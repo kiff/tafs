@@ -3,26 +3,39 @@ import SwiftUI
 struct TafDetailView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
-    @State private var section = 0
+    /// 0 chat, 1 activity, 2 card. Chat first: talking to a taf is the main thing.
+    @State private var section = Screenshots.enabled && Screenshots.screen == "taf" ? 1 : 0
     @State private var confirmRevoke = false
     /// Set on the tap itself, before the request starts, so a second tap can't send one.
     @State private var runTapped = false
 
     var body: some View {
         if let taf = model.taf(tafID) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 12) {
                     header(taf)
                     Picker("View", selection: $section) {
-                        Text("Activity").tag(0)
-                        Text("Card").tag(1)
+                        if model.canChat(taf.id) { Text("Chat").tag(0) }
+                        Text("Activity").tag(1)
+                        Text("Card").tag(2)
                     }
                     .pickerStyle(.segmented)
-
-                    if section == 0 { activity(taf) } else { card(taf) }
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.top, 12)
+                .padding(.bottom, 4)
+
+                if section == 0 && model.canChat(taf.id) {
+                    TafChatView(tafID: taf.id)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            if section == 2 { card(taf) } else { activity(taf) }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                }
             }
             .screenBackground()
             .navigationBarTitleDisplayMode(.inline)
