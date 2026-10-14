@@ -87,6 +87,8 @@ final class AppModel: ObservableObject {
                 Keychain.save(token.accessToken, for: Self.tokenAccount)
                 kiff.token = token.accessToken
                 cloud.token = token.accessToken
+                startAttempt = nil
+                accountGeneration += 1
                 tafs = []; held = []; record = []
                 mode = .kiff
                 await refresh()
@@ -106,6 +108,8 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
+        startAttempt = nil
+        accountGeneration += 1
         store?.clear()
         tafs = []; held = []; record = []
         scriptPosition = [:]; templateOf = [:]
@@ -229,7 +233,16 @@ final class AppModel: ObservableObject {
         var key: String?
         /// tafs cloud may have the taf: its answer was lost, or it holds the name.
         var cloudUnknown = false
+        /// The signed-in session this attempt belongs to (`accountGeneration`).
+        var account = 0
+        /// Cards issued, or sent and maybe issued, for this agent. One no longer in the
+        /// plan is revoked before the agent gets its key.
+        var issuedCardIDs: Set<String> = []
     }
+
+    /// Moves on with every sign-in and sign-out, so an attempt (and its key) never
+    /// outlives the session that made it, even one still running when it changes.
+    private(set) var accountGeneration = 0
 
     struct StartResult: Equatable {
         let taf: TafsCloud.CloudTaf
@@ -246,10 +259,11 @@ final class AppModel: ObservableObject {
                      progress: (StartStep) -> Void = { _ in }) async throws -> StartResult {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         var a: StartAttempt
-        if let previous = startAttempt, previous.name == name, previous.job == job {
+        let gen = accountGeneration
+        if let previous = startAttempt, previous.name == name, previous.job == job, previous.account == gen {
             a = previous
         } else {
-            a = StartAttempt(name: name, job: job, agent: agentID ?? TafPlan.agentID(for: name))
+            a = StartAttempt(name: name, job: job, agent: agentID ?? TafPlan.agentID(for: name), account: gen)
         }
         let cards: [KIFFClient.CardRequest]
         do { cards = try TafPlan.cards(agentID: a.agent, limits: limits) } catch {
@@ -263,8 +277,9 @@ final class AppModel: ObservableObject {
         } catch {
             throw StartFailure(step: .confirm, message: a.agentAdded ? "Face ID did not confirm; nothing more was done." : "Nothing was started: Face ID did not confirm.")
         }
+        guard accountGeneration == gen else { throw Self.signedOut(.confirm) }
         startAttempt = a
-        defer { if startAttempt != nil { startAttempt = a } }
+        defer { if startAttempt != nil, accountGeneration == gen { startAttempt = a } }
 
         if !a.agentAdded {
             progress(.agent)
@@ -274,16 +289,33 @@ final class AppModel: ObservableObject {
                 throw StartFailure(step: .agent, message: Self.startMessage(.agent, error))
             }
             a.agentAdded = true
+            guard accountGeneration == gen else { throw Self.signedOut(.agent) }
         }
-        if !a.cardsIssued {
+        // Cards from an earlier try for tools no longer in the plan: revoked first, so the
+        // key never carries authority the owner just took out.
+        let removed = a.issuedCardIDs.subtracting(cards.map(\.id)).sorted()
+        if !a.cardsIssued || !removed.isEmpty {
             progress(.cards)
-            try await attempt(.cards) { for card in cards { try await kiff.issueCard(card) } }
+            try await attempt(.cards) {
+                for id in removed {
+                    try await kiff.revoke(cardID: id)
+                    a.issuedCardIDs.remove(id)
+                }
+                if !a.cardsIssued {
+                    for card in cards {
+                        a.issuedCardIDs.insert(card.id)
+                        try await kiff.issueCard(card)
+                    }
+                }
+            }
             a.cardsIssued = true
+            guard accountGeneration == gen else { throw Self.signedOut(.cards) }
         }
         let key: String
         if let k = a.key { key = k } else {
             progress(.key)
             key = try await attempt(.key) { try await kiff.mintGatewayKey(agentID: a.agent, label: "tafs · \(name)").plaintext }
+            guard accountGeneration == gen else { throw Self.signedOut(.key) }
             a.key = key
         }
 
@@ -308,7 +340,7 @@ final class AppModel: ObservableObject {
     private func finish(_ taf: TafsCloud.CloudTaf, session: String?, _ a: inout StartAttempt) -> StartResult {
         a.key = nil
         startAttempt = nil
-        cloudTafs[a.agent] = taf
+        if a.account == accountGeneration { cloudTafs[a.agent] = taf }
         Task { await refresh() }
         return StartResult(taf: taf, session: session)
     }
@@ -316,6 +348,10 @@ final class AppModel: ObservableObject {
     /// The account's tafs cloud taf acting as `agent`, if tafs cloud lists one.
     private func cloudTaf(agent: String) async -> TafsCloud.CloudTaf? {
         (try? await cloud.tafs())?.first { $0.kiffAgent == agent }
+    }
+
+    private static func signedOut(_ step: StartStep) -> StartFailure {
+        StartFailure(step: step, message: "You signed out or changed accounts while it was starting; nothing more was done.")
     }
 
     /// Forgets a failed start, so the next one is a new agent.

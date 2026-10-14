@@ -216,6 +216,53 @@ final class StartTafTests: XCTestCase {
         XCTAssertNil(model.startAttempt)
     }
 
+    func testARetryWithFewerToolsRevokesTheDroppedToolsCard() async throws {
+        let model = model()
+        stubKIFFSteps()
+        StubProtocol.responses["POST /v1/tafs"] = (503, #"{"error":"busy"}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        let both = [ToolLimit(tool: refund, on: true, perDay: "100"), ToolLimit(tool: lookup, on: true, callsPerDay: "5")]
+        _ = try? await model.startOnKIFF(name: "Rae", job: "refunds", limits: both, agentID: "rae-k3f9")
+        XCTAssertEqual(count("POST", "/v1/me/mandates"), 2)
+
+        // The owner turns the refund tool off and tries again.
+        StubProtocol.responses["POST /v1/me/mandates/rae-k3f9-stripe_refund/revoke"] = (200, #"{}"#)
+        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"},"session":"sesn_2"}"#)
+        let result = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: [ToolLimit(tool: lookup, on: true, callsPerDay: "5")])
+        XCTAssertEqual(result.session, "sesn_2")
+        let paths = StubProtocol.sent.map { "\($0.httpMethod ?? "") \($0.url?.path ?? "")" }
+        let revoked = try XCTUnwrap(paths.firstIndex(of: "POST /v1/me/mandates/rae-k3f9-stripe_refund/revoke"), "the dropped tool's Card is revoked")
+        let started = try XCTUnwrap(paths.lastIndex(of: "POST /v1/tafs"))
+        XCTAssertLessThan(revoked, started, "before tafs cloud gets the key")
+        XCTAssertEqual(count("POST", "/v1/keys"), 1, "the key is still reused")
+    }
+
+    func testAFailedStartDoesNotOutliveItsAccount() async throws {
+        let model = model()
+        stubKIFFSteps()
+        StubProtocol.responses["POST /v1/tafs"] = (503, #"{"error":"busy"}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        let limits = [ToolLimit(tool: lookup, on: true, callsPerDay: "5")]
+        _ = try? await model.startOnKIFF(name: "Rae", job: "refunds", limits: limits, agentID: "rae-k3f9")
+        XCTAssertNotNil(model.startAttempt)
+
+        await model.signOut()
+        XCTAssertNil(model.startAttempt, "signing out forgets the attempt and its key")
+
+        // Another account signs in and starts a taf with the same name and job.
+        model.kiff.token = "kiff_dev_b"
+        model.cloud.token = "kiff_dev_b"
+        StubProtocol.responses["POST /v1/me/agents"] = (201, #"{"id":"rae-b222"}"#)
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_b","plaintext":"kiff_live_b","agent_id":"rae-b222"}"#)
+        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"depl_b","name":"Rae","job":"refunds","kiff_agent":"rae-b222","status":"active"},"session":"sesn_b"}"#)
+        _ = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: limits, agentID: "rae-b222")
+        XCTAssertEqual(count("POST", "/v1/me/agents"), 2, "provisioned afresh")
+        XCTAssertEqual(count("POST", "/v1/keys"), 2)
+        let last = StubProtocol.sent.last { $0.url?.path == "/v1/tafs" && $0.httpMethod == "POST" }
+        XCTAssertEqual(body(last)["agent_key"] as? String, "kiff_live_b", "never the first account's key")
+        XCTAssertEqual(last?.value(forHTTPHeaderField: "Authorization"), "Bearer kiff_dev_b")
+    }
+
     // MARK: Runs
 
     private let rae = TafsCloud.CloudTaf(id: "depl_1", name: "Rae", job: "refunds", kiffAgent: "rae-k3f9", status: "active", nextRun: nil, lastRun: nil)
