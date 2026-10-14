@@ -1,0 +1,28 @@
+{
+  "name": "@tafs/runtime",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "tafs": "node dist/cli.js"
+  },
+  "license": "SEE LICENSE IN ../README.md",
+  "description": "Runs tafs as Claude Managed Agents, governed by KIFF",
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  },
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tafs": "dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

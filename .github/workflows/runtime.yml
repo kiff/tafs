@@ -1,0 +1,91 @@
+name: Runtime
+
+# Every push and pull request: typecheck and test the runtime.
+# Push to main: create or update the job agents in the Anthropic account
+# (the merge is the approval). Skipped until ANTHROPIC_API_KEY is set.
+# Manual "start a taf": starts one taf with the key in KIFF_AGENT_KEY.
+
+on:
+  push:
+    branches: [main]
+    paths: ["runtime/**", ".github/workflows/runtime.yml"]
+  pull_request:
+    paths: ["runtime/**", ".github/workflows/runtime.yml"]
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "The taf's name"
+        required: true
+      job:
+        description: "Its job"
+        required: true
+        type: choice
+        options: [refunds, billpay, access, deploys, chargebacks]
+      budget_cents:
+        description: "Most one run may cost, in cents"
+        default: "200"
+
+defaults:
+  run:
+    working-directory: runtime
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: runtime/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  setup:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: runtime/package-lock.json
+      - run: npm ci && npm run build
+      - name: Create or update the job agents
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::ANTHROPIC_API_KEY is not set; skipping."
+            exit 0
+          fi
+          node dist/cli.js setup
+
+  start:
+    needs: test
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      KIFF_AGENT_KEY: ${{ secrets.KIFF_AGENT_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: runtime/package-lock.json
+      - run: npm ci && npm run build
+      - name: Start the taf and follow its first run
+        env:
+          NAME: ${{ inputs.name }}
+          JOB: ${{ inputs.job }}
+          BUDGET: ${{ inputs.budget_cents }}
+        run: node dist/cli.js start --name "$NAME" --job "$JOB" --budget-cents "$BUDGET"

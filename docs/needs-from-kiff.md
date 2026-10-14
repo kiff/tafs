@@ -49,3 +49,14 @@ Shopify's.
 The app shows "$212 of $500 today" in sample mode. In KIFF mode it would need
 `/v1/me/mandates/{id}/statement` per Card on every refresh. A `used` and
 `remaining` per limit on the mandates list would save a round trip per Card.
+
+## 5. An agent key for a taf, without the dashboard
+
+**Today:** the runtime (`runtime/`) needs the taf's KIFF agent key, copied from
+KIFF's dashboard into `KIFF_AGENT_KEY`. The key goes into an Anthropic vault as
+a static bearer token for `mcp.kiff.dev/mcp`.
+
+**Needed:** with item 3, KIFF returns the new holder's credential to the
+runtime once the owner confirms the Card, so starting a taf from the phone needs
+no copy and paste. An OAuth grant (RFC 044) would fit too: Anthropic's vault
+refreshes `mcp_oauth` credentials itself.
