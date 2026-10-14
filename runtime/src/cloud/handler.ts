@@ -42,24 +42,13 @@ export interface Deps {
   names: Names;
   fetch?: Fetch;
   kiffBase?: string;
-  now?: () => Date;
 }
 
 export interface Names {
-  /**
-   * Claims (tenant, name). True when it was free, or when an earlier claim is
-   * older than staleBefore (an attempt whose outcome was never learned).
-   */
-  claim(tenant: string, name: string, staleBefore: Date): Promise<boolean>;
+  /** Claims (tenant, name). True only when nobody holds it. */
+  claim(tenant: string, name: string): Promise<boolean>;
   release(tenant: string, name: string): Promise<void>;
 }
-
-/**
- * How long a claim with an unknown outcome blocks the name. Long past any
- * request that could still complete; after it, a retry checks Anthropic for
- * the taf before taking the name over.
- */
-export const CLAIM_SETTLES_MS = 15 * 60 * 1000;
 
 /** Most one run of a taf started from the phone may cost: $10. */
 export const MAX_BUDGET_CENTS = 1000;
@@ -163,12 +152,12 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
   const exists = async () =>
     (await listTafs(client)).some((d) => d.metadata?.[META.tenant] === me.tenantID && d.metadata?.[META.taf] === name);
   if (await exists()) throw taken;
-  const now = deps.now?.() ?? new Date();
-  if (!(await deps.names.claim(me.tenantID, name, new Date(now.getTime() - CLAIM_SETTLES_MS)))) {
-    throw new HTTPError(409, `a taf named ${name} is being started; if it doesn't appear, try again in 15 minutes`);
+  if (!(await deps.names.claim(me.tenantID, name))) {
+    // Held by an attempt that is still running, or whose outcome was never
+    // learned. Nothing proves such an attempt can't still make the taf, so
+    // the name stays taken; another name always works.
+    throw new HTTPError(409, `${name} is taken by an earlier start whose outcome isn't known; it may still appear. Choose another name`);
   }
-  // A claim taken over from an unknown outcome: that attempt may have made the taf after all.
-  if (await exists()) throw taken;
 
   let asked = false;
   let created = false;
@@ -188,8 +177,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
   } catch (err) {
     // The name is freed only when no taf can exist: the deployment was never
     // asked for, or Anthropic refused it outright. Once it exists, or when the
-    // answer was lost, the claim stays; an unknown one settles after
-    // CLAIM_SETTLES_MS, when a retry checks for the taf before taking over.
+    // answer was lost, the claim stays for good.
     if (!created && (!asked || refused(err))) await deps.names.release(me.tenantID, name);
     throw new HTTPError(502, (err as Error).message);
   }

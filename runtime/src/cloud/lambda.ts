@@ -30,15 +30,12 @@ function ensureSetup(): Promise<Setup> {
 /** Taf names per account, claimed with a conditional write so only one request wins. */
 const dynamo = new DynamoDBClient({});
 const names: Names = {
-  async claim(tenant, name, staleBefore) {
+  async claim(tenant, name) {
     try {
       await dynamo.send(new PutItemCommand({
         TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
         Item: { id: { S: `${tenant}#${name}` }, at: { S: new Date().toISOString() } },
-        // ISO times in UTC compare correctly as strings.
-        ConditionExpression: "attribute_not_exists(id) OR #at < :stale",
-        ExpressionAttributeNames: { "#at": "at" },
-        ExpressionAttributeValues: { ":stale": { S: staleBefore.toISOString() } },
+        ConditionExpression: "attribute_not_exists(id)",
       }));
       return true;
     } catch (err) {
