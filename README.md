@@ -136,5 +136,6 @@ language mode; App Store builds will come from CI with a current Xcode.
 
 ## License
 
-To be added after legal review. The intent is FSL-1.1-ALv2 (source-available,
-each version Apache 2.0 two years after release). Until then, all rights reserved.
+[FSL-1.1-ALv2](LICENSE.md), the Functional Source License. You may use, change
+and share tafs for anything except a product that competes with it. Each version
+becomes Apache 2.0 two years after its release.
