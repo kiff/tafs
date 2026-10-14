@@ -389,7 +389,11 @@ export interface Note {
   updated_at: string;
 }
 
-/** The taf's notes, newest first. A taf without a memory store yet has none. */
+/**
+ * The taf's newest notes, newest first. The API doesn't list by date, so every
+ * note is read before the newest are picked. A taf without a memory store yet
+ * has none.
+ */
 async function notes(client: Anthropic, taf: Deployment): Promise<Note[]> {
   const store = taf.metadata?.[META.memory];
   if (!store) return [];
@@ -397,9 +401,8 @@ async function notes(client: Anthropic, taf: Deployment): Promise<Note[]> {
   for await (const m of client.beta.memoryStores.memories.list(store, { view: "full" })) {
     if (m.type !== "memory") continue;
     out.push({ id: m.id, path: m.path, content: m.content ?? "", updated_at: m.updated_at });
-    if (out.length >= MEMORY.shown) break;
   }
-  return out.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  return out.sort((a, b) => b.updated_at.localeCompare(a.updated_at)).slice(0, MEMORY.shown);
 }
 
 /** Forgets one note. Only a note in this taf's own store can be named. */

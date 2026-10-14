@@ -677,13 +677,15 @@ final class AppModel: ObservableObject {
     }
 
     /// Forgets one note. It goes from the list at once, and comes back if tafs cloud refuses.
+    /// Only that note comes back: another Forget may have finished meanwhile, and its
+    /// note must stay gone.
     @discardableResult
     func forget(_ note: TafsCloud.Note, from tafID: UUID) async -> Bool {
         guard let before = memories[tafID], before.contains(note) else { return false }
         memories[tafID] = before.filter { $0.id != note.id }
         memoryErrors[tafID] = nil
         if mode == .sample { return true }
-        guard let c = cloudTaf(for: tafID) else { memories[tafID] = before; return false }
+        guard let c = cloudTaf(for: tafID) else { putBack(note, in: tafID); return false }
         let gen = accountGeneration
         do {
             try await cloud.forget(c.id, note: note.id)
@@ -692,10 +694,19 @@ final class AppModel: ObservableObject {
             return gen == accountGeneration // already gone
         } catch {
             guard gen == accountGeneration else { return false }
-            memories[tafID] = before
+            putBack(note, in: tafID)
             memoryErrors[tafID] = "It wasn't forgotten: \(error.localizedDescription)"
             return false
         }
+    }
+
+    /// Puts one note back in the list as it is now, newest first.
+    private func putBack(_ note: TafsCloud.Note, in tafID: UUID) {
+        var notes = memories[tafID] ?? []
+        guard !notes.contains(where: { $0.id == note.id }) else { return }
+        notes.append(note)
+        notes.sort { $0.updatedAt > $1.updatedAt }
+        memories[tafID] = notes
     }
 
     /// A sample taf's notes: the kind of thing a real one writes down as it learns.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
 import { MEMORY_INSTRUCTIONS } from "../src/config.js";
-import { CHAT, handle, type HTTPEvent, type Names, type Slots } from "../src/cloud/handler.js";
+import { CHAT, handle, type HTTPEvent, MEMORY, type Names, type Slots } from "../src/cloud/handler.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -118,7 +118,7 @@ function fakeAnthropic() {
     sessions.push({ updated_at: s.created_at, status: "idle", metadata: {}, agent: { id: "agent_refunds" }, ...s });
     events[s.id] = evs;
   };
-  return { client, calls, addSession, say, sessions, deployments };
+  return { client, calls, addSession, say, sessions, deployments, notes };
 }
 
 function call(fake: ReturnType<typeof fakeAnthropic>, method: string, path: string, opts: { token?: string; body?: unknown; slots?: Slots; now?: Date } = {}) {
@@ -278,6 +278,19 @@ describe("memory", () => {
       { id: "mem_old", path: "/refunds.md", content: "Offer store credit first.", updated_at: minutesAgo(600) },
     ]);
     expect(f.calls).toContain("memories.list memstore_depl_acme full");
+  });
+
+  it("shows the newest notes when there are more than it shows, whatever order the API lists them in", async () => {
+    const f = fakeAnthropic();
+    const many = Array.from({ length: MEMORY.shown + 5 }, (_, i) => ({
+      type: "memory", id: `mem_${i}`, path: `/n${i}.md`, content: `note ${i}`, updated_at: minutesAgo(1000 - i),
+    }));
+    f.notes.memstore_depl_acme = [...many.slice(1), many[0]!].reverse(); // the newest listed last
+    const r = await call(f, "GET", "/v1/tafs/depl_acme/memory");
+    const ids = r.body.notes.map((n: { id: string }) => n.id);
+    expect(ids).toHaveLength(MEMORY.shown);
+    expect(ids[0]).toBe(`mem_${MEMORY.shown + 4}`);
+    expect(ids).not.toContain("mem_0");
   });
 
   it("shows no notes for a taf without memory yet, and makes none to show them", async () => {

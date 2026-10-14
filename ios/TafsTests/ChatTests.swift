@@ -232,4 +232,19 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(model.memories[id]?.map(\.id), ["mem_2"])
         XCTAssertTrue(model.memoryErrors[id]?.contains("cannot manage Cards") ?? false)
     }
+
+    func testARefusedForgetDoesNotBringBackANoteForgottenMeanwhile() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/memory"] = (200, #"{"notes":[{"id":"mem_2","path":"/a.md","content":"A","updated_at":"2026-10-14T11:00:00Z"},{"id":"mem_1","path":"/b.md","content":"B","updated_at":"2026-10-13T09:00:00Z"}]}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/memory/mem_2"] = (500, #"{"error":"try again"}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/memory/mem_1"] = (200, #"{"forgotten":"mem_1"}"#)
+        await model.loadMemory(id)
+        let notes = try XCTUnwrap(model.memories[id])
+        async let refused = model.forget(notes[0], from: id)
+        async let done = model.forget(notes[1], from: id)
+        let (r, d) = await (refused, done)
+        XCTAssertFalse(r)
+        XCTAssertTrue(d)
+        XCTAssertEqual(model.memories[id]?.map(\.id), ["mem_2"])
+    }
 }
