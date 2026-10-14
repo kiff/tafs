@@ -4,7 +4,9 @@
 #   tafs-cloud                 Lambda (Node 22, arm64) with a public function URL;
 #                              the code authenticates every route with KIFF.
 #   tafs-cloud-lambda          its role: logs, and reading the one secret below.
-#   tafs-cloud-names           DynamoDB: a taf's name per account, claimed once.
+#   tafs-cloud-names           DynamoDB: a taf's name per account, claimed once; and
+#                              chat message slots (rate#tenant#taf#window#n, 10 per
+#                              10 minutes), each put once, with a ttl attribute.
 #   tafs/anthropic-api-key     the Anthropic key; a person puts it there (see README).
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update this function's code, nothing else.
@@ -55,6 +57,9 @@ if ! aws dynamodb describe-table --table-name "$TABLE" >/dev/null 2>&1; then
   aws dynamodb wait table-exists --table-name "$TABLE"
   echo "created table $TABLE"
 fi
+# Old chat message slots expire on their own.
+aws dynamodb update-time-to-live --table-name "$TABLE" \
+  --time-to-live-specification Enabled=true,AttributeName=ttl >/dev/null 2>&1 || true
 TABLE_ARN=$(aws dynamodb describe-table --table-name "$TABLE" --query Table.TableArn --output text)
 
 # The function's role.

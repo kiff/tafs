@@ -42,6 +42,8 @@ export interface Deps {
    * when it is already claimed. Released when starting fails.
    */
   names: Names;
+  /** Message slots per taf and 10-minute window, claimed durably (the flood guard). */
+  slots: Slots;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
@@ -51,6 +53,11 @@ export interface Names {
   /** Claims (tenant, name). True only when nobody holds it. */
   claim(tenant: string, name: string): Promise<boolean>;
   release(tenant: string, name: string): Promise<void>;
+}
+
+export interface Slots {
+  /** Claims `key` until `expiresAt`. True only when nobody holds it. */
+  claim(key: string, expiresAt: Date): Promise<boolean>;
 }
 
 /** Most one run of a taf started from the phone may cost: $10. */
@@ -306,12 +313,21 @@ async function message(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, ta
   if (!text || text.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters`);
   const now = (deps.now?.() ?? new Date()).getTime();
 
-  const { messages, sessions } = await conversation(client, taf);
-  const since = now - CHAT.floodMinutes * 60_000;
-  const recent = messages.filter((m) => m.from === "owner" && m.kind === "message" && Date.parse(m.at) >= since).length;
-  if (recent >= CHAT.floodMessages) {
-    throw new HTTPError(429, `that's ${recent} messages in ${CHAT.floodMinutes} minutes; wait a little before writing again`);
+  // The flood guard: one of 10 slots per taf and 10-minute window, claimed with a
+  // conditional write, so it holds however many sessions the messages start and
+  // whatever the thread shows. A window is fixed, so at most 20 can straddle two.
+  const windowMs = CHAT.floodMinutes * 60_000;
+  const bucket = Math.floor(now / windowMs);
+  const expires = new Date((bucket + 2) * windowMs);
+  let slot = false;
+  for (let n = 0; n < CHAT.floodMessages && !slot; n++) {
+    slot = await deps.slots.claim(`rate#${me.tenantID}#${taf.id}#${bucket}#${n}`, expires);
   }
+  if (!slot) {
+    throw new HTTPError(429, `that's ${CHAT.floodMessages} messages in ${CHAT.floodMinutes} minutes; wait a little before writing again`);
+  }
+
+  const { sessions } = await conversation(client, taf);
 
   const userMessage = { type: "user.message" as const, content: [{ type: "text" as const, text }] };
   const latest = sessions.at(-1);

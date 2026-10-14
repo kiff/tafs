@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { CHAT, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
+import { CHAT, handle, type HTTPEvent, type Names, type Slots } from "../src/cloud/handler.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -16,6 +16,12 @@ function kiff(byToken: Record<string, object>) {
 }
 
 const names: Names = { claim: async () => true, release: async () => {} };
+
+/** Slots claimed atomically, like the DynamoDB conditional write. */
+function memorySlots(): Slots & { held: Set<string> } {
+  const held = new Set<string>();
+  return { held, async claim(key) { if (held.has(key)) return false; held.add(key); return true; } };
+}
 
 interface FakeSession {
   id: string;
@@ -80,7 +86,7 @@ function fakeAnthropic() {
   return { client, calls, addSession, say, sessions };
 }
 
-function call(fake: ReturnType<typeof fakeAnthropic>, method: string, path: string, opts: { token?: string; body?: unknown } = {}) {
+function call(fake: ReturnType<typeof fakeAnthropic>, method: string, path: string, opts: { token?: string; body?: unknown; slots?: Slots; now?: Date } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
     requestContext: { http: { method } },
@@ -91,8 +97,9 @@ function call(fake: ReturnType<typeof fakeAnthropic>, method: string, path: stri
     anthropic: async () => fake.client,
     setup: async () => ({ environmentID: "env_1", agents: {} }),
     names,
+    slots: opts.slots ?? memorySlots(),
     fetch: kiff({ ana: ME, viewer: VIEWER }),
-    now: () => NOW,
+    now: () => opts.now ?? NOW,
   }).then((r) => ({ status: r.statusCode, body: JSON.parse(r.body) }));
 }
 
@@ -203,18 +210,24 @@ describe("messages", () => {
     expect(sessions.map((s) => s.id)).toContain("sesn_chat1");
   });
 
-  it("refuses an eleventh message in ten minutes", async () => {
+  it("refuses an eleventh message in ten minutes, however many sessions they start", async () => {
     const f = fakeAnthropic();
-    f.addSession({ id: "sesn_chat0", created_at: minutesAgo(9), updated_at: minutesAgo(1), metadata: { tafs_chat_for: "depl_acme" }, status: "idle" },
-      Array.from({ length: 10 }, (_, i) => f.say("user.message", `nudge ${i}`, minutesAgo(9 - i * 0.5))));
-    const r = await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "one more" } });
-    expect(r.status).toBe(429);
-    expect(f.calls.some((c) => c.startsWith("events.send") || c.startsWith("sessions.create"))).toBe(false);
+    const slots = memorySlots();
+    // Nothing is live, so each message starts its own chat session, and the thread
+    // keeps only the latest few: the guard must not depend on what it shows.
+    (f.client.beta.sessions as unknown as { list: () => AsyncGenerator<never> }).list = async function* () {};
+    for (let i = 0; i < 10; i++) {
+      const r = await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: `go ${i}` }, slots });
+      expect(r.status, `message ${i}`).toBe(200);
+      expect(r.body.new_session).toBe(true);
+    }
+    const eleventh = await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "one more" }, slots });
+    expect(eleventh.status).toBe(429);
+    expect(f.calls.filter((c) => c.startsWith("sessions.create"))).toHaveLength(10);
 
-    // Older messages don't count.
-    const g = fakeAnthropic();
-    g.addSession({ id: "sesn_chat0", created_at: minutesAgo(40), updated_at: minutesAgo(1), metadata: { tafs_chat_for: "depl_acme" }, status: "idle" },
-      Array.from({ length: 10 }, (_, i) => g.say("user.message", `old ${i}`, minutesAgo(40 - i))));
-    expect((await call(g, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "fine" } })).status).toBe(200);
+    // The next window has room again; another taf has its own.
+    const later = new Date(NOW.getTime() + CHAT.floodMinutes * 60_000);
+    expect((await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "later" }, slots, now: later })).status).toBe(200);
+    expect([...slots.held].every((k) => k.startsWith("rate#t_acme#depl_acme#"))).toBe(true);
   });
 });
