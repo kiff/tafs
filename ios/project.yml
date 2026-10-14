@@ -46,7 +46,12 @@ targets:
     type: app-extension
     platform: iOS
     deploymentTarget: "16.1"
-    sources: [TafsWidgets, Shared]
+    # The widget gets its own small mascot (TafsWidgets/WidgetAssets): a Live Activity
+    # shows a gray placeholder in place of an image over its size budget.
+    sources:
+      - TafsWidgets
+      - path: Shared
+        excludes: [Mascot.xcassets]
     info:
       path: TafsWidgets/Info.plist
       properties:
