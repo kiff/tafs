@@ -45,12 +45,12 @@ struct NewTafFlow: View {
                 .padding(12)
                 .frame(minHeight: 160)
                 .background(Theme.panel)
-                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.amber.opacity(0.45)))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.line))
                 .clipShape(RoundedRectangle(cornerRadius: 18))
                 .accessibilityLabel("The job")
-            Text("Or start from a job others run").font(.system(size: 13)).foregroundColor(Theme.dim)
-            FlowChips(items: TafTemplates.all.map(\.name)) { name in
-                if let t = TafTemplates.all.first(where: { $0.name == name }) { job = t.job }
+            Text("Or start from one of these").font(.system(size: 13)).foregroundColor(Theme.dim)
+            ForEach(TafTemplates.all) { t in
+                JobRow(template: t, selected: job == t.job) { job = t.job }
             }
             Button("Draft the taf") {
                 draft = model.draft(job: job)
@@ -175,24 +175,6 @@ struct RuleEditor: View {
             .background(Theme.background)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .accessibilityLabel(label)
-        }
-    }
-}
-
-/// Chips that wrap onto as many lines as they need.
-struct FlowChips: View {
-    let items: [String]
-    let action: (String) -> Void
-
-    var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 8)], alignment: .leading, spacing: 8) {
-            ForEach(items, id: \.self) { item in
-                Button(item) { action(item) }
-                    .font(.system(size: 14))
-                    .foregroundColor(Theme.ink)
-                    .frame(maxWidth: .infinity, minHeight: 40)
-                    .overlay(Capsule().stroke(Theme.ink.opacity(0.2)))
-            }
         }
     }
 }

@@ -98,6 +98,52 @@ final class TafsCloud {
         return r.report
     }
 
+    // MARK: Chat
+
+    /// One line of a taf's thread: the owner's messages and the taf's replies and reports.
+    struct ChatMessage: Decodable, Equatable, Identifiable {
+        enum From: String, Decodable { case owner, taf }
+        enum Kind: String, Decodable { case kickoff, message }
+        var id: String { "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)" }
+        let at: Date
+        let from: From
+        let kind: Kind
+        let text: String
+        let session: String
+
+        init(at: Date, from: From, kind: Kind = .message, text: String, session: String) {
+            self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session
+        }
+
+        enum CodingKeys: String, CodingKey { case at, from, kind, text, session }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            at = try c.decode(Date.self, forKey: .at)
+            from = try c.decode(From.self, forKey: .from)
+            kind = (try? c.decode(Kind.self, forKey: .kind)) ?? .message
+            text = try c.decode(String.self, forKey: .text)
+            session = try c.decode(String.self, forKey: .session)
+        }
+    }
+
+    /// The taf's thread, oldest first.
+    func conversation(_ id: String) async throws -> [ChatMessage] {
+        struct Response: Decodable { let messages: [ChatMessage] }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/conversation")
+        return r.messages
+    }
+
+    struct Sent: Decodable, Equatable {
+        let session: String
+        let newSession: Bool
+        enum CodingKeys: String, CodingKey { case session, newSession = "new_session" }
+    }
+
+    /// Sends the owner's message: into the taf's current run, or a new one.
+    func sendMessage(_ id: String, text: String) async throws -> Sent {
+        try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: ["text": text])
+    }
+
     // MARK: Transport
 
     private func escaped(_ s: String) -> String {

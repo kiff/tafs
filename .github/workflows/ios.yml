@@ -88,6 +88,7 @@ jobs:
           shoot 4-record -screenshots YES -tab record
           shoot 5-taf -screenshots YES -tab tafs -screen taf
           shoot 6-new-taf -screenshots YES -tab tafs -screen new
+          shoot 7-chat -screenshots YES -tab tafs -screen chat
           ls -la "$RUNNER_TEMP/shots"
 
       - uses: actions/upload-artifact@v5
