@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="160" viewBox="0 0 560 160">
+  <!-- The tafs mark, then the name. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFB13D"/>
+      <stop offset="1" stop-color="#FF8A00"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="144" height="144" rx="34" fill="url(#bg)"/>
+  <g transform="translate(8 8) scale(0.140625) translate(-28 18)">
+    <g fill="none" stroke="#1A1400" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M500 432 V650 Q500 790 652 790" stroke-width="124"/>
+      <path d="M336 520 H596 L690 446" stroke-width="108"/>
+    </g>
+    <circle cx="500" cy="262" r="84" fill="#1A1400"/>
+    <rect x="684" y="326" width="122" height="86" rx="18" transform="rotate(-24 745 369)" fill="#FFF4E0"/>
+  </g>
+  <text x="184" y="114" font-family="'New York', Georgia, 'Times New Roman', serif" font-size="104" font-weight="700" letter-spacing="-2" fill="#F4EFE6">tafs</text>
+</svg>
