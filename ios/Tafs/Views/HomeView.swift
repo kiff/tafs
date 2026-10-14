@@ -79,8 +79,9 @@ struct HomeView: View {
                 TafDetailView(tafID: id)
             }
         }
-        .onChange(of: model.tafs.count) { count in
-            guard Screenshots.enabled, count >= TafTemplates.all.count else { return }
+        .task(id: model.tafs.count) {
+            guard Screenshots.enabled, model.tafs.count >= TafTemplates.all.count else { return }
+            try? await Task.sleep(nanoseconds: 500_000_000)
             switch Screenshots.screen {
             case "taf": openingFirst = true
             case "new": showingNew = true
