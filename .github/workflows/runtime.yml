@@ -3,14 +3,17 @@ name: Runtime
 # Every push and pull request: typecheck and test the runtime.
 # Push to main: create or update the job agents in the Anthropic account
 # (the merge is the approval). Skipped until ANTHROPIC_API_KEY is set.
+# Push to main: also deploy tafs cloud's code (runtime/src/cloud) to AWS Lambda,
+# through the tafs-github-deploy role that infra/aws.sh creates (no stored AWS
+# keys). The Anthropic key it uses lives in AWS, set by a person, never here.
 # Manual "start a taf": starts one taf with the key in KIFF_AGENT_KEY.
 
 on:
   push:
     branches: [main]
-    paths: ["runtime/**", ".github/workflows/runtime.yml"]
+    paths: ["runtime/**", "infra/**", ".github/workflows/runtime.yml"]
   pull_request:
-    paths: ["runtime/**", ".github/workflows/runtime.yml"]
+    paths: ["runtime/**", "infra/**", ".github/workflows/runtime.yml"]
   workflow_dispatch:
     inputs:
       name:
@@ -66,6 +69,32 @@ jobs:
             exit 0
           fi
           node dist/cli.js setup
+
+  deploy:
+    needs: test
+    # On once infra/aws.sh has run: set the repository variable TAFS_CLOUD=on.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.TAFS_CLOUD == 'on'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: runtime/package-lock.json
+      - run: npm ci && npm run bundle
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::929018226542:role/tafs-github-deploy
+          aws-region: us-east-1
+      - name: Deploy tafs cloud
+        run: |
+          aws lambda update-function-code --function-name tafs-cloud --zip-file fileb://lambda.zip >/dev/null
+          aws lambda wait function-updated-v2 --function-name tafs-cloud
 
   start:
     needs: test

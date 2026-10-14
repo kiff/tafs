@@ -6,3 +6,5 @@ build/
 xcuserdata/
 node_modules/
 runtime/dist/
+runtime/dist-lambda/
+runtime/lambda.zip

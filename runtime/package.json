@@ -5,7 +5,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "tafs": "node dist/cli.js"
+    "tafs": "node dist/cli.js",
+    "bundle": "esbuild src/cloud/lambda.ts --bundle --platform=node --target=node22 --format=esm --sourcemap --outfile=dist-lambda/index.mjs --external:@aws-sdk/* --banner:js=\"import{createRequire}from\\\"module\\\";const require=createRequire(import.meta.url);\" && cd dist-lambda && rm -f ../lambda.zip && zip -qr ../lambda.zip ."
   },
   "license": "SEE LICENSE IN ../README.md",
   "description": "Runs tafs as Claude Managed Agents, governed by KIFF",
@@ -13,7 +14,10 @@
     "@anthropic-ai/sdk": "0.133.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "3.1151.0",
+    "@aws-sdk/client-secrets-manager": "3.1151.0",
     "@types/node": "26.6.5",
+    "esbuild": "0.28.2",
     "typescript": "7.0.2",
     "vitest": "4.1.11"
   },

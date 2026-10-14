@@ -14,7 +14,7 @@ export const ENVIRONMENT_NAME = "tafs";
 export const DEFAULT_BUDGET_CENTS = 200;
 
 /** Metadata keys tafs puts on what it creates, so it can find them again. */
-export const META = { job: "tafs_job", taf: "tafs_taf", kind: "tafs_kind" } as const;
+export const META = { job: "tafs_job", taf: "tafs_taf", kind: "tafs_kind", tenant: "tafs_tenant", kiffAgent: "tafs_kiff_agent" } as const;
 
 /**
  * The agent for a job. Its only tools are the company's, through KIFF's
@@ -69,6 +69,8 @@ export interface TafSpec {
   cron?: string;
   timezone?: string;
   budgetCents?: number;
+  /** More metadata, such as who owns the taf. Cannot replace tafs' own keys. */
+  metadata?: Record<string, string>;
 }
 
 export function deploymentParams(taf: TafSpec): DeploymentCreateParams {
@@ -85,6 +87,6 @@ export function deploymentParams(taf: TafSpec): DeploymentCreateParams {
     initial_events: [{ type: "user.message", content: [{ type: "text", text: taf.job.kickoff }] }],
     schedule: { type: "cron", expression: cron.trim(), timezone: taf.timezone ?? "UTC" },
     budget: { type: "limit", max_list_cost: { amount: String(budget), currency: "USD" } },
-    metadata: { [META.job]: taf.job.id, [META.taf]: taf.name },
+    metadata: { ...taf.metadata, [META.job]: taf.job.id, [META.taf]: taf.name },
   };
 }
