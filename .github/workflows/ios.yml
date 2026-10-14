@@ -1,6 +1,7 @@
 name: iOS
 
-# Every push and pull request: build and run the tests on a simulator.
+# Every push and pull request: build and run the tests on a simulator, and,
+# when the change touches the app's screens, take screenshots.
 # A version tag (v0.1.0) or a manual run: also archive, sign and upload to
 # TestFlight. Uploading publishes nothing: the build reaches internal testers
 # only, until someone chooses otherwise in App Store Connect.
@@ -21,6 +22,34 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Whether the screens could look different: screenshots cost a macOS runner,
+  # so they run only for a change to the app's screens, or when asked by hand.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      ui: ${{ steps.diff.outputs.ui }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.sha }}
+        run: |
+          # What draws the screens: the views, the design system, the assets,
+          # the root (TafsApp.swift: tab bar, navigation, onboarding, color
+          # scheme), the mascot. And this workflow itself.
+          ui='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|\.github/workflows/ios\.yml$)'
+          if [ "$EVENT" = workflow_dispatch ] || [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "ui=true" >> "$GITHUB_OUTPUT"   # asked by hand, or nothing to compare with
+          elif git diff --name-only "$BASE" "$HEAD" | grep -Eq "$ui"; then
+            echo "ui=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ui=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
     runs-on: macos-26
     timeout-minutes: 30
@@ -48,7 +77,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
   screenshots:
-    needs: test
+    needs: [changes, test]
+    if: needs.changes.outputs.ui == 'true'
     runs-on: macos-26
     timeout-minutes: 30
     steps:
