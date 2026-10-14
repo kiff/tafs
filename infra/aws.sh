@@ -11,6 +11,9 @@
 #
 # Everything is named tafs-*, in us-east-1, and touches nothing of kiff-cloud's.
 # Usage: infra/aws.sh path/to/lambda.zip
+#
+# Applied on 2026-10-14 step by step (each part checked before the next), not by
+# running this file; it records what exists and can repair it.
 set -euo pipefail
 
 REGION=us-east-1
@@ -101,8 +104,12 @@ if ! URL=$(aws lambda get-function-url-config --function-name "$FN" --query Func
 fi
 aws lambda add-permission --function-name "$FN" --statement-id public-url --action lambda:InvokeFunctionUrl \
   --principal '*' --function-url-auth-type NONE >/dev/null 2>&1 || true
+# Since 2025 a public URL also needs lambda:InvokeFunction, limited to calls made
+# through the URL. AWS CLI 2.31 has no --invoked-via-function-url; on an older
+# CLI, add it with the SDK's AddPermission and InvokedViaFunctionUrl: true.
 aws lambda add-permission --function-name "$FN" --statement-id public-url-invoke --action lambda:InvokeFunction \
-  --principal '*' --invoked-via-function-url >/dev/null 2>&1 || true
+  --principal '*' --invoked-via-function-url >/dev/null 2>&1 \
+  || echo "add the URL-only InvokeFunction permission by hand (see the comment above)" >&2
 
 # The deploy role, for kiff/tafs main only.
 FN_ARN=$(aws lambda get-function --function-name "$FN" --query Configuration.FunctionArn --output text)

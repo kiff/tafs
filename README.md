@@ -87,6 +87,7 @@ workflow** starts a taf with the agent key in the `KIFF_AGENT_KEY` secret.
 
 The phone can't hold the Anthropic key, so the few calls that need it go
 through tafs cloud (`runtime/src/cloud/`), an AWS Lambda behind a function URL.
+It answers at `https://qvjurway3eczrk7pqorfuy7z5y0vuztq.lambda-url.us-east-1.on.aws`.
 It keeps no accounts: the phone sends its KIFF sign-in, and KIFF says who that
 is, on which account, with which rights. A company sees and changes only its
 own tafs; another company's taf answers like a missing one.
