@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
 import {
@@ -9,15 +10,20 @@ import {
   KIFF_MCP_URL,
   MEMORY_INSTRUCTIONS,
   memoryStoreParams,
+  KIFF_SKILL_NAME,
   MODEL,
 } from "../src/config.js";
+import { KIFF_SKILL } from "../src/kiff-skill.js";
 import { JOBS, type Job, jobById, systemPrompt } from "../src/jobs.js";
-import { agentChanged, ensureMemory, environmentChanged, setup, startTaf } from "../src/runtime.js";
+import { agentChanged, ensureKiffSkill, ensureMemory, environmentChanged, setup, startTaf } from "../src/runtime.js";
 
 type Agent = Anthropic.Beta.Agents.BetaManagedAgentsAgent;
 type Environment = Anthropic.Beta.Environments.BetaEnvironment;
 
 const refunds = jobById("refunds");
+
+/** KIFF's skill as setup finds it already uploaded, pinned to its version. */
+const SKILL = { type: "custom" as const, skill_id: "skill_kiff", version: "skillver_1" };
 
 /** An agent as the API returns it for a job: defaults filled in, effort as an object. */
 function echoed(job: Job, version = 1, change: (a: Record<string, unknown>) => void = () => {}): Agent {
@@ -52,7 +58,7 @@ function echoed(job: Job, version = 1, change: (a: Record<string, unknown>) => v
         })),
       },
     ],
-    skills: [],
+    skills: [SKILL],
     multiagent: null,
   };
   change(a);
@@ -84,6 +90,8 @@ describe("jobs", () => {
       expect(prompt).toContain("kiff_pending");
       expect(prompt).toContain("kiff_operation_id");
       expect(prompt).toContain("never repeat the call");
+      expect(prompt).toContain("kiff skill");
+      expect(prompt).toContain("don't wait for it and don't retry it during this run");
       expect(prompt).toContain(j.instructions);
     }
   });
@@ -111,35 +119,35 @@ describe("agent", () => {
   });
 
   it("matches the API's echo of the same configuration", () => {
-    expect(agentChanged(echoed(refunds), refunds)).toBe(false);
-    expect(agentChanged(echoed(refunds, 1, (a) => { (a.mcp_servers as Array<{ url: string }>)[0]!.url = `${KIFF_MCP_URL}/`; }), refunds)).toBe(false);
+    expect(agentChanged(echoed(refunds), refunds, SKILL)).toBe(false);
+    expect(agentChanged(echoed(refunds, 1, (a) => { (a.mcp_servers as Array<{ url: string }>)[0]!.url = `${KIFF_MCP_URL}/`; }), refunds, SKILL)).toBe(false);
   });
 
   it("changes when the prompt, summary or model changes", () => {
-    expect(agentChanged(echoed(refunds, 1, (a) => { a.system = "old"; }), refunds)).toBe(true);
-    expect(agentChanged(echoed(refunds, 1, (a) => { a.description = "old"; }), refunds)).toBe(true);
-    expect(agentChanged(echoed(refunds, 1, (a) => { a.model = { id: "claude-opus-5", effort: { type: "high" } }; }), refunds)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.system = "old"; }), refunds, SKILL)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.description = "old"; }), refunds, SKILL)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.model = { id: "claude-opus-5", effort: { type: "high" } }; }), refunds, SKILL)).toBe(true);
   });
 
   it("changes when only the effort changes", () => {
-    expect(agentChanged(echoed(refunds, 1, (a) => { a.model = { id: MODEL, effort: { type: "medium" } }; }), refunds)).toBe(true);
-    expect(agentChanged(echoed(refunds, 1, (a) => { a.model = { id: MODEL }; }), refunds)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.model = { id: MODEL, effort: { type: "medium" } }; }), refunds, SKILL)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.model = { id: MODEL }; }), refunds, SKILL)).toBe(true);
   });
 
   it("changes when only the MCP server URL changes", () => {
-    expect(agentChanged(echoed(refunds, 1, (a) => { a.mcp_servers = [{ type: "url", name: "kiff", url: "https://mcp.example.com/mcp" }]; }), refunds)).toBe(true);
-    expect(agentChanged(echoed(refunds, 1, (a) => { a.mcp_servers = []; a.tools = []; }), refunds)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.mcp_servers = [{ type: "url", name: "kiff", url: "https://mcp.example.com/mcp" }]; }), refunds, SKILL)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.mcp_servers = []; a.tools = []; }), refunds, SKILL)).toBe(true);
   });
 
   it("changes when only the tool permissions change", () => {
     const policy = (type: string) => (a: Record<string, unknown>) => {
       (a.tools as Array<{ default_config: { permission_policy: { type: string } } }>)[0]!.default_config.permission_policy = { type };
     };
-    expect(agentChanged(echoed(refunds, 1, policy("always_ask")), refunds)).toBe(true);
-    expect(agentChanged(echoed(refunds, 1, policy("auto")), refunds)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, policy("always_ask")), refunds, SKILL)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, policy("auto")), refunds, SKILL)).toBe(true);
     expect(agentChanged(echoed(refunds, 1, (a) => {
       (a.tools as Array<{ configs: unknown[] }>)[0]!.configs = [{ name: "refund", enabled: false, permission_policy: null }];
-    }), refunds)).toBe(true);
+    }), refunds, SKILL)).toBe(true);
   });
 
   it("changes when a shell or web tool is turned on", () => {
@@ -147,14 +155,20 @@ describe("agent", () => {
       expect(agentChanged(echoed(refunds, 1, (a) => {
         const set = (a.tools as Array<{ configs: Array<{ name: string; enabled: boolean }> }>)[1]!;
         set.configs.find((c) => c.name === name)!.enabled = true;
-      }), refunds)).toBe(true);
+      }), refunds, SKILL)).toBe(true);
     }
-    expect(agentChanged(echoed(refunds, 1, (a) => { (a.tools as unknown[]).pop(); }), refunds)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { (a.tools as unknown[]).pop(); }), refunds, SKILL)).toBe(true);
   });
 
   it("changes when another toolset or a skill is added", () => {
-    expect(agentChanged(echoed(refunds, 1, (a) => { (a.tools as unknown[]).push({ type: "web_toolset" }); }), refunds)).toBe(true);
-    expect(agentChanged(echoed(refunds, 1, (a) => { a.skills = [{ type: "anthropic", skill_id: "xlsx" }]; }), refunds)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { (a.tools as unknown[]).push({ type: "web_toolset" }); }), refunds, SKILL)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.skills = [SKILL, { type: "anthropic", skill_id: "xlsx" }]; }), refunds, SKILL)).toBe(true);
+  });
+
+  it("changes when KIFF's skill is missing or pinned to another version", () => {
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.skills = []; }), refunds, SKILL)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { a.skills = [{ ...SKILL, version: "skillver_0" }]; }), refunds, SKILL)).toBe(true);
+    expect(agentChanged(echoed(refunds), refunds, { ...SKILL, skill_id: "skill_other" })).toBe(true);
   });
 });
 
@@ -253,11 +267,22 @@ function fakeClient(opts: {
   envs?: Environment[];
   deployments?: FakeDeployment[];
   run?: { session_id: string | null; error?: { type: string; message: string } | null };
+  /** Custom skills already uploaded; by default, KIFF's skill at the pinned commit. */
+  skills?: Array<{ id: string; display_name: string; created_at: string; latest_version_id: string }>;
 }) {
   const calls: string[] = [];
   const updates: Array<{ id: string; body: unknown }> = [];
   let n = 0;
+  const skills = opts.skills ?? [{ id: SKILL.skill_id, display_name: KIFF_SKILL_NAME, created_at: "2026-10-01T00:00:00Z", latest_version_id: SKILL.version }];
   const client = {
+    skills: {
+      list: async function* () { yield* skills; },
+      create: async (p: { files: Array<{ name: string; text(): Promise<string> }>; display_name: string }) => {
+        calls.push(`skill.create ${p.display_name}`);
+        updates.push({ id: "skill", body: { names: p.files.map((f) => f.name), text: await p.files[0]!.text() } });
+        return { id: "skill_new", display_name: p.display_name, created_at: "2026-10-15T00:00:00Z", latest_version_id: "skillver_new" };
+      },
+    },
     beta: {
       environments: {
         list: async function* () { yield* opts.envs ?? []; },
@@ -266,8 +291,9 @@ function fakeClient(opts: {
       },
       agents: {
         list: async function* () { yield* opts.agents ?? []; },
-        create: async (p: { metadata: Record<string, string> }) => {
+        create: async (p: { metadata: Record<string, string>; skills?: unknown }) => {
           calls.push(`agent.create ${p.metadata.tafs_job}`);
+          updates.push({ id: `agent.create ${p.metadata.tafs_job}`, body: p });
           return { id: `agent_${++n}`, version: 1 };
         },
         update: async (id: string, body: { version: number }) => {
@@ -308,6 +334,44 @@ const taf = (agentVersion: number, metadata: Record<string, string> = { tafs_mem
   agent: { type: "agent", id: "agent_refunds", version: agentVersion },
 });
 
+describe("KIFF's skill", () => {
+  it("is the vendored file, pinned to one commit", () => {
+    const onDisk = readFileSync(new URL("../skills/kiff/SKILL.md", import.meta.url), "utf8");
+    expect(KIFF_SKILL.content).toBe(onDisk);
+    expect(KIFF_SKILL.commit).toMatch(/^[0-9a-f]{40}$/);
+    expect(KIFF_SKILL.content).toMatch(/^---\nname: kiff\n/);
+    expect(KIFF_SKILL_NAME).toBe(`kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`);
+  });
+
+  it("is uploaded when missing, as kiff/SKILL.md, and every job agent gets it", async () => {
+    const { client, calls, updates } = fakeClient({ skills: [] });
+    await setup(client);
+    expect(calls.slice(0, 3)).toEqual(["env.create", `skill.create ${KIFF_SKILL_NAME}`, "agent.create refunds"]);
+    const upload = updates.find((u) => u.id === "skill")!.body as { names: string[]; text: string };
+    expect(upload.names).toEqual(["kiff/SKILL.md"]);
+    expect(upload.text).toBe(KIFF_SKILL.content);
+    expect(calls.filter((c) => c.startsWith("skill.create"))).toHaveLength(1);
+    for (const j of JOBS) {
+      const made = updates.find((u) => u.id === `agent.create ${j.id}`)!.body as { skills: unknown };
+      expect(made.skills).toEqual([{ type: "custom", skill_id: "skill_new", version: "skillver_new" }]);
+    }
+  });
+
+  it("is found again by its pinned name, the oldest when two setups raced", async () => {
+    const old = { id: "skill_old", display_name: KIFF_SKILL_NAME, created_at: "2026-10-01T00:00:00Z", latest_version_id: "skillver_a" };
+    const dup = { id: "skill_dup", display_name: KIFF_SKILL_NAME, created_at: "2026-10-02T00:00:00Z", latest_version_id: "skillver_b" };
+    const other = { id: "skill_prev", display_name: "kiff-plugins@000000000000", created_at: "2026-09-01T00:00:00Z", latest_version_id: "skillver_c" };
+    const { client, calls } = fakeClient({ skills: [dup, other, old] });
+    expect(await ensureKiffSkill(client)).toEqual({ type: "custom", skill_id: "skill_old", version: "skillver_a" });
+    expect(calls).toEqual([]);
+  });
+
+  it("is attached to the agent with its version, so a new pin updates every agent", () => {
+    expect(agentParams(refunds, SKILL).skills).toEqual([SKILL]);
+    expect(agentParams(refunds).skills).toEqual([]);
+  });
+});
+
 describe("setup", () => {
   it("creates what is missing", async () => {
     const { client, calls } = fakeClient({});
@@ -335,7 +399,7 @@ describe("setup", () => {
     expect(body.mcp_servers).toEqual(agentParams(refunds).mcp_servers);
     expect(body.tools).toEqual(agentParams(refunds).tools);
     expect(body.model).toEqual(agentParams(refunds).model);
-    expect(body.skills).toEqual([]);
+    expect(body.skills).toEqual([SKILL]);
   });
 
   it("restores an environment whose networking drifted", async () => {
