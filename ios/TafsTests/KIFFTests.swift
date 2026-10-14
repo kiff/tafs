@@ -160,7 +160,8 @@ final class KIFFTests: XCTestCase {
                      {"quantity":"sum(amount_cents)","window":"1d","limit":60000,"used":21200,"status":"ok","unit":"EUR","scale":2}]}]}
         """)
         var ids: [String: UUID] = [:]
-        let taf = try XCTUnwrap(KIFFMapping.tafs(from: try await client.cards(), ids: &ids, owner: "You").first)
+        let cards = try await client.cards()
+        let taf = try XCTUnwrap(KIFFMapping.tafs(from: cards, ids: &ids, owner: "You").first)
         let rule = try XCTUnwrap(taf.card.rules.first)
         XCTAssertEqual(rule.window, .day)
         XCTAssertEqual(rule.perWindow, Money(minor: 60000, currency: "EUR", scale: 2), "today's ceiling with its extra room")
