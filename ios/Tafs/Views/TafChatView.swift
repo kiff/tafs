@@ -42,7 +42,7 @@ struct TafChatView: View {
             }
             composer
         }
-        .task(id: tafID) { await follow() }
+        .task(id: tafID) { await model.followChat(tafID) }
     }
 
     private var composer: some View {
@@ -75,21 +75,6 @@ struct TafChatView: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
-    }
-
-    /// Loads the thread, then keeps it fresh while the taf owes an answer (up to two minutes).
-    private func follow() async {
-        await model.loadChat(tafID)
-        var waited = 0
-        while !Task.isCancelled {
-            try? await Task.sleep(nanoseconds: 4_000_000_000)
-            guard model.mode == .kiff, model.awaitingReply(tafID), waited < 30 else {
-                if model.mode == .kiff { waited = 0 }
-                continue
-            }
-            waited += 1
-            await model.loadChat(tafID)
-        }
     }
 
     private func scrollToEnd(_ proxy: ScrollViewProxy) {

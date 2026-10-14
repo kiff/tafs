@@ -139,6 +139,39 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
     }
 
+    /// Waits, off the main actor, until the held request has reached the stub.
+    private func untilHeldRequestArrives() async {
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
+    }
+
+    func testAThreadLoadingWhenTheAccountChangesIsDropped() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"taf","kind":"message","text":"Account A's secret","session":"sesn_a"}]}"#)
+        StubProtocol.holdOnce = "GET /v1/tafs/depl_1/conversation"
+        let load = Task { await model.loadChat(id) }
+        await untilHeldRequestArrives()
+        await model.signOut()
+        StubProtocol.release.signal()
+        await load.value
+        XCTAssertTrue(model.chats.isEmpty, "account A's thread doesn't come back after sign-out")
+        XCTAssertTrue(model.chatErrors.isEmpty)
+    }
+
+    func testPollingStopsWhenTheBudgetForAnUnansweredMessageRunsOut() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"message","text":"Anyone there?","session":"sesn_1"}]}"#)
+        model.chatPollInterval = 2_000_000   // 2 ms
+        model.chatPollBudget = 3
+        let follow = Task { await model.followChat(id) }
+        try await Task.sleep(nanoseconds: 300_000_000)
+        follow.cancel()
+        await follow.value
+        XCTAssertTrue(model.awaitingReply(id))
+        XCTAssertEqual(count("GET", "/v1/tafs/depl_1/conversation"), 1 + 3, "the first load, then three reloads, then none")
+    }
+
     func testATafNotOnTafsCloudCannotChat() async throws {
         let maxCard = #"{"id":"max-card","subject":"max","grants":[],"aggregates":[],"active":true}"#
         let (model, raeID) = await kiffModel(cards: [Self.raeCard, maxCard])

@@ -88,6 +88,7 @@ final class AppModel: ObservableObject {
                 kiff.token = token.accessToken
                 cloud.token = token.accessToken
                 startAttempt = nil
+                holderIDs = [:]; chats = [:]; chatErrors = [:]
                 accountGeneration += 1
                 tafs = []; held = []; record = []
                 mode = .kiff
@@ -109,6 +110,7 @@ final class AppModel: ObservableObject {
         cloud.token = nil
         cloudTafs = [:]
         chats = [:]; chatErrors = [:]
+        holderIDs = [:]
         startAttempt = nil
         accountGeneration += 1
         store?.clear()
@@ -618,11 +620,14 @@ final class AppModel: ObservableObject {
             return
         }
         guard let c = cloudTaf(for: tafID) else { return }
-        do {
-            chats[tafID] = try await cloud.conversation(c.id)
-            chatErrors[tafID] = nil
-        } catch {
-            chatErrors[tafID] = "The thread couldn't be loaded: \(error.localizedDescription)"
+        let gen = accountGeneration
+        let result: Result<[TafsCloud.ChatMessage], Error>
+        do { result = .success(try await cloud.conversation(c.id)) } catch { result = .failure(error) }
+        // An answer for a session that has since ended (signed out, another account) is dropped.
+        guard gen == accountGeneration, mode == .kiff else { return }
+        switch result {
+        case .success(let messages): chats[tafID] = messages; chatErrors[tafID] = nil
+        case .failure(let error): chatErrors[tafID] = "The thread couldn't be loaded: \(error.localizedDescription)"
         }
     }
 
@@ -638,12 +643,16 @@ final class AppModel: ObservableObject {
         }
         guard chatSending.insert(tafID).inserted else { return false }
         defer { chatSending.remove(tafID) }
+        let gen = accountGeneration
+        /// After each wait: is this still the session the message was sent in?
+        func current() -> Bool { gen == accountGeneration }
         chatErrors[tafID] = nil
         let pending = sampleMessage(.owner, text, session: "pending")
         chats[tafID, default: []].append(pending)
 
         if mode == .sample {
             try? await Task.sleep(nanoseconds: sampleReplyDelay)
+            guard current(), mode == .sample else { return false }
             chats[tafID, default: []].append(sampleMessage(.taf, sampleReply(to: text, tafID: tafID)))
             return true
         }
@@ -654,16 +663,42 @@ final class AppModel: ObservableObject {
         }
         do {
             _ = try await cloud.sendMessage(c.id, text: text)
+            guard current() else { return false }
             await loadChat(tafID)
             return true
         } catch let e as TafsCloud.CloudError where e.status == 429 {
+            guard current() else { return false }
             chats[tafID]?.removeAll { $0 == pending }
             chatErrors[tafID] = "That's a lot of messages in a few minutes. Give \(c.name) a moment, then try again."
             return false
         } catch {
+            guard current() else { return false }
             chats[tafID]?.removeAll { $0 == pending }
             chatErrors[tafID] = "It wasn't sent: \(error.localizedDescription)"
             return false
+        }
+    }
+
+    /// How often a thread is reloaded while the taf owes an answer, and how many times for
+    /// one unanswered message (30 × 4 s = two minutes). Tests shorten both.
+    var chatPollInterval: UInt64 = 4_000_000_000
+    var chatPollBudget = 30
+
+    /// Loads a taf's thread, then reloads it while the taf owes an answer: at most
+    /// `chatPollBudget` times for each unanswered message, starting again only when the
+    /// owner sends another. Ends when the task is cancelled (the view goes away).
+    func followChat(_ tafID: UUID) async {
+        await loadChat(tafID)
+        var waitingFor: String?
+        var polls = 0
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: chatPollInterval)
+            if Task.isCancelled { return }
+            guard mode == .kiff, awaitingReply(tafID), let last = chats[tafID]?.last(where: { $0.from == .owner })?.id else { continue }
+            if last != waitingFor { waitingFor = last; polls = 0 }
+            guard polls < chatPollBudget else { continue }
+            polls += 1
+            await loadChat(tafID)
         }
     }
 
