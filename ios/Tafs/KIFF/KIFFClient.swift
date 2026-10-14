@@ -1,7 +1,8 @@
 import Foundation
 
 /// The KIFF API as the iPhone uses it: device sign-in (RFC 034-B), held calls
-/// (`/v1/me/card-exceptions`) and Cards (`/v1/me/mandates`).
+/// (`/v1/me/card-exceptions`), Cards (`/v1/me/mandates`), and what starting a taf
+/// needs: the gateway's connected tools, a new agent, its Cards and its key.
 ///
 /// tafs is a KIFF customer like any other: it only uses the public API.
 @MainActor
@@ -27,6 +28,8 @@ final class KIFFClient {
     let baseURL: URL
     /// Where a person answers in KIFF's own app.
     let webURL: URL
+    /// KIFF's MCP gateway, which lists the account's connected tools.
+    let gatewayURL: URL
     var token: String?
     /// Whether KIFF checks the phone's signature on an answer (docs/needs-from-kiff.md, item 1).
     /// Until it does, the phone does not answer KIFF's held calls: an answer that KIFF accepts on
@@ -36,11 +39,13 @@ final class KIFFClient {
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
          webURL: URL = URL(string: "https://app.kiff.dev")!,
+         gatewayURL: URL = URL(string: "https://mcp.kiff.dev")!,
          token: String? = nil,
          serverVerifiesSignatures: Bool = false,
          session: URLSession = .shared) {
         self.baseURL = baseURL
         self.webURL = webURL
+        self.gatewayURL = gatewayURL
         self.token = token
         self.serverVerifiesSignatures = serverVerifiesSignatures
         self.session = session
@@ -213,6 +218,92 @@ final class KIFFClient {
         let _: Empty = try await send("POST", "/v1/me/mandates/\(escaped(cardID))/revoke", body: [String: String]())
     }
 
+    // MARK: Starting a taf
+
+    /// A tool the account connected to KIFF's gateway. A Card names it as its action.
+    struct Connection: Decodable, Equatable, Identifiable {
+        var id: String { name }
+        let name: String
+        let description: String?
+        /// The argument that carries the amount, when the tool moves one.
+        let amountArgument: String?
+        /// What the amount means ("USD") and its decimal places (2), when declared.
+        let amountUnit: String?
+        let amountScale: Int?
+        let readOnly: Bool
+
+        enum CodingKeys: String, CodingKey {
+            case name, description
+            case amountArgument = "amount_argument", amountUnit = "amount_unit", amountScale = "amount_scale"
+            case readOnly = "read_only"
+        }
+
+        var movesAmount: Bool { !(amountArgument ?? "").isEmpty }
+    }
+
+    /// The account's connected tools, from the gateway, with the person's own session.
+    func connections() async throws -> [Connection] {
+        struct Response: Decodable { let connections: [Connection] }
+        let response: Response = try await send("GET", "/v1/connections", base: gatewayURL)
+        return response.connections
+    }
+
+    /// Records a new agent. 409 when the name is taken.
+    func createAgent(id: String) async throws {
+        let _: Empty = try await send("POST", "/v1/me/agents", body: ["id": id])
+    }
+
+    /// A Card for one tool on the gateway domain, as the dashboard issues it.
+    struct CardRequest: Encodable, Equatable {
+        struct Grant: Encodable, Equatable {
+            struct PerAction: Encodable, Equatable { let quantity: String; let max: Int64 }
+            let action: String
+            var perActionMax: [PerAction]?
+            var nextSteps: [String]?
+            enum CodingKeys: String, CodingKey { case action, perActionMax = "per_action_max", nextSteps = "next_steps" }
+        }
+        struct Aggregate: Encodable, Equatable {
+            let quantity: String
+            let limit: Int64
+            let window: String
+        }
+        let id: String
+        let subject: String
+        var domain = "gateway"
+        let grants: [Grant]
+        let aggregates: [Aggregate]
+        var onExceed = "owner"
+        var holdExpiry = "10m"
+        enum CodingKeys: String, CodingKey {
+            case id, subject, domain, grants, aggregates
+            case onExceed = "on_exceed", holdExpiry = "hold_expiry"
+        }
+    }
+
+    @discardableResult
+    func issueCard(_ card: CardRequest) async throws -> Mandate {
+        try await send("POST", "/v1/me/mandates", body: card)
+    }
+
+    /// A key bound to the agent, for the gateway only. KIFF returns the secret once.
+    struct AgentKey: Decodable, Equatable {
+        let id: String
+        let plaintext: String
+        let agentID: String?
+        enum CodingKeys: String, CodingKey { case id, plaintext, agentID = "agent_id" }
+    }
+
+    /// Only an admin may mint it: an editor gets 403.
+    func mintGatewayKey(agentID: String, label: String) async throws -> AgentKey {
+        struct Body: Encodable {
+            let label: String
+            let roles: [String]
+            let agentID: String
+            enum CodingKeys: String, CodingKey { case label, roles, agentID = "agent_id" }
+        }
+        return try await send("POST", "/v1/keys", body: Body(label: label, roles: ["gateway_agent"], agentID: agentID))
+    }
+
     // MARK: Transport
 
     private struct Empty: Decodable {}
@@ -221,12 +312,12 @@ final class KIFFClient {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
 
-    private func send<T: Decodable>(_ method: String, _ path: String, authorized: Bool = true) async throws -> T {
-        try await send(method, path, body: Optional<[String: String]>.none, authorized: authorized)
+    private func send<T: Decodable>(_ method: String, _ path: String, base: URL? = nil, authorized: Bool = true) async throws -> T {
+        try await send(method, path, body: Optional<[String: String]>.none, base: base, authorized: authorized)
     }
 
-    private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, authorized: Bool = true) async throws -> T {
-        guard let url = URL(string: path, relativeTo: baseURL) else { throw KIFFError.server(status: 0, message: "Bad path") }
+    private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true) async throws -> T {
+        guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: "Bad path") }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")

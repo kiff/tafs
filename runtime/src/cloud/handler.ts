@@ -224,6 +224,8 @@ function view(d: Anthropic.Beta.BetaManagedAgentsDeployment) {
     id: d.id,
     name: d.metadata?.[META.taf] ?? d.name,
     job: d.metadata?.[META.job] ?? "",
+    /** The KIFF agent the taf acts as: the holder of its Cards. */
+    kiff_agent: d.metadata?.[META.kiffAgent] ?? null,
     status: d.status,
     next_run: d.schedule?.upcoming_runs_at?.[0] ?? null,
     last_run: d.schedule?.last_run_at ?? null,

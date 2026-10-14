@@ -16,10 +16,13 @@ final class AppModel: ObservableObject {
     @Published private(set) var held: [HeldCall] = []
     @Published private(set) var record: [RecordEntry] = []
     @Published private(set) var refreshing = false
+    /// The tafs tafs cloud runs for this account, by the KIFF agent they act as.
+    @Published private(set) var cloudTafs: [String: TafsCloud.CloudTaf] = [:]
     @Published var lastError: String?
 
     let ownerName: String
     let kiff: KIFFClient
+    let cloud: TafsCloud
     private let signer: ApprovalSigning
     private let store: SampleStore?
     private let clock: () -> Date
@@ -33,11 +36,13 @@ final class AppModel: ObservableObject {
     init(ownerName: String = "You",
          signer: ApprovalSigning = ApprovalSigner(),
          kiff: KIFFClient = KIFFClient(),
+         cloud: TafsCloud = TafsCloud(),
          store: SampleStore? = nil,
          clock: @escaping () -> Date = Date.init) {
         self.ownerName = ownerName
         self.signer = signer
         self.kiff = kiff
+        self.cloud = cloud
         self.store = store
         self.clock = clock
     }
@@ -46,6 +51,7 @@ final class AppModel: ObservableObject {
     func restore() async {
         if let token = Keychain.load(Self.tokenAccount) {
             kiff.token = token
+            cloud.token = token
             mode = .kiff
             await refresh()
         } else if let snapshot = store?.load() {
@@ -80,6 +86,7 @@ final class AppModel: ObservableObject {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
                 Keychain.save(token.accessToken, for: Self.tokenAccount)
                 kiff.token = token.accessToken
+                cloud.token = token.accessToken
                 tafs = []; held = []; record = []
                 mode = .kiff
                 await refresh()
@@ -97,6 +104,8 @@ final class AppModel: ObservableObject {
         if mode == .kiff { try? await kiff.signOut() }
         Keychain.delete(Self.tokenAccount)
         kiff.token = nil
+        cloud.token = nil
+        cloudTafs = [:]
         store?.clear()
         tafs = []; held = []; record = []
         scriptPosition = [:]; templateOf = [:]
@@ -114,6 +123,7 @@ final class AppModel: ObservableObject {
             async let calls = kiff.heldCalls()
             let (mandates, exceptions) = try await (cards, calls)
             show(mandates, exceptions)
+            await refreshCloud()
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
@@ -148,8 +158,8 @@ final class AppModel: ObservableObject {
 
     // MARK: Starting a taf
 
-    /// Tafs are started on the phone in sample mode; on KIFF they arrive with the tafs runtime.
-    var canStartTafs: Bool { mode == .sample }
+    /// Tafs start on the phone in both modes: on KIFF, through `startOnKIFF`.
+    var canStartTafs: Bool { mode != .signedOut }
 
     func draft(job: String) -> TafDraft { TafTemplates.draft(from: job) }
 
@@ -176,6 +186,122 @@ final class AppModel: ObservableObject {
         log(taf.id, .started, "\(taf.name) started", "Card issued by \(ownerName)")
         save()
         return taf
+    }
+
+    // MARK: Starting a taf on KIFF
+
+    /// The steps of starting a taf on KIFF, in order, for the progress list.
+    enum StartStep: Int, CaseIterable, Comparable {
+        case confirm, agent, cards, key, run
+        static func < (a: StartStep, b: StartStep) -> Bool { a.rawValue < b.rawValue }
+        var label: String {
+            switch self {
+            case .confirm: return "Confirm with Face ID"
+            case .agent: return "Add the agent to KIFF"
+            case .cards: return "Issue its Cards"
+            case .key: return "Give it its gateway key"
+            case .run: return "Start its first run"
+            }
+        }
+    }
+
+    struct StartFailure: Error, LocalizedError, Equatable {
+        let step: StartStep
+        let message: String
+        var errorDescription: String? { message }
+    }
+
+    /// The account's connected tools, to choose from.
+    func connectedTools() async throws -> [KIFFClient.Connection] {
+        try await kiff.connections()
+    }
+
+    /// Starts a taf on KIFF: the owner confirms with Face ID, then the app adds the agent,
+    /// issues one Card per tool, mints its gateway key and hands it to tafs cloud, which
+    /// runs it on its job. The key is never kept on the phone. Returns the first run's session.
+    func startOnKIFF(name: String, job: String, limits: [ToolLimit], agentID: String? = nil,
+                     progress: (StartStep) -> Void = { _ in }) async throws -> String {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let agent = agentID ?? TafPlan.agentID(for: name)
+        let cards: [KIFFClient.CardRequest]
+        do { cards = try TafPlan.cards(agentID: agent, limits: limits) } catch {
+            throw StartFailure(step: .confirm, message: error.localizedDescription)
+        }
+
+        progress(.confirm)
+        do {
+            _ = try await signer.sign(answer: .approveOnce, heldID: "start-\(agent)", reason: "Start \(name) with \(cards.count) Card\(cards.count == 1 ? "" : "s")")
+        } catch {
+            throw StartFailure(step: .confirm, message: "Nothing was started: Face ID did not confirm.")
+        }
+
+        progress(.agent)
+        try await attempt(.agent) { try await kiff.createAgent(id: agent) }
+        progress(.cards)
+        try await attempt(.cards) { for card in cards { try await kiff.issueCard(card) } }
+        progress(.key)
+        let key = try await attempt(.key) { try await kiff.mintGatewayKey(agentID: agent, label: "tafs · \(name)") }
+        progress(.run)
+        let started = try await attempt(.run) { try await cloud.start(name: name, job: job, agentKey: key.plaintext) }
+        cloudTafs[agent] = started.taf
+        await refresh()
+        return started.session
+    }
+
+    /// Runs one step of starting a taf; a failure says what is already in KIFF.
+    private func attempt<T>(_ step: StartStep, _ work: () async throws -> T) async throws -> T {
+        do { return try await work() } catch {
+            throw StartFailure(step: step, message: Self.startMessage(step, error))
+        }
+    }
+
+    private static func startMessage(_ step: StartStep, _ error: Error) -> String {
+        if case KIFFClient.KIFFError.server(403, _) = error {
+            switch step {
+            case .key: return "The agent and its Cards are in KIFF, but only an admin can give it its gateway key. Ask an admin to start it, or to make you one."
+            default: return "Your role on this KIFF account can't start tafs. An admin or an editor can."
+            }
+        }
+        if step == .agent, case KIFFClient.KIFFError.server(409, _) = error {
+            return "KIFF already has an agent with that name. Try again: the next one gets a new name."
+        }
+        let done: String
+        switch step {
+        case .confirm, .agent: done = "Nothing was started."
+        case .cards: done = "The agent is in KIFF; some of its Cards may be too."
+        case .key: done = "The agent and its Cards are in KIFF."
+        case .run: done = "The agent, its Cards and its key are in KIFF, but tafs cloud didn't start it."
+        }
+        return "\(done) \(error.localizedDescription)"
+    }
+
+    /// Runs a taf now, outside its schedule. Returns the run's session.
+    func runNow(_ cloudTaf: TafsCloud.CloudTaf) async -> String? {
+        do { return try await cloud.runNow(cloudTaf.id) } catch {
+            lastError = "The run didn't start: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    /// Reads which tafs tafs cloud runs; KIFF stays the source of the Cards and held calls.
+    func refreshCloud() async {
+        guard mode == .kiff, let list = try? await cloud.tafs() else { return }
+        var byAgent: [String: TafsCloud.CloudTaf] = [:]
+        for t in list { if let a = t.kiffAgent { byAgent[a] = t } }
+        cloudTafs = byAgent
+        for i in tafs.indices {
+            guard let holder = holderIDs.first(where: { $0.value == tafs[i].id })?.key, let c = byAgent[holder] else { continue }
+            tafs[i].name = c.name
+            if tafs[i].state != .waiting {
+                tafs[i].state = c.paused ? .paused : .working
+                tafs[i].now = c.paused ? "Paused" : c.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
+            }
+        }
+    }
+
+    /// The tafs cloud taf behind a taf, when there is one.
+    func cloudTaf(for tafID: UUID) -> TafsCloud.CloudTaf? {
+        holderIDs.first(where: { $0.value == tafID }).flatMap { cloudTafs[$0.key] }
     }
 
     // MARK: A taf acts (sample mode)

@@ -72,7 +72,9 @@ struct HomeView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
+        .sheet(isPresented: $showingNew) {
+            if model.mode == .kiff { StartTafFlow().environmentObject(model) } else { NewTafFlow().environmentObject(model) }
+        }
         .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
         .navigationDestination(isPresented: $openingFirst) {
             if let id = model.tafs.first(where: { $0.name == "Refunds" })?.id ?? model.tafs.first?.id {

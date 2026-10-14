@@ -5,6 +5,7 @@ struct TafDetailView: View {
     let tafID: UUID
     @State private var section = 0
     @State private var confirmRevoke = false
+    @State private var runStarted = false
 
     var body: some View {
         if let taf = model.taf(tafID) {
@@ -52,6 +53,21 @@ struct TafDetailView: View {
         Panel {
             Eyebrow(text: "The job")
             Text(taf.job).font(.system(size: 15)).foregroundColor(Theme.ink)
+        }
+        if let cloud = model.cloudTaf(for: taf.id) {
+            Panel {
+                Eyebrow(text: "Runs")
+                Text(cloud.paused ? "Paused" : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? "On its schedule")
+                    .font(.system(size: 15)).foregroundColor(Theme.ink)
+                if let last = cloud.lastRun {
+                    Text("Last run at \(last.shortTime)").font(.system(size: 13)).foregroundColor(Theme.dim)
+                }
+                Button(runStarted ? "Run started" : "Run now") {
+                    Task { runStarted = await model.runNow(cloud) != nil }
+                }
+                .buttonStyle(OutlineButtonStyle())
+                .disabled(runStarted)
+            }
         }
         ForEach(model.heldCalls(for: taf.id)) { HeldCallCard(call: $0) }
         let entries = model.entries(for: taf.id)
