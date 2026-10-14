@@ -125,7 +125,7 @@ final class KIFFTests: XCTestCase {
           {"id":"m1","subject":"refund-agent","domain":"d","environment":"production","active":true,"on_exceed":"owner",
            "grants":[{"action":"refund_order","entity_states":[],"per_action_max":[{"quantity":"sum(amount_cents)","max":15000,"unit":"USD","scale":2}]}],
            "aggregates":[{"quantity":"sum(amount_cents)","limit":200000,"window":"1d","unit":"USD","scale":2}],
-           "limits":[{"quantity":"sum(amount_cents)","limit":200000,"used":21200,"remaining":178800,"status":"ok","unit":"USD","scale":2}]},
+           "limits":[{"quantity":"sum(amount_cents)","window":"1d","limit":200000,"used":21200,"remaining":178800,"status":"ok","unit":"USD","scale":2}]},
           {"id":"m2","subject":"deploy-agent","domain":"d","environment":"production","active":true,
            "grants":[{"action":"deploy","entity_states":[]}],
            "aggregates":[{"quantity":"count","limit":10,"window":"1d"}]},
@@ -144,6 +144,49 @@ final class KIFFTests: XCTestCase {
         let deploys = try XCTUnwrap(tafs.first { $0.name == "deploy-agent" })
         XCTAssertEqual(deploys.card.rules.first?.countPerWindow, 10, "a count stays a count, never money")
         XCTAssertTrue(deploys.used.isEmpty, "no use line, nothing shown as used")
+        XCTAssertEqual(refunds.usageUnknown, [])
+    }
+
+    /// The meter pairs a total with its own use: a Card capping the same amount a day and
+    /// a month shows the daily total with today's use, at its ceiling now (extra room in).
+    func testUseMatchesTheTotalShown() async throws {
+        let client = makeClient()
+        StubProtocol.responses["GET /v1/me/mandates?include=use"] = (200, """
+        {"mandates":[{"id":"m1","subject":"refund-agent","active":true,"on_exceed":"owner",
+           "grants":[{"action":"refund_order","entity_states":[]}],
+           "aggregates":[{"quantity":"sum(amount_cents)","limit":50000,"window":"1d","unit":"EUR","scale":2},
+                         {"quantity":"sum(amount_cents)","limit":900000,"window":"30d","unit":"EUR","scale":2}],
+           "limits":[{"quantity":"sum(amount_cents)","window":"30d","limit":900000,"used":400000,"status":"ok","unit":"EUR","scale":2},
+                     {"quantity":"sum(amount_cents)","window":"1d","limit":60000,"used":21200,"status":"ok","unit":"EUR","scale":2}]}]}
+        """)
+        var ids: [String: UUID] = [:]
+        let taf = try XCTUnwrap(KIFFMapping.tafs(from: try await client.cards(), ids: &ids, owner: "You").first)
+        let rule = try XCTUnwrap(taf.card.rules.first)
+        XCTAssertEqual(rule.window, .day)
+        XCTAssertEqual(rule.perWindow, Money(minor: 60000, currency: "EUR", scale: 2), "today's ceiling with its extra room")
+        XCTAssertEqual(taf.used["refund_order"], Money(minor: 21200, currency: "EUR", scale: 2), "today's use, not the month's")
+    }
+
+    /// Use KIFF couldn't read is unknown, never zero.
+    func testUnreadableUseIsUnknown() async throws {
+        let client = makeClient()
+        StubProtocol.responses["GET /v1/me/mandates?include=use"] = (200, """
+        {"mandates":[{"id":"m1","subject":"refund-agent","active":true,
+           "grants":[{"action":"refund_order","entity_states":[]}],
+           "aggregates":[{"quantity":"sum(amount_cents)","limit":50000,"window":"1d","unit":"EUR","scale":2}],
+           "limits":[{"quantity":"sum(amount_cents)","window":"1d","limit":50000,"status":"unavailable"}]},
+          {"id":"m2","subject":"old-api-agent","active":true,
+           "grants":[{"action":"pay_invoice","entity_states":[]}],
+           "aggregates":[{"quantity":"sum(amount_cents)","limit":50000,"window":"1d"}]}]}
+        """)
+        var ids: [String: UUID] = [:]
+        let tafs = KIFFMapping.tafs(from: try await client.cards(), ids: &ids, owner: "You")
+        let refunds = try XCTUnwrap(tafs.first { $0.name == "refund-agent" })
+        XCTAssertNil(refunds.used["refund_order"])
+        XCTAssertEqual(refunds.usageUnknown, ["refund_order"])
+        XCTAssertEqual(refunds.card.rules.first?.perWindow, Money(minor: 50000, currency: "EUR", scale: 2))
+        let old = try XCTUnwrap(tafs.first { $0.name == "old-api-agent" })
+        XCTAssertEqual(old.usageUnknown, ["pay_invoice"], "no use line from KIFF is unknown too")
     }
 }
 

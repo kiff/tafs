@@ -53,16 +53,29 @@ enum KIFFMapping {
             if let cap = grant.perActionMax?.first { rule.perAction = money(cap.max, unit: cap.unit, scale: cap.scale) }
             return rule
         }
-        // A Card's totals cover all its grants; show each once, on the first line.
-        for aggregate in mandate.aggregates where !rules.isEmpty {
-            if isSum(aggregate.quantity) {
-                rules[0].perWindow = money(aggregate.limit, unit: aggregate.unit, scale: aggregate.scale)
-            } else {
-                rules[0].countPerWindow = Int(aggregate.limit)
-            }
-            rules[0].window = window(aggregate.window)
+        // A Card's totals cover all its grants; show one of each, on the first line: the
+        // first summed total, with the ceiling it has now (extra room included), and the
+        // first count.
+        guard !rules.isEmpty else { return rules }
+        let count = mandate.aggregates.first { !isSum($0.quantity) }
+        if let count { rules[0].countPerWindow = Int(count.limit) }
+        if let shown = shownTotal(mandate) {
+            let (total, line) = shown
+            let ceiling = line.flatMap { $0.status == "ok" ? $0.limit : nil } ?? total.limit
+            rules[0].perWindow = money(ceiling, unit: line?.unit ?? total.unit, scale: line?.scale ?? total.scale)
+            rules[0].window = window(total.window)
+        } else if let count {
+            rules[0].window = window(count.window)
         }
         return rules
+    }
+
+    /// The summed total a Card shows, and its use line from `?include=use`: the same
+    /// quantity and window, so the meter never divides one window's use by another's.
+    static func shownTotal(_ mandate: KIFFClient.Mandate) -> (KIFFClient.Mandate.Aggregate, KIFFClient.Mandate.Limit?)? {
+        guard let total = mandate.aggregates.first(where: { isSum($0.quantity) }) else { return nil }
+        let line = mandate.limits?.first { $0.quantity == total.quantity && $0.window == total.window }
+        return (total, line)
     }
 
     /// One taf per holder; `ids` keeps each holder's taf id stable across refreshes.
@@ -84,13 +97,19 @@ enum KIFFMapping {
             taf.state = card.revoked ? .revoked : .working
             taf.now = card.revoked ? "Card not active" : "Acting under KIFF"
             taf.kiffCardIDs = cards.map(\.id)
-            // What each Card has used in its window, on the line that shows its total.
+            // What each Card has used of the total it shows. When KIFF could not read it,
+            // the taf says so instead of showing nothing used.
+            var unknown = Set<String>()
             for card in cards {
-                guard let action = card.grants.first?.action,
-                      let line = card.limits?.first(where: { isSum($0.quantity) && $0.status == "ok" }),
-                      let used = line.used else { continue }
-                taf.used[action] = money(used, unit: line.unit, scale: line.scale)
+                guard let action = card.grants.first?.action, let shown = shownTotal(card) else { continue }
+                let (total, line) = shown
+                if let line, line.status == "ok", let used = line.used {
+                    taf.used[action] = money(used, unit: line.unit ?? total.unit, scale: line.scale ?? total.scale)
+                } else {
+                    unknown.insert(action)
+                }
             }
+            taf.usageUnknown = unknown
             return taf
         }
     }

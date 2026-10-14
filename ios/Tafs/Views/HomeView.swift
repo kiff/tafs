@@ -142,15 +142,19 @@ struct TafRow: View {
             }
             if let rule = taf.card.rules.first(where: { $0.perWindow != nil }), let limit = rule.perWindow {
                 let used = taf.used[rule.action] ?? .zero
+                // KIFF couldn't read the use: say so, never show an empty meter.
+                let unknown = taf.usageUnknown?.contains(rule.action) == true
                 VStack(spacing: 6) {
                     HStack {
                         Text("\(rule.label) · \(limit.formatted) \(rule.window.label)")
                         Spacer()
-                        Text(used.formatted).font(Theme.mono(12))
+                        Text(unknown ? "use unavailable" : used.formatted).font(Theme.mono(12))
                     }
                     .font(.system(size: 12))
                     .foregroundColor(Theme.dim)
-                    Meter(fraction: Double(used.minor) / Double(max(limit.minor, 1)), color: Theme.tafColor(taf.colorIndex))
+                    if !unknown {
+                        Meter(fraction: Double(used.minor) / Double(max(limit.minor, 1)), color: Theme.tafColor(taf.colorIndex))
+                    }
                 }
             }
         }

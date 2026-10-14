@@ -205,6 +205,8 @@ final class KIFFClient {
         /// Card's statement). `used` is absent when KIFF could not read it.
         struct Limit: Decodable, Equatable {
             let quantity: String
+            let window: String?
+            /// The ceiling now, extra room included.
             let limit: Int64
             let used: Int64?
             let remaining: Int64?
