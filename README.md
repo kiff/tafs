@@ -83,6 +83,32 @@ node dist/cli.js run --name Rae           # run now and follow it
 once the `ANTHROPIC_API_KEY` secret is set. **Actions → Runtime → Run
 workflow** starts a taf with the agent key in the `KIFF_AGENT_KEY` secret.
 
+## tafs cloud
+
+The phone can't hold the Anthropic key, so the few calls that need it go
+through tafs cloud (`runtime/src/cloud/`), an AWS Lambda behind a function URL.
+It keeps no accounts: the phone sends its KIFF sign-in, and KIFF says who that
+is, on which account, with which rights. A company sees and changes only its
+own tafs; another company's taf answers like a missing one.
+
+| Route | Who | What |
+|---|---|---|
+| `GET /v1/jobs` | anyone | the five jobs |
+| `GET /v1/tafs` | a person signed in with KIFF | the account's tafs |
+| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, agent_key, cron?, timezone?, budget_cents?}`. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run |
+| `POST /v1/tafs/{id}/pause`, `resume`, `run` | `cards.manage` | |
+| `GET /v1/tafs/{id}/runs`, `runs/{session}` | a person | recent runs, and a run's report |
+
+Setting it up, once, with AWS credentials for the account:
+
+```sh
+cd runtime && npm ci && npm run bundle && cd ..
+infra/aws.sh runtime/lambda.zip      # the function, its role, the secret, the deploy role
+aws --region us-east-1 secretsmanager put-secret-value \
+  --secret-id tafs/anthropic-api-key --secret-string "$ANTHROPIC_API_KEY"
+gh variable set TAFS_CLOUD --repo kiff/tafs --body on   # main then deploys on every merge
+```
+
 ## TestFlight
 
 `.github/workflows/ios.yml` builds and tests every push on GitHub's macOS 26

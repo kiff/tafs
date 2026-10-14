@@ -174,6 +174,7 @@ export interface StartTaf {
   cron?: string;
   timezone?: string;
   budgetCents?: number;
+  metadata?: Record<string, string>;
 }
 
 /**
@@ -187,7 +188,7 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
 
   const vault = await client.beta.vaults.create({
     display_name: `tafs · ${spec.name}`,
-    metadata: { [META.taf]: spec.name, [META.job]: job.id },
+    metadata: { ...spec.metadata, [META.taf]: spec.name, [META.job]: job.id },
   });
   await client.beta.vaults.credentials.create(vault.id, credentialParams(spec.kiffKey));
 
@@ -201,6 +202,7 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
       cron: spec.cron,
       timezone: spec.timezone,
       budgetCents: spec.budgetCents,
+      metadata: spec.metadata,
     }),
   );
   const run = await client.beta.deployments.run(deployment.id);
