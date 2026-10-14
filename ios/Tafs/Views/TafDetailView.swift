@@ -25,7 +25,7 @@ struct TafDetailView: View {
             .screenBackground()
             .navigationBarTitleDisplayMode(.inline)
             .confirmationDialog("Revoke \(taf.name)'s Card?", isPresented: $confirmRevoke, titleVisibility: .visible) {
-                Button("Revoke and stop", role: .destructive) { model.revoke(tafID) }
+                Button("Revoke and stop", role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
                 Text("It stops at once. Anything already done stays done.")
             }
@@ -82,8 +82,10 @@ struct TafDetailView: View {
         }
         if taf.state != .revoked {
             HStack(spacing: 8) {
-                Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
-                    .buttonStyle(OutlineButtonStyle())
+                if model.mode == .sample {
+                    Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
+                        .buttonStyle(OutlineButtonStyle())
+                }
                 Button("Revoke") { confirmRevoke = true }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
             }

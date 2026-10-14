@@ -2,7 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// Signs without Face ID, so tests never wait at a prompt.
-private struct StubSigner: ApprovalSigning {
+struct StubSigner: ApprovalSigning {
     func sign(answer: Answer, heldID: UUID, reason: String) async throws -> String { "stub-signature" }
 }
 
@@ -56,7 +56,7 @@ final class AppModelTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         let taf = await startedRefunds(model)
         model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
-        model.revoke(taf.id)
+        await model.revoke(taf.id)
         XCTAssertTrue(model.held.isEmpty)
         XCTAssertEqual(model.taf(taf.id)?.state, .revoked)
 

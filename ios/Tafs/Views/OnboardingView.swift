@@ -3,6 +3,7 @@ import SwiftUI
 struct OnboardingView: View {
     @EnvironmentObject private var model: AppModel
     @State private var loading = false
+    @State private var signingIn = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -33,22 +34,20 @@ struct OnboardingView: View {
             Spacer()
 
             VStack(spacing: 10) {
+                Button("Sign in with KIFF") { signingIn = true }
+                    .buttonStyle(PrimaryButtonStyle())
+
                 Button {
                     loading = true
                     Task {
-                        await model.loadSample()
-                        model.signedIn = true
+                        await model.startSample()
                         loading = false
                     }
                 } label: {
-                    if loading { ProgressView().tint(Theme.amberInk) } else { Text("Try it with sample data") }
+                    if loading { ProgressView().tint(Theme.ink) } else { Text("Try it with sample data") }
                 }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(OutlineButtonStyle())
                 .disabled(loading)
-
-                Button("Sign in with KIFF · next build") {}
-                    .buttonStyle(OutlineButtonStyle(color: Theme.dim))
-                    .disabled(true)
             }
         }
         .padding(.horizontal, 24)
@@ -56,6 +55,7 @@ struct OnboardingView: View {
         .padding(.bottom, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .screenBackground()
+        .sheet(isPresented: $signingIn) { SignInView() }
     }
 
     private func point(_ lead: String, _ rest: String, _ color: Color) -> some View {

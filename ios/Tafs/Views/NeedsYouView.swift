@@ -20,6 +20,7 @@ struct NeedsYouView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
+        .refreshable { await model.refresh() }
         .screenBackground()
     }
 }
@@ -65,8 +66,10 @@ struct HeldCallCard: View {
             .disabled(sending)
 
             HStack(spacing: 8) {
-                Button("Return first") { send(.returnFirst) }
-                    .buttonStyle(OutlineButtonStyle())
+                ForEach(call.nextSteps, id: \.self) { step in
+                    Button(step) { send(.nextStep(step)) }
+                        .buttonStyle(OutlineButtonStyle())
+                }
                 Button("Refuse") { send(.refuse) }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
             }

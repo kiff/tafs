@@ -36,7 +36,7 @@ final class ApprovalSigner: ApprovalSigning {
     /// Returns the signature, base64.
     func sign(answer: Answer, heldID: UUID, reason: String) async throws -> String {
         try await authenticate(reason: reason)
-        let message = Data("tafs.answer.v1|\(heldID.uuidString)|\(answer.rawValue)".utf8)
+        let message = Data("tafs.answer.v1|\(heldID.uuidString)|\(answer.wireName)".utf8)
         let signature: Data
         if let enclaveKey {
             signature = try enclaveKey.signature(for: message).derRepresentation

@@ -50,6 +50,8 @@ struct CardRule: Identifiable, Hashable, Codable {
     var never = false           // never allowed, whatever the amount
     var alwaysAsk = false       // allowed only with the owner's answer
     var outside: Outside = .hold
+    /// Answers the owner may give besides approve and refuse, when held.
+    var nextSteps: [String] = []
 
     var summary: String {
         if never { return "never" }
@@ -96,6 +98,8 @@ struct Taf: Identifiable, Hashable, Codable {
     /// Spent so far in the current window, per rule action.
     var used: [String: Money] = [:]
     var counted: [String: Int] = [:]
+    /// The KIFF Cards this taf holds, when signed in to KIFF.
+    var kiffCardIDs: [String] = []
 
     var initial: String { String(name.prefix(1)).uppercased() }
 }
@@ -116,10 +120,27 @@ struct HeldCall: Identifiable, Hashable, Codable {
     var reason: String          // "Over $50 each"
     var heldAt: Date
     var expiresAt: Date
+    /// KIFF's id for this held call, when it came from KIFF.
+    var kiffID: String?
+    /// Other answers the Card allows besides approve and refuse ("return first").
+    var nextSteps: [String] = []
 }
 
-enum Answer: String, Codable {
-    case approveOnce, returnFirst, refuse
+/// The owner's answer to a held call: approve it once, refuse it, or refuse it with
+/// one of the Card's next steps for the taf to follow ("Return first").
+enum Answer: Hashable, Codable {
+    case approveOnce
+    case refuse
+    case nextStep(String)
+
+    /// The words signed and sent, stable across versions.
+    var wireName: String {
+        switch self {
+        case .approveOnce: return "approve-once"
+        case .refuse: return "reject"
+        case .nextStep(let step): return "reject:\(step)"
+        }
+    }
 }
 
 struct RecordEntry: Identifiable, Hashable, Codable {
