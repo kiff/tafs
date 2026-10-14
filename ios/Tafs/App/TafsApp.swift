@@ -33,6 +33,8 @@ enum Tab: Hashable { case tafs, needsYou, record }
 /// without asking for notifications.
 enum Screenshots {
     static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
+    /// `-screen taf` opens a taf's page; `-screen new` the new-taf flow.
+    static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
     static var tab: Tab {
         switch UserDefaults.standard.string(forKey: "tab") {
         case "needs-you": return .needsYou
