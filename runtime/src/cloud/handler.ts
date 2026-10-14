@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { META } from "../config.js";
+import { META, memoryResource } from "../config.js";
 import { JOBS, jobById } from "../jobs.js";
-import { listTafs, type Setup, startTaf } from "../runtime.js";
+import { ensureMemory, listTafs, type Setup, startTaf } from "../runtime.js";
 import { type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 
 /**
@@ -11,12 +11,14 @@ import { type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
  *
  *   GET  /v1/jobs
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, job, agent_key, cron?, timezone?, budget_cents?}
+ *   POST /v1/tafs                       {name, job, agent_key, cron?, timezone?, budget_cents?, notes?}
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET  /v1/tafs/{id}/runs
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
  *   GET  /v1/tafs/{id}/conversation     the thread: the owner's messages and the taf's
  *   POST /v1/tafs/{id}/messages         {text}: into the live session, or a new one
+ *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
+ *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
  */
 
 /** The Lambda function URL event, as much of it as we read. */
@@ -75,6 +77,9 @@ export const CHAT = {
   floodMessages: 10,
   floodMinutes: 10,
 } as const;
+
+/** Memory limits: the owner's first note, and how many notes the app is shown. */
+export const MEMORY = { maxNotes: 2000, shown: 100 } as const;
 
 class HTTPError extends Error {
   constructor(readonly status: number, message: string) {
@@ -142,6 +147,13 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     need(me, "cards.manage");
     return message(event, me, client, taf, deps);
   }
+  if (parts.length === 4 && method === "GET" && action === "memory") {
+    return { notes: await notes(client, taf) };
+  }
+  if (parts.length === 5 && method === "DELETE" && action === "memory") {
+    need(me, "cards.manage");
+    return forget(client, taf, parts[4] ?? "");
+  }
   throw new HTTPError(404, "not found");
 }
 
@@ -165,6 +177,10 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
   try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   const cron = body.cron === undefined ? undefined : str(body.cron);
   if (cron !== undefined && !calmEnough(cron)) throw new HTTPError(400, "a taf runs at most every 15 minutes");
+  const notesText = body.notes === undefined ? undefined : str(body.notes).trim();
+  if (notesText !== undefined && notesText.length > MEMORY.maxNotes) {
+    throw new HTTPError(400, `keep the notes to ${MEMORY.maxNotes} characters`);
+  }
   const budget = body.budget_cents === undefined ? undefined : Number(body.budget_cents);
   if (budget !== undefined && (!Number.isInteger(budget) || budget <= 0 || budget > MAX_BUDGET_CENTS)) {
     throw new HTTPError(400, `a run's budget is 1 to ${MAX_BUDGET_CENTS} cents`);
@@ -200,6 +216,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
       timezone: body.timezone === undefined ? undefined : str(body.timezone),
       budgetCents: budget,
       metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agent.agentID },
+      notes: notesText,
       onCreating: () => { asked = true; },
       onCreated: () => { created = true; },
     });
@@ -343,16 +360,53 @@ async function message(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, ta
     }
   }
 
+  // A chat remembers what the runs learned, and the other way around.
+  const memory = await ensureMemory(client, taf);
   const session = await client.beta.sessions.create({
     agent: { type: "agent", id: taf.agent.id, version: taf.agent.version },
     environment_id: taf.environment_id,
     vault_ids: taf.vault_ids,
+    resources: [memoryResource(memory)],
     ...(taf.budget ? { budget: taf.budget } : {}),
     title: `${taf.metadata?.[META.taf] ?? taf.name}: chat`,
     metadata: { [META.chatFor]: taf.id, [META.tenant]: me.tenantID, [META.taf]: taf.metadata?.[META.taf] ?? taf.name },
     initial_events: [userMessage],
   });
   return { session: session.id, new_session: true };
+}
+
+/** A note the taf keeps: one file in its memory store. */
+export interface Note {
+  id: string;
+  path: string;
+  content: string;
+  updated_at: string;
+}
+
+/** The taf's notes, newest first. A taf without a memory store yet has none. */
+async function notes(client: Anthropic, taf: Deployment): Promise<Note[]> {
+  const store = taf.metadata?.[META.memory];
+  if (!store) return [];
+  const out: Note[] = [];
+  for await (const m of client.beta.memoryStores.memories.list(store, { view: "full" })) {
+    if (m.type !== "memory") continue;
+    out.push({ id: m.id, path: m.path, content: m.content ?? "", updated_at: m.updated_at });
+    if (out.length >= MEMORY.shown) break;
+  }
+  return out.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+/** Forgets one note. Only a note in this taf's own store can be named. */
+async function forget(client: Anthropic, taf: Deployment, noteID: string): Promise<unknown> {
+  const store = taf.metadata?.[META.memory];
+  if (!store || !/^mem_[A-Za-z0-9]+$/.test(noteID)) throw new HTTPError(404, "no such note");
+  try {
+    await client.beta.memoryStores.memories.delete(noteID, { memory_store_id: store });
+  } catch (err) {
+    if ((err as { status?: unknown })?.status === 404) throw new HTTPError(404, "no such note");
+    throw err;
+  }
+  return { forgotten: noteID };
 }
 
 function view(d: Anthropic.Beta.BetaManagedAgentsDeployment) {

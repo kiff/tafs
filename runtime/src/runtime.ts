@@ -6,6 +6,9 @@ import {
   deploymentParams,
   environmentParams,
   ENVIRONMENT_NAME,
+  memoryResource,
+  memoryStoreParams,
+  OWNER_NOTE_PATH,
 } from "./config.js";
 import { JOBS, type Job, jobById } from "./jobs.js";
 
@@ -89,6 +92,13 @@ export async function setup(client: Anthropic, log: (line: string) => void = () 
     log(`moved taf ${d.name} to agent version ${version}`);
   }
 
+  // Tafs started before memory get their memory store.
+  for await (const d of client.beta.deployments.list()) {
+    if (!d.metadata?.[META.taf] || d.archived_at || d.metadata[META.memory]) continue;
+    const storeID = await ensureMemory(client, d);
+    log(`gave taf ${d.name} its memory ${storeID}`);
+  }
+
   return { environmentID, agents };
 }
 
@@ -114,6 +124,13 @@ interface ToolFields {
   configs?: ReadonlyArray<{ name: string; enabled?: boolean | null; permission_policy?: { type: string } | null }> | null;
 }
 
+/** The built-in tools an agent toolset leaves on, from its default and its per-tool overrides. */
+function enabledTools(tool: ToolFields): string[] {
+  const all = ["bash", "read", "write", "edit", "glob", "grep", "web_fetch", "web_search"];
+  const on = tool.default_config?.enabled ?? true;
+  return all.filter((name) => tool.configs?.find((c) => c.name === name)?.enabled ?? on).sort();
+}
+
 /**
  * The configuration tafs owns on an agent, in one comparable shape. The API
  * echoes defaults (an MCP toolset is enabled and always_ask unless set) and
@@ -123,6 +140,7 @@ function ownedConfig(a: OwnedFields): string {
   const model = typeof a.model === "string" ? { id: a.model } : (a.model as { id: string; effort?: unknown });
   const tools = (a.tools ?? []).map((t) => {
     const tool = t as ToolFields;
+    if (tool.type === "agent_toolset_20260401") return { type: tool.type, enabled: enabledTools(tool) };
     if (tool.type !== "mcp_toolset") return { type: tool.type };
     return {
       type: tool.type,
@@ -175,6 +193,8 @@ export interface StartTaf {
   timezone?: string;
   budgetCents?: number;
   metadata?: Record<string, string>;
+  /** What the owner said about the job, kept as the taf's first note. */
+  notes?: string;
   /** Called just before the deployment is asked for: from here its outcome can be unknown. */
   onCreating?: () => void;
   /** Called once the deployment exists, before its first run. */
@@ -182,8 +202,9 @@ export interface StartTaf {
 }
 
 /**
- * Starts a taf: a vault holding its KIFF key, and a deployment that runs its
- * job's agent on a schedule with that vault. Runs once now as well.
+ * Starts a taf: a vault holding its KIFF key, a memory store for what it
+ * learns, and a deployment that runs its job's agent on a schedule with both.
+ * Runs once now as well.
  */
 export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Promise<{ deployment: Deployment; sessionID: string }> {
   const job = jobById(spec.job);
@@ -196,6 +217,10 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
   });
   await client.beta.vaults.credentials.create(vault.id, credentialParams(spec.kiffKey));
 
+  const store = await client.beta.memoryStores.create(memoryStoreParams(spec.name, job.name, spec.metadata));
+  const notes = spec.notes?.trim();
+  if (notes) await client.beta.memoryStores.memories.create(store.id, { path: OWNER_NOTE_PATH, content: notes });
+
   spec.onCreating?.();
   // Not retried by the SDK: a retry after a lost response could make a second
   // taf. The caller decides, knowing the outcome may be unknown.
@@ -206,6 +231,7 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
       agentID,
       environmentID: s.environmentID,
       vaultID: vault.id,
+      memoryStoreID: store.id,
       cron: spec.cron,
       timezone: spec.timezone,
       budgetCents: spec.budgetCents,
@@ -223,6 +249,39 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
     );
   }
   return { deployment, sessionID: run.session_id };
+}
+
+/**
+ * The taf's memory store, made and attached now if the taf has none (tafs
+ * started before memory). Attached to the deployment only when every resource
+ * it has is a memory store, since sending resources replaces them all.
+ */
+export async function ensureMemory(client: Anthropic, taf: Deployment): Promise<string> {
+  const have = taf.metadata?.[META.memory];
+  if (have) return have;
+  const name = taf.metadata?.[META.taf] ?? taf.name;
+  const jobName = JOBS.find((j) => j.id === taf.metadata?.[META.job])?.name ?? "job";
+  const owner = taf.metadata?.[META.tenant];
+  const store = await client.beta.memoryStores.create(memoryStoreParams(name, jobName, owner ? { [META.tenant]: owner } : {}));
+  const resources = taf.resources ?? [];
+  const onlyMemory = resources.every((r) => r.type === "memory_store");
+  await client.beta.deployments.update(taf.id, {
+    metadata: { [META.memory]: store.id },
+    ...(onlyMemory
+      ? {
+          resources: [
+            ...resources.map((r) => ({
+              type: "memory_store" as const,
+              memory_store_id: (r as { memory_store_id: string }).memory_store_id,
+              access: (r as { access?: "read_write" | "read_only" | null }).access ?? null,
+              instructions: (r as { instructions?: string | null }).instructions ?? null,
+            })),
+            memoryResource(store.id),
+          ],
+        }
+      : {}),
+  });
+  return store.id;
 }
 
 export async function listTafs(client: Anthropic): Promise<Deployment[]> {

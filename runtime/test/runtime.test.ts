@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { agentParams, credentialParams, deploymentParams, environmentParams, KIFF_MCP_URL, MODEL } from "../src/config.js";
+import {
+  agentParams,
+  credentialParams,
+  deploymentParams,
+  environmentParams,
+  FILE_TOOLS,
+  KIFF_MCP_URL,
+  MEMORY_INSTRUCTIONS,
+  memoryStoreParams,
+  MODEL,
+} from "../src/config.js";
 import { JOBS, type Job, jobById, systemPrompt } from "../src/jobs.js";
-import { agentChanged, environmentChanged, setup, startTaf } from "../src/runtime.js";
+import { agentChanged, ensureMemory, environmentChanged, setup, startTaf } from "../src/runtime.js";
 
 type Agent = Anthropic.Beta.Agents.BetaManagedAgentsAgent;
 type Environment = Anthropic.Beta.Environments.BetaEnvironment;
@@ -29,6 +39,17 @@ function echoed(job: Job, version = 1, change: (a: Record<string, unknown>) => v
         mcp_server_name: "kiff",
         default_config: { enabled: true, permission_policy: { type: "always_allow" } },
         configs: [],
+      },
+      {
+        // The API lists every built-in tool, each with its own setting.
+        type: "agent_toolset_20260401",
+        default_config: { enabled: false, permission_policy: { type: "always_allow" } },
+        configs: ["bash", "edit", "glob", "grep", "read", "web_fetch", "web_search", "write"].map((name) => ({
+          name,
+          type: name,
+          enabled: (FILE_TOOLS as readonly string[]).includes(name),
+          permission_policy: { type: "always_allow" },
+        })),
       },
     ],
     skills: [],
@@ -73,13 +94,19 @@ describe("jobs", () => {
 });
 
 describe("agent", () => {
-  it("reaches tools only through KIFF and lets the Card decide", () => {
+  it("acts only through KIFF, lets the Card decide, and has file tools for its memory", () => {
     const p = agentParams(refunds);
     expect(p.model).toEqual({ id: MODEL, effort: "high" });
     expect(p.mcp_servers).toEqual([{ type: "url", name: "kiff", url: KIFF_MCP_URL }]);
-    expect(p.tools).toEqual([
+    expect(p.tools?.[0]).toEqual(
       { type: "mcp_toolset", mcp_server_name: "kiff", default_config: { enabled: true, permission_policy: { type: "always_allow" } } },
-    ]);
+    );
+    expect(p.tools?.[1]).toEqual({
+      type: "agent_toolset_20260401",
+      default_config: { enabled: false },
+      configs: ["read", "write", "edit", "glob", "grep"].map((name) => ({ name, enabled: true, permission_policy: { type: "always_allow" } })),
+    });
+    expect(p.tools).toHaveLength(2);
     expect(p.metadata).toEqual({ tafs_job: "refunds" });
   });
 
@@ -115,8 +142,18 @@ describe("agent", () => {
     }), refunds)).toBe(true);
   });
 
+  it("changes when a shell or web tool is turned on", () => {
+    for (const name of ["bash", "web_fetch", "web_search"]) {
+      expect(agentChanged(echoed(refunds, 1, (a) => {
+        const set = (a.tools as Array<{ configs: Array<{ name: string; enabled: boolean }> }>)[1]!;
+        set.configs.find((c) => c.name === name)!.enabled = true;
+      }), refunds)).toBe(true);
+    }
+    expect(agentChanged(echoed(refunds, 1, (a) => { (a.tools as unknown[]).pop(); }), refunds)).toBe(true);
+  });
+
   it("changes when another toolset or a skill is added", () => {
-    expect(agentChanged(echoed(refunds, 1, (a) => { (a.tools as unknown[]).push({ type: "agent_toolset_20260401" }); }), refunds)).toBe(true);
+    expect(agentChanged(echoed(refunds, 1, (a) => { (a.tools as unknown[]).push({ type: "web_toolset" }); }), refunds)).toBe(true);
     expect(agentChanged(echoed(refunds, 1, (a) => { a.skills = [{ type: "anthropic", skill_id: "xlsx" }]; }), refunds)).toBe(true);
   });
 });
@@ -135,6 +172,22 @@ describe("environment", () => {
     expect(environmentChanged(env({ allow_mcp_servers: false }))).toBe(true);
     expect(environmentChanged(env({ allowed_hosts: ["evil.example.com"] }))).toBe(true);
     expect(environmentChanged({ ...env(), config: { type: "cloud", networking: { type: "unrestricted" }, packages: {} } } as unknown as Environment)).toBe(true);
+  });
+});
+
+describe("memory", () => {
+  it("names the store for the taf and describes it for the model", () => {
+    const p = memoryStoreParams("Rae's Refunds!", "Refunds", { tafs_tenant: "t_acme" });
+    expect(p.name).toBe("tafs-rae-s-refunds");
+    expect(p.description).toContain("Rae's Refunds!");
+    expect(p.metadata).toEqual({ tafs_tenant: "t_acme", tafs_taf: "Rae's Refunds!", tafs_kind: "memory" });
+    expect(memoryStoreParams("¡¡", "Refunds").name).toBe("tafs-taf");
+  });
+
+  it("tells the taf notes never widen its Card, and never to keep secrets", () => {
+    expect(MEMORY_INSTRUCTIONS).toMatch(/never widen your Card/);
+    expect(MEMORY_INSTRUCTIONS).toMatch(/Never write secrets/);
+    expect(MEMORY_INSTRUCTIONS.length).toBeLessThanOrEqual(4096);
   });
 });
 
@@ -161,6 +214,15 @@ describe("deployment", () => {
     expect(d.metadata).toEqual({ tafs_job: "refunds", tafs_taf: "Rae" });
   });
 
+  it("mounts the taf's memory into every run and records it", () => {
+    expect(deploymentParams(base).resources).toBeUndefined();
+    const d = deploymentParams({ ...base, memoryStoreID: "memstore_1" });
+    expect(d.resources).toEqual([
+      { type: "memory_store", memory_store_id: "memstore_1", access: "read_write", instructions: MEMORY_INSTRUCTIONS },
+    ]);
+    expect(d.metadata).toEqual({ tafs_job: "refunds", tafs_taf: "Rae", tafs_memory: "memstore_1" });
+  });
+
   it("takes the taf's own schedule and budget", () => {
     const d = deploymentParams({ ...base, cron: "0 8 * * *", timezone: "Europe/Paris", budgetCents: 50 });
     expect(d.schedule).toEqual({ type: "cron", expression: "0 8 * * *", timezone: "Europe/Paris" });
@@ -180,7 +242,11 @@ interface FakeDeployment {
   archived_at: null;
   metadata: Record<string, string>;
   agent: { type: "agent"; id: string; version: number };
+  resources?: Array<Record<string, unknown>>;
 }
+
+/** Every deployment the fake was asked to create, across clients. */
+const created: unknown[] = [];
 
 function fakeClient(opts: {
   agents?: Agent[];
@@ -213,12 +279,18 @@ function fakeClient(opts: {
       deployments: {
         list: async function* () { yield* opts.deployments ?? []; },
         update: async (id: string, body: unknown) => { calls.push(`deployment.update ${id}`); updates.push({ id, body }); return { id }; },
-        create: async (p: { name: string }) => { calls.push("deployment.create"); return { id: "depl_new", name: p.name }; },
+        create: async (p: { name: string }) => { calls.push("deployment.create"); created.push(p); return { id: "depl_new", name: p.name }; },
         run: async () => { calls.push("deployment.run"); return opts.run ?? { session_id: "sesn_1", error: null }; },
       },
       vaults: {
         create: async () => { calls.push("vault.create"); return { id: "vlt_1" }; },
         credentials: { create: async () => { calls.push("credential.create"); return { id: "cred_1" }; } },
+      },
+      memoryStores: {
+        create: async (p: unknown) => { calls.push("memory.create"); updates.push({ id: "memory", body: p }); return { id: "memstore_1" }; },
+        memories: {
+          create: async (id: string, p: unknown) => { calls.push(`note.create ${id}`); updates.push({ id, body: p }); return { id: "mem_1" }; },
+        },
       },
     },
   } as unknown as Anthropic;
@@ -228,11 +300,11 @@ function fakeClient(opts: {
 const allEchoed = (change: (job: Job) => ((a: Record<string, unknown>) => void) | undefined = () => undefined) =>
   JOBS.map((j) => echoed(j, 1, change(j)));
 
-const taf = (agentVersion: number): FakeDeployment => ({
+const taf = (agentVersion: number, metadata: Record<string, string> = { tafs_memory: "memstore_rae" }): FakeDeployment => ({
   id: "depl_rae",
   name: "Rae",
   archived_at: null,
-  metadata: { tafs_taf: "Rae", tafs_job: "refunds" },
+  metadata: { tafs_taf: "Rae", tafs_job: "refunds", ...metadata },
   agent: { type: "agent", id: "agent_refunds", version: agentVersion },
 });
 
@@ -290,12 +362,48 @@ describe("setup", () => {
     expect(updates[0]!.body).toEqual({ agent: { type: "agent", id: "agent_refunds", version: 3 } });
   });
 
+  it("gives a taf started before memory its memory store, attached to its runs", async () => {
+    const { client, calls, updates } = fakeClient({ agents: allEchoed(), envs: [env()], deployments: [taf(1, { tafs_tenant: "t_acme" })] });
+    await setup(client);
+    expect(calls).toEqual(["memory.create", "deployment.update depl_rae"]);
+    expect(updates[0]!.body).toEqual(memoryStoreParams("Rae", "Refunds", { tafs_tenant: "t_acme" }));
+    expect(updates[1]).toEqual({
+      id: "depl_rae",
+      body: {
+        metadata: { tafs_memory: "memstore_1" },
+        resources: [{ type: "memory_store", memory_store_id: "memstore_1", access: "read_write", instructions: MEMORY_INSTRUCTIONS }],
+      },
+    });
+  });
+
   it("leaves deployments it did not make alone", async () => {
     const agents = allEchoed((j) => (j.id === "refunds" ? (a) => { a.system = "old"; } : undefined));
     const other = { ...taf(1), id: "depl_other", metadata: {} };
     const { client, calls } = fakeClient({ agents, envs: [env()], deployments: [other] });
     await setup(client);
     expect(calls).toEqual(["agent.update agent_refunds"]);
+  });
+});
+
+describe("ensureMemory", () => {
+  it("returns the store a taf already has, without calls", async () => {
+    const { client, calls } = fakeClient({});
+    expect(await ensureMemory(client, taf(1) as never)).toBe("memstore_rae");
+    expect(calls).toEqual([]);
+  });
+
+  it("keeps memory stores already attached, and doesn't replace resources of other kinds", async () => {
+    const kept = { type: "memory_store", memory_store_id: "memstore_shared", access: "read_only", instructions: "shared" };
+    const one = fakeClient({});
+    await ensureMemory(one.client, { ...taf(1, {}), resources: [kept] } as never);
+    expect((one.updates[1]!.body as { resources: unknown[] }).resources).toEqual([
+      kept,
+      { type: "memory_store", memory_store_id: "memstore_1", access: "read_write", instructions: MEMORY_INSTRUCTIONS },
+    ]);
+
+    const two = fakeClient({});
+    await ensureMemory(two.client, { ...taf(1, {}), resources: [{ type: "file", file_id: "file_1" }] } as never);
+    expect(two.updates[1]!.body).toEqual({ metadata: { tafs_memory: "memstore_1" } });
   });
 });
 
@@ -306,7 +414,25 @@ describe("startTaf", () => {
     const { client, calls } = fakeClient({});
     const r = await startTaf(client, s, { name: "Rae", job: "refunds", kiffKey: "k" });
     expect(r.sessionID).toBe("sesn_1");
-    expect(calls).toEqual(["vault.create", "credential.create", "deployment.create", "deployment.run"]);
+    expect(calls).toEqual(["vault.create", "credential.create", "memory.create", "deployment.create", "deployment.run"]);
+  });
+
+  it("gives the taf a memory store, mounted into its runs, with the owner's notes as its first note", async () => {
+    const { client, calls, updates } = fakeClient({});
+    await startTaf(client, s, { name: "Rae", job: "refunds", kiffKey: "k", notes: "  Offer store credit first.  ", metadata: { tafs_tenant: "t_acme" } });
+    expect(calls).toContain("note.create memstore_1");
+    expect(updates.find((u) => u.id === "memory")!.body).toEqual(memoryStoreParams("Rae", "Refunds", { tafs_tenant: "t_acme" }));
+    expect(updates.find((u) => u.id === "memstore_1")!.body).toEqual({ path: "/from-the-owner.md", content: "Offer store credit first." });
+    expect(created[created.length - 1]).toMatchObject({
+      resources: [{ type: "memory_store", memory_store_id: "memstore_1", access: "read_write" }],
+      metadata: { tafs_memory: "memstore_1" },
+    });
+  });
+
+  it("writes no note when the owner said nothing", async () => {
+    const { client, calls } = fakeClient({});
+    await startTaf(client, s, { name: "Rae", job: "refunds", kiffKey: "k", notes: "   " });
+    expect(calls.some((c) => c.startsWith("note.create"))).toBe(false);
   });
 
   it("fails, naming the deployment, when the first run did not start", async () => {

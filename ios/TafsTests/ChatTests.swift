@@ -178,4 +178,58 @@ final class ChatTests: XCTestCase {
         let max = try XCTUnwrap(model.tafs.first { $0.id != raeID })
         XCTAssertFalse(model.canChat(max.id), "an agent holding Cards that tafs cloud doesn't run has no thread")
     }
+
+    // MARK: Memory
+
+    func testASampleTafRemembersAndForgets() async throws {
+        let model = AppModel(signer: StubSigner())
+        await model.startSample()
+        let bills = try XCTUnwrap(model.tafs.first { $0.name == "Bill pay" })
+        await model.loadMemory(bills.id)
+        let notes = try XCTUnwrap(model.memories[bills.id])
+        XCTAssertEqual(notes.count, 3)
+        XCTAssertEqual(notes.map(\.updatedAt), notes.map(\.updatedAt).sorted(by: >), "newest first")
+
+        let forgotten = await model.forget(notes[1], from: bills.id)
+        XCTAssertTrue(forgotten)
+        XCTAssertEqual(model.memories[bills.id]?.map(\.id), [notes[0].id, notes[2].id])
+    }
+
+    func testANotesTitleComesFromItsPath() {
+        let note = TafsCloud.Note(id: "mem_1", path: "/customers/acme-co.md", content: "x", updatedAt: Date())
+        XCTAssertEqual(note.title, "customers · acme co")
+    }
+
+    func testLoadsWhatATafRemembersFromTafsCloud() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/memory"] = (200, #"{"notes":[{"id":"mem_2","path":"/customers/acme.md","content":"Acme buys wholesale: ask first.","updated_at":"2026-10-14T11:00:00.123456Z"},{"id":"mem_1","path":"/refunds.md","content":"Offer store credit first.","updated_at":"2026-10-13T09:00:00Z"}]}"#)
+        await model.loadMemory(id)
+        XCTAssertEqual(model.memories[id]?.map(\.id), ["mem_2", "mem_1"])
+        XCTAssertEqual(model.memories[id]?.first?.content, "Acme buys wholesale: ask first.")
+        XCTAssertNil(model.memoryErrors[id])
+    }
+
+    func testForgettingANoteDeletesItOnTafsCloud() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/memory"] = (200, #"{"notes":[{"id":"mem_2","path":"/a.md","content":"A","updated_at":"2026-10-14T11:00:00Z"},{"id":"mem_1","path":"/b.md","content":"B","updated_at":"2026-10-13T09:00:00Z"}]}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/memory/mem_2"] = (200, #"{"forgotten":"mem_2"}"#)
+        await model.loadMemory(id)
+        let note = try XCTUnwrap(model.memories[id]?.first)
+        let forgotten = await model.forget(note, from: id)
+        XCTAssertTrue(forgotten)
+        XCTAssertEqual(count("DELETE", "/v1/tafs/depl_1/memory/mem_2"), 1)
+        XCTAssertEqual(model.memories[id]?.map(\.id), ["mem_1"])
+    }
+
+    func testANoteTafsCloudWontForgetComesBack() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/memory"] = (200, #"{"notes":[{"id":"mem_2","path":"/a.md","content":"A","updated_at":"2026-10-14T11:00:00Z"}]}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/memory/mem_2"] = (403, #"{"error":"your role on this KIFF account cannot manage Cards"}"#)
+        await model.loadMemory(id)
+        let note = try XCTUnwrap(model.memories[id]?.first)
+        let forgotten = await model.forget(note, from: id)
+        XCTAssertFalse(forgotten)
+        XCTAssertEqual(model.memories[id]?.map(\.id), ["mem_2"])
+        XCTAssertTrue(model.memoryErrors[id]?.contains("cannot manage Cards") ?? false)
+    }
 }

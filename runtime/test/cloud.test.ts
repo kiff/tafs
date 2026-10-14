@@ -59,6 +59,10 @@ function fakeAnthropic() {
         create: async () => { calls.push("vault.create"); return { id: "vlt_1" }; },
         credentials: { create: async (_id: string, p: { auth: { token: string } }) => { calls.push(`credential ${p.auth.token}`); return {}; } },
       },
+      memoryStores: {
+        create: async (p: { name: string }) => { calls.push(`memory ${p.name}`); return { id: "memstore_1" }; },
+        memories: { create: async (id: string, p: { path: string; content: string }) => { calls.push(`note ${id} ${p.path} ${p.content}`); return { id: "mem_1" }; } },
+      },
       sessions: {
         retrieve: async () => ({ status: "idle" }),
         events: { list: async function* () { yield { type: "agent.message", content: [{ type: "text", text: "Refunded 3 orders; 1 waits on you." }] }; } },
@@ -120,9 +124,18 @@ describe("tafs cloud", () => {
     expect(r.calls).toEqual([
       "vault.create",
       "credential key_rae",
-      `deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy"}`,
+      "memory tafs-ivy",
+      `deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`,
       "run depl_new",
     ]);
+  });
+
+  it("keeps what the owner said about the job as the taf's first note", async () => {
+    const r = await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae", notes: " Never refund twice. " } });
+    expect(r.status).toBe(200);
+    expect(r.calls).toContain("note memstore_1 /from-the-owner.md Never refund twice.");
+    const long = await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae", notes: "x".repeat(2001) } });
+    expect(long.status).toBe(400);
   });
 
   it("refuses to start without the right, the right key, or sane settings", async () => {
