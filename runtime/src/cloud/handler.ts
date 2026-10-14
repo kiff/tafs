@@ -35,8 +35,18 @@ export interface HTTPResult {
 export interface Deps {
   anthropic: () => Promise<Anthropic>;
   setup: () => Promise<Setup>;
+  /**
+   * Claims a taf's name on an account, durably and across containers. False
+   * when it is already claimed. Released when starting fails.
+   */
+  names: Names;
   fetch?: Fetch;
   kiffBase?: string;
+}
+
+export interface Names {
+  claim(tenant: string, name: string): Promise<boolean>;
+  release(tenant: string, name: string): Promise<void>;
 }
 
 /** Most one run of a taf started from the phone may cost: $10. */
@@ -136,9 +146,13 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
   if (agent.tenantID !== me.tenantID) throw new HTTPError(400, "the agent key belongs to another KIFF account");
   if (!agent.apiKey || !agent.agentID) throw new HTTPError(400, "the key is not bound to an agent");
 
+  // Two taps, or a retry, must not start two tafs: the name is claimed first.
+  const taken = new HTTPError(409, `you already have a taf named ${name}`);
   const mine = (await listTafs(client)).filter((d) => d.metadata?.[META.tenant] === me.tenantID);
-  if (mine.some((d) => d.metadata?.[META.taf] === name)) throw new HTTPError(409, `you already have a taf named ${name}`);
+  if (mine.some((d) => d.metadata?.[META.taf] === name)) throw taken;
+  if (!(await deps.names.claim(me.tenantID, name))) throw taken;
 
+  let created = false;
   try {
     const { deployment, sessionID } = await startTaf(client, await deps.setup(), {
       name,
@@ -148,9 +162,13 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
       timezone: body.timezone === undefined ? undefined : str(body.timezone),
       budgetCents: budget,
       metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agent.agentID },
+      onCreated: () => { created = true; },
     });
     return { taf: view(deployment), session: sessionID };
   } catch (err) {
+    // Once the deployment exists the name stays claimed: the taf is there,
+    // only its first run failed, and it can be run again.
+    if (!created) await deps.names.release(me.tenantID, name);
     throw new HTTPError(502, (err as Error).message);
   }
 }
@@ -196,19 +214,38 @@ function view(d: Anthropic.Beta.BetaManagedAgentsDeployment) {
   };
 }
 
-/** True when a cron expression fires at most every 15 minutes. */
+/**
+ * True when a cron expression fires at most every 15 minutes: every gap
+ * between the minutes it fires at, including the one across the hour, is at
+ * least 15. Steps and lists are expanded first, so equivalent forms agree.
+ */
 export function calmEnough(cron: string): boolean {
   const fields = cron.trim().split(/\s+/);
   if (fields.length !== 5) return false;
-  const minute = fields[0] ?? "";
-  if (minute === "*") return false;
-  const step = /^\*\/(\d+)$/.exec(minute);
-  if (step) return Number(step[1]) >= 15;
-  if (!/^\d+(,\d+)*$/.test(minute)) return false;
-  const mins = minute.split(",").map(Number).sort((a, b) => a - b);
-  if (mins.some((m) => m > 59)) return false;
+  const mins = minutes(fields[0] ?? "");
+  if (!mins || mins.length === 0) return false;
+  if (mins.length === 1) return true;
   for (let i = 1; i < mins.length; i++) if ((mins[i] ?? 0) - (mins[i - 1] ?? 0) < 15) return false;
-  return mins.length < 2 || 60 - (mins.at(-1) ?? 0) + (mins[0] ?? 0) >= 15;
+  return 60 - (mins.at(-1) ?? 0) + (mins[0] ?? 0) >= 15;
+}
+
+/** The minutes a cron minute field fires at, sorted; undefined when not understood. */
+function minutes(field: string): number[] | undefined {
+  const out = new Set<number>();
+  for (const part of field.split(",")) {
+    const step = /^(\*|\d+)\/(\d+)$/.exec(part);
+    if (step) {
+      const from = step[1] === "*" ? 0 : Number(step[1]);
+      const by = Number(step[2]);
+      if (by < 1 || from > 59) return undefined;
+      for (let m = from; m <= 59; m += by) out.add(m);
+    } else if (/^\d+$/.test(part) && Number(part) <= 59) {
+      out.add(Number(part));
+    } else {
+      return undefined; // "*", ranges and names fire too often or aren't worth reading
+    }
+  }
+  return [...out].sort((a, b) => a - b);
 }
 
 function header(event: HTTPEvent, name: string): string {

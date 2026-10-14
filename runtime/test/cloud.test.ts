@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { calmEnough, handle, type HTTPEvent } from "../src/cloud/handler.js";
+import { calmEnough, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
+
+/** Names claimed atomically, like the DynamoDB conditional write. */
+function memoryNames(): Names & { held: Set<string> } {
+  const held = new Set<string>();
+  return {
+    held,
+    async claim(t, n) { const k = `${t}#${n}`; if (held.has(k)) return false; held.add(k); return true; },
+    async release(t, n) { held.delete(`${t}#${n}`); },
+  };
+}
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -48,8 +58,8 @@ function fakeAnthropic() {
   return { client, calls };
 }
 
-function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object> } = {}) {
-  const { client, calls } = fakeAnthropic();
+function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic> } = {}) {
+  const { client, calls } = opts.anthropic ?? fakeAnthropic();
   const event: HTTPEvent = {
     rawPath: path,
     requestContext: { http: { method } },
@@ -59,6 +69,7 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
   const result = handle(event, {
     anthropic: async () => client,
     setup: async () => ({ environmentID: "env_1", agents: { refunds: "agent_refunds" } }),
+    names: opts.names ?? memoryNames(),
     fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } }),
   });
   return result.then((r) => ({ status: r.statusCode, body: JSON.parse(r.body), calls }));
@@ -123,6 +134,33 @@ describe("tafs cloud", () => {
     }
   });
 
+  it("starts one taf when two requests race for the same name", async () => {
+    const shared = fakeAnthropic();
+    const names = memoryNames();
+    const body = { name: "Ivy", job: "refunds", agent_key: "key_rae" };
+    const [a, b] = await Promise.all([
+      call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: shared }),
+      call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: shared }),
+    ]);
+    expect([a.status, b.status].sort()).toEqual([200, 409]);
+    expect(shared.calls.filter((c) => c.startsWith("deployment.create"))).toHaveLength(1);
+    expect(shared.calls.filter((c) => c.startsWith("run "))).toHaveLength(1);
+  });
+
+  it("frees the name when the taf could not be created, and keeps it once it exists", async () => {
+    const names = memoryNames();
+    const broken = fakeAnthropic();
+    (broken.client.beta.vaults as unknown as { create: () => Promise<never> }).create = async () => { throw new Error("vaults are down"); };
+    const body = { name: "Ivy", job: "refunds", agent_key: "key_rae" };
+    expect((await call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: broken })).status).toBe(502);
+    expect(names.held.size).toBe(0);
+
+    const noRun = fakeAnthropic();
+    (noRun.client.beta.deployments as unknown as { run: () => Promise<object> }).run = async () => ({ session_id: null, error: { type: "session_rate_limited_error", message: "busy" } });
+    expect((await call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: noRun })).status).toBe(502);
+    expect([...names.held]).toEqual(["t_acme#Ivy"]);
+  });
+
   it("pauses and runs the caller's taf", async () => {
     expect((await call("POST", "/v1/tafs/depl_acme/pause", { token: "ana" })).body.taf.status).toBe("paused");
     expect((await call("POST", "/v1/tafs/depl_acme/run", { token: "ana" })).body.session).toBe("sesn_1");
@@ -138,7 +176,12 @@ describe("tafs cloud", () => {
 
 describe("calmEnough", () => {
   it("allows every 15 minutes or less often", () => {
-    for (const ok of ["*/15 * * * *", "*/30 * * * *", "0 * * * *", "0,30 * * * *", "0 9 * * 1-5", "0,15,30,45 * * * *"]) expect(calmEnough(ok), ok).toBe(true);
-    for (const no of ["* * * * *", "*/5 * * * *", "0,10 * * * *", "0,50 * * * *", "1-59 * * * *", "0 9 * *", "61 * * * *"]) expect(calmEnough(no), no).toBe(false);
+    for (const ok of ["*/15 * * * *", "*/20 * * * *", "*/30 * * * *", "*/60 * * * *", "0 * * * *", "0,30 * * * *", "0 9 * * 1-5", "0,15,30,45 * * * *", "5/30 * * * *"]) expect(calmEnough(ok), ok).toBe(true);
+    for (const no of ["* * * * *", "*/5 * * * *", "0,10 * * * *", "0,50 * * * *", "1-59 * * * *", "0 9 * *", "61 * * * *", "*/59 * * * *", "*/17 * * * *", "*/50 * * * *", "*/0 * * * *", "50/5 * * * *"]) expect(calmEnough(no), no).toBe(false);
+  });
+
+  it("agrees on equivalent forms", () => {
+    expect(calmEnough("*/50 * * * *")).toBe(calmEnough("0,50 * * * *"));
+    expect(calmEnough("*/20 * * * *")).toBe(calmEnough("0,20,40 * * * *"));
   });
 });

@@ -4,6 +4,7 @@
 #   tafs-cloud                 Lambda (Node 22, arm64) with a public function URL;
 #                              the code authenticates every route with KIFF.
 #   tafs-cloud-lambda          its role: logs, and reading the one secret below.
+#   tafs-cloud-names           DynamoDB: a taf's name per account, claimed once.
 #   tafs/anthropic-api-key     the Anthropic key; a person puts it there (see README).
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update this function's code, nothing else.
@@ -16,6 +17,7 @@ REGION=us-east-1
 FN=tafs-cloud
 SECRET=tafs/anthropic-api-key
 LAMBDA_ROLE=tafs-cloud-lambda
+TABLE=tafs-cloud-names
 DEPLOY_ROLE=tafs-github-deploy
 REPO=kiff/tafs
 ZIP=${1:?usage: infra/aws.sh lambda.zip}
@@ -39,6 +41,16 @@ if ! SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$SECRET" --que
   echo "created secret $SECRET"
 fi
 
+# Taf names, claimed with a conditional write so two requests can't both start one.
+if ! aws dynamodb describe-table --table-name "$TABLE" >/dev/null 2>&1; then
+  aws dynamodb create-table --table-name "$TABLE" --billing-mode PAY_PER_REQUEST \
+    --attribute-definitions AttributeName=id,AttributeType=S --key-schema AttributeName=id,KeyType=HASH \
+    --tags Key=project,Value=tafs >/dev/null
+  aws dynamodb wait table-exists --table-name "$TABLE"
+  echo "created table $TABLE"
+fi
+TABLE_ARN=$(aws dynamodb describe-table --table-name "$TABLE" --query Table.TableArn --output text)
+
 # The function's role.
 if ! aws iam get-role --role-name "$LAMBDA_ROLE" >/dev/null 2>&1; then
   aws iam create-role --role-name "$LAMBDA_ROLE" --tags Key=project,Value=tafs --assume-role-policy-document '{
@@ -51,12 +63,15 @@ aws iam attach-role-policy --role-name "$LAMBDA_ROLE" \
   --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name read-anthropic-key --policy-document "{
   \"Version\": \"2012-10-17\",
-  \"Statement\": [{\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": \"$SECRET_ARN\"}]
+  \"Statement\": [
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": \"$SECRET_ARN\"},
+    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:PutItem\", \"dynamodb:DeleteItem\"], \"Resource\": \"$TABLE_ARN\"}
+  ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)
 
 # The function.
-ENV="Variables={ANTHROPIC_SECRET_ID=$SECRET,NODE_OPTIONS=--enable-source-maps}"
+ENV="Variables={ANTHROPIC_SECRET_ID=$SECRET,NAMES_TABLE=$TABLE,NODE_OPTIONS=--enable-source-maps}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

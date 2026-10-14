@@ -175,6 +175,8 @@ export interface StartTaf {
   timezone?: string;
   budgetCents?: number;
   metadata?: Record<string, string>;
+  /** Called once the deployment exists, before its first run. */
+  onCreated?: (deployment: Deployment) => void;
 }
 
 /**
@@ -205,6 +207,7 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
       metadata: spec.metadata,
     }),
   );
+  spec.onCreated?.(deployment);
   const run = await client.beta.deployments.run(deployment.id);
   if (!run.session_id) {
     const why = run.error ? `${run.error.type}: ${run.error.message}` : "no session was created";

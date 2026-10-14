@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { setup, type Setup } from "../runtime.js";
-import { handle, type HTTPEvent, type HTTPResult } from "./handler.js";
+import { handle, type HTTPEvent, type HTTPResult, type Names } from "./handler.js";
 
 // Kept for the life of the container: the key, the client, the agents.
 let client: Promise<Anthropic> | undefined;
@@ -26,6 +27,30 @@ function ensureSetup(): Promise<Setup> {
   return ready;
 }
 
+/** Taf names per account, claimed with a conditional write so only one request wins. */
+const dynamo = new DynamoDBClient({});
+const names: Names = {
+  async claim(tenant, name) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
+        Item: { id: { S: `${tenant}#${name}` }, at: { S: new Date().toISOString() } },
+        ConditionExpression: "attribute_not_exists(id)",
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+  async release(tenant, name) {
+    await dynamo.send(new DeleteItemCommand({
+      TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
+      Key: { id: { S: `${tenant}#${name}` } },
+    }));
+  },
+};
+
 export async function handler(event: HTTPEvent): Promise<HTTPResult> {
-  return handle(event, { anthropic, setup: ensureSetup });
+  return handle(event, { anthropic, setup: ensureSetup, names });
 }
