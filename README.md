@@ -1,3 +1,5 @@
+<img src="docs/brand/tafs-icon-1024.png" alt="" width="96" align="right">
+
 # tafs
 
 **They taf. You kiff.**
