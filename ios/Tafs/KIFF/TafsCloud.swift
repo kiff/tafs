@@ -144,6 +144,37 @@ final class TafsCloud {
         try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: ["text": text])
     }
 
+    // MARK: Memory
+
+    /// One thing a taf remembers: a note it keeps between its runs and chats.
+    struct Note: Decodable, Equatable, Identifiable {
+        let id: String
+        let path: String
+        let content: String
+        let updatedAt: Date
+
+        enum CodingKeys: String, CodingKey { case id, path, content, updatedAt = "updated_at" }
+
+        /// The note's name, from its path: "/customers/acme.md" reads "customers · acme".
+        var title: String {
+            path.split(separator: "/").map { $0.replacingOccurrences(of: ".md", with: "").replacingOccurrences(of: "-", with: " ") }
+                .joined(separator: " · ")
+        }
+    }
+
+    /// What the taf remembers, newest first.
+    func memory(_ id: String) async throws -> [Note] {
+        struct Response: Decodable { let notes: [Note] }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/memory")
+        return r.notes
+    }
+
+    /// Forgets one note: the taf won't see it on its next run or chat.
+    func forget(_ id: String, note: String) async throws {
+        struct Response: Decodable { let forgotten: String }
+        let _: Response = try await send("DELETE", "/v1/tafs/\(escaped(id))/memory/\(escaped(note))")
+    }
+
     // MARK: Transport
 
     private func escaped(_ s: String) -> String {

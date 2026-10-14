@@ -123,7 +123,7 @@ final class AppModel: ObservableObject {
         kiff.token = token
         cloud.token = token
         startAttempt = nil
-        holderIDs = [:]; chats = [:]; chatErrors = [:]
+        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
         accountGeneration += 1
         tafs = []; held = []; record = []
         mode = .kiff
@@ -138,7 +138,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
-        chats = [:]; chatErrors = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
         holderIDs = [:]
         startAttempt = nil
         accountGeneration += 1
@@ -650,6 +650,75 @@ final class AppModel: ObservableObject {
         tafs[i].state = tafs[i].state == .paused ? .working : .paused
         tafs[i].now = tafs[i].state == .paused ? "Paused by you" : "Back to work"
         save()
+    }
+
+    // MARK: Memory
+
+    /// What each taf remembers between its runs and chats, newest first.
+    @Published private(set) var memories: [UUID: [TafsCloud.Note]] = [:]
+    @Published var memoryErrors: [UUID: String] = [:]
+
+    /// Reloads what a taf remembers. On KIFF it comes from tafs cloud; in sample mode it
+    /// lives here.
+    func loadMemory(_ tafID: UUID) async {
+        if mode == .sample {
+            if memories[tafID] == nil, let taf = taf(tafID) { memories[tafID] = Self.sampleNotes(taf, at: clock()) }
+            return
+        }
+        guard let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        let result: Result<[TafsCloud.Note], Error>
+        do { result = .success(try await cloud.memory(c.id)) } catch { result = .failure(error) }
+        guard gen == accountGeneration, mode == .kiff else { return }
+        switch result {
+        case .success(let notes): memories[tafID] = notes; memoryErrors[tafID] = nil
+        case .failure(let error): memoryErrors[tafID] = "Its notes couldn't be loaded: \(error.localizedDescription)"
+        }
+    }
+
+    /// Forgets one note. It goes from the list at once, and comes back if tafs cloud refuses.
+    /// Only that note comes back: another Forget may have finished meanwhile, and its
+    /// note must stay gone.
+    @discardableResult
+    func forget(_ note: TafsCloud.Note, from tafID: UUID) async -> Bool {
+        guard let before = memories[tafID], before.contains(note) else { return false }
+        memories[tafID] = before.filter { $0.id != note.id }
+        memoryErrors[tafID] = nil
+        if mode == .sample { return true }
+        guard let c = cloudTaf(for: tafID) else { putBack(note, in: tafID); return false }
+        let gen = accountGeneration
+        do {
+            try await cloud.forget(c.id, note: note.id)
+            return gen == accountGeneration
+        } catch let e as TafsCloud.CloudError where e.status == 404 {
+            return gen == accountGeneration // already gone
+        } catch {
+            guard gen == accountGeneration else { return false }
+            putBack(note, in: tafID)
+            memoryErrors[tafID] = "It wasn't forgotten: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    /// Puts one note back in the list as it is now, newest first.
+    private func putBack(_ note: TafsCloud.Note, in tafID: UUID) {
+        var notes = memories[tafID] ?? []
+        guard !notes.contains(where: { $0.id == note.id }) else { return }
+        notes.append(note)
+        notes.sort { $0.updatedAt > $1.updatedAt }
+        memories[tafID] = notes
+    }
+
+    /// A sample taf's notes: the kind of thing a real one writes down as it learns.
+    private static func sampleNotes(_ taf: Taf, at now: Date) -> [TafsCloud.Note] {
+        let notes: [(String, String, TimeInterval)] = [
+            ("/how-you-like-it.md", "You'd rather I explain a decision in one line than in a paragraph.", 3_600),
+            ("/customers/regulars.md", "Customers who write every week get a reply the same morning.", 86_400),
+            ("/from-the-owner.md", "Ask before anything unusual, even when it fits the Card.", 3 * 86_400),
+        ]
+        return notes.enumerated().map { i, n in
+            TafsCloud.Note(id: "sample-\(taf.id.uuidString)-\(i)", path: n.0, content: n.1, updatedAt: now.addingTimeInterval(-n.2))
+        }
     }
 
     // MARK: Chat

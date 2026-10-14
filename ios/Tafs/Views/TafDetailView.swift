@@ -98,6 +98,9 @@ struct TafDetailView: View {
 
     @ViewBuilder
     private func card(_ taf: Taf) -> some View {
+        if model.mode == .sample || model.cloudTaf(for: taf.id) != nil {
+            MemoryPanel(tafID: taf.id)
+        }
         CardFace(name: taf.name, rules: taf.card.rules, issuedBy: taf.card.issuedBy,
                  expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked)
         Panel {
@@ -125,6 +128,47 @@ struct TafDetailView: View {
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
             }
         }
+    }
+}
+
+/// What the taf remembers between its runs and chats, each note with a Forget button.
+struct MemoryPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+
+    var body: some View {
+        Panel {
+            Eyebrow(text: "What it remembers")
+            if let notes = model.memories[tafID] {
+                if notes.isEmpty {
+                    Text("Nothing yet. It writes down what it learns about how you like the job done.")
+                        .font(.system(size: 14)).foregroundColor(Theme.soft)
+                }
+                ForEach(notes) { note in
+                    HStack(alignment: .top, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(note.content).font(.system(size: 15)).foregroundColor(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text("\(note.title) · \(note.updatedAt.shortTime)").font(.system(size: 12)).foregroundColor(Theme.soft)
+                        }
+                        Spacer(minLength: 0)
+                        Button("Forget") { Task { await model.forget(note, from: tafID) } }
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Theme.soft)
+                            .frame(minHeight: 44)
+                            .accessibilityLabel("Forget: \(note.content)")
+                    }
+                }
+                Text("Every run and chat starts with these. They shape how it works, never what its Card allows.")
+                    .font(.system(size: 12)).foregroundColor(Theme.soft)
+            } else if model.memoryErrors[tafID] == nil {
+                ProgressView().tint(Theme.amber)
+            }
+            if let error = model.memoryErrors[tafID] {
+                Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+            }
+        }
+        .task(id: tafID) { await model.loadMemory(tafID) }
     }
 }
 

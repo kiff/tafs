@@ -103,11 +103,20 @@ own tafs; another company's taf answers like a missing one.
 |---|---|---|
 | `GET /v1/jobs` | anyone | the five jobs |
 | `GET /v1/tafs` | a person signed in with KIFF | the account's tafs |
-| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, agent_key, cron?, timezone?, budget_cents?}`. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run |
+| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, agent_key, cron?, timezone?, budget_cents?, notes?}`. `notes` (at most 2000 characters) becomes the taf's first memory note. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run |
 | `POST /v1/tafs/{id}/pause`, `resume`, `run` | `cards.manage` | |
 | `GET /v1/tafs/{id}/runs`, `runs/{session}` | a person | recent runs, and a run's report |
 | `GET /v1/tafs/{id}/conversation` | a person | the taf's thread: its last 5 runs and last 5 chats, oldest first, at most 100 messages `{at, from: owner\|taf, kind: kickoff\|message, text, session}` |
-| `POST /v1/tafs/{id}/messages` | `cards.manage` | `{text}`, 1 to 2000 characters: into the latest session if it was active in the last 30 minutes, else a new session with the taf's agent, vault and budget. `{session, new_session}`. At most 10 a taf in 10 minutes |
+| `POST /v1/tafs/{id}/messages` | `cards.manage` | `{text}`, 1 to 2000 characters: into the latest session if it was active in the last 30 minutes, else a new session with the taf's agent, vault, budget and memory. `{session, new_session}`. At most 10 a taf in 10 minutes |
+| `GET /v1/tafs/{id}/memory` | a person | what the taf remembers, newest first: `{notes: [{id, path, content, updated_at}]}` |
+| `DELETE /v1/tafs/{id}/memory/{note}` | `cards.manage` | forget one note |
+
+**Memory.** Each taf has its own Managed Agents memory store, mounted into
+every run and every chat. The taf reads its notes before it starts and writes
+down what it learns about the owner and their customers, with file tools in
+its own sandbox (no shell, no web). Notes shape how it works; they never
+change what its Card allows, since KIFF still decides every action. `tafs
+setup` gives tafs started before memory their store.
 
 Setting it up, once, with AWS credentials for the account:
 

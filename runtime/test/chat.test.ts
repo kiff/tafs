@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { CHAT, handle, type HTTPEvent, type Names, type Slots } from "../src/cloud/handler.js";
+import { MEMORY_INSTRUCTIONS } from "../src/config.js";
+import { CHAT, handle, type HTTPEvent, MEMORY, type Names, type Slots } from "../src/cloud/handler.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -42,10 +43,20 @@ function fakeAnthropic() {
     agent: { id: "agent_refunds", version: 3, type: "agent" },
     environment_id: "env_1", vault_ids: [`vlt_${id}`],
     budget: { type: "limit", max_list_cost: { amount: "200", currency: "USD" } },
-    metadata: { tafs_tenant: tenant, tafs_taf: "Rae", tafs_job: "refunds" },
+    metadata: { tafs_tenant: tenant, tafs_taf: "Rae", tafs_job: "refunds", tafs_memory: `memstore_${id}` } as Record<string, string>,
+    resources: [] as unknown[],
     schedule: null,
   });
   const deployments = [deployment("depl_acme", "t_acme"), deployment("depl_other", "t_other")];
+  // Notes per memory store, as the API lists them with view=full.
+  const notes: Record<string, Array<{ type: string; id: string; path: string; content: string; updated_at: string }>> = {
+    memstore_depl_acme: [
+      { type: "memory_prefix", id: "", path: "/customers/", content: "", updated_at: "" },
+      { type: "memory", id: "mem_old", path: "/refunds.md", content: "Offer store credit first.", updated_at: minutesAgo(600) },
+      { type: "memory", id: "mem_new", path: "/customers/acme.md", content: "Acme buys wholesale: ask first.", updated_at: minutesAgo(60) },
+    ],
+    memstore_depl_other: [{ type: "memory", id: "mem_theirs", path: "/x.md", content: "not yours", updated_at: minutesAgo(5) }],
+  };
   const sessions: FakeSession[] = [];
   const events: Record<string, FakeEvent[]> = {};
   let n = 0;
@@ -55,6 +66,30 @@ function fakeAnthropic() {
       deployments: {
         list: async function* () { yield* deployments; },
         retrieve: async (id: string) => { const d = deployments.find((x) => x.id === id); if (!d) throw new Error("404"); return d; },
+        update: async (id: string, p: { metadata?: Record<string, string>; resources?: unknown[] }) => {
+          calls.push(`deployments.update ${id} ${JSON.stringify(p)}`);
+          const d = deployments.find((x) => x.id === id)!;
+          Object.assign(d.metadata, p.metadata ?? {});
+          if (p.resources) d.resources = p.resources;
+          return d;
+        },
+      },
+      memoryStores: {
+        create: async (p: { name: string }) => { calls.push(`memoryStores.create ${p.name}`); notes.memstore_made = []; return { id: "memstore_made" }; },
+        memories: {
+          list: async function* (store: string, p: { view: string }) {
+            calls.push(`memories.list ${store} ${p.view}`);
+            yield* notes[store] ?? [];
+          },
+          delete: async (id: string, p: { memory_store_id: string }) => {
+            calls.push(`memories.delete ${id} ${p.memory_store_id}`);
+            const list = notes[p.memory_store_id] ?? [];
+            const i = list.findIndex((m) => m.id === id);
+            if (i < 0) throw Object.assign(new Error("not found"), { status: 404 });
+            list.splice(i, 1);
+            return { id, type: "memory_deleted" };
+          },
+        },
       },
       sessions: {
         list: async function* (p: { agent_id: string; order: string }) {
@@ -83,7 +118,7 @@ function fakeAnthropic() {
     sessions.push({ updated_at: s.created_at, status: "idle", metadata: {}, agent: { id: "agent_refunds" }, ...s });
     events[s.id] = evs;
   };
-  return { client, calls, addSession, say, sessions };
+  return { client, calls, addSession, say, sessions, deployments, notes };
 }
 
 function call(fake: ReturnType<typeof fakeAnthropic>, method: string, path: string, opts: { token?: string; body?: unknown; slots?: Slots; now?: Date } = {}) {
@@ -186,6 +221,7 @@ describe("messages", () => {
       agent: { type: "agent", id: "agent_refunds", version: 3 },
       environment_id: "env_1",
       vault_ids: ["vlt_depl_acme"],
+      resources: [{ type: "memory_store", memory_store_id: "memstore_depl_acme", access: "read_write", instructions: MEMORY_INSTRUCTIONS }],
       budget: { type: "limit", max_list_cost: { amount: "200", currency: "USD" } },
       title: "Rae: chat",
       metadata: { tafs_chat_for: "depl_acme", tafs_tenant: "t_acme", tafs_taf: "Rae" },
@@ -229,5 +265,85 @@ describe("messages", () => {
     const later = new Date(NOW.getTime() + CHAT.floodMinutes * 60_000);
     expect((await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "later" }, slots, now: later })).status).toBe(200);
     expect([...slots.held].every((k) => k.startsWith("rate#t_acme#depl_acme#"))).toBe(true);
+  });
+});
+
+describe("memory", () => {
+  it("lists the taf's notes, newest first, without folders", async () => {
+    const f = fakeAnthropic();
+    const r = await call(f, "GET", "/v1/tafs/depl_acme/memory", { token: "viewer" });
+    expect(r.status).toBe(200);
+    expect(r.body.notes).toEqual([
+      { id: "mem_new", path: "/customers/acme.md", content: "Acme buys wholesale: ask first.", updated_at: minutesAgo(60) },
+      { id: "mem_old", path: "/refunds.md", content: "Offer store credit first.", updated_at: minutesAgo(600) },
+    ]);
+    expect(f.calls).toContain("memories.list memstore_depl_acme full");
+  });
+
+  it("shows the newest notes when there are more than it shows, whatever order the API lists them in", async () => {
+    const f = fakeAnthropic();
+    const many = Array.from({ length: MEMORY.shown + 5 }, (_, i) => ({
+      type: "memory", id: `mem_${i}`, path: `/n${i}.md`, content: `note ${i}`, updated_at: minutesAgo(1000 - i),
+    }));
+    f.notes.memstore_depl_acme = [...many.slice(1), many[0]!].reverse(); // the newest listed last
+    const r = await call(f, "GET", "/v1/tafs/depl_acme/memory");
+    const ids = r.body.notes.map((n: { id: string }) => n.id);
+    expect(ids).toHaveLength(MEMORY.shown);
+    expect(ids[0]).toBe(`mem_${MEMORY.shown + 4}`);
+    expect(ids).not.toContain("mem_0");
+  });
+
+  it("shows no notes for a taf without memory yet, and makes none to show them", async () => {
+    const f = fakeAnthropic();
+    delete f.deployments[0]!.metadata.tafs_memory;
+    const r = await call(f, "GET", "/v1/tafs/depl_acme/memory");
+    expect(r.body).toEqual({ notes: [] });
+    expect(f.calls).toEqual([]);
+  });
+
+  it("forgets a note, for someone who can manage Cards", async () => {
+    const f = fakeAnthropic();
+    expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_old", { token: "viewer" })).status).toBe(403);
+    const r = await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_old");
+    expect(r).toEqual({ status: 200, body: { forgotten: "mem_old" } });
+    expect(f.calls).toContain("memories.delete mem_old memstore_depl_acme");
+    const after = await call(f, "GET", "/v1/tafs/depl_acme/memory");
+    expect(after.body.notes.map((n: { id: string }) => n.id)).toEqual(["mem_new"]);
+  });
+
+  it("can't forget another taf's note, or another account's", async () => {
+    const f = fakeAnthropic();
+    // Named through my taf, the note is looked up only in my taf's store.
+    expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_theirs")).status).toBe(404);
+    expect((await call(f, "DELETE", "/v1/tafs/depl_other/memory/mem_theirs")).status).toBe(404);
+    expect((await call(f, "GET", "/v1/tafs/depl_other/memory")).status).toBe(404);
+    expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/..%2Fx")).status).toBe(404);
+    expect(f.calls.filter((c) => c.startsWith("memories.delete"))).toEqual(["memories.delete mem_theirs memstore_depl_acme"]);
+  });
+
+  it("gives a taf started before memory its store when the owner first writes", async () => {
+    const f = fakeAnthropic();
+    delete f.deployments[0]!.metadata.tafs_memory;
+    const r = await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "Remember: Acme is wholesale." } });
+    expect(r.body).toEqual({ session: "sesn_chat1", new_session: true });
+    expect(f.calls).toContain("memoryStores.create tafs-rae");
+    expect(f.deployments[0]!.metadata.tafs_memory).toBe("memstore_made");
+    expect(f.deployments[0]!.resources).toEqual([
+      { type: "memory_store", memory_store_id: "memstore_made", access: "read_write", instructions: MEMORY_INSTRUCTIONS },
+    ]);
+    const created = JSON.parse(f.calls.find((c) => c.startsWith("sessions.create"))!.slice("sessions.create ".length));
+    expect(created.resources[0].memory_store_id).toBe("memstore_made");
+  });
+
+  it("makes one store when two first chats race: the one without the lock starts without memory", async () => {
+    const f = fakeAnthropic();
+    delete f.deployments[0]!.metadata.tafs_memory;
+    const slots = memorySlots();
+    slots.held.add("memory#depl_acme"); // another chat is giving the taf its store right now
+    const r = await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "Hello" }, slots });
+    expect(r.status).toBe(200);
+    expect(f.calls.filter((c) => c.startsWith("memoryStores.create"))).toEqual([]);
+    const created = JSON.parse(f.calls.find((c) => c.startsWith("sessions.create"))!.slice("sessions.create ".length));
+    expect(created.resources).toBeUndefined();
   });
 });
