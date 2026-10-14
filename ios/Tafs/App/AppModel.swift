@@ -84,14 +84,7 @@ final class AppModel: ObservableObject {
             try await Task.sleep(nanoseconds: interval * 1_000_000_000)
             do {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
-                Keychain.save(token.accessToken, for: Self.tokenAccount)
-                kiff.token = token.accessToken
-                cloud.token = token.accessToken
-                startAttempt = nil
-                accountGeneration += 1
-                tafs = []; held = []; record = []
-                mode = .kiff
-                await refresh()
+                await useSession(token.accessToken)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -102,12 +95,28 @@ final class AppModel: ObservableObject {
         throw KIFFClient.KIFFError.expired
     }
 
+    /// Starts using a KIFF session: keeps it in the Keychain, clears what belonged to any
+    /// earlier session, and loads this one's Cards and tafs.
+    func useSession(_ token: String) async {
+        Keychain.save(token, for: Self.tokenAccount)
+        kiff.token = token
+        cloud.token = token
+        startAttempt = nil
+        holderIDs = [:]; chats = [:]; chatErrors = [:]
+        accountGeneration += 1
+        tafs = []; held = []; record = []
+        mode = .kiff
+        await refresh()
+    }
+
     func signOut() async {
         if mode == .kiff { try? await kiff.signOut() }
         Keychain.delete(Self.tokenAccount)
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
+        chats = [:]; chatErrors = [:]
+        holderIDs = [:]
         startAttempt = nil
         accountGeneration += 1
         store?.clear()
@@ -593,6 +602,149 @@ final class AppModel: ObservableObject {
         save()
     }
 
+    // MARK: Chat
+
+    /// Each taf's thread, oldest first: the owner's messages and the taf's replies.
+    @Published private(set) var chats: [UUID: [TafsCloud.ChatMessage]] = [:]
+    /// The tafs a message is on its way to, so one is sent at a time.
+    @Published private(set) var chatSending: Set<UUID> = []
+    @Published var chatErrors: [UUID: String] = [:]
+    /// How long a sample taf takes to answer; tests set it to zero.
+    var sampleReplyDelay: UInt64 = 700_000_000
+
+    static let chatLimit = 2000
+
+    /// A taf can chat in sample mode, and on KIFF once tafs cloud runs it.
+    func canChat(_ tafID: UUID) -> Bool {
+        mode == .sample || cloudTaf(for: tafID) != nil
+    }
+
+    /// Reloads a taf's thread. On KIFF it comes from tafs cloud; in sample mode it lives here.
+    func loadChat(_ tafID: UUID) async {
+        if mode == .sample {
+            if chats[tafID] == nil, let taf = taf(tafID) { chats[tafID] = [sampleMessage(.taf, Self.sampleHello(taf))] }
+            return
+        }
+        guard let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        let result: Result<[TafsCloud.ChatMessage], Error>
+        do { result = .success(try await cloud.conversation(c.id)) } catch { result = .failure(error) }
+        // An answer for a session that has since ended (signed out, another account) is dropped.
+        guard gen == accountGeneration, mode == .kiff else { return }
+        switch result {
+        case .success(let messages): chats[tafID] = messages; chatErrors[tafID] = nil
+        case .failure(let error): chatErrors[tafID] = "The thread couldn't be loaded: \(error.localizedDescription)"
+        }
+    }
+
+    /// Sends the owner's message to the taf. It shows at once; on KIFF the thread is then
+    /// reloaded from tafs cloud, where the taf's answer arrives as it works.
+    @discardableResult
+    func sendChat(_ text: String, to tafID: UUID) async -> Bool {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return false }
+        guard text.count <= Self.chatLimit else {
+            chatErrors[tafID] = "That's longer than \(Self.chatLimit) characters. Say it in fewer words."
+            return false
+        }
+        guard chatSending.insert(tafID).inserted else { return false }
+        defer { chatSending.remove(tafID) }
+        let gen = accountGeneration
+        /// After each wait: is this still the session the message was sent in?
+        func current() -> Bool { gen == accountGeneration }
+        chatErrors[tafID] = nil
+        let pending = sampleMessage(.owner, text, session: "pending")
+        chats[tafID, default: []].append(pending)
+
+        if mode == .sample {
+            try? await Task.sleep(nanoseconds: sampleReplyDelay)
+            guard current(), mode == .sample else { return false }
+            chats[tafID, default: []].append(sampleMessage(.taf, sampleReply(to: text, tafID: tafID)))
+            return true
+        }
+        guard let c = cloudTaf(for: tafID) else {
+            chats[tafID]?.removeAll { $0 == pending }
+            chatErrors[tafID] = "This taf isn't running on tafs cloud, so it can't be messaged."
+            return false
+        }
+        do {
+            _ = try await cloud.sendMessage(c.id, text: text)
+            guard current() else { return false }
+            await loadChat(tafID)
+            return true
+        } catch let e as TafsCloud.CloudError where e.status == 429 {
+            guard current() else { return false }
+            chats[tafID]?.removeAll { $0 == pending }
+            chatErrors[tafID] = "That's a lot of messages in a few minutes. Give \(c.name) a moment, then try again."
+            return false
+        } catch {
+            guard current() else { return false }
+            chats[tafID]?.removeAll { $0 == pending }
+            chatErrors[tafID] = "It wasn't sent: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    /// How often a thread is reloaded while the taf owes an answer, and how many times for
+    /// one unanswered message (30 × 4 s = two minutes). Tests shorten both.
+    var chatPollInterval: UInt64 = 4_000_000_000
+    var chatPollBudget = 30
+
+    /// Loads a taf's thread, then reloads it while the taf owes an answer: at most
+    /// `chatPollBudget` times for each unanswered message, starting again only when the
+    /// owner sends another. Ends when the task is cancelled (the view goes away).
+    func followChat(_ tafID: UUID) async {
+        await loadChat(tafID)
+        var waitingFor: String?
+        var polls = 0
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: chatPollInterval)
+            if Task.isCancelled { return }
+            guard mode == .kiff, awaitingReply(tafID), let last = chats[tafID]?.last(where: { $0.from == .owner })?.id else { continue }
+            if last != waitingFor { waitingFor = last; polls = 0 }
+            guard polls < chatPollBudget else { continue }
+            polls += 1
+            await loadChat(tafID)
+        }
+    }
+
+    /// True while the taf hasn't answered the owner's last message yet.
+    func awaitingReply(_ tafID: UUID) -> Bool {
+        chats[tafID]?.last?.from == .owner
+    }
+
+    private func sampleMessage(_ from: TafsCloud.ChatMessage.From, _ text: String, session: String = "sample") -> TafsCloud.ChatMessage {
+        TafsCloud.ChatMessage(at: clock(), from: from, text: text, session: session)
+    }
+
+    private static func sampleHello(_ taf: Taf) -> String {
+        "Hi, I'm \(taf.name). I'm on it: \(taf.now.lowercased()). Ask me what I did, or tell me what to do differently. I stay inside my Card either way."
+    }
+
+    /// A sample taf answers from its own record: what it did, what waits, or a pause.
+    private func sampleReply(to text: String, tafID: UUID) -> String {
+        let lower = text.lowercased()
+        guard let taf = taf(tafID) else { return "I'm not here any more." }
+        if ["stop", "pause", "hold off"].contains(where: { lower.contains($0) }) {
+            if taf.state != .paused { togglePause(tafID) }
+            return "Paused. Nothing more goes out until you tell me to carry on."
+        }
+        if ["go", "carry on", "resume", "continue"].contains(where: { lower == $0 || lower.hasPrefix($0 + " ") }) {
+            if taf.state == .paused { togglePause(tafID) }
+            return "Back to work."
+        }
+        if ["more", "raise", "limit", "bigger", "increase"].contains(where: { lower.contains($0) }) {
+            return "I can't give myself more room: only you can, by changing my Card. Anything over it waits for you in Needs you."
+        }
+        let done = entries(for: tafID).prefix(3).map { "• " + $0.title }
+        let waiting = heldCalls(for: tafID).count
+        var lines: [String] = []
+        lines.append(done.isEmpty ? "Nothing done yet today." : "Lately:\n" + done.joined(separator: "\n"))
+        if waiting > 0 { lines.append("\(waiting) thing\(waiting == 1 ? " waits" : "s wait") on you in Needs you.") }
+        lines.append("(Sample reply. Signed in with KIFF, your taf answers for real.)")
+        return lines.joined(separator: "\n\n")
+    }
+
     // MARK: Sample data
 
     /// Fills the app with sample tafs and a morning of work. Labelled as sample in the UI.
@@ -607,6 +759,13 @@ final class AppModel: ObservableObject {
         // Pulling to refresh plays the next round.
         playNextDemoActions()
         playNextDemoActions()
+        if let refunds = tafs.first(where: { $0.name == "Refunds" }) {
+            chats[refunds.id] = [
+                sampleMessage(.taf, Self.sampleHello(refunds)),
+                sampleMessage(.owner, "How did this morning go?"),
+                sampleMessage(.taf, sampleReply(to: "How did this morning go?", tafID: refunds.id)),
+            ]
+        }
     }
 
     // MARK: Saving the sample
