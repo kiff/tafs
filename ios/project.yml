@@ -1,0 +1,49 @@
+name: Tafs
+options:
+  bundleIdPrefix: bot.tafs
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.7"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+targets:
+  Tafs:
+    type: application
+    platform: iOS
+    sources: [Tafs]
+    info:
+      path: Tafs/Info.plist
+      properties:
+        CFBundleDisplayName: tafs
+        UILaunchScreen:
+          UIColorName: Background
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIUserInterfaceStyle: Dark
+        NSFaceIDUsageDescription: tafs asks for Face ID before an approval is signed and sent.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  TafsTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [TafsTests]
+    dependencies:
+      - target: Tafs
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Tafs:
+    build:
+      targets:
+        Tafs: all
+        TafsTests: [test]
+    test:
+      targets: [TafsTests]

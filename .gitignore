@@ -1,0 +1,6 @@
+.DS_Store
+ios/Tafs.xcodeproj/
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
