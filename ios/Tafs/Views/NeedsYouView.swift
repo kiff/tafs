@@ -29,6 +29,7 @@ struct HeldCallCard: View {
     @EnvironmentObject private var model: AppModel
     let call: HeldCall
     @State private var sending = false
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         let taf = model.taf(call.tafID)
@@ -57,23 +58,36 @@ struct HeldCallCard: View {
                 .background(Theme.amber.opacity(0.14))
                 .clipShape(Capsule())
 
-            Button {
-                send(.approveOnce)
-            } label: {
-                Label("Approve once with Face ID", systemImage: "faceid")
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            .disabled(sending)
-
-            HStack(spacing: 8) {
-                ForEach(call.nextSteps, id: \.self) { step in
-                    Button(step) { send(.nextStep(step)) }
-                        .buttonStyle(OutlineButtonStyle())
+            if model.canAnswer(call) {
+                Button {
+                    send(.approveOnce)
+                } label: {
+                    Label("Approve once with Face ID", systemImage: "faceid")
                 }
-                Button("Refuse") { send(.refuse) }
-                    .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(sending)
+
+                HStack(spacing: 8) {
+                    ForEach(call.nextSteps, id: \.self) { step in
+                        Button(step) { send(.nextStep(step)) }
+                            .buttonStyle(OutlineButtonStyle())
+                    }
+                    Button("Refuse") { send(.refuse) }
+                        .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                }
+                .disabled(sending)
+            } else {
+                Text("Answering from the phone arrives once KIFF checks the phone's signature. Until then, answer in KIFF.")
+                    .font(.system(size: 13)).foregroundColor(Theme.soft)
+                if let page = model.answerPage(for: call) {
+                    Button {
+                        openURL(page)
+                    } label: {
+                        Label("Answer in KIFF", systemImage: "arrow.up.right.square")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
             }
-            .disabled(sending)
         }
     }
 

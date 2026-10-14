@@ -113,23 +113,29 @@ final class AppModel: ObservableObject {
             async let cards = kiff.cards()
             async let calls = kiff.heldCalls()
             let (mandates, exceptions) = try await (cards, calls)
-            tafs = KIFFMapping.tafs(from: mandates, ids: &holderIDs, owner: ownerName)
-            held = exceptions.map { e in
-                let id = holderIDs[e.subject] ?? UUID()
-                holderIDs[e.subject] = id
-                return KIFFMapping.held(e, tafID: id)
-            }
-            for i in tafs.indices where held.contains(where: { $0.tafID == tafs[i].id }) {
-                tafs[i].state = .waiting
-                tafs[i].now = "Waiting on you"
-            }
-            notifyHeld()
+            show(mandates, exceptions)
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
         } catch {
             lastError = "Couldn't reach KIFF: \(error.localizedDescription)"
         }
+    }
+
+    /// Shows what KIFF returned. A held call keeps its id across refreshes (it is derived
+    /// from KIFF's id), so the lock screen notifies once and rows are not recreated.
+    func show(_ mandates: [KIFFClient.Mandate], _ exceptions: [KIFFClient.CardException]) {
+        tafs = KIFFMapping.tafs(from: mandates, ids: &holderIDs, owner: ownerName)
+        held = exceptions.map { e in
+            let id = holderIDs[e.subject] ?? UUID()
+            holderIDs[e.subject] = id
+            return KIFFMapping.held(e, tafID: id)
+        }
+        for i in tafs.indices where held.contains(where: { $0.tafID == tafs[i].id }) {
+            tafs[i].state = .waiting
+            tafs[i].now = "Waiting on you"
+        }
+        notifyHeld()
     }
 
     // MARK: Sample mode
@@ -152,7 +158,7 @@ final class AppModel: ObservableObject {
     func start(_ draft: TafDraft, confirm: Bool = true) async -> Taf? {
         if confirm {
             do {
-                _ = try await signer.sign(answer: .approveOnce, heldID: UUID(), reason: "Issue \(draft.name)'s Card")
+                _ = try await signer.sign(answer: .approveOnce, heldID: "card-\(UUID().uuidString)", reason: "Issue \(draft.name)'s Card")
             } catch {
                 lastError = "The Card was not issued: Face ID did not confirm."
                 return nil
@@ -214,8 +220,23 @@ final class AppModel: ObservableObject {
 
     // MARK: The owner answers
 
+    /// Whether the owner can answer `call` from this phone. KIFF's held calls wait until
+    /// KIFF checks the phone's signature; until then they are answered in KIFF.
+    func canAnswer(_ call: HeldCall) -> Bool {
+        call.kiffID == nil || kiff.serverVerifiesSignatures
+    }
+
+    /// Where a held call from KIFF is answered while the phone cannot answer it.
+    func answerPage(for call: HeldCall) -> URL? {
+        call.kiffID.map(kiff.answerPage(for:))
+    }
+
     func answer(_ call: HeldCall, with answer: Answer) async {
-        guard held.contains(where: { $0.id == call.id }) else { return }
+        guard held.contains(where: { same($0, call) }) else { return }
+        guard canAnswer(call) else {
+            lastError = "Answer this one in KIFF. Answering from the phone arrives once KIFF checks the phone's signature."
+            return
+        }
         if call.kiffID == nil, clock() > call.expiresAt {
             resolve(call)
             log(call.tafID, .refused, "Expired: \(call.proposed.summary)", "Nobody answered in time")
@@ -224,7 +245,7 @@ final class AppModel: ObservableObject {
         }
         let signature: String
         do {
-            signature = try await signer.sign(answer: answer, heldID: call.id, reason: "Answer \(call.proposed.summary)")
+            signature = try await signer.sign(answer: answer, heldID: call.kiffID ?? call.id.uuidString, reason: "Answer \(call.proposed.summary)")
         } catch {
             lastError = "Not sent: Face ID did not confirm."
             return
@@ -326,9 +347,16 @@ final class AppModel: ObservableObject {
 
     // MARK: Helpers
 
+    /// Removes `call`, matched by KIFF's id when it has one, so a refresh while the
+    /// answer was on its way still removes the right hold.
     private func resolve(_ call: HeldCall) {
-        held.removeAll { $0.id == call.id }
+        held.removeAll { same($0, call) }
         notifyHeld()
+    }
+
+    private func same(_ a: HeldCall, _ b: HeldCall) -> Bool {
+        if let id = b.kiffID { return a.kiffID == id }
+        return a.id == b.id
     }
 
     private func notifyHeld() { onHeldChanged?(held, tafs) }

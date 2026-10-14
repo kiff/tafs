@@ -7,18 +7,24 @@ inside tafs.
 
 ## 1. Verify the phone's signature on an answer
 
-**Today:** the app signs every answer (approve once, refuse, a next step) with a
-P-256 key in the iPhone's Secure Enclave, behind Face ID. It then calls
-`POST /v1/me/card-exceptions/{id}/approve-once` or `/reject` with the person's
-device session. KIFF accepts the answer on the session alone; the signature stays
-on the phone.
+**Today:** the app does not answer KIFF's held calls. KIFF would accept an
+answer on the device session alone, which does not prove the owner gave it, so
+each held call from KIFF shows read-only with **Answer in KIFF**, which opens it
+at `app.kiff.dev/needs-you/{id}`. The switch is
+`KIFFClient.serverVerifiesSignatures`, off until this item ships.
+
+The signing is built: in sample mode every answer is signed with a P-256 key in
+the iPhone's Secure Enclave, behind Face ID, over
+`tafs.answer.v1|<id>|<answer>`, where the id is KIFF's exception id for a held
+call from KIFF.
 
 **Needed:** register a device's public key against the person
 (`POST /v1/me/devices`), and accept an answer only with a valid signature from a
-registered key over a fixed message. The app signs
-`tafs.answer.v1|<held id>|<answer>` today; KIFF should define the canonical
-message (exception id, answer, next step, accounting version, a nonce or expiry)
-and put the device key id in the receipt.
+registered key over a fixed message. KIFF should define the canonical message
+(exception id, answer, next step, accounting version, a nonce or expiry), refuse
+missing, invalid, wrong-hold and replayed signatures, and put the device key id
+in the receipt. Then the app sends the signature with the answer and turns the
+switch on.
 
 **Why it matters:** without it, anyone holding the session token can approve a
 refund. With it, the receipt proves the owner's own iPhone approved it.
@@ -44,11 +50,15 @@ confirms the exact holder, tools and limits on the phone; only then does it
 activate. Plus a Card per operation inside a generic tool (#1175) for tools like
 Shopify's.
 
-## 4. A cheap way to list a Card's use
+## 4. A cheap way to list a Card's use, in its units
 
 The app shows "$212 of $500 today" in sample mode. In KIFF mode it would need
 `/v1/me/mandates/{id}/statement` per Card on every refresh. A `used` and
 `remaining` per limit on the mandates list would save a round trip per Card.
+
+The mandates list also carries no units, so the app shows a Card's limits from it
+as bare numbers (15000, not $150.00). The statement and held calls already say
+the unit and scale (`unit`, `scale`, `parameter_units`); the list should too.
 
 ## 5. An agent key for a taf, without the dashboard
 
