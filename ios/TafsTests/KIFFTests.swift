@@ -77,6 +77,15 @@ final class KIFFTests: XCTestCase {
         XCTAssertEqual(String(data: StubProtocol.sent.last?.httpBody ?? Data(), encoding: .utf8), #"{"device_code":"dc"}"#)
     }
 
+    func testSignInSendsThePhonesKey() async throws {
+        let client = makeClient()
+        StubProtocol.responses["POST /v1/auth/device/start"] = (200, #"{"device_code":"dc","user_code":"ABCD-EFGH","verification_uri":"https://app.test/auth/device","verification_uri_complete":"https://app.test/auth/device?code=ABCD-EFGH","expires_in":600,"interval":5}"#)
+        _ = try await client.startDeviceSignIn(publicKey: Data([1, 2, 3]), deviceName: "tafs on iPhone")
+        let sent = try XCTUnwrap(StubProtocol.sent.last?.httpBody)
+        let body = try JSONDecoder().decode([String: String].self, from: sent)
+        XCTAssertEqual(body, ["public_key": "AQID", "device_name": "tafs on iPhone"])
+    }
+
     func testHeldCallsDecodeAndMap() async throws {
         let client = makeClient()
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, """

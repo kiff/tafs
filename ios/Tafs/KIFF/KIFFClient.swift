@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// The KIFF API as the iPhone uses it: device sign-in (RFC 034-B), held calls
@@ -31,17 +32,24 @@ final class KIFFClient {
     /// KIFF's MCP gateway, which lists the account's connected tools.
     let gatewayURL: URL
     var token: String?
-    /// Whether KIFF checks the phone's signature on an answer (docs/needs-from-kiff.md, item 1).
-    /// Until it does, the phone does not answer KIFF's held calls: an answer that KIFF accepts on
-    /// the session alone would not prove this iPhone's owner gave it.
+    /// Whether KIFF checks the phone's signature on an answer (kiff/kiff-cloud#1218). Without
+    /// it the phone does not answer KIFF's held calls: an answer that KIFF accepts on the
+    /// session alone would not prove this iPhone's owner gave it.
     let serverVerifiesSignatures: Bool
     private let session: URLSession
+    /// The account the phone signed in to, for signed setup calls.
+    var tenant: String?
+    /// Signs a setup call for a phone session bound to its key (kiff-cloud #1225): set
+    /// while a start the owner confirmed with Face ID runs, nil otherwise.
+    var setupSigner: (@MainActor (Data) throws -> String)?
+    /// The calls KIFF takes from a phone's session only with its signature.
+    static let signedSetupPaths: Set<String> = ["/v1/me/agents", "/v1/me/mandates", "/v1/keys"]
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
          webURL: URL = URL(string: "https://app.kiff.dev")!,
          gatewayURL: URL = URL(string: "https://mcp.kiff.dev")!,
          token: String? = nil,
-         serverVerifiesSignatures: Bool = false,
+         serverVerifiesSignatures: Bool = true,
          session: URLSession = .shared) {
         self.baseURL = baseURL
         self.webURL = webURL
@@ -84,8 +92,13 @@ final class KIFFClient {
         }
     }
 
-    func startDeviceSignIn() async throws -> DeviceStart {
-        try await send("POST", "/v1/auth/device/start", body: [String: String](), authorized: false)
+    /// Starts signing in. `publicKey` (SPKI DER) is the phone's signing key: KIFF shows its
+    /// fingerprint when the owner approves in their browser, and binds it to this session.
+    func startDeviceSignIn(publicKey: Data? = nil, deviceName: String? = nil) async throws -> DeviceStart {
+        var body: [String: String] = [:]
+        if let publicKey { body["public_key"] = publicKey.base64EncodedString() }
+        if let deviceName { body["device_name"] = deviceName }
+        return try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
     }
 
     /// One poll. Throws `.authorizationPending` until the person approves.
@@ -147,10 +160,13 @@ final class KIFFClient {
         let nextSteps: [String]?
         let createdAt: Date
         let expiresAt: Date?
+        /// The hold's accounting version: part of what the phone signs, so an answer
+        /// counts only for the hold as it stood when the owner saw it.
+        let accountingVersion: Int?
 
         enum CodingKeys: String, CodingKey {
             case id, subject, action, status, breaches, parameters, reason
-            case entityID = "entity_id", nextSteps = "next_steps"
+            case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
             case createdAt = "created_at", expiresAt = "expires_at"
         }
@@ -162,15 +178,48 @@ final class KIFFClient {
         return response.exceptions
     }
 
-    func approveOnce(_ id: String) async throws {
-        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/approve-once", body: [String: String]())
+    /// The phone's signature on an answer, as KIFF checks it.
+    struct AnswerSignature: Encodable, Equatable {
+        let signedAt: String
+        let value: String
+
+        enum CodingKeys: String, CodingKey { case signedAt = "signed_at", value }
+    }
+
+    private struct AnswerBody: Encodable {
+        var nextStep: String?
+        var signature: AnswerSignature?
+
+        enum CodingKeys: String, CodingKey { case nextStep = "next_step", signature }
+    }
+
+    /// What the phone signs to answer a held call: KIFF's `kiff.answer.v1` message, one
+    /// field per line (kiff-cloud apps/api/internal/auth/devicekey.go).
+    static func answerMessage(tenant: String, exceptionID: String, answer: String, nextStep: String?,
+                              note: String? = nil, accountingVersion: Int, signedAt: String) -> Data {
+        let noteHash = note.flatMap { $0.isEmpty ? nil : $0 }
+            .map { SHA256.hash(data: Data($0.utf8)).map { String(format: "%02x", $0) }.joined() } ?? ""
+        let lines = ["kiff.answer.v1", tenant, exceptionID, answer, nextStep ?? "", noteHash,
+                     String(accountingVersion), signedAt]
+        return Data(lines.joined(separator: "\n").utf8)
+    }
+
+    /// What the phone signs for a setup call: KIFF's `kiff.request.v1` message
+    /// (kiff-cloud apps/api/internal/auth/devicekey.go).
+    static func requestMessage(tenant: String, method: String, uri: String, body: Data, signedAt: String) -> Data {
+        let bodyHash = SHA256.hash(data: body).map { String(format: "%02x", $0) }.joined()
+        return Data(["kiff.request.v1", tenant, method, uri, bodyHash, signedAt].joined(separator: "\n").utf8)
+    }
+
+    func approveOnce(_ id: String, signature: AnswerSignature? = nil) async throws {
+        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/approve-once",
+                                      body: AnswerBody(signature: signature))
     }
 
     /// Refuses a held call; `nextStep` is one of the Card's next steps ("return first").
-    func reject(_ id: String, nextStep: String? = nil) async throws {
-        var body: [String: String] = [:]
-        if let nextStep { body["next_step"] = nextStep }
-        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/reject", body: body)
+    func reject(_ id: String, nextStep: String? = nil, signature: AnswerSignature? = nil) async throws {
+        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/reject",
+                                      body: AnswerBody(nextStep: nextStep, signature: signature))
     }
 
     // MARK: Cards
@@ -350,6 +399,12 @@ final class KIFFClient {
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
+        }
+        if method == "POST", base == nil, Self.signedSetupPaths.contains(path), let setupSigner, let tenant {
+            let signedAt = ISO8601DateFormatter().string(from: Date())
+            let uri = url.path + (url.query.map { "?" + $0 } ?? "")
+            let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)
+            request.setValue("t=\(signedAt),v1=\(try setupSigner(message))", forHTTPHeaderField: "KIFF-Device-Signature")
         }
         if authorized {
             guard let token else { throw KIFFError.unauthorized }

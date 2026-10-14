@@ -4,7 +4,9 @@ import XCTest
 /// A signer that refuses, as when Face ID is cancelled.
 struct RefusingSigner: ApprovalSigning {
     struct Cancelled: Error {}
-    func sign(answer: Answer, heldID: String, reason: String) async throws -> String { throw Cancelled() }
+    var publicKeyDER: Data { Data([0x30, 0x59]) }
+    func sign(_ message: Data, reason: String) async throws -> String { throw Cancelled() }
+    func signConfirmed(_ message: Data) throws -> String { throw Cancelled() }
 }
 
 @MainActor
@@ -91,6 +93,37 @@ final class StartTafTests: XCTestCase {
     }
 
     // MARK: Starting on KIFF
+
+    /// From a phone session bound to its key, the start's setup calls carry the phone's
+    /// signature over KIFF's kiff.request.v1 message (kiff-cloud #1225); one Face ID, at
+    /// confirm, covers them. Nothing else is signed this way.
+    func testAKeyedPhoneSignsTheSetupCalls() async throws {
+        let signer = RecordingSigner()
+        let model = model(signer: signer)
+        model.kiffTenant = "t1"
+        model.sessionHasKey = true
+        StubProtocol.responses["POST /v1/me/agents"] = (201, #"{"id":"rae-k3f9","recorded":true,"sources":["record"]}"#)
+        StubProtocol.responses["POST /v1/me/mandates"] = (201, #"{"id":"rae-k3f9-stripe_refund","subject":"rae-k3f9","grants":[],"aggregates":[],"active":true}"#)
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_1","plaintext":"kiff_live_secret","agent_id":"rae-k3f9","created_at":"2026-10-14T10:00:00Z"}"#)
+        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active","next_run":"2026-10-14T10:30:00Z","last_run":null},"session":"sesn_1"}"#)
+
+        _ = try await model.startOnKIFF(name: "Rae", job: "refunds",
+                                        limits: [ToolLimit(tool: refund, on: true, perCall: "150", perDay: "2000")], agentID: "rae-k3f9")
+
+        let setup = StubProtocol.sent.filter { $0.url?.host == "api.test" && $0.httpMethod == "POST" }
+        XCTAssertEqual(setup.map { $0.url?.path ?? "" }, ["/v1/me/agents", "/v1/me/mandates", "/v1/keys"])
+        for request in setup {
+            let header = try XCTUnwrap(request.value(forHTTPHeaderField: "KIFF-Device-Signature"), request.url?.path ?? "")
+            XCTAssertTrue(header.hasPrefix("t=") && header.hasSuffix(",v1=signature"), header)
+            let signedAt = String(header.dropFirst(2).prefix { $0 != "," })
+            let expected = KIFFClient.requestMessage(tenant: "t1", method: "POST", uri: request.url?.path ?? "",
+                                                     body: request.httpBody ?? Data(), signedAt: signedAt)
+            XCTAssertTrue(signer.signed.contains(String(decoding: expected, as: UTF8.self)), "signed what KIFF checks for \(request.url?.path ?? "")")
+        }
+        XCTAssertNil(StubProtocol.sent.first { $0.url?.host == "cloud.test" }?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertEqual(signer.signed.filter { $0.hasPrefix("kiff.request.v1") }.count, 3)
+        XCTAssertNil(model.kiff.setupSigner, "nothing signs after the start")
+    }
 
     func testStartsTheAgentItsCardsItsKeyThenTheRun() async throws {
         let model = model()
