@@ -1,6 +1,11 @@
 import XCTest
 @testable import Tafs
 
+/// Signs without Face ID, so tests never wait at a prompt.
+private struct StubSigner: ApprovalSigning {
+    func sign(answer: Answer, heldID: UUID, reason: String) async throws -> String { "stub-signature" }
+}
+
 @MainActor
 final class AppModelTests: XCTestCase {
     private func startedRefunds(_ model: AppModel) async -> Taf {
@@ -11,7 +16,7 @@ final class AppModelTests: XCTestCase {
     }
 
     func testHeldCallWaitsThenApprovalDrawsOnTheCard() async {
-        let model = AppModel()
+        let model = AppModel(signer: StubSigner())
         let taf = await startedRefunds(model)
 
         model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
@@ -27,7 +32,7 @@ final class AppModelTests: XCTestCase {
     }
 
     func testRefusedAnswerDrawsNothing() async {
-        let model = AppModel()
+        let model = AppModel(signer: StubSigner())
         let taf = await startedRefunds(model)
         model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
         await model.answer(model.held[0], with: .refuse)
@@ -37,7 +42,7 @@ final class AppModelTests: XCTestCase {
 
     func testExpiredHeldCallIsRefusedNotApproved() async {
         var now = Date()
-        let model = AppModel(clock: { now })
+        let model = AppModel(signer: StubSigner(), clock: { now })
         let taf = await startedRefunds(model)
         model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
         now = now.addingTimeInterval(11 * 60)
@@ -48,7 +53,7 @@ final class AppModelTests: XCTestCase {
     }
 
     func testRevokeStopsAndDropsWaitingCalls() async {
-        let model = AppModel()
+        let model = AppModel(signer: StubSigner())
         let taf = await startedRefunds(model)
         model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
         model.revoke(taf.id)
@@ -60,7 +65,7 @@ final class AppModelTests: XCTestCase {
     }
 
     func testDraftMatchesTheJob() {
-        let draft = AppModel().draft(job: "Pay our vendor bills when they match a PO")
+        let draft = AppModel(signer: StubSigner()).draft(job: "Pay our vendor bills when they match a PO")
         XCTAssertEqual(draft.templateKey, "billpay")
         XCTAssertTrue(draft.rules.contains { $0.action == "new_payee" && $0.never })
     }
