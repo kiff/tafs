@@ -47,7 +47,7 @@ enum TafTemplates {
         job: "Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.",
         tools: ["Stripe", "Shopify", "Email"],
         rules: [
-            CardRule(action: "refund", label: "Refunds", perAction: .usd(150), perWindow: .usd(2_000), window: .day),
+            CardRule(action: "refund", label: "Refunds", perAction: .usd(150), perWindow: .usd(2_000), window: .day, nextSteps: ["Return first"]),
             CardRule(action: "credit", label: "Credits", perAction: .usd(100), perWindow: .usd(1_000), window: .day),
             CardRule(action: "payout", label: "Payouts", never: true, outside: .refuse),
         ],
@@ -66,7 +66,7 @@ enum TafTemplates {
         job: "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
         tools: ["Xero", "Email"],
         rules: [
-            CardRule(action: "pay_bill", label: "Bills", perAction: .usd(5_000), perWindow: .usd(25_000), window: .week),
+            CardRule(action: "pay_bill", label: "Bills", perAction: .usd(5_000), perWindow: .usd(25_000), window: .week, nextSteps: ["Pay half now"]),
             CardRule(action: "wire", label: "Wires", alwaysAsk: true),
             CardRule(action: "bank_details", label: "Bank detail changes", never: true, outside: .refuse),
             CardRule(action: "new_payee", label: "New payees", never: true, outside: .refuse),
@@ -108,7 +108,7 @@ enum TafTemplates {
         rules: [
             CardRule(action: "deploy", label: "Production deploys", countPerWindow: 10, window: .day),
             CardRule(action: "rollback", label: "Rollbacks", countPerWindow: 20, window: .day),
-            CardRule(action: "migration", label: "Schema migrations", alwaysAsk: true),
+            CardRule(action: "migration", label: "Schema migrations", alwaysAsk: true, nextSteps: ["Run it tonight"]),
             CardRule(action: "destroy_data", label: "Dropping or deleting data", never: true, outside: .refuse),
         ],
         script: [

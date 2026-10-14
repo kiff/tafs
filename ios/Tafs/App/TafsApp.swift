@@ -2,7 +2,9 @@ import SwiftUI
 
 @main
 struct TafsApp: App {
-    @StateObject private var model = AppModel()
+    @StateObject private var model = AppModel(store: SampleStore())
+    @Environment(\.scenePhase) private var scenePhase
+    private let lockScreen = LockScreen()
 
     var body: some Scene {
         WindowGroup {
@@ -10,6 +12,13 @@ struct TafsApp: App {
                 .environmentObject(model)
                 .preferredColorScheme(.dark)
                 .tint(Theme.amber)
+                .task {
+                    model.onHeldChanged = { [lockScreen] held, tafs in lockScreen.update(held: held, tafs: tafs) }
+                    await model.restore()
+                }
+        }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active, model.mode == .kiff { Task { await model.refresh() } }
         }
     }
 }
@@ -38,6 +47,9 @@ struct RootView: View {
             } else {
                 OnboardingView()
             }
+        }
+        .onOpenURL { url in
+            if url.host == "needs-you" { tab = .needsYou }
         }
         .alert("Not done", isPresented: Binding(
             get: { model.lastError != nil },

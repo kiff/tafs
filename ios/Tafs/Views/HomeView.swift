@@ -4,6 +4,7 @@ struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @Binding var tab: Tab
     @State private var showingNew = false
+    @State private var showingSettings = false
 
     var body: some View {
         ScrollView {
@@ -23,32 +24,55 @@ struct HomeView: View {
                     }
                 }
 
-                Button("Play the next sample actions") { model.playNextDemoActions() }
-                    .buttonStyle(OutlineButtonStyle(color: Theme.soft))
-                Text("Sample data. The Card is checked on this phone; with KIFF connected, KIFF decides.")
-                    .font(.system(size: 12))
-                    .foregroundColor(Theme.dim)
+                if model.mode == .kiff, model.tafs.isEmpty {
+                    Panel {
+                        Text("No Cards yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                        Text("Cards you issue in KIFF show up here, one taf per agent that holds them. Pull down to refresh.")
+                            .font(.system(size: 14)).foregroundColor(Theme.soft)
+                    }
+                }
+
+                if model.mode == .sample {
+                    Button("Play the next sample actions") { model.playNextDemoActions() }
+                        .buttonStyle(OutlineButtonStyle(color: Theme.soft))
+                    Text("Sample data. The Card is checked on this phone; signed in with KIFF, KIFF decides.")
+                        .font(.system(size: 12))
+                        .foregroundColor(Theme.dim)
+                } else {
+                    Text("Signed in with KIFF. KIFF decides every action. Pull down to refresh.")
+                        .font(.system(size: 12))
+                        .foregroundColor(Theme.dim)
+                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
-        .refreshable { model.playNextDemoActions() }
+        .refreshable { await model.refresh() }
         .screenBackground()
         .navigationDestination(for: UUID.self) { TafDetailView(tafID: $0) }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button { showingNew = true } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(Theme.amberInk)
-                        .frame(width: 36, height: 36)
-                        .background(Theme.amber)
-                        .clipShape(Circle())
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button { showingSettings = true } label: {
+                    Image(systemName: "gearshape").foregroundColor(Theme.soft)
                 }
-                .accessibilityLabel("Start a new taf")
+                .accessibilityLabel("Settings")
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if model.canStartTafs {
+                    Button { showingNew = true } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundColor(Theme.amberInk)
+                            .frame(width: 36, height: 36)
+                            .background(Theme.amber)
+                            .clipShape(Circle())
+                    }
+                    .accessibilityLabel("Start a new taf")
+                }
             }
         }
         .sheet(isPresented: $showingNew) { NewTafFlow() }
+        .sheet(isPresented: $showingSettings) { SettingsView() }
     }
 
     private var headline: some View {

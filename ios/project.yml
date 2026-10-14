@@ -15,7 +15,9 @@ targets:
   Tafs:
     type: application
     platform: iOS
-    sources: [Tafs]
+    sources: [Tafs, Shared]
+    dependencies:
+      - target: TafsWidgets
     info:
       path: Tafs/Info.plist
       properties:
@@ -26,11 +28,30 @@ targets:
         UIUserInterfaceStyle: Dark
         NSFaceIDUsageDescription: tafs asks for Face ID before an approval is signed and sent.
         ITSAppUsesNonExemptEncryption: false
+        NSSupportsLiveActivities: true
+        CFBundleURLTypes:
+          - CFBundleURLName: bot.tafs.app
+            CFBundleURLSchemes: [tafs]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  TafsWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.1"
+    sources: [TafsWidgets, Shared]
+    info:
+      path: TafsWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: tafs
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.widgets
+        TARGETED_DEVICE_FAMILY: "1"
   TafsTests:
     type: bundle.unit-test
     platform: iOS

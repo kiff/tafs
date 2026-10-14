@@ -1,0 +1,226 @@
+import Foundation
+
+/// The KIFF API as the iPhone uses it: device sign-in (RFC 034-B), held calls
+/// (`/v1/me/card-exceptions`) and Cards (`/v1/me/mandates`).
+///
+/// tafs is a KIFF customer like any other: it only uses the public API.
+final class KIFFClient {
+    enum KIFFError: Error, Equatable, LocalizedError {
+        case authorizationPending
+        case slowDown
+        case expired
+        case unauthorized
+        case server(status: Int, message: String)
+
+        var errorDescription: String? {
+            switch self {
+            case .authorizationPending: return "Waiting for you to approve the sign-in."
+            case .slowDown: return "Asked KIFF too often; slowing down."
+            case .expired: return "The sign-in code expired. Start again."
+            case .unauthorized: return "Signed out of KIFF. Sign in again."
+            case .server(_, let message): return message
+            }
+        }
+    }
+
+    let baseURL: URL
+    var token: String?
+    private let session: URLSession
+
+    init(baseURL: URL = URL(string: "https://api.kiff.dev")!, token: String? = nil, session: URLSession = .shared) {
+        self.baseURL = baseURL
+        self.token = token
+        self.session = session
+    }
+
+    // MARK: Device sign-in
+
+    struct DeviceStart: Decodable, Equatable {
+        let deviceCode: String
+        let userCode: String
+        let verificationURI: String
+        let verificationURIComplete: String
+        let expiresIn: Int
+        let interval: Int
+
+        enum CodingKeys: String, CodingKey {
+            case deviceCode = "device_code", userCode = "user_code"
+            case verificationURI = "verification_uri", verificationURIComplete = "verification_uri_complete"
+            case expiresIn = "expires_in", interval
+        }
+    }
+
+    struct DeviceToken: Decodable, Equatable {
+        let accessToken: String
+        let expiresIn: Int
+        let tenant: String
+        let subject: String
+
+        enum CodingKeys: String, CodingKey {
+            case accessToken = "access_token", expiresIn = "expires_in", tenant, subject
+        }
+    }
+
+    func startDeviceSignIn() async throws -> DeviceStart {
+        try await send("POST", "/v1/auth/device/start", body: [String: String](), authorized: false)
+    }
+
+    /// One poll. Throws `.authorizationPending` until the person approves.
+    func pollDeviceToken(deviceCode: String) async throws -> DeviceToken {
+        do {
+            return try await send("POST", "/v1/auth/device/token", body: ["device_code": deviceCode], authorized: false)
+        } catch KIFFError.server(400, let message) {
+            switch message {
+            case "authorization_pending": throw KIFFError.authorizationPending
+            case "slow_down": throw KIFFError.slowDown
+            case "expired_token": throw KIFFError.expired
+            default: throw KIFFError.server(status: 400, message: message)
+            }
+        }
+    }
+
+    func signOut() async throws {
+        let _: Empty = try await send("POST", "/v1/auth/device/logout", body: [String: String]())
+    }
+
+    // MARK: Held calls
+
+    struct CardException: Decodable, Equatable {
+        struct Breach: Decodable, Equatable {
+            let outcome: String
+            let reason: String?
+            let limit: Int64?
+            let quantity: String?
+        }
+
+        let id: String
+        let subject: String
+        let action: String
+        let entityID: String
+        let status: String
+        let breaches: [Breach]
+        let parameters: [String: Int64]?
+        let reason: String?
+        let nextSteps: [String]?
+        let createdAt: Date
+        let expiresAt: Date?
+
+        enum CodingKeys: String, CodingKey {
+            case id, subject, action, status, breaches, parameters, reason
+            case entityID = "entity_id", nextSteps = "next_steps"
+            case createdAt = "created_at", expiresAt = "expires_at"
+        }
+    }
+
+    func heldCalls() async throws -> [CardException] {
+        struct Response: Decodable { let exceptions: [CardException] }
+        let response: Response = try await send("GET", "/v1/me/card-exceptions?status=held")
+        return response.exceptions
+    }
+
+    func approveOnce(_ id: String) async throws {
+        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/approve-once", body: [String: String]())
+    }
+
+    /// Refuses a held call; `nextStep` is one of the Card's next steps ("return first").
+    func reject(_ id: String, nextStep: String? = nil) async throws {
+        var body: [String: String] = [:]
+        if let nextStep { body["next_step"] = nextStep }
+        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/reject", body: body)
+    }
+
+    // MARK: Cards
+
+    struct Mandate: Decodable, Equatable {
+        struct Grant: Decodable, Equatable {
+            struct PerAction: Decodable, Equatable { let quantity: String; let max: Int64 }
+            let action: String
+            let perActionMax: [PerAction]?
+            let nextSteps: [String]?
+
+            enum CodingKeys: String, CodingKey {
+                case action, perActionMax = "per_action_max", nextSteps = "next_steps"
+            }
+        }
+
+        struct Aggregate: Decodable, Equatable {
+            let quantity: String
+            let limit: Int64
+            let window: String
+        }
+
+        let id: String
+        let subject: String
+        let grants: [Grant]
+        let aggregates: [Aggregate]
+        let active: Bool
+        let validUntil: Date?
+        let revokedAt: Date?
+        let onExceed: String?
+
+        enum CodingKeys: String, CodingKey {
+            case id, subject, grants, aggregates, active
+            case validUntil = "valid_until", revokedAt = "revoked_at", onExceed = "on_exceed"
+        }
+    }
+
+    func cards() async throws -> [Mandate] {
+        struct Response: Decodable { let mandates: [Mandate] }
+        let response: Response = try await send("GET", "/v1/me/mandates")
+        return response.mandates
+    }
+
+    func revoke(cardID: String) async throws {
+        let _: Empty = try await send("POST", "/v1/me/mandates/\(escaped(cardID))/revoke", body: [String: String]())
+    }
+
+    // MARK: Transport
+
+    private struct Empty: Decodable {}
+
+    private func escaped(_ s: String) -> String {
+        s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
+    }
+
+    private func send<T: Decodable>(_ method: String, _ path: String, authorized: Bool = true) async throws -> T {
+        try await send(method, path, body: Optional<[String: String]>.none, authorized: authorized)
+    }
+
+    private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, authorized: Bool = true) async throws -> T {
+        guard let url = URL(string: path, relativeTo: baseURL) else { throw KIFFError.server(status: 0, message: "Bad path") }
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("tafs-ios", forHTTPHeaderField: "User-Agent")
+        if let body {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONEncoder().encode(body)
+        }
+        if authorized {
+            guard let token else { throw KIFFError.unauthorized }
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await session.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if status == 401 { throw KIFFError.unauthorized }
+        guard (200..<300).contains(status) else {
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "KIFF answered \(status)"
+            throw KIFFError.server(status: status, message: message)
+        }
+        if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }
+        return try Self.decoder.decode(T.self, from: data)
+    }
+
+    static let decoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .custom { decoder in
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            let precise = ISO8601DateFormatter()
+            precise.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = precise.date(from: raw) ?? ISO8601DateFormatter().date(from: raw) { return date }
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Bad date \(raw)"))
+        }
+        return d
+    }()
+}
