@@ -63,7 +63,8 @@ async function main(argv: string[]): Promise<void> {
         budgetCents: budget ? Number(budget) : undefined,
       });
       print(`started ${deployment.name} (${deployment.id}); next runs ${deployment.schedule?.upcoming_runs_at?.slice(0, 3).join(", ")}`);
-      if (sessionID) { print(`first run ${sessionID}`); await watch(c, sessionID, print); }
+      print(`first run ${sessionID}`);
+      await watch(c, sessionID, print);
       return;
     }
     case "list":
