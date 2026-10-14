@@ -360,13 +360,19 @@ async function message(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, ta
     }
   }
 
-  // A chat remembers what the runs learned, and the other way around.
-  const memory = await ensureMemory(client, taf);
+  // A chat remembers what the runs learned, and the other way around. A taf
+  // started before memory gets its store here, by whichever chat claims the
+  // lock: two first chats at once must not make two stores. The other one
+  // starts without memory this time.
+  let memory = taf.metadata?.[META.memory];
+  if (!memory && await deps.slots.claim(`memory#${taf.id}`, new Date(now + 10 * 60_000))) {
+    memory = await ensureMemory(client, taf);
+  }
   const session = await client.beta.sessions.create({
     agent: { type: "agent", id: taf.agent.id, version: taf.agent.version },
     environment_id: taf.environment_id,
     vault_ids: taf.vault_ids,
-    resources: [memoryResource(memory)],
+    ...(memory ? { resources: [memoryResource(memory)] } : {}),
     ...(taf.budget ? { budget: taf.budget } : {}),
     title: `${taf.metadata?.[META.taf] ?? taf.name}: chat`,
     metadata: { [META.chatFor]: taf.id, [META.tenant]: me.tenantID, [META.taf]: taf.metadata?.[META.taf] ?? taf.name },

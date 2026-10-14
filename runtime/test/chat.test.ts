@@ -321,4 +321,16 @@ describe("memory", () => {
     const created = JSON.parse(f.calls.find((c) => c.startsWith("sessions.create"))!.slice("sessions.create ".length));
     expect(created.resources[0].memory_store_id).toBe("memstore_made");
   });
+
+  it("makes one store when two first chats race: the one without the lock starts without memory", async () => {
+    const f = fakeAnthropic();
+    delete f.deployments[0]!.metadata.tafs_memory;
+    const slots = memorySlots();
+    slots.held.add("memory#depl_acme"); // another chat is giving the taf its store right now
+    const r = await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "Hello" }, slots });
+    expect(r.status).toBe(200);
+    expect(f.calls.filter((c) => c.startsWith("memoryStores.create"))).toEqual([]);
+    const created = JSON.parse(f.calls.find((c) => c.startsWith("sessions.create"))!.slice("sessions.create ".length));
+    expect(created.resources).toBeUndefined();
+  });
 });
