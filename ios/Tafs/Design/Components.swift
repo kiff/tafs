@@ -67,10 +67,10 @@ struct Eyebrow: View {
 
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        Body(configuration: configuration)
+        StyledLabel(configuration: configuration)
     }
 
-    private struct Body: View {
+    private struct StyledLabel: View {
         let configuration: Configuration
         @Environment(\.isEnabled) private var isEnabled
 
@@ -90,10 +90,10 @@ struct OutlineButtonStyle: ButtonStyle {
     var color: Color = Theme.ink
 
     func makeBody(configuration: Configuration) -> some View {
-        Body(configuration: configuration, color: color)
+        StyledLabel(configuration: configuration, color: color)
     }
 
-    private struct Body: View {
+    private struct StyledLabel: View {
         let configuration: Configuration
         let color: Color
         @Environment(\.isEnabled) private var isEnabled
