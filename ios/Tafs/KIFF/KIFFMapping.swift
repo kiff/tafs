@@ -17,6 +17,12 @@ enum KIFFMapping {
         return String(quantity.dropFirst(4).dropLast())
     }
 
+    /// An amount in the unit KIFF declares for it; a bare number when it declares none.
+    static func money(_ minor: Int64, unit: String?, scale: Int?) -> Money {
+        guard let unit, !unit.isEmpty else { return .bare(minor) }
+        return Money(minor: minor, currency: unit, scale: scale ?? 0)
+    }
+
     /// A held call's local id, the same on every refresh and every launch: derived from
     /// KIFF's id, so a notification is posted once and an answer removes the right row.
     static func heldID(_ kiffID: String) -> UUID {
@@ -44,20 +50,32 @@ enum KIFFMapping {
         let outside: Outside = mandate.onExceed == "refuse" ? .refuse : .hold
         var rules = mandate.grants.map { grant -> CardRule in
             var rule = CardRule(action: grant.action, label: label(grant.action), outside: outside)
-            // The mandates list carries no units (docs/needs-from-kiff.md, item 4): bare.
-            if let cap = grant.perActionMax?.first { rule.perAction = .bare(cap.max) }
+            if let cap = grant.perActionMax?.first { rule.perAction = money(cap.max, unit: cap.unit, scale: cap.scale) }
             return rule
         }
-        // A Card's totals cover all its grants; show each once, on the first line.
-        for aggregate in mandate.aggregates where !rules.isEmpty {
-            if isSum(aggregate.quantity) {
-                rules[0].perWindow = .bare(aggregate.limit)
-            } else {
-                rules[0].countPerWindow = Int(aggregate.limit)
-            }
-            rules[0].window = window(aggregate.window)
+        // A Card's totals cover all its grants; show one of each, on the first line: the
+        // first summed total, with the ceiling it has now (extra room included), and the
+        // first count.
+        guard !rules.isEmpty else { return rules }
+        let count = mandate.aggregates.first { !isSum($0.quantity) }
+        if let count { rules[0].countPerWindow = Int(count.limit) }
+        if let shown = shownTotal(mandate) {
+            let (total, line) = shown
+            let ceiling = line.flatMap { $0.status == "ok" ? $0.limit : nil } ?? total.limit
+            rules[0].perWindow = money(ceiling, unit: line?.unit ?? total.unit, scale: line?.scale ?? total.scale)
+            rules[0].window = window(total.window)
+        } else if let count {
+            rules[0].window = window(count.window)
         }
         return rules
+    }
+
+    /// The summed total a Card shows, and its use line from `?include=use`: the same
+    /// quantity and window, so the meter never divides one window's use by another's.
+    static func shownTotal(_ mandate: KIFFClient.Mandate) -> (KIFFClient.Mandate.Aggregate, KIFFClient.Mandate.Limit?)? {
+        guard let total = mandate.aggregates.first(where: { isSum($0.quantity) }) else { return nil }
+        let line = mandate.limits?.first { $0.quantity == total.quantity && $0.window == total.window }
+        return (total, line)
     }
 
     /// One taf per holder; `ids` keeps each holder's taf id stable across refreshes.
@@ -79,6 +97,19 @@ enum KIFFMapping {
             taf.state = card.revoked ? .revoked : .working
             taf.now = card.revoked ? "Card not active" : "Acting under KIFF"
             taf.kiffCardIDs = cards.map(\.id)
+            // What each Card has used of the total it shows. When KIFF could not read it,
+            // the taf says so instead of showing nothing used.
+            var unknown = Set<String>()
+            for card in cards {
+                guard let action = card.grants.first?.action, let shown = shownTotal(card) else { continue }
+                let (total, line) = shown
+                if let line, line.status == "ok", let used = line.used {
+                    taf.used[action] = money(used, unit: line.unit ?? total.unit, scale: line.scale ?? total.scale)
+                } else {
+                    unknown.insert(action)
+                }
+            }
+            taf.usageUnknown = unknown
             return taf
         }
     }

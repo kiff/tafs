@@ -143,6 +143,9 @@ struct Taf: Identifiable, Hashable, Codable {
     var now: String = "Ready"
     /// Spent so far in the current window, per rule action.
     var used: [String: Money] = [:]
+    /// Rule actions whose use KIFF could not read: shown as unknown, never as zero.
+    /// Nil in sample mode.
+    var usageUnknown: Set<String>?
     var counted: [String: Int] = [:]
     /// The KIFF Cards this taf holds, when signed in to KIFF.
     var kiffCardIDs: [String] = []
