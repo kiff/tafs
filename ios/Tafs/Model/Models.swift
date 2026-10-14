@@ -171,6 +171,8 @@ struct HeldCall: Identifiable, Hashable, Codable {
     var expiresAt: Date
     /// KIFF's id for this held call, when it came from KIFF.
     var kiffID: String?
+    /// KIFF's accounting version for the hold, signed with the answer.
+    var accountingVersion: Int?
     /// Other answers the Card allows besides approve and refuse ("return first").
     var nextSteps: [String] = []
 }

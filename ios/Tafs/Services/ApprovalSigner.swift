@@ -6,42 +6,79 @@ import LocalAuthentication
 /// a real signature waits for a person at the Face ID prompt.
 @MainActor
 protocol ApprovalSigning {
-    func sign(answer: Answer, heldID: String, reason: String) async throws -> String
+    /// The public half of the signing key (P-256, SPKI DER). KIFF binds it to this
+    /// phone's session when the owner approves the sign-in in their browser.
+    var publicKeyDER: Data { get }
+    /// Asks for Face ID (or the passcode), then signs `message`. Returns a base64 DER
+    /// ECDSA signature over its SHA-256.
+    func sign(_ message: Data, reason: String) async throws -> String
+    /// Signs `message` without asking again: only for the requests of a step the owner
+    /// has just confirmed with Face ID (starting a taf signs each of its setup calls).
+    func signConfirmed(_ message: Data) throws -> String
+}
+
+@MainActor
+extension ApprovalSigning {
+    /// An answer in sample mode, where the phone checks the Card itself.
+    func sign(answer: Answer, heldID: String, reason: String) async throws -> String {
+        try await sign(Data("tafs.answer.v1|\(heldID)|\(answer.wireName)".utf8), reason: reason)
+    }
 }
 
 /// Signs the owner's answer to a held call with a key that never leaves the iPhone.
 ///
 /// On a device the key lives in the Secure Enclave. The Simulator has none, so there
-/// it falls back to an in-memory software key, which is fine for a demo and never
-/// for production. An answer to KIFF counts only once KIFF verifies the signature
-/// against the device's registered public key; until KIFF does, the app does not
-/// answer KIFF's held calls (`KIFFClient.serverVerifiesSignatures`). A BFF never
+/// it falls back to a software key, which is fine for a demo and never for production.
+/// The key is kept across launches (the Keychain holds the Secure Enclave's handle, not
+/// the key), so the key KIFF registered at sign-in is the one that signs. An answer to
+/// KIFF counts only once KIFF verifies the signature against that key; a BFF never
 /// vouches for an approval.
 @MainActor
 final class ApprovalSigner: ApprovalSigning {
     enum SignerError: Error { case notAuthenticated }
 
+    private static let keyAccount = "tafs.signing-key"
+
     private let enclaveKey: SecureEnclave.P256.Signing.PrivateKey?
     private let softwareKey: P256.Signing.PrivateKey?
 
     init() {
-        if SecureEnclave.isAvailable, let key = try? SecureEnclave.P256.Signing.PrivateKey() {
-            enclaveKey = key
-            softwareKey = nil
-        } else {
-            enclaveKey = nil
-            softwareKey = P256.Signing.PrivateKey()
+        let saved = Keychain.load(Self.keyAccount).flatMap { Data(base64Encoded: $0) }
+        var enclave: SecureEnclave.P256.Signing.PrivateKey?
+        var software: P256.Signing.PrivateKey?
+        if SecureEnclave.isAvailable {
+            if let saved, let key = try? SecureEnclave.P256.Signing.PrivateKey(dataRepresentation: saved) {
+                enclave = key
+            } else if let key = try? SecureEnclave.P256.Signing.PrivateKey() {
+                Keychain.save(key.dataRepresentation.base64EncodedString(), for: Self.keyAccount)
+                enclave = key
+            }
         }
+        if enclave == nil {
+            if let saved, let key = try? P256.Signing.PrivateKey(rawRepresentation: saved) {
+                software = key
+            } else {
+                let key = P256.Signing.PrivateKey()
+                Keychain.save(key.rawRepresentation.base64EncodedString(), for: Self.keyAccount)
+                software = key
+            }
+        }
+        enclaveKey = enclave
+        softwareKey = software
     }
 
     var usesSecureEnclave: Bool { enclaveKey != nil }
 
-    /// Asks for Face ID (or the passcode), then signs `answer` for `heldID`: KIFF's
-    /// exception id for a held call from KIFF, so the signature names the server's hold.
-    /// Returns the signature, base64.
-    func sign(answer: Answer, heldID: String, reason: String) async throws -> String {
+    var publicKeyDER: Data {
+        enclaveKey?.publicKey.derRepresentation ?? softwareKey?.publicKey.derRepresentation ?? Data()
+    }
+
+    func sign(_ message: Data, reason: String) async throws -> String {
         try await authenticate(reason: reason)
-        let message = Data("tafs.answer.v1|\(heldID)|\(answer.wireName)".utf8)
+        return try signConfirmed(message)
+    }
+
+    func signConfirmed(_ message: Data) throws -> String {
         let signature: Data
         if let enclaveKey {
             signature = try enclaveKey.signature(for: message).derRepresentation

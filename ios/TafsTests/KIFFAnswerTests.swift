@@ -69,17 +69,21 @@ final class KIFFUnitsTests: XCTestCase {
     }
 }
 
-/// Answers to KIFF's held calls: gated until KIFF verifies the phone's signature,
-/// bound to KIFF's id, and matched by it across refreshes.
+/// Answers to KIFF's held calls: signed with KIFF's message over this hold and its
+/// accounting version, sent only from a session that holds the phone's key, and
+/// matched by KIFF's id across refreshes.
 @MainActor
 final class KIFFAnswerTests: XCTestCase {
     private let heldJSON = """
     {"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"refund-agent","action":"refund_order","entity_id":"ord_4502",
       "status":"held","breaches":[{"mandate_id":"m1","outcome":"per_action_exceeded","quantity":"sum(amount_cents)","limit":15000}],
-      "parameters":{"amount_cents":48000},"created_at":"2026-10-14T10:41:00Z","expires_at":"2099-10-14T10:51:00Z"}]}
+      "parameters":{"amount_cents":48000},"created_at":"2026-10-14T10:41:00Z","expires_at":"2099-10-14T10:51:00Z",
+      "accounting_version":2}]}
     """
 
-    private func makeModel(verifies: Bool, signer: RecordingSigner) async throws -> AppModel {
+    private let now = ISO8601DateFormatter().date(from: "2026-10-14T10:45:00Z")!
+
+    private func makeModel(verifies: Bool, signer: RecordingSigner, keyed: Bool = true) async throws -> AppModel {
         StubProtocol.responses = [:]
         StubProtocol.sent = []
         let config = URLSessionConfiguration.ephemeral
@@ -89,7 +93,10 @@ final class KIFFAnswerTests: XCTestCase {
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, heldJSON)
         StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
         StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/reject"] = (200, #"{"id":"ce_1"}"#)
-        let model = AppModel(signer: signer, kiff: client)
+        let fixed = now
+        let model = AppModel(signer: signer, kiff: client, clock: { fixed })
+        model.kiffTenant = "t1"
+        model.sessionHasKey = keyed
         model.show([], try await client.heldCalls())
         StubProtocol.sent = []
         return model
@@ -128,13 +135,44 @@ final class KIFFAnswerTests: XCTestCase {
         XCTAssertTrue(model.held.isEmpty)
     }
 
-    func testTheSignatureNamesKIFFsHold() async throws {
+    func testTheSignatureIsKIFFsMessageForThisHold() async throws {
         let signer = RecordingSigner()
         let model = try await makeModel(verifies: true, signer: signer)
         await model.answer(try XCTUnwrap(model.held.first), with: .nextStep("return first"))
-        XCTAssertEqual(signer.signed, ["tafs.answer.v1|ce_1|reject:return first"])
+        XCTAssertEqual(signer.signed, ["kiff.answer.v1\nt1\nce_1\nreject\nreturn first\n\n2\n2026-10-14T10:45:00Z"])
         XCTAssertEqual(answersSent, ["/v1/me/card-exceptions/ce_1/reject"])
+        let sent = try XCTUnwrap(StubProtocol.sent.last?.httpBody)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: sent) as? [String: Any])
+        XCTAssertEqual(body["next_step"] as? String, "return first")
+        let signature = try XCTUnwrap(body["signature"] as? [String: String])
+        XCTAssertEqual(signature, ["signed_at": "2026-10-14T10:45:00Z", "value": "signature"])
         XCTAssertTrue(model.held.isEmpty)
+    }
+
+    func testApproveOnceSignsTheApproval() async throws {
+        let signer = RecordingSigner()
+        let model = try await makeModel(verifies: true, signer: signer)
+        await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce)
+        XCTAssertEqual(signer.signed, ["kiff.answer.v1\nt1\nce_1\napprove-once\n\n\n2\n2026-10-14T10:45:00Z"])
+        XCTAssertEqual(answersSent, ["/v1/me/card-exceptions/ce_1/approve-once"])
+    }
+
+    func testASessionWithoutThePhonesKeyCannotAnswer() async throws {
+        let signer = RecordingSigner()
+        let model = try await makeModel(verifies: true, signer: signer, keyed: false)
+        let call = try XCTUnwrap(model.held.first)
+        XCTAssertFalse(model.canAnswer(call))
+        await model.answer(call, with: .approveOnce)
+        XCTAssertEqual(answersSent, [])
+        XCTAssertEqual(signer.signed, [])
+        XCTAssertTrue(model.lastError?.contains("Sign out and in again") == true, model.lastError ?? "")
+    }
+
+    func testTheAnswerMessageHashesTheNote() {
+        let message = KIFFClient.answerMessage(tenant: "t1", exceptionID: "ce_1", answer: "reject", nextStep: "return_first",
+                                               note: "Ask for photos.", accountingVersion: 2, signedAt: "2026-10-14T12:00:00Z")
+        XCTAssertEqual(String(decoding: message, as: UTF8.self),
+                       "kiff.answer.v1\nt1\nce_1\nreject\nreturn_first\n2b951386ddf8c195c3f5603c65de2156acb7f9f2a13638581448711e019dc654\n2\n2026-10-14T12:00:00Z")
     }
 
     func testAHeldCallKeepsItsIdentityAcrossRefreshes() async throws {

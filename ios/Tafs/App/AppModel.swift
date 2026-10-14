@@ -23,6 +23,11 @@ final class AppModel: ObservableObject {
     let ownerName: String
     let kiff: KIFFClient
     let cloud: TafsCloud
+    /// The KIFF account this phone signed in to; part of every signed answer.
+    var kiffTenant: String?
+    /// Whether this phone's KIFF session holds its signing key. A session from before
+    /// the phone sent its key cannot answer: sign in again.
+    var sessionHasKey = false
     private let signer: ApprovalSigning
     private let store: SampleStore?
     private let clock: () -> Date
@@ -52,6 +57,8 @@ final class AppModel: ObservableObject {
         if let token = Keychain.load(Self.tokenAccount) {
             kiff.token = token
             cloud.token = token
+            kiffTenant = Keychain.load(Self.tenantAccount)
+            sessionHasKey = Keychain.load(Self.keyedAccount) == "1"
             mode = .kiff
             await refresh()
         } else if let snapshot = store?.load() {
@@ -71,9 +78,13 @@ final class AppModel: ObservableObject {
     // MARK: Signing in with KIFF
 
     static let tokenAccount = "kiff.session"
+    static let tenantAccount = "kiff.tenant"
+    static let keyedAccount = "kiff.session-keyed"
 
+    /// Starts signing in with this phone's signing key, so KIFF accepts its answers
+    /// only with that key's signature.
     func startSignIn() async throws -> KIFFClient.DeviceStart {
-        try await kiff.startDeviceSignIn()
+        try await kiff.startDeviceSignIn(publicKey: signer.publicKeyDER, deviceName: "tafs on iPhone")
     }
 
     /// Polls until the person approves the code in KIFF, then loads their Cards.
@@ -84,7 +95,7 @@ final class AppModel: ObservableObject {
             try await Task.sleep(nanoseconds: interval * 1_000_000_000)
             do {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
-                await useSession(token.accessToken)
+                await useSession(token.accessToken, tenant: token.tenant)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -96,9 +107,19 @@ final class AppModel: ObservableObject {
     }
 
     /// Starts using a KIFF session: keeps it in the Keychain, clears what belonged to any
-    /// earlier session, and loads this one's Cards and tafs.
-    func useSession(_ token: String) async {
+    /// earlier session, and loads this one's Cards and tafs. A session from the device-flow
+    /// sign-in names its account (`tenant`) and holds this phone's signing key.
+    func useSession(_ token: String, tenant: String? = nil) async {
         Keychain.save(token, for: Self.tokenAccount)
+        if let tenant {
+            Keychain.save(tenant, for: Self.tenantAccount)
+            Keychain.save("1", for: Self.keyedAccount)
+        } else {
+            Keychain.delete(Self.tenantAccount)
+            Keychain.delete(Self.keyedAccount)
+        }
+        kiffTenant = tenant
+        sessionHasKey = tenant != nil
         kiff.token = token
         cloud.token = token
         startAttempt = nil
@@ -112,6 +133,8 @@ final class AppModel: ObservableObject {
     func signOut() async {
         if mode == .kiff { try? await kiff.signOut() }
         Keychain.delete(Self.tokenAccount)
+        Keychain.delete(Self.tenantAccount)
+        Keychain.delete(Self.keyedAccount)
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
@@ -119,6 +142,8 @@ final class AppModel: ObservableObject {
         holderIDs = [:]
         startAttempt = nil
         accountGeneration += 1
+        kiffTenant = nil
+        sessionHasKey = false
         store?.clear()
         tafs = []; held = []; record = []
         scriptPosition = [:]; templateOf = [:]
@@ -287,6 +312,14 @@ final class AppModel: ObservableObject {
             throw StartFailure(step: .confirm, message: a.agentAdded ? "Face ID did not confirm; nothing more was done." : "Nothing was started: Face ID did not confirm.")
         }
         guard accountGeneration == gen else { throw Self.signedOut(.confirm) }
+        // The owner just confirmed with Face ID: a phone session bound to its key signs this
+        // start's setup calls (agent, Cards, key), as KIFF requires (kiff-cloud #1225).
+        if sessionHasKey, let tenant = kiffTenant {
+            let signer = self.signer
+            kiff.tenant = tenant
+            kiff.setupSigner = { try signer.signConfirmed($0) }
+        }
+        defer { kiff.setupSigner = nil }
         startAttempt = a
         defer { if startAttempt != nil, accountGeneration == gen { startAttempt = a } }
 
@@ -507,10 +540,11 @@ final class AppModel: ObservableObject {
 
     // MARK: The owner answers
 
-    /// Whether the owner can answer `call` from this phone. KIFF's held calls wait until
-    /// KIFF checks the phone's signature; until then they are answered in KIFF.
+    /// Whether the owner can answer `call` from this phone. A held call from KIFF is
+    /// answered here only when KIFF checks this phone's signature on it: the session holds
+    /// the phone's key, and the hold says which version of it the owner saw.
     func canAnswer(_ call: HeldCall) -> Bool {
-        call.kiffID == nil || kiff.serverVerifiesSignatures
+        call.kiffID == nil || (kiff.serverVerifiesSignatures && sessionHasKey && kiffTenant != nil && call.accountingVersion != nil)
     }
 
     /// Where a held call from KIFF is answered while the phone cannot answer it.
@@ -521,7 +555,9 @@ final class AppModel: ObservableObject {
     func answer(_ call: HeldCall, with answer: Answer) async {
         guard held.contains(where: { same($0, call) }) else { return }
         guard canAnswer(call) else {
-            lastError = "Answer this one in KIFF. Answering from the phone arrives once KIFF checks the phone's signature."
+            lastError = kiff.serverVerifiesSignatures && !sessionHasKey
+                ? "Sign out and in again to answer from this phone, so KIFF knows its key. Or answer this one in KIFF."
+                : "Answer this one in KIFF. Answering from the phone arrives once KIFF checks the phone's signature."
             return
         }
         if call.kiffID == nil, clock() > call.expiresAt {
@@ -530,9 +566,23 @@ final class AppModel: ObservableObject {
             save()
             return
         }
+        let reason = "Answer \(call.proposed.summary)"
         let signature: String
+        var signed: KIFFClient.AnswerSignature?
         do {
-            signature = try await signer.sign(answer: answer, heldID: call.kiffID ?? call.id.uuidString, reason: "Answer \(call.proposed.summary)")
+            if let kiffID = call.kiffID, let tenant = kiffTenant, let version = call.accountingVersion {
+                // KIFF's message: this hold, this answer, the hold's version, now.
+                let signedAt = ISO8601DateFormatter().string(from: clock())
+                var nextStep: String?
+                if case .nextStep(let step) = answer { nextStep = step }
+                let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: kiffID,
+                                                       answer: answer == .approveOnce ? "approve-once" : "reject",
+                                                       nextStep: nextStep, accountingVersion: version, signedAt: signedAt)
+                signature = try await signer.sign(message, reason: reason)
+                signed = KIFFClient.AnswerSignature(signedAt: signedAt, value: signature)
+            } else {
+                signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)
+            }
         } catch {
             lastError = "Not sent: Face ID did not confirm."
             return
@@ -541,9 +591,9 @@ final class AppModel: ObservableObject {
         if let kiffID = call.kiffID {
             do {
                 switch answer {
-                case .approveOnce: try await kiff.approveOnce(kiffID)
-                case .refuse: try await kiff.reject(kiffID)
-                case .nextStep(let step): try await kiff.reject(kiffID, nextStep: step)
+                case .approveOnce: try await kiff.approveOnce(kiffID, signature: signed)
+                case .refuse: try await kiff.reject(kiffID, signature: signed)
+                case .nextStep(let step): try await kiff.reject(kiffID, nextStep: step, signature: signed)
                 }
             } catch {
                 lastError = "KIFF didn't take the answer: \(error.localizedDescription)"

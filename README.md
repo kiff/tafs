@@ -41,11 +41,13 @@ them do.
 Version 0.1. A working iPhone app with two modes.
 
 **Signed in with KIFF**
-- Sign in with KIFF's device flow: the phone shows a code, you approve it in KIFF.
+- Sign in with KIFF's device flow: the phone shows a code and sends its signing
+  key; you approve it in your browser, which shows the key's fingerprint.
 - Your tafs are the agents holding your KIFF Cards (`/v1/me/mandates`).
 - Held calls come from KIFF (`/v1/me/card-exceptions`), with amounts in the unit
-  KIFF declares. They are answered in KIFF (**Answer in KIFF**) until KIFF checks
-  the phone's signature on an answer; revoke a Card from its taf.
+  KIFF declares. Approve once or refuse them on the phone: each answer is signed
+  with KIFF's `kiff.answer.v1` message, and KIFF accepts it only with that
+  signature (kiff/kiff-cloud#1218). Revoke a Card from its taf.
 
 **Sample data**
 - Five sample tafs (the jobs above) and a morning of work, saved on the phone.

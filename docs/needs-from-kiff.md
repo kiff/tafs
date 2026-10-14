@@ -7,7 +7,10 @@ inside tafs.
 
 ## 1. Verify the phone's signature on an answer
 
-Filed as kiff/kiff-cloud#1218; part 1 is in review (kiff/kiff-cloud#1223).
+Shipped in kiff/kiff-cloud#1223 and #1226 (issue #1218). The app sends its key
+at sign-in, signs KIFF's `kiff.answer.v1` message on each answer, and signs
+the start flow's setup calls. kiff/kiff-cloud#1227 (in review) puts the
+phone's signature in the settled receipt. The notes below are what it replaced.
 
 **Today:** the app does not answer KIFF's held calls. KIFF would accept an
 answer on the device session alone, which does not prove the owner gave it, so
