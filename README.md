@@ -25,17 +25,34 @@ them do.
 
 ## Status
 
-Version 0.1, a working iPhone app on sample data:
+Version 0.1. A working iPhone app with two modes.
 
-- Start a taf: say the job, review the drafted Card, issue it with Face ID.
-- Tafs propose actions; each is allowed, held for you, or refused by its Card.
-- Answer held actions with Approve once, Return first or Refuse. Each answer is
-  signed on the phone (Secure Enclave on a device; a software key in the Simulator).
-- Pause or revoke a taf; the Record shows everything, newest first.
+**Signed in with KIFF**
+- Sign in with KIFF's device flow: the phone shows a code, you approve it in KIFF.
+- Your tafs are the agents holding your KIFF Cards (`/v1/me/mandates`).
+- Held calls come from KIFF (`/v1/me/card-exceptions`). Answer with Approve once,
+  Refuse, or one of the Card's next steps; revoke a Card from its taf.
 
-In this version the Card is checked on the phone. Next: sign in with KIFF, held
-actions from KIFF (`/v1/me/card-exceptions`), Cards from `/v1/me/mandates`, and
-the tafs runtime that runs each taf with the Claude Agent SDK.
+**Sample data**
+- Five sample tafs (the jobs above) and a morning of work, saved on the phone.
+- Start a new taf: say the job, review the drafted Card, issue it with Face ID.
+- The Card is checked on the phone in this mode.
+
+**Both**
+- Every answer is signed on the phone (Secure Enclave and Face ID on a device).
+- The first held call counts down as a Live Activity on the lock screen and in
+  the Dynamic Island; each new one posts a notification.
+- The Record shows everything, newest first.
+
+What tafs still needs from KIFF is in [docs/needs-from-kiff.md](docs/needs-from-kiff.md).
+
+## TestFlight
+
+`.github/workflows/ios.yml` builds and tests every push on GitHub's macOS 26
+runners. A `v*` tag or a manual run (Actions → iOS → Run workflow) also uploads
+to TestFlight for internal testers. It needs four repository secrets:
+`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (an App Store Connect API key with
+the Admin role) and `APPLE_TEAM_ID`.
 
 ## Build
 
