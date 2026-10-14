@@ -177,7 +177,13 @@ final class KIFFClient {
 
     struct Mandate: Decodable, Equatable {
         struct Grant: Decodable, Equatable {
-            struct PerAction: Decodable, Equatable { let quantity: String; let max: Int64 }
+            struct PerAction: Decodable, Equatable {
+                let quantity: String
+                let max: Int64
+                /// What a summed limit means ("EUR", 2), when KIFF can say.
+                var unit: String? = nil
+                var scale: Int? = nil
+            }
             let action: String
             let perActionMax: [PerAction]?
             let nextSteps: [String]?
@@ -191,6 +197,20 @@ final class KIFFClient {
             let quantity: String
             let limit: Int64
             let window: String
+            var unit: String? = nil
+            var scale: Int? = nil
+        }
+
+        /// A limit's use in its current window (`?include=use`, the same lines as the
+        /// Card's statement). `used` is absent when KIFF could not read it.
+        struct Limit: Decodable, Equatable {
+            let quantity: String
+            let limit: Int64
+            let used: Int64?
+            let remaining: Int64?
+            let status: String?
+            var unit: String? = nil
+            var scale: Int? = nil
         }
 
         let id: String
@@ -201,16 +221,19 @@ final class KIFFClient {
         let validUntil: Date?
         let revokedAt: Date?
         let onExceed: String?
+        let limits: [Limit]?
 
         enum CodingKeys: String, CodingKey {
-            case id, subject, grants, aggregates, active
+            case id, subject, grants, aggregates, active, limits
             case validUntil = "valid_until", revokedAt = "revoked_at", onExceed = "on_exceed"
         }
     }
 
     func cards() async throws -> [Mandate] {
         struct Response: Decodable { let mandates: [Mandate] }
-        let response: Response = try await send("GET", "/v1/me/mandates")
+        // With each limit's use, so the app shows "$212 of $500 today" without a
+        // statement call per Card.
+        let response: Response = try await send("GET", "/v1/me/mandates?include=use")
         return response.mandates
     }
 

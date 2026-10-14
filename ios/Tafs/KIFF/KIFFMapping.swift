@@ -17,6 +17,12 @@ enum KIFFMapping {
         return String(quantity.dropFirst(4).dropLast())
     }
 
+    /// An amount in the unit KIFF declares for it; a bare number when it declares none.
+    static func money(_ minor: Int64, unit: String?, scale: Int?) -> Money {
+        guard let unit, !unit.isEmpty else { return .bare(minor) }
+        return Money(minor: minor, currency: unit, scale: scale ?? 0)
+    }
+
     /// A held call's local id, the same on every refresh and every launch: derived from
     /// KIFF's id, so a notification is posted once and an answer removes the right row.
     static func heldID(_ kiffID: String) -> UUID {
@@ -44,14 +50,13 @@ enum KIFFMapping {
         let outside: Outside = mandate.onExceed == "refuse" ? .refuse : .hold
         var rules = mandate.grants.map { grant -> CardRule in
             var rule = CardRule(action: grant.action, label: label(grant.action), outside: outside)
-            // The mandates list carries no units (docs/needs-from-kiff.md, item 4): bare.
-            if let cap = grant.perActionMax?.first { rule.perAction = .bare(cap.max) }
+            if let cap = grant.perActionMax?.first { rule.perAction = money(cap.max, unit: cap.unit, scale: cap.scale) }
             return rule
         }
         // A Card's totals cover all its grants; show each once, on the first line.
         for aggregate in mandate.aggregates where !rules.isEmpty {
             if isSum(aggregate.quantity) {
-                rules[0].perWindow = .bare(aggregate.limit)
+                rules[0].perWindow = money(aggregate.limit, unit: aggregate.unit, scale: aggregate.scale)
             } else {
                 rules[0].countPerWindow = Int(aggregate.limit)
             }
@@ -79,6 +84,13 @@ enum KIFFMapping {
             taf.state = card.revoked ? .revoked : .working
             taf.now = card.revoked ? "Card not active" : "Acting under KIFF"
             taf.kiffCardIDs = cards.map(\.id)
+            // What each Card has used in its window, on the line that shows its total.
+            for card in cards {
+                guard let action = card.grants.first?.action,
+                      let line = card.limits?.first(where: { isSum($0.quantity) && $0.status == "ok" }),
+                      let used = line.used else { continue }
+                taf.used[action] = money(used, unit: line.unit, scale: line.scale)
+            }
             return taf
         }
     }

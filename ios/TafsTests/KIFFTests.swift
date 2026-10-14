@@ -107,7 +107,7 @@ final class KIFFTests: XCTestCase {
 
     func testUnauthorizedIsItsOwnError() async {
         let client = makeClient()
-        StubProtocol.responses["GET /v1/me/mandates"] = (401, #"{"error":"bad token"}"#)
+        StubProtocol.responses["GET /v1/me/mandates?include=use"] = (401, #"{"error":"bad token"}"#)
         do {
             _ = try await client.cards()
             XCTFail("expected unauthorized")
@@ -120,11 +120,12 @@ final class KIFFTests: XCTestCase {
 
     func testCardsBecomeOneTafPerHolder() async throws {
         let client = makeClient()
-        StubProtocol.responses["GET /v1/me/mandates"] = (200, """
+        StubProtocol.responses["GET /v1/me/mandates?include=use"] = (200, """
         {"mandates":[
           {"id":"m1","subject":"refund-agent","domain":"d","environment":"production","active":true,"on_exceed":"owner",
-           "grants":[{"action":"refund_order","entity_states":[],"per_action_max":[{"quantity":"sum(amount_cents)","max":15000}]}],
-           "aggregates":[{"quantity":"sum(amount_cents)","limit":200000,"window":"1d"}]},
+           "grants":[{"action":"refund_order","entity_states":[],"per_action_max":[{"quantity":"sum(amount_cents)","max":15000,"unit":"USD","scale":2}]}],
+           "aggregates":[{"quantity":"sum(amount_cents)","limit":200000,"window":"1d","unit":"USD","scale":2}],
+           "limits":[{"quantity":"sum(amount_cents)","limit":200000,"used":21200,"remaining":178800,"status":"ok","unit":"USD","scale":2}]},
           {"id":"m2","subject":"deploy-agent","domain":"d","environment":"production","active":true,
            "grants":[{"action":"deploy","entity_states":[]}],
            "aggregates":[{"quantity":"count","limit":10,"window":"1d"}]},
@@ -136,11 +137,13 @@ final class KIFFTests: XCTestCase {
         let tafs = KIFFMapping.tafs(from: try await client.cards(), ids: &ids, owner: "You")
         XCTAssertEqual(tafs.map(\.name), ["deploy-agent", "refund-agent"], "revoked Cards drop out")
         let refunds = try XCTUnwrap(tafs.first { $0.name == "refund-agent" })
-        XCTAssertEqual(refunds.card.rules.first?.perAction, .bare(15000), "the mandates list carries no units")
-        XCTAssertEqual(refunds.card.rules.first?.perWindow, .bare(200000))
+        XCTAssertEqual(refunds.card.rules.first?.perAction, Money(minor: 15000, currency: "USD", scale: 2), "$150.00 each, in KIFF's unit")
+        XCTAssertEqual(refunds.card.rules.first?.perWindow, Money(minor: 200000, currency: "USD", scale: 2))
+        XCTAssertEqual(refunds.used["refund_order"], Money(minor: 21200, currency: "USD", scale: 2), "$212.00 used today, from the list")
         XCTAssertEqual(refunds.kiffCardIDs, ["m1"])
         let deploys = try XCTUnwrap(tafs.first { $0.name == "deploy-agent" })
         XCTAssertEqual(deploys.card.rules.first?.countPerWindow, 10, "a count stays a count, never money")
+        XCTAssertTrue(deploys.used.isEmpty, "no use line, nothing shown as used")
     }
 }
 
