@@ -105,7 +105,7 @@ struct SettingsView: View {
             .screenBackground()
             .navigationTitle("Settings")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-            .sheet(isPresented: $signingIn) { SignInView() }
+            .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
         }
     }
 

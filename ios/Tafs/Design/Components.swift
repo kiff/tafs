@@ -67,12 +67,22 @@ struct Eyebrow: View {
 
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 16, weight: .semibold))
-            .frame(maxWidth: .infinity, minHeight: 54)
-            .foregroundColor(Theme.amberInk)
-            .background(Theme.amber.opacity(configuration.isPressed ? 0.8 : 1))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        StyledLabel(configuration: configuration)
+    }
+
+    private struct StyledLabel: View {
+        let configuration: Configuration
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .font(.system(size: 16, weight: .semibold))
+                .frame(maxWidth: .infinity, minHeight: 54)
+                .foregroundColor(Theme.amberInk)
+                .background(Theme.amber.opacity(configuration.isPressed ? 0.8 : 1))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .opacity(isEnabled ? 1 : 0.4)
+        }
     }
 }
 
@@ -80,12 +90,23 @@ struct OutlineButtonStyle: ButtonStyle {
     var color: Color = Theme.ink
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 15, weight: .medium))
-            .frame(maxWidth: .infinity, minHeight: 48)
-            .foregroundColor(color)
-            .background(Theme.ink.opacity(configuration.isPressed ? 0.08 : 0))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(color.opacity(0.4), lineWidth: 1))
+        StyledLabel(configuration: configuration, color: color)
+    }
+
+    private struct StyledLabel: View {
+        let configuration: Configuration
+        let color: Color
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .font(.system(size: 15, weight: .medium))
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .foregroundColor(color)
+                .background(Theme.ink.opacity(configuration.isPressed ? 0.08 : 0))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(color.opacity(0.4), lineWidth: 1))
+                .opacity(isEnabled ? 1 : 0.4)
+        }
     }
 }
 

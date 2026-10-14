@@ -5,6 +5,7 @@ struct HomeView: View {
     @Binding var tab: Tab
     @State private var showingNew = false
     @State private var showingSettings = false
+    @State private var openingFirst = false
 
     var body: some View {
         ScrollView {
@@ -71,8 +72,22 @@ struct HomeView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingNew) { NewTafFlow() }
-        .sheet(isPresented: $showingSettings) { SettingsView() }
+        .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
+        .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
+        .navigationDestination(isPresented: $openingFirst) {
+            if let id = model.tafs.first(where: { $0.name == "Refunds" })?.id ?? model.tafs.first?.id {
+                TafDetailView(tafID: id)
+            }
+        }
+        .task(id: model.tafs.count) {
+            guard Screenshots.enabled, model.tafs.count >= TafTemplates.all.count else { return }
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            switch Screenshots.screen {
+            case "taf": openingFirst = true
+            case "new": showingNew = true
+            default: break
+            }
+        }
     }
 
     private var headline: some View {

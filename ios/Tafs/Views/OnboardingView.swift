@@ -55,7 +55,7 @@ struct OnboardingView: View {
         .padding(.bottom, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .screenBackground()
-        .sheet(isPresented: $signingIn) { SignInView() }
+        .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
     }
 
     private func point(_ lead: String, _ rest: String, _ color: Color) -> some View {
