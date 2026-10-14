@@ -1,6 +1,7 @@
 import Foundation
 
 /// Keeps the sample on the phone between launches, as one JSON file.
+@MainActor
 final class SampleStore {
     struct Snapshot: Codable, Equatable {
         var tafs: [Taf]

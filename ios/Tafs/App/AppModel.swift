@@ -60,7 +60,7 @@ final class AppModel: ObservableObject {
     func taf(_ id: UUID) -> Taf? { tafs.first { $0.id == id } }
     func entries(for tafID: UUID) -> [RecordEntry] { record.filter { $0.tafID == tafID } }
     func heldCalls(for tafID: UUID) -> [HeldCall] { held.filter { $0.tafID == tafID } }
-    var workingCount: Int { tafs.filter { $0.state == .working || $0.state == .waiting }.count }
+    var workingCount: Int { tafs.filter { $0.state == .working }.count }
 
     // MARK: Signing in with KIFF
 
@@ -304,7 +304,8 @@ final class AppModel: ObservableObject {
             let draft = TafDraft(name: t.name, job: t.job, tools: t.tools, rules: t.rules, templateKey: t.key)
             await start(draft, confirm: false)
         }
-        playNextDemoActions()
+        // Two rounds: a few actions within the Cards, and two held for the owner.
+        // Pulling to refresh plays the next round.
         playNextDemoActions()
         playNextDemoActions()
     }

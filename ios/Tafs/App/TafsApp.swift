@@ -13,6 +13,10 @@ struct TafsApp: App {
                 .preferredColorScheme(.dark)
                 .tint(Theme.amber)
                 .task {
+                    if Screenshots.enabled {
+                        await model.startSample()
+                        return
+                    }
                     model.onHeldChanged = { [lockScreen] held, tafs in lockScreen.update(held: held, tafs: tafs) }
                     await model.restore()
                 }
@@ -25,9 +29,22 @@ struct TafsApp: App {
 
 enum Tab: Hashable { case tafs, needsYou, record }
 
+/// CI's screenshot run: `-screenshots YES -tab needs-you` opens the sample on a tab,
+/// without asking for notifications.
+enum Screenshots {
+    static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
+    static var tab: Tab {
+        switch UserDefaults.standard.string(forKey: "tab") {
+        case "needs-you": return .needsYou
+        case "record": return .record
+        default: return .tafs
+        }
+    }
+}
+
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
-    @State private var tab: Tab = .tafs
+    @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
 
     var body: some View {
         Group {

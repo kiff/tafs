@@ -3,8 +3,8 @@ import XCTest
 
 /// Answers requests from canned responses, and records what was sent.
 final class StubProtocol: URLProtocol {
-    static var responses: [String: (Int, String)] = [:]   // "METHOD path" → (status, body)
-    static var sent: [URLRequest] = []
+    nonisolated(unsafe) static var responses: [String: (Int, String)] = [:]   // "METHOD path" → (status, body)
+    nonisolated(unsafe) static var sent: [URLRequest] = []
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -35,18 +35,19 @@ final class StubProtocol: URLProtocol {
     override func stopLoading() {}
 }
 
+@MainActor
 final class KIFFTests: XCTestCase {
-    private var client: KIFFClient!
-
-    override func setUp() {
+    /// A client whose requests are answered by `StubProtocol`, with nothing sent yet.
+    private func makeClient() -> KIFFClient {
         StubProtocol.responses = [:]
         StubProtocol.sent = []
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubProtocol.self]
-        client = KIFFClient(baseURL: URL(string: "https://api.test")!, token: "dev_token", session: URLSession(configuration: config))
+        return KIFFClient(baseURL: URL(string: "https://api.test")!, token: "dev_token", session: URLSession(configuration: config))
     }
 
     func testDeviceSignInPendingThenToken() async throws {
+        let client = makeClient()
         StubProtocol.responses["POST /v1/auth/device/start"] = (200, #"{"device_code":"dc","user_code":"ABCD-EFGH","verification_uri":"https://app.test/auth/device","verification_uri_complete":"https://app.test/auth/device?code=ABCD-EFGH","expires_in":600,"interval":5}"#)
         let start = try await client.startDeviceSignIn()
         XCTAssertEqual(start.userCode, "ABCD-EFGH")
@@ -67,6 +68,7 @@ final class KIFFTests: XCTestCase {
     }
 
     func testHeldCallsDecodeAndMap() async throws {
+        let client = makeClient()
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, """
         {"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"refund-agent","action":"refund_order","entity_id":"ord_4502",
           "status":"held","breaches":[{"mandate_id":"m1","outcome":"per_action_exceeded","quantity":"sum(amount_cents)","limit":15000,"used":0,"draw":48000,"reason":"Over $150 each"}],
@@ -85,6 +87,7 @@ final class KIFFTests: XCTestCase {
     }
 
     func testAnswersHitTheRightEndpoints() async throws {
+        let client = makeClient()
         StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
         StubProtocol.responses["POST /v1/me/card-exceptions/ce_2/reject"] = (200, #"{"id":"ce_2"}"#)
         try await client.approveOnce("ce_1")
@@ -93,6 +96,7 @@ final class KIFFTests: XCTestCase {
     }
 
     func testUnauthorizedIsItsOwnError() async {
+        let client = makeClient()
         StubProtocol.responses["GET /v1/me/mandates"] = (401, #"{"error":"bad token"}"#)
         do {
             _ = try await client.cards()
@@ -105,6 +109,7 @@ final class KIFFTests: XCTestCase {
     }
 
     func testCardsBecomeOneTafPerHolder() async throws {
+        let client = makeClient()
         StubProtocol.responses["GET /v1/me/mandates"] = (200, """
         {"mandates":[
           {"id":"m1","subject":"refund-agent","domain":"d","environment":"production","active":true,"on_exceed":"owner",
