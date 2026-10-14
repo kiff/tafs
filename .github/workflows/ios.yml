@@ -115,6 +115,8 @@ jobs:
           printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
           chmod 600 "$RUNNER_TEMP/AuthKey.p8"
 
+      # Signed for distribution from the start: a development profile needs a
+      # registered iPhone on the team, and a TestFlight build needs none.
       - name: Archive
         run: |
           cd ios
@@ -128,6 +130,7 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}"
 
       - name: Upload to TestFlight
