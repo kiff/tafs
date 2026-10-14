@@ -119,7 +119,8 @@ final class KIFFAnswerTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         let t = TafTemplates.refunds
         let draft = TafDraft(name: t.name, job: t.job, tools: t.tools, rules: t.rules, templateKey: t.key)
-        let taf = try XCTUnwrap(await model.start(draft, confirm: false))
+        let started = await model.start(draft, confirm: false)
+        let taf = try XCTUnwrap(started)
         model.propose(ProposedAction(action: "refund", summary: "Refund #4502", amount: .usd(480)), by: taf.id)
         let call = try XCTUnwrap(model.held.first)
         XCTAssertTrue(model.canAnswer(call))
