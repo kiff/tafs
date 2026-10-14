@@ -12,9 +12,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# One queue per branch and kind of run. A newer push to a pull request cancels
+# its older run; runs on main and TestFlight builds always finish.
 concurrency:
-  group: ios-${{ github.ref }}
-  cancel-in-progress: true
+  group: ios-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
