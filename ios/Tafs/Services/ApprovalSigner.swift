@@ -4,6 +4,7 @@ import LocalAuthentication
 
 /// Signs an owner's answer. The app uses `ApprovalSigner`; tests use a stub, since
 /// a real signature waits for a person at the Face ID prompt.
+@MainActor
 protocol ApprovalSigning {
     func sign(answer: Answer, heldID: UUID, reason: String) async throws -> String
 }
@@ -14,6 +15,7 @@ protocol ApprovalSigning {
 /// it falls back to an in-memory software key, which is fine for a demo and never
 /// for production. KIFF verifies the signature against the device's registered
 /// public key (the approvals RFC); a BFF never vouches for an approval.
+@MainActor
 final class ApprovalSigner: ApprovalSigning {
     enum SignerError: Error { case notAuthenticated }
 

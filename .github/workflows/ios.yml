@@ -43,6 +43,52 @@ jobs:
             -destination "id=$DEVICE_ID" \
             CODE_SIGNING_ALLOWED=NO
 
+  screenshots:
+    needs: test
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Run the app and take screenshots
+        run: |
+          cd ios
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted(k for k in devices if "iOS" in k)
+          print(next(d["udid"] for d in devices[ios[-1]] if d["name"].startswith("iPhone")))
+          ')
+          xcrun simctl boot "$DEVICE_ID" || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+          xcodebuild build -project Tafs.xcodeproj -scheme Tafs \
+            -destination "id=$DEVICE_ID" -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet
+          xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
+          mkdir -p "$RUNNER_TEMP/shots"
+          shoot() {
+            name=$1; shift
+            xcrun simctl launch "$DEVICE_ID" bot.tafs.app "$@"
+            sleep 8
+            xcrun simctl io "$DEVICE_ID" screenshot "$RUNNER_TEMP/shots/$name.png"
+            xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
+          }
+          shoot 1-welcome
+          shoot 2-tafs -screenshots YES -tab tafs
+          shoot 3-needs-you -screenshots YES -tab needs-you
+          shoot 4-record -screenshots YES -tab record
+          ls -la "$RUNNER_TEMP/shots"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: ${{ runner.temp }}/shots
+
   testflight:
     needs: test
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'

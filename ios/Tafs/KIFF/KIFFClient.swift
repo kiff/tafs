@@ -4,6 +4,7 @@ import Foundation
 /// (`/v1/me/card-exceptions`) and Cards (`/v1/me/mandates`).
 ///
 /// tafs is a KIFF customer like any other: it only uses the public API.
+@MainActor
 final class KIFFClient {
     enum KIFFError: Error, Equatable, LocalizedError {
         case authorizationPending
