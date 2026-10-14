@@ -49,9 +49,12 @@ final class LockScreen {
     @available(iOS 16.1, *)
     private func updateActivity(_ held: [HeldCall], _ tafs: [Taf]) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        let current = Activity<HeldActivityAttributes>.activities.first
         guard let first = held.sorted(by: { $0.expiresAt < $1.expiresAt }).first else {
-            Task { await current?.end(dismissalPolicy: .immediate) }
+            Task {
+                for activity in Activity<HeldActivityAttributes>.activities {
+                    await activity.end(dismissalPolicy: .immediate)
+                }
+            }
             return
         }
         let taf = tafs.first { $0.id == first.tafID }
@@ -64,10 +67,14 @@ final class LockScreen {
             expiresAt: first.expiresAt,
             waiting: held.count
         )
-        if let current {
-            Task { await current.update(using: state) }
-        } else {
+        if Activity<HeldActivityAttributes>.activities.isEmpty {
             _ = try? Activity.request(attributes: HeldActivityAttributes(), contentState: state)
+        } else {
+            Task {
+                for activity in Activity<HeldActivityAttributes>.activities {
+                    await activity.update(using: state)
+                }
+            }
         }
     }
 }
