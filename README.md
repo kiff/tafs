@@ -12,6 +12,7 @@ through KIFF's gateway, which checks the Card before any call reaches a tool.
 
 <p>
   <img src="docs/screenshots/welcome.png" width="220" alt="Welcome: They taf. You kiff.">
+  <img src="docs/screenshots/tafs.png" width="220" alt="Tafs: three working, two need you">
   <img src="docs/screenshots/needs-you.png" width="220" alt="Needs you: held actions with Approve once and Refuse">
   <img src="docs/screenshots/record.png" width="220" alt="Record: everything the tafs did, newest first">
 </p>
