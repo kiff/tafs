@@ -19,9 +19,10 @@ private let pink = Color(red: 1.0, green: 0x4F / 255.0, blue: 0x7B / 255.0)
 private let islandText = Color(red: 0xF4 / 255.0, green: 0xEF / 255.0, blue: 0xE6 / 255.0)
 private let islandDim = Color(white: 0.65)
 
-/// The mascot, from Shared/Mascot.xcassets.
+/// The mascot, from WidgetAssets.xcassets: 28 pt at most, so the Live Activity
+/// can draw it. The app's 600 px mascot is over its budget and shows as a gray shape.
 private func mascot(_ size: CGFloat) -> some View {
-    Image("Mascot").resizable().scaledToFit().frame(width: size, height: size)
+    Image("IslandMascot").resizable().scaledToFit().frame(width: size, height: size)
 }
 private let openURL = URL(string: "tafs://needs-you")!
 
