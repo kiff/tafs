@@ -38,8 +38,10 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD: ${{ github.sha }}
         run: |
-          # What draws the screens, and this workflow itself.
-          ui='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Shared/Mascot\.xcassets/|\.github/workflows/ios\.yml$)'
+          # What draws the screens: the views, the design system, the assets,
+          # the root (TafsApp.swift: tab bar, navigation, onboarding, color
+          # scheme), the mascot. And this workflow itself.
+          ui='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|\.github/workflows/ios\.yml$)'
           if [ "$EVENT" = workflow_dispatch ] || [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
             echo "ui=true" >> "$GITHUB_OUTPUT"   # asked by hand, or nothing to compare with
           elif git diff --name-only "$BASE" "$HEAD" | grep -Eq "$ui"; then
