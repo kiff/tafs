@@ -9,9 +9,20 @@ struct TafsWidgets: WidgetBundle {
     }
 }
 
-private let amber = Color(red: 1.0, green: 0x9A / 255.0, blue: 0x1A / 255.0)
-private let ink = Color(red: 0xF4 / 255.0, green: 0xEF / 255.0, blue: 0xE6 / 255.0)
-private let dim = Color(red: 0x9D / 255.0, green: 0x97 / 255.0, blue: 0x8D / 255.0)
+// The app's palette, from the mascot. The Dynamic Island is always black (iOS draws
+// it), so there the text is light and the countdown takes the mascot's orange.
+private let cream = Color(red: 0xFB / 255.0, green: 0xF7 / 255.0, blue: 0xEE / 255.0)
+private let ink = Color(red: 0x1B / 255.0, green: 0x17 / 255.0, blue: 0x26 / 255.0)
+private let dim = Color(red: 0x8A / 255.0, green: 0x84 / 255.0, blue: 0x96 / 255.0)
+private let orange = Color(red: 1.0, green: 0x8A / 255.0, blue: 0x1F / 255.0)
+private let pink = Color(red: 1.0, green: 0x4F / 255.0, blue: 0x7B / 255.0)
+private let islandText = Color(red: 0xF4 / 255.0, green: 0xEF / 255.0, blue: 0xE6 / 255.0)
+private let islandDim = Color(white: 0.65)
+
+/// The mascot, from Shared/Mascot.xcassets.
+private func mascot(_ size: CGFloat) -> some View {
+    Image("Mascot").resizable().scaledToFit().frame(width: size, height: size)
+}
 private let openURL = URL(string: "tafs://needs-you")!
 
 /// The held call counting down on the lock screen and in the Dynamic Island.
@@ -20,38 +31,41 @@ struct HeldActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: HeldActivityAttributes.self) { context in
             LockScreenView(state: context.state)
-                .activityBackgroundTint(Color.black.opacity(0.75))
+                .activityBackgroundTint(cream)
                 .activitySystemActionForegroundColor(ink)
                 .widgetURL(openURL)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Text(context.state.tafName).font(.headline).foregroundColor(ink)
+                    HStack(spacing: 6) {
+                        mascot(26)
+                        Text(context.state.tafName).font(.headline).foregroundColor(islandText).lineLimit(1)
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     Text(timerInterval: Date()...max(Date(), context.state.expiresAt), countsDown: true)
                         .font(.system(.title3, design: .monospaced).weight(.semibold))
-                        .foregroundColor(amber)
+                        .foregroundColor(orange)
                         .multilineTextAlignment(.trailing)
                         .frame(maxWidth: 70)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text([context.state.amount, context.state.summary].compactMap { $0 }.joined(separator: " · "))
-                            .font(.subheadline.weight(.semibold)).foregroundColor(ink)
-                        Text(context.state.reason).font(.caption).foregroundColor(dim)
+                            .font(.subheadline.weight(.semibold)).foregroundColor(islandText)
+                        Text(context.state.reason).font(.caption).foregroundColor(islandDim)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } compactLeading: {
-                Text("t").font(.system(.body, design: .serif).weight(.bold)).foregroundColor(amber)
+                mascot(22)
             } compactTrailing: {
                 Text(timerInterval: Date()...max(Date(), context.state.expiresAt), countsDown: true)
                     .monospacedDigit()
-                    .foregroundColor(amber)
+                    .foregroundColor(orange)
                     .frame(maxWidth: 44)
             } minimal: {
-                Text("t").font(.system(.body, design: .serif).weight(.bold)).foregroundColor(amber)
+                mascot(22)
             }
             .widgetURL(openURL)
         }
@@ -63,7 +77,8 @@ private struct LockScreenView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
+            HStack(spacing: 8) {
+                mascot(28)
                 Text("\(state.tafName) is waiting on you").font(.subheadline.weight(.semibold)).foregroundColor(ink)
                 Spacer()
                 Text(state.waiting > 1 ? "\(state.waiting) waiting" : "tafs").font(.caption).foregroundColor(dim)
@@ -71,7 +86,7 @@ private struct LockScreenView: View {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 2) {
                     if let amount = state.amount {
-                        Text(amount).font(.system(size: 30, design: .serif)).foregroundColor(ink)
+                        Text(amount).font(.system(size: 30, weight: .bold, design: .rounded)).foregroundColor(ink)
                     }
                     Text(state.summary).font(.footnote).foregroundColor(ink).lineLimit(1)
                     Text(state.reason).font(.caption).foregroundColor(dim).lineLimit(1)
@@ -80,7 +95,7 @@ private struct LockScreenView: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(timerInterval: Date()...max(Date(), state.expiresAt), countsDown: true)
                         .font(.system(size: 26, weight: .semibold, design: .monospaced))
-                        .foregroundColor(amber)
+                        .foregroundStyle(LinearGradient(colors: [orange, pink], startPoint: .leading, endPoint: .trailing))
                         .multilineTextAlignment(.trailing)
                     Text("then refused").font(.caption2).foregroundColor(dim)
                 }

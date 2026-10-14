@@ -10,7 +10,7 @@ struct TafsApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(model)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
                 .tint(Theme.amber)
                 .task {
                     if Screenshots.enabled {
