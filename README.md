@@ -17,6 +17,8 @@ through KIFF's gateway, which checks the Card before any call reaches a tool.
   <img src="docs/screenshots/tafs.png" width="220" alt="Tafs: three working, two need you">
   <img src="docs/screenshots/needs-you.png" width="220" alt="Needs you: held actions with Approve once and Refuse">
   <img src="docs/screenshots/record.png" width="220" alt="Record: everything the tafs did, newest first">
+  <img src="docs/screenshots/taf.png" width="220" alt="A taf: its job, its runs and its activity">
+  <img src="docs/screenshots/new-taf.png" width="220" alt="Starting a new taf">
 </p>
 
 Screenshots come from CI: every run uploads them as the `screenshots` artifact.
