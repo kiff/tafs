@@ -223,9 +223,11 @@ final class StartTafTests: XCTestCase {
     func testRunNowSendsOneRequestHoweverOftenItIsTapped() async {
         let model = model()
         StubProtocol.responses["POST /v1/tafs/depl_1/run"] = (200, #"{"session":"sesn_9"}"#)
-        async let first = model.runNow(rae)
-        async let second = model.runNow(rae)
-        let (a, b) = await (first, second)
+        let taf = rae
+        // Two taps: two tasks on the main actor, the second before the first's answer.
+        let first = Task { await model.runNow(taf) }
+        let second = Task { await model.runNow(taf) }
+        let (a, b) = (await first.value, await second.value)
         XCTAssertEqual([a, b].compactMap { $0 }, ["sesn_9"])
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/run"), 1)
         XCTAssertTrue(model.runsInFlight.isEmpty)
