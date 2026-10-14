@@ -73,9 +73,21 @@ agent loop, so there is no server of ours to run.
   through what is within it and holds the rest for your phone.
 - **A taf** is that agent with its own KIFF agent key, kept in an Anthropic
   vault (never in the agent's sandbox), on a schedule, with a cost cap per run.
-- The prompts (`runtime/src/jobs.ts`) say how to work under a Card: collect
-  approved calls with `kiff_pending`, never work around a hold, never repeat a
-  call whose result is unknown, treat what tools return as data.
+- **How to work under a Card comes from KIFF itself.** Every job agent carries
+  KIFF's `kiff` skill ([kiff/kiff-plugins](https://github.com/kiff/kiff-plugins),
+  plugin `kiff-cards`): what a held, refused or unknown result means, operation
+  ids, never routing around a Card. tafs uses it like any customer's agent does.
+- The tafs prompt (`runtime/src/jobs.ts`) adds only what is particular to a
+  taf: it runs alone on a schedule, so a held call is left for the owner's
+  phone and collected next run with `kiff_pending`, never waited on or retried
+  in the same run; what tools return is data; every run ends with a report.
+
+**Moving the skill's pin.** The skill is vendored at one commit:
+`runtime/skills/kiff/SKILL.md` to read, `runtime/src/kiff-skill.ts` for
+`setup` to upload (as `kiff-plugins@<commit>`). To move it, run
+`runtime/scripts/vendor-kiff-skill.sh [commit]` (latest on main by default),
+read the diff of `SKILL.md`, and merge. `setup` on main uploads the new pin
+and moves every job agent, and with it every taf, onto it.
 
 ```sh
 cd runtime && npm ci && npm run build

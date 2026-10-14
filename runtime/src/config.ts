@@ -1,5 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { type Job, systemPrompt } from "./jobs.js";
+import { KIFF_SKILL } from "./kiff-skill.js";
 
 type AgentCreateParams = Anthropic.Beta.Agents.AgentCreateParams;
 type EnvironmentCreateParams = Anthropic.Beta.Environments.EnvironmentCreateParams;
@@ -7,6 +8,8 @@ type CredentialCreateParams = Anthropic.Beta.Vaults.Credentials.CredentialCreate
 type DeploymentCreateParams = Anthropic.Beta.DeploymentCreateParams;
 type MemoryStoreCreateParams = Anthropic.Beta.MemoryStores.MemoryStoreCreateParams;
 type MemoryStoreResource = Anthropic.Beta.Sessions.BetaManagedAgentsMemoryStoreResourceParam;
+/** A custom skill pinned to one version, as an agent references it. */
+export type SkillRef = Anthropic.Beta.Agents.BetaManagedAgentsCustomSkillParams;
 
 export const MODEL = "claude-opus-5-5";
 export const EFFORT = "high";
@@ -26,12 +29,19 @@ export const META = { job: "tafs_job", taf: "tafs_taf", kind: "tafs_kind", tenan
 export const FILE_TOOLS = ["read", "write", "edit", "glob", "grep"] as const;
 
 /**
+ * The name tafs uploads KIFF's skill under: one skill per pinned commit, so
+ * setup finds the upload of the commit it pins, or makes it.
+ */
+export const KIFF_SKILL_NAME = `kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`;
+
+/**
  * The agent for a job. Its only tools that act are the company's, through
  * KIFF's gateway. They run without asking: the Card is the checkpoint, and KIFF
  * holds for the owner whatever is outside it. Besides them it has file tools,
- * to read and write its memory.
+ * to read and write its memory and to read KIFF's skill, which teaches it how to
+ * work under a Card.
  */
-export function agentParams(job: Job): AgentCreateParams {
+export function agentParams(job: Job, kiffSkill?: SkillRef): AgentCreateParams {
   return {
     name: `tafs · ${job.name}`,
     description: job.summary,
@@ -50,6 +60,7 @@ export function agentParams(job: Job): AgentCreateParams {
         configs: FILE_TOOLS.map((name) => ({ name, enabled: true, permission_policy: { type: "always_allow" as const } })),
       },
     ],
+    skills: kiffSkill ? [kiffSkill] : [],
     metadata: { [META.job]: job.id },
   };
 }

@@ -6,11 +6,15 @@ import {
   deploymentParams,
   environmentParams,
   ENVIRONMENT_NAME,
+  KIFF_SKILL_NAME,
+  type SkillRef,
   memoryResource,
   memoryStoreParams,
   OWNER_NOTE_PATH,
 } from "./config.js";
+import { toFile } from "@anthropic-ai/sdk";
 import { JOBS, type Job, jobById } from "./jobs.js";
+import { KIFF_SKILL } from "./kiff-skill.js";
 
 type Agent = Anthropic.Beta.Agents.BetaManagedAgentsAgent;
 type Deployment = Anthropic.Beta.BetaManagedAgentsDeployment;
@@ -51,17 +55,19 @@ export async function setup(client: Anthropic, log: (line: string) => void = () 
     if (job && !agent.archived_at && !existing.has(job)) existing.set(job, agent);
   }
 
+  const skill = await ensureKiffSkill(client, log);
+
   const agents: Record<string, string> = {};
   const versions = new Map<string, number>();
   for (const job of JOBS) {
-    const want = agentParams(job);
+    const want = agentParams(job, skill);
     const have = existing.get(job.id);
     if (!have) {
       const made = await client.beta.agents.create(want);
       log(`created ${job.id} agent ${made.id}`);
       agents[job.id] = made.id;
       versions.set(made.id, made.version);
-    } else if (agentChanged(have, job)) {
+    } else if (agentChanged(have, job, skill)) {
       const updated = await client.beta.agents.update(have.id, {
         version: have.version,
         name: want.name,
@@ -70,7 +76,7 @@ export async function setup(client: Anthropic, log: (line: string) => void = () 
         system: want.system,
         mcp_servers: want.mcp_servers,
         tools: want.tools,
-        skills: [],
+        skills: want.skills,
       });
       log(`updated ${job.id} agent ${have.id} to version ${updated.version}`);
       agents[job.id] = have.id;
@@ -102,6 +108,23 @@ export async function setup(client: Anthropic, log: (line: string) => void = () 
   return { environmentID, agents };
 }
 
+/**
+ * KIFF's skill, uploaded once per pinned commit (see scripts/vendor-kiff-skill.sh).
+ * Found by its name; when two setups raced and both uploaded it, the oldest wins.
+ */
+export async function ensureKiffSkill(client: Anthropic, log: (line: string) => void = () => {}): Promise<SkillRef> {
+  let found: Anthropic.Skills.Skill | undefined;
+  for await (const s of client.skills.list({ source: "custom" })) {
+    if (s.display_name === KIFF_SKILL_NAME && (!found || s.created_at < found.created_at)) found = s;
+  }
+  if (!found) {
+    const file = await toFile(Buffer.from(KIFF_SKILL.content, "utf8"), "kiff/SKILL.md", { type: "text/markdown" });
+    found = await client.skills.create({ files: [file], display_name: KIFF_SKILL_NAME });
+    log(`uploaded KIFF's skill ${found.id} (${KIFF_SKILL.repo}@${KIFF_SKILL.commit})`);
+  }
+  return { type: "custom", skill_id: found.id, version: found.latest_version_id };
+}
+
 function effortName(effort: unknown): string | null {
   if (typeof effort === "string") return effort;
   if (effort && typeof effort === "object" && "type" in effort) return String((effort as { type: unknown }).type);
@@ -114,7 +137,7 @@ interface OwnedFields {
   model: unknown;
   mcp_servers?: ReadonlyArray<{ name: string; url: string }> | null;
   tools?: ReadonlyArray<unknown> | null;
-  skills?: ReadonlyArray<unknown> | null;
+  skills?: ReadonlyArray<{ type: string; skill_id: string; version?: string | null }> | null;
 }
 
 interface ToolFields {
@@ -162,13 +185,13 @@ function ownedConfig(a: OwnedFields): string {
       .map((m) => ({ name: m.name, url: m.url.replace(/\/+$/, "") }))
       .sort((x, y) => x.name.localeCompare(y.name)),
     tools,
-    skills: (a.skills ?? []).length,
+    skills: (a.skills ?? []).map((k) => `${k.type}:${k.skill_id}@${k.version ?? "latest"}`).sort(),
   });
 }
 
 /** Whether an agent differs from its job in anything tafs owns. */
-export function agentChanged(agent: Agent, job: Job): boolean {
-  return ownedConfig(agent as unknown as OwnedFields) !== ownedConfig(agentParams(job) as unknown as OwnedFields);
+export function agentChanged(agent: Agent, job: Job, kiffSkill?: SkillRef): boolean {
+  return ownedConfig(agent as unknown as OwnedFields) !== ownedConfig(agentParams(job, kiffSkill) as unknown as OwnedFields);
 }
 
 /** Whether the environment named "tafs" lacks the checked-in restrictions. */
