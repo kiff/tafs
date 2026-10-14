@@ -25,13 +25,30 @@ final class KIFFClient {
     }
 
     let baseURL: URL
+    /// Where a person answers in KIFF's own app.
+    let webURL: URL
     var token: String?
+    /// Whether KIFF checks the phone's signature on an answer (docs/needs-from-kiff.md, item 1).
+    /// Until it does, the phone does not answer KIFF's held calls: an answer that KIFF accepts on
+    /// the session alone would not prove this iPhone's owner gave it.
+    let serverVerifiesSignatures: Bool
     private let session: URLSession
 
-    init(baseURL: URL = URL(string: "https://api.kiff.dev")!, token: String? = nil, session: URLSession = .shared) {
+    init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
+         webURL: URL = URL(string: "https://app.kiff.dev")!,
+         token: String? = nil,
+         serverVerifiesSignatures: Bool = false,
+         session: URLSession = .shared) {
         self.baseURL = baseURL
+        self.webURL = webURL
         self.token = token
+        self.serverVerifiesSignatures = serverVerifiesSignatures
         self.session = session
+    }
+
+    /// The held call's page in KIFF, where it can be answered today.
+    func answerPage(for exceptionID: String) -> URL {
+        webURL.appendingPathComponent("needs-you").appendingPathComponent(exceptionID)
     }
 
     // MARK: Device sign-in
@@ -92,6 +109,22 @@ final class KIFFClient {
             let reason: String?
             let limit: Int64?
             let quantity: String?
+            /// What the summed amount means, when KIFF could say.
+            let unit: String?
+            let scale: Int?
+            let unitUnavailable: Bool?
+            let unitAmbiguous: Bool?
+
+            enum CodingKeys: String, CodingKey {
+                case outcome, reason, limit, quantity, unit, scale
+                case unitUnavailable = "unit_unavailable", unitAmbiguous = "unit_ambiguous"
+            }
+        }
+
+        /// A parameter's declared unit and decimal places ("EUR", 2).
+        struct ParameterUnit: Decodable, Equatable {
+            let unit: String
+            let scale: Int
         }
 
         let id: String
@@ -102,6 +135,10 @@ final class KIFFClient {
         let breaches: [Breach]
         let parameters: [String: Int64]?
         let reason: String?
+        /// The units the held action declares for its parameters; absent for a bare number.
+        let parameterUnits: [String: ParameterUnit]?
+        /// KIFF could not read the units: amounts are not bare, just unknown.
+        let unitsUnavailable: Bool?
         let nextSteps: [String]?
         let createdAt: Date
         let expiresAt: Date?
@@ -109,6 +146,7 @@ final class KIFFClient {
         enum CodingKeys: String, CodingKey {
             case id, subject, action, status, breaches, parameters, reason
             case entityID = "entity_id", nextSteps = "next_steps"
+            case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
             case createdAt = "created_at", expiresAt = "expires_at"
         }
     }

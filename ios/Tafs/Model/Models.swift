@@ -1,22 +1,68 @@
 import Foundation
 
-/// An amount in minor units (cents) of one currency.
+/// An amount as an integer, with what it means when that is known: a unit
+/// (a currency code such as "EUR", or another unit) and its decimal places.
+///
+/// Without a unit it is a bare number and is shown as stored: the app never
+/// guesses a currency or a scale.
 struct Money: Hashable, Comparable, Codable {
     var minor: Int64
-    var currency: String = "USD"
+    /// The declared unit; nil when there is none or it could not be read.
+    var currency: String?
+    /// Decimal places in `minor`: 2 means 2550 is 25.50.
+    var scale: Int
 
-    static func usd(_ dollars: Double) -> Money { Money(minor: Int64((dollars * 100).rounded())) }
-    static let zero = Money(minor: 0)
+    init(minor: Int64, currency: String?, scale: Int) {
+        self.minor = minor
+        self.currency = currency
+        self.scale = currency == nil ? 0 : scale
+    }
+
+    /// A number with no declared unit.
+    static func bare(_ value: Int64) -> Money { Money(minor: value, currency: nil, scale: 0) }
+    static func usd(_ dollars: Double) -> Money { Money(minor: Int64((dollars * 100).rounded()), currency: "USD", scale: 2) }
+    static let zero = Money.bare(0)
+
+    var hasUnit: Bool { currency != nil }
 
     static func < (a: Money, b: Money) -> Bool { a.minor < b.minor }
-    static func + (a: Money, b: Money) -> Money { Money(minor: a.minor + b.minor, currency: a.currency) }
+    /// Adding to zero takes the other side's unit, so sums start from `.zero`.
+    static func + (a: Money, b: Money) -> Money {
+        let unit = a.minor == 0 && !a.hasUnit ? b : a
+        return Money(minor: a.minor + b.minor, currency: unit.currency, scale: unit.scale)
+    }
+
+    /// The amount in whole units: 2550 at scale 2 is 25.5.
+    var value: Decimal { Decimal(minor) / pow(Decimal(10), scale) }
 
     var formatted: String {
+        guard let currency else {
+            return NumberFormatter.localizedString(from: NSNumber(value: minor), number: .decimal)
+        }
         let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.currencyCode = currency
-        f.maximumFractionDigits = minor % 100 == 0 ? 0 : 2
-        return f.string(from: NSNumber(value: Double(minor) / 100)) ?? "\(minor)"
+        let whole = minor % Self.power(scale) == 0
+        if Locale.commonISOCurrencyCodes.contains(currency.uppercased()) {
+            f.numberStyle = .currency
+            f.currencyCode = currency.uppercased()
+            f.minimumFractionDigits = whole ? 0 : scale
+            f.maximumFractionDigits = whole ? 0 : scale
+            return f.string(from: value as NSDecimalNumber) ?? "\(minor)"
+        }
+        f.numberStyle = .decimal
+        f.minimumFractionDigits = whole ? 0 : scale
+        f.maximumFractionDigits = whole ? 0 : scale
+        return "\(f.string(from: value as NSDecimalNumber) ?? "\(minor)") \(currency)"
+    }
+
+    private static func power(_ n: Int) -> Int64 { (0..<max(n, 0)).reduce(1) { acc, _ in acc * 10 } }
+
+    // Samples saved before units existed were all US cents.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let minor = try c.decode(Int64.self, forKey: .minor)
+        let currency = try c.decodeIfPresent(String.self, forKey: .currency)
+        let scale = try c.decodeIfPresent(Int.self, forKey: .scale) ?? (currency == nil ? 0 : 2)
+        self.init(minor: minor, currency: currency, scale: scale)
     }
 }
 

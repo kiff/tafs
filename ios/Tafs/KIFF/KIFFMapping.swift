@@ -1,12 +1,31 @@
+import CryptoKit
 import Foundation
 
 /// Turns KIFF's Cards and held calls into the app's tafs and held calls.
 ///
-/// One taf per Card holder (the agent KIFF knows as the Card's subject). Amounts
-/// are read as money only when KIFF's quantity says cents; anything else is a count,
-/// so the app never invents a currency.
+/// One taf per Card holder (the agent KIFF knows as the Card's subject). An amount
+/// carries the unit and decimal places KIFF declares for it; where KIFF declares
+/// none, or could not read it, the amount is a bare number. The app never guesses a
+/// currency or a scale from a parameter's name.
 enum KIFFMapping {
-    static func isMoney(_ quantity: String) -> Bool { quantity.lowercased().contains("cents") }
+    /// A summed quantity ("sum(amount_cents)") is an amount; "count" is a count.
+    static func isSum(_ quantity: String) -> Bool { quantity.lowercased().hasPrefix("sum(") }
+
+    /// The parameter a summed quantity adds up: "sum(amount_cents)" → "amount_cents".
+    static func summed(_ quantity: String) -> String? {
+        guard isSum(quantity), quantity.hasSuffix(")") else { return nil }
+        return String(quantity.dropFirst(4).dropLast())
+    }
+
+    /// A held call's local id, the same on every refresh and every launch: derived from
+    /// KIFF's id, so a notification is posted once and an answer removes the right row.
+    static func heldID(_ kiffID: String) -> UUID {
+        var bytes = Array(SHA256.hash(data: Data("tafs.held|\(kiffID)".utf8)).prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x50  // version 5 style: name-based
+        bytes[8] = (bytes[8] & 0x3F) | 0x80  // RFC 4122 variant
+        return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+                           bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
+    }
 
     static func window(_ raw: String) -> Window {
         switch raw.lowercased() {
@@ -25,13 +44,14 @@ enum KIFFMapping {
         let outside: Outside = mandate.onExceed == "refuse" ? .refuse : .hold
         var rules = mandate.grants.map { grant -> CardRule in
             var rule = CardRule(action: grant.action, label: label(grant.action), outside: outside)
-            if let cap = grant.perActionMax?.first, isMoney(cap.quantity) { rule.perAction = Money(minor: cap.max) }
+            // The mandates list carries no units (docs/needs-from-kiff.md, item 4): bare.
+            if let cap = grant.perActionMax?.first { rule.perAction = .bare(cap.max) }
             return rule
         }
         // A Card's totals cover all its grants; show each once, on the first line.
         for aggregate in mandate.aggregates where !rules.isEmpty {
-            if isMoney(aggregate.quantity) {
-                rules[0].perWindow = Money(minor: aggregate.limit)
+            if isSum(aggregate.quantity) {
+                rules[0].perWindow = .bare(aggregate.limit)
             } else {
                 rules[0].countPerWindow = Int(aggregate.limit)
             }
@@ -64,12 +84,11 @@ enum KIFFMapping {
     }
 
     static func held(_ e: KIFFClient.CardException, tafID: UUID) -> HeldCall {
-        let amountKey = e.parameters?.keys.sorted().first { isMoney($0) || $0.lowercased().contains("amount") }
-        let amount = amountKey.flatMap { e.parameters?[$0] }.map { Money(minor: $0) }
         let reason = e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
         var call = HeldCall(
+            id: heldID(e.id),
             tafID: tafID,
-            proposed: ProposedAction(action: e.action, summary: "\(label(e.action)) \(e.entityID)", amount: amount),
+            proposed: ProposedAction(action: e.action, summary: "\(label(e.action)) \(e.entityID)", amount: amount(of: e)),
             reason: reason,
             heldAt: e.createdAt,
             expiresAt: e.expiresAt ?? e.createdAt.addingTimeInterval(10 * 60)
@@ -77,6 +96,23 @@ enum KIFFMapping {
         call.kiffID = e.id
         call.nextSteps = e.nextSteps ?? []
         return call
+    }
+
+    /// The amount to show above the answer: a parameter KIFF declares a unit for, in that
+    /// unit; otherwise the parameter a breach sums, as a bare number; otherwise none.
+    static func amount(of e: KIFFClient.CardException) -> Money? {
+        guard let parameters = e.parameters, !parameters.isEmpty else { return nil }
+        let units = Dictionary((e.parameterUnits ?? [:]).map { ($0.key.lowercased(), $0.value) }, uniquingKeysWith: { a, _ in a })
+        let sorted = parameters.sorted { $0.key < $1.key }
+        if let declared = sorted.first(where: { units[$0.key.lowercased()] != nil }),
+           let unit = units[declared.key.lowercased()] {
+            return Money(minor: declared.value, currency: unit.unit, scale: unit.scale)
+        }
+        let summedNames = e.breaches.compactMap { $0.quantity.flatMap(summed) }.map { $0.lowercased() }
+        if let counted = sorted.first(where: { summedNames.contains($0.key.lowercased()) }) {
+            return .bare(counted.value)
+        }
+        return nil
     }
 
     static func outcomeText(_ outcome: String?) -> String {

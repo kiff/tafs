@@ -3,7 +3,20 @@ import XCTest
 
 /// Signs without Face ID, so tests never wait at a prompt.
 struct StubSigner: ApprovalSigning {
-    func sign(answer: Answer, heldID: UUID, reason: String) async throws -> String { "stub-signature" }
+    func sign(answer: Answer, heldID: String, reason: String) async throws -> String { "stub-signature" }
+}
+
+/// Records what it signed, and can run something while "Face ID" is up.
+@MainActor
+final class RecordingSigner: ApprovalSigning {
+    var signed: [String] = []
+    var whileSigning: (() -> Void)?
+
+    func sign(answer: Answer, heldID: String, reason: String) async throws -> String {
+        signed.append("tafs.answer.v1|\(heldID)|\(answer.wireName)")
+        whileSigning?()
+        return "signature"
+    }
 }
 
 @MainActor

@@ -164,7 +164,7 @@ struct RuleEditor: View {
             Spacer()
             TextField("0", text: Binding(
                 get: { money.wrappedValue.map { String($0.minor / 100) } ?? "" },
-                set: { if let dollars = Int64($0.filter(\.isNumber)) { money.wrappedValue = Money(minor: dollars * 100) } }
+                set: { if let dollars = Int64($0.filter(\.isNumber)) { money.wrappedValue = Money(minor: dollars * 100, currency: "USD", scale: 2) } }
             ))
             .keyboardType(.numberPad)
             .multilineTextAlignment(.trailing)

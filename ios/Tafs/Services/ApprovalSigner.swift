@@ -6,15 +6,17 @@ import LocalAuthentication
 /// a real signature waits for a person at the Face ID prompt.
 @MainActor
 protocol ApprovalSigning {
-    func sign(answer: Answer, heldID: UUID, reason: String) async throws -> String
+    func sign(answer: Answer, heldID: String, reason: String) async throws -> String
 }
 
 /// Signs the owner's answer to a held call with a key that never leaves the iPhone.
 ///
 /// On a device the key lives in the Secure Enclave. The Simulator has none, so there
 /// it falls back to an in-memory software key, which is fine for a demo and never
-/// for production. KIFF verifies the signature against the device's registered
-/// public key (the approvals RFC); a BFF never vouches for an approval.
+/// for production. An answer to KIFF counts only once KIFF verifies the signature
+/// against the device's registered public key; until KIFF does, the app does not
+/// answer KIFF's held calls (`KIFFClient.serverVerifiesSignatures`). A BFF never
+/// vouches for an approval.
 @MainActor
 final class ApprovalSigner: ApprovalSigning {
     enum SignerError: Error { case notAuthenticated }
@@ -34,11 +36,12 @@ final class ApprovalSigner: ApprovalSigning {
 
     var usesSecureEnclave: Bool { enclaveKey != nil }
 
-    /// Asks for Face ID (or the passcode), then signs `answer` for `heldID`.
+    /// Asks for Face ID (or the passcode), then signs `answer` for `heldID`: KIFF's
+    /// exception id for a held call from KIFF, so the signature names the server's hold.
     /// Returns the signature, base64.
-    func sign(answer: Answer, heldID: UUID, reason: String) async throws -> String {
+    func sign(answer: Answer, heldID: String, reason: String) async throws -> String {
         try await authenticate(reason: reason)
-        let message = Data("tafs.answer.v1|\(heldID.uuidString)|\(answer.wireName)".utf8)
+        let message = Data("tafs.answer.v1|\(heldID)|\(answer.wireName)".utf8)
         let signature: Data
         if let enclaveKey {
             signature = try enclaveKey.signature(for: message).derRepresentation

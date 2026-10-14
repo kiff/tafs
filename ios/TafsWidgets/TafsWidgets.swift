@@ -15,7 +15,7 @@ private let dim = Color(red: 0x9D / 255.0, green: 0x97 / 255.0, blue: 0x8D / 255
 private let openURL = URL(string: "tafs://needs-you")!
 
 /// The held call counting down on the lock screen and in the Dynamic Island.
-/// Tapping it opens Needs you, where the answer is signed with Face ID.
+/// Tapping it opens Needs you, where the owner answers it.
 struct HeldActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: HeldActivityAttributes.self) { context in
@@ -85,7 +85,7 @@ private struct LockScreenView: View {
                     Text("then refused").font(.caption2).foregroundColor(dim)
                 }
             }
-            Text("Tap to answer with Face ID").font(.caption2).foregroundColor(dim)
+            Text("Tap to answer").font(.caption2).foregroundColor(dim)
         }
         .padding(16)
     }
