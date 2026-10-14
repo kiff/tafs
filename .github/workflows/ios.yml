@@ -12,9 +12,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+# A pull request's runs share one group, so a newer push cancels the older run.
+# Every other run (main, tags, TestFlight builds) has a group of its own, keyed
+# by its run id: GitHub replaces a pending run when another joins its group, so
+# a shared group would drop runs even without cancel-in-progress.
 concurrency:
-  group: ios-${{ github.ref }}
-  cancel-in-progress: true
+  group: ios-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
