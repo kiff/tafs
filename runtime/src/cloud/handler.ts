@@ -15,6 +15,8 @@ import { type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET  /v1/tafs/{id}/runs
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
+ *   GET  /v1/tafs/{id}/conversation     the thread: the owner's messages and the taf's
+ *   POST /v1/tafs/{id}/messages         {text}: into the live session, or a new one
  */
 
 /** The Lambda function URL event, as much of it as we read. */
@@ -40,8 +42,11 @@ export interface Deps {
    * when it is already claimed. Released when starting fails.
    */
   names: Names;
+  /** Message slots per taf and 10-minute window, claimed durably (the flood guard). */
+  slots: Slots;
   fetch?: Fetch;
   kiffBase?: string;
+  now?: () => Date;
 }
 
 export interface Names {
@@ -50,8 +55,26 @@ export interface Names {
   release(tenant: string, name: string): Promise<void>;
 }
 
+export interface Slots {
+  /** Claims `key` until `expiresAt`. True only when nobody holds it. */
+  claim(key: string, expiresAt: Date): Promise<boolean>;
+}
+
 /** Most one run of a taf started from the phone may cost: $10. */
 export const MAX_BUDGET_CENTS = 1000;
+
+/** Chat limits: a message's length, the thread's length, and how often the owner may write. */
+export const CHAT = {
+  maxText: 2000,
+  maxThread: 100,
+  /** Sessions read for the thread: the latest runs, and the latest chats. */
+  runsInThread: 5,
+  chatsInThread: 5,
+  /** A session active this recently takes the message instead of a new one. */
+  liveMinutes: 30,
+  floodMessages: 10,
+  floodMinutes: 10,
+} as const;
 
 class HTTPError extends Error {
   constructor(readonly status: number, message: string) {
@@ -111,6 +134,13 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const session = parts[4] ?? "";
     if (!(await runs(client, taf.id)).some((r) => r.session === session)) throw new HTTPError(404, "no such run");
     return { session, report: await report(client, session) };
+  }
+  if (parts.length === 4 && method === "GET" && action === "conversation") {
+    return { messages: (await conversation(client, taf)).messages };
+  }
+  if (parts.length === 4 && method === "POST" && action === "messages") {
+    need(me, "cards.manage");
+    return message(event, me, client, taf, deps);
   }
   throw new HTTPError(404, "not found");
 }
@@ -217,6 +247,112 @@ async function report(client: Anthropic, sessionID: string) {
     }
   }
   return { status: session.status, text };
+}
+
+type Deployment = Anthropic.Beta.BetaManagedAgentsDeployment;
+type Session = Anthropic.Beta.Sessions.BetaManagedAgentsSession;
+
+/** A message in a taf's thread. A run's opening instruction is the owner's, of kind "kickoff". */
+export interface ThreadMessage {
+  at: string;
+  from: "owner" | "taf";
+  kind: "kickoff" | "message";
+  text: string;
+  session: string;
+}
+
+/**
+ * The taf's sessions the thread reads, oldest first: its latest scheduled or
+ * manual runs (they carry the deployment's id) and its latest chats (marked
+ * with tafs_chat_for). Sessions are listed by the taf's agent, newest first,
+ * a bounded number at most, since one agent serves every taf on its job.
+ */
+async function tafSessions(client: Anthropic, taf: Deployment): Promise<Session[]> {
+  const out: Session[] = [];
+  let runs = 0, chats = 0, scanned = 0;
+  for await (const s of client.beta.sessions.list({ agent_id: taf.agent.id, order: "desc" })) {
+    if (++scanned > 200) break;
+    if (s.deployment_id === taf.id && runs < CHAT.runsInThread) { out.push(s); runs++; }
+    else if (s.metadata?.[META.chatFor] === taf.id && chats < CHAT.chatsInThread) { out.push(s); chats++; }
+    if (runs >= CHAT.runsInThread && chats >= CHAT.chatsInThread) break;
+  }
+  return out.sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+async function conversation(client: Anthropic, taf: Deployment): Promise<{ messages: ThreadMessage[]; sessions: Session[] }> {
+  const sessions = await tafSessions(client, taf);
+  const messages: ThreadMessage[] = [];
+  for (const s of sessions) {
+    let first = true;
+    for await (const e of client.beta.sessions.events.list(s.id)) {
+      if (e.type !== "user.message" && e.type !== "agent.message") continue;
+      const text = e.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("\n").trim();
+      const at = e.processed_at ?? s.updated_at;
+      if (e.type === "user.message") {
+        // A run opens with the job's instruction: shown as such, not as something the owner typed.
+        const kind = first && s.deployment_id === taf.id ? "kickoff" : "message";
+        first = false;
+        if (text) messages.push({ at, from: "owner", kind, text, session: s.id });
+      } else if (text) {
+        messages.push({ at, from: "taf", kind: "message", text, session: s.id });
+      }
+    }
+  }
+  messages.sort((a, b) => a.at.localeCompare(b.at));
+  return { messages: messages.slice(-CHAT.maxThread), sessions };
+}
+
+/**
+ * The owner writes to the taf. The message goes into the taf's latest session
+ * when it is still live (idle or running, active in the last 30 minutes);
+ * otherwise a new session starts with it, with the taf's agent, environment,
+ * vault and budget. Either way the taf has only its Card's tools.
+ */
+async function message(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, taf: Deployment, deps: Deps): Promise<unknown> {
+  const text = str(parseBody(event).text).trim();
+  if (!text || text.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters`);
+  const now = (deps.now?.() ?? new Date()).getTime();
+
+  // The flood guard: one of 10 slots per taf and 10-minute window, claimed with a
+  // conditional write, so it holds however many sessions the messages start and
+  // whatever the thread shows. A window is fixed, so at most 20 can straddle two.
+  const windowMs = CHAT.floodMinutes * 60_000;
+  const bucket = Math.floor(now / windowMs);
+  const expires = new Date((bucket + 2) * windowMs);
+  let slot = false;
+  for (let n = 0; n < CHAT.floodMessages && !slot; n++) {
+    slot = await deps.slots.claim(`rate#${me.tenantID}#${taf.id}#${bucket}#${n}`, expires);
+  }
+  if (!slot) {
+    throw new HTTPError(429, `that's ${CHAT.floodMessages} messages in ${CHAT.floodMinutes} minutes; wait a little before writing again`);
+  }
+
+  const { sessions } = await conversation(client, taf);
+
+  const userMessage = { type: "user.message" as const, content: [{ type: "text" as const, text }] };
+  const latest = sessions.at(-1);
+  const live = latest && ["idle", "running", "rescheduling"].includes(latest.status) &&
+    now - Date.parse(latest.updated_at) < CHAT.liveMinutes * 60_000;
+  if (latest && live) {
+    try {
+      await client.beta.sessions.events.send(latest.id, { events: [userMessage] });
+      return { session: latest.id, new_session: false };
+    } catch (err) {
+      // Refused, for example a session paused at its budget: a new one takes the message.
+      if (!refused(err)) throw err;
+    }
+  }
+
+  const session = await client.beta.sessions.create({
+    agent: { type: "agent", id: taf.agent.id, version: taf.agent.version },
+    environment_id: taf.environment_id,
+    vault_ids: taf.vault_ids,
+    ...(taf.budget ? { budget: taf.budget } : {}),
+    title: `${taf.metadata?.[META.taf] ?? taf.name}: chat`,
+    metadata: { [META.chatFor]: taf.id, [META.tenant]: me.tenantID, [META.taf]: taf.metadata?.[META.taf] ?? taf.name },
+    initial_events: [userMessage],
+  });
+  return { session: session.id, new_session: true };
 }
 
 function view(d: Anthropic.Beta.BetaManagedAgentsDeployment) {

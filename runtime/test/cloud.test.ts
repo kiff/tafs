@@ -80,6 +80,7 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
     anthropic: async () => client,
     setup: async () => ({ environmentID: "env_1", agents: { refunds: "agent_refunds" } }),
     names: opts.names ?? memoryNames(),
+    slots: { claim: async () => true },
     fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } }),
   });
   return result.then((r) => ({ status: r.statusCode, body: JSON.parse(r.body), calls }));

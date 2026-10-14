@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { setup, type Setup } from "../runtime.js";
-import { handle, type HTTPEvent, type HTTPResult, type Names } from "./handler.js";
+import { handle, type HTTPEvent, type HTTPResult, type Names, type Slots } from "./handler.js";
 
 // Kept for the life of the container: the key, the client, the agents.
 let client: Promise<Anthropic> | undefined;
@@ -51,6 +51,26 @@ const names: Names = {
   },
 };
 
+/**
+ * Chat message slots, in the same table: one item per slot, claimed with
+ * attribute_not_exists, and a ttl so DynamoDB removes old windows.
+ */
+const slots: Slots = {
+  async claim(key, expiresAt) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
+        Item: { id: { S: key }, ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } },
+        ConditionExpression: "attribute_not_exists(id)",
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+};
+
 export async function handler(event: HTTPEvent): Promise<HTTPResult> {
-  return handle(event, { anthropic, setup: ensureSetup, names });
+  return handle(event, { anthropic, setup: ensureSetup, names, slots });
 }
