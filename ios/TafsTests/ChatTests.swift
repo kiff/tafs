@@ -18,7 +18,7 @@ final class ChatTests: XCTestCase {
 
     private static let raeCard = #"{"id":"rae-k3f9-stripe_refund","subject":"rae-k3f9","grants":[],"aggregates":[],"active":true}"#
 
-    /// A model signed in with KIFF (through the Keychain, as on a phone) whose one taf is
+    /// A model signed in with KIFF (as sign-in ends, through useSession) whose one taf is
     /// Rae, run by tafs cloud as depl_1.
     private func kiffModel(cards: [String] = [raeCard]) async -> (AppModel, UUID) {
         let session = stubbedSession()
@@ -26,8 +26,7 @@ final class ChatTests: XCTestCase {
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session)
         let model = AppModel(signer: StubSigner(), kiff: kiff, cloud: cloud)
         stubKIFF(cards: cards)
-        Keychain.save("kiff_dev_x", for: AppModel.tokenAccount)
-        await model.restore()
+        await model.useSession("kiff_dev_x")
         XCTAssertEqual(model.mode, .kiff)
         let rae = model.tafs.first { $0.name == "Rae" }
         return (model, try! XCTUnwrap(rae?.id, "Rae is named by tafs cloud"))

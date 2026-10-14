@@ -84,15 +84,7 @@ final class AppModel: ObservableObject {
             try await Task.sleep(nanoseconds: interval * 1_000_000_000)
             do {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
-                Keychain.save(token.accessToken, for: Self.tokenAccount)
-                kiff.token = token.accessToken
-                cloud.token = token.accessToken
-                startAttempt = nil
-                holderIDs = [:]; chats = [:]; chatErrors = [:]
-                accountGeneration += 1
-                tafs = []; held = []; record = []
-                mode = .kiff
-                await refresh()
+                await useSession(token.accessToken)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -101,6 +93,20 @@ final class AppModel: ObservableObject {
             }
         }
         throw KIFFClient.KIFFError.expired
+    }
+
+    /// Starts using a KIFF session: keeps it in the Keychain, clears what belonged to any
+    /// earlier session, and loads this one's Cards and tafs.
+    func useSession(_ token: String) async {
+        Keychain.save(token, for: Self.tokenAccount)
+        kiff.token = token
+        cloud.token = token
+        startAttempt = nil
+        holderIDs = [:]; chats = [:]; chatErrors = [:]
+        accountGeneration += 1
+        tafs = []; held = []; record = []
+        mode = .kiff
+        await refresh()
     }
 
     func signOut() async {
