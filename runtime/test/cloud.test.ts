@@ -3,11 +3,17 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { calmEnough, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
 
 /** Names claimed atomically, like the DynamoDB conditional write. */
-function memoryNames(): Names & { held: Set<string> } {
-  const held = new Set<string>();
+function memoryNames(clock: () => Date = () => new Date()): Names & { held: Map<string, Date> } {
+  const held = new Map<string, Date>();
   return {
     held,
-    async claim(t, n) { const k = `${t}#${n}`; if (held.has(k)) return false; held.add(k); return true; },
+    async claim(t, n, staleBefore) {
+      const k = `${t}#${n}`;
+      const at = held.get(k);
+      if (at && at >= staleBefore) return false;
+      held.set(k, clock());
+      return true;
+    },
     async release(t, n) { held.delete(`${t}#${n}`); },
   };
 }
@@ -37,7 +43,12 @@ function fakeAnthropic() {
       deployments: {
         list: async function* () { yield* deployments; },
         retrieve: async (id: string) => { const d = deployments.find((x) => x.id === id); if (!d) throw new Error("404"); return d; },
-        create: async (p: { name: string; metadata: Record<string, string> }) => { calls.push(`deployment.create ${JSON.stringify(p.metadata)}`); return deployment("depl_new", p.metadata.tafs_tenant ?? "", p.name); },
+        create: async (p: { name: string; metadata: Record<string, string> }) => {
+          calls.push(`deployment.create ${JSON.stringify(p.metadata)}`);
+          const d = deployment("depl_new", p.metadata.tafs_tenant ?? "", p.name);
+          deployments.push(d);
+          return d;
+        },
         run: async (id: string) => { calls.push(`run ${id}`); return { session_id: "sesn_1" }; },
         pause: async (id: string) => { calls.push(`pause ${id}`); return { ...deployment(id, "t_acme", "Rae"), status: "paused" }; },
         unpause: async (id: string) => deployment(id, "t_acme", "Rae"),
@@ -55,10 +66,10 @@ function fakeAnthropic() {
       },
     },
   } as unknown as Anthropic;
-  return { client, calls };
+  return { client, calls, deployments };
 }
 
-function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic> } = {}) {
+function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; now?: () => Date } = {}) {
   const { client, calls } = opts.anthropic ?? fakeAnthropic();
   const event: HTTPEvent = {
     rawPath: path,
@@ -70,6 +81,7 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
     anthropic: async () => client,
     setup: async () => ({ environmentID: "env_1", agents: { refunds: "agent_refunds" } }),
     names: opts.names ?? memoryNames(),
+    now: opts.now,
     fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } }),
   });
   return result.then((r) => ({ status: r.statusCode, body: JSON.parse(r.body), calls }));
@@ -158,7 +170,63 @@ describe("tafs cloud", () => {
     const noRun = fakeAnthropic();
     (noRun.client.beta.deployments as unknown as { run: () => Promise<object> }).run = async () => ({ session_id: null, error: { type: "session_rate_limited_error", message: "busy" } });
     expect((await call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: noRun })).status).toBe(502);
-    expect([...names.held]).toEqual(["t_acme#Ivy"]);
+    expect([...names.held.keys()]).toEqual(["t_acme#Ivy"]);
+  });
+
+  it("keeps the name when a create's answer is lost, even if the taf appears later", async () => {
+    let clock = new Date("2026-10-14T10:00:00Z");
+    const now = () => clock;
+    const names = memoryNames(now);
+    const shared = fakeAnthropic();
+    const late: Array<() => void> = [];
+    const realCreate = shared.client.beta.deployments.create.bind(shared.client.beta.deployments);
+    // The first create times out; Anthropic finishes it a little later.
+    let first = true;
+    (shared.client.beta.deployments as unknown as { create: (p: never) => Promise<unknown> }).create = async (p: never) => {
+      if (!first) return realCreate(p);
+      first = false;
+      late.push(() => { void realCreate(p); });
+      throw Object.assign(new Error("Request timed out."), { name: "APIConnectionTimeoutError" });
+    };
+    const body = { name: "Ivy", job: "refunds", agent_key: "key_rae" };
+    const opts = { token: "ana", body, names, anthropic: shared, now };
+
+    expect((await call("POST", "/v1/tafs", opts)).status).toBe(502);
+    expect((await call("POST", "/v1/tafs", opts)).status).toBe(409); // retry: still claimed
+    late.forEach((f) => f());                                        // the lost create lands
+
+    clock = new Date(clock.getTime() + 16 * 60 * 1000);              // the claim has settled
+    expect((await call("POST", "/v1/tafs", opts)).status).toBe(409); // the taf exists: no second one
+    expect(shared.deployments.filter((d) => d.metadata.tafs_taf === "Ivy")).toHaveLength(1);
+  });
+
+  it("lets a settled claim go when the lost create never happened", async () => {
+    let clock = new Date("2026-10-14T10:00:00Z");
+    const now = () => clock;
+    const names = memoryNames(now);
+    const shared = fakeAnthropic();
+    const realCreate = shared.client.beta.deployments.create.bind(shared.client.beta.deployments);
+    let first = true;
+    (shared.client.beta.deployments as unknown as { create: (p: never) => Promise<unknown> }).create = async (p: never) => {
+      if (first) { first = false; throw new Error("socket hang up"); }
+      return realCreate(p);
+    };
+    const opts = { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae" }, names, anthropic: shared, now };
+    expect((await call("POST", "/v1/tafs", opts)).status).toBe(502);
+    expect((await call("POST", "/v1/tafs", opts)).status).toBe(409);
+    clock = new Date(clock.getTime() + 16 * 60 * 1000);
+    expect((await call("POST", "/v1/tafs", opts)).status).toBe(200);
+    expect(shared.deployments.filter((d) => d.metadata.tafs_taf === "Ivy")).toHaveLength(1);
+  });
+
+  it("frees the name at once when Anthropic refuses the create", async () => {
+    const names = memoryNames();
+    const shared = fakeAnthropic();
+    (shared.client.beta.deployments as unknown as { create: () => Promise<never> }).create = async () => {
+      throw Object.assign(new Error("invalid schedule"), { status: 400 });
+    };
+    expect((await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae" }, names, anthropic: shared })).status).toBe(502);
+    expect(names.held.size).toBe(0);
   });
 
   it("pauses and runs the caller's taf", async () => {

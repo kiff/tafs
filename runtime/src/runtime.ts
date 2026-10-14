@@ -175,6 +175,8 @@ export interface StartTaf {
   timezone?: string;
   budgetCents?: number;
   metadata?: Record<string, string>;
+  /** Called just before the deployment is asked for: from here its outcome can be unknown. */
+  onCreating?: () => void;
   /** Called once the deployment exists, before its first run. */
   onCreated?: (deployment: Deployment) => void;
 }
@@ -194,6 +196,9 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
   });
   await client.beta.vaults.credentials.create(vault.id, credentialParams(spec.kiffKey));
 
+  spec.onCreating?.();
+  // Not retried by the SDK: a retry after a lost response could make a second
+  // taf. The caller decides, knowing the outcome may be unknown.
   const deployment = await client.beta.deployments.create(
     deploymentParams({
       name: spec.name,
@@ -206,6 +211,7 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
       budgetCents: spec.budgetCents,
       metadata: spec.metadata,
     }),
+    { maxRetries: 0 },
   );
   spec.onCreated?.(deployment);
   const run = await client.beta.deployments.run(deployment.id);
