@@ -54,7 +54,7 @@ struct HomeView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button { showingSettings = true } label: {
-                    Image(systemName: "gearshape").foregroundColor(Theme.soft)
+                    Mascot(size: 34)
                 }
                 .accessibilityLabel("Settings")
             }
@@ -65,7 +65,7 @@ struct HomeView: View {
                             .font(.system(size: 17, weight: .bold))
                             .foregroundColor(Theme.amberInk)
                             .frame(width: 36, height: 36)
-                            .background(Theme.amber)
+                            .background(Theme.brand)
                             .clipShape(Circle())
                     }
                     .accessibilityLabel("Start a new taf")

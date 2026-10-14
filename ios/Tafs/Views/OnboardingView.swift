@@ -7,13 +7,7 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Text("t")
-                .font(Theme.display(30))
-                .foregroundColor(Theme.amberInk)
-                .frame(width: 56, height: 56)
-                .background(Theme.amber)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .accessibilityHidden(true)
+            Mascot(size: 96)
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("They taf.\nYou kiff.")

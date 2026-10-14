@@ -184,7 +184,7 @@ struct CardFace: View {
                 }
             }
         }
-        .foregroundColor(Theme.background)
+        .foregroundColor(.white)
         .padding(20)
         .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
         .background(color.opacity(revoked ? 0.4 : 1))

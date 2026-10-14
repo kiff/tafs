@@ -7,7 +7,7 @@ struct TafAvatar: View {
     var body: some View {
         Text(taf.initial)
             .font(Theme.display(size * 0.5))
-            .foregroundColor(Theme.background)
+            .foregroundColor(.white)
             .frame(width: size, height: size)
             .background(Theme.tafColor(taf.colorIndex))
             .clipShape(RoundedRectangle(cornerRadius: size * 0.3, style: .continuous))
@@ -79,7 +79,7 @@ struct PrimaryButtonStyle: ButtonStyle {
                 .font(.system(size: 16, weight: .semibold))
                 .frame(maxWidth: .infinity, minHeight: 54)
                 .foregroundColor(Theme.amberInk)
-                .background(Theme.amber.opacity(configuration.isPressed ? 0.8 : 1))
+                .background(Theme.brand.opacity(configuration.isPressed ? 0.8 : 1))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .opacity(isEnabled ? 1 : 0.4)
         }

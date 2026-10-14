@@ -28,7 +28,7 @@ targets:
         UILaunchScreen:
           UIColorName: Background
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        UIUserInterfaceStyle: Dark
+        UIUserInterfaceStyle: Light
         NSFaceIDUsageDescription: tafs asks for Face ID before an approval is signed and sent.
         ITSAppUsesNonExemptEncryption: false
         NSSupportsLiveActivities: true
