@@ -22,7 +22,10 @@ SECRET=tafs/anthropic-api-key
 LAMBDA_ROLE=tafs-cloud-lambda
 TABLE=tafs-cloud-names
 DEPLOY_ROLE=tafs-github-deploy
-REPO=kiff/tafs
+# GitHub sends kiff/tafs's immutable subject (owner and repo by id), so a
+# renamed or recreated repo can't take over the role.
+# gh api repos/kiff/tafs/actions/oidc/customization/sub -> sub_claim_prefix
+REPO_SUB=repo:kiff@2176846/tafs@1418264001
 ZIP=${1:?usage: infra/aws.sh lambda.zip}
 aws() { command aws --region "$REGION" "$@"; }
 
@@ -122,7 +125,7 @@ TRUST="{
     \"Condition\": {
       \"StringEquals\": {
         \"token.actions.githubusercontent.com:aud\": \"sts.amazonaws.com\",
-        \"token.actions.githubusercontent.com:sub\": \"repo:$REPO:ref:refs/heads/main\"
+        \"token.actions.githubusercontent.com:sub\": \"$REPO_SUB:ref:refs/heads/main\"
       }
     }
   }]
