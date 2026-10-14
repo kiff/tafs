@@ -5,6 +5,8 @@ struct TafDetailView: View {
     let tafID: UUID
     @State private var section = 0
     @State private var confirmRevoke = false
+    /// Set on the tap itself, before the request starts, so a second tap can't send one.
+    @State private var runTapped = false
 
     var body: some View {
         if let taf = model.taf(tafID) {
@@ -53,6 +55,26 @@ struct TafDetailView: View {
             Eyebrow(text: "The job")
             Text(taf.job).font(.system(size: 15)).foregroundColor(Theme.ink)
         }
+        if let cloud = model.cloudTaf(for: taf.id) {
+            let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
+            Panel {
+                Eyebrow(text: "Runs")
+                Text(cloud.paused ? "Paused" : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? "On its schedule")
+                    .font(.system(size: 15)).foregroundColor(Theme.ink)
+                Button(inFlight ? "Starting a run…" : "Run now") {
+                    guard !runTapped else { return }
+                    runTapped = true
+                    Task {
+                        if await model.runNow(cloud) != nil { await model.loadReport(cloud) }
+                        runTapped = false
+                    }
+                }
+                .buttonStyle(OutlineButtonStyle())
+                .disabled(inFlight)
+            }
+            RunReportPanel(report: model.reports[cloud.id]) { Task { await model.loadReport(cloud) } }
+                .task(id: cloud.id) { await model.loadReport(cloud) }
+        }
         ForEach(model.heldCalls(for: taf.id)) { HeldCallCard(call: $0) }
         let entries = model.entries(for: taf.id)
         if entries.isEmpty {
@@ -88,6 +110,40 @@ struct TafDetailView: View {
                 }
                 Button("Revoke") { confirmRevoke = true }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
+            }
+        }
+    }
+}
+
+/// The taf's latest run on tafs cloud and, once it stops, what it reported.
+struct RunReportPanel: View {
+    let report: AppModel.RunReport?
+    let reload: () -> Void
+
+    var body: some View {
+        Panel {
+            HStack {
+                Eyebrow(text: "Last run")
+                Spacer()
+                Button("Refresh", action: reload).font(.system(size: 13)).foregroundColor(Theme.amber)
+            }
+            if let report {
+                if let at = report.at {
+                    Text("\(at.shortTime) · \(report.finished ? "finished" : report.status == "running" ? "still running" : "no session")")
+                        .font(Theme.mono(12)).foregroundColor(Theme.dim)
+                }
+                if !report.text.isEmpty {
+                    Text(report.text).font(.system(size: 14)).foregroundColor(Theme.ink).textSelection(.enabled)
+                } else if report.session == nil && report.error == nil {
+                    Text("No run yet.").font(.system(size: 14)).foregroundColor(Theme.dim)
+                } else if !report.finished && report.error == nil {
+                    Text("Its report shows here when the run ends.").font(.system(size: 14)).foregroundColor(Theme.dim)
+                }
+                if let error = report.error {
+                    Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+                }
+            } else {
+                ProgressView().tint(Theme.amber)
             }
         }
     }

@@ -101,6 +101,7 @@ describe("tafs cloud", () => {
   it("lists only the caller's account's tafs", async () => {
     const r = await call("GET", "/v1/tafs", { token: "ana" });
     expect(r.body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
+    expect(r.body.tafs[0]).toHaveProperty("kiff_agent");
   });
 
   it("treats another account's taf as missing", async () => {
