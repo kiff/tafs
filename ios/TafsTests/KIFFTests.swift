@@ -5,6 +5,10 @@ import XCTest
 final class StubProtocol: URLProtocol {
     nonisolated(unsafe) static var responses: [String: (Int, String)] = [:]   // "METHOD path" → (status, body)
     nonisolated(unsafe) static var sent: [URLRequest] = []
+    /// One request ("METHOD path") to hold until `release` is signalled; `arrived` says it came.
+    nonisolated(unsafe) static var holdOnce: String?
+    static let arrived = DispatchSemaphore(value: 0)
+    static let release = DispatchSemaphore(value: 0)
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -25,7 +29,13 @@ final class StubProtocol: URLProtocol {
         }
         Self.sent.append(request)
         let path = request.url.map { $0.path + ($0.query.map { "?" + $0 } ?? "") } ?? ""
-        let (status, body) = Self.responses["\(request.httpMethod ?? "GET") \(path)"] ?? (404, #"{"error":"not stubbed"}"#)
+        let key = "\(request.httpMethod ?? "GET") \(path)"
+        if Self.holdOnce == key {
+            Self.holdOnce = nil
+            Self.arrived.signal()
+            Self.release.wait()
+        }
+        let (status, body) = Self.responses[key] ?? (404, #"{"error":"not stubbed"}"#)
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data(body.utf8))

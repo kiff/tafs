@@ -298,11 +298,13 @@ final class AppModel: ObservableObject {
             progress(.cards)
             try await attempt(.cards) {
                 for id in removed {
+                    guard accountGeneration == gen else { throw Self.signedOut(.cards) }
                     try await kiff.revoke(cardID: id)
                     a.issuedCardIDs.remove(id)
                 }
                 if !a.cardsIssued {
                     for card in cards {
+                        guard accountGeneration == gen else { throw Self.signedOut(.cards) }
                         a.issuedCardIDs.insert(card.id)
                         try await kiff.issueCard(card)
                     }
@@ -320,9 +322,12 @@ final class AppModel: ObservableObject {
         }
 
         progress(.run)
+        guard accountGeneration == gen else { throw Self.signedOut(.run) }
         if a.cloudUnknown, let existing = await cloudTaf(agent: a.agent) {
             return finish(existing, session: nil, &a)
         }
+        // The lookup above waited: the key goes to tafs cloud only under the session that made it.
+        guard accountGeneration == gen else { throw Self.signedOut(.run) }
         do {
             let started = try await cloud.start(name: name, job: job, agentKey: key)
             return finish(started.taf, session: started.session, &a)
@@ -359,7 +364,7 @@ final class AppModel: ObservableObject {
 
     /// Runs one step of starting a taf; a failure says what is already in KIFF.
     private func attempt<T>(_ step: StartStep, _ work: () async throws -> T) async throws -> T {
-        do { return try await work() } catch {
+        do { return try await work() } catch let failure as StartFailure { throw failure } catch {
             throw StartFailure(step: step, message: Self.startMessage(step, error))
         }
     }

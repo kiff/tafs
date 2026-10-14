@@ -263,6 +263,43 @@ final class StartTafTests: XCTestCase {
         XCTAssertEqual(last?.value(forHTTPHeaderField: "Authorization"), "Bearer kiff_dev_b")
     }
 
+    /// Waits, off the main actor, until the held request has reached the stub.
+    private func untilHeldRequestArrives() async {
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
+    }
+
+    func testAnAccountChangeMidCardsStopsBeforeTheNextRequest() async {
+        let model = model()
+        stubKIFFSteps()
+        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"},"session":"sesn_1"}"#)
+        StubProtocol.holdOnce = "POST /v1/me/mandates"
+        let both = [ToolLimit(tool: refund, on: true, perDay: "100"), ToolLimit(tool: lookup, on: true, callsPerDay: "5")]
+        let start = Task { try await model.startOnKIFF(name: "Rae", job: "refunds", limits: both, agentID: "rae-k3f9") }
+
+        // The first Card is on its way; the owner signs out and another account signs in.
+        await untilHeldRequestArrives()
+        await model.signOut()
+        model.kiff.token = "kiff_dev_b"
+        model.cloud.token = "kiff_dev_b"
+        StubProtocol.release.signal()
+
+        do {
+            _ = try await start.value
+            XCTFail("expected the start to stop")
+        } catch let f as AppModel.StartFailure {
+            XCTAssertEqual(f.step, .cards)
+            XCTAssertTrue(f.message.contains("signed out"), f.message)
+        } catch { XCTFail("\(error)") }
+        XCTAssertEqual(count("POST", "/v1/me/mandates"), 1, "no second Card under the new account")
+        XCTAssertEqual(count("POST", "/v1/keys"), 0)
+        XCTAssertEqual(count("POST", "/v1/tafs"), 0)
+        XCTAssertFalse(StubProtocol.sent.contains { $0.value(forHTTPHeaderField: "Authorization") == "Bearer kiff_dev_b" && $0.httpMethod == "POST" },
+                       "nothing of the old start is sent with the new account's session")
+        XCTAssertNil(model.startAttempt)
+    }
+
     // MARK: Runs
 
     private let rae = TafsCloud.CloudTaf(id: "depl_1", name: "Rae", job: "refunds", kiffAgent: "rae-k3f9", status: "active", nextRun: nil, lastRun: nil)
