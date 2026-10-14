@@ -10,6 +10,14 @@ Revoked, it stops at once.
 Cards are enforced by [KIFF](https://kiff.dev): every action a taf takes passes
 through KIFF's gateway, which checks the Card before any call reaches a tool.
 
+<p>
+  <img src="docs/screenshots/welcome.png" width="220" alt="Welcome: They taf. You kiff.">
+  <img src="docs/screenshots/needs-you.png" width="220" alt="Needs you: held actions with Approve once and Refuse">
+  <img src="docs/screenshots/record.png" width="220" alt="Record: everything the tafs did, newest first">
+</p>
+
+Screenshots come from CI: every run uploads them as the `screenshots` artifact.
+
 ## The first five jobs
 
 Each is a consequential job companies want agents to do and are afraid to let
