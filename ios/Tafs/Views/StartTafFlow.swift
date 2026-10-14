@@ -14,7 +14,7 @@ struct StartTafFlow: View {
     @State private var loadError: String?
     @State private var reached: AppModel.StartStep?
     @State private var failure: AppModel.StartFailure?
-    @State private var startedSession: String?
+    @State private var started: AppModel.StartResult?
 
     var body: some View {
         NavigationStack {
@@ -31,7 +31,7 @@ struct StartTafFlow: View {
             }
             .screenBackground()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(startedSession == nil ? "Close" : "Done") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(started == nil ? "Close" : "Done") { dismiss() } }
                 if step > 1 && reached == nil {
                     ToolbarItem(placement: .navigationBarLeading) { Button("Back") { step -= 1 } }
                 }
@@ -133,7 +133,7 @@ struct StartTafFlow: View {
 
     private var startStep: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text(startedSession == nil ? "Start \(name)" : "\(name) is running").font(Theme.display(32)).foregroundColor(Theme.ink)
+            Text(started == nil ? "Start \(name)" : "\(name) is running").font(Theme.display(32)).foregroundColor(Theme.ink)
             ForEach(limits.filter(\.on)) { limit in
                 HStack(alignment: .firstTextBaseline) {
                     Text(limit.tool.name).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
@@ -153,8 +153,10 @@ struct StartTafFlow: View {
             if let failure {
                 Text(failure.message).font(.system(size: 14)).foregroundColor(Theme.no)
             }
-            if startedSession != nil {
-                Text("Its first run has started. Its report shows on its page when the run ends.")
+            if let started {
+                Text(started.session == nil
+                     ? "\(name) is set up and runs on its schedule. Its first run didn't start; you can run it now from its page."
+                     : "Its first run has started. Its report shows on its page when the run ends.")
                     .font(.system(size: 14)).foregroundColor(Theme.ok)
                 Button("Done") { dismiss() }.buttonStyle(PrimaryButtonStyle())
             } else {
@@ -172,7 +174,7 @@ struct StartTafFlow: View {
     private func progressRow(_ s: AppModel.StartStep) -> some View {
         let state: (String, Color) = {
             guard let reached else { return ("circle", Theme.dim) }
-            if startedSession != nil || s < reached { return ("checkmark.circle.fill", Theme.ok) }
+            if started != nil || s < reached { return ("checkmark.circle.fill", Theme.ok) }
             if s == reached { return failure == nil ? ("circle.dotted", Theme.amber) : ("xmark.circle.fill", Theme.no) }
             return ("circle", Theme.dim)
         }()
@@ -184,9 +186,9 @@ struct StartTafFlow: View {
     private func start() async {
         guard let job else { return }
         failure = nil
-        startedSession = nil
+        started = nil
         do {
-            startedSession = try await model.startOnKIFF(name: name, job: job.key, limits: limits) { reached = $0 }
+            started = try await model.startOnKIFF(name: name, job: job.key, limits: limits) { reached = $0 }
         } catch let f as AppModel.StartFailure {
             failure = f
             if f.step == .confirm { reached = nil }

@@ -216,37 +216,110 @@ final class AppModel: ObservableObject {
         try await kiff.connections()
     }
 
+    /// A start in progress. Kept when a step fails, so trying again resumes it: the same
+    /// agent, without adding it, issuing its Cards or minting its key a second time. The key
+    /// lives here only in memory, and only until tafs cloud has it.
+    struct StartAttempt: Equatable {
+        let name: String
+        let job: String
+        let agent: String
+        var cards: [KIFFClient.CardRequest] = []
+        var agentAdded = false
+        var cardsIssued = false
+        var key: String?
+        /// tafs cloud may have the taf: its answer was lost, or it holds the name.
+        var cloudUnknown = false
+    }
+
+    struct StartResult: Equatable {
+        let taf: TafsCloud.CloudTaf
+        /// The first run's session; nil when the taf exists but its first run didn't start.
+        let session: String?
+    }
+
+    @Published private(set) var startAttempt: StartAttempt?
+
     /// Starts a taf on KIFF: the owner confirms with Face ID, then the app adds the agent,
     /// issues one Card per tool, mints its gateway key and hands it to tafs cloud, which
-    /// runs it on its job. The key is never kept on the phone. Returns the first run's session.
+    /// runs it on its job. Calling it again after a failure resumes the same attempt.
     func startOnKIFF(name: String, job: String, limits: [ToolLimit], agentID: String? = nil,
-                     progress: (StartStep) -> Void = { _ in }) async throws -> String {
+                     progress: (StartStep) -> Void = { _ in }) async throws -> StartResult {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let agent = agentID ?? TafPlan.agentID(for: name)
+        var a: StartAttempt
+        if let previous = startAttempt, previous.name == name, previous.job == job {
+            a = previous
+        } else {
+            a = StartAttempt(name: name, job: job, agent: agentID ?? TafPlan.agentID(for: name))
+        }
         let cards: [KIFFClient.CardRequest]
-        do { cards = try TafPlan.cards(agentID: agent, limits: limits) } catch {
+        do { cards = try TafPlan.cards(agentID: a.agent, limits: limits) } catch {
             throw StartFailure(step: .confirm, message: error.localizedDescription)
         }
+        if cards != a.cards { a.cards = cards; a.cardsIssued = false }
 
         progress(.confirm)
         do {
-            _ = try await signer.sign(answer: .approveOnce, heldID: "start-\(agent)", reason: "Start \(name) with \(cards.count) Card\(cards.count == 1 ? "" : "s")")
+            _ = try await signer.sign(answer: .approveOnce, heldID: "start-\(a.agent)", reason: "Start \(name) with \(cards.count) Card\(cards.count == 1 ? "" : "s")")
         } catch {
-            throw StartFailure(step: .confirm, message: "Nothing was started: Face ID did not confirm.")
+            throw StartFailure(step: .confirm, message: a.agentAdded ? "Face ID did not confirm; nothing more was done." : "Nothing was started: Face ID did not confirm.")
+        }
+        startAttempt = a
+        defer { if startAttempt != nil { startAttempt = a } }
+
+        if !a.agentAdded {
+            progress(.agent)
+            do { try await kiff.createAgent(id: a.agent) } catch {
+                // The name is taken in KIFF: the next try starts over with a new agent id.
+                if case KIFFClient.KIFFError.server(409, _) = error { startAttempt = nil }
+                throw StartFailure(step: .agent, message: Self.startMessage(.agent, error))
+            }
+            a.agentAdded = true
+        }
+        if !a.cardsIssued {
+            progress(.cards)
+            try await attempt(.cards) { for card in cards { try await kiff.issueCard(card) } }
+            a.cardsIssued = true
+        }
+        let key: String
+        if let k = a.key { key = k } else {
+            progress(.key)
+            key = try await attempt(.key) { try await kiff.mintGatewayKey(agentID: a.agent, label: "tafs · \(name)").plaintext }
+            a.key = key
         }
 
-        progress(.agent)
-        try await attempt(.agent) { try await kiff.createAgent(id: agent) }
-        progress(.cards)
-        try await attempt(.cards) { for card in cards { try await kiff.issueCard(card) } }
-        progress(.key)
-        let key = try await attempt(.key) { try await kiff.mintGatewayKey(agentID: agent, label: "tafs · \(name)") }
         progress(.run)
-        let started = try await attempt(.run) { try await cloud.start(name: name, job: job, agentKey: key.plaintext) }
-        cloudTafs[agent] = started.taf
-        await refresh()
-        return started.session
+        if a.cloudUnknown, let existing = await cloudTaf(agent: a.agent) {
+            return finish(existing, session: nil, &a)
+        }
+        do {
+            let started = try await cloud.start(name: name, job: job, agentKey: key)
+            return finish(started.taf, session: started.session, &a)
+        } catch let e as TafsCloud.CloudError where (400..<500).contains(e.status) && e.status != 408 && e.status != 409 && e.status != 429 {
+            // Refused outright: tafs cloud made nothing.
+            throw StartFailure(step: .run, message: "The agent, its Cards and its key are in KIFF; tafs cloud refused to run it: \(e.message)")
+        } catch {
+            // Lost, busy, or the name is held: the taf may exist or still appear.
+            if let existing = await cloudTaf(agent: a.agent) { return finish(existing, session: nil, &a) }
+            a.cloudUnknown = true
+            throw StartFailure(step: .run, message: "The agent, its Cards and its key are in KIFF, and tafs cloud may have the taf already: it didn't confirm (\(error.localizedDescription)). Try again in a minute: the app checks for it before starting another.")
+        }
     }
+
+    private func finish(_ taf: TafsCloud.CloudTaf, session: String?, _ a: inout StartAttempt) -> StartResult {
+        a.key = nil
+        startAttempt = nil
+        cloudTafs[a.agent] = taf
+        Task { await refresh() }
+        return StartResult(taf: taf, session: session)
+    }
+
+    /// The account's tafs cloud taf acting as `agent`, if tafs cloud lists one.
+    private func cloudTaf(agent: String) async -> TafsCloud.CloudTaf? {
+        (try? await cloud.tafs())?.first { $0.kiffAgent == agent }
+    }
+
+    /// Forgets a failed start, so the next one is a new agent.
+    func abandonStart() { startAttempt = nil }
 
     /// Runs one step of starting a taf; a failure says what is already in KIFF.
     private func attempt<T>(_ step: StartStep, _ work: () async throws -> T) async throws -> T {
@@ -268,18 +341,56 @@ final class AppModel: ObservableObject {
         let done: String
         switch step {
         case .confirm, .agent: done = "Nothing was started."
-        case .cards: done = "The agent is in KIFF; some of its Cards may be too."
+        case .cards: done = "The agent is in KIFF; some of its Cards may be too. Trying again issues them again."
         case .key: done = "The agent and its Cards are in KIFF."
-        case .run: done = "The agent, its Cards and its key are in KIFF, but tafs cloud didn't start it."
+        case .run: done = "The agent, its Cards and its key are in KIFF."
         }
         return "\(done) \(error.localizedDescription)"
     }
 
-    /// Runs a taf now, outside its schedule. Returns the run's session.
+    // MARK: Runs
+
+    /// The tafs whose Run now request is on its way, so a second tap starts nothing.
+    @Published private(set) var runsInFlight: Set<String> = []
+
+    /// Runs a taf now, outside its schedule. Returns the run's session; nil when it didn't
+    /// start, or when a run request for it is already on its way.
     func runNow(_ cloudTaf: TafsCloud.CloudTaf) async -> String? {
+        guard runsInFlight.insert(cloudTaf.id).inserted else { return nil }
+        defer { runsInFlight.remove(cloudTaf.id) }
         do { return try await cloud.runNow(cloudTaf.id) } catch {
             lastError = "The run didn't start: \(error.localizedDescription)"
             return nil
+        }
+    }
+
+    /// A taf's latest run, as its page shows it.
+    struct RunReport: Equatable {
+        var session: String?
+        var at: Date?
+        /// "running" while it works, "idle" once it has stopped.
+        var status: String?
+        var text: String = ""
+        var error: String?
+        var finished: Bool { status != nil && status != "running" }
+    }
+
+    @Published private(set) var reports: [String: RunReport] = [:]
+
+    /// Loads the taf's latest run and, once it has stopped, its report.
+    func loadReport(_ cloudTaf: TafsCloud.CloudTaf) async {
+        do {
+            let runs = try await cloud.runs(cloudTaf.id)
+            guard let latest = runs.first(where: { $0.session != nil }), let session = latest.session else {
+                reports[cloudTaf.id] = RunReport(at: runs.first?.at, error: runs.first?.error)
+                return
+            }
+            let r = try await cloud.report(cloudTaf.id, session: session)
+            reports[cloudTaf.id] = RunReport(session: session, at: latest.at, status: r.status, text: r.text)
+        } catch {
+            var r = reports[cloudTaf.id] ?? RunReport()
+            r.error = "Its runs couldn't be loaded: \(error.localizedDescription)"
+            reports[cloudTaf.id] = r
         }
     }
 

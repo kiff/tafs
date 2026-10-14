@@ -100,11 +100,12 @@ final class StartTafTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active","next_run":"2026-10-14T10:30:00Z","last_run":null},"session":"sesn_1"}"#)
 
         var steps: [AppModel.StartStep] = []
-        let session = try await model.startOnKIFF(name: " Rae ", job: "refunds",
+        let result = try await model.startOnKIFF(name: " Rae ", job: "refunds",
                                                   limits: [ToolLimit(tool: refund, on: true, perCall: "150", perDay: "2000")],
                                                   agentID: "rae-k3f9") { steps.append($0) }
-        XCTAssertEqual(session, "sesn_1")
+        XCTAssertEqual(result.session, "sesn_1")
         XCTAssertEqual(steps, [.confirm, .agent, .cards, .key, .run])
+        XCTAssertNil(model.startAttempt, "a finished start keeps nothing, the key least of all")
 
         let sent = StubProtocol.sent.map { "\($0.httpMethod ?? "") \($0.url?.host ?? "")\($0.url?.path ?? "")" }
         XCTAssertEqual(Array(sent.prefix(4)), ["POST api.test/v1/me/agents", "POST api.test/v1/me/mandates", "POST api.test/v1/keys", "POST cloud.test/v1/tafs"])
@@ -146,6 +147,105 @@ final class StartTafTests: XCTestCase {
             XCTAssertTrue(f.message.contains("only an admin"), f.message)
         } catch { XCTFail("\(error)") }
         XCTAssertFalse(StubProtocol.sent.contains { $0.url?.host == "cloud.test" }, "no run without a key")
+    }
+
+    // MARK: tafs cloud's answer
+
+    private func stubKIFFSteps() {
+        StubProtocol.responses["POST /v1/me/agents"] = (201, #"{"id":"rae-k3f9"}"#)
+        StubProtocol.responses["POST /v1/me/mandates"] = (201, #"{"id":"c","subject":"rae-k3f9","grants":[],"aggregates":[],"active":true}"#)
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_1","plaintext":"kiff_live_secret","agent_id":"rae-k3f9"}"#)
+    }
+    private let raeInCloud = #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active","next_run":null,"last_run":null}]}"#
+    private func count(_ method: String, _ path: String) -> Int {
+        StubProtocol.sent.filter { $0.httpMethod == method && $0.url?.path == path }.count
+    }
+
+    func testALostCloudAnswerIsResumedNotStartedAgain() async throws {
+        let model = model()
+        stubKIFFSteps()
+        StubProtocol.responses["POST /v1/tafs"] = (504, #"{"error":"timed out"}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        let limits = [ToolLimit(tool: lookup, on: true, callsPerDay: "5")]
+        do {
+            _ = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: limits, agentID: "rae-k3f9")
+            XCTFail("expected a failure")
+        } catch let f as AppModel.StartFailure {
+            XCTAssertEqual(f.step, .run)
+            XCTAssertTrue(f.message.contains("may have the taf"), f.message)
+            XCTAssertFalse(f.message.contains("didn't start"), "an unknown outcome isn't a failure to start")
+        }
+        XCTAssertEqual(model.startAttempt?.cloudUnknown, true)
+
+        // The lost start lands; trying again finds it instead of starting another.
+        StubProtocol.responses["GET /v1/tafs"] = (200, raeInCloud)
+        let result = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: limits)
+        XCTAssertEqual(result.taf.id, "depl_1")
+        XCTAssertNil(result.session)
+        XCTAssertEqual(count("POST", "/v1/me/agents"), 1)
+        XCTAssertEqual(count("POST", "/v1/me/mandates"), 1)
+        XCTAssertEqual(count("POST", "/v1/keys"), 1, "the key isn't minted twice")
+        XCTAssertEqual(count("POST", "/v1/tafs"), 1, "no second start once the taf is there")
+    }
+
+    func testRetryingAfterAnUnknownStartReusesTheKey() async throws {
+        let model = model()
+        stubKIFFSteps()
+        StubProtocol.responses["POST /v1/tafs"] = (503, #"{"error":"busy"}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        let limits = [ToolLimit(tool: lookup, on: true, callsPerDay: "5")]
+        _ = try? await model.startOnKIFF(name: "Rae", job: "refunds", limits: limits, agentID: "rae-k3f9")
+
+        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"},"session":"sesn_2"}"#)
+        let result = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: limits)
+        XCTAssertEqual(result.session, "sesn_2")
+        XCTAssertEqual(count("POST", "/v1/keys"), 1)
+        XCTAssertEqual(count("POST", "/v1/tafs"), 2)
+        let last = StubProtocol.sent.last { $0.url?.path == "/v1/tafs" && $0.httpMethod == "POST" }
+        XCTAssertEqual(body(last)["agent_key"] as? String, "kiff_live_secret")
+    }
+
+    func testACreatedTafWhoseFirstRunFailedIsStarted() async throws {
+        let model = model()
+        stubKIFFSteps()
+        StubProtocol.responses["POST /v1/tafs"] = (502, #"{"error":"taf "Rae" is created (deployment depl_1), but its first run did not start (session_rate_limited_error: busy)."}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, raeInCloud)
+        let result = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: [ToolLimit(tool: lookup, on: true, callsPerDay: "5")], agentID: "rae-k3f9")
+        XCTAssertEqual(result.taf.id, "depl_1")
+        XCTAssertNil(result.session, "no first run, and the app says so")
+        XCTAssertNil(model.startAttempt)
+    }
+
+    // MARK: Runs
+
+    private let rae = TafsCloud.CloudTaf(id: "depl_1", name: "Rae", job: "refunds", kiffAgent: "rae-k3f9", status: "active", nextRun: nil, lastRun: nil)
+
+    func testRunNowSendsOneRequestHoweverOftenItIsTapped() async {
+        let model = model()
+        StubProtocol.responses["POST /v1/tafs/depl_1/run"] = (200, #"{"session":"sesn_9"}"#)
+        async let first = model.runNow(rae)
+        async let second = model.runNow(rae)
+        let (a, b) = await (first, second)
+        XCTAssertEqual([a, b].compactMap { $0 }, ["sesn_9"])
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/run"), 1)
+        XCTAssertTrue(model.runsInFlight.isEmpty)
+        _ = await model.runNow(rae)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/run"), 2, "once the first is done, another run can start")
+    }
+
+    func testLoadsTheLatestRunsReport() async {
+        let model = model()
+        StubProtocol.responses["GET /v1/tafs/depl_1/runs"] = (200, #"{"runs":[{"session":"sesn_9","at":"2026-10-14T09:00:00Z","error":null},{"session":"sesn_1","at":"2026-10-14T08:00:00Z","error":null}]}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/runs/sesn_9"] = (200, #"{"session":"sesn_9","report":{"status":"idle","text":"Refunded 3 orders; 1 waits on you."}}"#)
+        await model.loadReport(rae)
+        XCTAssertEqual(model.reports["depl_1"]?.session, "sesn_9")
+        XCTAssertEqual(model.reports["depl_1"]?.text, "Refunded 3 orders; 1 waits on you.")
+        XCTAssertEqual(model.reports["depl_1"]?.finished, true)
+
+        StubProtocol.responses["GET /v1/tafs/depl_1/runs"] = (500, #"{"error":"down"}"#)
+        await model.loadReport(rae)
+        XCTAssertEqual(model.reports["depl_1"]?.text, "Refunded 3 orders; 1 waits on you.", "an error keeps the last report")
+        XCTAssertNotNil(model.reports["depl_1"]?.error)
     }
 
     func testListsConnectedToolsFromTheGateway() async throws {
