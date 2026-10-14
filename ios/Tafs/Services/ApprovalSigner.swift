@@ -2,13 +2,19 @@ import CryptoKit
 import Foundation
 import LocalAuthentication
 
+/// Signs an owner's answer. The app uses `ApprovalSigner`; tests use a stub, since
+/// a real signature waits for a person at the Face ID prompt.
+protocol ApprovalSigning {
+    func sign(answer: Answer, heldID: UUID, reason: String) async throws -> String
+}
+
 /// Signs the owner's answer to a held call with a key that never leaves the iPhone.
 ///
 /// On a device the key lives in the Secure Enclave. The Simulator has none, so there
 /// it falls back to an in-memory software key, which is fine for a demo and never
 /// for production. KIFF verifies the signature against the device's registered
 /// public key (the approvals RFC); a BFF never vouches for an approval.
-final class ApprovalSigner {
+final class ApprovalSigner: ApprovalSigning {
     enum SignerError: Error { case notAuthenticated }
 
     private let enclaveKey: SecureEnclave.P256.Signing.PrivateKey?

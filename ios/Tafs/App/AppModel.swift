@@ -16,12 +16,12 @@ final class AppModel: ObservableObject {
     @Published var lastError: String?
 
     let ownerName: String
-    private let signer: ApprovalSigner
+    private let signer: ApprovalSigning
     private var scriptPosition: [UUID: Int] = [:]
     private var templateOf: [UUID: String] = [:]
     private let clock: () -> Date
 
-    init(ownerName: String = "You", signer: ApprovalSigner = ApprovalSigner(), clock: @escaping () -> Date = Date.init) {
+    init(ownerName: String = "You", signer: ApprovalSigning = ApprovalSigner(), clock: @escaping () -> Date = Date.init) {
         self.ownerName = ownerName
         self.signer = signer
         self.clock = clock
