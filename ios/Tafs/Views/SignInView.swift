@@ -1,5 +1,11 @@
 import SwiftUI
 
+/// kiff.dev's Terms and Privacy policy, which cover tafs.
+enum Legal {
+    static let terms = URL(string: "https://kiff.dev/terms#tafs")!
+    static let privacy = URL(string: "https://kiff.dev/privacy#tafs")!
+}
+
 /// Sign in with KIFF: the phone shows a code, the person approves it in KIFF
 /// (on the web, signed in as themselves), and the phone receives a session.
 struct SignInView: View {
@@ -44,6 +50,8 @@ struct SignInView: View {
                     Button("Try again") { begin() }.buttonStyle(OutlineButtonStyle())
                 }
                 Spacer()
+                Text("By signing in, you agree to KIFF's [Terms](https://kiff.dev/terms#tafs), which cover tafs, and its [Privacy policy](https://kiff.dev/privacy#tafs).")
+                    .font(.system(size: 12)).foregroundColor(Theme.dim).tint(Theme.amber)
             }
             .padding(24)
             .screenBackground()
@@ -95,6 +103,10 @@ struct SettingsView: View {
                 Section("How it works") {
                     Text("Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this iPhone.")
                         .font(.system(size: 14)).foregroundColor(Theme.soft)
+                }
+                Section("Legal") {
+                    Link("Terms", destination: Legal.terms)
+                    Link("Privacy policy", destination: Legal.privacy)
                 }
                 Section("About") {
                     LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")

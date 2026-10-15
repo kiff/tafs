@@ -7,6 +7,16 @@ checked, the row says **unverified**.
 tafs makes no data-residency claim. Everything tafs runs itself is in AWS
 `us-east-1`. We'll revisit this when a customer asks, with this page as the input.
 
+**Anthropic, from its documentation (checked 15 October 2026):**
+- Data is stored in the US: `us` is the only workspace geo
+  ([data residency](https://platform.claude.com/docs/en/manage-claude/data-residency)).
+- Model inference may run in the US, Europe, Asia or Australia unless an agent
+  pins `inference_geo: "us"`. tafs's agents don't pin it
+  ([where are your servers](https://privacy.claude.com/en/articles/7996890-where-are-your-servers-located-do-you-host-your-models-on-eu-servers)).
+- Managed Agents sessions are kept until deleted, and aren't eligible for zero
+  data retention. Content Anthropic's safety systems flag can be kept longer under
+  its own terms.
+
 ## The table
 
 | What | Where | Region | What's in it | How long | Who deletes it |
@@ -20,11 +30,11 @@ tafs makes no data-residency claim. Everything tafs runs itself is in AWS
 | Delivered alerts (with #32) | Same table, `alert#tenant#event#token` | `us-east-1` | Account id, KIFF event id, phone token | 72 hours, ttl | DynamoDB ttl |
 | The Anthropic API key | AWS Secrets Manager `tafs/anthropic-api-key` | `us-east-1` | The key tafs cloud runs tafs with | Until rotated | A person |
 | The APNs key | AWS Secrets Manager `tafs/apns-key` | `us-east-1` | The "tafs push" key (`3THAT9GWCS`) | Until rotated or revoked in the Apple Developer portal | A person |
-| Agents, environment, KIFF skill uploads | Anthropic, Claude Managed Agents | **unverified** | One agent per job: model, instructions, KIFF's skill. No customer data | `setup` updates the agents and the environment in place; Anthropic keeps their earlier versions (retention **unverified**). Each new pin of KIFF's skill is a new upload, and older uploads stay | Nobody: `setup` makes the current configuration active and deletes nothing |
-| A taf's deployment | Anthropic | **unverified** | Name, schedule, budget, the KIFF account id and agent id as metadata, the opening instruction | Until removed (#34 archives it; Anthropic keeps archived deployments, **retention unverified**) | tafs cloud on remove |
-| Sessions and transcripts | Anthropic | **unverified** | Every run and chat: the owner's messages, the taf's replies and reports, the tool calls through KIFF's gateway and their results (which can include customer data from the company's tools) | **Unverified.** tafs has no way to delete them today | Nobody yet. Open question |
-| Memory stores | Anthropic | **unverified** | The notes a taf writes about how the owner wants the job done (and the owner's first note) | Until the owner forgets a note, or the taf is removed (#34) | The owner (Forget), tafs cloud on remove |
-| Vaults | Anthropic | **unverified** | The taf's KIFF agent key. Never in the agent's sandbox | Until the taf is removed (#34) | tafs cloud on remove |
+| Agents, environment, KIFF skill uploads | Anthropic, Claude Managed Agents | Stored in the US | One agent per job: model, instructions, KIFF's skill. No customer data | `setup` updates the agents and the environment in place; Anthropic keeps their earlier versions (retention **unverified**). Each new pin of KIFF's skill is a new upload, and older uploads stay | Nobody: `setup` makes the current configuration active and deletes nothing |
+| A taf's deployment | Anthropic | Stored in the US | Name, schedule, budget, the KIFF account id and agent id as metadata, the opening instruction | Until removed (#34 archives it; Anthropic keeps archived deployments, **retention unverified**) | tafs cloud on remove |
+| Sessions and transcripts | Anthropic | Stored in the US; inference may run elsewhere (above) | Every run and chat: the owner's messages, the taf's replies and reports, the tool calls through KIFF's gateway and their results (which can include customer data from the company's tools) | Until the taf is removed: removal deletes its runs (they carry its deployment) and chats (they mount its memory store), with their events and sandboxes | tafs cloud on remove |
+| Memory stores | Anthropic | Stored in the US | The notes a taf writes about how the owner wants the job done (and the owner's first note), and every earlier version of each note | Until the owner forgets a note, or the taf is removed. The store keeps earlier versions of a note for up to 30 days, deleted or not, so Forget also redacts them. Removing the taf deletes the store with all its versions | The owner (Forget), tafs cloud on remove |
+| Vaults | Anthropic | Stored in the US | The taf's KIFF agent key. Never in the agent's sandbox | Until the taf is removed (#34) | tafs cloud on remove |
 | Cards, held calls, answers, receipts | KIFF (`api.kiff.dev`) | KIFF's | Who may do what, what was held, the phone's signed answers, receipts | KIFF's terms | KIFF: [kiff.dev/privacy](https://kiff.dev/privacy) |
 | Push alerts (with #32) | Apple Push Notification service | Apple's | "A taf needs you", the tool name, the held call's id. No amounts or request details: KIFF never sends them | Until delivered, or until the hold expires | Apple |
 | The phone | iPhone Keychain, this device only | The phone | The KIFF session, the account id, the pending alert secret (with #32) | Until sign-out | The app on sign-out |
@@ -48,5 +58,15 @@ KIFF ──(signed alert)───────────────▶ tafs c
 
 ## Open
 
-- **Anthropic.** Region and retention for sessions, transcripts, memory stores, archived deployments and vaults are unverified. Check Anthropic's documentation and terms, and fill those rows in.
-- **Sessions can't be deleted.** tafs has no way to delete a taf's past sessions. Removing a taf (#34) leaves them. Decide whether removal should delete them once Anthropic's retention is known.
+- **This table describes today's runtime, Managed Agents, before launch.** tafs is
+  moving its agents to kiff/agents (#26). There, runs, chats and memory live in
+  tafs's own store (an EU region), each kind of event has a keep rule (tool results
+  only until the run ends, the rest 30 days by default), and Anthropic only serves
+  the model. kiff.dev's legal pages describe that runtime. Rewrite this table when
+  it ships.
+- **Archived deployments and earlier agent versions.** How long Anthropic keeps them
+  after tafs archives or replaces them is still **unverified**.
+- **Chats from before memory (#21).** They mount no memory store, so removal can't
+  find them by the store. They predate any customer.
+- **Inference region.** tafs doesn't pin `inference_geo`. Pinning `"us"` keeps
+  inference in the US at 1.1x the price. Decide when a customer asks.

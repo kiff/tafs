@@ -21,7 +21,7 @@ import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, typ
  *   POST /v1/tafs/{id}/messages         {text}: into the live session, or a new one
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
- *   DELETE /v1/tafs/{id}                remove it: stop it, delete its memory and vault, free its name
+ *   DELETE /v1/tafs/{id}                remove it: stop it, delete its runs and chats, memory and vault, free its name
  *   POST /v1/push                       {device_token, environment, alert_target?}: this phone gets the account's alerts
  *   DELETE /v1/push/{token}             it stops
  *   POST /v1/kiff/alerts                KIFF's signed held-call alerts (no sign-in: the signature is the check)
@@ -444,7 +444,10 @@ async function remove(client: Anthropic, taf: Deployment, me: KIFFIdentity, deps
     const stores = new Set<string>(taf.resources?.flatMap((r) => (r.type === "memory_store" ? [r.memory_store_id] : [])) ?? []);
     const noted = taf.metadata?.[META.memory];
     if (noted) stores.add(noted);
-    for (const id of stores) await step("memory", () => client.beta.memoryStores.delete(id));
+    // Its runs and chats first: they mount its memory store, which is how its
+    // chats are found, so the store goes only once they are gone.
+    await step("history", () => deleteHistory(client, taf.id, [...stores]));
+    if (failed.length === 0) for (const id of stores) await step("memory", () => client.beta.memoryStores.delete(id));
     for (const id of taf.vault_ids ?? []) await step("key", () => client.beta.vaults.delete(id));
     // Only this taf's own claim: if a newer start holds the name, it keeps it.
     if (failed.length === 0) await step("name", () => deps.names.release(me.tenantID, name, taf.metadata?.[META.nameClaim] ?? ""));
@@ -458,6 +461,27 @@ async function remove(client: Anthropic, taf: Deployment, me: KIFFIdentity, deps
     removed: [...new Set(removed)],
     failed: [...new Set(failed)],
   };
+}
+
+/**
+ * Deletes a taf's sessions at Anthropic: its runs (they carry its deployment)
+ * and its chats (they mount its memory store), with their events and
+ * sandboxes. A session still running can't be deleted yet; that fails the
+ * step, and the next remove finishes it.
+ */
+async function deleteHistory(client: Anthropic, deploymentID: string, stores: string[]) {
+  const ids = new Set<string>();
+  for await (const s of client.beta.sessions.list({ deployment_id: deploymentID, include_archived: true })) ids.add(s.id);
+  for (const store of stores) {
+    for await (const s of client.beta.sessions.list({ memory_store_id: store, include_archived: true })) ids.add(s.id);
+  }
+  for (const id of ids) {
+    try {
+      await client.beta.sessions.delete(id);
+    } catch (err) {
+      if ((err as { status?: unknown }).status !== 404) throw err;
+    }
+  }
 }
 
 async function runs(client: Anthropic, deploymentID: string) {
@@ -621,16 +645,32 @@ async function notes(client: Anthropic, taf: Deployment): Promise<Note[]> {
   return out.sort((a, b) => b.updated_at.localeCompare(a.updated_at)).slice(0, MEMORY.shown);
 }
 
-/** Forgets one note. Only a note in this taf's own store can be named. */
+/**
+ * Forgets one note. Only a note in this taf's own store can be named. The
+ * store keeps every earlier version of a note for up to 30 days, deleted or
+ * not, so forgetting also redacts them: the note's text is gone, not only its
+ * latest version. Safe to repeat: a note already deleted still has its
+ * versions redacted.
+ */
 async function forget(client: Anthropic, taf: Deployment, noteID: string): Promise<unknown> {
   const store = taf.metadata?.[META.memory];
   if (!store || !/^mem_[A-Za-z0-9]+$/.test(noteID)) throw new HTTPError(404, "no such note");
+  let deleted = true;
   try {
     await client.beta.memoryStores.memories.delete(noteID, { memory_store_id: store });
   } catch (err) {
-    if ((err as { status?: unknown })?.status === 404) throw new HTTPError(404, "no such note");
-    throw err;
+    if ((err as { status?: unknown })?.status !== 404) throw err;
+    deleted = false;
   }
+  let versions = 0;
+  for await (const v of client.beta.memoryStores.memoryVersions.list(store, { memory_id: noteID })) {
+    versions++;
+    // The deletion version too: its content is gone, but its path (which can
+    // name a customer) stays until it's redacted.
+    if (v.redacted_at) continue;
+    await client.beta.memoryStores.memoryVersions.redact(v.id, { memory_store_id: store });
+  }
+  if (!deleted && versions === 0) throw new HTTPError(404, "no such note");
   return { forgotten: noteID };
 }
 

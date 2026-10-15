@@ -886,7 +886,7 @@ final class AppModel: ObservableObject {
         if let agent = holderIDs.first(where: { $0.value == tafID })?.key { cloudTafs[agent] = nil }
         log(tafID, .revoked, "You removed \(taf.name)", "Schedule, memory and key deleted; name free")
         save()
-        return "\(cards) Its schedule, memory and key are deleted, and the name \(taf.name) is free. Past chats, run reports and KIFF's receipts stay."
+        return "\(cards) Its schedule, chats, run reports, memory and key are deleted, and the name \(taf.name) is free. KIFF's receipts stay."
     }
 
     /// Finishes removals tafs cloud lists as begun. They were confirmed with Face ID when
@@ -903,10 +903,30 @@ final class AppModel: ObservableObject {
     private static func removalStep(_ step: String) -> String {
         switch step {
         case "schedule": return "schedule"
+        case "history": return "runs and chats"
         case "memory": return "memory"
         case "key": return "key (its vault)"
         case "name": return "name"
         default: return step
+        }
+    }
+
+    /// Pauses or resumes a real taf in tafs cloud: no run starts while it is paused.
+    /// Pausing doesn't touch its Cards; revoke a Card to stop its authority.
+    func setPaused(_ tafID: UUID, _ paused: Bool) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID),
+              let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return }
+        let gen = accountGeneration
+        do {
+            let updated = try await cloud.setPaused(c.id, paused)
+            guard gen == accountGeneration else { return }
+            cloudTafs[agent] = updated
+            if let i = tafs.firstIndex(where: { $0.id == tafID }), tafs[i].state != .waiting, tafs[i].state != .revoked {
+                tafs[i].state = updated.paused ? .paused : .working
+                tafs[i].now = updated.paused ? "Paused by you" : updated.nextRun.map { "Next run \($0.shortTime)" } ?? "Back to work"
+            }
+        } catch {
+            lastError = "tafs cloud didn't \(paused ? "pause" : "resume") it: \(error.localizedDescription)"
         }
     }
 

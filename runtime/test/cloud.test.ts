@@ -92,6 +92,12 @@ function deployment(id: string, tenant: string, name: string) {
 function fakeAnthropic() {
   const calls: string[] = [];
   const deployments = [deployment("depl_acme", "t_acme", "Rae"), deployment("depl_other", "t_other", "Max")];
+  // Rae's run and chat (both mount its memory), and another account's run.
+  const sessions = [
+    { id: "sesn_rae_run", deployment_id: "depl_acme", memory_store_id: "mem_depl_acme", status: "idle" },
+    { id: "sesn_rae_chat", deployment_id: null, memory_store_id: "mem_depl_acme", status: "idle" },
+    { id: "sesn_max_run", deployment_id: "depl_other", memory_store_id: "mem_depl_other", status: "idle" },
+  ];
   const client = {
     beta: {
       deployments: {
@@ -130,12 +136,23 @@ function fakeAnthropic() {
         memories: { create: async (id: string, p: { path: string; content: string }) => { calls.push(`note ${id} ${p.path} ${p.content}`); return { id: "mem_1" }; } },
       },
       sessions: {
+        list: async function* (p: { deployment_id?: string; memory_store_id?: string }) {
+          yield* sessions.filter((x) => (p.deployment_id && x.deployment_id === p.deployment_id) || (p.memory_store_id && x.memory_store_id === p.memory_store_id));
+        },
+        delete: async (id: string) => {
+          const i = sessions.findIndex((x) => x.id === id);
+          if (i < 0) throw Object.assign(new Error("not found"), { status: 404 });
+          if (sessions[i]!.status === "running") throw Object.assign(new Error("running"), { status: 400 });
+          calls.push(`session.delete ${id}`);
+          sessions.splice(i, 1);
+          return { id };
+        },
         retrieve: async () => ({ status: "idle" }),
         events: { list: async function* () { yield { type: "agent.message", content: [{ type: "text", text: "Refunded 3 orders; 1 waits on you." }] }; } },
       },
     },
   } as unknown as Anthropic;
-  return { client, calls, deployments };
+  return { client, calls, deployments, sessions };
 }
 
 function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[]; claims?: Claims; removals?: Removals } = {}) {
@@ -436,8 +453,11 @@ describe("removing a taf", () => {
     const { shared, names, opts } = rae();
     const r = await call("DELETE", "/v1/tafs/depl_acme", opts);
     expect(r.status).toBe(200);
-    expect(r.body).toMatchObject({ taf: "depl_acme", name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "memory", "key", "name"], failed: [] });
-    expect(shared.calls).toEqual(["archive depl_acme", "memory.delete mem_depl_acme", "vault.delete vlt_depl_acme"]);
+    expect(r.body).toMatchObject({ taf: "depl_acme", name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });
+    expect(shared.calls).toEqual(["archive depl_acme", "session.delete sesn_rae_run", "session.delete sesn_rae_chat",
+      "memory.delete mem_depl_acme", "vault.delete vlt_depl_acme"]);
+    // Another account's history is untouched.
+    expect(shared.sessions.map((x) => x.id)).toEqual(["sesn_max_run"]);
     expect(names.held.has("t_acme#Rae")).toBe(false);
 
     // Gone: not listed, never run again, nothing else answers for it.
@@ -461,7 +481,7 @@ describe("removing a taf", () => {
     const realDelete = vaults.delete;
     vaults.delete = async () => { throw Object.assign(new Error("vaults are down"), { status: 503 }); };
     const first = await call("DELETE", "/v1/tafs/depl_acme", opts);
-    expect(first.body).toMatchObject({ done: false, removed: ["schedule", "memory"], failed: ["key"] });
+    expect(first.body).toMatchObject({ done: false, removed: ["schedule", "history", "memory"], failed: ["key"] });
     expect(names.held.has("t_acme#Rae")).toBe(true); // the name waits until all is gone
     // Archived, so no longer a taf in the list, but listed as a removal to finish.
     const listed = await call("GET", "/v1/tafs", opts);
@@ -473,7 +493,7 @@ describe("removing a taf", () => {
       throw Object.assign(new Error("not found"), { status: 404 }); // deleted the first time
     };
     const second = await call("DELETE", "/v1/tafs/depl_acme", opts);
-    expect(second.body).toMatchObject({ done: true, removed: ["schedule", "memory", "key", "name"], failed: [] });
+    expect(second.body).toMatchObject({ done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });
     expect(shared.calls.filter((c) => c.startsWith("archive"))).toHaveLength(1);
     expect(names.held.has("t_acme#Rae")).toBe(false);
     expect((await call("GET", "/v1/tafs", opts)).body.removing).toEqual([]);
@@ -512,6 +532,22 @@ describe("removing a taf", () => {
     expect(listed.body.removing).toEqual([{ id: "depl_acme", name: "Rae" }]);
     deployments.archive = realArchive;
     expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
+  });
+
+  it("keeps its memory while a chat is still running, so the next remove can find and finish it", async () => {
+    const { shared, names, opts } = rae();
+    const chat = shared.sessions.find((x) => x.id === "sesn_rae_chat")!;
+    chat.status = "running";
+    const first = await call("DELETE", "/v1/tafs/depl_acme", opts);
+    expect(first.body).toMatchObject({ done: false, failed: ["history"] });
+    expect(shared.calls).not.toContain("memory.delete mem_depl_acme");
+    expect(names.held.has("t_acme#Rae")).toBe(true);
+
+    chat.status = "idle";
+    const second = await call("DELETE", "/v1/tafs/depl_acme", opts);
+    expect(second.body).toMatchObject({ done: true, failed: [] });
+    expect(shared.calls).toContain("session.delete sesn_rae_chat");
+    expect(shared.calls).toContain("memory.delete mem_depl_acme");
   });
 
   it("deletes nothing while it may still run", async () => {
