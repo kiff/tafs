@@ -6,6 +6,9 @@ struct TafDetailView: View {
     /// 0 chat, 1 activity, 2 card. Chat first: talking to a taf is the main thing.
     @State private var section = Screenshots.enabled && Screenshots.screen == "taf" ? 1 : 0
     @State private var confirmRevoke = false
+    @State private var confirmRemove = false
+    /// What removing it did, shown once it's done.
+    @State private var removal: String?
     /// Set on the tap itself, before the request starts, so a second tap can't send one.
     @State private var runTapped = false
 
@@ -43,6 +46,16 @@ struct TafDetailView: View {
                 Button("Revoke and stop", role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
                 Text("It stops at once. Anything already done stays done.")
+            }
+            .confirmationDialog("Remove \(taf.name) for good?", isPresented: $confirmRemove, titleVisibility: .visible) {
+                Button("Remove", role: .destructive) { Task { removal = await model.removeTaf(tafID) } }
+            } message: {
+                Text("Its Cards are revoked, its schedule stopped, its memory and key deleted, and its name freed. Past chats, run reports and KIFF's receipts stay.")
+            }
+            .alert("Remove \(taf.name)", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(removal ?? "")
             }
         } else {
             Text("This taf is gone.").foregroundColor(Theme.dim).screenBackground()
@@ -128,6 +141,10 @@ struct TafDetailView: View {
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
             }
         }
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
+            Button("Remove for good") { confirmRemove = true }
+                .buttonStyle(OutlineButtonStyle(color: Theme.no))
+        }
     }
 }
 
@@ -159,7 +176,7 @@ struct MemoryPanel: View {
                             .accessibilityLabel("Forget: \(note.content)")
                     }
                 }
-                Text("Every run and chat starts with these. They shape how it works, never what its Card allows.")
+                Text("Every run and chat starts with these. They shape how it works, never what its Card allows. Forget removes that one note; past chats and run reports stay.")
                     .font(.system(size: 12)).foregroundColor(Theme.soft)
             } else if model.memoryErrors[tafID] == nil {
                 ProgressView().tint(Theme.amber)

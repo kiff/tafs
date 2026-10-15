@@ -1,19 +1,27 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { calmEnough, type Claim, type Claims, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
+import { calmEnough, type Claim, type Claims, handle, type HTTPEvent, type Names, type Removal, type Removals } from "../src/cloud/handler.js";
 
 /** Names claimed atomically, like the DynamoDB conditional write. */
-function memoryNames(): Names & { held: Map<string, Date> } {
+/** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
+function memoryNames(): Names & { held: Map<string, Date>; owners: Map<string, string> } {
   const held = new Map<string, Date>();
+  const owners = new Map<string, string>();
   return {
     held,
-    async claim(t, n) {
+    owners,
+    async claim(t, n, owner) {
       const k = `${t}#${n}`;
       if (held.has(k)) return false;
       held.set(k, new Date());
+      owners.set(k, owner);
       return true;
     },
-    async release(t, n) { held.delete(`${t}#${n}`); },
+    async release(t, n, owner) {
+      const k = `${t}#${n}`;
+      const o = owners.get(k);
+      if (o === undefined || o === owner) { held.delete(k); owners.delete(k); }
+    },
   };
 }
 
@@ -25,6 +33,17 @@ function memoryClaims(): Claims & { held: Map<string, Claim> } {
     async get(t, d) { return held.get(`${t}#${d}`); },
     async put(t, d, c) { held.set(`${t}#${d}`, c); },
     async remove(t, d) { held.delete(`${t}#${d}`); },
+  };
+}
+
+/** Removals on record, like the DynamoDB item. */
+function memoryRemovals(): Removals & { held: Map<string, Removal> } {
+  const held = new Map<string, Removal>();
+  return {
+    held,
+    async list(t) { return [...held.entries()].filter(([k]) => k.startsWith(`${t}#`)).map(([, r]) => r); },
+    async add(t, r) { held.set(`${t}#${r.id}`, r); },
+    async done(t, id) { held.delete(`${t}#${id}`); },
   };
 }
 
@@ -61,7 +80,13 @@ const DRAFTS: Drafts = {
 };
 
 function deployment(id: string, tenant: string, name: string) {
-  return { id, name, status: "active", metadata: { tafs_tenant: tenant, tafs_taf: name, tafs_job: "refunds" }, schedule: { upcoming_runs_at: ["2026-10-15T09:00:00Z"], last_run_at: null } };
+  return {
+    id, name, status: "active", archived_at: null as string | null,
+    metadata: { tafs_tenant: tenant, tafs_taf: name, tafs_job: "refunds", tafs_kiff_agent: "rae" } as Record<string, string>,
+    resources: [{ type: "memory_store", memory_store_id: `mem_${id}` }],
+    vault_ids: [`vlt_${id}`],
+    schedule: { upcoming_runs_at: ["2026-10-15T09:00:00Z"], last_run_at: null },
+  };
 }
 
 function fakeAnthropic() {
@@ -70,27 +95,38 @@ function fakeAnthropic() {
   const client = {
     beta: {
       deployments: {
-        list: async function* () { yield* deployments; },
+        list: async function* () { yield* deployments.filter((d) => !d.archived_at); },
         retrieve: async (id: string) => { const d = deployments.find((x) => x.id === id); if (!d) throw new Error("404"); return d; },
         create: async (p: { name: string; metadata: Record<string, string> }) => {
-          calls.push(`deployment.create ${JSON.stringify(p.metadata)}`);
+          const { tafs_name_claim: claim, ...rest } = p.metadata;
+          calls.push(`deployment.create ${JSON.stringify(rest)}`);
+          if (claim) calls.push(`name claim ${claim}`);
           const d = deployment("depl_new", p.metadata.tafs_tenant ?? "", p.name);
+          d.metadata = { ...d.metadata, ...p.metadata };
           deployments.push(d);
           return d;
         },
         run: async (id: string) => { calls.push(`run ${id}`); return { session_id: "sesn_1" }; },
         pause: async (id: string) => { calls.push(`pause ${id}`); return { ...deployment(id, "t_acme", "Rae"), status: "paused" }; },
         unpause: async (id: string) => deployment(id, "t_acme", "Rae"),
+        archive: async (id: string) => {
+          calls.push(`archive ${id}`);
+          const d = deployments.find((x) => x.id === id)!;
+          d.archived_at = "2026-10-15T10:00:00Z";
+          return d;
+        },
       },
       deploymentRuns: {
         list: async function* (p: { deployment_id: string }) { yield { session_id: `sesn_of_${p.deployment_id}`, created_at: "2026-10-14T09:00:00Z", error: null }; },
       },
       vaults: {
         create: async () => { calls.push("vault.create"); return { id: "vlt_1" }; },
+        delete: async (id: string) => { calls.push(`vault.delete ${id}`); return { id }; },
         credentials: { create: async (_id: string, p: { auth: { token: string } }) => { calls.push(`credential ${p.auth.token}`); return {}; } },
       },
       memoryStores: {
         create: async (p: { name: string }) => { calls.push(`memory ${p.name}`); return { id: "memstore_1" }; },
+        delete: async (id: string) => { calls.push(`memory.delete ${id}`); return { id }; },
         memories: { create: async (id: string, p: { path: string; content: string }) => { calls.push(`note ${id} ${p.path} ${p.content}`); return { id: "mem_1" }; } },
       },
       sessions: {
@@ -102,7 +138,7 @@ function fakeAnthropic() {
   return { client, calls, deployments };
 }
 
-function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[]; claims?: Claims } = {}) {
+function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[]; claims?: Claims; removals?: Removals } = {}) {
   const { client, calls } = opts.anthropic ?? fakeAnthropic();
   const event: HTTPEvent = {
     rawPath: path,
@@ -118,6 +154,7 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
     claims: opts.claims ?? memoryClaims(),
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
+    removals: opts.removals ?? memoryRemovals(),
     fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } },
       opts.drafts ?? DRAFTS, opts.claimed ?? []),
   });
@@ -155,13 +192,14 @@ describe("tafs cloud", () => {
     const r = await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae" } });
     expect(r.status).toBe(200);
     expect(r.body.session).toBe("sesn_1");
-    expect(r.calls).toEqual([
+    expect(r.calls.filter((c) => !c.startsWith("name claim "))).toEqual([
       "vault.create",
       "credential key_rae",
       "memory tafs-ivy",
       `deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`,
       "run depl_new",
     ]);
+    expect(r.calls.some((c) => /^name claim [0-9a-f-]{36}$/.test(c)), "the taf carries its start's claim on the name").toBe(true);
   });
 
   it("starts a taf from a confirmed KIFF draft, claiming its key itself", async () => {
@@ -381,5 +419,108 @@ describe("calmEnough", () => {
   it("agrees on equivalent forms", () => {
     expect(calmEnough("*/50 * * * *")).toBe(calmEnough("0,50 * * * *"));
     expect(calmEnough("*/20 * * * *")).toBe(calmEnough("0,20,40 * * * *"));
+  });
+});
+
+describe("removing a taf", () => {
+  /** An account whose taf Rae holds its name, as a started taf does. */
+  function rae() {
+    const shared = fakeAnthropic();
+    const names = memoryNames();
+    names.held.set("t_acme#Rae", new Date());
+    const removals = memoryRemovals();
+    return { shared, names, removals, opts: { token: "ana", anthropic: shared, names, removals } };
+  }
+
+  it("stops it, deletes its memory and its key's vault, and frees its name", async () => {
+    const { shared, names, opts } = rae();
+    const r = await call("DELETE", "/v1/tafs/depl_acme", opts);
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ taf: "depl_acme", name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "memory", "key", "name"], failed: [] });
+    expect(shared.calls).toEqual(["archive depl_acme", "memory.delete mem_depl_acme", "vault.delete vlt_depl_acme"]);
+    expect(names.held.has("t_acme#Rae")).toBe(false);
+
+    // Gone: not listed, never run again, nothing else answers for it.
+    expect((await call("GET", "/v1/tafs", opts)).body.tafs).toEqual([]);
+    expect((await call("POST", "/v1/tafs/depl_acme/run", opts)).status).toBe(404);
+    expect((await call("POST", "/v1/tafs/depl_acme/messages", { ...opts, body: { text: "hi" } })).status).toBe(404);
+    expect(shared.calls.filter((c) => c.startsWith("run "))).toEqual([]);
+  });
+
+  it("takes the right to manage Cards, and another account's taf answers like a missing one", async () => {
+    const { shared, opts } = rae();
+    expect((await call("DELETE", "/v1/tafs/depl_acme", { ...opts, token: "viewer" })).status).toBe(403);
+    expect((await call("DELETE", "/v1/tafs/depl_other", opts)).status).toBe(404);
+    expect((await call("DELETE", "/v1/tafs/depl_nope", opts)).status).toBe(404);
+    expect(shared.calls).toEqual([]);
+  });
+
+  it("says what failed, and a second remove finishes the job", async () => {
+    const { shared, names, opts } = rae();
+    const vaults = shared.client.beta.vaults as unknown as { delete: (id: string) => Promise<unknown> };
+    const realDelete = vaults.delete;
+    vaults.delete = async () => { throw Object.assign(new Error("vaults are down"), { status: 503 }); };
+    const first = await call("DELETE", "/v1/tafs/depl_acme", opts);
+    expect(first.body).toMatchObject({ done: false, removed: ["schedule", "memory"], failed: ["key"] });
+    expect(names.held.has("t_acme#Rae")).toBe(true); // the name waits until all is gone
+    // Archived, so no longer a taf in the list, but listed as a removal to finish.
+    const listed = await call("GET", "/v1/tafs", opts);
+    expect(listed.body.tafs).toEqual([]);
+    expect(listed.body.removing).toEqual([{ id: "depl_acme", name: "Rae" }]);
+
+    vaults.delete = realDelete;
+    (shared.client.beta.memoryStores as unknown as { delete: () => Promise<never> }).delete = async () => {
+      throw Object.assign(new Error("not found"), { status: 404 }); // deleted the first time
+    };
+    const second = await call("DELETE", "/v1/tafs/depl_acme", opts);
+    expect(second.body).toMatchObject({ done: true, removed: ["schedule", "memory", "key", "name"], failed: [] });
+    expect(shared.calls.filter((c) => c.startsWith("archive"))).toHaveLength(1);
+    expect(names.held.has("t_acme#Rae")).toBe(false);
+    expect((await call("GET", "/v1/tafs", opts)).body.removing).toEqual([]);
+  });
+
+  it("never frees the name for a newer taf, however often an old removal is replayed", async () => {
+    const { names, opts } = rae();
+    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
+    // A new start claims the name, and is still making its taf.
+    expect(await names.claim("t_acme", "Rae", "start_new")).toBe(true);
+    // The old removal is replayed (a retry, or the app finishing it).
+    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
+    expect(names.owners.get("t_acme#Rae")).toBe("start_new");
+    expect(await names.claim("t_acme", "Rae", "start_third")).toBe(false);
+  });
+
+  it("frees the name its own start claimed", async () => {
+    const shared = fakeAnthropic();
+    const names = memoryNames();
+    const opts = { token: "ana", anthropic: shared, names };
+    expect((await call("POST", "/v1/tafs", { ...opts, body: { name: "Ivy", job: "refunds", agent_key: "key_rae" } })).status).toBe(200);
+    const owner = names.owners.get("t_acme#Ivy");
+    expect(shared.calls).toContain(`name claim ${owner}`);
+    expect((await call("DELETE", "/v1/tafs/depl_new", opts)).body).toMatchObject({ done: true });
+    expect(names.held.has("t_acme#Ivy")).toBe(false);
+  });
+
+  it("is listed to finish even when the archive's answer was lost", async () => {
+    const { shared, opts } = rae();
+    const deployments = shared.client.beta.deployments as unknown as { archive: (id: string) => Promise<unknown> };
+    const realArchive = deployments.archive;
+    deployments.archive = async (id: string) => { await realArchive(id); throw Object.assign(new Error("timed out"), { name: "APIConnectionTimeoutError" }); };
+    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: false, failed: ["schedule"] });
+    const listed = await call("GET", "/v1/tafs", opts);
+    expect(listed.body.tafs).toEqual([]);
+    expect(listed.body.removing).toEqual([{ id: "depl_acme", name: "Rae" }]);
+    deployments.archive = realArchive;
+    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
+  });
+
+  it("deletes nothing while it may still run", async () => {
+    const { shared, opts } = rae();
+    (shared.client.beta.deployments as unknown as { archive: () => Promise<never> }).archive = async () => {
+      throw Object.assign(new Error("busy"), { status: 503 });
+    };
+    const r = await call("DELETE", "/v1/tafs/depl_acme", opts);
+    expect(r.body).toMatchObject({ done: false, removed: [], failed: ["schedule"] });
+    expect(shared.calls).toEqual([]);
   });
 });

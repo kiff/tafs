@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type Anthropic from "@anthropic-ai/sdk";
 import { META, memoryResource } from "../config.js";
 import { JOBS, jobById } from "../jobs.js";
@@ -21,6 +21,7 @@ import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, typ
  *   POST /v1/tafs/{id}/messages         {text}: into the live session, or a new one
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
+ *   DELETE /v1/tafs/{id}                remove it: stop it, delete its memory and vault, free its name
  *   POST /v1/push                       {device_token, environment, alert_target?}: this phone gets the account's alerts
  *   DELETE /v1/push/{token}             it stops
  *   POST /v1/kiff/alerts                KIFF's signed held-call alerts (no sign-in: the signature is the check)
@@ -57,15 +58,21 @@ export interface Deps {
   push: PushStore;
   /** Apple push. */
   apns: Sender;
+  /** Removals begun and not finished, so the app can finish them after a refresh. */
+  removals: Removals;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
 }
 
 export interface Names {
-  /** Claims (tenant, name). True only when nobody holds it. */
-  claim(tenant: string, name: string): Promise<boolean>;
-  release(tenant: string, name: string): Promise<void>;
+  /** Claims (tenant, name) for `owner`, the start that will make the taf. True only when nobody holds it. */
+  claim(tenant: string, name: string, owner: string): Promise<boolean>;
+  /**
+   * Frees (tenant, name) only while `owner` holds it, or nobody named one (a
+   * claim from before owners). A newer start's claim on the same name stays.
+   */
+  release(tenant: string, name: string, owner: string): Promise<void>;
 }
 
 export interface Slots {
@@ -89,6 +96,18 @@ export interface Claim {
   name: string;
   agentID: string;
   vaultID: string;
+}
+
+/** A taf whose removal began: kept until every step is done. */
+export interface Removal {
+  id: string;
+  name: string;
+}
+
+export interface Removals {
+  list(tenant: string): Promise<Removal[]>;
+  add(tenant: string, removal: Removal): Promise<void>;
+  done(tenant: string, id: string): Promise<void>;
 }
 
 export interface Claims {
@@ -159,11 +178,17 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   if (parts.length === 2 && method === "GET") {
     const tafs = (await listTafs(client)).filter((d) => d.metadata?.[META.tenant] === me.tenantID);
-    return { tafs: tafs.map(view) };
+    // Archived tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
+    return { tafs: tafs.map(view), removing: await deps.removals.list(me.tenantID) };
   }
   if (parts.length === 2 && method === "POST") {
     need(me, "cards.manage");
     return start(event, me, client, deps);
+  }
+
+  if (parts.length === 3 && method === "DELETE") {
+    need(me, "cards.manage");
+    return remove(client, await owned(client, me, parts[2] ?? "", { archived: true }), me, deps);
   }
 
   const taf = await owned(client, me, parts[2] ?? "");
@@ -293,7 +318,9 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
   const exists = async () =>
     (await listTafs(client)).some((d) => d.metadata?.[META.tenant] === me.tenantID && d.metadata?.[META.taf] === name);
   if (await exists()) throw taken;
-  if (!(await deps.names.claim(me.tenantID, name))) {
+  // This start's claim on the name; the taf carries it, so only its removal frees it.
+  const nameClaim = randomUUID();
+  if (!(await deps.names.claim(me.tenantID, name, nameClaim))) {
     // Held by an attempt that is still running, or whose outcome was never
     // learned. Nothing proves such an attempt can't still make the taf, so
     // the name stays taken; another name always works.
@@ -305,7 +332,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
     try {
       ({ agentID, vaultID } = await draftKey(me, name, job.id, draftID, claimSecret, client, deps, check));
     } catch (err) {
-      await deps.names.release(me.tenantID, name);
+      await deps.names.release(me.tenantID, name, nameClaim);
       throw err;
     }
   }
@@ -321,7 +348,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
       cron,
       timezone: body.timezone === undefined ? undefined : str(body.timezone),
       budgetCents: budget,
-      metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agentID },
+      metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agentID, [META.nameClaim]: nameClaim },
       notes: notesText,
       onCreating: () => { asked = true; },
       onCreated: () => { created = true; },
@@ -333,7 +360,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
     // asked for, or Anthropic refused it outright. Once it exists, or when the
     // answer was lost, the claim stays for good. A draft's vault stays on
     // record either way, so a retry resumes with the key already claimed.
-    if (!created && (!asked || refused(err))) await deps.names.release(me.tenantID, name);
+    if (!created && (!asked || refused(err))) await deps.names.release(me.tenantID, name, nameClaim);
     throw new HTTPError(502, (err as Error).message);
   }
 }
@@ -379,12 +406,58 @@ function refused(err: unknown): boolean {
   return typeof status === "number" && status >= 400 && status < 500 && ![408, 409, 429].includes(status);
 }
 
-async function owned(client: Anthropic, me: KIFFIdentity, id: string) {
+async function owned(client: Anthropic, me: KIFFIdentity, id: string, opts: { archived?: boolean } = {}) {
   let d;
   try { d = await client.beta.deployments.retrieve(id); } catch { throw new HTTPError(404, "no such taf"); }
   // Someone else's taf answers exactly like a missing one.
   if (d.metadata?.[META.tenant] !== me.tenantID || !d.metadata?.[META.taf]) throw new HTTPError(404, "no such taf");
+  // A removed taf is gone for everything but finishing its removal.
+  if (d.archived_at && !opts.archived) throw new HTTPError(404, "no such taf");
   return d;
+}
+
+/**
+ * Removes a taf, each step safe to repeat: a second remove finishes what the
+ * first left. Stopping it comes first, and nothing else is deleted unless that
+ * worked, so a taf that may still run keeps its memory. Its Cards are KIFF's:
+ * the phone revokes them, before calling this.
+ */
+async function remove(client: Anthropic, taf: Deployment, me: KIFFIdentity, deps: Deps) {
+  const removed: string[] = [];
+  const failed: string[] = [];
+  const name = taf.metadata?.[META.taf] ?? taf.name;
+  const step = async (what: string, work: () => Promise<unknown>) => {
+    try { await work(); removed.push(what); } catch (err) {
+      // Already gone counts as done.
+      if ((err as { status?: unknown }).status === 404) { removed.push(what); return; }
+      console.error(`remove ${taf.id}: ${what}: ${(err as Error).message}`);
+      failed.push(what);
+    }
+  };
+
+  // On record before anything changes: if this stops anywhere, even with the
+  // answer lost, the app sees it listed and finishes it.
+  await deps.removals.add(me.tenantID, { id: taf.id, name });
+  if (taf.archived_at) removed.push("schedule");
+  else await step("schedule", () => client.beta.deployments.archive(taf.id));
+  if (failed.length === 0) {
+    const stores = new Set<string>(taf.resources?.flatMap((r) => (r.type === "memory_store" ? [r.memory_store_id] : [])) ?? []);
+    const noted = taf.metadata?.[META.memory];
+    if (noted) stores.add(noted);
+    for (const id of stores) await step("memory", () => client.beta.memoryStores.delete(id));
+    for (const id of taf.vault_ids ?? []) await step("key", () => client.beta.vaults.delete(id));
+    // Only this taf's own claim: if a newer start holds the name, it keeps it.
+    if (failed.length === 0) await step("name", () => deps.names.release(me.tenantID, name, taf.metadata?.[META.nameClaim] ?? ""));
+    if (failed.length === 0) await deps.removals.done(me.tenantID, taf.id);
+  }
+  return {
+    taf: taf.id,
+    name,
+    kiff_agent: taf.metadata?.[META.kiffAgent] ?? null,
+    done: failed.length === 0,
+    removed: [...new Set(removed)],
+    failed: [...new Set(failed)],
+  };
 }
 
 async function runs(client: Anthropic, deploymentID: string) {

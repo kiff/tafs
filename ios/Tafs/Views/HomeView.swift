@@ -25,6 +25,14 @@ struct HomeView: View {
                     }
                 }
 
+                ForEach(model.unfinishedRemovals) { r in
+                    Panel {
+                        Text("\(r.name) isn't fully removed yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                        Text("It no longer runs. tafs deletes what's left each time it refreshes.")
+                            .font(.system(size: 14)).foregroundColor(Theme.soft)
+                    }
+                }
+
                 if model.mode == .kiff, model.tafs.isEmpty {
                     Panel {
                         Text("No Cards yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)

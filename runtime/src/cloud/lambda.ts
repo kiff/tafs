@@ -3,7 +3,7 @@ import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { setup, type Setup } from "../runtime.js";
 import { apnsSender } from "./apns.js";
-import { type Claims, handle, type HTTPEvent, type HTTPResult, type Names, type Slots } from "./handler.js";
+import { type Claims, handle, type HTTPEvent, type Removals, type HTTPResult, type Names, type Slots } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
 // Kept for the life of the container: the key, the client, the agents.
@@ -32,11 +32,11 @@ function ensureSetup(): Promise<Setup> {
 /** Taf names per account, claimed with a conditional write so only one request wins. */
 const dynamo = new DynamoDBClient({});
 const names: Names = {
-  async claim(tenant, name) {
+  async claim(tenant, name, owner) {
     try {
       await dynamo.send(new PutItemCommand({
         TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
-        Item: { id: { S: `${tenant}#${name}` }, at: { S: new Date().toISOString() } },
+        Item: { id: { S: `${tenant}#${name}` }, owner: { S: owner }, at: { S: new Date().toISOString() } },
         ConditionExpression: "attribute_not_exists(id)",
       }));
       return true;
@@ -45,11 +45,19 @@ const names: Names = {
       throw err;
     }
   },
-  async release(tenant, name) {
-    await dynamo.send(new DeleteItemCommand({
-      TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
-      Key: { id: { S: `${tenant}#${name}` } },
-    }));
+  async release(tenant, name, owner) {
+    try {
+      await dynamo.send(new DeleteItemCommand({
+        TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
+        Key: { id: { S: `${tenant}#${name}` } },
+        // Only this owner's claim, or one from before owners: never a newer start's.
+        ConditionExpression: owner ? "attribute_not_exists(#o) OR #o = :o" : "attribute_not_exists(#o)",
+        ExpressionAttributeNames: { "#o": "owner" },
+        ...(owner ? { ExpressionAttributeValues: { ":o": { S: owner } } } : {}),
+      }));
+    } catch (err) {
+      if (!(err instanceof ConditionalCheckFailedException)) throw err;
+    }
   },
 };
 
@@ -202,6 +210,29 @@ const claims: Claims = {
   },
 };
 
+/**
+ * Removals not finished, per account, in one item (removing#tenant): a map of
+ * deployment id → taf name, each entry set or removed on its own.
+ */
+const removals: Removals = {
+  async list(tenant) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names", Key: { id: { S: `removing#${tenant}` } }, ConsistentRead: true }));
+    return Object.entries(out.Item?.tafs?.M ?? {}).map(([id, v]) => ({ id, name: v.S ?? "" }));
+  },
+  async add(tenant, r) {
+    const TableName = process.env.NAMES_TABLE ?? "tafs-cloud-names";
+    const Key = { id: { S: `removing#${tenant}` } };
+    await dynamo.send(new UpdateItemCommand({ TableName, Key, UpdateExpression: "SET tafs = if_not_exists(tafs, :empty)", ExpressionAttributeValues: { ":empty": { M: {} } } }));
+    await dynamo.send(new UpdateItemCommand({ TableName, Key, UpdateExpression: "SET tafs.#id = :name", ExpressionAttributeNames: { "#id": r.id }, ExpressionAttributeValues: { ":name": { S: r.name } } }));
+  },
+  async done(tenant, id) {
+    await dynamo.send(new UpdateItemCommand({
+      TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names", Key: { id: { S: `removing#${tenant}` } },
+      UpdateExpression: "REMOVE tafs.#id", ExpressionAttributeNames: { "#id": id },
+    }));
+  },
+};
+
 export async function handler(event: HTTPEvent): Promise<HTTPResult> {
-  return handle(event, { anthropic, setup: ensureSetup, names, slots, claims, push, apns });
+  return handle(event, { anthropic, setup: ensureSetup, names, slots, claims, push, apns, removals });
 }

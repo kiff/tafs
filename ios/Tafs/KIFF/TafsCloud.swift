@@ -59,9 +59,20 @@ final class TafsCloud {
     }
 
     func tafs() async throws -> [CloudTaf] {
-        struct Response: Decodable { let tafs: [CloudTaf] }
+        try await listing().tafs
+    }
+
+    /// A taf whose removal began and didn't finish: archived, so no longer listed as a taf.
+    struct PendingRemoval: Decodable, Equatable, Identifiable {
+        let id: String
+        let name: String
+    }
+
+    /// The account's tafs, and the removals still to finish.
+    func listing() async throws -> (tafs: [CloudTaf], removing: [PendingRemoval]) {
+        struct Response: Decodable { let tafs: [CloudTaf]; let removing: [PendingRemoval]? }
         let r: Response = try await send("GET", "/v1/tafs")
-        return r.tafs
+        return (r.tafs, r.removing ?? [])
     }
 
     /// Starts a taf from a confirmed KIFF draft, and runs it once now. tafs cloud claims
@@ -73,6 +84,20 @@ final class TafsCloud {
             enum CodingKeys: String, CodingKey { case name, job, timezone, draftID = "draft_id", claimSecret = "claim_secret" }
         }
         return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, claimSecret: claimSecret, timezone: timezone))
+    }
+
+    /// What removing a taf did: each step, "schedule", "memory", "key" (its vault) and "name",
+    /// is in `removed` or `failed`. A second remove finishes what the first left.
+    struct Removal: Decodable, Equatable {
+        let done: Bool
+        let removed: [String]
+        let failed: [String]
+    }
+
+    /// Removes the taf for good: stops it, deletes its memory and the vault holding its key,
+    /// and frees its name. Its Cards are KIFF's: the phone revokes them first.
+    func remove(_ id: String) async throws -> Removal {
+        try await send("DELETE", "/v1/tafs/\(escaped(id))")
     }
 
     /// Runs the taf now. Returns the run's session.
