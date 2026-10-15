@@ -63,6 +63,12 @@ function fakeAnthropic() {
     ],
     memstore_depl_other: [{ type: "memory", id: "mem_theirs", path: "/x.md", content: "not yours", updated_at: minutesAgo(5) }],
   };
+  // Every version of a note: the store keeps them after a delete.
+  const versions: Array<{ id: string; memory_store_id: string; memory_id: string; operation: string; redacted_at: string | null }> = [
+    { id: "memver_1", memory_store_id: "memstore_depl_acme", memory_id: "mem_old", operation: "created", redacted_at: null },
+    { id: "memver_2", memory_store_id: "memstore_depl_acme", memory_id: "mem_old", operation: "modified", redacted_at: null },
+    { id: "memver_3", memory_store_id: "memstore_depl_acme", memory_id: "mem_new", operation: "created", redacted_at: null },
+  ];
   const sessions: FakeSession[] = [];
   const events: Record<string, FakeEvent[]> = {};
   let n = 0;
@@ -93,7 +99,19 @@ function fakeAnthropic() {
             const i = list.findIndex((m) => m.id === id);
             if (i < 0) throw Object.assign(new Error("not found"), { status: 404 });
             list.splice(i, 1);
+            versions.push({ id: `memver_del_${id}`, memory_store_id: p.memory_store_id, memory_id: id, operation: "deleted", redacted_at: null });
             return { id, type: "memory_deleted" };
+          },
+        },
+        memoryVersions: {
+          list: async function* (store: string, p: { memory_id: string }) {
+            yield* versions.filter((v) => v.memory_store_id === store && v.memory_id === p.memory_id);
+          },
+          redact: async (id: string, p: { memory_store_id: string }) => {
+            const v = versions.find((x) => x.id === id && x.memory_store_id === p.memory_store_id)!;
+            calls.push(`versions.redact ${id}`);
+            v.redacted_at = NOW.toISOString();
+            return v;
           },
         },
       },
@@ -315,6 +333,18 @@ describe("memory", () => {
     expect(f.calls).toContain("memories.delete mem_old memstore_depl_acme");
     const after = await call(f, "GET", "/v1/tafs/depl_acme/memory");
     expect(after.body.notes.map((n: { id: string }) => n.id)).toEqual(["mem_new"]);
+  });
+
+  it("redacts every earlier version of a note it forgets, and forgetting again finishes the job", async () => {
+    const f = fakeAnthropic();
+    expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_old")).status).toBe(200);
+    // The note's own versions only; the deletion marker has no text to redact.
+    expect(f.calls.filter((c) => c.startsWith("versions.redact"))).toEqual(["versions.redact memver_1", "versions.redact memver_2"]);
+    // Again (say the answer was lost): already deleted, nothing left to redact, still done.
+    expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_old")).status).toBe(200);
+    expect(f.calls.filter((c) => c.startsWith("versions.redact"))).toHaveLength(2);
+    // A note that never was is still missing.
+    expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_nope")).status).toBe(404);
   });
 
   it("can't forget another taf's note, or another account's", async () => {

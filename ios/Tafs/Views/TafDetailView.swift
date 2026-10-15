@@ -50,7 +50,7 @@ struct TafDetailView: View {
             .confirmationDialog("Remove \(taf.name) for good?", isPresented: $confirmRemove, titleVisibility: .visible) {
                 Button("Remove", role: .destructive) { Task { removal = await model.removeTaf(tafID) } }
             } message: {
-                Text("Its Cards are revoked, its schedule stopped, its memory and key deleted, and its name freed. Past chats, run reports and KIFF's receipts stay.")
+                Text("Its Cards are revoked, its schedule stopped, its chats, run reports, memory and key deleted, and its name freed. KIFF's receipts stay.")
             }
             .alert("Remove \(taf.name)", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
                 Button("OK", role: .cancel) {}
@@ -176,7 +176,7 @@ struct MemoryPanel: View {
                             .accessibilityLabel("Forget: \(note.content)")
                     }
                 }
-                Text("Every run and chat starts with these. They shape how it works, never what its Card allows. Forget removes that one note; past chats and run reports stay.")
+                Text("Every run and chat starts with these. They shape how it works, never what its Card allows. Forget removes that one note and its earlier versions; past chats and run reports stay until the taf is removed.")
                     .font(.system(size: 12)).foregroundColor(Theme.soft)
             } else if model.memoryErrors[tafID] == nil {
                 ProgressView().tint(Theme.amber)

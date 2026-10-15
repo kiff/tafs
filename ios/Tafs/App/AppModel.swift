@@ -886,7 +886,7 @@ final class AppModel: ObservableObject {
         if let agent = holderIDs.first(where: { $0.value == tafID })?.key { cloudTafs[agent] = nil }
         log(tafID, .revoked, "You removed \(taf.name)", "Schedule, memory and key deleted; name free")
         save()
-        return "\(cards) Its schedule, memory and key are deleted, and the name \(taf.name) is free. Past chats, run reports and KIFF's receipts stay."
+        return "\(cards) Its schedule, chats, run reports, memory and key are deleted, and the name \(taf.name) is free. KIFF's receipts stay."
     }
 
     /// Finishes removals tafs cloud lists as begun. They were confirmed with Face ID when
