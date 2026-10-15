@@ -177,6 +177,40 @@ final class TafsCloud {
         let _: Response = try await send("DELETE", "/v1/tafs/\(escaped(id))/memory/\(escaped(note))")
     }
 
+    // MARK: Alerts
+
+    /// Where KIFF posts the account's held calls, for tafs cloud to push to its phones.
+    var alertsURL: URL { URL(string: "/v1/kiff/alerts", relativeTo: baseURL)!.absoluteURL }
+
+    /// What tafs cloud says after a phone registers: whether this person's phones are alerted
+    /// (they may answer held calls), and whether tafs cloud holds a KIFF secret for the account.
+    struct PushStatus: Decodable, Equatable {
+        let answers: Bool
+        let alerts: Bool
+    }
+
+    /// This phone gets the account's alerts at `deviceToken`. With `target`, also hands over
+    /// the KIFF target's signing secret, which checks KIFF's deliveries.
+    func registerPush(deviceToken: String, environment: String, target: KIFFClient.AlertTarget? = nil) async throws -> PushStatus {
+        struct Target: Encodable {
+            let id: String, signingSecret: String
+            enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }
+        }
+        struct Body: Encodable {
+            let deviceToken: String, environment: String, alertTarget: Target?
+            enum CodingKeys: String, CodingKey { case environment, deviceToken = "device_token", alertTarget = "alert_target" }
+        }
+        return try await send("POST", "/v1/push", body: Body(
+            deviceToken: deviceToken, environment: environment,
+            alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }))
+    }
+
+    /// This phone stops getting the account's alerts.
+    func unregisterPush(deviceToken: String) async throws {
+        struct Response: Decodable { let removed: Bool }
+        let _: Response = try await send("DELETE", "/v1/push/\(escaped(deviceToken))")
+    }
+
     // MARK: Transport
 
     private func escaped(_ s: String) -> String {

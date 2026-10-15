@@ -9,7 +9,11 @@
 #                              10 minutes), each put once, with a ttl attribute; and
 #                              claimed KIFF drafts (draft#tenant#draft: the vault
 #                              holding the key, never the key), kept 30 days.
+#                              Also each account's phones and KIFF alert secrets
+#                              (push#tenant), and delivered alert ids (ttl).
 #   tafs/anthropic-api-key     the Anthropic key; a person puts it there (see README).
+#   tafs/apns-key              the "tafs push" APNs key (.p8), made in the Apple
+#                              Developer portal; a person puts it there.
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update this function's code, nothing else.
 #
@@ -23,6 +27,11 @@ set -euo pipefail
 REGION=us-east-1
 FN=tafs-cloud
 SECRET=tafs/anthropic-api-key
+APNS_SECRET=tafs/apns-key
+# The "tafs push" key (Sandbox & Production, team scoped), and the app it pushes to.
+APNS_KEY_ID=3THAT9GWCS
+APNS_TEAM_ID=R54YWFRK4B
+APNS_TOPIC=bot.tafs.app
 LAMBDA_ROLE=tafs-cloud-lambda
 TABLE=tafs-cloud-names
 DEPLOY_ROLE=tafs-github-deploy
@@ -51,6 +60,13 @@ if ! SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$SECRET" --que
   echo "created secret $SECRET"
 fi
 
+# The APNs key, as a placeholder until a person puts the .p8 in it.
+if ! APNS_SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$APNS_SECRET" --query ARN --output text 2>/dev/null); then
+  APNS_SECRET_ARN=$(aws secretsmanager create-secret --name "$APNS_SECRET" --description "tafs push: APNs key $APNS_KEY_ID" \
+    --secret-string unset --tags Key=project,Value=tafs --query ARN --output text)
+  echo "created secret $APNS_SECRET"
+fi
+
 # Taf names, claimed with a conditional write so two requests can't both start one.
 if ! aws dynamodb describe-table --table-name "$TABLE" >/dev/null 2>&1; then
   aws dynamodb create-table --table-name "$TABLE" --billing-mode PAY_PER_REQUEST \
@@ -77,14 +93,14 @@ aws iam attach-role-policy --role-name "$LAMBDA_ROLE" \
 aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-access --policy-document "{
   \"Version\": \"2012-10-17\",
   \"Statement\": [
-    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": \"$SECRET_ARN\"},
-    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:DeleteItem\"], \"Resource\": \"$TABLE_ARN\"}
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$SECRET_ARN\", \"$APNS_SECRET_ARN\"]},
+    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:UpdateItem\", \"dynamodb:DeleteItem\"], \"Resource\": \"$TABLE_ARN\"}
   ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)
 
 # The function.
-ENV="Variables={ANTHROPIC_SECRET_ID=$SECRET,NAMES_TABLE=$TABLE,NODE_OPTIONS=--enable-source-maps}"
+ENV="Variables={ANTHROPIC_SECRET_ID=$SECRET,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,NODE_OPTIONS=--enable-source-maps}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

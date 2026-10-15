@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct TafsApp: App {
     @StateObject private var model = AppModel(store: SampleStore())
+    @UIApplicationDelegateAdaptor(PushDelegate.self) private var push
     @Environment(\.scenePhase) private var scenePhase
     private let lockScreen = LockScreen()
 
@@ -17,8 +18,17 @@ struct TafsApp: App {
                         await model.startSample()
                         return
                     }
-                    model.onHeldChanged = { [lockScreen] held, tafs in lockScreen.update(held: held, tafs: tafs) }
+                    // Once tafs cloud pushes held calls, the app doesn't post its own alert as well.
+                    model.onHeldChanged = { [lockScreen, weak model] held, tafs in
+                        lockScreen.update(held: held, tafs: tafs, notify: model?.alertsReady != true)
+                    }
+                    model.requestPushToken = { PushDelegate.register() }
+                    model.askNotificationPermission = { await PushDelegate.askPermission() }
+                    push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
+                    push.onHeldChanged = { [weak model] in await model?.refresh() }
+                    push.onOpen = { [weak model] destination in model?.open(destination) }
                     await model.restore()
+                    PushDelegate.registerIfAllowed()
                 }
         }
         .onChange(of: scenePhase) { phase in
@@ -48,6 +58,12 @@ struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
 
+    private func showRequestedTab(_ requested: Tab?) {
+        guard let requested else { return }
+        tab = requested
+        model.requestedTab = nil
+    }
+
     var body: some View {
         Group {
             if model.signedIn {
@@ -70,6 +86,8 @@ struct RootView: View {
         .onOpenURL { url in
             if url.host == "needs-you" { tab = .needsYou }
         }
+        .onChange(of: model.requestedTab) { requested in showRequestedTab(requested) }
+        .onAppear { showRequestedTab(model.requestedTab) }
         .alert("Not done", isPresented: Binding(
             get: { model.lastError != nil },
             set: { if !$0 { model.lastError = nil } }

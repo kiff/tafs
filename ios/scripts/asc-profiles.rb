@@ -5,7 +5,11 @@
 #
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH  the API key
 #   DIST_CERT_SERIAL                          the certificate in the keychain
-#   ruby asc-profiles.rb bot.tafs.app="tafs App Store CI" bot.tafs.app.widgets="tafs widgets App Store CI"
+#   ruby asc-profiles.rb bot.tafs.app+push="tafs App Store CI" bot.tafs.app.widgets="tafs widgets App Store CI"
+#
+# "+push" turns on Push Notifications for that bundle ID first, and replaces a
+# profile made before it was on: a profile carries the capabilities its bundle
+# ID had when it was made.
 require "openssl"
 require "json"
 require "base64"
@@ -52,14 +56,29 @@ dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
 FileUtils.mkdir_p(dir)
 
 ARGV.each do |arg|
-  identifier, name = arg.split("=", 2)
+  spec, name = arg.split("=", 2)
+  identifier, *capabilities = spec.split("+")
+  push = capabilities.delete("push")
+  abort "unknown capability in #{spec}" unless capabilities.empty?
   bundle = api("get", "/v1/bundleIds?filter[identifier]=#{identifier}&limit=5")["data"].find { |b| b.dig("attributes", "identifier") == identifier }
   abort "bundle ID #{identifier} is not registered" unless bundle
+
+  if push
+    have = api("get", "/v1/bundleIds/#{bundle["id"]}/bundleIdCapabilities?limit=200")["data"] || []
+    unless have.any? { |c| c.dig("attributes", "capabilityType") == "PUSH_NOTIFICATIONS" }
+      api("post", "/v1/bundleIdCapabilities", { data: { type: "bundleIdCapabilities",
+        attributes: { capabilityType: "PUSH_NOTIFICATIONS" },
+        relationships: { bundleId: { data: { type: "bundleIds", id: bundle["id"] } } } } })
+      puts "turned on Push Notifications for #{identifier}"
+    end
+  end
 
   found = api("get", "/v1/profiles?filter[name]=#{URI.encode_www_form_component(name)}&include=certificates&limit=20")
   profile = (found["data"] || []).find do |p|
     p.dig("attributes", "profileState") == "ACTIVE" &&
-      (p.dig("relationships", "certificates", "data") || []).any? { |c| c["id"] == cert["id"] }
+      (p.dig("relationships", "certificates", "data") || []).any? { |c| c["id"] == cert["id"] } &&
+      # The profile's signed plist names aps-environment only when it was made with push on.
+      (!push || Base64.decode64(p.dig("attributes", "profileContent").to_s).include?("aps-environment"))
   end
   # A profile of ours that is no longer usable (expired, or for another certificate) is replaced.
   (found["data"] || []).reject { |p| p == profile }.each do |p|

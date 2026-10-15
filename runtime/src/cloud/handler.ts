@@ -4,6 +4,7 @@ import { META, memoryResource } from "../config.js";
 import { JOBS, jobById } from "../jobs.js";
 import { ensureMemory, keepKey, listTafs, type Setup, startTaf } from "../runtime.js";
 import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
+import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender } from "./push.js";
 
 /**
  * tafs cloud: the few routes the phone needs that hold the Anthropic key.
@@ -20,6 +21,9 @@ import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./k
  *   POST /v1/tafs/{id}/messages         {text}: into the live session, or a new one
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
+ *   POST /v1/push                       {device_token, environment, alert_target?}: this phone gets the account's alerts
+ *   DELETE /v1/push/{token}             it stops
+ *   POST /v1/kiff/alerts                KIFF's signed held-call alerts (no sign-in: the signature is the check)
  */
 
 /** The Lambda function URL event, as much of it as we read. */
@@ -49,6 +53,10 @@ export interface Deps {
   slots: Slots;
   /** Drafts whose key was claimed and kept in a vault, so a failed start can resume. */
   claims: Claims;
+  /** Phones that get each account's alerts, and the secrets that check KIFF's deliveries. */
+  push: PushStore;
+  /** Apple push. */
+  apns: Sender;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
@@ -61,8 +69,13 @@ export interface Names {
 }
 
 export interface Slots {
-  /** Claims `key` until `expiresAt`. True only when nobody holds it. */
+  /** Claims `key` until `expiresAt`. True only when nobody holds it, or its claim has expired. */
   claim(key: string, expiresAt: Date): Promise<boolean>;
+  /** Holds a claimed `key` until a new time. */
+  keep(key: string, expiresAt: Date): Promise<void>;
+  /** Whether `key` is held and unexpired. */
+  held(key: string): Promise<boolean>;
+  release(key: string): Promise<void>;
 }
 
 /**
@@ -113,7 +126,7 @@ export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> 
   try {
     return json(200, await route(event, deps));
   } catch (err) {
-    if (err instanceof HTTPError || err instanceof KIFFError) return json(err.status, { error: err.message });
+    if (err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
     return json(500, { error: "something went wrong on tafs cloud" });
   }
@@ -127,6 +140,18 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (method === "GET" && parts.length === 2 && parts[1] === "jobs") {
     return { jobs: JOBS.map((j) => ({ id: j.id, name: j.name, summary: j.summary, cron: j.cron })) };
   }
+  if (method === "POST" && parts.length === 3 && parts[1] === "kiff" && parts[2] === "alerts") {
+    return receiveAlert(header(event, "kiff-signature"), rawBody(event), {
+      push: deps.push,
+      apns: deps.apns,
+      claim: (key, until) => deps.slots.claim(key, until),
+      held: (key) => deps.slots.held(key),
+      keep: (key, until) => deps.slots.keep(key, until),
+      release: (key) => deps.slots.release(key),
+      now: deps.now?.() ?? new Date(),
+    });
+  }
+  if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] !== "tafs") throw new HTTPError(404, "not found");
 
   const me = await person(event, deps);
@@ -185,6 +210,38 @@ async function person(event: HTTPEvent, deps: Deps): Promise<KIFFIdentity> {
   const me = await whoIs(token, deps.fetch, deps.kiffBase);
   if (me.apiKey) throw new HTTPError(403, "sign in as a person, not with a key");
   return me;
+}
+
+/**
+ * A phone signs up for its account's alerts, or stops. Any person may add
+ * their phone, but only phones of people who may answer held calls
+ * (holds.answer) are alerted, and only they may hand over the KIFF target's
+ * signing secret.
+ */
+async function push(event: HTTPEvent, method: string, parts: string[], deps: Deps): Promise<unknown> {
+  const me = await person(event, deps);
+  if (method === "POST" && parts.length === 2) {
+    const r = registration(parseBody(event));
+    const answers = me.capabilities.includes("holds.answer");
+    if (r.target && !answers) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
+    const at = (deps.now?.() ?? new Date()).toISOString();
+    const { devices, secrets } = await deps.push.get(me.tenantID);
+    if (!devices.some((d) => d.token === r.token) && devices.length >= MAX_DEVICES) {
+      throw new HTTPError(409, `an account gets alerts on ${MAX_DEVICES} phones at most; remove one first`);
+    }
+    if (r.target) await deps.push.addSecret(me.tenantID, r.target.id, r.target.secret, at);
+    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, at });
+    return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0 };
+  }
+  if (method === "DELETE" && parts.length === 3) {
+    const token = (parts[2] ?? "").toLowerCase();
+    const { devices } = await deps.push.get(me.tenantID);
+    // A person removes their own phones; someone who manages Cards, any of the account's.
+    const mine = devices.find((d) => d.token === token && (d.subject === me.subject || me.capabilities.includes("cards.manage")));
+    if (mine) await deps.push.removeDevice(me.tenantID, token);
+    return { removed: Boolean(mine) };
+  }
+  throw new HTTPError(404, "not found");
 }
 
 function need(me: KIFFIdentity, capability: string): void {
@@ -556,8 +613,13 @@ function header(event: HTTPEvent, name: string): string {
   return "";
 }
 
+/** The body exactly as sent, which is what a signature covers. */
+function rawBody(event: HTTPEvent): string {
+  return event.isBase64Encoded ? Buffer.from(event.body ?? "", "base64").toString("utf8") : (event.body ?? "");
+}
+
 function parseBody(event: HTTPEvent): Record<string, unknown> {
-  const raw = event.isBase64Encoded ? Buffer.from(event.body ?? "", "base64").toString("utf8") : (event.body ?? "");
+  const raw = rawBody(event);
   try {
     const v = JSON.parse(raw || "{}");
     if (v && typeof v === "object" && !Array.isArray(v)) return v as Record<string, unknown>;

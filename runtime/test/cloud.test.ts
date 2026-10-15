@@ -114,8 +114,10 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
     anthropic: async () => client,
     setup: async () => ({ environmentID: "env_1", agents: { refunds: "agent_refunds" } }),
     names: opts.names ?? memoryNames(),
-    slots: { claim: async () => true },
+    slots: { claim: async () => true, keep: async () => undefined, held: async () => false, release: async () => undefined },
     claims: opts.claims ?? memoryClaims(),
+    push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
+    apns: { send: async () => "sent" as const },
     fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } },
       opts.drafts ?? DRAFTS, opts.claimed ?? []),
   });

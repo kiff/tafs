@@ -7,6 +7,9 @@ struct NeedsYouView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Needs you").font(Theme.display(34)).foregroundColor(Theme.ink)
+                if model.mode == .kiff, model.sessionHasKey, model.canAnswerHolds != false, model.alertsReady != true {
+                    AlertsCard()
+                }
                 if model.held.isEmpty {
                     Panel {
                         Text("Nothing is waiting.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
@@ -102,5 +105,24 @@ struct HeldCallCard: View {
     private func remaining(at date: Date) -> String {
         let seconds = max(0, Int(call.expiresAt.timeIntervalSince(date)))
         return seconds == 0 ? "expired" : String(format: "%d:%02d left", seconds / 60, seconds % 60)
+    }
+}
+
+/// Offers alerts that reach a closed app: KIFF tells tafs cloud when a call is held, and
+/// tafs cloud tells this phone. One Face ID turns it on for the account.
+struct AlertsCard: View {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        Panel {
+            Text("Know the moment a taf needs you").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+            Text("Get an alert when a call waits for your answer, even with tafs closed.")
+                .font(.system(size: 14)).foregroundColor(Theme.soft)
+            Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
+                Task { await model.turnOnAlerts() }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(model.turningOnAlerts)
+        }
     }
 }
