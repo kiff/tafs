@@ -61,7 +61,7 @@ final class RemoveTafTests: XCTestCase {
         let removed = await model.removeTaf(rae)
         let message = try XCTUnwrap(removed)
         XCTAssertTrue(message.contains("KIFF didn't revoke 1 of its Cards: revoke them in KIFF."), message)
-        XCTAssertTrue(message.contains("its key (its vault) couldn't be removed. Tap Remove again"), message)
+        XCTAssertTrue(message.contains("its key (its vault) couldn't be removed. tafs tries again each time it refreshes."), message)
         XCTAssertNotNil(model.cloudTaf(for: rae), "still there to finish")
     }
 
@@ -127,6 +127,9 @@ final class RemoveTafTests: XCTestCase {
         let removal = Task { await model.removeTaf(rae) }
 
         await untilHeldRequestArrives()
+        // Signed out without a request (the stub holds its one loading thread), so the
+        // account has changed by the time the held revocation answers.
+        model.kiff.token = nil
         await model.signOut()
         model.kiff.token = "kiff_dev_b"
         model.cloud.token = "kiff_dev_b"
