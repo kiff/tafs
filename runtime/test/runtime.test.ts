@@ -15,7 +15,7 @@ import {
 } from "../src/config.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
 import { JOBS, type Job, jobById, systemPrompt } from "../src/jobs.js";
-import { agentChanged, ensureKiffSkill, ensureMemory, environmentChanged, expireSessions, setup, startTaf } from "../src/runtime.js";
+import { agentChanged, ensureKiffSkill, ensureMemory, environmentChanged, setup, startTaf } from "../src/runtime.js";
 
 type Agent = Anthropic.Beta.Agents.BetaManagedAgentsAgent;
 type Environment = Anthropic.Beta.Environments.BetaEnvironment;
@@ -547,54 +547,5 @@ describe("tool surface", () => {
     const net = (environmentParams().config as { networking: Record<string, unknown> }).networking;
     expect(net).toEqual({ type: "limited", allow_package_managers: false, allow_mcp_servers: true });
     expect(net.allowed_hosts ?? []).toEqual([]);
-  });
-});
-
-describe("expiring old runs and chats", () => {
-  const NOW = new Date("2026-10-15T03:17:00Z");
-  const daysAgo = (d: number) => new Date(NOW.getTime() - d * 86_400_000).toISOString();
-  function fake() {
-    const deleted: string[] = [];
-    const queries: Array<Record<string, unknown>> = [];
-    const sessions = [
-      { id: "sesn_old_run", agent: "agent_refunds", created_at: daysAgo(120), status: "idle" },
-      { id: "sesn_old_running", agent: "agent_refunds", created_at: daysAgo(95), status: "running" },
-      { id: "sesn_recent", agent: "agent_refunds", created_at: daysAgo(10), status: "idle" },
-      { id: "sesn_old_archived_agent", agent: "agent_old_billpay", created_at: daysAgo(200), status: "terminated" },
-      { id: "sesn_not_a_taf", agent: "agent_other", created_at: daysAgo(300), status: "idle" },
-    ];
-    const client = {
-      beta: {
-        agents: {
-          list: async function* () {
-            yield { id: "agent_refunds", metadata: { tafs_job: "refunds" } };
-            yield { id: "agent_old_billpay", metadata: { tafs_job: "billpay" }, archived_at: daysAgo(30) };
-            yield { id: "agent_other", metadata: {} };
-          },
-        },
-        sessions: {
-          list: async function* (p: Record<string, unknown>) {
-            queries.push(p);
-            const before = p["created_at[lt]"] as string;
-            yield* sessions.filter((x) => x.agent === p.agent_id && x.created_at < before);
-          },
-          delete: async (id: string) => { deleted.push(id); return { id }; },
-        },
-      },
-    } as unknown as Anthropic;
-    return { client, deleted, queries };
-  }
-
-  it("deletes taf sessions older than the window, on current and archived job agents, and nothing else", async () => {
-    const f = fake();
-    expect(await expireSessions(f.client, 90, NOW)).toEqual({ deleted: 2, running: 1 });
-    expect(f.deleted).toEqual(["sesn_old_run", "sesn_old_archived_agent"]);
-    expect(f.queries.every((q) => q.include_archived === true && q["created_at[lt]"] === daysAgo(90))).toBe(true);
-    expect(f.queries.map((q) => q.agent_id)).toEqual(["agent_refunds", "agent_old_billpay"]);
-  });
-
-  it("refuses a window that would delete everything", async () => {
-    await expect(expireSessions(fake().client, 0, NOW)).rejects.toThrow(/at least 1/);
-    await expect(expireSessions(fake().client, 1.5, NOW)).rejects.toThrow(/whole number/);
   });
 });
