@@ -2,7 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { META, memoryResource } from "../config.js";
 import { JOBS, jobById } from "../jobs.js";
 import { ensureMemory, listTafs, type Setup, startTaf } from "../runtime.js";
-import { type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
+import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 
 /**
  * tafs cloud: the few routes the phone needs that hold the Anthropic key.
@@ -11,7 +11,7 @@ import { type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
  *
  *   GET  /v1/jobs
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, job, agent_key, cron?, timezone?, budget_cents?, notes?}
+ *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?}
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET  /v1/tafs/{id}/runs
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
@@ -186,12 +186,24 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
     throw new HTTPError(400, `a run's budget is 1 to ${MAX_BUDGET_CENTS} cents`);
   }
 
-  // The agent key must be an agent's key on this same KIFF account.
-  const agentKey = str(body.agent_key).trim();
-  let agent: KIFFIdentity;
-  try { agent = await whoIs(agentKey, deps.fetch, deps.kiffBase); } catch { throw new HTTPError(400, "KIFF did not accept the agent key"); }
-  if (agent.tenantID !== me.tenantID) throw new HTTPError(400, "the agent key belongs to another KIFF account");
-  if (!agent.apiKey || !agent.agentID) throw new HTTPError(400, "the key is not bound to an agent");
+  // The agent's key comes one of two ways. From a confirmed KIFF draft
+  // (draft_id + claim_secret), tafs cloud claims it itself, so the key never
+  // reaches the phone; it is claimed only once the name is ours, below. Or as
+  // agent_key, from the CLI and app builds from before drafts.
+  const draftID = str(body.draft_id).trim();
+  const claimSecret = str(body.claim_secret).trim();
+  if (!draftID !== !claimSecret) throw new HTTPError(400, "send both draft_id and claim_secret");
+  let agentKey = draftID ? "" : str(body.agent_key).trim();
+  if (!draftID && !agentKey) throw new HTTPError(400, "send draft_id and claim_secret, or agent_key");
+  const check = async (key: string): Promise<KIFFIdentity> => {
+    // The agent key must be an agent's key on this same KIFF account.
+    let agent: KIFFIdentity;
+    try { agent = await whoIs(key, deps.fetch, deps.kiffBase); } catch { throw new HTTPError(400, "KIFF did not accept the agent key"); }
+    if (agent.tenantID !== me.tenantID) throw new HTTPError(400, "the agent key belongs to another KIFF account");
+    if (!agent.apiKey || !agent.agentID) throw new HTTPError(400, "the key is not bound to an agent");
+    return agent;
+  };
+  let agent = agentKey ? await check(agentKey) : undefined;
 
   // Two taps, or a retry, must not start two tafs: the name is claimed first.
   const taken = new HTTPError(409, `you already have a taf named ${name}`);
@@ -203,6 +215,20 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
     // learned. Nothing proves such an attempt can't still make the taf, so
     // the name stays taken; another name always works.
     throw new HTTPError(409, `${name} is taken by an earlier start whose outcome isn't known; it may still appear. Choose another name`);
+  }
+
+  if (!agent) {
+    // The claim works once: made only now, with the name held, so a second tap
+    // or a taken name never spends it.
+    try {
+      agentKey = (await claimDraft(draftID, claimSecret, deps.fetch, deps.kiffBase)).key;
+      agent = await check(agentKey);
+    } catch (err) {
+      await deps.names.release(me.tenantID, name);
+      if (err instanceof HTTPError) throw err;
+      const status = err instanceof KIFFError ? err.status : 502;
+      throw new HTTPError(status >= 400 && status < 500 ? status : 502, `KIFF did not give the draft's key: ${(err as Error).message}`);
+    }
   }
 
   let asked = false;
