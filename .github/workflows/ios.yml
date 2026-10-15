@@ -57,6 +57,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # The TestFlight job doesn't run on pull requests, so its Beta testers
+      # step is tested here, against canned App Store Connect answers.
+      - name: Test the Beta testers script
+        run: ruby ios/scripts/test_asc_beta.rb
+
       - name: Generate the Xcode project
         run: |
           brew install xcodegen
