@@ -42,9 +42,10 @@ final class KIFFClient {
     /// Signs a setup call for a phone session bound to its key (kiff-cloud #1225): set
     /// while a start the owner confirmed with Face ID runs, nil otherwise.
     var setupSigner: (@MainActor (Data) throws -> String)?
-    /// The calls KIFF takes from a phone's session only with its signature. A phone makes
-    /// one setup call: the draft that starts a taf (kiff-cloud #1217, #1225).
-    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts"]
+    /// The calls KIFF takes from a phone's session only with its signature: the draft that
+    /// starts a taf (kiff-cloud #1217, #1225), and the alert target that tells tafs cloud
+    /// when a call is held (#1234).
+    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets"]
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
          webURL: URL = URL(string: "https://app.kiff.dev")!,
@@ -390,6 +391,23 @@ final class KIFFClient {
     /// Discards a draft nobody claimed, and revokes the Cards it issued.
     func discardDraft(id: String) async throws {
         let _: Empty = try await send("DELETE", "/v1/me/agent-drafts/\(escaped(id))")
+    }
+
+    // MARK: Alerts
+
+    /// Where KIFF sends the account's held calls, as a phone registers it (kiff-cloud #1234):
+    /// only to an app backend KIFF lists, for held calls and their answers only. The signing
+    /// secret is shown this once.
+    struct AlertTarget: Decodable, Equatable {
+        let id: String
+        let signingSecret: String
+        enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }
+    }
+
+    /// Points the account's held-call alerts at `url`, replacing the target there before.
+    /// A signed setup call: the owner confirms it with Face ID first.
+    func registerAlertTarget(url: URL) async throws -> AlertTarget {
+        try await send("POST", "/v1/me/alert-targets", body: ["url": url.absoluteString])
     }
 
     // MARK: Transport

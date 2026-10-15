@@ -207,7 +207,7 @@ jobs:
           ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
         run: |
           ruby ios/scripts/asc-profiles.rb \
-            bot.tafs.app="tafs App Store CI" \
+            bot.tafs.app+push="tafs App Store CI" \
             bot.tafs.app.widgets="tafs widgets App Store CI"
 
       - name: Archive

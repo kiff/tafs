@@ -21,7 +21,7 @@ const names: Names = { claim: async () => true, release: async () => {} };
 /** Slots claimed atomically, like the DynamoDB conditional write. */
 function memorySlots(): Slots & { held: Set<string> } {
   const held = new Set<string>();
-  return { held, async claim(key) { if (held.has(key)) return false; held.add(key); return true; } };
+  return { held, async claim(key) { if (held.has(key)) return false; held.add(key); return true; }, async release(key) { held.delete(key); } };
 }
 
 interface FakeSession {

@@ -5,15 +5,16 @@ import UserNotifications
 /// Keeps the lock screen in step with what needs the owner: a notification for
 /// each newly held call, and one Live Activity counting down the first one.
 ///
-/// Notifications here are local, posted by the app while it runs. Push from a
-/// server (so a held call reaches a closed app) comes with the tafs runtime.
+/// Notifications here are local, posted by the app while it runs. Once tafs cloud
+/// pushes the account's held calls (`PushDelegate`), those alerts come from there,
+/// and this posts none of its own.
 @MainActor
 final class LockScreen {
     private var notified: Set<UUID> = []
     private var askedPermission = false
 
-    func update(held: [HeldCall], tafs: [Taf]) {
-        notifyNew(held, tafs)
+    func update(held: [HeldCall], tafs: [Taf], notify: Bool = true) {
+        if notify { notifyNew(held, tafs) } else { notified = Set(held.map(\.id)) }
         if #available(iOS 16.1, *) { updateActivity(held, tafs) }
     }
 

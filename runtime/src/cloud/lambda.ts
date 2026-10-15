@@ -1,8 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { setup, type Setup } from "../runtime.js";
+import { apnsSender } from "./apns.js";
 import { type Claims, handle, type HTTPEvent, type HTTPResult, type Names, type Slots } from "./handler.js";
+import type { Device, PushStore } from "./push.js";
 
 // Kept for the life of the container: the key, the client, the agents.
 let client: Promise<Anthropic> | undefined;
@@ -69,7 +71,87 @@ const slots: Slots = {
       throw err;
     }
   },
+  async release(key) {
+    await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: key } } }));
+  },
 };
+
+const TABLE = process.env.NAMES_TABLE ?? "tafs-cloud-names";
+
+/**
+ * Each account's phones and KIFF target secrets, in one item of the same
+ * table (push#tenant): devices and secrets are maps, each entry set or
+ * removed on its own, so two phones registering at once both land.
+ */
+const MAX_SECRETS = 5;
+const push: PushStore = {
+  async get(tenant) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: `push#${tenant}` } }, ConsistentRead: true }));
+    const devices: Device[] = Object.entries(out.Item?.devices?.M ?? {}).flatMap(([token, v]) => {
+      const m = v.M ?? {};
+      const env = m.environment?.S;
+      return env === "sandbox" || env === "production" ? [{ token, environment: env, subject: m.subject?.S ?? "", at: m.at?.S ?? "" }] : [];
+    });
+    const secrets = Object.values(out.Item?.secrets?.M ?? {})
+      .map((v) => ({ s: v.M?.secret?.S ?? "", at: v.M?.at?.S ?? "" }))
+      .filter((x) => x.s)
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .map((x) => x.s);
+    return { devices, secrets };
+  },
+  async addDevice(tenant, d) {
+    await setEntry(tenant, "devices", d.token, { environment: { S: d.environment }, subject: { S: d.subject }, at: { S: d.at } });
+  },
+  async removeDevice(tenant, token) {
+    await dynamo.send(new UpdateItemCommand({
+      TableName: TABLE, Key: { id: { S: `push#${tenant}` } },
+      UpdateExpression: "REMOVE devices.#k", ExpressionAttributeNames: { "#k": token },
+    }));
+  },
+  async addSecret(tenant, targetID, secret, at) {
+    await setEntry(tenant, "secrets", targetID, { secret: { S: secret }, at: { S: at } });
+    // Keep the newest few: older targets were replaced in KIFF and sign nothing more.
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: `push#${tenant}` } }, ConsistentRead: true }));
+    const old = Object.entries(out.Item?.secrets?.M ?? {})
+      .sort(([, a], [, b]) => (b.M?.at?.S ?? "").localeCompare(a.M?.at?.S ?? ""))
+      .slice(MAX_SECRETS)
+      .map(([id]) => id);
+    if (old.length === 0) return;
+    await dynamo.send(new UpdateItemCommand({
+      TableName: TABLE, Key: { id: { S: `push#${tenant}` } },
+      UpdateExpression: `REMOVE ${old.map((_, i) => `secrets.#o${i}`).join(", ")}`,
+      ExpressionAttributeNames: Object.fromEntries(old.map((id, i) => [`#o${i}`, id])),
+    }));
+  },
+};
+
+/** Sets map.key on the account's item, making the item and the map first if need be. */
+async function setEntry(tenant: string, map: "devices" | "secrets", key: string, value: Record<string, AttributeValue>) {
+  const Key = { id: { S: `push#${tenant}` } };
+  await dynamo.send(new UpdateItemCommand({
+    TableName: TABLE, Key,
+    UpdateExpression: "SET #m = if_not_exists(#m, :empty)",
+    ExpressionAttributeNames: { "#m": map }, ExpressionAttributeValues: { ":empty": { M: {} } },
+  }));
+  await dynamo.send(new UpdateItemCommand({
+    TableName: TABLE, Key,
+    UpdateExpression: "SET #m.#k = :v",
+    ExpressionAttributeNames: { "#m": map, "#k": key }, ExpressionAttributeValues: { ":v": { M: value } },
+  }));
+}
+
+/** Apple push with the "tafs push" key, read from Secrets Manager on first use. */
+const apns = apnsSender({
+  keyPEM: async () => {
+    const id = process.env.APNS_SECRET_ID;
+    if (!id) throw new Error("APNS_SECRET_ID is not set");
+    const out = await new SecretsManagerClient({}).send(new GetSecretValueCommand({ SecretId: id }));
+    return (out.SecretString ?? "").trim();
+  },
+  keyID: process.env.APNS_KEY_ID ?? "",
+  teamID: process.env.APNS_TEAM_ID ?? "",
+  topic: process.env.APNS_TOPIC ?? "bot.tafs.app",
+});
 
 /**
  * Claimed drafts, in the same table: the vault holding each one's key, kept
@@ -105,5 +187,5 @@ const claims: Claims = {
 };
 
 export async function handler(event: HTTPEvent): Promise<HTTPResult> {
-  return handle(event, { anthropic, setup: ensureSetup, names, slots, claims });
+  return handle(event, { anthropic, setup: ensureSetup, names, slots, claims, push, apns });
 }

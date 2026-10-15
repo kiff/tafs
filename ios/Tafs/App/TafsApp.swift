@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct TafsApp: App {
     @StateObject private var model = AppModel(store: SampleStore())
+    @UIApplicationDelegateAdaptor(PushDelegate.self) private var push
     @Environment(\.scenePhase) private var scenePhase
     private let lockScreen = LockScreen()
 
@@ -17,8 +18,16 @@ struct TafsApp: App {
                         await model.startSample()
                         return
                     }
-                    model.onHeldChanged = { [lockScreen] held, tafs in lockScreen.update(held: held, tafs: tafs) }
+                    // Once tafs cloud pushes held calls, the app doesn't post its own alert as well.
+                    model.onHeldChanged = { [lockScreen, weak model] held, tafs in
+                        lockScreen.update(held: held, tafs: tafs, notify: model?.alertsReady != true)
+                    }
+                    model.requestPushToken = { PushDelegate.register() }
+                    model.askNotificationPermission = { await PushDelegate.askPermission() }
+                    push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
+                    push.onHeldChanged = { [weak model] in await model?.refresh() }
                     await model.restore()
+                    PushDelegate.registerIfAllowed()
                 }
         }
         .onChange(of: scenePhase) { phase in

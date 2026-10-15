@@ -32,9 +32,16 @@ targets:
         NSFaceIDUsageDescription: tafs asks for Face ID before an approval is signed and sent.
         ITSAppUsesNonExemptEncryption: false
         NSSupportsLiveActivities: true
+        # A silent push says a held call was answered elsewhere, so its alert goes.
+        UIBackgroundModes: [remote-notification]
         CFBundleURLTypes:
           - CFBundleURLName: bot.tafs.app
             CFBundleURLSchemes: [tafs]
+    # Push: Xcode's builds use Apple's sandbox, TestFlight and the App Store production.
+    entitlements:
+      path: Tafs/Tafs.entitlements
+      properties:
+        aps-environment: $(TAFS_APS_ENVIRONMENT)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
@@ -42,6 +49,11 @@ targets:
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_APP)
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      configs:
+        Debug:
+          TAFS_APS_ENVIRONMENT: development
+        Release:
+          TAFS_APS_ENVIRONMENT: production
   TafsWidgets:
     type: app-extension
     platform: iOS
