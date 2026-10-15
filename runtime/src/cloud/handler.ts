@@ -21,6 +21,7 @@ import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, typ
  *   POST /v1/tafs/{id}/messages         {text}: into the live session, or a new one
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
+ *   DELETE /v1/tafs/{id}                remove it: stop it, delete its memory and vault, free its name
  *   POST /v1/push                       {device_token, environment, alert_target?}: this phone gets the account's alerts
  *   DELETE /v1/push/{token}             it stops
  *   POST /v1/kiff/alerts                KIFF's signed held-call alerts (no sign-in: the signature is the check)
@@ -164,6 +165,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 2 && method === "POST") {
     need(me, "cards.manage");
     return start(event, me, client, deps);
+  }
+
+  if (parts.length === 3 && method === "DELETE") {
+    need(me, "cards.manage");
+    return remove(client, await owned(client, me, parts[2] ?? "", { archived: true }), me, deps);
   }
 
   const taf = await owned(client, me, parts[2] ?? "");
@@ -379,12 +385,53 @@ function refused(err: unknown): boolean {
   return typeof status === "number" && status >= 400 && status < 500 && ![408, 409, 429].includes(status);
 }
 
-async function owned(client: Anthropic, me: KIFFIdentity, id: string) {
+async function owned(client: Anthropic, me: KIFFIdentity, id: string, opts: { archived?: boolean } = {}) {
   let d;
   try { d = await client.beta.deployments.retrieve(id); } catch { throw new HTTPError(404, "no such taf"); }
   // Someone else's taf answers exactly like a missing one.
   if (d.metadata?.[META.tenant] !== me.tenantID || !d.metadata?.[META.taf]) throw new HTTPError(404, "no such taf");
+  // A removed taf is gone for everything but finishing its removal.
+  if (d.archived_at && !opts.archived) throw new HTTPError(404, "no such taf");
   return d;
+}
+
+/**
+ * Removes a taf, each step safe to repeat: a second remove finishes what the
+ * first left. Stopping it comes first, and nothing else is deleted unless that
+ * worked, so a taf that may still run keeps its memory. Its Cards are KIFF's:
+ * the phone revokes them, before calling this.
+ */
+async function remove(client: Anthropic, taf: Deployment, me: KIFFIdentity, deps: Deps) {
+  const removed: string[] = [];
+  const failed: string[] = [];
+  const name = taf.metadata?.[META.taf] ?? taf.name;
+  const step = async (what: string, work: () => Promise<unknown>) => {
+    try { await work(); removed.push(what); } catch (err) {
+      // Already gone counts as done.
+      if ((err as { status?: unknown }).status === 404) { removed.push(what); return; }
+      console.error(`remove ${taf.id}: ${what}: ${(err as Error).message}`);
+      failed.push(what);
+    }
+  };
+
+  if (taf.archived_at) removed.push("schedule");
+  else await step("schedule", () => client.beta.deployments.archive(taf.id));
+  if (failed.length === 0) {
+    const stores = new Set<string>(taf.resources?.flatMap((r) => (r.type === "memory_store" ? [r.memory_store_id] : [])) ?? []);
+    const noted = taf.metadata?.[META.memory];
+    if (noted) stores.add(noted);
+    for (const id of stores) await step("memory", () => client.beta.memoryStores.delete(id));
+    for (const id of taf.vault_ids ?? []) await step("key", () => client.beta.vaults.delete(id));
+    if (failed.length === 0) await step("name", () => deps.names.release(me.tenantID, name));
+  }
+  return {
+    taf: taf.id,
+    name,
+    kiff_agent: taf.metadata?.[META.kiffAgent] ?? null,
+    done: failed.length === 0,
+    removed: [...new Set(removed)],
+    failed: [...new Set(failed)],
+  };
 }
 
 async function runs(client: Anthropic, deploymentID: string) {

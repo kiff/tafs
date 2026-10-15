@@ -75,6 +75,20 @@ final class TafsCloud {
         return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, claimSecret: claimSecret, timezone: timezone))
     }
 
+    /// What removing a taf did: each step, "schedule", "memory", "key" (its vault) and "name",
+    /// is in `removed` or `failed`. A second remove finishes what the first left.
+    struct Removal: Decodable, Equatable {
+        let done: Bool
+        let removed: [String]
+        let failed: [String]
+    }
+
+    /// Removes the taf for good: stops it, deletes its memory and the vault holding its key,
+    /// and frees its name. Its Cards are KIFF's: the phone revokes them first.
+    func remove(_ id: String) async throws -> Removal {
+        try await send("DELETE", "/v1/tafs/\(escaped(id))")
+    }
+
     /// Runs the taf now. Returns the run's session.
     func runNow(_ id: String) async throws -> String {
         struct Response: Decodable { let session: String }

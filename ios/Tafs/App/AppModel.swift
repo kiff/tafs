@@ -829,6 +829,57 @@ final class AppModel: ObservableObject {
         save()
     }
 
+    /// Removes a taf for good, after Face ID: KIFF revokes its Cards first, so it can't act
+    /// whatever happens next; then tafs cloud stops it, deletes its memory and the vault with
+    /// its key, and frees its name. Returns what to tell the owner, nil when nothing was done.
+    func removeTaf(_ tafID: UUID) async -> String? {
+        guard mode == .kiff, let taf = taf(tafID), let c = cloudTaf(for: tafID) else { return nil }
+        do {
+            _ = try await signer.sign(Data("tafs.remove.v1|\(c.id)".utf8), reason: "Remove \(taf.name) for good")
+        } catch { return nil }
+        let gen = accountGeneration
+
+        var cardsLeft = 0
+        if !taf.card.revoked {
+            for cardID in taf.kiffCardIDs {
+                do { try await kiff.revoke(cardID: cardID) } catch { cardsLeft += 1 }
+            }
+        }
+        guard gen == accountGeneration else { return nil }
+        let cards = cardsLeft == 0
+            ? "Its Cards are revoked in KIFF."
+            : "KIFF didn't revoke \(cardsLeft) of its Cards: revoke them in KIFF."
+
+        let removal: TafsCloud.Removal
+        do { removal = try await cloud.remove(c.id) } catch {
+            return "\(cards) tafs cloud didn't answer (\(error.localizedDescription)), so it may still be scheduled. Tap Remove again."
+        }
+        guard gen == accountGeneration else { return nil }
+        if cardsLeft == 0, let i = tafs.firstIndex(where: { $0.id == tafID }) {
+            tafs[i].card.revoked = true
+            tafs[i].state = .revoked
+            tafs[i].now = "Removed"
+        }
+        guard removal.done else {
+            let failed = removal.failed.map(Self.removalStep).joined(separator: ", ")
+            return "\(cards) Not finished: its \(failed) couldn't be removed. Tap Remove again to finish."
+        }
+        if let agent = holderIDs.first(where: { $0.value == tafID })?.key { cloudTafs[agent] = nil }
+        log(tafID, .revoked, "You removed \(taf.name)", "Schedule, memory and key deleted; name free")
+        save()
+        return "\(cards) Its schedule, memory and key are deleted, and the name \(taf.name) is free. Past chats, run reports and KIFF's receipts stay."
+    }
+
+    private static func removalStep(_ step: String) -> String {
+        switch step {
+        case "schedule": return "schedule"
+        case "memory": return "memory"
+        case "key": return "key (its vault)"
+        case "name": return "name"
+        default: return step
+        }
+    }
+
     func togglePause(_ tafID: UUID) {
         guard mode == .sample, let i = tafs.firstIndex(where: { $0.id == tafID }), tafs[i].state != .revoked else { return }
         tafs[i].state = tafs[i].state == .paused ? .working : .paused

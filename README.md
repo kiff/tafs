@@ -143,6 +143,7 @@ own tafs; another company's taf answers like a missing one.
 | `POST /v1/tafs/{id}/messages` | `cards.manage` | `{text}`, 1 to 2000 characters: into the latest session if it was active in the last 30 minutes, else a new session with the taf's agent, vault, budget and memory. `{session, new_session}`. At most 10 a taf in 10 minutes |
 | `GET /v1/tafs/{id}/memory` | a person | what the taf remembers, newest first: `{notes: [{id, path, content, updated_at}]}` |
 | `DELETE /v1/tafs/{id}/memory/{note}` | `cards.manage` | forget one note |
+| `DELETE /v1/tafs/{id}` | `cards.manage` | remove it for good: archive its deployment, delete its memory store and the vault holding its key, free its name. Stopping comes first; nothing else is deleted unless that worked. A second remove finishes what the first left. Answers `{done, removed, failed}`. The phone revokes its Cards in KIFF before calling this. Past sessions stay with Anthropic and receipts stay in KIFF |
 
 **Memory.** Each taf has its own Managed Agents memory store, mounted into
 every run and every chat. The taf reads its notes before it starts and writes
