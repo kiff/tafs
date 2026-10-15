@@ -63,13 +63,22 @@ const slots: Slots = {
       await dynamo.send(new PutItemCommand({
         TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
         Item: { id: { S: key }, ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } },
-        ConditionExpression: "attribute_not_exists(id)",
+        // DynamoDB removes expired items late, so an expired claim is free too.
+        ConditionExpression: "attribute_not_exists(id) OR #ttl < :now",
+        ExpressionAttributeNames: { "#ttl": "ttl" },
+        ExpressionAttributeValues: { ":now": { N: String(Math.floor(Date.now() / 1000)) } },
       }));
       return true;
     } catch (err) {
       if (err instanceof ConditionalCheckFailedException) return false;
       throw err;
     }
+  },
+  async keep(key, expiresAt) {
+    await dynamo.send(new PutItemCommand({
+      TableName: TABLE,
+      Item: { id: { S: key }, ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } },
+    }));
   },
   async release(key) {
     await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: key } } }));
@@ -90,7 +99,9 @@ const push: PushStore = {
     const devices: Device[] = Object.entries(out.Item?.devices?.M ?? {}).flatMap(([token, v]) => {
       const m = v.M ?? {};
       const env = m.environment?.S;
-      return env === "sandbox" || env === "production" ? [{ token, environment: env, subject: m.subject?.S ?? "", at: m.at?.S ?? "" }] : [];
+      return env === "sandbox" || env === "production"
+        ? [{ token, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, at: m.at?.S ?? "" }]
+        : [];
     });
     const secrets = Object.values(out.Item?.secrets?.M ?? {})
       .map((v) => ({ s: v.M?.secret?.S ?? "", at: v.M?.at?.S ?? "" }))
@@ -100,7 +111,7 @@ const push: PushStore = {
     return { devices, secrets };
   },
   async addDevice(tenant, d) {
-    await setEntry(tenant, "devices", d.token, { environment: { S: d.environment }, subject: { S: d.subject }, at: { S: d.at } });
+    await setEntry(tenant, "devices", d.token, { environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, at: { S: d.at } });
   },
   async removeDevice(tenant, token) {
     await dynamo.send(new UpdateItemCommand({

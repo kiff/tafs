@@ -26,6 +26,7 @@ struct TafsApp: App {
                     model.askNotificationPermission = { await PushDelegate.askPermission() }
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
+                    push.onOpen = { [weak model] destination in model?.open(destination) }
                     await model.restore()
                     PushDelegate.registerIfAllowed()
                 }
@@ -57,6 +58,12 @@ struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
 
+    private func showRequestedTab(_ requested: Tab?) {
+        guard let requested else { return }
+        tab = requested
+        model.requestedTab = nil
+    }
+
     var body: some View {
         Group {
             if model.signedIn {
@@ -79,6 +86,8 @@ struct RootView: View {
         .onOpenURL { url in
             if url.host == "needs-you" { tab = .needsYou }
         }
+        .onChange(of: model.requestedTab) { requested in showRequestedTab(requested) }
+        .onAppear { showRequestedTab(model.requestedTab) }
         .alert("Not done", isPresented: Binding(
             get: { model.lastError != nil },
             set: { if !$0 { model.lastError = nil } }

@@ -27,6 +27,8 @@ export interface Device {
   environment: "sandbox" | "production";
   /** The KIFF person who registered it. */
   subject: string;
+  /** Whether that person may answer held calls (holds.answer): only their phones are alerted. */
+  answers: boolean;
   at: string;
 }
 
@@ -68,8 +70,13 @@ export class PushError extends Error {
 
 /** How far KIFF's signing time may be from ours: a replay older than this is refused. */
 export const SIGNATURE_TOLERANCE_SECONDS = 300;
-/** How long a delivered event id is remembered, so KIFF's retries don't alert twice. */
+/** How long a delivered event is remembered per phone, so KIFF's retries don't alert it twice. */
 export const DEDUPE_HOURS = 72;
+/**
+ * How long a phone's delivery is held while it is being sent. If this run dies
+ * mid-send, the claim lapses and KIFF's retry sends it.
+ */
+export const IN_FLIGHT_SECONDS = 120;
 /** Most phones an account keeps alerts for. */
 export const MAX_DEVICES = 50;
 
@@ -109,16 +116,19 @@ interface AlertBody {
 export interface AlertDeps {
   push: PushStore;
   apns: Sender;
-  /** Remembers an event id until a time; false when it is already remembered. */
-  remember(key: string, until: Date): Promise<boolean>;
-  forget(key: string): Promise<void>;
+  /** Claims a key until a time; false while someone else holds it unexpired. */
+  claim(key: string, until: Date): Promise<boolean>;
+  /** Holds a claimed key until a later time. */
+  keep(key: string, until: Date): Promise<void>;
+  release(key: string): Promise<void>;
   now: Date;
 }
 
 /**
  * Handles one delivery from KIFF. Unsigned or wrongly signed deliveries are
- * refused (401) before anything is sent. A delivery whose pushes all failed
- * answers 502, so KIFF retries it; a repeat of one already sent is a no-op.
+ * refused (401) before anything is sent. Each phone's delivery of an event is
+ * tracked on its own: a phone that got it is never alerted again by a retry,
+ * and if any phone's push failed the answer is 502, so KIFF retries for the rest.
  */
 export async function receiveAlert(signature: string, raw: string, deps: AlertDeps): Promise<Record<string, unknown>> {
   let body: AlertBody;
@@ -133,25 +143,31 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   const eventID = typeof body.event_id === "string" ? body.event_id : "";
   const holdID = typeof body.hold?.id === "string" ? body.hold.id : "";
   if (!eventID || !holdID) throw new PushError(400, "an alert names its event and its held call");
-  if (devices.length === 0) return { sent: 0 };
-
-  const key = `alert#${tenant}#${eventID}`;
-  if (!(await deps.remember(key, new Date(deps.now.getTime() + DEDUPE_HOURS * 3600_000)))) return { duplicate: true };
 
   const n = outcome === HELD ? heldNotification(body, holdID, deps.now) : answeredNotification(holdID);
-  let sent = 0, failed = 0;
-  for (const device of devices) {
-    const r = await deps.apns.send(device, n);
-    if (r === "sent") sent++;
-    else if (r === "gone") await deps.push.removeDevice(tenant, device.token);
-    else failed++;
+  const inFlight = new Date(deps.now.getTime() + IN_FLIGHT_SECONDS * 1000);
+  const done = new Date(deps.now.getTime() + DEDUPE_HOURS * 3600_000);
+  let sent = 0, failed = 0, already = 0;
+  // Only phones of people who may answer: "a taf needs you" is for them.
+  for (const device of devices.filter((d) => d.answers)) {
+    const key = `alert#${tenant}#${eventID}#${device.token}`;
+    if (!(await deps.claim(key, inFlight))) { already++; continue; }
+    let r: Awaited<ReturnType<Sender["send"]>>;
+    try { r = await deps.apns.send(device, n); } catch (err) {
+      console.error(`push: ${(err as Error).message}`);
+      r = "failed";
+    }
+    if (r === "failed") {
+      await deps.release(key);
+      failed++;
+      continue;
+    }
+    if (r === "gone") await deps.push.removeDevice(tenant, device.token);
+    else sent++;
+    await deps.keep(key, done);
   }
-  if (sent === 0 && failed > 0) {
-    // Nothing reached a phone and APNs may take it later: KIFF tries again.
-    await deps.forget(key);
-    throw new PushError(502, "Apple push didn't take the alert; try again");
-  }
-  return { sent };
+  if (failed > 0) throw new PushError(502, `Apple push didn't take the alert for ${failed} phone${failed === 1 ? "" : "s"}; try again`);
+  return already > 0 && sent === 0 ? { duplicate: true } : { sent };
 }
 
 function heldNotification(body: AlertBody, holdID: string, now: Date): Notification {

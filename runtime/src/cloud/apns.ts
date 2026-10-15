@@ -58,10 +58,15 @@ export function apnsSender(config: APNsConfig): Sender {
 
   return {
     async send(device, n) {
+      let auth: string;
+      try { auth = await bearer(); } catch (err) {
+        console.error(`APNs key: ${(err as Error).message}`);
+        return "failed";
+      }
       const headers: http2.OutgoingHttpHeaders = {
         ":method": "POST",
         ":path": `/3/device/${device.token}`,
-        authorization: `bearer ${await bearer()}`,
+        authorization: `bearer ${auth}`,
         "apns-topic": config.topic,
         "apns-push-type": n.kind,
         // A background push must go at priority 5.

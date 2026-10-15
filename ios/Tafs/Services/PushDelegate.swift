@@ -1,14 +1,46 @@
 import UIKit
 import UserNotifications
 
-/// Apple push for held calls: iOS gives the phone's token here, and wakes the app here when
-/// a held call was answered elsewhere, so its alert goes. tafs cloud sends both (from
-/// KIFF's alerts); `AppModel` hands tafs cloud the token.
+/// Apple push for held calls: iOS gives the phone's token here, wakes the app here when a
+/// held call was answered elsewhere so its alert goes, and says here which alert was
+/// tapped. tafs cloud sends the pushes (from KIFF's alerts); `AppModel` hands it the token.
 @MainActor
-final class PushDelegate: NSObject, UIApplicationDelegate {
+final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     var onToken: (@MainActor (Data) -> Void)?
     /// A held call changed elsewhere: reload what needs the owner.
     var onHeldChanged: (@MainActor () async -> Void)?
+    /// Opens a screen ("needs-you"). A tap that launched the app waits here until it is set.
+    var onOpen: (@MainActor (String) -> Void)? {
+        didSet { if let onOpen, let waiting = pendingOpen { pendingOpen = nil; onOpen(waiting) } }
+    }
+    private(set) var pendingOpen: String?
+
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // Set before launch ends, so a tap that launched the app is delivered here.
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
+    /// The owner tapped an alert: open where it points, now or once the app is ready.
+    func open(_ destination: String) {
+        if let onOpen { onOpen(destination) } else { pendingOpen = destination }
+    }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
+        let destination = response.notification.request.content.userInfo["open"] as? String
+        completionHandler()
+        guard let destination else { return }
+        Task { @MainActor in self.open(destination) }
+    }
+
+    /// With tafs open, an alert still shows, and the app reloads what needs the owner.
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .list, .sound])
+        Task { @MainActor in await self.onHeldChanged?() }
+    }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         onToken?(deviceToken)

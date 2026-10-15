@@ -69,8 +69,10 @@ export interface Names {
 }
 
 export interface Slots {
-  /** Claims `key` until `expiresAt`. True only when nobody holds it. */
+  /** Claims `key` until `expiresAt`. True only when nobody holds it, or its claim has expired. */
   claim(key: string, expiresAt: Date): Promise<boolean>;
+  /** Holds a claimed `key` until a new time. */
+  keep(key: string, expiresAt: Date): Promise<void>;
   release(key: string): Promise<void>;
 }
 
@@ -140,8 +142,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return receiveAlert(header(event, "kiff-signature"), rawBody(event), {
       push: deps.push,
       apns: deps.apns,
-      remember: (key, until) => deps.slots.claim(key, until),
-      forget: (key) => deps.slots.release(key),
+      claim: (key, until) => deps.slots.claim(key, until),
+      keep: (key, until) => deps.slots.keep(key, until),
+      release: (key) => deps.slots.release(key),
       now: deps.now?.() ?? new Date(),
     });
   }
@@ -208,22 +211,24 @@ async function person(event: HTTPEvent, deps: Deps): Promise<KIFFIdentity> {
 
 /**
  * A phone signs up for its account's alerts, or stops. Any person may add
- * their phone; handing over the KIFF target's signing secret takes the right
- * to manage Cards, the right that answers held calls.
+ * their phone, but only phones of people who may answer held calls
+ * (holds.answer) are alerted, and only they may hand over the KIFF target's
+ * signing secret.
  */
 async function push(event: HTTPEvent, method: string, parts: string[], deps: Deps): Promise<unknown> {
   const me = await person(event, deps);
   if (method === "POST" && parts.length === 2) {
     const r = registration(parseBody(event));
-    if (r.target) need(me, "cards.manage");
+    const answers = me.capabilities.includes("holds.answer");
+    if (r.target && !answers) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     const at = (deps.now?.() ?? new Date()).toISOString();
     const { devices, secrets } = await deps.push.get(me.tenantID);
     if (!devices.some((d) => d.token === r.token) && devices.length >= MAX_DEVICES) {
       throw new HTTPError(409, `an account gets alerts on ${MAX_DEVICES} phones at most; remove one first`);
     }
     if (r.target) await deps.push.addSecret(me.tenantID, r.target.id, r.target.secret, at);
-    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, at });
-    return { device: true, alerts: Boolean(r.target) || secrets.length > 0 };
+    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, at });
+    return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0 };
   }
   if (method === "DELETE" && parts.length === 3) {
     const token = (parts[2] ?? "").toLowerCase();

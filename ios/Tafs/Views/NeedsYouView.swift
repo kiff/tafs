@@ -7,7 +7,7 @@ struct NeedsYouView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Needs you").font(Theme.display(34)).foregroundColor(Theme.ink)
-                if model.mode == .kiff, model.sessionHasKey, model.alertsReady != true {
+                if model.mode == .kiff, model.sessionHasKey, model.canAnswerHolds != false, model.alertsReady != true {
                     AlertsCard()
                 }
                 if model.held.isEmpty {

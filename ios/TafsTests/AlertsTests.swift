@@ -11,6 +11,7 @@ final class AlertsTests: XCTestCase {
     private func model(signer: ApprovalSigning = StubSigner(), allowed: Bool = true) -> AppModel {
         StubProtocol.responses = [:]
         StubProtocol.sent = []
+        Keychain.delete(AppModel.alertHandoffAccount)
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubProtocol.self]
         let session = URLSession(configuration: config)
@@ -43,7 +44,7 @@ final class AlertsTests: XCTestCase {
         let model = model(signer: signer)
         await signedIn(model)
         StubProtocol.responses["POST /v1/me/alert-targets"] = (201, #"{"id":"at_1","url":"https://cloud.test/v1/kiff/alerts","signing_secret":"whsec_abc"}"#)
-        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"alerts":true}"#)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":true}"#)
 
         let on = await model.turnOnAlerts()
         XCTAssertTrue(on)
@@ -84,7 +85,7 @@ final class AlertsTests: XCTestCase {
     func testANewTokenIsHandedOverAgainWithoutTheSecret() async throws {
         let model = model()
         await signedIn(model)
-        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"alerts":false}"#)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":false}"#)
         await model.pushTokenArrived(token)
         let push = try XCTUnwrap(sent("POST", "cloud.test", "/v1/push").last)
         XCTAssertEqual(body(push)["device_token"] as? String, "ab01ff")
@@ -105,11 +106,71 @@ final class AlertsTests: XCTestCase {
     func testSigningOutStopsThisPhonesAlerts() async {
         let model = model()
         await signedIn(model)
-        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"alerts":true}"#)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":true}"#)
         StubProtocol.responses["DELETE /v1/push/ab01ff"] = (200, #"{"removed":true}"#)
         await model.pushTokenArrived(token)
         await model.signOut()
         XCTAssertEqual(sent("DELETE", "cloud.test", "/v1/push/ab01ff").count, 1)
         XCTAssertNil(model.alertsReady)
+    }
+
+    /// KIFF replaced the account's target and showed its new secret once; the hand-over to
+    /// tafs cloud failed while tafs cloud still held an older secret. The new secret is kept
+    /// and handed over again, without a second registration, and alerts don't count as ready
+    /// until tafs cloud has it.
+    func testASecretTafsCloudDidntTakeIsHandedOverAgain() async throws {
+        let model = model()
+        await signedIn(model)
+        StubProtocol.responses["POST /v1/me/alert-targets"] = (201, #"{"id":"at_2","signing_secret":"whsec_new"}"#)
+        StubProtocol.responses["POST /v1/push"] = (502, #"{"error":"busy"}"#)
+        let first = await model.turnOnAlerts()
+        XCTAssertFalse(first)
+        XCTAssertEqual(model.alertsReady, false)
+
+        // tafs cloud is back, and still says alerts are set up: with the older secret.
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":true}"#)
+        await model.syncPush()
+        let retried = try XCTUnwrap(sent("POST", "cloud.test", "/v1/push").last)
+        let handed = try XCTUnwrap(body(retried)["alert_target"] as? [String: Any], "the kept secret goes with the token")
+        XCTAssertEqual(handed["signing_secret"] as? String, "whsec_new")
+        XCTAssertEqual(sent("POST", "api.test", "/v1/me/alert-targets").count, 1, "KIFF isn't asked again")
+        XCTAssertEqual(model.alertsReady, true)
+
+        // Handed over: the next sync carries the token alone.
+        await model.syncPush()
+        XCTAssertNil(body(sent("POST", "cloud.test", "/v1/push").last)["alert_target"])
+    }
+
+    func testSomeoneWhoCantAnswerIsntOfferedAlerts() async {
+        let model = model()
+        await signedIn(model)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":false,"alerts":true}"#)
+        await model.pushTokenArrived(token)
+        XCTAssertEqual(model.canAnswerHolds, false)
+    }
+
+    // MARK: Tapping an alert
+
+    func testATapOpensNeedsYouEvenWhenItLaunchedTheApp() {
+        let push = PushDelegate()
+        var opened: [String] = []
+        // Cold start: the tap arrives before the app is ready.
+        push.open("needs-you")
+        XCTAssertEqual(push.pendingOpen, "needs-you")
+        push.onOpen = { opened.append($0) }
+        XCTAssertEqual(opened, ["needs-you"])
+        XCTAssertNil(push.pendingOpen)
+        // Running, on another tab.
+        push.open("needs-you")
+        XCTAssertEqual(opened, ["needs-you", "needs-you"])
+    }
+
+    func testTheModelAsksForNeedsYou() {
+        let model = model()
+        model.open("needs-you")
+        XCTAssertEqual(model.requestedTab, .needsYou)
+        model.requestedTab = nil
+        model.open("somewhere-else")
+        XCTAssertNil(model.requestedTab)
     }
 }

@@ -182,10 +182,16 @@ final class TafsCloud {
     /// Where KIFF posts the account's held calls, for tafs cloud to push to its phones.
     var alertsURL: URL { URL(string: "/v1/kiff/alerts", relativeTo: baseURL)!.absoluteURL }
 
+    /// What tafs cloud says after a phone registers: whether this person's phones are alerted
+    /// (they may answer held calls), and whether tafs cloud holds a KIFF secret for the account.
+    struct PushStatus: Decodable, Equatable {
+        let answers: Bool
+        let alerts: Bool
+    }
+
     /// This phone gets the account's alerts at `deviceToken`. With `target`, also hands over
-    /// the KIFF target's signing secret, which checks KIFF's deliveries. Returns whether
-    /// tafs cloud can alert the account's phones: it has a secret, from this phone or another.
-    func registerPush(deviceToken: String, environment: String, target: KIFFClient.AlertTarget? = nil) async throws -> Bool {
+    /// the KIFF target's signing secret, which checks KIFF's deliveries.
+    func registerPush(deviceToken: String, environment: String, target: KIFFClient.AlertTarget? = nil) async throws -> PushStatus {
         struct Target: Encodable {
             let id: String, signingSecret: String
             enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }
@@ -194,11 +200,9 @@ final class TafsCloud {
             let deviceToken: String, environment: String, alertTarget: Target?
             enum CodingKeys: String, CodingKey { case environment, deviceToken = "device_token", alertTarget = "alert_target" }
         }
-        struct Response: Decodable { let alerts: Bool }
-        let r: Response = try await send("POST", "/v1/push", body: Body(
+        return try await send("POST", "/v1/push", body: Body(
             deviceToken: deviceToken, environment: environment,
             alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }))
-        return r.alerts
     }
 
     /// This phone stops getting the account's alerts.

@@ -398,7 +398,7 @@ final class KIFFClient {
     /// Where KIFF sends the account's held calls, as a phone registers it (kiff-cloud #1234):
     /// only to an app backend KIFF lists, for held calls and their answers only. The signing
     /// secret is shown this once.
-    struct AlertTarget: Decodable, Equatable {
+    struct AlertTarget: Codable, Equatable {
         let id: String
         let signingSecret: String
         enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }

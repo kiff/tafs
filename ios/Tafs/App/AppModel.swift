@@ -147,6 +147,7 @@ final class AppModel: ObservableObject {
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
+        canAnswerHolds = nil
         mode = .kiff
         await refresh()
         await syncPush()
@@ -168,6 +169,8 @@ final class AppModel: ObservableObject {
         kiffTenant = nil
         sessionHasKey = false
         alertsReady = nil
+        canAnswerHolds = nil
+        Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
         tafs = []; held = []; record = []
         scriptPosition = [:]; templateOf = [:]
@@ -177,25 +180,72 @@ final class AppModel: ObservableObject {
 
     // MARK: Alerts while tafs is closed
 
+    /// A tab to show, asked for by a tapped alert; the root view shows it and clears this.
+    @Published var requestedTab: Tab?
+
+    /// Opens where a tapped alert points.
+    func open(_ destination: String) {
+        if destination == "needs-you" { requestedTab = .needsYou }
+    }
+
+    static let alertHandoffAccount = "kiff.alert-handoff"
+
+    /// A KIFF alert target whose secret tafs cloud hasn't confirmed yet. Registering a target
+    /// replaces the account's one before, and KIFF shows the new secret only once: until tafs
+    /// cloud has it, KIFF's alerts fail its check. So the secret is kept here, in the
+    /// Keychain, and handed over again until tafs cloud takes it.
+    private struct AlertHandoff: Codable {
+        let tenant: String
+        let target: KIFFClient.AlertTarget
+    }
+
+    private var pendingHandoff: AlertHandoff? {
+        get {
+            guard let json = Keychain.load(Self.alertHandoffAccount),
+                  let h = try? JSONDecoder().decode(AlertHandoff.self, from: Data(json.utf8)), h.tenant == kiffTenant else { return nil }
+            return h
+        }
+        set {
+            if let newValue, let data = try? JSONEncoder().encode(newValue) {
+                Keychain.save(String(decoding: data, as: UTF8.self), for: Self.alertHandoffAccount)
+            } else {
+                Keychain.delete(Self.alertHandoffAccount)
+            }
+        }
+    }
+
     /// iOS gave this phone a push token (at launch, and whenever it changes).
     func pushTokenArrived(_ token: Data) async {
         pushToken = token.map { String(format: "%02x", $0) }.joined()
         await syncPush()
     }
 
-    /// Tells tafs cloud this phone's token again (tokens change), and learns whether the
-    /// account's alerts are set up. Only once alerts were allowed: until then iOS gives no token.
+    /// Tells tafs cloud this phone's token again (tokens change), with a secret it hasn't
+    /// confirmed yet if there is one, and learns whether the account's alerts are set up.
     func syncPush() async {
         guard mode == .kiff, let token = pushToken else { return }
         let gen = accountGeneration
-        guard let ready = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment) else { return }
-        if gen == accountGeneration { alertsReady = ready }
+        let handoff = pendingHandoff
+        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, target: handoff?.target),
+              gen == accountGeneration else { return }
+        if handoff != nil { pendingHandoff = nil }
+        applyPush(status)
     }
+
+    private func applyPush(_ status: TafsCloud.PushStatus) {
+        canAnswerHolds = status.answers
+        alertsReady = status.alerts && pendingHandoff == nil
+    }
+
+    /// Whether this person may answer held calls, as tafs cloud last said; only their phones
+    /// are alerted. nil until known.
+    @Published private(set) var canAnswerHolds: Bool?
 
     /// Turns on alerts for the account's held calls, so they reach this phone with tafs closed:
     /// the owner allows notifications and confirms with Face ID; the phone points the
     /// account's KIFF alert target at tafs cloud (a signed setup call) and hands tafs cloud
-    /// the target's signing secret with its push token. True once done.
+    /// the target's signing secret with its push token. A secret tafs cloud didn't take last
+    /// time is handed over again first, without registering a new one. True once done.
     @discardableResult
     func turnOnAlerts() async -> Bool {
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
@@ -217,29 +267,42 @@ final class AppModel: ObservableObject {
             lastError = "The iPhone didn't give tafs a push token. Try again in a moment."
             return false
         }
-        do {
-            _ = try await signer.sign(Data("tafs.alerts.v1|\(tenant)".utf8), reason: "Get an alert when a taf needs you")
-        } catch { return false }
-        guard gen == accountGeneration else { return false }
 
-        let signer = self.signer
-        kiff.tenant = tenant
-        kiff.setupSigner = { try signer.signConfirmed($0) }
-        defer { kiff.setupSigner = nil }
+        var handoff = pendingHandoff
+        if handoff == nil {
+            do {
+                _ = try await signer.sign(Data("tafs.alerts.v1|\(tenant)".utf8), reason: "Get an alert when a taf needs you")
+            } catch { return false }
+            guard gen == accountGeneration else { return false }
+            let signer = self.signer
+            kiff.tenant = tenant
+            kiff.setupSigner = { try signer.signConfirmed($0) }
+            defer { kiff.setupSigner = nil }
+            do {
+                let target = try await kiff.registerAlertTarget(url: cloud.alertsURL)
+                guard gen == accountGeneration else { return false }
+                // Kept before anything else can fail: KIFF already signs with this secret.
+                handoff = AlertHandoff(tenant: tenant, target: target)
+                pendingHandoff = handoff
+            } catch KIFFClient.KIFFError.server(403, let message) {
+                lastError = message.contains("phone_alert_url_forbidden") || message.contains("app backend")
+                    ? "KIFF doesn't send alerts to tafs yet on this account."
+                    : "Your role on this KIFF account can't turn on alerts."
+                return false
+            } catch {
+                lastError = "Alerts aren't on: \(error.localizedDescription)"
+                return false
+            }
+        }
         do {
-            let target = try await kiff.registerAlertTarget(url: cloud.alertsURL)
+            let status = try await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, target: handoff?.target)
             guard gen == accountGeneration else { return false }
-            let ready = try await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, target: target)
-            guard gen == accountGeneration else { return false }
-            alertsReady = ready
-            return ready
-        } catch KIFFClient.KIFFError.server(403, let message) {
-            lastError = message.contains("phone_alert_url_forbidden") || message.contains("app backend")
-                ? "KIFF doesn't send alerts to tafs yet on this account."
-                : "Your role on this KIFF account can't turn on alerts."
-            return false
+            pendingHandoff = nil
+            applyPush(status)
+            return status.alerts
         } catch {
-            lastError = "Alerts aren't on: \(error.localizedDescription)"
+            lastError = "Alerts are almost on: tafs cloud didn't answer (\(error.localizedDescription)). Tap Turn on alerts again."
+            alertsReady = false
             return false
         }
     }
