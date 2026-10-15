@@ -48,7 +48,9 @@ Version 0.1. A working iPhone app with two modes.
   phone submits one signed KIFF agent draft holding the taf's Cards; tafs cloud
   claims the agent's key from the confirmed draft and runs the taf, so the key
   never reaches the phone. An editor's draft waits for an admin to confirm it
-  in KIFF. A start that fails is resumed or taken back, never left half made.
+  in KIFF. A start that fails partway resumes on the next try. When tafs cloud
+  refuses it, the app takes the draft's Cards back; if KIFF doesn't confirm
+  every revocation, the app says so and the owner revokes the rest in KIFF.
 - Your tafs are the agents holding your KIFF Cards (`/v1/me/mandates`), and the
   ones running on tafs cloud: run them now, read their latest report, chat with
   them, and see or remove what they remember.
@@ -133,7 +135,7 @@ own tafs; another company's taf answers like a missing one.
 |---|---|---|
 | `GET /v1/jobs` | anyone | the five jobs |
 | `GET /v1/tafs` | a person signed in with KIFF | the account's tafs |
-| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, draft_id + claim_secret, cron?, timezone?, budget_cents?, notes?}`. tafs cloud claims the agent's key from the confirmed KIFF draft once the name is held, so the key never reaches the phone, and puts it straight in the taf's vault. A claim works once, so the draft is kept on record (its vault, never the key): a retry with the same draft, secret and name resumes from there. A draft whose key was claimed but never kept answers 410, and the app takes its Cards back. `agent_key` instead of a draft is still accepted, for the CLI. `notes` (at most 2000 characters) becomes the taf's first memory note. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run |
+| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, draft_id + claim_secret, cron?, timezone?, budget_cents?, notes?}`. tafs cloud claims the agent's key from the confirmed KIFF draft once the name is held, so the key never reaches the phone, and puts it straight in the taf's vault. A claim works once, so the draft is kept on record (its vault, never the key): a retry with the same draft, secret and name resumes from there. A draft whose key was claimed but never kept answers 410; the app then tries to take its Cards back and says which ones the owner must revoke in KIFF if it can't. `agent_key` instead of a draft is still accepted, for the CLI. `notes` (at most 2000 characters) becomes the taf's first memory note. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run |
 | `POST /v1/tafs/{id}/pause`, `resume`, `run` | `cards.manage` | |
 | `GET /v1/tafs/{id}/runs`, `runs/{session}` | a person | recent runs, and a run's report |
 | `GET /v1/tafs/{id}/conversation` | a person | the taf's thread: its last 5 runs and last 5 chats, oldest first, at most 100 messages `{at, from: owner\|taf, kind: kickoff\|message, text, session}` |
