@@ -75,6 +75,7 @@ Version 0.1. A working iPhone app with two modes.
 - The Record shows everything, newest first.
 
 What tafs still needs from KIFF is in [docs/needs-from-kiff.md](docs/needs-from-kiff.md).
+Where tafs data lives, for how long, and who deletes it: [docs/data.md](docs/data.md).
 
 **Where it's going.** Today tafs has five fixed jobs. Next, a builder agent
 designs each taf by conversation, each taf is its own agent holding one or more
