@@ -32,11 +32,11 @@ function ensureSetup(): Promise<Setup> {
 /** Taf names per account, claimed with a conditional write so only one request wins. */
 const dynamo = new DynamoDBClient({});
 const names: Names = {
-  async claim(tenant, name) {
+  async claim(tenant, name, owner) {
     try {
       await dynamo.send(new PutItemCommand({
         TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
-        Item: { id: { S: `${tenant}#${name}` }, at: { S: new Date().toISOString() } },
+        Item: { id: { S: `${tenant}#${name}` }, owner: { S: owner }, at: { S: new Date().toISOString() } },
         ConditionExpression: "attribute_not_exists(id)",
       }));
       return true;
@@ -45,11 +45,19 @@ const names: Names = {
       throw err;
     }
   },
-  async release(tenant, name) {
-    await dynamo.send(new DeleteItemCommand({
-      TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
-      Key: { id: { S: `${tenant}#${name}` } },
-    }));
+  async release(tenant, name, owner) {
+    try {
+      await dynamo.send(new DeleteItemCommand({
+        TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
+        Key: { id: { S: `${tenant}#${name}` } },
+        // Only this owner's claim, or one from before owners: never a newer start's.
+        ConditionExpression: owner ? "attribute_not_exists(#o) OR #o = :o" : "attribute_not_exists(#o)",
+        ExpressionAttributeNames: { "#o": "owner" },
+        ...(owner ? { ExpressionAttributeValues: { ":o": { S: owner } } } : {}),
+      }));
+    } catch (err) {
+      if (!(err instanceof ConditionalCheckFailedException)) throw err;
+    }
   },
 };
 

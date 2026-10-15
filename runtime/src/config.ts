@@ -19,7 +19,7 @@ export const ENVIRONMENT_NAME = "tafs";
 export const DEFAULT_BUDGET_CENTS = 200;
 
 /** Metadata keys tafs puts on what it creates, so it can find them again. */
-export const META = { job: "tafs_job", taf: "tafs_taf", kind: "tafs_kind", tenant: "tafs_tenant", kiffAgent: "tafs_kiff_agent", chatFor: "tafs_chat_for", memory: "tafs_memory" } as const;
+export const META = { job: "tafs_job", taf: "tafs_taf", kind: "tafs_kind", tenant: "tafs_tenant", kiffAgent: "tafs_kiff_agent", chatFor: "tafs_chat_for", memory: "tafs_memory", nameClaim: "tafs_name_claim" } as const;
 
 /**
  * The file tools a taf has, for its memory only: its container reaches nothing

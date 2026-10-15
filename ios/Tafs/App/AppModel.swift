@@ -673,7 +673,11 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let listing = try? await cloud.listing(), gen == accountGeneration else { return }
         let list = listing.tafs, removing = listing.removing
         unfinishedRemovals = removing
-        if !removing.isEmpty { await finishRemovals(removing, gen: gen) }
+        if !removing.isEmpty {
+            await finishRemovals(removing, gen: gen)
+            // Finishing waited: another account may be signed in now, with its own tafs.
+            guard gen == accountGeneration else { return }
+        }
         var byAgent: [String: TafsCloud.CloudTaf] = [:]
         for t in list { if let a = t.kiffAgent { byAgent[a] = t } }
         cloudTafs = byAgent

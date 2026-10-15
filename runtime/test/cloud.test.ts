@@ -3,17 +3,25 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { calmEnough, type Claim, type Claims, handle, type HTTPEvent, type Names, type Removal, type Removals } from "../src/cloud/handler.js";
 
 /** Names claimed atomically, like the DynamoDB conditional write. */
-function memoryNames(): Names & { held: Map<string, Date> } {
+/** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
+function memoryNames(): Names & { held: Map<string, Date>; owners: Map<string, string> } {
   const held = new Map<string, Date>();
+  const owners = new Map<string, string>();
   return {
     held,
-    async claim(t, n) {
+    owners,
+    async claim(t, n, owner) {
       const k = `${t}#${n}`;
       if (held.has(k)) return false;
       held.set(k, new Date());
+      owners.set(k, owner);
       return true;
     },
-    async release(t, n) { held.delete(`${t}#${n}`); },
+    async release(t, n, owner) {
+      const k = `${t}#${n}`;
+      const o = owners.get(k);
+      if (o === undefined || o === owner) { held.delete(k); owners.delete(k); }
+    },
   };
 }
 
@@ -90,8 +98,11 @@ function fakeAnthropic() {
         list: async function* () { yield* deployments.filter((d) => !d.archived_at); },
         retrieve: async (id: string) => { const d = deployments.find((x) => x.id === id); if (!d) throw new Error("404"); return d; },
         create: async (p: { name: string; metadata: Record<string, string> }) => {
-          calls.push(`deployment.create ${JSON.stringify(p.metadata)}`);
+          const { tafs_name_claim: claim, ...rest } = p.metadata;
+          calls.push(`deployment.create ${JSON.stringify(rest)}`);
+          if (claim) calls.push(`name claim ${claim}`);
           const d = deployment("depl_new", p.metadata.tafs_tenant ?? "", p.name);
+          d.metadata = { ...d.metadata, ...p.metadata };
           deployments.push(d);
           return d;
         },
@@ -181,13 +192,14 @@ describe("tafs cloud", () => {
     const r = await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae" } });
     expect(r.status).toBe(200);
     expect(r.body.session).toBe("sesn_1");
-    expect(r.calls).toEqual([
+    expect(r.calls.filter((c) => !c.startsWith("name claim "))).toEqual([
       "vault.create",
       "credential key_rae",
       "memory tafs-ivy",
       `deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`,
       "run depl_new",
     ]);
+    expect(r.calls.some((c) => /^name claim [0-9a-f-]{36}$/.test(c)), "the taf carries its start's claim on the name").toBe(true);
   });
 
   it("starts a taf from a confirmed KIFF draft, claiming its key itself", async () => {
@@ -465,6 +477,28 @@ describe("removing a taf", () => {
     expect(shared.calls.filter((c) => c.startsWith("archive"))).toHaveLength(1);
     expect(names.held.has("t_acme#Rae")).toBe(false);
     expect((await call("GET", "/v1/tafs", opts)).body.removing).toEqual([]);
+  });
+
+  it("never frees the name for a newer taf, however often an old removal is replayed", async () => {
+    const { names, opts } = rae();
+    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
+    // A new start claims the name, and is still making its taf.
+    expect(await names.claim("t_acme", "Rae", "start_new")).toBe(true);
+    // The old removal is replayed (a retry, or the app finishing it).
+    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
+    expect(names.owners.get("t_acme#Rae")).toBe("start_new");
+    expect(await names.claim("t_acme", "Rae", "start_third")).toBe(false);
+  });
+
+  it("frees the name its own start claimed", async () => {
+    const shared = fakeAnthropic();
+    const names = memoryNames();
+    const opts = { token: "ana", anthropic: shared, names };
+    expect((await call("POST", "/v1/tafs", { ...opts, body: { name: "Ivy", job: "refunds", agent_key: "key_rae" } })).status).toBe(200);
+    const owner = names.owners.get("t_acme#Ivy");
+    expect(shared.calls).toContain(`name claim ${owner}`);
+    expect((await call("DELETE", "/v1/tafs/depl_new", opts)).body).toMatchObject({ done: true });
+    expect(names.held.has("t_acme#Ivy")).toBe(false);
   });
 
   it("is listed to finish even when the archive's answer was lost", async () => {

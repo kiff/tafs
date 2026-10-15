@@ -140,6 +140,25 @@ final class RemoveTafTests: XCTestCase {
         XCTAssertTrue(sent("POST", "/v1/me/mandates/\(cards[1])/revoke").isEmpty, "no revocation under the new sign-in")
         XCTAssertTrue(sent("DELETE", "/v1/tafs/depl_1").isEmpty)
     }
+
+    /// Finishing an old account's removal waited while the owner signed out: what that
+    /// refresh read is dropped, not shown after the switch.
+    func testARefreshFinishingARemovalDoesntOutliveItsAccount() async throws {
+        let (model, _) = try await signedIn()
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}],"removing":[{"id":"depl_9","name":"Old"}]}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_9"] = (200, #"{"done":true,"removed":["schedule","memory","key","name"],"failed":[]}"#)
+        StubProtocol.holdOnce = "DELETE /v1/tafs/depl_9"
+        let refresh = Task { await model.refresh() }
+
+        await untilHeldRequestArrives()
+        model.kiff.token = nil   // sign out without a request: the stub holds its loading thread
+        await model.signOut()
+        StubProtocol.release.signal()
+        await refresh.value
+
+        XCTAssertTrue(model.cloudTafs.isEmpty, "account A's tafs aren't put back after it signed out")
+        XCTAssertTrue(model.unfinishedRemovals.isEmpty)
+    }
 }
 
 /// A signer whose Face ID waits on `whileSigning`, so a test can change the account then.

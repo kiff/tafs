@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type Anthropic from "@anthropic-ai/sdk";
 import { META, memoryResource } from "../config.js";
 import { JOBS, jobById } from "../jobs.js";
@@ -66,9 +66,13 @@ export interface Deps {
 }
 
 export interface Names {
-  /** Claims (tenant, name). True only when nobody holds it. */
-  claim(tenant: string, name: string): Promise<boolean>;
-  release(tenant: string, name: string): Promise<void>;
+  /** Claims (tenant, name) for `owner`, the start that will make the taf. True only when nobody holds it. */
+  claim(tenant: string, name: string, owner: string): Promise<boolean>;
+  /**
+   * Frees (tenant, name) only while `owner` holds it, or nobody named one (a
+   * claim from before owners). A newer start's claim on the same name stays.
+   */
+  release(tenant: string, name: string, owner: string): Promise<void>;
 }
 
 export interface Slots {
@@ -314,7 +318,9 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
   const exists = async () =>
     (await listTafs(client)).some((d) => d.metadata?.[META.tenant] === me.tenantID && d.metadata?.[META.taf] === name);
   if (await exists()) throw taken;
-  if (!(await deps.names.claim(me.tenantID, name))) {
+  // This start's claim on the name; the taf carries it, so only its removal frees it.
+  const nameClaim = randomUUID();
+  if (!(await deps.names.claim(me.tenantID, name, nameClaim))) {
     // Held by an attempt that is still running, or whose outcome was never
     // learned. Nothing proves such an attempt can't still make the taf, so
     // the name stays taken; another name always works.
@@ -326,7 +332,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
     try {
       ({ agentID, vaultID } = await draftKey(me, name, job.id, draftID, claimSecret, client, deps, check));
     } catch (err) {
-      await deps.names.release(me.tenantID, name);
+      await deps.names.release(me.tenantID, name, nameClaim);
       throw err;
     }
   }
@@ -342,7 +348,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
       cron,
       timezone: body.timezone === undefined ? undefined : str(body.timezone),
       budgetCents: budget,
-      metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agentID },
+      metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agentID, [META.nameClaim]: nameClaim },
       notes: notesText,
       onCreating: () => { asked = true; },
       onCreated: () => { created = true; },
@@ -354,7 +360,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
     // asked for, or Anthropic refused it outright. Once it exists, or when the
     // answer was lost, the claim stays for good. A draft's vault stays on
     // record either way, so a retry resumes with the key already claimed.
-    if (!created && (!asked || refused(err))) await deps.names.release(me.tenantID, name);
+    if (!created && (!asked || refused(err))) await deps.names.release(me.tenantID, name, nameClaim);
     throw new HTTPError(502, (err as Error).message);
   }
 }
@@ -440,7 +446,8 @@ async function remove(client: Anthropic, taf: Deployment, me: KIFFIdentity, deps
     if (noted) stores.add(noted);
     for (const id of stores) await step("memory", () => client.beta.memoryStores.delete(id));
     for (const id of taf.vault_ids ?? []) await step("key", () => client.beta.vaults.delete(id));
-    if (failed.length === 0) await step("name", () => deps.names.release(me.tenantID, name));
+    // Only this taf's own claim: if a newer start holds the name, it keeps it.
+    if (failed.length === 0) await step("name", () => deps.names.release(me.tenantID, name, taf.metadata?.[META.nameClaim] ?? ""));
     if (failed.length === 0) await deps.removals.done(me.tenantID, taf.id);
   }
   return {
