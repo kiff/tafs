@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { calmEnough, type Claim, type Claims, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
+import { calmEnough, type Claim, type Claims, handle, type HTTPEvent, type Names, type Removal, type Removals } from "../src/cloud/handler.js";
 
 /** Names claimed atomically, like the DynamoDB conditional write. */
 function memoryNames(): Names & { held: Map<string, Date> } {
@@ -25,6 +25,17 @@ function memoryClaims(): Claims & { held: Map<string, Claim> } {
     async get(t, d) { return held.get(`${t}#${d}`); },
     async put(t, d, c) { held.set(`${t}#${d}`, c); },
     async remove(t, d) { held.delete(`${t}#${d}`); },
+  };
+}
+
+/** Removals on record, like the DynamoDB item. */
+function memoryRemovals(): Removals & { held: Map<string, Removal> } {
+  const held = new Map<string, Removal>();
+  return {
+    held,
+    async list(t) { return [...held.entries()].filter(([k]) => k.startsWith(`${t}#`)).map(([, r]) => r); },
+    async add(t, r) { held.set(`${t}#${r.id}`, r); },
+    async done(t, id) { held.delete(`${t}#${id}`); },
   };
 }
 
@@ -116,7 +127,7 @@ function fakeAnthropic() {
   return { client, calls, deployments };
 }
 
-function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[]; claims?: Claims } = {}) {
+function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[]; claims?: Claims; removals?: Removals } = {}) {
   const { client, calls } = opts.anthropic ?? fakeAnthropic();
   const event: HTTPEvent = {
     rawPath: path,
@@ -132,6 +143,7 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
     claims: opts.claims ?? memoryClaims(),
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
+    removals: opts.removals ?? memoryRemovals(),
     fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } },
       opts.drafts ?? DRAFTS, opts.claimed ?? []),
   });
@@ -404,7 +416,8 @@ describe("removing a taf", () => {
     const shared = fakeAnthropic();
     const names = memoryNames();
     names.held.set("t_acme#Rae", new Date());
-    return { shared, names, opts: { token: "ana", anthropic: shared, names } };
+    const removals = memoryRemovals();
+    return { shared, names, removals, opts: { token: "ana", anthropic: shared, names, removals } };
   }
 
   it("stops it, deletes its memory and its key's vault, and frees its name", async () => {
@@ -438,6 +451,10 @@ describe("removing a taf", () => {
     const first = await call("DELETE", "/v1/tafs/depl_acme", opts);
     expect(first.body).toMatchObject({ done: false, removed: ["schedule", "memory"], failed: ["key"] });
     expect(names.held.has("t_acme#Rae")).toBe(true); // the name waits until all is gone
+    // Archived, so no longer a taf in the list, but listed as a removal to finish.
+    const listed = await call("GET", "/v1/tafs", opts);
+    expect(listed.body.tafs).toEqual([]);
+    expect(listed.body.removing).toEqual([{ id: "depl_acme", name: "Rae" }]);
 
     vaults.delete = realDelete;
     (shared.client.beta.memoryStores as unknown as { delete: () => Promise<never> }).delete = async () => {
@@ -447,6 +464,20 @@ describe("removing a taf", () => {
     expect(second.body).toMatchObject({ done: true, removed: ["schedule", "memory", "key", "name"], failed: [] });
     expect(shared.calls.filter((c) => c.startsWith("archive"))).toHaveLength(1);
     expect(names.held.has("t_acme#Rae")).toBe(false);
+    expect((await call("GET", "/v1/tafs", opts)).body.removing).toEqual([]);
+  });
+
+  it("is listed to finish even when the archive's answer was lost", async () => {
+    const { shared, opts } = rae();
+    const deployments = shared.client.beta.deployments as unknown as { archive: (id: string) => Promise<unknown> };
+    const realArchive = deployments.archive;
+    deployments.archive = async (id: string) => { await realArchive(id); throw Object.assign(new Error("timed out"), { name: "APIConnectionTimeoutError" }); };
+    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: false, failed: ["schedule"] });
+    const listed = await call("GET", "/v1/tafs", opts);
+    expect(listed.body.tafs).toEqual([]);
+    expect(listed.body.removing).toEqual([{ id: "depl_acme", name: "Rae" }]);
+    deployments.archive = realArchive;
+    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
   });
 
   it("deletes nothing while it may still run", async () => {

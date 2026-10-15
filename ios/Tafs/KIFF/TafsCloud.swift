@@ -59,9 +59,20 @@ final class TafsCloud {
     }
 
     func tafs() async throws -> [CloudTaf] {
-        struct Response: Decodable { let tafs: [CloudTaf] }
+        try await listing().tafs
+    }
+
+    /// A taf whose removal began and didn't finish: archived, so no longer listed as a taf.
+    struct PendingRemoval: Decodable, Equatable, Identifiable {
+        let id: String
+        let name: String
+    }
+
+    /// The account's tafs, and the removals still to finish.
+    func listing() async throws -> (tafs: [CloudTaf], removing: [PendingRemoval]) {
+        struct Response: Decodable { let tafs: [CloudTaf]; let removing: [PendingRemoval]? }
         let r: Response = try await send("GET", "/v1/tafs")
-        return r.tafs
+        return (r.tafs, r.removing ?? [])
     }
 
     /// Starts a taf from a confirmed KIFF draft, and runs it once now. tafs cloud claims

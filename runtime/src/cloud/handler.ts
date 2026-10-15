@@ -58,6 +58,8 @@ export interface Deps {
   push: PushStore;
   /** Apple push. */
   apns: Sender;
+  /** Removals begun and not finished, so the app can finish them after a refresh. */
+  removals: Removals;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
@@ -90,6 +92,18 @@ export interface Claim {
   name: string;
   agentID: string;
   vaultID: string;
+}
+
+/** A taf whose removal began: kept until every step is done. */
+export interface Removal {
+  id: string;
+  name: string;
+}
+
+export interface Removals {
+  list(tenant: string): Promise<Removal[]>;
+  add(tenant: string, removal: Removal): Promise<void>;
+  done(tenant: string, id: string): Promise<void>;
 }
 
 export interface Claims {
@@ -160,7 +174,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   if (parts.length === 2 && method === "GET") {
     const tafs = (await listTafs(client)).filter((d) => d.metadata?.[META.tenant] === me.tenantID);
-    return { tafs: tafs.map(view) };
+    // Archived tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
+    return { tafs: tafs.map(view), removing: await deps.removals.list(me.tenantID) };
   }
   if (parts.length === 2 && method === "POST") {
     need(me, "cards.manage");
@@ -414,6 +429,9 @@ async function remove(client: Anthropic, taf: Deployment, me: KIFFIdentity, deps
     }
   };
 
+  // On record before anything changes: if this stops anywhere, even with the
+  // answer lost, the app sees it listed and finishes it.
+  await deps.removals.add(me.tenantID, { id: taf.id, name });
   if (taf.archived_at) removed.push("schedule");
   else await step("schedule", () => client.beta.deployments.archive(taf.id));
   if (failed.length === 0) {
@@ -423,6 +441,7 @@ async function remove(client: Anthropic, taf: Deployment, me: KIFFIdentity, deps
     for (const id of stores) await step("memory", () => client.beta.memoryStores.delete(id));
     for (const id of taf.vault_ids ?? []) await step("key", () => client.beta.vaults.delete(id));
     if (failed.length === 0) await step("name", () => deps.names.release(me.tenantID, name));
+    if (failed.length === 0) await deps.removals.done(me.tenantID, taf.id);
   }
   return {
     taf: taf.id,

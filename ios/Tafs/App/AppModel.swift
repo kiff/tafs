@@ -144,6 +144,7 @@ final class AppModel: ObservableObject {
         cloud.token = token
         startAttempt = nil
         holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
+        unfinishedRemovals = []
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
@@ -165,6 +166,7 @@ final class AppModel: ObservableObject {
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
         holderIDs = [:]
         startAttempt = nil
+        unfinishedRemovals = []
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false
@@ -661,9 +663,17 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Removals tafs cloud began and didn't finish (a step failed, or the answer was lost).
+    /// Archived tafs aren't listed, so the app finishes these itself on each refresh.
+    @Published private(set) var unfinishedRemovals: [TafsCloud.PendingRemoval] = []
+
     /// Reads which tafs tafs cloud runs; KIFF stays the source of the Cards and held calls.
     func refreshCloud() async {
-        guard mode == .kiff, let list = try? await cloud.tafs() else { return }
+        let gen = accountGeneration
+        guard mode == .kiff, let listing = try? await cloud.listing(), gen == accountGeneration else { return }
+        let list = listing.tafs, removing = listing.removing
+        unfinishedRemovals = removing
+        if !removing.isEmpty { await finishRemovals(removing, gen: gen) }
         var byAgent: [String: TafsCloud.CloudTaf] = [:]
         for t in list { if let a = t.kiffAgent { byAgent[a] = t } }
         cloudTafs = byAgent
@@ -834,14 +844,18 @@ final class AppModel: ObservableObject {
     /// its key, and frees its name. Returns what to tell the owner, nil when nothing was done.
     func removeTaf(_ tafID: UUID) async -> String? {
         guard mode == .kiff, let taf = taf(tafID), let c = cloudTaf(for: tafID) else { return nil }
+        // The session this removal belongs to: checked after every wait, so nothing of it
+        // goes out under another account's sign-in.
+        let gen = accountGeneration
         do {
             _ = try await signer.sign(Data("tafs.remove.v1|\(c.id)".utf8), reason: "Remove \(taf.name) for good")
         } catch { return nil }
-        let gen = accountGeneration
+        guard gen == accountGeneration else { return nil }
 
         var cardsLeft = 0
         if !taf.card.revoked {
             for cardID in taf.kiffCardIDs {
+                guard gen == accountGeneration else { return nil }
                 do { try await kiff.revoke(cardID: cardID) } catch { cardsLeft += 1 }
             }
         }
@@ -852,7 +866,8 @@ final class AppModel: ObservableObject {
 
         let removal: TafsCloud.Removal
         do { removal = try await cloud.remove(c.id) } catch {
-            return "\(cards) tafs cloud didn't answer (\(error.localizedDescription)), so it may still be scheduled. Tap Remove again."
+            guard gen == accountGeneration else { return nil }
+            return "\(cards) tafs cloud didn't answer (\(error.localizedDescription)). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again."
         }
         guard gen == accountGeneration else { return nil }
         if cardsLeft == 0, let i = tafs.firstIndex(where: { $0.id == tafID }) {
@@ -862,12 +877,23 @@ final class AppModel: ObservableObject {
         }
         guard removal.done else {
             let failed = removal.failed.map(Self.removalStep).joined(separator: ", ")
-            return "\(cards) Not finished: its \(failed) couldn't be removed. Tap Remove again to finish."
+            return "\(cards) Not finished: its \(failed) couldn't be removed. tafs tries again each time it refreshes."
         }
         if let agent = holderIDs.first(where: { $0.value == tafID })?.key { cloudTafs[agent] = nil }
         log(tafID, .revoked, "You removed \(taf.name)", "Schedule, memory and key deleted; name free")
         save()
         return "\(cards) Its schedule, memory and key are deleted, and the name \(taf.name) is free. Past chats, run reports and KIFF's receipts stay."
+    }
+
+    /// Finishes removals tafs cloud lists as begun. They were confirmed with Face ID when
+    /// they began; finishing only deletes what's left of a taf already stopped.
+    private func finishRemovals(_ removing: [TafsCloud.PendingRemoval], gen: Int) async {
+        var still = removing
+        for r in removing {
+            guard gen == accountGeneration else { return }
+            if let done = try? await cloud.remove(r.id), done.done { still.removeAll { $0.id == r.id } }
+        }
+        if gen == accountGeneration { unfinishedRemovals = still }
     }
 
     private static func removalStep(_ step: String) -> String {
