@@ -74,7 +74,7 @@ if ! aws iam get-role --role-name "$LAMBDA_ROLE" >/dev/null 2>&1; then
 fi
 aws iam attach-role-policy --role-name "$LAMBDA_ROLE" \
   --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name read-anthropic-key --policy-document "{
+aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-access --policy-document "{
   \"Version\": \"2012-10-17\",
   \"Statement\": [
     {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": \"$SECRET_ARN\"},
