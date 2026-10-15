@@ -15,7 +15,7 @@ kiff/kiff-cloud#1223, #1226 and #1231 (issue #1218).
 - The settled receipt keeps the proof: the phone's name, its public key, the
   signed text and the signature.
 
-## 2. Tell the phone when a call is held — KIFF shipped its part; tafs hasn't built its part
+## 2. Tell the phone when a call is held — KIFF shipped its part; tafs hasn't built its part yet
 
 kiff/kiff-cloud#1224 and #1233 (issue #1220).
 - KIFF sends a signed alert to a registered target when a call is held, and
@@ -27,10 +27,11 @@ kiff/kiff-cloud#1224 and #1233 (issue #1220).
   the owner's phone, starting or updating the Live Activity countdown;
 - the app registering its push token with tafs cloud.
 
-**Still needed from KIFF:** registering an alert target needs the
-`account settings` right. A phone's session can't reach that route, so the app
-can't turn notifications on by itself. Asked as a signed phone setup call, like
-the draft.
+**Registering from the phone — shipped** (kiff/kiff-cloud#1236, issue #1234).
+The phone registers its account's alert target with a signed setup call, like
+the draft. KIFF takes only URLs on its allowed list (tafs cloud by default) and
+alerts that phone only about held calls. A new registration replaces the
+account's other targets at that URL.
 
 ## 3. Start an agent and issue its Cards from the phone — shipped, in use
 
