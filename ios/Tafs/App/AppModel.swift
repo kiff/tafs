@@ -170,6 +170,7 @@ final class AppModel: ObservableObject {
         sessionHasKey = false
         alertsReady = nil
         canAnswerHolds = nil
+        handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
         tafs = []; held = []; record = []
@@ -199,13 +200,19 @@ final class AppModel: ObservableObject {
         let target: KIFFClient.AlertTarget
     }
 
+    /// Held in memory as well: the Keychain keeps it across a relaunch, but may refuse a
+    /// write (an unsigned build), and the hand-over must still be retried while the app runs.
+    private var handoffInMemory: AlertHandoff?
+
     private var pendingHandoff: AlertHandoff? {
         get {
+            if let h = handoffInMemory { return h.tenant == kiffTenant ? h : nil }
             guard let json = Keychain.load(Self.alertHandoffAccount),
                   let h = try? JSONDecoder().decode(AlertHandoff.self, from: Data(json.utf8)), h.tenant == kiffTenant else { return nil }
             return h
         }
         set {
+            handoffInMemory = newValue
             if let newValue, let data = try? JSONEncoder().encode(newValue) {
                 Keychain.save(String(decoding: data, as: UTF8.self), for: Self.alertHandoffAccount)
             } else {
