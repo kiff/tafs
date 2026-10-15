@@ -1,8 +1,9 @@
+import { createHash } from "node:crypto";
 import type Anthropic from "@anthropic-ai/sdk";
 import { META, memoryResource } from "../config.js";
 import { JOBS, jobById } from "../jobs.js";
-import { ensureMemory, listTafs, type Setup, startTaf } from "../runtime.js";
-import { type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
+import { ensureMemory, keepKey, listTafs, type Setup, startTaf } from "../runtime.js";
+import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 
 /**
  * tafs cloud: the few routes the phone needs that hold the Anthropic key.
@@ -11,7 +12,7 @@ import { type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
  *
  *   GET  /v1/jobs
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, job, agent_key, cron?, timezone?, budget_cents?, notes?}
+ *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?}
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET  /v1/tafs/{id}/runs
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
@@ -46,6 +47,8 @@ export interface Deps {
   names: Names;
   /** Message slots per taf and 10-minute window, claimed durably (the flood guard). */
   slots: Slots;
+  /** Drafts whose key was claimed and kept in a vault, so a failed start can resume. */
+  claims: Claims;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
@@ -60,6 +63,25 @@ export interface Names {
 export interface Slots {
   /** Claims `key` until `expiresAt`. True only when nobody holds it. */
   claim(key: string, expiresAt: Date): Promise<boolean>;
+}
+
+/**
+ * A KIFF draft whose key tafs cloud claimed (a claim works once) and put in a
+ * vault. Never the key itself: the vault holds it.
+ */
+export interface Claim {
+  /** sha256 of the draft's claim secret: only whoever holds it may resume. */
+  secret: string;
+  /** The taf the draft is starting; a resume must be for the same name. */
+  name: string;
+  agentID: string;
+  vaultID: string;
+}
+
+export interface Claims {
+  get(tenant: string, draftID: string): Promise<Claim | undefined>;
+  put(tenant: string, draftID: string, claim: Claim): Promise<void>;
+  remove(tenant: string, draftID: string): Promise<void>;
 }
 
 /** Most one run of a taf started from the phone may cost: $10. */
@@ -186,12 +208,28 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
     throw new HTTPError(400, `a run's budget is 1 to ${MAX_BUDGET_CENTS} cents`);
   }
 
-  // The agent key must be an agent's key on this same KIFF account.
-  const agentKey = str(body.agent_key).trim();
-  let agent: KIFFIdentity;
-  try { agent = await whoIs(agentKey, deps.fetch, deps.kiffBase); } catch { throw new HTTPError(400, "KIFF did not accept the agent key"); }
-  if (agent.tenantID !== me.tenantID) throw new HTTPError(400, "the agent key belongs to another KIFF account");
-  if (!agent.apiKey || !agent.agentID) throw new HTTPError(400, "the key is not bound to an agent");
+  // The agent's key comes one of two ways. From a confirmed KIFF draft
+  // (draft_id + claim_secret), tafs cloud claims it itself, so the key never
+  // reaches the phone; it is claimed only once the name is ours, below. Or as
+  // agent_key, from the CLI and app builds from before drafts.
+  const draftID = str(body.draft_id).trim();
+  const claimSecret = str(body.claim_secret).trim();
+  if (!draftID !== !claimSecret) throw new HTTPError(400, "send both draft_id and claim_secret");
+  if (draftID && !/^drf_[A-Za-z0-9]+$/.test(draftID)) throw new HTTPError(400, "that is not a KIFF draft id");
+  let agentKey = draftID ? "" : str(body.agent_key).trim();
+  if (!draftID && !agentKey) throw new HTTPError(400, "send draft_id and claim_secret, or agent_key");
+  const check = async (key: string): Promise<string> => {
+    // The agent key must be an agent's key on this same KIFF account.
+    let agent: KIFFIdentity;
+    try { agent = await whoIs(key, deps.fetch, deps.kiffBase); } catch (err) {
+      if (err instanceof KIFFError && err.status === 502) throw new HTTPError(502, "KIFF didn't answer about the agent key; try again");
+      throw new HTTPError(400, "KIFF did not accept the agent key");
+    }
+    if (agent.tenantID !== me.tenantID) throw new HTTPError(400, "the agent key belongs to another KIFF account");
+    if (!agent.apiKey || !agent.agentID) throw new HTTPError(400, "the key is not bound to an agent");
+    return agent.agentID;
+  };
+  let agentID = agentKey ? await check(agentKey) : "";
 
   // Two taps, or a retry, must not start two tafs: the name is claimed first.
   const taken = new HTTPError(409, `you already have a taf named ${name}`);
@@ -205,29 +243,77 @@ async function start(event: HTTPEvent, me: KIFFIdentity, client: Anthropic, deps
     throw new HTTPError(409, `${name} is taken by an earlier start whose outcome isn't known; it may still appear. Choose another name`);
   }
 
+  let vaultID: string | undefined;
+  if (draftID) {
+    try {
+      ({ agentID, vaultID } = await draftKey(me, name, job.id, draftID, claimSecret, client, deps, check));
+    } catch (err) {
+      await deps.names.release(me.tenantID, name);
+      throw err;
+    }
+  }
+
   let asked = false;
   let created = false;
   try {
     const { deployment, sessionID } = await startTaf(client, await deps.setup(), {
       name,
       job: job.id,
-      kiffKey: agentKey,
+      kiffKey: agentKey || undefined,
+      vaultID,
       cron,
       timezone: body.timezone === undefined ? undefined : str(body.timezone),
       budgetCents: budget,
-      metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agent.agentID },
+      metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agentID },
       notes: notesText,
       onCreating: () => { asked = true; },
       onCreated: () => { created = true; },
     });
+    if (draftID) await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
     return { taf: view(deployment), session: sessionID };
   } catch (err) {
     // The name is freed only when no taf can exist: the deployment was never
     // asked for, or Anthropic refused it outright. Once it exists, or when the
-    // answer was lost, the claim stays for good.
+    // answer was lost, the claim stays for good. A draft's vault stays on
+    // record either way, so a retry resumes with the key already claimed.
     if (!created && (!asked || refused(err))) await deps.names.release(me.tenantID, name);
     throw new HTTPError(502, (err as Error).message);
   }
+}
+
+/**
+ * The agent and the vault holding the key of a confirmed KIFF draft. The claim
+ * works once, so the key goes straight into a vault, kept on record: a retry
+ * after a later failure resumes with that vault instead of claiming again.
+ * Made only with the name held, so a second tap or a taken name never spends it.
+ */
+async function draftKey(me: KIFFIdentity, name: string, job: string, draftID: string, claimSecret: string,
+  client: Anthropic, deps: Deps, check: (key: string) => Promise<string>): Promise<{ agentID: string; vaultID: string }> {
+  const secret = createHash("sha256").update(claimSecret).digest("hex");
+  const held = await deps.claims.get(me.tenantID, draftID);
+  if (held) {
+    if (held.secret !== secret) throw new HTTPError(401, "the draft's claim secret is required");
+    if (held.name !== name) throw new HTTPError(409, `this draft is starting the taf ${held.name}; start it with that name`);
+    return { agentID: held.agentID, vaultID: held.vaultID };
+  }
+  let key: string;
+  try {
+    key = (await claimDraft(draftID, claimSecret, deps.fetch, deps.kiffBase)).key;
+  } catch (err) {
+    const status = err instanceof KIFFError ? err.status : 502;
+    // Claimed before, and nothing here kept its key: it can't be had again.
+    // Gone, so the app takes the draft's Cards back and starts a new one.
+    if (status === 409) throw new HTTPError(410, "KIFF already gave out this draft's key, and the start that took it didn't finish. Start again: its Cards are taken back");
+    throw new HTTPError(status >= 400 && status < 500 ? status : 502, `KIFF did not give the draft's key: ${(err as Error).message}`);
+  }
+  // From here the key exists only in this request until it is in a vault on
+  // record. A failure in between loses it, and a retry answers 410 above.
+  const agentID = await check(key);
+  const vaultID = await keepKey(client, { name, job, kiffKey: key, metadata: { [META.tenant]: me.tenantID, [META.kiffAgent]: agentID } })
+    .catch((err) => { throw new HTTPError(502, (err as Error).message); });
+  await deps.claims.put(me.tenantID, draftID, { secret, name, agentID, vaultID })
+    .catch((err) => { throw new HTTPError(502, (err as Error).message); });
+  return { agentID, vaultID };
 }
 
 /** True for an answer that means the request was refused, so nothing was made. */

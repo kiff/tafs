@@ -5,75 +5,54 @@ found while building the iPhone app, in the order they block the product. Each
 one belongs on kiff/kiff-cloud as an issue or RFC; none should be worked around
 inside tafs.
 
-## 1. Verify the phone's signature on an answer
+## 1. Verify the phone's signature on an answer — shipped, in use
 
-Shipped in kiff/kiff-cloud#1223 and #1226 (issue #1218). The app sends its key
-at sign-in, signs KIFF's `kiff.answer.v1` message on each answer, and signs
-the start flow's setup calls. kiff/kiff-cloud#1227 (in review) puts the
-phone's signature in the settled receipt. The notes below are what it replaced.
+kiff/kiff-cloud#1223, #1226 and #1231 (issue #1218).
+- The app binds its Secure Enclave key at sign-in and signs KIFF's
+  `kiff.answer.v1` message on every answer.
+- It signs its one setup call, the draft that starts a taf (item 3).
+- KIFF refuses an answer from the phone's session without a valid signature.
+- The settled receipt keeps the proof: the phone's name, its public key, the
+  signed text and the signature.
 
-**Today:** the app does not answer KIFF's held calls. KIFF would accept an
-answer on the device session alone, which does not prove the owner gave it, so
-each held call from KIFF shows read-only with **Answer in KIFF**, which opens it
-at `app.kiff.dev/needs-you/{id}`. The switch is
-`KIFFClient.serverVerifiesSignatures`, off until this item ships.
+## 2. Tell the phone when a call is held — KIFF shipped its part; tafs hasn't built its part
 
-The signing is built: in sample mode every answer is signed with a P-256 key in
-the iPhone's Secure Enclave, behind Face ID, over
-`tafs.answer.v1|<id>|<answer>`, where the id is KIFF's exception id for a held
-call from KIFF.
+kiff/kiff-cloud#1224 and #1233 (issue #1220).
+- KIFF sends a signed alert to a registered target when a call is held, and
+  again when it's answered (`hold_answered`).
+- It retries failed deliveries for about a day, then switches the target off.
 
-**Needed:** register a device's public key against the person
-(`POST /v1/me/devices`), and accept an answer only with a valid signature from a
-registered key over a fixed message. KIFF should define the canonical message
-(exception id, answer, next step, accounting version, a nonce or expiry), refuse
-missing, invalid, wrong-hold and replayed signatures, and put the device key id
-in the receipt. Then the app sends the signature with the answer and turns the
-switch on.
+**What tafs still needs to build:**
+- a tafs cloud endpoint that checks KIFF's signature and sends an Apple push to
+  the owner's phone, starting or updating the Live Activity countdown;
+- the app registering its push token with tafs cloud.
 
-**Why it matters:** without it, anyone holding the session token can approve a
-refund. With it, the receipt proves the owner's own iPhone approved it.
+**Still needed from KIFF:** registering an alert target needs the
+`account settings` right. A phone's session can't reach that route, so the app
+can't turn notifications on by itself. Asked as a signed phone setup call, like
+the draft.
 
-## 2. Tell the phone when a call is held
+## 3. Start an agent and issue its Cards from the phone — shipped, in use
 
-Filed as kiff/kiff-cloud#1220: signed alert webhooks with the held call's id.
+kiff/kiff-cloud#1230 (issue #1217).
+1. The app submits one signed draft: the new agent and one Card per tool. From
+   someone who may issue Cards and give keys, it's confirmed at once. An
+   editor's draft waits for an admin to confirm it in KIFF.
+2. tafs cloud claims the agent's key with the draft's one-time secret and puts
+   it straight into the taf's vault. The key never reaches the phone.
 
-**Today:** the app lists held calls when it opens or is pulled to refresh, and
-posts a local notification for new ones. A closed app hears nothing.
+Still open in KIFF: a Card per operation inside a generic tool, like Stripe's
+`stripe_api_write` (kiff/kiff-cloud#1175).
 
-**Needed:** a way for KIFF to reach the owner's phone the moment a call is held.
-Either KIFF sends Apple push itself (device token registered with the device key
-above), or KIFF calls a webhook on the tafs backend, which sends the push. The
-push also starts or updates the Live Activity countdown.
+## 4. A cheap way to list a Card's use, in its units — shipped, in use
 
-## 3. Start an agent and issue its Card from the phone
+kiff/kiff-cloud#1221 (issue #1219).
+- `GET /v1/me/mandates` gives every limit its `unit` and `scale`.
+- `?include=use` adds each Card's `used` and `remaining`.
 
-**Today:** in KIFF mode the app shows the agents that already hold the person's
-Cards. Starting a new taf works only in sample mode.
+So a Card shows "$212.00 of $2,000.00 today" without a statement call per Card.
 
-**Needed:** the draft → owner confirmation → activation flow (#1177) for a new
-holder: the tafs runtime submits a draft Card that grants nothing; the owner
-confirms the exact holder, tools and limits on the phone; only then does it
-activate. Plus a Card per operation inside a generic tool (#1175) for tools like
-Shopify's.
+## 5. An agent key for a taf, without the dashboard — shipped, in use
 
-## 4. A cheap way to list a Card's use, in its units — shipped
-
-KIFF shipped this in kiff/kiff-cloud#1221 (issue #1219). `GET /v1/me/mandates`
-gives every summed limit and per-action limit its `unit` and `scale`.
-`?include=use` adds each Card's `limits` (`used`, `remaining`), the same lines
-as its statement. The app reads both, so a Card shows "$212.00 of $2,000.00
-today" without a statement call per Card.
-
-## 5. An agent key for a taf, without the dashboard
-
-Filed as kiff/kiff-cloud#1217, after #1177.
-
-**Today:** the runtime (`runtime/`) needs the taf's KIFF agent key, copied from
-KIFF's dashboard into `KIFF_AGENT_KEY`. The key goes into an Anthropic vault as
-a static bearer token for `mcp.kiff.dev/mcp`.
-
-**Needed:** with item 3, KIFF returns the new holder's credential to the
-runtime once the owner confirms the Card, so starting a taf from the phone needs
-no copy and paste. An OAuth grant (RFC 044) would fit too: Anthropic's vault
-refreshes `mcp_oauth` credentials itself.
+Covered by the draft claim in item 3. The CLI still takes `KIFF_AGENT_KEY` for
+tafs started by hand.

@@ -42,8 +42,9 @@ final class KIFFClient {
     /// Signs a setup call for a phone session bound to its key (kiff-cloud #1225): set
     /// while a start the owner confirmed with Face ID runs, nil otherwise.
     var setupSigner: (@MainActor (Data) throws -> String)?
-    /// The calls KIFF takes from a phone's session only with its signature.
-    static let signedSetupPaths: Set<String> = ["/v1/me/agents", "/v1/me/mandates", "/v1/keys"]
+    /// The calls KIFF takes from a phone's session only with its signature. A phone makes
+    /// one setup call: the draft that starts a taf (kiff-cloud #1217, #1225).
+    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts"]
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
          webURL: URL = URL(string: "https://app.kiff.dev")!,
@@ -322,11 +323,6 @@ final class KIFFClient {
         return response.connections
     }
 
-    /// Records a new agent. 409 when the name is taken.
-    func createAgent(id: String) async throws {
-        let _: Empty = try await send("POST", "/v1/me/agents", body: ["id": id])
-    }
-
     /// A Card for one tool on the gateway domain, as the dashboard issues it.
     struct CardRequest: Encodable, Equatable {
         struct Grant: Encodable, Equatable {
@@ -354,28 +350,46 @@ final class KIFFClient {
         }
     }
 
-    @discardableResult
-    func issueCard(_ card: CardRequest) async throws -> Mandate {
-        try await send("POST", "/v1/me/mandates", body: card)
-    }
-
-    /// A key bound to the agent, for the gateway only. KIFF returns the secret once.
-    struct AgentKey: Decodable, Equatable {
+    /// A new agent and its Cards, submitted as one draft (kiff-cloud #1217). Submitted
+    /// by someone who may issue Cards and give keys, from their phone and signed, it is
+    /// confirmed at once: KIFF issues the Cards. Its key is minted only when the
+    /// `claimSecret` is claimed, which tafs cloud does, so the key never reaches the phone.
+    struct AgentDraft: Decodable, Equatable {
         let id: String
-        let plaintext: String
-        let agentID: String?
-        enum CodingKeys: String, CodingKey { case id, plaintext, agentID = "agent_id" }
+        let agentID: String
+        /// draft (waits for someone who may confirm it), confirming, confirmed, rolling_back,
+        /// failed, discarding, discarded, claimed.
+        let status: String
+        let version: String
+        /// Shown once, in the answer to the submit.
+        let claimSecret: String?
+        let cardIDs: [String]?
+        let reason: String?
+        enum CodingKeys: String, CodingKey {
+            case id, status, version, reason
+            case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids"
+        }
+        var confirmed: Bool { status == "confirmed" }
     }
 
-    /// Only an admin may mint it: an editor gets 403.
-    func mintGatewayKey(agentID: String, label: String) async throws -> AgentKey {
+    func submitDraft(agentID: String, label: String, cards: [CardRequest]) async throws -> AgentDraft {
         struct Body: Encodable {
-            let label: String
-            let roles: [String]
             let agentID: String
-            enum CodingKeys: String, CodingKey { case label, roles, agentID = "agent_id" }
+            let label: String
+            let cards: [CardRequest]
+            enum CodingKeys: String, CodingKey { case label, cards, agentID = "agent_id" }
         }
-        return try await send("POST", "/v1/keys", body: Body(label: label, roles: ["gateway_agent"], agentID: agentID))
+        return try await send("POST", "/v1/me/agent-drafts", body: Body(agentID: agentID, label: label, cards: cards))
+    }
+
+    /// A draft as it is now: has someone confirmed it since it was submitted?
+    func draft(id: String) async throws -> AgentDraft {
+        try await send("GET", "/v1/me/agent-drafts/\(escaped(id))")
+    }
+
+    /// Discards a draft nobody claimed, and revokes the Cards it issued.
+    func discardDraft(id: String) async throws {
+        let _: Empty = try await send("DELETE", "/v1/me/agent-drafts/\(escaped(id))")
     }
 
     // MARK: Transport

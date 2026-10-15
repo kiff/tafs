@@ -115,7 +115,7 @@ own tafs; another company's taf answers like a missing one.
 |---|---|---|
 | `GET /v1/jobs` | anyone | the five jobs |
 | `GET /v1/tafs` | a person signed in with KIFF | the account's tafs |
-| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, agent_key, cron?, timezone?, budget_cents?, notes?}`. `notes` (at most 2000 characters) becomes the taf's first memory note. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run |
+| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, draft_id + claim_secret, cron?, timezone?, budget_cents?, notes?}`. tafs cloud claims the agent's key from the confirmed KIFF draft once the name is held, so the key never reaches the phone. `agent_key` instead of a draft is still accepted, for the CLI. `notes` (at most 2000 characters) becomes the taf's first memory note. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run |
 | `POST /v1/tafs/{id}/pause`, `resume`, `run` | `cards.manage` | |
 | `GET /v1/tafs/{id}/runs`, `runs/{session}` | a person | recent runs, and a run's report |
 | `GET /v1/tafs/{id}/conversation` | a person | the taf's thread: its last 5 runs and last 5 chats, oldest first, at most 100 messages `{at, from: owner\|taf, kind: kickoff\|message, text, session}` |

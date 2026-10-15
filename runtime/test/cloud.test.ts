@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { calmEnough, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
+import { calmEnough, type Claim, type Claims, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
 
 /** Names claimed atomically, like the DynamoDB conditional write. */
 function memoryNames(): Names & { held: Map<string, Date> } {
@@ -17,18 +17,48 @@ function memoryNames(): Names & { held: Map<string, Date> } {
   };
 }
 
+/** Claimed drafts on record, like the DynamoDB items. */
+function memoryClaims(): Claims & { held: Map<string, Claim> } {
+  const held = new Map<string, Claim>();
+  return {
+    held,
+    async get(t, d) { return held.get(`${t}#${d}`); },
+    async put(t, d, c) { held.set(`${t}#${d}`, c); },
+    async remove(t, d) { held.delete(`${t}#${d}`); },
+  };
+}
+
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
 const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id: "rae", capabilities: ["actions.propose"] };
 
-/** KIFF's /v1/me, answering per bearer token. */
-function kiff(byToken: Record<string, object>) {
-  return (async (_url: string, init?: RequestInit) => {
+/** Drafts KIFF would let be claimed: draft id → its claim secret and agent key. Each claims once. */
+type Drafts = Record<string, { secret: string; key: string; agent: string; status?: number }>;
+
+/** KIFF's /v1/me, answering per bearer token, and its draft claims. */
+function kiff(byToken: Record<string, object>, drafts: Drafts = {}, claimed: string[] = []) {
+  return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
+    const claim = /\/v1\/agent-drafts\/([^/]+)\/claim$/.exec(url);
+    if (claim) {
+      const id = claim[1]!;
+      const d = drafts[id];
+      if (!d || d.secret !== token) return new Response(JSON.stringify({ error: "the draft's claim secret is required" }), { status: 401 });
+      if (d.status) return new Response(JSON.stringify({ error: "not claimable" }), { status: d.status });
+      if (claimed.includes(id)) return new Response(JSON.stringify({ error: "already claimed" }), { status: 409 });
+      claimed.push(id);
+      return new Response(JSON.stringify({ agent_id: d.agent, key_id: "key_1", plaintext: d.key, card_ids: [] }), { status: 200 });
+    }
     const me = byToken[token];
     return me ? new Response(JSON.stringify(me), { status: 200 }) : new Response("{}", { status: 401 });
   }) as typeof fetch;
 }
+
+const DRAFTS: Drafts = {
+  drf_1: { secret: "dcs_1", key: "key_rae", agent: "rae" },
+  drf_other: { secret: "dcs_o", key: "key_other", agent: "max" },
+  drf_gone: { secret: "dcs_g", key: "key_rae", agent: "rae", status: 410 },
+};
 
 function deployment(id: string, tenant: string, name: string) {
   return { id, name, status: "active", metadata: { tafs_tenant: tenant, tafs_taf: name, tafs_job: "refunds" }, schedule: { upcoming_runs_at: ["2026-10-15T09:00:00Z"], last_run_at: null } };
@@ -72,7 +102,7 @@ function fakeAnthropic() {
   return { client, calls, deployments };
 }
 
-function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>} = {}) {
+function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[]; claims?: Claims } = {}) {
   const { client, calls } = opts.anthropic ?? fakeAnthropic();
   const event: HTTPEvent = {
     rawPath: path,
@@ -85,7 +115,9 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
     setup: async () => ({ environmentID: "env_1", agents: { refunds: "agent_refunds" } }),
     names: opts.names ?? memoryNames(),
     slots: { claim: async () => true },
-    fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } }),
+    claims: opts.claims ?? memoryClaims(),
+    fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } },
+      opts.drafts ?? DRAFTS, opts.claimed ?? []),
   });
   return result.then((r) => ({ status: r.statusCode, body: JSON.parse(r.body), calls }));
 }
@@ -128,6 +160,107 @@ describe("tafs cloud", () => {
       `deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`,
       "run depl_new",
     ]);
+  });
+
+  it("starts a taf from a confirmed KIFF draft, claiming its key itself", async () => {
+    const claimed: string[] = [];
+    const r = await call("POST", "/v1/tafs", { token: "ana", claimed, body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(r.status).toBe(200);
+    expect(claimed).toEqual(["drf_1"]);
+    expect(r.calls).toContain("credential key_rae");
+    expect(r.calls).toContain(`deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`);
+    expect(JSON.stringify(r.body)).not.toContain("key_rae");
+  });
+
+  it("claims a draft only once the name is held, so a taken name or a second tap never spends it", async () => {
+    const claimed: string[] = [];
+    const taken = await call("POST", "/v1/tafs", { token: "ana", claimed, body: { name: "Rae", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(taken.status).toBe(409);
+    expect(claimed).toEqual([]);
+
+    const shared = fakeAnthropic();
+    const names = memoryNames();
+    const body = { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" };
+    const [a, b] = await Promise.all([
+      call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: shared, claimed }),
+      call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: shared, claimed }),
+    ]);
+    expect([a.status, b.status].sort()).toEqual([200, 409]);
+    expect(claimed).toEqual(["drf_1"]);
+  });
+
+  it("frees the name when KIFF won't give the draft's key, and says why", async () => {
+    const names = memoryNames();
+    const gone = await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_gone", claim_secret: "dcs_g" } });
+    expect(gone.status).toBe(410);
+    expect(gone.body.error).toContain("KIFF did not give the draft's key");
+    expect(gone.calls).toEqual([]);
+    const wrong = await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "nope" } });
+    expect(wrong.status).toBe(401);
+    const other = await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_other", claim_secret: "dcs_o" } });
+    expect(other.status).toBe(400);
+    expect(other.calls).toEqual([]);
+    // The name was freed each time.
+    expect((await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } })).status).toBe(200);
+  });
+
+  it("resumes a start that failed after the one-time claim, with the key already in a vault", async () => {
+    const names = memoryNames();
+    const claims = memoryClaims();
+    const claimed: string[] = [];
+    const shared = fakeAnthropic();
+    const realCreate = shared.client.beta.memoryStores.create.bind(shared.client.beta.memoryStores);
+    let down = true;
+    (shared.client.beta.memoryStores as unknown as { create: (p: never) => Promise<unknown> }).create = async (p: never) => {
+      if (down) throw Object.assign(new Error("memory stores are down"), { status: 503 });
+      return realCreate(p);
+    };
+    const body = { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" };
+    const opts = { token: "ana", body, names, claims, claimed, anthropic: shared };
+
+    const failed = await call("POST", "/v1/tafs", opts);
+    expect(failed.status).toBe(502);
+    expect(claimed).toEqual(["drf_1"]);
+    expect(names.held.size).toBe(0);
+    const kept = claims.held.get("t_acme#drf_1");
+    expect(kept).toMatchObject({ name: "Ivy", agentID: "rae", vaultID: "vlt_1" });
+    expect(JSON.stringify(kept)).not.toContain("dcs_1"); // only a hash of the secret
+    expect(JSON.stringify(kept)).not.toContain("key_rae");
+
+    // Someone without the secret, or with another name, can't use the kept vault.
+    expect((await call("POST", "/v1/tafs", { ...opts, body: { ...body, claim_secret: "nope" } })).status).toBe(401);
+    expect((await call("POST", "/v1/tafs", { ...opts, body: { ...body, name: "Other" } })).status).toBe(409);
+
+    down = false;
+    const vaultsBefore = shared.calls.filter((c) => c === "vault.create").length;
+    const retry = await call("POST", "/v1/tafs", opts);
+    expect(retry.status).toBe(200);
+    expect(claimed).toEqual(["drf_1"]); // not claimed twice
+    expect(shared.calls.filter((c) => c === "vault.create").length).toBe(vaultsBefore);
+    expect(shared.calls).toContain(`deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`);
+    expect(claims.held.size).toBe(0);
+  });
+
+  it("says a draft is spent when its key was claimed and nothing kept it", async () => {
+    const names = memoryNames();
+    const spent = await call("POST", "/v1/tafs", { token: "ana", names, claimed: ["drf_1"], body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(spent.status).toBe(410);
+    expect(spent.body.error).toMatch(/Start again/);
+    expect(spent.calls).toEqual([]);
+    expect(names.held.size).toBe(0);
+  });
+
+  it("needs both a draft id and its secret, or an agent key", async () => {
+    for (const body of [
+      { name: "Ivy", job: "refunds", draft_id: "drf_1" },
+      { name: "Ivy", job: "refunds", claim_secret: "dcs_1" },
+      { name: "Ivy", job: "refunds" },
+      { name: "Ivy", job: "refunds", draft_id: "../x", claim_secret: "dcs_1" },
+    ]) {
+      const r = await call("POST", "/v1/tafs", { token: "ana", body });
+      expect(r.status, JSON.stringify(body)).toBe(400);
+      expect(r.calls).toEqual([]);
+    }
   });
 
   it("keeps what the owner said about the job as the taf's first note", async () => {

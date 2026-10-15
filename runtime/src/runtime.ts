@@ -210,8 +210,10 @@ export function environmentChanged(env: Environment): boolean {
 export interface StartTaf {
   name: string;
   job: string;
-  /** The taf's own KIFF agent key: its Card. */
-  kiffKey: string;
+  /** The taf's own KIFF agent key: its Card. Not needed when `vaultID` already holds it. */
+  kiffKey?: string;
+  /** A vault already holding the key (from keepKey), used instead of a new one. */
+  vaultID?: string;
   cron?: string;
   timezone?: string;
   budgetCents?: number;
@@ -224,6 +226,17 @@ export interface StartTaf {
   onCreated?: (deployment: Deployment) => void;
 }
 
+/** Puts a taf's KIFF key in a vault of its own, returning the vault's id. */
+export async function keepKey(client: Anthropic, spec: Pick<StartTaf, "name" | "job" | "kiffKey" | "metadata">): Promise<string> {
+  if (!spec.kiffKey) throw new Error("no KIFF key to keep");
+  const vault = await client.beta.vaults.create({
+    display_name: `tafs · ${spec.name}`,
+    metadata: { ...spec.metadata, [META.taf]: spec.name, [META.job]: jobById(spec.job).id },
+  });
+  await client.beta.vaults.credentials.create(vault.id, credentialParams(spec.kiffKey));
+  return vault.id;
+}
+
 /**
  * Starts a taf: a vault holding its KIFF key, a memory store for what it
  * learns, and a deployment that runs its job's agent on a schedule with both.
@@ -234,11 +247,7 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
   const agentID = s.agents[job.id];
   if (!agentID) throw new Error(`no agent for ${job.id}; run setup first`);
 
-  const vault = await client.beta.vaults.create({
-    display_name: `tafs · ${spec.name}`,
-    metadata: { ...spec.metadata, [META.taf]: spec.name, [META.job]: job.id },
-  });
-  await client.beta.vaults.credentials.create(vault.id, credentialParams(spec.kiffKey));
+  const vaultID = spec.vaultID ?? (await keepKey(client, spec));
 
   const store = await client.beta.memoryStores.create(memoryStoreParams(spec.name, job.name, spec.metadata));
   const notes = spec.notes?.trim();
@@ -253,7 +262,7 @@ export async function startTaf(client: Anthropic, s: Setup, spec: StartTaf): Pro
       job,
       agentID,
       environmentID: s.environmentID,
-      vaultID: vault.id,
+      vaultID,
       memoryStoreID: store.id,
       cron: spec.cron,
       timezone: spec.timezone,
