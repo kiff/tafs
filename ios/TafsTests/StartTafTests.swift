@@ -317,6 +317,63 @@ final class StartTafTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/me/mandates/rae-k3f9-stripe_refund/revoke"), 1)
     }
 
+    /// An editor's draft names no Cards until an admin confirms it. When the claimed start is
+    /// then refused, the Cards to revoke are the confirmed draft's, not the submitted one's.
+    func testARefusedStartOfAnEditorsDraftRevokesTheConfirmedCards() async throws {
+        let model = model()
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_1","agent_id":"rae-k3f9","status":"draft","version":"v1","claim_secret":"dcs_secret"}"#)
+        StubProtocol.responses["GET /v1/me/agent-drafts/drf_1"] = (200, #"{"id":"drf_1","agent_id":"rae-k3f9","status":"confirmed","version":"v1","card_ids":["c1","c2"]}"#)
+        StubProtocol.responses["POST /v1/tafs"] = (400, #"{"error":"KIFF did not accept the agent key"}"#)
+        StubProtocol.responses["DELETE /v1/me/agent-drafts/drf_1"] = (409, #"{"error":"claimed"}"#)
+        StubProtocol.responses["POST /v1/me/mandates/c1/revoke"] = (200, #"{}"#)
+        StubProtocol.responses["POST /v1/me/mandates/c2/revoke"] = (200, #"{}"#)
+        do {
+            _ = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: [ToolLimit(tool: lookup, on: true, callsPerDay: "5")], agentID: "rae-k3f9")
+            XCTFail("expected a failure")
+        } catch let f as AppModel.StartFailure {
+            XCTAssertTrue(f.message.contains("taken back"), f.message)
+        }
+        XCTAssertEqual(count("POST", "/v1/me/mandates/c1/revoke"), 1)
+        XCTAssertEqual(count("POST", "/v1/me/mandates/c2/revoke"), 1)
+        XCTAssertNil(model.startAttempt)
+    }
+
+    /// A Card that couldn't be revoked is said, not claimed as taken back.
+    func testARefusedStartSaysWhenItsCardsCouldNotBeTakenBack() async throws {
+        let model = model()
+        stubDraft()
+        StubProtocol.responses["POST /v1/tafs"] = (400, #"{"error":"KIFF did not accept the agent key"}"#)
+        StubProtocol.responses["DELETE /v1/me/agent-drafts/drf_1"] = (409, #"{"error":"claimed"}"#)
+        StubProtocol.responses["POST /v1/me/mandates/rae-k3f9-stripe_refund/revoke"] = (503, #"{"error":"down"}"#)
+        do {
+            _ = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: [ToolLimit(tool: lookup, on: true, callsPerDay: "5")], agentID: "rae-k3f9")
+            XCTFail("expected a failure")
+        } catch let f as AppModel.StartFailure {
+            XCTAssertTrue(f.message.contains("couldn't all be taken back"), f.message)
+        }
+    }
+
+    /// tafs cloud says the draft's key was claimed and nothing kept it (410): its Cards go,
+    /// and the next start is a new draft for a new agent.
+    func testASpentDraftStartsOver() async throws {
+        let model = model()
+        stubDraft()
+        StubProtocol.responses["POST /v1/tafs"] = (410, #"{"error":"KIFF already gave out this draft's key. Start again"}"#)
+        StubProtocol.responses["DELETE /v1/me/agent-drafts/drf_1"] = (409, #"{"error":"claimed"}"#)
+        StubProtocol.responses["POST /v1/me/mandates/rae-k3f9-stripe_refund/revoke"] = (200, #"{}"#)
+        let limits = [ToolLimit(tool: lookup, on: true, callsPerDay: "5")]
+        _ = try? await model.startOnKIFF(name: "Rae", job: "refunds", limits: limits, agentID: "rae-k3f9")
+        XCTAssertEqual(count("POST", "/v1/me/mandates/rae-k3f9-stripe_refund/revoke"), 1)
+        XCTAssertNil(model.startAttempt)
+
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_2","agent_id":"rae-x","status":"confirmed","version":"v1","claim_secret":"dcs_2","card_ids":["c9"]}"#)
+        StubProtocol.responses["POST /v1/tafs"] = (200, startedRae)
+        _ = try await model.startOnKIFF(name: "Rae", job: "refunds", limits: limits)
+        let drafts = StubProtocol.sent.filter { $0.url?.path == "/v1/me/agent-drafts" && $0.httpMethod == "POST" }
+        XCTAssertEqual(drafts.count, 2)
+        XCTAssertNotEqual(body(drafts.last)["agent_id"] as? String, "rae-k3f9")
+    }
+
     func testAFailedStartDoesNotOutliveItsAccount() async throws {
         let model = model()
         stubDraft()

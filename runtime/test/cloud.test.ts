@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { calmEnough, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
+import { calmEnough, type Claim, type Claims, handle, type HTTPEvent, type Names } from "../src/cloud/handler.js";
 
 /** Names claimed atomically, like the DynamoDB conditional write. */
 function memoryNames(): Names & { held: Map<string, Date> } {
@@ -14,6 +14,17 @@ function memoryNames(): Names & { held: Map<string, Date> } {
       return true;
     },
     async release(t, n) { held.delete(`${t}#${n}`); },
+  };
+}
+
+/** Claimed drafts on record, like the DynamoDB items. */
+function memoryClaims(): Claims & { held: Map<string, Claim> } {
+  const held = new Map<string, Claim>();
+  return {
+    held,
+    async get(t, d) { return held.get(`${t}#${d}`); },
+    async put(t, d, c) { held.set(`${t}#${d}`, c); },
+    async remove(t, d) { held.delete(`${t}#${d}`); },
   };
 }
 
@@ -91,7 +102,7 @@ function fakeAnthropic() {
   return { client, calls, deployments };
 }
 
-function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[] } = {}) {
+function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[]; claims?: Claims } = {}) {
   const { client, calls } = opts.anthropic ?? fakeAnthropic();
   const event: HTTPEvent = {
     rawPath: path,
@@ -104,6 +115,7 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
     setup: async () => ({ environmentID: "env_1", agents: { refunds: "agent_refunds" } }),
     names: opts.names ?? memoryNames(),
     slots: { claim: async () => true },
+    claims: opts.claims ?? memoryClaims(),
     fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } },
       opts.drafts ?? DRAFTS, opts.claimed ?? []),
   });
@@ -190,6 +202,52 @@ describe("tafs cloud", () => {
     expect(other.calls).toEqual([]);
     // The name was freed each time.
     expect((await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } })).status).toBe(200);
+  });
+
+  it("resumes a start that failed after the one-time claim, with the key already in a vault", async () => {
+    const names = memoryNames();
+    const claims = memoryClaims();
+    const claimed: string[] = [];
+    const shared = fakeAnthropic();
+    const realCreate = shared.client.beta.memoryStores.create.bind(shared.client.beta.memoryStores);
+    let down = true;
+    (shared.client.beta.memoryStores as unknown as { create: (p: never) => Promise<unknown> }).create = async (p: never) => {
+      if (down) throw Object.assign(new Error("memory stores are down"), { status: 503 });
+      return realCreate(p);
+    };
+    const body = { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" };
+    const opts = { token: "ana", body, names, claims, claimed, anthropic: shared };
+
+    const failed = await call("POST", "/v1/tafs", opts);
+    expect(failed.status).toBe(502);
+    expect(claimed).toEqual(["drf_1"]);
+    expect(names.held.size).toBe(0);
+    const kept = claims.held.get("t_acme#drf_1");
+    expect(kept).toMatchObject({ name: "Ivy", agentID: "rae", vaultID: "vlt_1" });
+    expect(JSON.stringify(kept)).not.toContain("dcs_1"); // only a hash of the secret
+    expect(JSON.stringify(kept)).not.toContain("key_rae");
+
+    // Someone without the secret, or with another name, can't use the kept vault.
+    expect((await call("POST", "/v1/tafs", { ...opts, body: { ...body, claim_secret: "nope" } })).status).toBe(401);
+    expect((await call("POST", "/v1/tafs", { ...opts, body: { ...body, name: "Other" } })).status).toBe(409);
+
+    down = false;
+    const vaultsBefore = shared.calls.filter((c) => c === "vault.create").length;
+    const retry = await call("POST", "/v1/tafs", opts);
+    expect(retry.status).toBe(200);
+    expect(claimed).toEqual(["drf_1"]); // not claimed twice
+    expect(shared.calls.filter((c) => c === "vault.create").length).toBe(vaultsBefore);
+    expect(shared.calls).toContain(`deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`);
+    expect(claims.held.size).toBe(0);
+  });
+
+  it("says a draft is spent when its key was claimed and nothing kept it", async () => {
+    const names = memoryNames();
+    const spent = await call("POST", "/v1/tafs", { token: "ana", names, claimed: ["drf_1"], body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(spent.status).toBe(410);
+    expect(spent.body.error).toMatch(/Start again/);
+    expect(spent.calls).toEqual([]);
+    expect(names.held.size).toBe(0);
   });
 
   it("needs both a draft id and its secret, or an agent key", async () => {

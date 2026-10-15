@@ -344,13 +344,13 @@ final class AppModel: ObservableObject {
             guard accountGeneration == gen else { throw Self.signedOut(.cards) }
             a.draft = draft
         }
-        guard let draft = a.draft, let secret = draft.claimSecret else {
+        guard let submitted = a.draft, let secret = submitted.claimSecret else {
             startAttempt = nil
             throw StartFailure(step: .cards, message: "KIFF didn't return the draft's claim secret. Nothing is running; start again.")
         }
-        if !draft.confirmed {
+        if !submitted.confirmed {
             // An editor's draft waits for someone who may issue Cards and give keys.
-            let fresh = (try? await kiff.draft(id: draft.id)) ?? draft
+            let fresh = (try? await kiff.draft(id: submitted.id)) ?? submitted
             guard accountGeneration == gen else { throw Self.signedOut(.cards) }
             if ["failed", "discarded", "discarding", "rolling_back", "claimed"].contains(fresh.status) {
                 startAttempt = nil
@@ -362,6 +362,10 @@ final class AppModel: ObservableObject {
             a.draft = KIFFClient.AgentDraft(id: fresh.id, agentID: fresh.agentID, status: fresh.status, version: fresh.version,
                                             claimSecret: secret, cardIDs: fresh.cardIDs, reason: fresh.reason)
         }
+
+        // From here on, the draft as KIFF last described it: for an editor's draft only the
+        // confirmed one names the Cards that cleanup must revoke.
+        let draft = a.draft ?? submitted
 
         progress(.run)
         guard accountGeneration == gen else { throw Self.signedOut(.run) }
@@ -376,9 +380,11 @@ final class AppModel: ObservableObject {
         } catch let e as TafsCloud.CloudError where (400..<500).contains(e.status) && e.status != 408 && e.status != 409 && e.status != 429 {
             // Refused outright: tafs cloud runs nothing. Its Cards go, so no agent is left
             // holding authority that nothing runs.
-            await dropDraft(draft)
+            let dropped = await dropDraft(draft)
             startAttempt = nil
-            throw StartFailure(step: .run, message: "tafs cloud refused to run it, so its Cards were taken back: \(e.message)")
+            throw StartFailure(step: .run, message: dropped
+                ? "tafs cloud refused to run it, so its Cards were taken back: \(e.message)"
+                : "tafs cloud refused to run it, and its Cards couldn't all be taken back; revoke them in KIFF: \(e.message)")
         } catch {
             // Lost, busy, or the name is held: the taf may exist or still appear.
             if let existing = await cloudTaf(agent: a.agent) { return finish(existing, session: nil, &a) }
@@ -388,9 +394,19 @@ final class AppModel: ObservableObject {
     }
 
     /// Takes a draft's Cards back: discarding it while nobody claimed it, else revoking them.
-    private func dropDraft(_ draft: KIFFClient.AgentDraft) async {
-        do { try await kiff.discardDraft(id: draft.id) } catch {
-            for id in draft.cardIDs ?? [] { try? await kiff.revoke(cardID: id) }
+    /// True only when KIFF confirmed they are gone.
+    private func dropDraft(_ draft: KIFFClient.AgentDraft) async -> Bool {
+        do { try await kiff.discardDraft(id: draft.id); return true } catch {
+            // Claimed, so it can't be discarded: revoke its Cards one by one. KIFF names them
+            // only once the draft is confirmed, so ask when this copy doesn't.
+            var ids = draft.cardIDs ?? []
+            if ids.isEmpty, let fresh = try? await kiff.draft(id: draft.id) { ids = fresh.cardIDs ?? [] }
+            guard !ids.isEmpty else { return false }
+            var all = true
+            for id in ids {
+                do { try await kiff.revoke(cardID: id) } catch { all = false }
+            }
+            return all
         }
     }
 

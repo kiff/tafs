@@ -6,7 +6,9 @@
 #   tafs-cloud-lambda          its role: logs, and reading the one secret below.
 #   tafs-cloud-names           DynamoDB: a taf's name per account, claimed once; and
 #                              chat message slots (rate#tenant#taf#window#n, 10 per
-#                              10 minutes), each put once, with a ttl attribute.
+#                              10 minutes), each put once, with a ttl attribute; and
+#                              claimed KIFF drafts (draft#tenant#draft: the vault
+#                              holding the key, never the key), kept 30 days.
 #   tafs/anthropic-api-key     the Anthropic key; a person puts it there (see README).
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update this function's code, nothing else.
@@ -76,7 +78,7 @@ aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name read-anthropic-
   \"Version\": \"2012-10-17\",
   \"Statement\": [
     {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": \"$SECRET_ARN\"},
-    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:PutItem\", \"dynamodb:DeleteItem\"], \"Resource\": \"$TABLE_ARN\"}
+    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:DeleteItem\"], \"Resource\": \"$TABLE_ARN\"}
   ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)
