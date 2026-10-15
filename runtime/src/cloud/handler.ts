@@ -665,7 +665,9 @@ async function forget(client: Anthropic, taf: Deployment, noteID: string): Promi
   let versions = 0;
   for await (const v of client.beta.memoryStores.memoryVersions.list(store, { memory_id: noteID })) {
     versions++;
-    if (v.operation === "deleted" || v.redacted_at) continue;
+    // The deletion version too: its content is gone, but its path (which can
+    // name a customer) stays until it's redacted.
+    if (v.redacted_at) continue;
     await client.beta.memoryStores.memoryVersions.redact(v.id, { memory_store_id: store });
   }
   if (!deleted && versions === 0) throw new HTTPError(404, "no such note");

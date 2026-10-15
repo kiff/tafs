@@ -64,10 +64,10 @@ function fakeAnthropic() {
     memstore_depl_other: [{ type: "memory", id: "mem_theirs", path: "/x.md", content: "not yours", updated_at: minutesAgo(5) }],
   };
   // Every version of a note: the store keeps them after a delete.
-  const versions: Array<{ id: string; memory_store_id: string; memory_id: string; operation: string; redacted_at: string | null }> = [
-    { id: "memver_1", memory_store_id: "memstore_depl_acme", memory_id: "mem_old", operation: "created", redacted_at: null },
-    { id: "memver_2", memory_store_id: "memstore_depl_acme", memory_id: "mem_old", operation: "modified", redacted_at: null },
-    { id: "memver_3", memory_store_id: "memstore_depl_acme", memory_id: "mem_new", operation: "created", redacted_at: null },
+  const versions: Array<{ id: string; memory_store_id: string; memory_id: string; operation: string; path: string | null; redacted_at: string | null }> = [
+    { id: "memver_1", memory_store_id: "memstore_depl_acme", memory_id: "mem_old", operation: "created", path: "/customers/alice@example.com.md", redacted_at: null },
+    { id: "memver_2", memory_store_id: "memstore_depl_acme", memory_id: "mem_old", operation: "modified", path: "/customers/alice@example.com.md", redacted_at: null },
+    { id: "memver_3", memory_store_id: "memstore_depl_acme", memory_id: "mem_new", operation: "created", path: "/customers/acme.md", redacted_at: null },
   ];
   const sessions: FakeSession[] = [];
   const events: Record<string, FakeEvent[]> = {};
@@ -99,7 +99,9 @@ function fakeAnthropic() {
             const i = list.findIndex((m) => m.id === id);
             if (i < 0) throw Object.assign(new Error("not found"), { status: 404 });
             list.splice(i, 1);
-            versions.push({ id: `memver_del_${id}`, memory_store_id: p.memory_store_id, memory_id: id, operation: "deleted", redacted_at: null });
+            // A deletion version keeps the note's path until it's redacted.
+            const path = versions.find((v) => v.memory_id === id)?.path ?? null;
+            versions.push({ id: `memver_del_${id}`, memory_store_id: p.memory_store_id, memory_id: id, operation: "deleted", path, redacted_at: null });
             return { id, type: "memory_deleted" };
           },
         },
@@ -111,6 +113,7 @@ function fakeAnthropic() {
             const v = versions.find((x) => x.id === id && x.memory_store_id === p.memory_store_id)!;
             calls.push(`versions.redact ${id}`);
             v.redacted_at = NOW.toISOString();
+            v.path = null;
             return v;
           },
         },
@@ -142,7 +145,7 @@ function fakeAnthropic() {
     sessions.push({ updated_at: s.created_at, status: "idle", metadata: {}, agent: { id: "agent_refunds" }, ...s });
     events[s.id] = evs;
   };
-  return { client, calls, addSession, say, sessions, deployments, notes };
+  return { client, calls, addSession, say, sessions, deployments, notes, versions };
 }
 
 function call(fake: ReturnType<typeof fakeAnthropic>, method: string, path: string, opts: { token?: string; body?: unknown; slots?: Slots; now?: Date } = {}) {
@@ -338,11 +341,14 @@ describe("memory", () => {
   it("redacts every earlier version of a note it forgets, and forgetting again finishes the job", async () => {
     const f = fakeAnthropic();
     expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_old")).status).toBe(200);
-    // The note's own versions only; the deletion marker has no text to redact.
-    expect(f.calls.filter((c) => c.startsWith("versions.redact"))).toEqual(["versions.redact memver_1", "versions.redact memver_2"]);
+    // Every version of the note, the deletion version too: it keeps the path.
+    expect(f.calls.filter((c) => c.startsWith("versions.redact"))).toEqual(
+      ["versions.redact memver_1", "versions.redact memver_2", "versions.redact memver_del_mem_old"]);
+    expect(f.versions.filter((v) => v.memory_id === "mem_old").every((v) => v.path === null && v.redacted_at)).toBe(true);
+    expect(JSON.stringify(f.versions)).not.toContain("alice@example.com");
     // Again (say the answer was lost): already deleted, nothing left to redact, still done.
     expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_old")).status).toBe(200);
-    expect(f.calls.filter((c) => c.startsWith("versions.redact"))).toHaveLength(2);
+    expect(f.calls.filter((c) => c.startsWith("versions.redact"))).toHaveLength(3);
     // A note that never was is still missing.
     expect((await call(f, "DELETE", "/v1/tafs/depl_acme/memory/mem_nope")).status).toBe(404);
   });
