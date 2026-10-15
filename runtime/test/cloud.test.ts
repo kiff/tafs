@@ -114,7 +114,7 @@ function call(method: string, path: string, opts: { token?: string; body?: unkno
     anthropic: async () => client,
     setup: async () => ({ environmentID: "env_1", agents: { refunds: "agent_refunds" } }),
     names: opts.names ?? memoryNames(),
-    slots: { claim: async () => true, release: async () => undefined },
+    slots: { claim: async () => true, keep: async () => undefined, held: async () => false, release: async () => undefined },
     claims: opts.claims ?? memoryClaims(),
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },

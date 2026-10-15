@@ -73,6 +73,8 @@ export interface Slots {
   claim(key: string, expiresAt: Date): Promise<boolean>;
   /** Holds a claimed `key` until a new time. */
   keep(key: string, expiresAt: Date): Promise<void>;
+  /** Whether `key` is held and unexpired. */
+  held(key: string): Promise<boolean>;
   release(key: string): Promise<void>;
 }
 
@@ -143,6 +145,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       push: deps.push,
       apns: deps.apns,
       claim: (key, until) => deps.slots.claim(key, until),
+      held: (key) => deps.slots.held(key),
       keep: (key, until) => deps.slots.keep(key, until),
       release: (key) => deps.slots.release(key),
       now: deps.now?.() ?? new Date(),

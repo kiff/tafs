@@ -118,6 +118,8 @@ export interface AlertDeps {
   apns: Sender;
   /** Claims a key until a time; false while someone else holds it unexpired. */
   claim(key: string, until: Date): Promise<boolean>;
+  /** Whether a key is held and unexpired. */
+  held(key: string): Promise<boolean>;
   /** Holds a claimed key until a later time. */
   keep(key: string, until: Date): Promise<void>;
   release(key: string): Promise<void>;
@@ -126,9 +128,12 @@ export interface AlertDeps {
 
 /**
  * Handles one delivery from KIFF. Unsigned or wrongly signed deliveries are
- * refused (401) before anything is sent. Each phone's delivery of an event is
- * tracked on its own: a phone that got it is never alerted again by a retry,
- * and if any phone's push failed the answer is 502, so KIFF retries for the rest.
+ * refused (401) before anything is sent. Each phone's delivery of an event has
+ * two states, kept apart: delivered (72 hours: a retry never alerts it again)
+ * and being sent (a 2-minute lease). Only when every phone is delivered is the
+ * answer 200. A failed push answers 502 and a lease still running answers 503,
+ * so KIFF keeps its retry; its next one (1, 5, 15 minutes…) comes after a lease
+ * from a run that died has lapsed.
  */
 export async function receiveAlert(signature: string, raw: string, deps: AlertDeps): Promise<Record<string, unknown>> {
   let body: AlertBody;
@@ -147,11 +152,13 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   const n = outcome === HELD ? heldNotification(body, holdID, deps.now) : answeredNotification(holdID);
   const inFlight = new Date(deps.now.getTime() + IN_FLIGHT_SECONDS * 1000);
   const done = new Date(deps.now.getTime() + DEDUPE_HOURS * 3600_000);
-  let sent = 0, failed = 0, already = 0;
+  let sent = 0, failed = 0, sending = 0, already = 0;
   // Only phones of people who may answer: "a taf needs you" is for them.
   for (const device of devices.filter((d) => d.answers)) {
-    const key = `alert#${tenant}#${eventID}#${device.token}`;
-    if (!(await deps.claim(key, inFlight))) { already++; continue; }
+    const delivered = `alert#${tenant}#${eventID}#${device.token}`;
+    const key = `sending#${tenant}#${eventID}#${device.token}`;
+    if (await deps.held(delivered)) { already++; continue; }
+    if (!(await deps.claim(key, inFlight))) { sending++; continue; }
     let r: Awaited<ReturnType<Sender["send"]>>;
     try { r = await deps.apns.send(device, n); } catch (err) {
       console.error(`push: ${(err as Error).message}`);
@@ -164,9 +171,11 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
     }
     if (r === "gone") await deps.push.removeDevice(tenant, device.token);
     else sent++;
-    await deps.keep(key, done);
+    await deps.keep(delivered, done);
+    await deps.release(key);
   }
   if (failed > 0) throw new PushError(502, `Apple push didn't take the alert for ${failed} phone${failed === 1 ? "" : "s"}; try again`);
+  if (sending > 0) throw new PushError(503, `the alert is still being sent to ${sending} phone${sending === 1 ? "" : "s"}; try again`);
   return already > 0 && sent === 0 ? { duplicate: true } : { sent };
 }
 

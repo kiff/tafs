@@ -38,6 +38,7 @@ function memorySlots(clock: () => Date = () => NOW): Slots & { held: Map<string,
     async claim(k, until) { const h = held.get(k); if (h && h > clock()) return false; held.set(k, until); return true; },
     async keep(k, until) { held.set(k, until); },
     async release(k) { held.delete(k); },
+    async held(k) { const h = held.get(k); return Boolean(h && h > clock()); },
   };
 }
 
@@ -182,17 +183,38 @@ describe("KIFF's alerts", () => {
     expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_A, TOKEN_B, TOKEN_B]);
   });
 
-  it("sends after a run that died mid-send, once its claim lapses", async () => {
+  /** KIFF's retry queue (apps/api/internal/alert/retry.go): first try, then these waits, until a 2xx. */
+  const KIFF_RETRY_WAITS_S = [60, 300, 900, 3600, 10800, 21600, 43200];
+
+  it("keeps KIFF retrying while a run that died mid-send still holds its lease, then sends", async () => {
     const push = account();
     let now = NOW;
     const slots = memorySlots(() => now);
-    // A run claimed both phones and died before sending.
-    for (const t of [TOKEN_A, TOKEN_B]) await slots.claim(`alert#t_acme#evt_1#${t}`, new Date(NOW.getTime() + 120_000));
+    // A run claimed both phones' sends at NOW and died before sending anything.
+    for (const t of [TOKEN_A, TOKEN_B]) await slots.claim(`sending#t_acme#evt_1#${t}`, new Date(NOW.getTime() + 120_000));
     const apns = fakeAPNs();
+
+    const answers: number[] = [];
+    let at = NOW.getTime();
+    for (const wait of KIFF_RETRY_WAITS_S) {
+      at += wait * 1000;
+      now = new Date(at);
+      const r = await alert(held(), push, { apns, slots, now, signature: sig(held(), SECRET, Math.floor(at / 1000)) });
+      answers.push(r.status);
+      if (r.status < 300) { expect(r.body).toEqual({ sent: 2 }); break; }
+    }
+    // +1 minute: the lease still runs, so not acknowledged; +6 minutes: sent.
+    expect(answers).toEqual([503, 200]);
+    expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_A, TOKEN_B]);
+  });
+
+  it("acknowledges a repeat only once every phone has it", async () => {
+    const push = account();
+    const slots = memorySlots();
+    const apns = fakeAPNs();
+    expect((await alert(held(), push, { apns, slots })).body).toEqual({ sent: 2 });
     expect((await alert(held(), push, { apns, slots })).body).toEqual({ duplicate: true });
-    now = new Date(NOW.getTime() + 121_000);
-    const t = Math.floor(now.getTime() / 1000);
-    expect((await alert(held(), push, { apns, slots, now, signature: sig(held(), SECRET, t) })).body).toEqual({ sent: 2 });
+    expect(apns.sent).toHaveLength(2);
   });
 
   it("forgets a phone Apple says is gone", async () => {

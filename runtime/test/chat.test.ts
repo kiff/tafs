@@ -19,9 +19,15 @@ function kiff(byToken: Record<string, object>) {
 const names: Names = { claim: async () => true, release: async () => {} };
 
 /** Slots claimed atomically, like the DynamoDB conditional write. */
-function memorySlots(): Slots & { held: Set<string> } {
-  const held = new Set<string>();
-  return { held, async claim(key) { if (held.has(key)) return false; held.add(key); return true; }, async release(key) { held.delete(key); } };
+function memorySlots(): Slots & { taken: Set<string> } {
+  const taken = new Set<string>();
+  return {
+    taken,
+    async claim(key) { if (taken.has(key)) return false; taken.add(key); return true; },
+    async release(key) { taken.delete(key); },
+    async keep() {},
+    async held(key) { return taken.has(key); },
+  };
 }
 
 interface FakeSession {
@@ -264,7 +270,7 @@ describe("messages", () => {
     // The next window has room again; another taf has its own.
     const later = new Date(NOW.getTime() + CHAT.floodMinutes * 60_000);
     expect((await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "later" }, slots, now: later })).status).toBe(200);
-    expect([...slots.held].every((k) => k.startsWith("rate#t_acme#depl_acme#"))).toBe(true);
+    expect([...slots.taken].every((k) => k.startsWith("rate#t_acme#depl_acme#"))).toBe(true);
   });
 });
 
@@ -339,7 +345,7 @@ describe("memory", () => {
     const f = fakeAnthropic();
     delete f.deployments[0]!.metadata.tafs_memory;
     const slots = memorySlots();
-    slots.held.add("memory#depl_acme"); // another chat is giving the taf its store right now
+    slots.taken.add("memory#depl_acme"); // another chat is giving the taf its store right now
     const r = await call(f, "POST", "/v1/tafs/depl_acme/messages", { body: { text: "Hello" }, slots });
     expect(r.status).toBe(200);
     expect(f.calls.filter((c) => c.startsWith("memoryStores.create"))).toEqual([]);

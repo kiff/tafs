@@ -83,6 +83,11 @@ const slots: Slots = {
   async release(key) {
     await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: key } } }));
   },
+  async held(key) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: key } }, ConsistentRead: true }));
+    const ttl = Number(out.Item?.ttl?.N ?? 0);
+    return Boolean(out.Item) && ttl * 1000 > Date.now();
+  },
 };
 
 const TABLE = process.env.NAMES_TABLE ?? "tafs-cloud-names";
