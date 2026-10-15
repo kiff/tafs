@@ -87,16 +87,22 @@ struct TafDetailView: View {
                 Eyebrow(text: "Runs")
                 Text(cloud.paused ? "Paused" : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? "On its schedule")
                     .font(.system(size: 15)).foregroundColor(Theme.ink)
-                Button(inFlight ? "Starting a run…" : "Run now") {
-                    guard !runTapped else { return }
-                    runTapped = true
-                    Task {
-                        if await model.runNow(cloud) != nil { await model.loadReport(cloud) }
-                        runTapped = false
+                HStack(spacing: 8) {
+                    Button(inFlight ? "Starting a run…" : "Run now") {
+                        guard !runTapped else { return }
+                        runTapped = true
+                        Task {
+                            if await model.runNow(cloud) != nil { await model.loadReport(cloud) }
+                            runTapped = false
+                        }
                     }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(inFlight)
+                    Button(cloud.paused ? "Resume" : "Pause") {
+                        Task { await model.setPaused(taf.id, !cloud.paused) }
+                    }
+                    .buttonStyle(OutlineButtonStyle())
                 }
-                .buttonStyle(OutlineButtonStyle())
-                .disabled(inFlight)
             }
             RunReportPanel(report: model.reports[cloud.id]) { Task { await model.loadReport(cloud) } }
                 .task(id: cloud.id) { await model.loadReport(cloud) }

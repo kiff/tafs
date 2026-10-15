@@ -354,3 +354,33 @@ export async function watch(client: Anthropic, sessionID: string, out: (text: st
   }
   return last;
 }
+
+/**
+ * Deletes every taf session (runs and chats, with their events and sandboxes)
+ * created more than `days` ago, across every job agent, current or archived.
+ * A session still running is left for the next day. Safe to repeat.
+ */
+export async function expireSessions(client: Anthropic, days: number, now = new Date(), log: (line: string) => void = () => {}): Promise<{ deleted: number; running: number }> {
+  if (!Number.isInteger(days) || days < 1) throw new Error("days must be a whole number of at least 1");
+  const before = new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
+  const agents: string[] = [];
+  for await (const agent of client.beta.agents.list({ include_archived: true })) {
+    if (agent.metadata?.[META.job]) agents.push(agent.id);
+  }
+  let deleted = 0, running = 0;
+  for (const agent of agents) {
+    const old: Array<{ id: string; status: string }> = [];
+    for await (const s of client.beta.sessions.list({ agent_id: agent, "created_at[lt]": before, include_archived: true })) old.push(s);
+    for (const s of old) {
+      if (s.status === "running" || s.status === "rescheduling") { running++; continue; }
+      try {
+        await client.beta.sessions.delete(s.id);
+        deleted++;
+      } catch (err) {
+        if ((err as { status?: unknown }).status !== 404) throw err;
+      }
+    }
+  }
+  log(`deleted ${deleted} sessions created before ${before}${running ? `; ${running} still running, left for next time` : ""}`);
+  return { deleted, running };
+}

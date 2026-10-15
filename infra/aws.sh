@@ -11,6 +11,8 @@
 #                              holding the key, never the key), kept 30 days.
 #                              Also each account's phones and KIFF alert secrets
 #                              (push#tenant), and delivered alert ids (ttl).
+#   tafs-cloud-expire          EventBridge rule: once a day, the function deletes taf
+#                              runs and chats older than RETENTION_DAYS (90).
 #   tafs/anthropic-api-key     the Anthropic key; a person puts it there (see README).
 #   tafs/apns-key              the "tafs push" APNs key (.p8), made in the Apple
 #                              Developer portal; a person puts it there.
@@ -136,6 +138,18 @@ aws lambda add-permission --function-name "$FN" --statement-id public-url --acti
 aws lambda add-permission --function-name "$FN" --statement-id public-url-invoke --action lambda:InvokeFunction \
   --principal '*' --invoked-via-function-url >/dev/null 2>&1 \
   || echo "add the URL-only InvokeFunction permission by hand (see the comment above)" >&2
+
+# Every day, delete taf runs and chats older than RETENTION_DAYS (runtime/src/config.ts):
+# an EventBridge rule invokes the function with {"tafs": "expire"}.
+RULE=tafs-cloud-expire
+FN_ARN_FOR_RULE=$(aws lambda get-function --function-name "$FN" --query Configuration.FunctionArn --output text)
+RULE_ARN=$(aws events put-rule --name "$RULE" --schedule-expression "cron(17 3 * * ? *)" \
+  --description "tafs: delete taf runs and chats past retention" --tags Key=project,Value=tafs --query RuleArn --output text)
+aws lambda add-permission --function-name "$FN" --statement-id daily-expire --action lambda:InvokeFunction \
+  --principal events.amazonaws.com --source-arn "$RULE_ARN" >/dev/null 2>&1 || true
+aws events put-targets --rule "$RULE" \
+  --targets "Id=tafs-cloud,Arn=$FN_ARN_FOR_RULE,Input='{\"tafs\":\"expire\"}'" >/dev/null
+echo "daily retention rule $RULE"
 
 # The deploy role, for kiff/tafs main only.
 FN_ARN=$(aws lambda get-function --function-name "$FN" --query Configuration.FunctionArn --output text)

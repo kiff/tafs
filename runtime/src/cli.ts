@@ -2,7 +2,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { parseArgs } from "node:util";
 import { JOBS } from "./jobs.js";
-import { findTaf, listTafs, setup, startTaf, watch } from "./runtime.js";
+import { RETENTION_DAYS } from "./config.js";
+import { expireSessions, findTaf, listTafs, setup, startTaf, watch } from "./runtime.js";
 
 const USAGE = `tafs runtime
 
@@ -14,6 +15,7 @@ const USAGE = `tafs runtime
   tafs run --name N                  run a taf now and follow it
   tafs pause --name N | resume --name N
   tafs watch --session S             follow a run
+  tafs expire [--days 90]            delete taf runs and chats older than that (daily, in CI)
 
 ANTHROPIC_API_KEY is read from the environment.`;
 
@@ -28,6 +30,7 @@ async function main(argv: string[]): Promise<void> {
       timezone: { type: "string" },
       "budget-cents": { type: "string" },
       session: { type: "string" },
+      days: { type: "string" },
     },
   });
   const need = (key: keyof typeof values): string => {
@@ -39,6 +42,10 @@ async function main(argv: string[]): Promise<void> {
   const print = (line: string) => console.log(line);
 
   switch (command) {
+    case "expire": {
+      await expireSessions(client(), values.days ? Number(values.days) : RETENTION_DAYS, new Date(), print);
+      return;
+    }
     case "jobs":
       for (const j of JOBS) print(`${j.id.padEnd(12)} ${j.summary}  (${j.cron})`);
       return;

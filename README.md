@@ -145,6 +145,13 @@ own tafs; another company's taf answers like a missing one.
 | `DELETE /v1/tafs/{id}/memory/{note}` | `cards.manage` | forget one note: delete it and redact its earlier versions, which the store keeps for up to 30 days |
 | `DELETE /v1/tafs/{id}` | `cards.manage` | remove it for good: archive its deployment, delete its runs and chats at Anthropic, then its memory store and the vault holding its key, free its name. Stopping comes first; nothing else is deleted unless that worked, and the memory store goes only once its runs and chats are gone (a chat still running waits for the next remove). A second remove finishes what the first left. Answers `{done, removed, failed}`. The phone revokes its Cards in KIFF before calling this. Receipts stay in KIFF |
 
+**Retention.** A taf's runs and chats are kept for 90 days (`RETENTION_DAYS`
+in `runtime/src/config.ts`): an EventBridge rule (`infra/aws.sh`) has tafs cloud
+delete older ones once a day, and `node dist/cli.js expire` does it by hand.
+Removing a taf deletes all of them at once. kiff.dev's DPA states this number,
+so change both together. Where everything else lives is in
+[docs/data.md](docs/data.md).
+
 **Memory.** Each taf has its own Managed Agents memory store, mounted into
 every run and every chat. The taf reads its notes before it starts and writes
 down what it learns about the owner and their customers, with file tools in

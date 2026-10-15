@@ -17,6 +17,13 @@ export const KIFF_MCP_URL = "https://mcp.kiff.dev/mcp";
 export const ENVIRONMENT_NAME = "tafs";
 /** Every run stops at this cost unless the taf sets another. */
 export const DEFAULT_BUDGET_CENTS = 200;
+/**
+ * How long a taf's runs and chats are kept at Anthropic, in days. Older ones
+ * are deleted every day (expireSessions, .github/workflows/retention.yml);
+ * removing a taf deletes all of them at once. kiff.dev's DPA (Annex 4) states
+ * this number: change both together.
+ */
+export const RETENTION_DAYS = 90;
 
 /** Metadata keys tafs puts on what it creates, so it can find them again. */
 export const META = { job: "tafs_job", taf: "tafs_taf", kind: "tafs_kind", tenant: "tafs_tenant", kiffAgent: "tafs_kiff_agent", chatFor: "tafs_chat_for", memory: "tafs_memory", nameClaim: "tafs_name_claim" } as const;

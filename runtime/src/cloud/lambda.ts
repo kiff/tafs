@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
-import { setup, type Setup } from "../runtime.js";
+import { RETENTION_DAYS } from "../config.js";
+import { expireSessions, setup, type Setup } from "../runtime.js";
 import { apnsSender } from "./apns.js";
 import { type Claims, handle, type HTTPEvent, type Removals, type HTTPResult, type Names, type Slots } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
@@ -233,6 +234,17 @@ const removals: Removals = {
   },
 };
 
-export async function handler(event: HTTPEvent): Promise<HTTPResult> {
-  return handle(event, { anthropic, setup: ensureSetup, names, slots, claims, push, apns, removals });
+/**
+ * The daily retention sweep (infra/aws.sh's EventBridge rule sends
+ * {"tafs": "expire"}). A function URL request always arrives as an HTTP event
+ * with requestContext, and its caller only controls the body inside it, so no
+ * request from the internet can start this.
+ */
+export interface ExpireEvent { tafs: "expire" }
+
+export async function handler(event: HTTPEvent | ExpireEvent): Promise<HTTPResult | { deleted: number; running: number }> {
+  if ("tafs" in event && event.tafs === "expire" && !("requestContext" in event)) {
+    return expireSessions(await anthropic(), RETENTION_DAYS, new Date(), (line) => console.log(`expire: ${line}`));
+  }
+  return handle(event as HTTPEvent, { anthropic, setup: ensureSetup, names, slots, claims, push, apns, removals });
 }
