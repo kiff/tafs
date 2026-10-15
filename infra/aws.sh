@@ -29,8 +29,9 @@ FN=tafs-cloud
 SECRET=tafs/anthropic-api-key
 APNS_SECRET=tafs/apns-key
 # The "tafs push" key (Sandbox & Production, team scoped), and the app it pushes to.
-APNS_KEY_ID=3THAT9GWCS
-APNS_TEAM_ID=R54YWFRK4B
+# Its id and the Apple team come from the environment: this repository is public.
+APNS_KEY_ID=${APNS_KEY_ID:?set APNS_KEY_ID to the tafs push key id}
+APNS_TEAM_ID=${APNS_TEAM_ID:?set APNS_TEAM_ID to the Apple team id}
 APNS_TOPIC=bot.tafs.app
 LAMBDA_ROLE=tafs-cloud-lambda
 TABLE=tafs-cloud-names

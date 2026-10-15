@@ -89,7 +89,8 @@ jobs:
       - run: npm ci && npm run bundle
       - uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: arn:aws:iam::929018226542:role/tafs-github-deploy
+          # The account id stays out of this public repository.
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
           aws-region: us-east-1
       - name: Deploy tafs cloud
         run: |

@@ -3,8 +3,9 @@ name: iOS
 # Every push and pull request: build and run the tests on a simulator, and,
 # when the change touches the app's screens, take screenshots.
 # A version tag (v0.1.0) or a manual run: also archive, sign and upload to
-# TestFlight. Uploading publishes nothing: the build reaches internal testers
-# only, until someone chooses otherwise in App Store Connect.
+# TestFlight. Internal testers ("Team") get it at once; it also goes to the
+# external group "Beta testers", after Apple's Beta App Review. Its testers
+# are the BETA_TESTERS secret (this repository's logs are public).
 
 on:
   push:
@@ -257,6 +258,17 @@ jobs:
           xcrun altool --upload-app --type ios \
             --file "$(ls "$RUNNER_TEMP"/export/*.ipa)" \
             --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+
+      # External testers get a build only once it is added to their group and
+      # Apple has reviewed it; Team gets it without either.
+      - name: Give the build to Beta testers
+        env:
+          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          BUILD_NUMBER: ${{ github.run_number }}
+          TESTERS: ${{ secrets.BETA_TESTERS }}
+          BETA_CONTACT: ${{ secrets.BETA_CONTACT }}
+          BETA_FEEDBACK_EMAIL: ${{ secrets.BETA_FEEDBACK_EMAIL }}
+        run: ruby ios/scripts/asc-beta.rb
 
       - name: Remove the key and the keychain
         if: always()
