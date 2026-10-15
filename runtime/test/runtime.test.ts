@@ -507,3 +507,37 @@ describe("startTaf", () => {
     await expect(start).rejects.toThrow(/tafs run --name "Rae"/);
   });
 });
+
+/**
+ * tafs says KIFF decides every action a taf takes (#31). On tafs's side that
+ * rests on one thing: a taf has no way to reach a company's tools except its
+ * KIFF gateway. These fail if any job agent, deployment or sandbox gets another.
+ */
+describe("tool surface", () => {
+  it("every job agent has KIFF's gateway and its file tools, and nothing else", () => {
+    for (const job of JOBS) {
+      const p = agentParams(job, SKILL);
+      expect(p.mcp_servers, job.id).toEqual([{ type: "url", name: "kiff", url: KIFF_MCP_URL }]);
+      expect(p.tools?.map((t) => t.type), job.id).toEqual(["mcp_toolset", "agent_toolset_20260401"]);
+      expect((p.tools?.[0] as { mcp_server_name: string }).mcp_server_name, job.id).toBe("kiff");
+      const builtIn = p.tools?.[1] as { default_config: { enabled: boolean }; configs: Array<{ name: string; enabled: boolean }> };
+      expect(builtIn.default_config.enabled, `${job.id}: built-in tools are off unless named`).toBe(false);
+      expect(builtIn.configs.filter((c) => c.enabled).map((c) => c.name).sort(), job.id).toEqual([...FILE_TOOLS].sort());
+      for (const name of ["bash", "web_fetch", "web_search"]) expect(builtIn.configs.map((c) => c.name), `${job.id}: ${name}`).not.toContain(name);
+      expect(p.skills, `${job.id}: KIFF's skill only`).toEqual([SKILL]);
+    }
+  });
+
+  it("a taf's deployment adds no tools of its own", () => {
+    const d = deploymentParams({ name: "Rae", job: refunds, agentID: "agent_1", environmentID: "env_1", vaultID: "vlt_1", memoryStoreID: "memstore_1" });
+    expect(Object.keys(d)).not.toContain("tools");
+    expect(Object.keys(d)).not.toContain("mcp_servers");
+    expect((d.resources ?? []).map((r) => r.type)).toEqual(["memory_store"]);
+  });
+
+  it("the sandbox reaches MCP servers only: no hosts, no package managers", () => {
+    const net = (environmentParams().config as { networking: Record<string, unknown> }).networking;
+    expect(net).toEqual({ type: "limited", allow_package_managers: false, allow_mcp_servers: true });
+    expect(net.allowed_hosts ?? []).toEqual([]);
+  });
+});
