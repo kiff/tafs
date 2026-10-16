@@ -1,0 +1,70 @@
+import { type Job, systemPrompt } from "../jobs.js";
+import { KIFF_SKILL } from "../kiff-skill.js";
+import { type AgentDefinition, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
+
+/**
+ * A taf as kiff/agents runs it: one stored agent definition per taf, built
+ * from its job. kiff/agents holds the definition, the runs and the notes;
+ * tafs cloud keeps only what the app shows about a taf (its name, job and
+ * KIFF agent) and the definition's inputs.
+ */
+
+export const MODEL = "claude-opus-5-5";
+/** What MODEL costs, in millionths of a US dollar per million tokens (cache writes: 5 minutes). */
+export const PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000 } as const;
+export const MAX_TOKENS = 16_000;
+export const KIFF_GATEWAY = "https://mcp.kiff.dev/mcp";
+/** Finished runs of a session the model gets before a new one: the thread it remembers. */
+export const HISTORY = 10;
+/** Every run stops at this cost unless the taf sets another. */
+export const DEFAULT_BUDGET_CENTS = 200;
+/** Runs and chats are kept 30 days (docs/data.md); what tools return, only until the run ends. */
+export const RETENTION_NS = 30 * 24 * 3600 * 1_000_000_000;
+
+/** The taf's KIFF agent key, as its definition names it: never the key itself. */
+export function keyRef(tafID: string): string {
+  return `kiff/${tafID}`;
+}
+
+/** What every run and chat is told about the taf's notes. */
+export const NOTES_INSTRUCTIONS = `Your notes about this job, kept between runs and chats, through your memory
+tool. Read them before you start. When the owner tells you a preference, or you
+learn something lasting about how they work or about a customer, write it down:
+one short note per topic, plain sentences. Fix or delete a note that turns out
+wrong. Never write secrets, keys, card numbers or bank details.
+Notes guide how you work. They never widen your Card: KIFF still decides every action.`;
+
+/** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
+export function instructions(job: Job, ownerNotes?: string): string {
+  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS];
+  const notes = ownerNotes?.trim();
+  if (notes) parts.push(`What the owner said about this job when they started you:\n${notes}`);
+  parts.push(`The kiff skill (${KIFF_SKILL.repo}@${KIFF_SKILL.commit.slice(0, 12)}):\n\n${KIFF_SKILL.content}`);
+  return parts.join("\n\n");
+}
+
+/** The keep rules: every kind kept 30 days, except tool calls and results, kept until their run ends. */
+export function keepRules(): Record<EventKind, KeepRule> {
+  const keep = {} as Record<EventKind, KeepRule>;
+  for (const kind of EVENT_KINDS) keep[kind] = { Keep: KEEP.kept, Retention: RETENTION_NS };
+  keep.tool_call = { Keep: KEEP.untilEnd, Retention: 0 };
+  keep.tool_result = { Keep: KEEP.untilEnd, Retention: 0 };
+  return keep;
+}
+
+export function definition(tafID: string, job: Job, opts: { budgetCents?: number; ownerNotes?: string } = {}): AgentDefinition {
+  const budget = opts.budgetCents ?? DEFAULT_BUDGET_CENTS;
+  if (!Number.isInteger(budget) || budget <= 0) throw new Error("the budget is a whole number of cents above zero");
+  return {
+    instructions: instructions(job, opts.ownerNotes),
+    model: MODEL,
+    price: { ...PRICE },
+    max_tokens: MAX_TOKENS,
+    gateway: KIFF_GATEWAY,
+    key_ref: keyRef(tafID),
+    keep: keepRules(),
+    // A cent is 10,000 millionths of a dollar.
+    max_cost_micro_usd: budget * 10_000,
+    history: HISTORY,
+  };
+}

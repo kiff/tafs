@@ -1,6 +1,5 @@
 import { createHmac, generateKeyPairSync, verify } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import type Anthropic from "@anthropic-ai/sdk";
 import { providerToken } from "../src/cloud/apns.js";
 import { handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
 import { type Device, type Notification, type PushStore, signedByKIFF } from "../src/cloud/push.js";
@@ -64,11 +63,26 @@ function kiffMe(byToken: Record<string, object>) {
   }) as typeof fetch;
 }
 
-function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date }) {
+/** kiff/agents' alerts function, as tafs cloud hands alerts to it: what it got, or a failure. */
+function fakeForward() {
+  const f = {
+    got: [] as Array<{ signature: string; raw: string }>,
+    down: false,
+    forward: async (signature: string, raw: string) => {
+      if (f.down) throw new Error("kiff/agents answered 503");
+      f.got.push({ signature, raw });
+    },
+  };
+  return f;
+}
+
+function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<void>; accounts?: Map<string, { tenant: string; secret: string }> }) {
   const event: HTTPEvent = { rawPath: path, requestContext: { http: { method } }, headers: opts.headers ?? {}, body: opts.body };
+  const accounts = opts.accounts ?? new Map();
   return handle(event, {
-    anthropic: async () => { throw new Error("alerts never need Anthropic"); },
-    setup: async () => { throw new Error("no setup"); },
+    agents: new Proxy({}, { get: () => { throw new Error("alerts and phones never need kiff/agents"); } }),
+    forward: opts.forward ?? (async () => undefined),
+    accounts: { put: async (account: string, tenant: string, secret: string) => { accounts.set(account, { tenant, secret }); } },
     names: { claim: async () => true, release: async () => undefined },
     slots: opts.slots ?? memorySlots(),
     claims: { get: async () => undefined, put: async () => undefined, remove: async () => undefined },
@@ -96,8 +110,8 @@ function account() {
   return push;
 }
 
-const alert = (body: string, push: ReturnType<typeof memoryPush>, extra: { apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; signature?: string; now?: Date } = {}) =>
-  call("POST", "/v1/kiff/alerts", { body, headers: { "KIFF-Signature": extra.signature ?? sig(body) }, push, apns: extra.apns, slots: extra.slots, now: extra.now });
+const alert = (body: string, push: ReturnType<typeof memoryPush>, extra: { apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; signature?: string; now?: Date; forward?: ReturnType<typeof fakeForward> } = {}) =>
+  call("POST", "/v1/kiff/alerts", { body, headers: { "KIFF-Signature": extra.signature ?? sig(body) }, push, apns: extra.apns, slots: extra.slots, now: extra.now, forward: extra.forward?.forward });
 
 describe("KIFF's signature", () => {
   const body = held();
@@ -126,6 +140,34 @@ describe("KIFF's alerts", () => {
     expect(n.collapseID).toBe("hold_1");
     expect(n.expiresAt?.toISOString()).toBe("2026-10-15T09:10:00.000Z");
     expect(n.payload).toMatchObject({ aps: { alert: { title: "A taf needs you", body: "Stripe refund waits for your answer." } }, open: "needs-you", hold_id: "hold_1" });
+  });
+
+  it("hands the alert to kiff/agents as KIFF signed it, so the held run goes on", async () => {
+    const push = account();
+    const forward = fakeForward();
+    const answered = held({ outcome: "hold_answered", hold: { id: "hold_1", status: "approved" } });
+    expect((await alert(answered, push, { forward })).status).toBe(200);
+    expect(forward.got).toEqual([{ signature: sig(answered), raw: answered }]);
+  });
+
+  it("asks KIFF to send again when kiff/agents didn't get it, and tells the phones once", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const slots = memorySlots();
+    const forward = fakeForward();
+    forward.down = true;
+    expect((await alert(held(), push, { apns, slots, forward })).status).toBe(502);
+    forward.down = false;
+    expect((await alert(held(), push, { apns, slots, forward })).body).toEqual({ duplicate: true });
+    expect(apns.sent).toHaveLength(2);
+    expect(forward.got).toHaveLength(1);
+  });
+
+  it("hands kiff/agents nothing KIFF didn't sign", async () => {
+    const push = account();
+    const forward = fakeForward();
+    expect((await alert(held(), push, { forward, signature: sig(held(), "whsec_" + "b".repeat(43)) })).status).toBe(401);
+    expect(forward.got).toEqual([]);
   });
 
   it("refuses anything KIFF didn't sign, before sending a thing", async () => {
@@ -238,17 +280,21 @@ describe("KIFF's alerts", () => {
 
 describe("a phone signing up for alerts", () => {
   const signedIn = (who: string) => ({ Authorization: `Bearer ${who}` });
+  const accounts = new Map<string, { tenant: string; secret: string }>();
   const register = (who: string, body: object, push: ReturnType<typeof memoryPush>) =>
-    call("POST", "/v1/push", { body: JSON.stringify(body), headers: signedIn(who), push });
+    call("POST", "/v1/push", { body: JSON.stringify(body), headers: signedIn(who), push, accounts });
 
   it("keeps the phone and KIFF's secret; only someone who may answer held calls hands over the secret", async () => {
     const push = memoryPush();
     const target = { id: "at_1", signing_secret: SECRET };
     expect((await register("viewer", { device_token: TOKEN_B, environment: "production", alert_target: target }, push)).status).toBe(403);
     expect(push.secrets.get("t_acme")).toBeUndefined();
+    expect(accounts.size).toBe(0);
     expect((await register("viewer", { device_token: TOKEN_B, environment: "production" }, push)).body).toEqual({ device: true, answers: false, alerts: false });
     expect((await register("ana", { device_token: TOKEN_A.toUpperCase(), environment: "sandbox", alert_target: target }, push)).body).toEqual({ device: true, answers: true, alerts: true });
     expect(push.secrets.get("t_acme")).toEqual([SECRET]);
+    // kiff/agents checks the same alerts with the same secret, under the account's tenant.
+    expect(accounts.get("t_acme")).toEqual({ tenant: "t_acme", secret: SECRET });
     expect(push.devices.get("t_acme")!.map((d) => [d.token, d.environment, d.subject, d.answers])).toEqual([
       [TOKEN_B, "production", "u_vic", false], [TOKEN_A, "sandbox", "u_ana", true],
     ]);

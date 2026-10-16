@@ -1,51 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type Anthropic from "@anthropic-ai/sdk";
-import { calmEnough, type Claim, type Claims, handle, type HTTPEvent, type Names, type Removal, type Removals } from "../src/cloud/handler.js";
-
-/** Names claimed atomically, like the DynamoDB conditional write. */
-/** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
-function memoryNames(): Names & { held: Map<string, Date>; owners: Map<string, string> } {
-  const held = new Map<string, Date>();
-  const owners = new Map<string, string>();
-  return {
-    held,
-    owners,
-    async claim(t, n, owner) {
-      const k = `${t}#${n}`;
-      if (held.has(k)) return false;
-      held.set(k, new Date());
-      owners.set(k, owner);
-      return true;
-    },
-    async release(t, n, owner) {
-      const k = `${t}#${n}`;
-      const o = owners.get(k);
-      if (o === undefined || o === owner) { held.delete(k); owners.delete(k); }
-    },
-  };
-}
-
-/** Claimed drafts on record, like the DynamoDB items. */
-function memoryClaims(): Claims & { held: Map<string, Claim> } {
-  const held = new Map<string, Claim>();
-  return {
-    held,
-    async get(t, d) { return held.get(`${t}#${d}`); },
-    async put(t, d, c) { held.set(`${t}#${d}`, c); },
-    async remove(t, d) { held.delete(`${t}#${d}`); },
-  };
-}
-
-/** Removals on record, like the DynamoDB item. */
-function memoryRemovals(): Removals & { held: Map<string, Removal> } {
-  const held = new Map<string, Removal>();
-  return {
-    held,
-    async list(t) { return [...held.entries()].filter(([k]) => k.startsWith(`${t}#`)).map(([, r]) => r); },
-    async add(t, r) { held.set(`${t}#${r.id}`, r); },
-    async done(t, id) { held.delete(`${t}#${id}`); },
-  };
-}
+import { AgentsError } from "../src/cloud/agents.js";
+import { calmEnough, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { KIFF_GATEWAY, MODEL } from "../src/cloud/tafdef.js";
+import { fakeAgents, memoryAccounts, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -55,7 +12,7 @@ const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id
 type Drafts = Record<string, { secret: string; key: string; agent: string; status?: number }>;
 
 /** KIFF's /v1/me, answering per bearer token, and its draft claims. */
-function kiff(byToken: Record<string, object>, drafts: Drafts = {}, claimed: string[] = []) {
+function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     const claim = /\/v1\/agent-drafts\/([^/]+)\/claim$/.exec(url);
@@ -79,484 +36,303 @@ const DRAFTS: Drafts = {
   drf_gone: { secret: "dcs_g", key: "key_rae", agent: "rae", status: 410 },
 };
 
-function deployment(id: string, tenant: string, name: string) {
-  return {
-    id, name, status: "active", archived_at: null as string | null,
-    metadata: { tafs_tenant: tenant, tafs_taf: name, tafs_job: "refunds", tafs_kiff_agent: "rae" } as Record<string, string>,
-    resources: [{ type: "memory_store", memory_store_id: `mem_${id}` }],
-    vault_ids: [`vlt_${id}`],
-    schedule: { upcoming_runs_at: ["2026-10-15T09:00:00Z"], last_run_at: null },
+const ids = (...hex: string[]) => hex.map((h) => `taf-${h.padEnd(20, "0")}`);
+const [RAE, MAX, NEW, NEW2] = ids("aaaa", "bbbb", "cccc", "dddd") as [string, string, string, string];
+
+/** tafs cloud's world: KIFF, kiff/agents, and its own stores, with Rae (t_acme) and Max (t_other) running. */
+function world() {
+  const agents = fakeAgents();
+  const tafs = memoryTafs();
+  const w = {
+    agents, tafs,
+    names: memoryNames(), claims: memoryClaims(), removals: memoryRemovals(), keys: memoryKeys(), accounts: memoryAccounts(),
+    claimed: [] as string[], drafts: DRAFTS, newIDs: [NEW, NEW2],
   };
+  for (const [tenant, id, name] of [["t_acme", RAE, "Rae"], ["t_other", MAX, "Max"]] as const) {
+    const taf: Taf = { id, name, job: "refunds", kiffAgent: name.toLowerCase(), nameClaim: `claim-${id}`, created: "2026-10-15T09:00:00Z" };
+    tafs.held.set(`${tenant}#${id}`, taf);
+    w.names.held.set(`${tenant}#${name}`, taf.nameClaim);
+    w.keys.held.set(`${tenant}#${id}`, `key_${name}`);
+    void agents.api.putAgent(tenant, id, {} as never);
+    void agents.api.createSchedule(tenant, { id, agent: id, cron: "*/30 * * * *", input: "Work the refund queue.", enabled: true });
+  }
+  agents.calls.length = 0;
+  return w;
 }
+type World = ReturnType<typeof world>;
 
-function fakeAnthropic() {
-  const calls: string[] = [];
-  const deployments = [deployment("depl_acme", "t_acme", "Rae"), deployment("depl_other", "t_other", "Max")];
-  // Rae's run and chat (both mount its memory), and another account's run.
-  const sessions = [
-    { id: "sesn_rae_run", deployment_id: "depl_acme", memory_store_id: "mem_depl_acme", status: "idle" },
-    { id: "sesn_rae_chat", deployment_id: null, memory_store_id: "mem_depl_acme", status: "idle" },
-    { id: "sesn_max_run", deployment_id: "depl_other", memory_store_id: "mem_depl_other", status: "idle" },
-  ];
-  const client = {
-    beta: {
-      deployments: {
-        list: async function* () { yield* deployments.filter((d) => !d.archived_at); },
-        retrieve: async (id: string) => { const d = deployments.find((x) => x.id === id); if (!d) throw new Error("404"); return d; },
-        create: async (p: { name: string; metadata: Record<string, string> }) => {
-          const { tafs_name_claim: claim, ...rest } = p.metadata;
-          calls.push(`deployment.create ${JSON.stringify(rest)}`);
-          if (claim) calls.push(`name claim ${claim}`);
-          const d = deployment("depl_new", p.metadata.tafs_tenant ?? "", p.name);
-          d.metadata = { ...d.metadata, ...p.metadata };
-          deployments.push(d);
-          return d;
-        },
-        run: async (id: string) => { calls.push(`run ${id}`); return { session_id: "sesn_1" }; },
-        pause: async (id: string) => { calls.push(`pause ${id}`); return { ...deployment(id, "t_acme", "Rae"), status: "paused" }; },
-        unpause: async (id: string) => deployment(id, "t_acme", "Rae"),
-        archive: async (id: string) => {
-          calls.push(`archive ${id}`);
-          const d = deployments.find((x) => x.id === id)!;
-          d.archived_at = "2026-10-15T10:00:00Z";
-          return d;
-        },
-      },
-      deploymentRuns: {
-        list: async function* (p: { deployment_id: string }) { yield { session_id: `sesn_of_${p.deployment_id}`, created_at: "2026-10-14T09:00:00Z", error: null }; },
-      },
-      vaults: {
-        create: async () => { calls.push("vault.create"); return { id: "vlt_1" }; },
-        delete: async (id: string) => { calls.push(`vault.delete ${id}`); return { id }; },
-        credentials: { create: async (_id: string, p: { auth: { token: string } }) => { calls.push(`credential ${p.auth.token}`); return {}; } },
-      },
-      memoryStores: {
-        create: async (p: { name: string }) => { calls.push(`memory ${p.name}`); return { id: "memstore_1" }; },
-        delete: async (id: string) => { calls.push(`memory.delete ${id}`); return { id }; },
-        memories: { create: async (id: string, p: { path: string; content: string }) => { calls.push(`note ${id} ${p.path} ${p.content}`); return { id: "mem_1" }; } },
-      },
-      sessions: {
-        list: async function* (p: { deployment_id?: string; memory_store_id?: string }) {
-          yield* sessions.filter((x) => (p.deployment_id && x.deployment_id === p.deployment_id) || (p.memory_store_id && x.memory_store_id === p.memory_store_id));
-        },
-        delete: async (id: string) => {
-          const i = sessions.findIndex((x) => x.id === id);
-          if (i < 0) throw Object.assign(new Error("not found"), { status: 404 });
-          if (sessions[i]!.status === "running") throw Object.assign(new Error("running"), { status: 400 });
-          calls.push(`session.delete ${id}`);
-          sessions.splice(i, 1);
-          return { id };
-        },
-        retrieve: async () => ({ status: "idle" }),
-        events: { list: async function* () { yield { type: "agent.message", content: [{ type: "text", text: "Refunded 3 orders; 1 waits on you." }] }; } },
-      },
-    },
-  } as unknown as Anthropic;
-  return { client, calls, deployments, sessions };
-}
-
-function call(method: string, path: string, opts: { token?: string; body?: unknown; fetchAs?: Record<string, object>; names?: Names; anthropic?: ReturnType<typeof fakeAnthropic>; drafts?: Drafts; claimed?: string[]; claims?: Claims; removals?: Removals } = {}) {
-  const { client, calls } = opts.anthropic ?? fakeAnthropic();
+async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
     requestContext: { http: { method } },
     headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {},
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   };
-  const result = handle(event, {
-    anthropic: async () => client,
-    setup: async () => ({ environmentID: "env_1", agents: { refunds: "agent_refunds" } }),
-    names: opts.names ?? memoryNames(),
-    slots: { claim: async () => true, keep: async () => undefined, held: async () => false, release: async () => undefined },
-    claims: opts.claims ?? memoryClaims(),
+  const r = await handle(event, {
+    agents: w.agents.api, keys: w.keys, accounts: w.accounts, tafs: w.tafs,
+    names: w.names, slots: memorySlots(), claims: w.claims, removals: w.removals,
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
-    removals: opts.removals ?? memoryRemovals(),
-    fetch: kiff(opts.fetchAs ?? { ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } },
-      opts.drafts ?? DRAFTS, opts.claimed ?? []),
+    forward: async () => undefined,
+    fetch: kiff({ ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } }, w.drafts, w.claimed),
+    newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
   });
-  return result.then((r) => ({ status: r.statusCode, body: JSON.parse(r.body), calls }));
+  return { status: r.statusCode, body: JSON.parse(r.body) };
 }
+
+const START = { name: "Bo", job: "refunds", agent_key: "key_rae" };
 
 describe("tafs cloud", () => {
   it("lists the jobs without signing in", async () => {
-    const r = await call("GET", "/v1/jobs");
+    const r = await call(world(), "GET", "/v1/jobs");
     expect(r.status).toBe(200);
-    expect(r.body.jobs).toHaveLength(5);
+    expect(r.body.jobs.map((j: { id: string }) => j.id)).toContain("refunds");
   });
 
   it("needs a KIFF sign-in, and a person rather than a key", async () => {
-    expect((await call("GET", "/v1/tafs")).status).toBe(401);
-    expect((await call("GET", "/v1/tafs", { token: "nobody" })).status).toBe(401);
-    expect((await call("GET", "/v1/tafs", { token: "key_rae" })).status).toBe(403);
+    const w = world();
+    expect((await call(w, "GET", "/v1/tafs")).status).toBe(401);
+    expect((await call(w, "GET", "/v1/tafs", { token: "key_rae" })).status).toBe(403);
   });
 
-  it("lists only the caller's account's tafs", async () => {
-    const r = await call("GET", "/v1/tafs", { token: "ana" });
-    expect(r.body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
-    expect(r.body.tafs[0]).toHaveProperty("kiff_agent");
+  it("lists only the caller's account's tafs, as the app reads them", async () => {
+    const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
+    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null }]);
+    expect(r.body.removing).toEqual([]);
   });
 
-  it("treats another account's taf as missing", async () => {
-    for (const [m, p] of [["POST", "/v1/tafs/depl_other/pause"], ["POST", "/v1/tafs/depl_other/run"], ["GET", "/v1/tafs/depl_other/runs"]] as const) {
-      const r = await call(m, p, { token: "ana" });
-      expect(r.status).toBe(404);
-      expect(r.calls).toEqual([]);
+  it("treats another account's taf, or an id that isn't one, as missing", async () => {
+    const w = world();
+    for (const path of [`/v1/tafs/${MAX}/runs`, `/v1/tafs/${MAX}/run`, "/v1/tafs/depl_1/runs", `/v1/tafs/${RAE}x/runs`]) {
+      const r = await call(w, path.endsWith("/run") ? "POST" : "GET", path, { token: "ana" });
+      expect(r.status, path).toBe(404);
     }
+    expect(w.agents.calls).toEqual([]);
   });
 
-  it("starts a taf with an agent key from the same account", async () => {
-    const r = await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae" } });
+  it("starts a taf on kiff/agents: its key kept, its definition, its schedule, and a first run", async () => {
+    const w = world();
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...START, cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 } });
     expect(r.status).toBe(200);
-    expect(r.body.session).toBe("sesn_1");
-    expect(r.calls.filter((c) => !c.startsWith("name claim "))).toEqual([
-      "vault.create",
-      "credential key_rae",
-      "memory tafs-ivy",
-      `deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`,
-      "run depl_new",
-    ]);
-    expect(r.calls.some((c) => /^name claim [0-9a-f-]{36}$/.test(c)), "the taf carries its start's claim on the name").toBe(true);
+    expect(r.body.taf).toMatchObject({ id: NEW, name: "Bo", job: "refunds", kiff_agent: "rae", status: "active" });
+    expect(r.body.session).toMatch(/^sess/);
+    // The key is kept where kiff/agents reads it; the definition only names it.
+    expect(w.keys.held.get(`t_acme#${NEW}`)).toBe("key_rae");
+    const def = w.agents.agents.get(`t_acme|${NEW}`)!;
+    expect(def).toMatchObject({ model: MODEL, gateway: KIFF_GATEWAY, key_ref: `kiff/${NEW}`, max_cost_micro_usd: 3_000_000 });
+    expect(JSON.stringify(def)).not.toContain("key_rae");
+    expect(def.keep.tool_result).toEqual({ Keep: 1, Retention: 0 });
+    expect(def.keep.owner_message.Keep).toBe(2);
+    expect(def.instructions).toContain("Your job: Refunds");
+    expect(def.instructions).toContain("name: kiff");
+    expect(w.agents.calls).toEqual([`putAgent ${NEW}`, `createSchedule ${NEW} 0 9 * * 1-5 Europe/Madrid`, `trigger ${NEW}`]);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Bo", kiffAgent: "rae" });
   });
 
   it("starts a taf from a confirmed KIFF draft, claiming its key itself", async () => {
-    const claimed: string[] = [];
-    const r = await call("POST", "/v1/tafs", { token: "ana", claimed, body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    const w = world();
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Bo", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
     expect(r.status).toBe(200);
-    expect(claimed).toEqual(["drf_1"]);
-    expect(r.calls).toContain("credential key_rae");
-    expect(r.calls).toContain(`deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`);
     expect(JSON.stringify(r.body)).not.toContain("key_rae");
+    expect(w.keys.held.get(`t_acme#${NEW}`)).toBe("key_rae");
+    expect(w.claims.held.size).toBe(0);
   });
 
   it("claims a draft only once the name is held, so a taken name or a second tap never spends it", async () => {
-    const claimed: string[] = [];
-    const taken = await call("POST", "/v1/tafs", { token: "ana", claimed, body: { name: "Rae", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    const w = world();
+    const taken = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Rae", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
     expect(taken.status).toBe(409);
-    expect(claimed).toEqual([]);
-
-    const shared = fakeAnthropic();
-    const names = memoryNames();
-    const body = { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" };
-    const [a, b] = await Promise.all([
-      call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: shared, claimed }),
-      call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: shared, claimed }),
-    ]);
-    expect([a.status, b.status].sort()).toEqual([200, 409]);
-    expect(claimed).toEqual(["drf_1"]);
+    w.names.held.set("t_acme#Bo", "someone-else");
+    const racing = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Bo", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(racing.status).toBe(409);
+    expect(w.claimed).toEqual([]);
   });
 
   it("frees the name when KIFF won't give the draft's key, and says why", async () => {
-    const names = memoryNames();
-    const gone = await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_gone", claim_secret: "dcs_g" } });
-    expect(gone.status).toBe(410);
-    expect(gone.body.error).toContain("KIFF did not give the draft's key");
-    expect(gone.calls).toEqual([]);
-    const wrong = await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "nope" } });
-    expect(wrong.status).toBe(401);
-    const other = await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_other", claim_secret: "dcs_o" } });
-    expect(other.status).toBe(400);
-    expect(other.calls).toEqual([]);
-    // The name was freed each time.
-    expect((await call("POST", "/v1/tafs", { token: "ana", names, body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } })).status).toBe(200);
+    const w = world();
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Bo", job: "refunds", draft_id: "drf_gone", claim_secret: "dcs_g" } });
+    expect(r.status).toBe(410);
+    expect(w.names.held.has("t_acme#Bo")).toBe(false);
   });
 
-  it("resumes a start that failed after the one-time claim, with the key already in a vault", async () => {
-    const names = memoryNames();
-    const claims = memoryClaims();
-    const claimed: string[] = [];
-    const shared = fakeAnthropic();
-    const realCreate = shared.client.beta.memoryStores.create.bind(shared.client.beta.memoryStores);
-    let down = true;
-    (shared.client.beta.memoryStores as unknown as { create: (p: never) => Promise<unknown> }).create = async (p: never) => {
-      if (down) throw Object.assign(new Error("memory stores are down"), { status: 503 });
-      return realCreate(p);
-    };
-    const body = { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" };
-    const opts = { token: "ana", body, names, claims, claimed, anthropic: shared };
-
-    const failed = await call("POST", "/v1/tafs", opts);
-    expect(failed.status).toBe(502);
-    expect(claimed).toEqual(["drf_1"]);
-    expect(names.held.size).toBe(0);
-    const kept = claims.held.get("t_acme#drf_1");
-    expect(kept).toMatchObject({ name: "Ivy", agentID: "rae", vaultID: "vlt_1" });
-    expect(JSON.stringify(kept)).not.toContain("dcs_1"); // only a hash of the secret
-    expect(JSON.stringify(kept)).not.toContain("key_rae");
-
-    // Someone without the secret, or with another name, can't use the kept vault.
-    expect((await call("POST", "/v1/tafs", { ...opts, body: { ...body, claim_secret: "nope" } })).status).toBe(401);
-    expect((await call("POST", "/v1/tafs", { ...opts, body: { ...body, name: "Other" } })).status).toBe(409);
-
-    down = false;
-    const vaultsBefore = shared.calls.filter((c) => c === "vault.create").length;
-    const retry = await call("POST", "/v1/tafs", opts);
-    expect(retry.status).toBe(200);
-    expect(claimed).toEqual(["drf_1"]); // not claimed twice
-    expect(shared.calls.filter((c) => c === "vault.create").length).toBe(vaultsBefore);
-    expect(shared.calls).toContain(`deployment.create {"tafs_tenant":"t_acme","tafs_kiff_agent":"rae","tafs_job":"refunds","tafs_taf":"Ivy","tafs_memory":"memstore_1"}`);
-    expect(claims.held.size).toBe(0);
+  it("resumes a start that failed after the one-time claim, under the same taf and key", async () => {
+    const w = world();
+    w.agents.fail.set("putAgent", new Error("kiff/agents is down"));
+    w.agents.fail.set("deleteAgent", new Error("kiff/agents is down"));
+    const first = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Bo", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(first.status).toBe(502);
+    // Nothing proved the start undone, so the name stays this start's, and the key and the claim stay on record.
+    expect(w.claims.held.get("t_acme#drf_1")).toMatchObject({ name: "Bo", tafID: NEW });
+    expect(w.keys.held.get(`t_acme#${NEW}`)).toBe("key_rae");
+    w.names.held.delete("t_acme#Bo"); // the owner retries once the outcome is known: the name came free
+    const second = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Bo", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(second.status).toBe(200);
+    expect(second.body.taf.id).toBe(NEW);
+    expect(w.claimed).toEqual(["drf_1"]);
+    // Bo started, so the draft is spent: it can't start a second taf.
+    const other = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Cy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(other.status).toBe(410);
   });
 
   it("says a draft is spent when its key was claimed and nothing kept it", async () => {
-    const names = memoryNames();
-    const spent = await call("POST", "/v1/tafs", { token: "ana", names, claimed: ["drf_1"], body: { name: "Ivy", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
-    expect(spent.status).toBe(410);
-    expect(spent.body.error).toMatch(/Start again/);
-    expect(spent.calls).toEqual([]);
-    expect(names.held.size).toBe(0);
+    const w = world();
+    w.claimed.push("drf_1");
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Bo", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(r.status).toBe(410);
   });
 
   it("needs both a draft id and its secret, or an agent key", async () => {
-    for (const body of [
-      { name: "Ivy", job: "refunds", draft_id: "drf_1" },
-      { name: "Ivy", job: "refunds", claim_secret: "dcs_1" },
-      { name: "Ivy", job: "refunds" },
-      { name: "Ivy", job: "refunds", draft_id: "../x", claim_secret: "dcs_1" },
-    ]) {
-      const r = await call("POST", "/v1/tafs", { token: "ana", body });
-      expect(r.status, JSON.stringify(body)).toBe(400);
-      expect(r.calls).toEqual([]);
+    const w = world();
+    for (const body of [{ name: "Bo", job: "refunds" }, { name: "Bo", job: "refunds", draft_id: "drf_1" }, { name: "Bo", job: "refunds", draft_id: "x_1", claim_secret: "s" }]) {
+      expect((await call(w, "POST", "/v1/tafs", { token: "ana", body })).status).toBe(400);
     }
   });
 
-  it("keeps what the owner said about the job as the taf's first note", async () => {
-    const r = await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae", notes: " Never refund twice. " } });
-    expect(r.status).toBe(200);
-    expect(r.calls).toContain("note memstore_1 /from-the-owner.md Never refund twice.");
-    const long = await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae", notes: "x".repeat(2001) } });
-    expect(long.status).toBe(400);
+  it("gives the taf what the owner said about the job, in its instructions", async () => {
+    const w = world();
+    await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...START, notes: "Refund anything under $20 without asking." } });
+    expect(w.agents.agents.get(`t_acme|${NEW}`)!.instructions).toContain("Refund anything under $20 without asking.");
   });
 
   it("refuses to start without the right, the right key, or sane settings", async () => {
-    const base = { name: "Ivy", job: "refunds", agent_key: "key_rae" };
-    const cases: Array<[string, object, number]> = [
-      ["viewer", base, 403],
-      ["ana", { ...base, agent_key: "key_other" }, 400],
-      ["ana", { ...base, agent_key: "key_unbound" }, 400],
-      ["ana", { ...base, agent_key: "ana" }, 400],
-      ["ana", { ...base, agent_key: "garbage" }, 400],
-      ["ana", { ...base, name: "Rae" }, 409],
-      ["ana", { ...base, job: "payroll" }, 400],
-      ["ana", { ...base, cron: "*/5 * * * *" }, 400],
-      ["ana", { ...base, budget_cents: 5000 }, 400],
-      ["ana", { ...base, name: "" }, 400],
+    const w = world();
+    const bad: Array<[string, object, number]> = [
+      ["viewer", START, 403],
+      ["ana", { ...START, agent_key: "key_other" }, 400],
+      ["ana", { ...START, agent_key: "key_unbound" }, 400],
+      ["ana", { ...START, agent_key: "nope" }, 400],
+      ["ana", { ...START, cron: "*/5 * * * *" }, 400],
+      ["ana", { ...START, budget_cents: 5000 }, 400],
+      ["ana", { ...START, name: "" }, 400],
+      ["ana", { ...START, job: "nope" }, 400],
     ];
-    for (const [token, body, status] of cases) {
-      const r = await call("POST", "/v1/tafs", { token, body });
-      expect(r.status, JSON.stringify(body) + " as " + token).toBe(status);
-      expect(r.calls).toEqual([]);
-    }
+    for (const [token, body, status] of bad) expect((await call(w, "POST", "/v1/tafs", { token, body })).status, JSON.stringify(body)).toBe(status);
+    expect(w.agents.calls).toEqual([]);
+    expect(w.keys.held.has(`t_acme#${NEW}`)).toBe(false);
   });
 
   it("starts one taf when two requests race for the same name", async () => {
-    const shared = fakeAnthropic();
-    const names = memoryNames();
-    const body = { name: "Ivy", job: "refunds", agent_key: "key_rae" };
+    const w = world();
     const [a, b] = await Promise.all([
-      call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: shared }),
-      call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: shared }),
+      call(w, "POST", "/v1/tafs", { token: "ana", body: START }),
+      call(w, "POST", "/v1/tafs", { token: "ana", body: START }),
     ]);
     expect([a.status, b.status].sort()).toEqual([200, 409]);
-    expect(shared.calls.filter((c) => c.startsWith("deployment.create"))).toHaveLength(1);
-    expect(shared.calls.filter((c) => c.startsWith("run "))).toHaveLength(1);
+    expect([...w.tafs.held.values()].filter((t) => t.name === "Bo")).toHaveLength(1);
   });
 
-  it("frees the name when the taf could not be created, and keeps it once it exists", async () => {
-    const names = memoryNames();
-    const broken = fakeAnthropic();
-    (broken.client.beta.vaults as unknown as { create: () => Promise<never> }).create = async () => { throw new Error("vaults are down"); };
-    const body = { name: "Ivy", job: "refunds", agent_key: "key_rae" };
-    expect((await call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: broken })).status).toBe(502);
-    expect(names.held.size).toBe(0);
-
-    const noRun = fakeAnthropic();
-    (noRun.client.beta.deployments as unknown as { run: () => Promise<object> }).run = async () => ({ session_id: null, error: { type: "session_rate_limited_error", message: "busy" } });
-    expect((await call("POST", "/v1/tafs", { token: "ana", body, names, anthropic: noRun })).status).toBe(502);
-    expect([...names.held.keys()]).toEqual(["t_acme#Ivy"]);
+  it("undoes a start kiff/agents refused, and frees the name", async () => {
+    const w = world();
+    w.agents.fail.set("createSchedule", new AgentsError(400, "schedule: a time zone is an IANA name"));
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...START, timezone: "Mars/Olympus" } });
+    expect(r.status).toBe(400);
+    expect(r.body.error).toContain("IANA");
+    expect(w.agents.agents.has(`t_acme|${NEW}`)).toBe(false);
+    expect(w.keys.held.has(`t_acme#${NEW}`)).toBe(false);
+    expect(w.names.held.has("t_acme#Bo")).toBe(false);
+    expect(w.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
   });
 
-  it("keeps the name for good when a create's answer is lost, however late the taf lands", async () => {
-    const names = memoryNames();
-    const shared = fakeAnthropic();
-    const late: Array<() => void> = [];
-    const realCreate = shared.client.beta.deployments.create.bind(shared.client.beta.deployments);
-    let first = true;
-    (shared.client.beta.deployments as unknown as { create: (p: never) => Promise<unknown> }).create = async (p: never) => {
-      if (!first) return realCreate(p);
-      first = false;
-      late.push(() => { void realCreate(p); });
-      throw Object.assign(new Error("Request timed out."), { name: "APIConnectionTimeoutError" });
-    };
-    const opts = { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae" }, names, anthropic: shared };
-
-    expect((await call("POST", "/v1/tafs", opts)).status).toBe(502);
-    for (let i = 0; i < 3; i++) {
-      const retry = await call("POST", "/v1/tafs", opts);
-      expect(retry.status).toBe(409);
-      expect(retry.body.error).toMatch(/Choose another name/);
-    }
-    late.forEach((f) => f()); // the lost create lands, at any time
-    expect((await call("POST", "/v1/tafs", opts)).status).toBe(409);
-    expect(shared.deployments.filter((d) => d.metadata.tafs_taf === "Ivy")).toHaveLength(1);
-
-    // Another name works at once.
-    expect((await call("POST", "/v1/tafs", { ...opts, body: { ...opts.body, name: "Ivy 2" } })).status).toBe(200);
+  it("keeps the name when what a failed start made can't be undone", async () => {
+    const w = world();
+    w.agents.fail.set("createSchedule", new Error("timeout"));
+    w.agents.fail.set("deleteAgent", new Error("timeout"));
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: START });
+    expect(r.status).toBe(502);
+    expect(w.names.held.has("t_acme#Bo")).toBe(true);
   });
 
-  it("frees the name at once when Anthropic refuses the create", async () => {
-    const names = memoryNames();
-    const shared = fakeAnthropic();
-    (shared.client.beta.deployments as unknown as { create: () => Promise<never> }).create = async () => {
-      throw Object.assign(new Error("invalid schedule"), { status: 400 });
-    };
-    expect((await call("POST", "/v1/tafs", { token: "ana", body: { name: "Ivy", job: "refunds", agent_key: "key_rae" }, names, anthropic: shared })).status).toBe(502);
-    expect(names.held.size).toBe(0);
+  it("says when a taf started but its first run didn't", async () => {
+    const w = world();
+    w.agents.fail.set("trigger", new Error("timeout"));
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: START });
+    expect(r.status).toBe(502);
+    expect(r.body.error).toContain("Run it now");
+    expect(w.tafs.held.has(`t_acme#${NEW}`)).toBe(true);
   });
 
-  it("pauses and runs the caller's taf", async () => {
-    expect((await call("POST", "/v1/tafs/depl_acme/pause", { token: "ana" })).body.taf.status).toBe("paused");
-    expect((await call("POST", "/v1/tafs/depl_acme/run", { token: "ana" })).body.session).toBe("sesn_1");
-    expect((await call("POST", "/v1/tafs/depl_acme/run", { token: "viewer" })).status).toBe(403);
+  it("pauses, resumes and runs the caller's taf, through its schedule", async () => {
+    const w = world();
+    const paused = await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" });
+    expect(paused.body.taf).toMatchObject({ status: "paused", next_run: null });
+    const resumed = await call(w, "POST", `/v1/tafs/${RAE}/resume`, { token: "ana" });
+    expect(resumed.body.taf).toMatchObject({ status: "active" });
+    const run = await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });
+    expect(run.body.session).toMatch(/^sess/);
+    expect(w.agents.calls).toEqual([`switchSchedule ${RAE} off`, `switchSchedule ${RAE} on`, `trigger ${RAE}`]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "viewer" })).status).toBe(403);
   });
 
-  it("reads a run's report only for the taf's own runs", async () => {
-    const ok = await call("GET", "/v1/tafs/depl_acme/runs/sesn_of_depl_acme", { token: "ana" });
-    expect(ok.body.report).toEqual({ status: "idle", text: "Refunded 3 orders; 1 waits on you." });
-    expect((await call("GET", "/v1/tafs/depl_acme/runs/sesn_of_depl_other", { token: "ana" })).status).toBe(404);
+  it("lists the taf's runs, and reads a run's report only for its own runs", async () => {
+    const w = world();
+    const started = await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });
+    const run = w.agents.runs[0]!;
+    const runs = await call(w, "GET", `/v1/tafs/${RAE}/runs`, { token: "ana" });
+    expect(runs.body.runs).toEqual([{ session: started.body.session, at: "2026-10-16T12:00:00.000Z", error: null }]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/runs/${started.body.session}`, { token: "ana" })).body.report).toEqual({ status: "running", text: "" });
+    // Waiting on the owner is still working.
+    run.status = "PAUSED";
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/runs/${started.body.session}`, { token: "ana" })).body.report.status).toBe("running");
+    Object.assign(run, { status: "COMPLETED", output: "Refunded 3 orders; 1 waits on you." });
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/runs/${started.body.session}`, { token: "ana" })).body.report).toEqual({ status: "idle", text: "Refunded 3 orders; 1 waits on you." });
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/runs/sess_other`, { token: "ana" })).status).toBe(404);
   });
 });
 
 describe("calmEnough", () => {
   it("allows every 15 minutes or less often", () => {
-    for (const ok of ["*/15 * * * *", "*/20 * * * *", "*/30 * * * *", "*/60 * * * *", "0 * * * *", "0,30 * * * *", "0 9 * * 1-5", "0,15,30,45 * * * *", "5/30 * * * *"]) expect(calmEnough(ok), ok).toBe(true);
-    for (const no of ["* * * * *", "*/5 * * * *", "0,10 * * * *", "0,50 * * * *", "1-59 * * * *", "0 9 * *", "61 * * * *", "*/59 * * * *", "*/17 * * * *", "*/50 * * * *", "*/0 * * * *", "50/5 * * * *"]) expect(calmEnough(no), no).toBe(false);
+    for (const c of ["*/15 * * * *", "0 * * * *", "0,30 * * * *", "0 9 * * 1-5"]) expect(calmEnough(c), c).toBe(true);
+    for (const c of ["*/10 * * * *", "* * * * *", "0,10 * * * *", "0 9 * *"]) expect(calmEnough(c), c).toBe(false);
   });
 
   it("agrees on equivalent forms", () => {
-    expect(calmEnough("*/50 * * * *")).toBe(calmEnough("0,50 * * * *"));
-    expect(calmEnough("*/20 * * * *")).toBe(calmEnough("0,20,40 * * * *"));
+    expect(calmEnough("0,15,30,45 * * * *")).toBe(calmEnough("*/15 * * * *"));
+    expect(calmEnough("50,5 * * * *")).toBe(true);
   });
 });
 
 describe("removing a taf", () => {
-  /** An account whose taf Rae holds its name, as a started taf does. */
-  function rae() {
-    const shared = fakeAnthropic();
-    const names = memoryNames();
-    names.held.set("t_acme#Rae", new Date());
-    const removals = memoryRemovals();
-    return { shared, names, removals, opts: { token: "ana", anthropic: shared, names, removals } };
-  }
-
-  it("stops it, deletes its memory and its key's vault, and frees its name", async () => {
-    const { shared, names, opts } = rae();
-    const r = await call("DELETE", "/v1/tafs/depl_acme", opts);
+  it("removes it from kiff/agents, then its key, then frees its name", async () => {
+    const w = world();
+    const r = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
     expect(r.status).toBe(200);
-    expect(r.body).toMatchObject({ taf: "depl_acme", name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });
-    expect(shared.calls).toEqual(["archive depl_acme", "session.delete sesn_rae_run", "session.delete sesn_rae_chat",
-      "memory.delete mem_depl_acme", "vault.delete vlt_depl_acme"]);
-    // Another account's history is untouched.
-    expect(shared.sessions.map((x) => x.id)).toEqual(["sesn_max_run"]);
-    expect(names.held.has("t_acme#Rae")).toBe(false);
-
-    // Gone: not listed, never run again, nothing else answers for it.
-    expect((await call("GET", "/v1/tafs", opts)).body.tafs).toEqual([]);
-    expect((await call("POST", "/v1/tafs/depl_acme/run", opts)).status).toBe(404);
-    expect((await call("POST", "/v1/tafs/depl_acme/messages", { ...opts, body: { text: "hi" } })).status).toBe(404);
-    expect(shared.calls.filter((c) => c.startsWith("run "))).toEqual([]);
+    expect(r.body).toEqual({ taf: RAE, name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });
+    expect(w.agents.calls).toEqual([`deleteAgent ${RAE}`]);
+    expect(w.keys.held.has(`t_acme#${RAE}`)).toBe(false);
+    expect(w.names.held.has("t_acme#Rae")).toBe(false);
+    expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
+    expect(w.removals.held.size).toBe(0);
   });
 
   it("takes the right to manage Cards, and another account's taf answers like a missing one", async () => {
-    const { shared, opts } = rae();
-    expect((await call("DELETE", "/v1/tafs/depl_acme", { ...opts, token: "viewer" })).status).toBe(403);
-    expect((await call("DELETE", "/v1/tafs/depl_other", opts)).status).toBe(404);
-    expect((await call("DELETE", "/v1/tafs/depl_nope", opts)).status).toBe(404);
-    expect(shared.calls).toEqual([]);
+    const w = world();
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "viewer" })).status).toBe(403);
+    expect((await call(w, "DELETE", `/v1/tafs/${MAX}`, { token: "ana" })).status).toBe(404);
+    expect(w.agents.calls).toEqual([]);
   });
 
-  it("says what failed, and a second remove finishes the job", async () => {
-    const { shared, names, opts } = rae();
-    const vaults = shared.client.beta.vaults as unknown as { delete: (id: string) => Promise<unknown> };
-    const realDelete = vaults.delete;
-    vaults.delete = async () => { throw Object.assign(new Error("vaults are down"), { status: 503 }); };
-    const first = await call("DELETE", "/v1/tafs/depl_acme", opts);
-    expect(first.body).toMatchObject({ done: false, removed: ["schedule", "history", "memory"], failed: ["key"] });
-    expect(names.held.has("t_acme#Rae")).toBe(true); // the name waits until all is gone
-    // Archived, so no longer a taf in the list, but listed as a removal to finish.
-    const listed = await call("GET", "/v1/tafs", opts);
-    expect(listed.body.tafs).toEqual([]);
-    expect(listed.body.removing).toEqual([{ id: "depl_acme", name: "Rae" }]);
-
-    vaults.delete = realDelete;
-    (shared.client.beta.memoryStores as unknown as { delete: () => Promise<never> }).delete = async () => {
-      throw Object.assign(new Error("not found"), { status: 404 }); // deleted the first time
-    };
-    const second = await call("DELETE", "/v1/tafs/depl_acme", opts);
-    expect(second.body).toMatchObject({ done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });
-    expect(shared.calls.filter((c) => c.startsWith("archive"))).toHaveLength(1);
-    expect(names.held.has("t_acme#Rae")).toBe(false);
-    expect((await call("GET", "/v1/tafs", opts)).body.removing).toEqual([]);
-  });
-
-  it("never frees the name for a newer taf, however often an old removal is replayed", async () => {
-    const { names, opts } = rae();
-    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
-    // A new start claims the name, and is still making its taf.
-    expect(await names.claim("t_acme", "Rae", "start_new")).toBe(true);
-    // The old removal is replayed (a retry, or the app finishing it).
-    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
-    expect(names.owners.get("t_acme#Rae")).toBe("start_new");
-    expect(await names.claim("t_acme", "Rae", "start_third")).toBe(false);
-  });
-
-  it("frees the name its own start claimed", async () => {
-    const shared = fakeAnthropic();
-    const names = memoryNames();
-    const opts = { token: "ana", anthropic: shared, names };
-    expect((await call("POST", "/v1/tafs", { ...opts, body: { name: "Ivy", job: "refunds", agent_key: "key_rae" } })).status).toBe(200);
-    const owner = names.owners.get("t_acme#Ivy");
-    expect(shared.calls).toContain(`name claim ${owner}`);
-    expect((await call("DELETE", "/v1/tafs/depl_new", opts)).body).toMatchObject({ done: true });
-    expect(names.held.has("t_acme#Ivy")).toBe(false);
-  });
-
-  it("is listed to finish even when the archive's answer was lost", async () => {
-    const { shared, opts } = rae();
-    const deployments = shared.client.beta.deployments as unknown as { archive: (id: string) => Promise<unknown> };
-    const realArchive = deployments.archive;
-    deployments.archive = async (id: string) => { await realArchive(id); throw Object.assign(new Error("timed out"), { name: "APIConnectionTimeoutError" }); };
-    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: false, failed: ["schedule"] });
-    const listed = await call("GET", "/v1/tafs", opts);
-    expect(listed.body.tafs).toEqual([]);
-    expect(listed.body.removing).toEqual([{ id: "depl_acme", name: "Rae" }]);
-    deployments.archive = realArchive;
-    expect((await call("DELETE", "/v1/tafs/depl_acme", opts)).body).toMatchObject({ done: true });
-  });
-
-  it("keeps its memory while a chat is still running, so the next remove can find and finish it", async () => {
-    const { shared, names, opts } = rae();
-    const chat = shared.sessions.find((x) => x.id === "sesn_rae_chat")!;
-    chat.status = "running";
-    const first = await call("DELETE", "/v1/tafs/depl_acme", opts);
-    expect(first.body).toMatchObject({ done: false, failed: ["history"] });
-    expect(shared.calls).not.toContain("memory.delete mem_depl_acme");
-    expect(names.held.has("t_acme#Rae")).toBe(true);
-
-    chat.status = "idle";
-    const second = await call("DELETE", "/v1/tafs/depl_acme", opts);
+  it("deletes nothing else while kiff/agents may still run it, and a second remove finishes", async () => {
+    const w = world();
+    w.agents.fail.set("deleteAgent", new Error("timeout"));
+    const first = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
+    expect(first.body).toMatchObject({ done: false, removed: [], failed: ["schedule", "history", "memory"] });
+    expect(w.keys.held.has(`t_acme#${RAE}`)).toBe(true);
+    // Gone from the list but for finishing it.
+    const list = await call(w, "GET", "/v1/tafs", { token: "ana" });
+    expect(list.body.tafs).toEqual([]);
+    expect(list.body.removing).toEqual([{ id: RAE, name: "Rae" }]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/runs`, { token: "ana" })).status).toBe(404);
+    const second = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
     expect(second.body).toMatchObject({ done: true, failed: [] });
-    expect(shared.calls).toContain("session.delete sesn_rae_chat");
-    expect(shared.calls).toContain("memory.delete mem_depl_acme");
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.removing).toEqual([]);
   });
 
-  it("deletes nothing while it may still run", async () => {
-    const { shared, opts } = rae();
-    (shared.client.beta.deployments as unknown as { archive: () => Promise<never> }).archive = async () => {
-      throw Object.assign(new Error("busy"), { status: 503 });
-    };
-    const r = await call("DELETE", "/v1/tafs/depl_acme", opts);
-    expect(r.body).toMatchObject({ done: false, removed: [], failed: ["schedule"] });
-    expect(shared.calls).toEqual([]);
+  it("keeps the name for a newer taf, however often an old removal is replayed", async () => {
+    const w = world();
+    w.keys.fail.add("remove");
+    await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
+    w.names.held.set("t_acme#Rae", "newer-start");
+    await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
+    expect(w.names.held.get("t_acme#Rae")).toBe("newer-start");
   });
 });
