@@ -98,6 +98,18 @@ describe("kiff/agents client", () => {
     expect(JSON.parse(sent[1]!.body ?? "")).toEqual({ input: "Hello", background: true });
   });
 
+  it("sends back only what a schedule can be written with, so a read schedule round-trips", async () => {
+    const { agents, sent } = server((s) => new Response(s.body ?? "{}", { status: s.method === "POST" ? 201 : 200 }));
+    const read = { tenant: "t_acme", id: "taf1", agent: "taf1", cron: "*/30 * * * *", time_zone: "Europe/Madrid", input: "Work the queue.", enabled: true, next: "2026-10-16T12:30:00Z" };
+    await agents.updateSchedule("t_acme", { ...read, cron: "*/15 * * * *" });
+    await agents.createSchedule("t_acme", read);
+    for (const s of sent) {
+      // kiff/agents decodes schedules with unknown fields refused: next is only ever its answer.
+      expect(JSON.parse(s.body ?? "")).toEqual({ id: "taf1", agent: "taf1", cron: expect.any(String), time_zone: "Europe/Madrid", input: "Work the queue.", enabled: true });
+    }
+    expect(sent[0]!.url.pathname).toBe("/schedules/taf1");
+  });
+
   it("never sends an id that isn't one", async () => {
     const { agents, sent } = server();
     for (const id of ["", ".", "..", "../agents", "a/b", "a b", "x".repeat(129)]) {

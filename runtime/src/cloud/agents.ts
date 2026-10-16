@@ -211,7 +211,7 @@ export class Agents {
   // Schedules.
 
   createSchedule(tenant: string, s: Schedule): Promise<Schedule> {
-    return this.call("POST", tenant, ["schedules"], s);
+    return this.call("POST", tenant, ["schedules"], writable(s));
   }
 
   /** The schedule; undefined when the tenant has none of that id. */
@@ -219,8 +219,9 @@ export class Agents {
     return this.call<Schedule>("GET", tenant, ["schedules", id]).catch(notFound);
   }
 
+  /** Replaces the schedule; a schedule as read (with its `next`) can be sent back as it is. */
   updateSchedule(tenant: string, s: Schedule): Promise<Schedule> {
-    return this.call("PUT", tenant, ["schedules", s.id], s);
+    return this.call("PUT", tenant, ["schedules", s.id], writable(s));
   }
 
   switchSchedule(tenant: string, id: string, on: boolean): Promise<Schedule> {
@@ -281,6 +282,14 @@ export class Agents {
     }
     return parsed as T;
   }
+}
+
+/**
+ * The fields of a schedule kiff/agents takes. It refuses unknown fields, and
+ * `next` is only ever its answer; the tenant comes from the caller.
+ */
+function writable(s: Schedule): Omit<Schedule, "next" | "tenant"> {
+  return { id: s.id, agent: s.agent, cron: s.cron, ...(s.time_zone ? { time_zone: s.time_zone } : {}), input: s.input, enabled: s.enabled };
 }
 
 function notFound(err: unknown): undefined {
