@@ -68,7 +68,9 @@ function fakeForward() {
   const f = {
     got: [] as Array<{ signature: string; raw: string }>,
     down: false,
+    tries: 0,
     forward: async (signature: string, raw: string) => {
+      f.tries++;
       if (f.down) throw new Error("kiff/agents answered 503");
       f.got.push({ signature, raw });
     },
@@ -183,6 +185,8 @@ describe("KIFF's alerts", () => {
     forward.down = true;
     for (let i = 0; i < FORWARD_TRIES; i++) expect((await alert(held(), push, { apns, slots, forward })).status).toBe(502);
     expect((await alert(held(), push, { apns, slots, forward })).status).toBe(200);
+    // What the give-up log says: kiff/agents was tried FORWARD_TRIES + 1 times.
+    expect(forward.tries).toBe(FORWARD_TRIES + 1);
     expect(apns.sent).toHaveLength(2); // the phones were told once, on the first delivery
   });
 
@@ -360,10 +364,10 @@ describe("a phone signing up for alerts", () => {
 describe("the APNs provider token", () => {
   it("is an ES256 JWT naming the key and the team, that the key's public half verifies", () => {
     const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
-    const jwt = providerToken(privateKey, "3THAT9GWCS", "R54YWFRK4B", NOW);
+    const jwt = providerToken(privateKey, "KEYID12345", "TEAMID1234", NOW);
     const [h, c, s] = jwt.split(".");
-    expect(JSON.parse(Buffer.from(h!, "base64url").toString())).toEqual({ alg: "ES256", kid: "3THAT9GWCS" });
-    expect(JSON.parse(Buffer.from(c!, "base64url").toString())).toEqual({ iss: "R54YWFRK4B", iat: T });
+    expect(JSON.parse(Buffer.from(h!, "base64url").toString())).toEqual({ alg: "ES256", kid: "KEYID12345" });
+    expect(JSON.parse(Buffer.from(c!, "base64url").toString())).toEqual({ iss: "TEAMID1234", iat: T });
     expect(verify("sha256", Buffer.from(`${h}.${c}`), { key: publicKey, dsaEncoding: "ieee-p1363" }, Buffer.from(s!, "base64url"))).toBe(true);
   });
 });
