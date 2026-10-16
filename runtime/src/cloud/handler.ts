@@ -320,14 +320,14 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await deps.forward(signature, raw);
   } catch (err) {
     console.error(`alert: kiff/agents: ${(err as Error).message}`);
-    // Asked again, a few times. An alert kiff/agents keeps refusing (its
-    // setup and this one's disagree) would otherwise be a 502 until KIFF
-    // switches the target off, and the phones' pushes with it: past
-    // FORWARD_TRIES, the alert is let go and its run goes on when the hold
-    // expires, as without an answer.
-    const event = str((JSON.parse(raw) as { event_id?: unknown }).event_id);
-    if (await forwardTried(deps, event, now)) {
-      console.error(`alert: kiff/agents refused event ${event} ${FORWARD_TRIES} times; its run goes on when the hold expires`);
+    // Asked again, a few times. An alert kiff/agents keeps not taking (a
+    // refusal, a 5xx, no answer, or the secret not written) would otherwise
+    // be a 502 until KIFF switches the target off, and the phones' pushes
+    // with it: past FORWARD_TRIES, the alert is let go and its run goes on
+    // when the hold expires, as without an answer.
+    const eventID = str((JSON.parse(raw) as { event_id?: unknown }).event_id);
+    if (await forwardTried(deps, eventID, now)) {
+      console.error(`alert: kiff/agents didn't take event ${eventID} in ${FORWARD_TRIES} tries; its run goes on when the hold expires`);
       return out;
     }
     throw new HTTPError(502, "the alert didn't reach the tafs' runtime; send it again");
@@ -339,11 +339,11 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
 export const FORWARD_TRIES = 5;
 
 /** Takes one of the event's tries; true once all are taken. A day after, they free themselves. */
-async function forwardTried(deps: Deps, event: string, now: Date): Promise<boolean> {
-  if (!event) return false;
+async function forwardTried(deps: Deps, eventID: string, now: Date): Promise<boolean> {
+  if (!eventID) return false;
   const until = new Date(now.getTime() + 24 * 3600_000);
   for (let n = 0; n < FORWARD_TRIES; n++) {
-    if (await deps.slots.claim(`forward#${event}#${n}`, until)) return false;
+    if (await deps.slots.claim(`forward#${eventID}#${n}`, until)) return false;
   }
   return true;
 }
