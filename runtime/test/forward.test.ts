@@ -17,9 +17,13 @@ describe("handing KIFF's alert to kiff/agents", () => {
     await expect(forwardAlert(answering(401), "https://a.example/kiff/alerts", "s", "{}")).rejects.toThrow(/401/);
   });
 
+  it("fails on a 404, so KIFF sends it again: the owner answered before the run's pause was stored", async () => {
+    await expect(forwardAlert(answering(404), "https://a.example/kiff/alerts", "s", "{}")).rejects.toThrow(/404/);
+  });
+
   it("fails on a 5xx, and takes any other 4xx as final", async () => {
     await expect(forwardAlert(answering(503), "https://a.example/kiff/alerts", "s", "{}")).rejects.toThrow(/503/);
-    for (const status of [400, 404, 413]) {
+    for (const status of [400, 413]) {
       await expect(forwardAlert(answering(status), "https://a.example/kiff/alerts", "s", "{}")).resolves.toBeUndefined();
     }
   });

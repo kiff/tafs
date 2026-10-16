@@ -1,7 +1,7 @@
 import { createHmac, generateKeyPairSync, verify } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { providerToken } from "../src/cloud/apns.js";
-import { handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
+import { FORWARD_TRIES, handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
 import { type Device, type Notification, type PushStore, signedByKIFF } from "../src/cloud/push.js";
 
 const NOW = new Date("2026-10-15T09:00:00Z");
@@ -173,6 +173,17 @@ describe("KIFF's alerts", () => {
     expect((await alert(held(), push, { apns, slots, forward })).body).toEqual({ duplicate: true });
     expect(apns.sent).toHaveLength(2);
     expect(forward.got).toHaveLength(1);
+  });
+
+  it("stops asking KIFF again for an alert kiff/agents keeps refusing, so the target and its pushes stay on", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const slots = memorySlots();
+    const forward = fakeForward();
+    forward.down = true;
+    for (let i = 0; i < FORWARD_TRIES; i++) expect((await alert(held(), push, { apns, slots, forward })).status).toBe(502);
+    expect((await alert(held(), push, { apns, slots, forward })).status).toBe(200);
+    expect(apns.sent).toHaveLength(2); // the phones were told once, on the first delivery
   });
 
   it("hands kiff/agents nothing KIFF didn't sign", async () => {
