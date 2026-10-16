@@ -2,7 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// Removing a taf: KIFF revokes its Cards first, then tafs cloud stops it and deletes its
-/// memory, its key's vault and its name.
+/// runs, chats and memory, its key and its name.
 @MainActor
 final class RemoveTafTests: XCTestCase {
     private static let raeCard = #"{"id":"rae-k3f9-stripe_refund","subject":"rae-k3f9","grants":[],"aggregates":[],"active":true}"#
@@ -61,7 +61,7 @@ final class RemoveTafTests: XCTestCase {
         let removed = await model.removeTaf(rae)
         let message = try XCTUnwrap(removed)
         XCTAssertTrue(message.contains("KIFF didn't revoke 1 of its Cards: revoke them in KIFF."), message)
-        XCTAssertTrue(message.contains("its key (its vault) couldn't be removed. tafs tries again each time it refreshes."), message)
+        XCTAssertTrue(message.contains("its key couldn't be removed. tafs tries again each time it refreshes."), message)
         XCTAssertNotNil(model.cloudTaf(for: rae), "still there to finish")
     }
 
@@ -89,7 +89,7 @@ final class RemoveTafTests: XCTestCase {
 
         // Refresh: tafs cloud no longer lists it as a taf, only as a removal to finish.
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[],"removing":[{"id":"depl_1","name":"Rae"}]}"#)
-        StubProtocol.responses["DELETE /v1/tafs/depl_1"] = (502, #"{"error":"vaults are down"}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1"] = (502, #"{"error":"kiff/agents is down"}"#)
         await model.refresh()
         XCTAssertEqual(model.unfinishedRemovals.map(\.name), ["Rae"], "shown, and tried again")
         XCTAssertEqual(sent("DELETE", "/v1/tafs/depl_1").count, 2)

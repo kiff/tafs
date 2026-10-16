@@ -844,8 +844,8 @@ final class AppModel: ObservableObject {
     }
 
     /// Removes a taf for good, after Face ID: KIFF revokes its Cards first, so it can't act
-    /// whatever happens next; then tafs cloud stops it, deletes its memory and the vault with
-    /// its key, and frees its name. Returns what to tell the owner, nil when nothing was done.
+    /// whatever happens next; then tafs cloud stops it, deletes its runs, chats, memory and
+    /// key, and frees its name. Returns what to tell the owner, nil when nothing was done.
     func removeTaf(_ tafID: UUID) async -> String? {
         guard mode == .kiff, let taf = taf(tafID), let c = cloudTaf(for: tafID) else { return nil }
         // The session this removal belongs to: checked after every wait, so nothing of it
@@ -905,7 +905,7 @@ final class AppModel: ObservableObject {
         case "schedule": return "schedule"
         case "history": return "runs and chats"
         case "memory": return "memory"
-        case "key": return "key (its vault)"
+        case "key": return "key"
         case "name": return "name"
         default: return step
         }

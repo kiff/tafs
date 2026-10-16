@@ -48,7 +48,8 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
 /**
  * Claims a confirmed draft's agent key (kiff-cloud #1217): the draft's claim
  * secret, shown once to whoever submitted it, buys the key once. The key comes
- * straight here and goes into the taf's vault; the phone never holds it.
+ * straight here and goes into Secrets Manager, where kiff/agents reads it for the
+ * taf's runs; the phone never holds it.
  */
 export async function claimDraft(draftID: string, claimSecret: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<{ agentID: string; key: string }> {
   if (!/^drf_[A-Za-z0-9]+$/.test(draftID)) throw new KIFFError(400, "that is not a KIFF draft id");

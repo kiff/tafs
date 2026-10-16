@@ -40,7 +40,8 @@ kiff/kiff-cloud#1230 (issue #1217).
    someone who may issue Cards and give keys, it's confirmed at once. An
    editor's draft waits for an admin to confirm it in KIFF.
 2. tafs cloud claims the agent's key with the draft's one-time secret and puts
-   it straight into the taf's vault. The key never reaches the phone.
+   it straight into Secrets Manager, where kiff/agents reads it. The key never
+   reaches the phone.
 
 Still open in KIFF: a Card per operation inside a generic tool, like Stripe's
 `stripe_api_write` (kiff/kiff-cloud#1175).

@@ -1,6 +1,7 @@
 import Foundation
 
-/// tafs cloud: the few calls that need the Anthropic key, which the phone never holds.
+/// tafs cloud: the calls that start, follow, chat with and remove tafs, which run on
+/// kiff/agents; the phone never holds a taf's key.
 /// It keeps no accounts: every call carries the person's KIFF session, and tafs cloud
 /// asks KIFF who that is.
 @MainActor
@@ -76,7 +77,7 @@ final class TafsCloud {
     }
 
     /// Starts a taf from a confirmed KIFF draft, and runs it once now. tafs cloud claims
-    /// the agent's key with the draft's claim secret and keeps it in the taf's vault: the
+    /// the agent's key with the draft's claim secret and keeps it in Secrets Manager: the
     /// key itself never reaches the phone. The secret works once.
     func start(name: String, job: String, draftID: String, claimSecret: String, timezone: String = TimeZone.current.identifier) async throws -> Started {
         struct Body: Encodable {
@@ -86,7 +87,7 @@ final class TafsCloud {
         return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, claimSecret: claimSecret, timezone: timezone))
     }
 
-    /// What removing a taf did: each step, "schedule", "memory", "key" (its vault) and "name",
+    /// What removing a taf did: each step, "schedule", "history", "memory", "key" and "name",
     /// is in `removed` or `failed`. A second remove finishes what the first left.
     struct Removal: Decodable, Equatable {
         let done: Bool
@@ -94,7 +95,7 @@ final class TafsCloud {
         let failed: [String]
     }
 
-    /// Removes the taf for good: stops it, deletes its memory and the vault holding its key,
+    /// Removes the taf for good: stops it, deletes its runs, chats and memory and its key,
     /// and frees its name. Its Cards are KIFF's: the phone revokes them first.
     func remove(_ id: String) async throws -> Removal {
         try await send("DELETE", "/v1/tafs/\(escaped(id))")
