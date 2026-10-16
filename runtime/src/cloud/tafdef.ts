@@ -1,6 +1,6 @@
 import { type Job, systemPrompt } from "../jobs.js";
 import { KIFF_SKILL } from "../kiff-skill.js";
-import { type AgentDefinition, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
+import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
 
 /**
  * A taf as kiff/agents runs it: one stored agent definition per taf, built
@@ -13,6 +13,12 @@ export const MODEL = "claude-opus-5-5";
 /** What MODEL costs, in millionths of a US dollar per million tokens (cache writes: 5 minutes). */
 export const PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000 } as const;
 export const MAX_TOKENS = 16_000;
+/**
+ * How hard the model works on each turn: what tafs ran at on Managed Agents.
+ * Without it, kiff/agents runs at the API's default (medium on Opus 5.5).
+ * Not a measured best: kiff/agents' evals (kiff/agents#78) compare settings.
+ */
+export const EFFORT: Effort = "high";
 export const KIFF_GATEWAY = "https://mcp.kiff.dev/mcp";
 /** Finished runs of a session the model gets before a new one: the thread it remembers. */
 export const HISTORY = 10;
@@ -60,6 +66,7 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     model: MODEL,
     price: { ...PRICE },
     max_tokens: MAX_TOKENS,
+    effort: EFFORT,
     gateway: KIFF_GATEWAY,
     key_ref: keyRef(tafID),
     keep: keepRules(),

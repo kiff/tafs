@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { JOBS, jobById } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
-import { DEFAULT_BUDGET_CENTS, definition, KIFF_GATEWAY, MODEL, NOTES_INSTRUCTIONS, PRICE, RETENTION_NS } from "../src/cloud/tafdef.js";
+import { DEFAULT_BUDGET_CENTS, definition, EFFORT, KIFF_GATEWAY, MODEL, NOTES_INSTRUCTIONS, PRICE, RETENTION_NS } from "../src/cloud/tafdef.js";
 
 const ID = "taf-0123456789abcdef0123";
 
@@ -16,7 +16,7 @@ describe("a taf's definition on kiff/agents", () => {
       expect(d.gateway, job.id).toBe("https://mcp.kiff.dev/mcp");
       expect(d.gateway).toBe(KIFF_GATEWAY);
       expect(Object.keys(d).sort(), job.id).toEqual(
-        ["gateway", "history", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price"].sort());
+        ["effort", "gateway", "history", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price"].sort());
     }
   });
 
@@ -24,9 +24,11 @@ describe("a taf's definition on kiff/agents", () => {
     expect(definition(ID, jobById("refunds")).key_ref).toBe(`kiff/${ID}`);
   });
 
-  it("runs on the current Opus at its price, with a cost cap from the budget", () => {
+  it("runs on the current Opus at its price and high effort, with a cost cap from the budget", () => {
     const d = definition(ID, jobById("refunds"));
     expect(d.model).toBe(MODEL);
+    expect(d.effort).toBe("high");
+    expect(EFFORT).toBe("high");
     expect(d.price).toEqual(PRICE);
     expect(d.max_cost_micro_usd).toBe(DEFAULT_BUDGET_CENTS * 10_000);
     expect(definition(ID, jobById("refunds"), { budgetCents: 300 }).max_cost_micro_usd).toBe(3_000_000);
