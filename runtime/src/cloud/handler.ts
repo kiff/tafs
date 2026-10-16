@@ -327,7 +327,8 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // when the hold expires, as without an answer.
     const eventID = str((JSON.parse(raw) as { event_id?: unknown }).event_id);
     if (await forwardTried(deps, eventID, now)) {
-      console.error(`alert: kiff/agents didn't take event ${eventID} in ${FORWARD_TRIES} tries; its run goes on when the hold expires`);
+      // FORWARD_TRIES deliveries were answered 502; this is the one after them.
+      console.error(`alert: kiff/agents didn't take event ${eventID} in ${FORWARD_TRIES + 1} tries; its run goes on when the hold expires`);
       return out;
     }
     throw new HTTPError(502, "the alert didn't reach the tafs' runtime; send it again");
