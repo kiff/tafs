@@ -53,10 +53,10 @@ export type EventKind = (typeof EVENT_KINDS)[number];
 
 export const KEEP = { never: 0, untilEnd: 1, kept: 2 } as const;
 
-/** An agent as stored in kiff/agents' registry. The tenant and id come from the caller and the path. */
 /** The effort levels kiff/agents takes, lowest first. */
 export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
+/** An agent as stored in kiff/agents' registry. The tenant and id come from the caller and the path. */
 export interface AgentDefinition {
   tenant?: string;
   id?: string;
