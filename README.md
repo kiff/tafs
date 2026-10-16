@@ -145,22 +145,26 @@ down what it learns about the owner and their customers. Notes shape how it
 works; they never change what its Card allows, since KIFF still decides every
 action.
 
-Setting it up, once, with AWS credentials for the account. The model key
-lives in `tafs/anthropic-api-key` (us-east-1), replicated to eu-west-1, where
+Setting it up, once, with AWS credentials for the account. kiff/agents comes
+before tafs cloud, whose script reads its URLs. The model key comes first of
+all: `tafs/anthropic-api-key` (us-east-1), replicated to eu-west-1, where
 kiff/agents reads the replica; tafs cloud never reads it.
 
 ```sh
 cd runtime && npm ci && npm run bundle && cd ..
-APNS_KEY_ID=… APNS_TEAM_ID=… infra/aws.sh runtime/lambda.zip   # the function, its role, the table, the key's secret, the deploy role
 # The model key, without it on a command line (the clipboard holds it):
-pbpaste | tr -d '[:space:]' | aws --region us-east-1 secretsmanager put-secret-value \
-  --secret-id tafs/anthropic-api-key --secret-string file:///dev/stdin
+pbpaste | tr -d '[:space:]' | aws --region us-east-1 secretsmanager create-secret \
+  --name tafs/anthropic-api-key --tags Key=project,Value=tafs --secret-string file:///dev/stdin
 aws --region us-east-1 secretsmanager replicate-secret-to-regions \
   --secret-id tafs/anthropic-api-key --add-replica-regions Region=eu-west-1
-# Then kiff/agents, reading that replica (its own infra/aws.sh):
+# kiff/agents, reading that replica (its own infra/aws.sh):
 AGENTS_MODEL_KEY_SECRET=tafs/anthropic-api-key ../agents/infra/aws.sh
+APNS_KEY_ID=… APNS_TEAM_ID=… infra/aws.sh runtime/lambda.zip   # the function, its role, the table, the deploy role
 gh variable set TAFS_CLOUD --repo kiff/tafs --body on            # main then deploys on every merge
 ```
+
+To rotate the key, `put-secret-value` on `tafs/anthropic-api-key` (the same
+pipe); the replica follows.
 
 ## TestFlight
 

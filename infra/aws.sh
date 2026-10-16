@@ -13,8 +13,9 @@
 #                              key it is, never the key), kept 30 days.
 #                              Also each account's phones and KIFF alert secrets
 #                              (push#tenant), and delivered alert ids (ttl).
-#   tafs/anthropic-api-key     the model key; a person puts it there and replicates it
-#                              to eu-west-1 (see README).
+#   tafs/anthropic-api-key     the model key; a person creates it before this script
+#                              runs and replicates it to eu-west-1 (see README). Made
+#                              here only when it doesn't exist, holding "unset".
 #                              tafs cloud doesn't read it: kiff/agents reads its
 #                              replica in eu-west-1, which runs the model.
 #   tafs/apns-key              the "tafs push" APNs key (.p8), made in the Apple
