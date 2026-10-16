@@ -64,7 +64,7 @@ ARGV.each do |arg|
   abort "bundle ID #{identifier} is not registered" unless bundle
 
   if push
-    have = api("get", "/v1/bundleIds/#{bundle["id"]}/bundleIdCapabilities?limit=200")["data"] || []
+    have = api("get", "/v1/bundleIds/#{bundle["id"]}/bundleIdCapabilities")["data"] || []
     unless have.any? { |c| c.dig("attributes", "capabilityType") == "PUSH_NOTIFICATIONS" }
       api("post", "/v1/bundleIdCapabilities", { data: { type: "bundleIdCapabilities",
         attributes: { capabilityType: "PUSH_NOTIFICATIONS" },
