@@ -3,6 +3,7 @@ import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSec
 import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
+import { forwardAlert } from "./forward.js";
 import { type Accounts, type Claims, handle, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
@@ -78,23 +79,9 @@ const accountStore: AccountStore = {
 };
 const accounts: Accounts = { put: (account, tenant, secret) => keepAccount(accountStore, account, tenant, secret) };
 
-/**
- * Hands KIFF's alert to kiff/agents' alerts function, as KIFF signed it. A
- * 4xx is final (it couldn't check the alert, or it isn't one it takes):
- * logged, and KIFF isn't asked to send it again. Anything else fails, so KIFF
- * delivers it again.
- */
-async function forward(signature: string, raw: string): Promise<void> {
-  const res = await fetch(need("AGENTS_ALERTS_URL"), {
-    method: "POST",
-    headers: { "content-type": "application/json", "kiff-signature": signature },
-    body: raw,
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (res.ok) return;
-  const text = (await res.text().catch(() => "")).slice(0, 200);
-  if (res.status >= 400 && res.status < 500) { console.error(`alert: kiff/agents answered ${res.status}: ${text}`); return; }
-  throw new Error(`kiff/agents answered ${res.status}: ${text}`);
+/** KIFF's alert, handed to kiff/agents' alerts function (forward.ts). */
+function forward(signature: string, raw: string): Promise<void> {
+  return forwardAlert(fetch, need("AGENTS_ALERTS_URL"), signature, raw);
 }
 
 /** Taf names per account, claimed with a conditional write so only one request wins. */
