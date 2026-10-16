@@ -1,0 +1,46 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { JOBS, jobById, systemPrompt } from "../src/jobs.js";
+import { KIFF_SKILL } from "../src/kiff-skill.js";
+
+describe("jobs", () => {
+  it("has the five jobs, each with a valid default schedule", () => {
+    expect(JOBS.map((j) => j.id)).toEqual(["refunds", "billpay", "access", "deploys", "chargebacks"]);
+    for (const j of JOBS) expect(j.cron.split(" ")).toHaveLength(5);
+  });
+
+  it("tells every taf how to work under a Card", () => {
+    for (const j of JOBS) {
+      const prompt = systemPrompt(j);
+      expect(prompt).toContain("kiff_pending");
+      expect(prompt).toContain("kiff_operation_id");
+      expect(prompt).toContain("never repeat the call");
+      expect(prompt).toContain("kiff skill");
+      // On kiff/agents a held call pauses the run until the owner answers.
+      expect(prompt).toContain("your run pauses until the owner answers");
+      expect(prompt).toContain("Never retry a refused");
+      expect(prompt).toContain(j.instructions);
+    }
+  });
+
+  it("has every taf say an AI agent wrote what it sends outside the company", () => {
+    // kiff.dev's Terms state this for tafs (AI Act Article 50); keep it true.
+    for (const j of JOBS) {
+      expect(systemPrompt(j)).toContain("says, in one plain sentence, that an AI agent wrote it");
+      expect(systemPrompt(j)).toContain("Never present yourself as a person.");
+    }
+  });
+
+  it("refuses an unknown job", () => {
+    expect(() => jobById("payroll")).toThrow(/no job "payroll"/);
+  });
+});
+
+describe("KIFF's skill", () => {
+  it("is the vendored file, pinned to one commit", () => {
+    const onDisk = readFileSync(new URL("../skills/kiff/SKILL.md", import.meta.url), "utf8");
+    expect(KIFF_SKILL.content).toBe(onDisk);
+    expect(KIFF_SKILL.commit).toMatch(/^[0-9a-f]{40}$/);
+    expect(KIFF_SKILL.content).toMatch(/^---\nname: kiff\n/);
+  });
+});

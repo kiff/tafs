@@ -55,5 +55,5 @@ So a Card shows "$212.00 of $2,000.00 today" without a statement call per Card.
 
 ## 5. An agent key for a taf, without the dashboard — shipped, in use
 
-Covered by the draft claim in item 3. The CLI still takes `KIFF_AGENT_KEY` for
-tafs started by hand.
+Covered by the draft claim in item 3. `POST /v1/tafs` still takes an
+`agent_key` for a taf started by hand.
