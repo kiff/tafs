@@ -53,6 +53,9 @@ export type EventKind = (typeof EVENT_KINDS)[number];
 
 export const KEEP = { never: 0, untilEnd: 1, kept: 2 } as const;
 
+/** The effort levels kiff/agents takes, lowest first. */
+export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
+
 /** An agent as stored in kiff/agents' registry. The tenant and id come from the caller and the path. */
 export interface AgentDefinition {
   tenant?: string;
@@ -61,6 +64,8 @@ export interface AgentDefinition {
   model: string;
   price: Price;
   max_tokens: number;
+  /** How hard the model works on each turn ("low" to "max"); absent is the provider's default. */
+  effort?: Effort;
   gateway: string;
   /** Names the agent's KIFF key in the tenant's secrets; never the key. */
   key_ref: string;
