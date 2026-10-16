@@ -110,8 +110,8 @@ function account() {
   return push;
 }
 
-const alert = (body: string, push: ReturnType<typeof memoryPush>, extra: { apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; signature?: string; now?: Date; forward?: ReturnType<typeof fakeForward> } = {}) =>
-  call("POST", "/v1/kiff/alerts", { body, headers: { "KIFF-Signature": extra.signature ?? sig(body) }, push, apns: extra.apns, slots: extra.slots, now: extra.now, forward: extra.forward?.forward });
+const alert = (body: string, push: ReturnType<typeof memoryPush>, extra: { apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; signature?: string; now?: Date; forward?: ReturnType<typeof fakeForward>; accounts?: Map<string, { tenant: string; secret: string }> } = {}) =>
+  call("POST", "/v1/kiff/alerts", { body, headers: { "KIFF-Signature": extra.signature ?? sig(body) }, push, apns: extra.apns, slots: extra.slots, now: extra.now, forward: extra.forward?.forward, accounts: extra.accounts });
 
 describe("KIFF's signature", () => {
   const body = held();
@@ -148,6 +148,18 @@ describe("KIFF's alerts", () => {
     const answered = held({ outcome: "hold_answered", hold: { id: "hold_1", status: "approved" } });
     expect((await alert(answered, push, { forward })).status).toBe(200);
     expect(forward.got).toEqual([{ signature: sig(answered), raw: answered }]);
+  });
+
+  it("gives kiff/agents the secret that signed the alert before handing it on, for accounts registered before kiff/agents", async () => {
+    const OLD = "whsec_" + "o".repeat(43);
+    const push = account();
+    push.secrets.set("t_acme", [SECRET, OLD]); // newest first: this alert comes from the older target
+    const accounts = new Map<string, { tenant: string; secret: string }>();
+    const forward = fakeForward();
+    const r = await alert(held(), push, { forward, accounts, signature: sig(held(), OLD) });
+    expect(r.status).toBe(200);
+    expect(accounts.get("t_acme")).toEqual({ tenant: "t_acme", secret: OLD });
+    expect(forward.got).toHaveLength(1);
   });
 
   it("asks KIFF to send again when kiff/agents didn't get it, and tells the phones once", async () => {
@@ -298,6 +310,16 @@ describe("a phone signing up for alerts", () => {
     expect(push.devices.get("t_acme")!.map((d) => [d.token, d.environment, d.subject, d.answers])).toEqual([
       [TOKEN_B, "production", "u_vic", false], [TOKEN_A, "sandbox", "u_ana", true],
     ]);
+  });
+
+  it("gives kiff/agents the secret kept from before, when a phone registers again without one", async () => {
+    const push = memoryPush();
+    push.secrets.set("t_acme", [SECRET]);
+    const kept = new Map<string, { tenant: string; secret: string }>();
+    await call("POST", "/v1/push", { body: JSON.stringify({ device_token: TOKEN_B, environment: "production" }), headers: signedIn("viewer"), push, accounts: kept });
+    expect(kept.size).toBe(0); // only someone who may answer hands it on
+    await call("POST", "/v1/push", { body: JSON.stringify({ device_token: TOKEN_A, environment: "production" }), headers: signedIn("ana"), push, accounts: kept });
+    expect(kept.get("t_acme")).toEqual({ tenant: "t_acme", secret: SECRET });
   });
 
   it("refuses a token, environment or target that isn't one", async () => {

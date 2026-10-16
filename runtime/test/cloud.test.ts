@@ -233,6 +233,20 @@ describe("tafs cloud", () => {
     expect(w.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
   });
 
+  it("leaves no ghost when the taf's record was written but its answer was lost", async () => {
+    const w = world();
+    const put = w.tafs.put.bind(w.tafs);
+    let lost = true;
+    w.tafs.put = async (t, taf) => { await put(t, taf); if (lost) { lost = false; throw new Error("the answer was lost"); } };
+    const first = await call(w, "POST", "/v1/tafs", { token: "ana", body: START });
+    expect(first.status).toBe(502);
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
+    expect(w.agents.agents.has(`t_acme|${NEW}`)).toBe(false);
+    expect(w.names.held.has("t_acme#Bo")).toBe(false);
+    const retry = await call(w, "POST", "/v1/tafs", { token: "ana", body: START });
+    expect(retry.status).toBe(200);
+  });
+
   it("keeps the name when what a failed start made can't be undone", async () => {
     const w = world();
     w.agents.fail.set("createSchedule", new Error("timeout"));
@@ -325,6 +339,23 @@ describe("removing a taf", () => {
     const second = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
     expect(second.body).toMatchObject({ done: true, failed: [] });
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.removing).toEqual([]);
+  });
+
+  it("finishes a removal whose last step failed after the taf's record was gone", async () => {
+    const w = world();
+    const done = w.removals.done.bind(w.removals);
+    let fail = true;
+    w.removals.done = async (t, id) => { if (fail) { fail = false; throw new Error("timeout"); } await done(t, id); };
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" })).status).toBe(500);
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.removing).toEqual([{ id: RAE, name: "Rae" }]);
+    const again = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
+    expect(again.body).toEqual({ taf: RAE, name: "Rae", kiff_agent: null, done: true, removed: [], failed: [] });
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.removing).toEqual([]);
+    // Another account's leftover removal can't be cleared from here.
+    w.removals.held.set(`t_other#${MAX}`, { id: MAX, name: "Max" });
+    w.tafs.held.delete(`t_other#${MAX}`);
+    expect((await call(w, "DELETE", `/v1/tafs/${MAX}`, { token: "ana" })).status).toBe(404);
+    expect(w.removals.held.has(`t_other#${MAX}`)).toBe(true);
   });
 
   it("keeps the name for a newer taf, however often an old removal is replayed", async () => {

@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { type Agents, AgentsError, type Run, type Schedule, type Session } from "./agents.js";
 import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
-import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender } from "./push.js";
+import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { definition } from "./tafdef.js";
 
 /**
@@ -88,7 +88,11 @@ export interface Keys {
 }
 
 export interface Accounts {
-  /** Keeps the secret KIFF signs `account`'s alerts with, for kiff/agents, naming the tenant it runs them under. */
+  /**
+   * Keeps the secret KIFF signs `account`'s alerts with, for kiff/agents,
+   * naming the tenant it runs them under. Cheap to repeat: the same secret
+   * again writes nothing.
+   */
   put(account: string, tenant: string, secret: string): Promise<void>;
 }
 
@@ -230,7 +234,18 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   if (parts.length === 3 && method === "DELETE") {
     need(me, "cards.manage");
-    return remove(await owned(me, parts[2] ?? "", deps, { removing: true }), me, deps);
+    const id = parts[2] ?? "";
+    const taf = await owned(me, id, deps, { removing: true }).catch((err) => {
+      if (err instanceof HTTPError && err.status === 404) return undefined;
+      throw err;
+    });
+    if (taf) return remove(taf, me, deps);
+    // The record goes only once every other step is done, so a removal left
+    // without it lacks only its own entry: finishing is clearing that.
+    const left = (await deps.removals.list(me.tenantID)).find((r) => r.id === id);
+    if (!left) throw new HTTPError(404, "no such taf");
+    await deps.removals.done(me.tenantID, id);
+    return { taf: id, name: left.name, kiff_agent: null, done: true, removed: [], failed: [] };
   }
 
   const taf = await owned(me, parts[2] ?? "", deps);
@@ -281,6 +296,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const signature = header(event, "kiff-signature");
   const raw = rawBody(event);
+  const now = deps.now?.() ?? new Date();
   const out = await receiveAlert(signature, raw, {
     push: deps.push,
     apns: deps.apns,
@@ -288,9 +304,16 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
     held: (key) => deps.slots.held(key),
     keep: (key, until) => deps.slots.keep(key, until),
     release: (key) => deps.slots.release(key),
-    now: deps.now?.() ?? new Date(),
+    now,
   });
   try {
+    // kiff/agents checks the alert with the account's secret: the one that
+    // signed this alert, which an account registered before kiff/agents, or
+    // a phone with an older target, hasn't handed it yet.
+    const tenant = str((JSON.parse(raw) as { tenant_id?: unknown }).tenant_id);
+    const { secrets } = await deps.push.get(tenant);
+    const signer = secrets.find((secret) => signedByKIFF(signature, raw, [secret], now));
+    if (signer) await deps.accounts.put(tenant, tenant, signer);
     await deps.forward(signature, raw);
   } catch (err) {
     console.error(`alert: kiff/agents: ${(err as Error).message}`);
@@ -325,10 +348,11 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     if (!devices.some((d) => d.token === r.token) && devices.length >= MAX_DEVICES) {
       throw new HTTPError(409, `an account gets alerts on ${MAX_DEVICES} phones at most; remove one first`);
     }
-    if (r.target) {
-      await deps.push.addSecret(me.tenantID, r.target.id, r.target.secret, at);
-      await deps.accounts.put(me.tenantID, me.tenantID, r.target.secret);
-    }
+    if (r.target) await deps.push.addSecret(me.tenantID, r.target.id, r.target.secret, at);
+    // kiff/agents checks the same alerts: give it the newest secret, the one
+    // handed over now or, for a phone that registered before, the one kept.
+    const newest = r.target?.secret ?? secrets[0];
+    if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
     await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, at });
     return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0 };
   }
@@ -424,7 +448,11 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
     });
     await deps.tafs.put(me.tenantID, taf);
   } catch (err) {
-    const undone = await deps.agents.deleteAgent(me.tenantID, tafID).then(() => true, () => false);
+    // A failed write may still have landed, the record's included: all of it
+    // is undone, and the name is freed only if every part is gone.
+    const recordGone = await deps.tafs.remove(me.tenantID, tafID).then(() => true, () => false);
+    const agentGone = await deps.agents.deleteAgent(me.tenantID, tafID).then(() => true, () => false);
+    const undone = recordGone && agentGone;
     // A draft's key stays kept, so a retry resumes with it; an agent_key is the caller's to send again.
     if (undone && !draftID) await deps.keys.remove(me.tenantID, tafID).catch(() => undefined);
     if (undone) await deps.names.release(me.tenantID, name, nameClaim);
