@@ -91,8 +91,18 @@ describe("jobs", () => {
       expect(prompt).toContain("kiff_operation_id");
       expect(prompt).toContain("never repeat the call");
       expect(prompt).toContain("kiff skill");
-      expect(prompt).toContain("don't wait for it and don't retry it during this run");
+      // On kiff/agents a held call pauses the run until the owner answers.
+      expect(prompt).toContain("your run pauses until the owner answers");
+      expect(prompt).toContain("Never retry a refused");
       expect(prompt).toContain(j.instructions);
+    }
+  });
+
+  it("has every taf say an AI agent wrote what it sends outside the company", () => {
+    // kiff.dev's Terms state this for tafs (AI Act Article 50); keep it true.
+    for (const j of JOBS) {
+      expect(systemPrompt(j)).toContain("says, in one plain sentence, that an AI agent wrote it");
+      expect(systemPrompt(j)).toContain("Never present yourself as a person.");
     }
   });
 

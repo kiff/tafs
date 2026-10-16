@@ -1,32 +1,87 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
-import { setup, type Setup } from "../runtime.js";
+import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { type AccountStore, keepAccount } from "./accounts.js";
+import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
-import { type Claims, handle, type HTTPEvent, type Removals, type HTTPResult, type Names, type Slots } from "./handler.js";
+import { forwardAlert } from "./forward.js";
+import { type Accounts, type Claims, handle, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
-// Kept for the life of the container: the key, the client, the agents.
-let client: Promise<Anthropic> | undefined;
-let ready: Promise<Setup> | undefined;
+/**
+ * kiff/agents, where every taf runs: its API (AWS_IAM function URL, signed
+ * with this function's role), its alerts URL, and the region of both, whose
+ * Secrets Manager holds the tafs' KIFF keys and the accounts' alert secrets.
+ */
+function need(name: string): string {
+  const v = process.env[name];
+  if (!v) throw new Error(`${name} is not set`);
+  return v;
+}
+const AGENTS_REGION = process.env.AGENTS_REGION ?? "eu-west-1";
+/** Where kiff/agents reads each taf's key: <prefix><tenant>/<key_ref>, key_ref being kiff/<taf>. */
+const KEYS_PREFIX = process.env.AGENTS_SECRETS_PREFIX ?? "agents/";
+/** Where kiff/agents' alerts function reads each KIFF account's alert secret: <prefix><account>. */
+const ACCOUNTS_PREFIX = process.env.KIFF_ACCOUNTS_PREFIX ?? "agents-accounts/";
 
-function anthropic(): Promise<Anthropic> {
-  client ??= (async () => {
-    const secretID = process.env.ANTHROPIC_SECRET_ID;
-    if (!secretID) throw new Error("ANTHROPIC_SECRET_ID is not set");
-    const out = await new SecretsManagerClient({}).send(new GetSecretValueCommand({ SecretId: secretID }));
-    const apiKey = (out.SecretString ?? "").trim();
-    if (!apiKey) throw new Error("the Anthropic key secret is empty");
-    return new Anthropic({ apiKey });
-  })();
-  client.catch(() => { client = undefined; });
-  return client;
+let agentsClient: Agents | undefined;
+function agents(): Agents {
+  agentsClient ??= new Agents({ url: need("AGENTS_URL"), region: AGENTS_REGION, credentials: envCredentials });
+  return agentsClient;
 }
 
-function ensureSetup(): Promise<Setup> {
-  ready ??= anthropic().then((c) => setup(c));
-  ready.catch(() => { ready = undefined; });
-  return ready;
+const secrets = new SecretsManagerClient({ region: AGENTS_REGION });
+
+/** Makes the secret, or gives it a new value when it exists. */
+async function putSecret(name: string, value: string, description: string): Promise<void> {
+  try {
+    await secrets.send(new CreateSecretCommand({ Name: name, SecretString: value, Description: description }));
+  } catch (err) {
+    if (!(err instanceof ResourceExistsException)) throw err;
+    await secrets.send(new PutSecretValueCommand({ SecretId: name, SecretString: value }));
+  }
+}
+
+const keys: Keys = {
+  put: (tenant, tafID, key) => putSecret(`${KEYS_PREFIX}${tenant}/kiff/${tafID}`, key, "A taf's KIFF agent key, for kiff/agents"),
+  async remove(tenant, tafID) {
+    try {
+      // For good, at once: a removed taf's key must not outlive it.
+      await secrets.send(new DeleteSecretCommand({ SecretId: `${KEYS_PREFIX}${tenant}/kiff/${tafID}`, ForceDeleteWithoutRecovery: true }));
+    } catch (err) {
+      if (!(err instanceof ResourceNotFoundException)) throw err;
+    }
+  },
+};
+
+/** Each account's alert secret for kiff/agents, with the hash of what was written (account#id) beside it in the table. */
+const accountStore: AccountStore = {
+  async hash(account) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: `account#${account}` } }, ConsistentRead: true }));
+    return out.Item?.hash?.S;
+  },
+  async swapHash(account, prev, next) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: TABLE,
+        Item: { id: { S: `account#${account}` }, hash: { S: next } },
+        ConditionExpression: prev === undefined ? "attribute_not_exists(#h)" : "#h = :prev",
+        ExpressionAttributeNames: { "#h": "hash" },
+        ...(prev === undefined ? {} : { ExpressionAttributeValues: { ":prev": { S: prev } } }),
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+  writeSecret: (account, tenant, secret) =>
+    putSecret(`${ACCOUNTS_PREFIX}${account}`, JSON.stringify({ tenant, secret }), "A KIFF account's alert secret, for kiff/agents' alerts"),
+};
+const accounts: Accounts = { put: (account, tenant, secret) => keepAccount(accountStore, account, tenant, secret) };
+
+/** KIFF's alert, handed to kiff/agents' alerts function (forward.ts). */
+function forward(signature: string, raw: string): Promise<void> {
+  return forwardAlert(fetch, need("AGENTS_ALERTS_URL"), signature, raw);
 }
 
 /** Taf names per account, claimed with a conditional write so only one request wins. */
@@ -178,8 +233,32 @@ const apns = apnsSender({
 });
 
 /**
- * Claimed drafts, in the same table: the vault holding each one's key, kept
- * 30 days so a failed start can resume; removed once its taf starts.
+ * Each account's tafs, in one item (tafs#tenant): a map of taf id → the taf
+ * as JSON, each entry set or removed on its own.
+ */
+const tafs: Tafs = {
+  async list(tenant) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: `tafs#${tenant}` } }, ConsistentRead: true }));
+    return Object.values(out.Item?.tafs?.M ?? {}).flatMap((v) => {
+      try { return [JSON.parse(v.S ?? "") as Taf]; } catch { return []; }
+    });
+  },
+  async get(tenant, id) {
+    return (await this.list(tenant)).find((t) => t.id === id);
+  },
+  async put(tenant, taf) {
+    const Key = { id: { S: `tafs#${tenant}` } };
+    await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key, UpdateExpression: "SET tafs = if_not_exists(tafs, :empty)", ExpressionAttributeValues: { ":empty": { M: {} } } }));
+    await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key, UpdateExpression: "SET tafs.#id = :taf", ExpressionAttributeNames: { "#id": taf.id }, ExpressionAttributeValues: { ":taf": { S: JSON.stringify(taf) } } }));
+  },
+  async remove(tenant, id) {
+    await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key: { id: { S: `tafs#${tenant}` } }, UpdateExpression: "REMOVE tafs.#id", ExpressionAttributeNames: { "#id": id } }));
+  },
+};
+
+/**
+ * Claimed drafts, in the same table: the taf whose key each one's is (never
+ * the key), kept 30 days so a failed start can resume; removed once its taf starts.
  */
 const claims: Claims = {
   async get(tenant, draftID) {
@@ -189,15 +268,15 @@ const claims: Claims = {
       ConsistentRead: true,
     }));
     const i = out.Item;
-    if (!i?.secret?.S || !i.name?.S || !i.agent?.S || !i.vault?.S) return undefined;
-    return { secret: i.secret.S, name: i.name.S, agentID: i.agent.S, vaultID: i.vault.S };
+    if (!i?.secret?.S || !i.name?.S || !i.agent?.S || !i.taf?.S) return undefined;
+    return { secret: i.secret.S, name: i.name.S, agentID: i.agent.S, tafID: i.taf.S };
   },
   async put(tenant, draftID, c) {
     await dynamo.send(new PutItemCommand({
       TableName: process.env.NAMES_TABLE ?? "tafs-cloud-names",
       Item: {
         id: { S: `draft#${tenant}#${draftID}` },
-        secret: { S: c.secret }, name: { S: c.name }, agent: { S: c.agentID }, vault: { S: c.vaultID },
+        secret: { S: c.secret }, name: { S: c.name }, agent: { S: c.agentID }, taf: { S: c.tafID },
         ttl: { N: String(Math.floor(Date.now() / 1000) + 30 * 24 * 3600) },
       },
     }));
@@ -234,5 +313,5 @@ const removals: Removals = {
 };
 
 export async function handler(event: HTTPEvent): Promise<HTTPResult> {
-  return handle(event, { anthropic, setup: ensureSetup, names, slots, claims, push, apns, removals });
+  return handle(event, { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals });
 }

@@ -3,7 +3,9 @@
 #
 #   tafs-cloud                 Lambda (Node 22, arm64) with a public function URL;
 #                              the code authenticates every route with KIFF.
-#   tafs-cloud-lambda          its role: logs, and reading the one secret below.
+#   tafs-cloud-lambda          its role: logs, the APNs key, this table, calling
+#                              kiff/agents' API, and writing the tafs' KIFF keys and
+#                              the accounts' alert secrets where kiff/agents reads them.
 #   tafs-cloud-names           DynamoDB: a taf's name per account, claimed once; and
 #                              chat message slots (rate#tenant#taf#window#n, 10 per
 #                              10 minutes), each put once, with a ttl attribute; and
@@ -12,6 +14,8 @@
 #                              Also each account's phones and KIFF alert secrets
 #                              (push#tenant), and delivered alert ids (ttl).
 #   tafs/anthropic-api-key     the Anthropic key; a person puts it there (see README).
+#                              tafs cloud doesn't read it: kiff/agents reads its
+#                              replica in eu-west-1, which runs the model.
 #   tafs/apns-key              the "tafs push" APNs key (.p8), made in the Apple
 #                              Developer portal; a person puts it there.
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
@@ -91,17 +95,31 @@ if ! aws iam get-role --role-name "$LAMBDA_ROLE" >/dev/null 2>&1; then
 fi
 aws iam attach-role-policy --role-name "$LAMBDA_ROLE" \
   --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+# kiff/agents (kiff/agents infra/aws.sh), where every taf runs: its API, called
+# with this role, and the region's secrets it reads the tafs' KIFF keys and the
+# accounts' alert secrets from. tafs cloud writes those and never reads them.
+AGENTS_REGION=eu-west-1
+AGENTS_FN_ARN=arn:aws:lambda:$AGENTS_REGION:$ACCOUNT:function:agents
+AGENTS_SECRETS=arn:aws:secretsmanager:$AGENTS_REGION:$ACCOUNT:secret
 aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-access --policy-document "{
   \"Version\": \"2012-10-17\",
   \"Statement\": [
-    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$SECRET_ARN\", \"$APNS_SECRET_ARN\"]},
-    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:UpdateItem\", \"dynamodb:DeleteItem\"], \"Resource\": \"$TABLE_ARN\"}
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$APNS_SECRET_ARN\"]},
+    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:UpdateItem\", \"dynamodb:DeleteItem\"], \"Resource\": \"$TABLE_ARN\"},
+    {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunctionUrl\", \"Resource\": \"$AGENTS_FN_ARN\",
+     \"Condition\": {\"StringEquals\": {\"lambda:FunctionUrlAuthType\": \"AWS_IAM\"}}},
+    {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$AGENTS_FN_ARN\",
+     \"Condition\": {\"Bool\": {\"lambda:InvokedViaFunctionUrl\": \"true\"}}},
+    {\"Effect\": \"Allow\", \"Action\": [\"secretsmanager:CreateSecret\", \"secretsmanager:PutSecretValue\", \"secretsmanager:DeleteSecret\", \"secretsmanager:DescribeSecret\"],
+     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}
   ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)
 
 # The function.
-ENV="Variables={ANTHROPIC_SECRET_ID=$SECRET,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,NODE_OPTIONS=--enable-source-maps}"
+AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
+AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
+ENV="Variables={AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,NODE_OPTIONS=--enable-source-maps}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

@@ -1,0 +1,337 @@
+import { createHash, createHmac, type Hash, type Hmac } from "node:crypto";
+import { SignatureV4 } from "@smithy/signature-v4";
+
+/**
+ * kiff/agents, as tafs cloud calls it: the runtime that runs each taf
+ * (kiff/agents ARCHITECTURE.md). Its server is a Lambda function URL with
+ * AWS_IAM auth; tafs cloud's role is its one caller. Every request is signed
+ * with that role and names the KIFF account in Kiff-Tenant, after tafs cloud
+ * has verified the person: the server trusts the header only from that role.
+ *
+ * Only what tafs needs, in kiff/agents' own shapes. Runs always start in the
+ * background: the app reads the conversation, it doesn't hold a stream.
+ */
+
+export interface Credentials {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken?: string;
+}
+
+export interface AgentsConfig {
+  /** The function URL, e.g. https://<id>.lambda-url.eu-west-1.on.aws */
+  url: string;
+  /** The function's region: what the signature is scoped to. */
+  region: string;
+  credentials: () => Promise<Credentials>;
+  fetch?: typeof fetch;
+  now?: () => Date;
+}
+
+export class AgentsError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message);
+  }
+}
+
+/** A model's price, in millionths of a US dollar per million tokens of each kind. */
+export interface Price {
+  Input: number;
+  Output: number;
+  CacheRead: number;
+  CacheWrite: number;
+}
+
+/** How long one kind of event is kept: never (0), until its run ends (1), or kept (2) for Retention nanoseconds (0: as long as the session). */
+export interface KeepRule {
+  Keep: 0 | 1 | 2;
+  Retention: number;
+}
+
+export const EVENT_KINDS = ["owner_message", "agent_message", "tool_call", "tool_result", "report", "memory_note", "usage", "error"] as const;
+export type EventKind = (typeof EVENT_KINDS)[number];
+
+export const KEEP = { never: 0, untilEnd: 1, kept: 2 } as const;
+
+/** An agent as stored in kiff/agents' registry. The tenant and id come from the caller and the path. */
+export interface AgentDefinition {
+  tenant?: string;
+  id?: string;
+  instructions: string;
+  model: string;
+  price: Price;
+  max_tokens: number;
+  gateway: string;
+  /** Names the agent's KIFF key in the tenant's secrets; never the key. */
+  key_ref: string;
+  keep: Record<EventKind, KeepRule>;
+  max_cost_micro_usd: number;
+  max_turns?: number;
+  history: number;
+}
+
+export type RunStatus = "PENDING" | "RUNNING" | "PAUSED" | "COMPLETED" | "ERROR" | "CANCELLED";
+
+/** One call KIFF holds for the owner: what a paused run waits for. */
+export interface Requirement {
+  call_id: string;
+  tool: string;
+  input: unknown;
+  operation: string;
+  exception?: string;
+  expires: string;
+  answered?: string;
+  answer?: string;
+}
+
+export interface Run {
+  id: string;
+  agent: string;
+  session: string;
+  trigger: string;
+  source?: string;
+  status: RunStatus;
+  stop?: string;
+  output?: string;
+  error?: string;
+  cost_micro_usd: number;
+  turns: number;
+  requirements?: Requirement[];
+  cancel_requested?: boolean;
+  created: string;
+  updated: string;
+}
+
+export interface Session {
+  id: string;
+  agent: string;
+  kind: "run" | "chat";
+  started: string;
+  updated: string;
+  expires?: string;
+}
+
+export interface SessionEvent {
+  session: string;
+  run: string;
+  seq: number;
+  time: string;
+  kind: EventKind;
+  body: unknown;
+}
+
+export interface Note {
+  agent: string;
+  name: string;
+  text: string;
+  updated: string;
+}
+
+export interface Schedule {
+  tenant?: string;
+  id: string;
+  agent: string;
+  /** Five-field cron, read in time_zone (IANA; empty is UTC). */
+  cron: string;
+  time_zone?: string;
+  input: string;
+  enabled: boolean;
+  /** The next firing, in UTC; absent when it's off. */
+  next?: string;
+}
+
+/** The ids kiff/agents takes: 1 to 128 letters, digits, '-', '_' or '.', never "." or "..". */
+const ID = /^[A-Za-z0-9._-]{1,128}$/;
+
+export class Agents {
+  private readonly signer: SignatureV4;
+  private readonly base: URL;
+
+  constructor(private readonly cfg: AgentsConfig) {
+    this.base = new URL(cfg.url);
+    if (this.base.protocol !== "https:") throw new Error("kiff/agents is called over https");
+    this.signer = new SignatureV4({ service: "lambda", region: cfg.region, credentials: cfg.credentials, sha256: Sha256 });
+  }
+
+  // Agents.
+
+  putAgent(tenant: string, id: string, def: AgentDefinition): Promise<AgentDefinition> {
+    return this.call("PUT", tenant, ["agents", id], def);
+  }
+
+  /** The agent's definition; undefined when the tenant has none of that id. */
+  async getAgent(tenant: string, id: string): Promise<AgentDefinition | undefined> {
+    return this.call<AgentDefinition>("GET", tenant, ["agents", id]).catch(notFound);
+  }
+
+  /** Removes the agent and everything kept for it, its held calls withdrawn first. Already gone counts as done. */
+  async deleteAgent(tenant: string, id: string): Promise<void> {
+    await this.call("DELETE", tenant, ["agents", id]).catch(notFound);
+  }
+
+  // Runs.
+
+  /** Starts a run of the agent in the background: in `session` when given, else in a new one. */
+  startRun(tenant: string, agent: string, input: string, session?: string): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}), background: true });
+  }
+
+  getRun(tenant: string, agent: string, run: string): Promise<Run> {
+    return this.call("GET", tenant, ["agents", agent, "runs", run]);
+  }
+
+  /** Cancels a run; a paused one has its held calls withdrawn in KIFF first. */
+  cancelRun(tenant: string, agent: string, run: string): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "cancel"]);
+  }
+
+  // Sessions and memory.
+
+  /** The agent's sessions, newest first. */
+  async sessions(tenant: string, agent: string, limit = 20): Promise<Session[]> {
+    const out = await this.call<{ sessions: Session[] }>("GET", tenant, ["sessions"], undefined, { agent_id: agent, limit: String(limit) });
+    return out.sessions;
+  }
+
+  /** A session and its events still kept, in order. */
+  session(tenant: string, id: string): Promise<{ session: Session; events: SessionEvent[] }> {
+    return this.call("GET", tenant, ["sessions", id]);
+  }
+
+  async memories(tenant: string, agent: string): Promise<Note[]> {
+    return (await this.call<{ memories: Note[] }>("GET", tenant, ["agents", agent, "memories"])).memories;
+  }
+
+  /** Forgets one note. Already gone counts as done. */
+  async forget(tenant: string, agent: string, name: string): Promise<void> {
+    if (!name || name === "." || name === "..") throw new AgentsError(404, "no such note");
+    await this.call("DELETE", tenant, ["agents", agent, "memories", { text: name }]).catch(notFound);
+  }
+
+  // Schedules.
+
+  createSchedule(tenant: string, s: Schedule): Promise<Schedule> {
+    return this.call("POST", tenant, ["schedules"], writable(s));
+  }
+
+  /** The schedule; undefined when the tenant has none of that id. */
+  async getSchedule(tenant: string, id: string): Promise<Schedule | undefined> {
+    return this.call<Schedule>("GET", tenant, ["schedules", id]).catch(notFound);
+  }
+
+  /** Replaces the schedule; a schedule as read (with its `next`) can be sent back as it is. */
+  updateSchedule(tenant: string, s: Schedule): Promise<Schedule> {
+    return this.call("PUT", tenant, ["schedules", s.id], writable(s));
+  }
+
+  switchSchedule(tenant: string, id: string, on: boolean): Promise<Schedule> {
+    return this.call("POST", tenant, ["schedules", id, on ? "enable" : "disable"]);
+  }
+
+  /** Fires the schedule now, by hand: an ordinary background run of its agent. */
+  trigger(tenant: string, id: string): Promise<Run> {
+    return this.call("POST", tenant, ["schedules", id, "trigger"]);
+  }
+
+  /** The runs the schedule started, newest first. */
+  async scheduleRuns(tenant: string, id: string, limit = 20): Promise<Run[]> {
+    return (await this.call<{ runs: Run[] }>("GET", tenant, ["schedules", id, "runs"], undefined, { limit: String(limit) })).runs;
+  }
+
+  /**
+   * One signed request. Each path segment is an id, checked, so a value from
+   * a route (a taf's id) can't reach another path; or free text (a note's
+   * name), escaped into one segment.
+   */
+  private async call<T>(method: string, tenant: string, segments: Array<string | { text: string }>, body?: unknown, query?: Record<string, string>): Promise<T> {
+    if (!tenant) throw new AgentsError(401, "no KIFF account to call kiff/agents for");
+    const path: string[] = [];
+    for (const seg of segments) {
+      if (typeof seg !== "string") { path.push(encodeURIComponent(seg.text)); continue; }
+      if (!ID.test(seg) || seg === "." || seg === "..") throw new AgentsError(404, "not found");
+      path.push(seg);
+    }
+    const payload = body === undefined ? undefined : JSON.stringify(body);
+    const headers: Record<string, string> = { host: this.base.host, accept: "application/json", "kiff-tenant": tenant };
+    if (payload !== undefined) headers["content-type"] = "application/json";
+    const signed = await this.signer.sign(
+      {
+        method,
+        protocol: "https:",
+        hostname: this.base.hostname,
+        // The signer escapes it once more: a function URL's canonical path is escaped twice.
+        path: "/" + path.join("/"),
+        headers,
+        ...(query ? { query } : {}),
+        ...(payload !== undefined ? { body: payload } : {}),
+      },
+      { signingDate: this.cfg.now?.() ?? new Date() },
+    );
+    const url = new URL("/" + path.join("/"), this.base);
+    for (const [k, v] of Object.entries(query ?? {})) url.searchParams.set(k, v);
+    // fetch sets Host itself, from the URL; it is signed with the same value.
+    const { host: _host, ...send } = signed.headers;
+    const res = await (this.cfg.fetch ?? fetch)(url, { method, headers: send, ...(payload !== undefined ? { body: payload } : {}) });
+    if (res.status === 204) return undefined as T;
+    const text = await res.text();
+    let parsed: unknown;
+    try { parsed = text ? JSON.parse(text) : undefined; } catch { parsed = undefined; }
+    if (!res.ok) {
+      const msg = (parsed as { error?: unknown } | undefined)?.error;
+      throw new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`);
+    }
+    return parsed as T;
+  }
+}
+
+/**
+ * The fields of a schedule kiff/agents takes. It refuses unknown fields, and
+ * `next` is only ever its answer; the tenant comes from the caller.
+ */
+function writable(s: Schedule): Omit<Schedule, "next" | "tenant"> {
+  return { id: s.id, agent: s.agent, cron: s.cron, ...(s.time_zone ? { time_zone: s.time_zone } : {}), input: s.input, enabled: s.enabled };
+}
+
+function notFound(err: unknown): undefined {
+  if (err instanceof AgentsError && err.status === 404) return undefined;
+  throw err;
+}
+
+type SourceData = string | ArrayBuffer | ArrayBufferView;
+
+function bytes(d: SourceData): string | Uint8Array {
+  if (typeof d === "string") return d;
+  if (d instanceof ArrayBuffer) return new Uint8Array(d);
+  return new Uint8Array(d.buffer, d.byteOffset, d.byteLength);
+}
+
+/** SHA-256 and its HMAC on node:crypto, in the shape the signer takes. */
+class Sha256 {
+  private h: Hash | Hmac;
+  private readonly secret: string | Uint8Array | undefined;
+  constructor(secret?: SourceData) {
+    this.secret = secret === undefined ? undefined : bytes(secret);
+    this.h = this.fresh();
+  }
+  private fresh(): Hash | Hmac {
+    return this.secret === undefined ? createHash("sha256") : createHmac("sha256", this.secret);
+  }
+  update(data: SourceData): void {
+    this.h.update(bytes(data));
+  }
+  async digest(): Promise<Uint8Array> {
+    return new Uint8Array(this.h.digest());
+  }
+  reset(): void {
+    this.h = this.fresh();
+  }
+}
+
+/** Credentials from the environment: what Lambda gives a function's role. */
+export async function envCredentials(): Promise<Credentials> {
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID ?? "";
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ?? "";
+  if (!accessKeyId || !secretAccessKey) throw new Error("no AWS credentials in the environment to sign kiff/agents requests with");
+  const sessionToken = process.env.AWS_SESSION_TOKEN;
+  return { accessKeyId, secretAccessKey, ...(sessionToken ? { sessionToken } : {}) };
+}
