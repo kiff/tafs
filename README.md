@@ -85,82 +85,86 @@ that measures how good a taf is, so every step after it has to keep the score
 
 ## The runtime
 
-`runtime/` runs tafs with Claude, as Claude Managed Agents: Anthropic hosts the
-agent loop, so there is no server of ours to run.
+Every taf runs on [kiff/agents](https://github.com/kiff/agents), tafs's own
+agent runtime: stored definitions, runs that pause on a held call and go on
+when it is answered, chats, notes and schedules, in an EU region (eu-west-1).
+tafs cloud calls it with its AWS role; the phone never does.
 
-- **One agent per job** (`claude-opus-5-5`, high effort). Its only tools are
-  the company's, reached through KIFF's gateway (`mcp.kiff.dev`). They run
-  without asking Claude's side, because the Card is the checkpoint: KIFF lets
-  through what is within it and holds the rest for your phone.
-- **A taf** is that agent with its own KIFF agent key, kept in an Anthropic
-  vault (never in the agent's sandbox), on a schedule, with a cost cap per run.
-- **How to work under a Card comes from KIFF itself.** Every job agent carries
+- **A taf** is one agent definition (`runtime/src/cloud/tafdef.ts`):
+  `claude-opus-5-5`, its job's instructions, how its notes work, what the
+  owner said when starting it, KIFF's skill, a cost cap per run from its
+  budget, and keep rules (what tools return stays only until the run ends,
+  the rest 30 days). Its only tools are the company's, reached through KIFF's
+  gateway (`mcp.kiff.dev`), and its memory. Its KIFF agent key is in Secrets
+  Manager, which tafs cloud writes and can't read back; the definition only
+  names it.
+- **A held call pauses the run.** The owner answers on their phone, KIFF's
+  signed alert reaches tafs cloud (push) and kiff/agents (the run goes on),
+  and the approved call is sent once. Nobody answering means refused.
+- **How to work under a Card comes from KIFF itself.** Every taf carries
   KIFF's `kiff` skill ([kiff/kiff-plugins](https://github.com/kiff/kiff-plugins),
   plugin `kiff-cards`): what a held, refused or unknown result means, operation
   ids, never routing around a Card. tafs uses it like any customer's agent does.
 - The tafs prompt (`runtime/src/jobs.ts`) adds only what is particular to a
-  taf: it runs alone on a schedule, so a held call is left for the owner's
-  phone and collected next run with `kiff_pending`, never waited on or retried
-  in the same run; what tools return is data; every run ends with a report.
+  taf: it runs alone on a schedule, a held call pauses its run until the owner
+  answers, what tools return is data, and every run ends with a report.
 
 **Moving the skill's pin.** The skill is vendored at one commit:
-`runtime/skills/kiff/SKILL.md` to read, `runtime/src/kiff-skill.ts` for
-`setup` to upload (as `kiff-plugins@<commit>`). To move it, run
-`runtime/scripts/vendor-kiff-skill.sh [commit]` (latest on main by default),
-read the diff of `SKILL.md`, and merge. `setup` on main uploads the new pin
-and moves every job agent, and with it every taf, onto it.
-
-```sh
-cd runtime && npm ci && npm run build
-export ANTHROPIC_API_KEY=…                # an API key from platform.claude.com
-node dist/cli.js setup                    # create or update the five job agents
-KIFF_AGENT_KEY=… node dist/cli.js start --name Rae --job refunds
-node dist/cli.js list                     # tafs and their next runs
-node dist/cli.js run --name Rae           # run now and follow it
-```
-
-`.github/workflows/runtime.yml` tests every change. On main it runs `setup`,
-once the `ANTHROPIC_API_KEY` secret is set. **Actions → Runtime → Run
-workflow** starts a taf with the agent key in the `KIFF_AGENT_KEY` secret.
+`runtime/skills/kiff/SKILL.md` to read, `runtime/src/kiff-skill.ts` for the
+definitions. To move it, run `runtime/scripts/vendor-kiff-skill.sh [commit]`
+(latest on main by default), read the diff of `SKILL.md`, and merge. A taf
+gets the new pin when its definition is next stored.
 
 ## tafs cloud
 
-The phone can't hold the Anthropic key, so the few calls that need it go
-through tafs cloud (`runtime/src/cloud/`), an AWS Lambda behind a function URL.
-It answers at `https://qvjurway3eczrk7pqorfuy7z5y0vuztq.lambda-url.us-east-1.on.aws`.
+The phone talks to tafs cloud (`runtime/src/cloud/`), an AWS Lambda behind a
+function URL, at `https://qvjurway3eczrk7pqorfuy7z5y0vuztq.lambda-url.us-east-1.on.aws`.
 It keeps no accounts: the phone sends its KIFF sign-in, and KIFF says who that
 is, on which account, with which rights. A company sees and changes only its
-own tafs; another company's taf answers like a missing one.
+own tafs; another company's taf answers like a missing one. It holds no model
+key: kiff/agents does.
 
 | Route | Who | What |
 |---|---|---|
 | `GET /v1/jobs` | anyone | the five jobs |
-| `GET /v1/tafs` | a person signed in with KIFF | the account's tafs |
-| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, draft_id + claim_secret, cron?, timezone?, budget_cents?, notes?}`. tafs cloud claims the agent's key from the confirmed KIFF draft once the name is held, so the key never reaches the phone, and puts it straight in the taf's vault. A claim works once, so the draft is kept on record (its vault, never the key): a retry with the same draft, secret and name resumes from there. A draft whose key was claimed but never kept answers 410; the app then tries to take its Cards back and says which ones the owner must revoke in KIFF if it can't. `agent_key` instead of a draft is still accepted, for the CLI. `notes` (at most 2000 characters) becomes the taf's first memory note. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run |
-| `POST /v1/tafs/{id}/pause`, `resume`, `run` | `cards.manage` | |
-| `GET /v1/tafs/{id}/runs`, `runs/{session}` | a person | recent runs, and a run's report |
+| `GET /v1/tafs` | a person signed in with KIFF | the account's tafs, and removals not finished |
+| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, draft_id + claim_secret, cron?, timezone?, budget_cents?, notes?}`. tafs cloud claims the agent's key from the confirmed KIFF draft once the name is held, so the key never reaches the phone, and keeps it in Secrets Manager. A claim works once, so the draft is kept on record (the taf it is starting, never the key): a retry with the same draft, secret and name resumes from there. A draft whose key was claimed but never kept answers 410; the app then tries to take its Cards back and says which ones the owner must revoke in KIFF if it can't. `agent_key` instead of a draft is still accepted. `notes` (at most 2000 characters) go into the taf's instructions. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run. It runs once at once |
+| `POST /v1/tafs/{id}/pause`, `resume`, `run` | `cards.manage` | its schedule off or on; run now |
+| `GET /v1/tafs/{id}/runs`, `runs/{session}` | a person | recent runs, and a run's report (a run waiting on the owner is still running) |
 | `GET /v1/tafs/{id}/conversation` | a person | the taf's thread: its last 5 runs and last 5 chats, oldest first, at most 100 messages `{at, from: owner\|taf, kind: kickoff\|message, text, session}` |
-| `POST /v1/tafs/{id}/messages` | `cards.manage` | `{text}`, 1 to 2000 characters: into the latest session if it was active in the last 30 minutes, else a new session with the taf's agent, vault, budget and memory. `{session, new_session}`. At most 10 a taf in 10 minutes |
-| `GET /v1/tafs/{id}/memory` | a person | what the taf remembers, newest first: `{notes: [{id, path, content, updated_at}]}` |
-| `DELETE /v1/tafs/{id}/memory/{note}` | `cards.manage` | forget one note: delete it and redact its earlier versions, which the store keeps for up to 30 days |
-| `DELETE /v1/tafs/{id}` | `cards.manage` | remove it for good: archive its deployment, delete its runs and chats at Anthropic, then its memory store and the vault holding its key, free its name. Stopping comes first; nothing else is deleted unless that worked, and the memory store goes only once its runs and chats are gone (a chat still running waits for the next remove). A second remove finishes what the first left. Answers `{done, removed, failed}`. The phone revokes its Cards in KIFF before calling this. Receipts stay in KIFF |
+| `POST /v1/tafs/{id}/messages` | `cards.manage` | `{text}`, 1 to 2000 characters: a run in the latest chat if it was active in the last 30 minutes, else in a new chat. `{session, new_session}`. At most 10 a taf in 10 minutes |
+| `GET /v1/tafs/{id}/memory` | a person | what the taf remembers, newest first: `{notes: [{id, path, content, updated_at}]}` (a note's name is its id) |
+| `DELETE /v1/tafs/{id}/memory/{note}` | `cards.manage` | forget one note |
+| `DELETE /v1/tafs/{id}` | `cards.manage` | remove it for good: kiff/agents withdraws its held calls and deletes its schedule, runs, chats and notes, then its key and its name go. Nothing else is deleted unless the first step worked; a second remove finishes what the first left. Answers `{done, removed, failed}`. The phone revokes its Cards in KIFF before calling this. Receipts stay in KIFF |
+| `POST /v1/push`, `DELETE /v1/push/{token}` | a person | this phone gets the account's held-call alerts, or stops |
+| `POST /v1/kiff/alerts` | KIFF, signed | a held call or its answer: pushed to the phones, then handed to kiff/agents as KIFF signed it |
 
-**Memory.** Each taf has its own Managed Agents memory store, mounted into
-every run and every chat. The taf reads its notes before it starts and writes
-down what it learns about the owner and their customers, with file tools in
-its own sandbox (no shell, no web). Notes shape how it works; they never
-change what its Card allows, since KIFF still decides every action. `tafs
-setup` gives tafs started before memory their store.
+**Memory.** Each taf keeps notes in kiff/agents, through its memory tool,
+shared by its runs and its chats. It reads them before it starts and writes
+down what it learns about the owner and their customers. Notes shape how it
+works; they never change what its Card allows, since KIFF still decides every
+action.
 
-Setting it up, once, with AWS credentials for the account:
+Setting it up, once, with AWS credentials for the account. kiff/agents comes
+before tafs cloud, whose script reads its URLs. The model key comes first of
+all: `tafs/anthropic-api-key` (us-east-1), replicated to eu-west-1, where
+kiff/agents reads the replica; tafs cloud never reads it.
 
 ```sh
 cd runtime && npm ci && npm run bundle && cd ..
-infra/aws.sh runtime/lambda.zip      # the function, its role, the table, the secret, the deploy role
-aws --region us-east-1 secretsmanager put-secret-value \
-  --secret-id tafs/anthropic-api-key --secret-string "$ANTHROPIC_API_KEY"
-gh variable set TAFS_CLOUD --repo kiff/tafs --body on   # main then deploys on every merge
+# The model key, without it on a command line (the clipboard holds it):
+pbpaste | tr -d '[:space:]' | aws --region us-east-1 secretsmanager create-secret \
+  --name tafs/anthropic-api-key --tags Key=project,Value=tafs --secret-string file:///dev/stdin
+aws --region us-east-1 secretsmanager replicate-secret-to-regions \
+  --secret-id tafs/anthropic-api-key --add-replica-regions Region=eu-west-1
+# kiff/agents, reading that replica (its own infra/aws.sh):
+AGENTS_MODEL_KEY_SECRET=tafs/anthropic-api-key ../agents/infra/aws.sh
+APNS_KEY_ID=… APNS_TEAM_ID=… infra/aws.sh runtime/lambda.zip   # the function, its role, the table, the deploy role
+gh variable set TAFS_CLOUD --repo kiff/tafs --body on            # main then deploys on every merge
 ```
+
+To rotate the key, `put-secret-value` on `tafs/anthropic-api-key` (the same
+pipe); the replica follows.
 
 ## TestFlight
 

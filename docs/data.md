@@ -62,8 +62,9 @@ KIFF ──(signed alert)───────────────▶ tafs c
 ## Open
 
 - **Managed Agents, being retired (#42).** tafs ran on Claude Managed Agents
-  before this. Its agents, environment, deployments, sessions, memory stores and
-  vaults are deleted when #42 retires it; until then they hold what earlier test
-  tafs did, and nothing new.
+  before this. No tafs code uses it any more, and nothing creates anything
+  there: the CLI and CI's `setup` job are gone. What earlier test tafs left
+  (agents, an environment, KIFF skill uploads, deployments, sessions, memory
+  stores, vaults) is deleted as #42's last step.
 - **Inference region.** tafs doesn't pin `inference_geo`. Pinning `"us"` keeps
   inference in the US at 1.1x the price. Decide when a customer asks.

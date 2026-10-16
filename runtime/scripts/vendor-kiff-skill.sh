@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Pins KIFF's own `kiff` skill (kiff/kiff-plugins) for the job agents.
+# Pins KIFF's own `kiff` skill (kiff/kiff-plugins) for every taf.
 # Writes skills/kiff/SKILL.md, for people to read, and src/kiff-skill.ts, which
-# setup uploads. Usage: scripts/vendor-kiff-skill.sh [commit]  (default: latest on main)
+# goes into each taf's definition (src/cloud/tafdef.ts).
+# Usage: scripts/vendor-kiff-skill.sh [commit]  (default: latest on main)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 REPO=kiff/kiff-plugins
