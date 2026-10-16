@@ -351,6 +351,11 @@ describe("removing a taf", () => {
     const again = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
     expect(again.body).toEqual({ taf: RAE, name: "Rae", kiff_agent: null, done: true, removed: [], failed: [] });
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.removing).toEqual([]);
+    // A removal begun on Managed Agents keeps its entry: its deployment, vaults
+    // and name are still there, for retiring Managed Agents to delete.
+    w.removals.held.set("t_acme#depl_old", { id: "depl_old", name: "Old" });
+    expect((await call(w, "DELETE", "/v1/tafs/depl_old", { token: "ana" })).status).toBe(404);
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.removing).toEqual([{ id: "depl_old", name: "Old" }]);
     // Another account's leftover removal can't be cleared from here.
     w.removals.held.set(`t_other#${MAX}`, { id: MAX, name: "Max" });
     w.tafs.held.delete(`t_other#${MAX}`);

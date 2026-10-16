@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
 import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
 import { type Accounts, type Claims, handle, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs } from "./handler.js";
@@ -52,21 +52,31 @@ const keys: Keys = {
   },
 };
 
-/**
- * Each account's alert secret for kiff/agents. tafs cloud can't read the
- * secret back, so what it last wrote is remembered as a hash (account#id in
- * the table): the same secret again writes nothing, and a new one replaces it.
- */
-const accounts: Accounts = {
-  async put(account, tenant, secret) {
-    const Key = { id: { S: `account#${account}` } };
-    const hash = createHash("sha256").update(`${tenant}\n${secret}`).digest("hex");
-    const had = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key, ConsistentRead: true }));
-    if (had.Item?.hash?.S === hash) return;
-    await putSecret(`${ACCOUNTS_PREFIX}${account}`, JSON.stringify({ tenant, secret }), "A KIFF account's alert secret, for kiff/agents' alerts");
-    await dynamo.send(new PutItemCommand({ TableName: TABLE, Item: { ...Key, hash: { S: hash } } }));
+/** Each account's alert secret for kiff/agents, with the hash of what was written (account#id) beside it in the table. */
+const accountStore: AccountStore = {
+  async hash(account) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: `account#${account}` } }, ConsistentRead: true }));
+    return out.Item?.hash?.S;
   },
+  async swapHash(account, prev, next) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: TABLE,
+        Item: { id: { S: `account#${account}` }, hash: { S: next } },
+        ConditionExpression: prev === undefined ? "attribute_not_exists(#h)" : "#h = :prev",
+        ExpressionAttributeNames: { "#h": "hash" },
+        ...(prev === undefined ? {} : { ExpressionAttributeValues: { ":prev": { S: prev } } }),
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+  writeSecret: (account, tenant, secret) =>
+    putSecret(`${ACCOUNTS_PREFIX}${account}`, JSON.stringify({ tenant, secret }), "A KIFF account's alert secret, for kiff/agents' alerts"),
 };
+const accounts: Accounts = { put: (account, tenant, secret) => keepAccount(accountStore, account, tenant, secret) };
 
 /**
  * Hands KIFF's alert to kiff/agents' alerts function, as KIFF signed it. A

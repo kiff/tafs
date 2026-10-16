@@ -241,8 +241,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     });
     if (taf) return remove(taf, me, deps);
     // The record goes only once every other step is done, so a removal left
-    // without it lacks only its own entry: finishing is clearing that.
-    const left = (await deps.removals.list(me.tenantID)).find((r) => r.id === id);
+    // without it lacks only its own entry: finishing is clearing that. Only a
+    // kiff/agents taf's: a removal begun on Managed Agents (a depl_ id) still
+    // holds its deployment, vaults and name there, which retiring Managed
+    // Agents (#42) deletes along with its entry.
+    const left = TAF_ID.test(id) ? (await deps.removals.list(me.tenantID)).find((r) => r.id === id) : undefined;
     if (!left) throw new HTTPError(404, "no such taf");
     await deps.removals.done(me.tenantID, id);
     return { taf: id, name: left.name, kiff_agent: null, done: true, removed: [], failed: [] };
@@ -502,13 +505,16 @@ async function draftKey(me: KIFFIdentity, name: string, draftID: string, claimSe
   return { agentID, tafID };
 }
 
+/** A taf's id on kiff/agents. */
+const TAF_ID = /^taf-[0-9a-f]{20}$/;
+
 function newTafID(): string {
   return `taf-${randomBytes(10).toString("hex")}`;
 }
 
 /** The caller's taf. Someone else's answers exactly like a missing one; a taf being removed is gone but for finishing that. */
 async function owned(me: KIFFIdentity, id: string, deps: Deps, opts: { removing?: boolean } = {}): Promise<Taf> {
-  if (!/^taf-[0-9a-f]{20}$/.test(id)) throw new HTTPError(404, "no such taf");
+  if (!TAF_ID.test(id)) throw new HTTPError(404, "no such taf");
   const taf = await deps.tafs.get(me.tenantID, id);
   if (!taf || (taf.removing && !opts.removing)) throw new HTTPError(404, "no such taf");
   return taf;
