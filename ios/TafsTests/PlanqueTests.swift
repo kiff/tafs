@@ -231,34 +231,31 @@ final class PlanqueTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// One Face ID approves the grant and the taf's draft; the vendor's sign-in comes back
-    /// with planque's code, the phone confirms it, and only then are the Cards confirmed.
-    func testConnectOneFaceIDThenSignInThenCards() async throws {
+    /// One Face ID approves the grant; the vendor's sign-in comes back with planque's code,
+    /// and the phone confirms it. A draft named with a grant not yet connected isn't read:
+    /// KIFF takes a taf's Cards only once its tools are connected.
+    func testConnectOneFaceIDThenSignIn() async throws {
         let signer = FaceIDSigner()
         let vendor = StubVendor()
         let model = await model(signer: signer, vendor: vendor)
         model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON())]}"#)
-        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"draft","version":"v3"}"#)
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grantJSON(status: "connected"))
-        StubProtocol.responses["POST /v1/me/agent-drafts/d_01/confirm"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"confirmed","version":"v3","card_ids":["m1"]}"#)
         vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
         StubProtocol.sent = []
 
         let connected = await model.connect(grantID: "g_01", draftID: "d_01")
         XCTAssertEqual(connected?.status, "connected", model.lastError ?? "")
-        XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(Self.digest)|v3"], "one Face ID, naming the grant and the draft version")
+        XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(Self.digest)"], "one Face ID, naming the grant")
         XCTAssertEqual(vendor.opened, [URL(string: "https://access.stripe.com/authorize?x=1")!])
 
         let order = StubProtocol.sent.map { "\($0.httpMethod ?? "") \($0.url?.path ?? "")" }
-        XCTAssertEqual(Array(order.prefix(5)), ["GET /v1/accounts/t_01/grants", "GET /v1/me/agent-drafts/d_01",
-                                                "POST /v1/accounts/t_01/grants/g_01/approve", "POST /v1/accounts/t_01/grants/g_01/confirm",
-                                                "POST /v1/me/agent-drafts/d_01/confirm"])
+        XCTAssertEqual(Array(order.prefix(3)), ["GET /v1/accounts/t_01/grants", "POST /v1/accounts/t_01/grants/g_01/approve",
+                                                "POST /v1/accounts/t_01/grants/g_01/confirm"])
         XCTAssertEqual(body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").first)["confirm"] as? String, "c0de")
-        let cards = try XCTUnwrap(sent("POST", "api.test", "/v1/me/agent-drafts/d_01/confirm").first)
-        XCTAssertEqual(body(cards)["version"] as? String, "v3", "the version shown")
-        XCTAssertNotNil(cards.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertTrue(sent("GET", "api.test", "/v1/me/agent-drafts/d_01").isEmpty, "no draft before its tools are connected")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts/d_01/confirm").isEmpty)
         XCTAssertNil(model.kiff.setupSigner)
         XCTAssertNil(model.planque.signer)
         Keychain.delete(AppModel.planqueAccount)

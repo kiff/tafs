@@ -1319,9 +1319,9 @@ final class AppModel: ObservableObject {
     /// An approval in the setup chat (contract 4, as amended on kiff/agents#91): one Face
     /// ID each. For a grant not yet connected, it approves planque's grant, then the owner
     /// signs in on the vendor's own page and the phone confirms the sign-in with the code
-    /// it brought back; a draft given too is confirmed last, so Cards go live only with
-    /// their tools. For a connected grant, it confirms only the taf's draft: KIFF takes a
-    /// Card only for a tool that is connected. Returns the grant, or nil with `lastError`.
+    /// it brought back. For a connected grant, it confirms the taf's draft: KIFF takes a
+    /// Card only for a tool that is connected, so a draft comes only after its grant.
+    /// Returns the grant, or nil with `lastError`.
     func connect(grantID: String, draftID: String? = nil) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
             lastError = "Set up planque on this iPhone first."
@@ -1346,7 +1346,7 @@ final class AppModel: ObservableObject {
                 return nil
             }
             grant = found
-            if let draftID { draft = try await kiff.draft(id: draftID) }
+            if let draftID, found.connected { draft = try await kiff.draft(id: draftID) }
         } catch {
             lastError = "Couldn't read what to approve: \(error.localizedDescription)"
             return nil
@@ -1379,7 +1379,7 @@ final class AppModel: ObservableObject {
         }
 
         do {
-            _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)|\(draft?.version ?? "")".utf8),
+            _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
                                       reason: "Connect \(grant.vendor) to \(grant.request.agent)")
         } catch { return nil }
         guard gen == accountGeneration else { return nil }
@@ -1402,14 +1402,6 @@ final class AppModel: ObservableObject {
             lastError = "Not connected: \(error.localizedDescription)"
             await refreshConnections()
             return nil
-        }
-        if let draft, !draft.confirmed {
-            kiff.setupSigner = { try signer.signConfirmed($0) }
-            do {
-                _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
-            } catch {
-                lastError = "\(grant.vendor) is connected, but KIFF didn't issue the taf's Cards: \(error.localizedDescription)"
-            }
         }
         await refreshConnections()
         return connected
