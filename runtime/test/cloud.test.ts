@@ -451,4 +451,24 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(again.body.taf.id).toBe(NEW);
     expect(w.agents.setupDrafts.get("drf_s1")?.keyRef).toBe(`kiff/${NEW}`);
   });
+
+  it("keeps the taf id on record before the claim, so a retry after an unknown outcome reuses it", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.fail.set("claimTafDraft", new Error("timed out"));
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY })).status).toBe(502);
+    expect(w.claims.held.get("t_acme#drf_s1")).toMatchObject({ secret: "", name: "Refunds", tafID: NEW });
+    const again = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
+    expect(again.status).toBe(200);
+    expect(again.body.taf.id).toBe(NEW);
+    expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft"))).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `claimTafDraft drf_s1 kiff/${NEW}`]);
+  });
+
+  it("leaves no record for a draft Setup didn't submit, so the phone's own claim still works", async () => {
+    const w = world();
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, draft_id: "drf_1" } })).status).toBe(404);
+    expect(w.claims.held.size).toBe(0);
+    const own = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Refunds", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(own.status).toBe(200);
+  });
 });

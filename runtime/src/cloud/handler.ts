@@ -626,18 +626,27 @@ async function setupDraftKey(me: KIFFIdentity, name: string, draftID: string, ta
   if (held) {
     if (held.name !== name) throw new HTTPError(409, `this draft is starting the taf ${held.name}; start it with that name`);
     tafID = held.tafID;
+  } else {
+    // On record before the claim: kiff/agents claims a draft into one key
+    // reference only, so a retry must reuse this taf id whatever happens next.
+    await deps.claims.put(me.tenantID, draftID, { secret: "", name, agentID: "", tafID })
+      .catch((err) => { throw new HTTPError(502, (err as Error).message); });
   }
   let agentID: string;
   try {
     agentID = (await deps.agents.claimTafDraft(me.tenantID, draftID, keyRef(tafID))).agent_id;
   } catch (err) {
-    if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "Setup submitted no draft by that id on this account");
+    if (err instanceof AgentsError && err.status === 404) {
+      // Not Setup's: nothing was claimed, so the record goes and can't stand in the draft's own claim.
+      if (!held) await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
+      throw new HTTPError(404, "Setup submitted no draft by that id on this account");
+    }
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw new HTTPError(502, `the taf's key couldn't be claimed: ${(err as Error).message}`);
   }
   if (!agentID) throw new HTTPError(502, "kiff/agents claimed the key but named no agent");
-  await deps.claims.put(me.tenantID, draftID, { secret: "", name, agentID, tafID })
-    .catch((err) => { throw new HTTPError(502, (err as Error).message); });
+  // The taf id is already on record, so losing this write only loses the agent id there.
+  await deps.claims.put(me.tenantID, draftID, { secret: "", name, agentID, tafID }).catch(() => undefined);
   return { agentID, tafID };
 }
 
