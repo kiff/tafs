@@ -111,6 +111,11 @@ final class PlanqueTests: XCTestCase {
     // MARK: The client
 
     private func grantJSON(_ id: String = "g_01", status: String = "pending", digest: String = PlanqueTests.digest) -> String {
+        Self.grantJSONFor(id, status: status, digest: digest)
+    }
+
+    /// A grant as planque lists it, over the request whose digest is `PlanqueTests.digest`.
+    static func grantJSONFor(_ id: String = "g_01", status: String = "pending", digest: String = PlanqueTests.digest) -> String {
         #"{"id":"\#(id)","status":"\#(status)","text":"refunds may refund payments at mcp.stripe.com","digest":"\#(digest)","request":\#(Self.request),"audience":"https://planque.kiff.dev/mcp/t_01/\#(id)","events":[{"at":"2026-10-17T10:00:00.123456789Z","what":"asked by setup-agent"}]}"#
     }
 
@@ -280,6 +285,36 @@ final class PlanqueTests: XCTestCase {
             XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts/d_01/confirm").isEmpty, callback ?? "closed")
             Keychain.delete(AppModel.planqueAccount)
         }
+    }
+
+    /// The second approval: the vendor is connected, so one Face ID confirms only the
+    /// taf's draft, the version shown; planque isn't asked again.
+    func testConnectedGrantConfirmsOnlyTheDraft() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(status: "connected"))]}"#)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"draft","version":"v3"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d_01/confirm"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"confirmed","version":"v3","card_ids":["m1"]}"#)
+        StubProtocol.sent = []
+
+        let done = await model.connect(grantID: "g_01", draftID: "d_01")
+        XCTAssertEqual(done?.status, "connected", model.lastError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.cards.v1|t_01|d_01|v3"])
+        XCTAssertTrue(vendor.opened.isEmpty, "no second vendor sign-in")
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty)
+        let cards = try XCTUnwrap(sent("POST", "api.test", "/v1/me/agent-drafts/d_01/confirm").first)
+        XCTAssertEqual(body(cards)["version"] as? String, "v3")
+        XCTAssertNotNil(cards.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertNil(model.kiff.setupSigner)
+
+        // Nothing to confirm: nothing asked.
+        let again = await model(signer: signer, vendor: vendor)
+        again.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(status: "connected"))]}"#)
+        _ = await again.connect(grantID: "g_01")
+        XCTAssertEqual(signer.prompts.count, 1)
     }
 
     /// A grant whose digest isn't its request's is never put to Face ID.

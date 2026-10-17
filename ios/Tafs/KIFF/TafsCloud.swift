@@ -172,6 +172,53 @@ final class TafsCloud {
         try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: ["text": text])
     }
 
+    // MARK: Setup (kiff/agents#91)
+
+    /// A component as the conversation lists it. One the app doesn't know is skipped.
+    struct Shown: Decodable, Equatable {
+        let at: Date
+        let session: String
+        let run: String
+        let component: SetupComponent
+    }
+
+    private struct LenientShown: Decodable {
+        let shown: Shown?
+        init(from decoder: Decoder) throws { shown = try? Shown(from: decoder) }
+    }
+
+    /// The account's Setup, or nil before it is started.
+    func setup() async throws -> CloudTaf? {
+        struct Response: Decodable { let setup: CloudTaf? }
+        let r: Response = try await send("GET", "/v1/setup")
+        return r.setup
+    }
+
+    /// Starts the account's Setup from a confirmed no-tools KIFF draft (kiff-cloud#1254).
+    /// tafs cloud claims its key with the claim secret, as for a taf.
+    func startSetup(draftID: String, claimSecret: String) async throws -> CloudTaf {
+        struct Body: Encodable {
+            let draftID: String, claimSecret: String
+            enum CodingKeys: String, CodingKey { case draftID = "draft_id", claimSecret = "claim_secret" }
+        }
+        struct Response: Decodable { let setup: CloudTaf }
+        let r: Response = try await send("POST", "/v1/setup", body: Body(draftID: draftID, claimSecret: claimSecret))
+        return r.setup
+    }
+
+    /// Setup's thread: its messages and the components it showed.
+    func setupThread(_ id: String) async throws -> SetupThread {
+        struct Response: Decodable { let messages: [ChatMessage]; let components: [LenientShown]? }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/conversation")
+        return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)))
+    }
+
+    /// Stops what the agent is doing in `session`: its latest run is cancelled.
+    func stop(_ id: String, session: String) async throws {
+        struct Response: Decodable { let stopped: Bool }
+        let _: Response = try await send("POST", "/v1/tafs/\(escaped(id))/stop", body: ["session": session])
+    }
+
     // MARK: Memory
 
     /// One thing a taf remembers: a note it keeps between its runs and chats.

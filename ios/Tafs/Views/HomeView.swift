@@ -25,6 +25,27 @@ struct HomeView: View {
                     }
                 }
 
+                if model.mode == .kiff {
+                    // Setup (kiff/tafs#50): connect the tools a taf works with.
+                    NavigationLink { SetupChatView() } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "plus").font(.system(size: 16, weight: .bold)).foregroundColor(.white)
+                                .frame(width: 36, height: 36).background(Theme.brand).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Connect a tool").font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.ink)
+                                Text("Setup connects it; you sign in and approve").font(.system(size: 13)).foregroundColor(Theme.dim)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
+                        }
+                        .padding(14)
+                        .background(Theme.panel)
+                        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Theme.line))
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 ForEach(model.unfinishedRemovals) { r in
                     Panel {
                         Text("\(r.name) isn't fully removed yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)

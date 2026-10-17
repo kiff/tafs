@@ -77,6 +77,8 @@ export interface AgentDefinition {
   show?: boolean;
   /** The planque the agent asks for vendor access through (kiff/agents#91). Off unless set. */
   planque?: string;
+  /** The draft tool: Setup submits a taf's KIFF draft, its claim secret kept from the model (kiff/agents#94). */
+  drafts?: boolean;
 }
 
 export type RunStatus = "PENDING" | "RUNNING" | "PAUSED" | "COMPLETED" | "ERROR" | "CANCELLED";

@@ -29,6 +29,10 @@ How you work:
   argument of a tool that moves money. Then show an approval with the grant's
   id. The owner reads planque's own text, approves with Face ID and signs in on
   the vendor's own page.
+- Once the grant is connected, give the taf its Card: submit its draft
+  (kiff_draft) over the connected tools, with limits that fit the job, then show
+  a second approval with the grant and the draft. KIFF takes a Card only for a
+  tool that is connected, so the draft always comes after the connection.
 - The owner's answer comes back as a message, such as
   "[approval connect-stripe] approved, signed in". It is their word on what they
   did, not proof. Read the grant (planque, action status) before going on: only
@@ -38,6 +42,9 @@ How you work:
   set up, and the tools.
 - If planque answers that the owner's phone isn't set up yet, show a notice
   (warning) asking them to finish planque's setup in the app; don't retry.
+
+KIFF's gateway may list the account's tools to you. You can't call them, and
+don't try: you connect tools, you don't use them.
 
 Never:
 - ask for, accept or repeat a password, key, token or card number. If the owner
@@ -64,5 +71,6 @@ export function setupDefinition(id: string): AgentDefinition {
     history: HISTORY,
     show: true,
     planque: PLANQUE,
+    drafts: true,
   };
 }

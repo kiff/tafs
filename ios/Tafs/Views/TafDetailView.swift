@@ -164,9 +164,9 @@ struct ConnectionsPanel: View {
 
     var body: some View {
         let connections = model.connections(for: tafID)
-        if !connections.isEmpty {
+        if model.mode == .kiff {
             Panel {
-                Eyebrow(text: "Connected")
+                Eyebrow(text: "Connections")
                 ForEach(connections) { grant in
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
@@ -185,6 +185,10 @@ struct ConnectionsPanel: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(Theme.no)
                     }
+                }
+                NavigationLink { SetupChatView() } label: {
+                    Label(connections.isEmpty ? "Connect a tool with Setup" : "Connect another tool with Setup", systemImage: "plus")
+                        .font(.system(size: 15, weight: .semibold))
                 }
             }
             .confirmationDialog("Disconnect \(confirming?.vendor ?? "")?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),

@@ -374,11 +374,54 @@ final class KIFFClient {
         let claimSecret: String?
         let cardIDs: [String]?
         let reason: String?
+        /// The Cards it would issue, as the owner reads them before confirming. Read
+        /// leniently: a field KIFF adds later doesn't stop the draft being shown.
+        var cards: [DraftCard]?
+        /// An agent that holds no tools (kiff-cloud#1254): Setup.
+        var noTools: Bool?
         enum CodingKeys: String, CodingKey {
-            case id, status, version, reason
-            case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids"
+            case id, status, version, reason, cards
+            case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids", noTools = "no_tools"
         }
         var confirmed: Bool { status == "confirmed" }
+    }
+
+    /// One Card of a draft, as the owner reads it: each action and its limits.
+    struct DraftCard: Decodable, Equatable {
+        struct Grant: Decodable, Equatable {
+            struct PerAction: Decodable, Equatable { let quantity: String; let max: Int64 }
+            let action: String
+            let perActionMax: [PerAction]?
+            enum CodingKeys: String, CodingKey { case action, perActionMax = "per_action_max" }
+        }
+        struct Aggregate: Decodable, Equatable { let quantity: String; let limit: Int64; let window: String }
+        let grants: [Grant]?
+        let aggregates: [Aggregate]?
+
+        /// Plain lines: "refund_payment: at most 15000 sum(amount) each", "200000 sum(amount) per calendar day".
+        var lines: [String] {
+            var out: [String] = []
+            for g in grants ?? [] {
+                let caps = (g.perActionMax ?? []).map { "at most \($0.max) \($0.quantity) each" }
+                out.append(caps.isEmpty ? g.action : "\(g.action): " + caps.joined(separator: ", "))
+            }
+            for a in aggregates ?? [] {
+                out.append("\(a.limit) \(a.quantity) per \(a.window.replacingOccurrences(of: "_", with: " "))")
+            }
+            return out
+        }
+    }
+
+    /// A draft for Setup, an agent that holds no tools (kiff-cloud#1254). From the phone,
+    /// signed, it is confirmed at once; tafs cloud then claims its key.
+    func submitNoToolsDraft(agentID: String, label: String) async throws -> AgentDraft {
+        struct Body: Encodable {
+            let agentID: String
+            let label: String
+            let noTools = true
+            enum CodingKeys: String, CodingKey { case label, agentID = "agent_id", noTools = "no_tools" }
+        }
+        return try await send("POST", "/v1/me/agent-drafts", body: Body(agentID: agentID, label: label))
     }
 
     func submitDraft(agentID: String, label: String, cards: [CardRequest]) async throws -> AgentDraft {
