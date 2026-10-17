@@ -23,6 +23,10 @@ final class AppModel: ObservableObject {
     let ownerName: String
     let kiff: KIFFClient
     let cloud: TafsCloud
+    /// planque, which keeps each taf's vendor sign-ins (kiff/planque, #51).
+    let planque: PlanqueClient
+    /// The vendor's sign-in page, opened for a connection the owner approved.
+    private let vendorSignIn: VendorSigningIn
     /// The KIFF account this phone signed in to; part of every signed answer.
     var kiffTenant: String?
     /// Whether this phone's KIFF session holds its signing key. A session from before
@@ -61,12 +65,16 @@ final class AppModel: ObservableObject {
          signer: ApprovalSigning = ApprovalSigner(),
          kiff: KIFFClient = KIFFClient(),
          cloud: TafsCloud = TafsCloud(),
+         planque: PlanqueClient = PlanqueClient(),
+         vendorSignIn: VendorSigningIn = VendorSignIn(),
          store: SampleStore? = nil,
          clock: @escaping () -> Date = Date.init) {
         self.ownerName = ownerName
         self.signer = signer
         self.kiff = kiff
         self.cloud = cloud
+        self.planque = planque
+        self.vendorSignIn = vendorSignIn
         self.store = store
         self.clock = clock
     }
@@ -145,6 +153,8 @@ final class AppModel: ObservableObject {
         startAttempt = nil
         holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
         unfinishedRemovals = []
+        grants = []
+        setupTaf = nil; setupThread = SetupThread(); setupDrafts = [:]; answered = []; setupError = nil
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
@@ -167,6 +177,8 @@ final class AppModel: ObservableObject {
         holderIDs = [:]
         startAttempt = nil
         unfinishedRemovals = []
+        grants = []
+        setupTaf = nil; setupThread = SetupThread(); setupDrafts = [:]; answered = []; setupError = nil
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false
@@ -327,6 +339,7 @@ final class AppModel: ObservableObject {
             let (mandates, exceptions) = try await (cards, calls)
             show(mandates, exceptions)
             await refreshCloud()
+            await refreshConnections()
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
@@ -1210,4 +1223,404 @@ final class AppModel: ObservableObject {
     private func log(_ tafID: UUID, _ kind: RecordEntry.Kind, _ title: String, _ detail: String, signature: String? = nil) {
         record.insert(RecordEntry(tafID: tafID, kind: kind, title: title, detail: detail, at: clock(), signature: signature), at: 0)
     }
+
+    // MARK: Connections (planque, #51)
+
+    /// The account's planque grants: connections, and connections waiting for the owner.
+    @Published private(set) var grants: [PlanqueClient.Grant] = []
+    /// The grant being connected now, so a second tap starts nothing.
+    @Published private(set) var connecting: String?
+    /// The account this phone enrolled with planque, kept in the Keychain across launches.
+    static let planqueAccount = "planque.enrolled"
+    /// The account this phone enrolled with planque, as last read or saved.
+    private var planqueTenant: String?
+
+    /// Whether this phone is set up with planque for the signed-in account.
+    var planqueReady: Bool {
+        guard mode == .kiff, let tenant = kiffTenant else { return false }
+        if planqueTenant == nil { planqueTenant = Keychain.load(Self.planqueAccount) }
+        return planqueTenant == tenant
+    }
+
+    /// Records that this phone is enrolled with planque for `tenant`.
+    func planqueSetUp(for tenant: String) {
+        planqueTenant = tenant
+        Keychain.save(tenant, for: Self.planqueAccount)
+    }
+
+    /// A taf's connections: the grants made for its KIFF agent, connected now.
+    func connections(for tafID: UUID) -> [PlanqueClient.Grant] {
+        guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return [] }
+        return grants.filter { $0.request.agent == agent && $0.connected }
+    }
+
+    /// Reads the grants. A read asks for no Face ID; it is signed so planque shows them only
+    /// to the enrolled phone.
+    func refreshConnections() async {
+        let gen = accountGeneration
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        guard let list = try? await planque.grants(), gen == accountGeneration else { return }
+        grants = list
+    }
+
+    /// Sets this phone up with planque, once per account, behind one Face ID: planque gets
+    /// the phone's key, and a KIFF key that connects tools and does nothing else (kiff-cloud
+    /// #1251), minted with a signed setup call and never kept on the phone. Done before a
+    /// connection is asked for, so every grant is read and shown before it is approved.
+    func setUpPlanque() async -> Bool {
+        guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
+            lastError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            return false
+        }
+        if planqueReady { return true }
+        let gen = accountGeneration
+        do {
+            _ = try await signer.sign(Data("tafs.planque.v1|\(tenant)".utf8), reason: "Let planque keep your tools' sign-ins")
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil; planque.signer = nil }
+        guard await enrolPlanque(tenant: tenant, gen: gen) else { return false }
+        await refreshConnections()
+        return true
+    }
+
+    /// Enrols this phone with planque and hands it a fresh connector key, as a step the
+    /// owner just confirmed with Face ID: the caller has set `kiff.setupSigner` and
+    /// `planque.signer`. Sets `lastError` and returns false when it can't.
+    private func enrolPlanque(tenant: String, gen: Int) async -> Bool {
+        do {
+            let key = try await kiff.mintConnectorKey()
+            guard gen == accountGeneration else { return false }
+            _ = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: key)
+        } catch KIFFClient.KIFFError.server(403, _) {
+            lastError = "Only an admin of this KIFF account can set up planque."
+            return false
+        } catch PlanqueClient.PlanqueError.server(409, _) {
+            lastError = "Another iPhone is set up with planque for this account. Connect tools from that one."
+            return false
+        } catch {
+            lastError = "planque isn't set up: \(error.localizedDescription)"
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        planqueSetUp(for: tenant)
+        return true
+    }
+
+    /// An approval in the setup chat (contract 4, as amended on kiff/agents#91): one Face
+    /// ID each. For a grant not yet connected, it approves planque's grant, then the owner
+    /// signs in on the vendor's own page and the phone confirms the sign-in with the code
+    /// it brought back. For a connected grant, it confirms the taf's draft: KIFF takes a
+    /// Card only for a tool that is connected, so a draft comes only after its grant.
+    /// Returns the grant, or nil with `lastError`.
+    func connect(grantID: String, draftID: String? = nil) async -> PlanqueClient.Grant? {
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
+            lastError = "Set up planque on this iPhone first."
+            return nil
+        }
+        guard connecting == nil else { return nil }
+        connecting = grantID
+        defer { connecting = nil }
+        let gen = accountGeneration
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        kiff.tenant = tenant
+        defer { planque.signer = nil; kiff.setupSigner = nil }
+
+        // What the owner approves, read as it is now.
+        let grant: PlanqueClient.Grant
+        var draft: KIFFClient.AgentDraft?
+        do {
+            guard let found = try await planque.grants().first(where: { $0.id == grantID }) else {
+                lastError = "planque has no connection with that id."
+                return nil
+            }
+            grant = found
+            if let draftID, found.connected { draft = try await kiff.draft(id: draftID) }
+        } catch {
+            lastError = "Couldn't read what to approve: \(error.localizedDescription)"
+            return nil
+        }
+        if grant.connected {
+            // The second approval (kiff/agents#91): the vendor is connected, and the
+            // taf's Cards over its tools wait as a draft. One Face ID confirms them.
+            guard let draft, !draft.confirmed else { return grant }
+            do {
+                _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
+                                          reason: "Give \(draft.agentID) its Card")
+            } catch { return nil }
+            guard gen == accountGeneration else { return nil }
+            kiff.setupSigner = { try signer.signConfirmed($0) }
+            do {
+                _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
+            } catch {
+                lastError = "KIFF didn't issue the taf's Cards: \(error.localizedDescription)"
+                return nil
+            }
+            return grant
+        }
+        guard ["pending", "approved", "signed_in"].contains(grant.status) else {
+            lastError = "This connection is \(grant.status.replacingOccurrences(of: "_", with: " "))\(grant.reason.map { ": \($0)" } ?? ".")"
+            return nil
+        }
+        guard grant.digestMatches else {
+            lastError = PlanqueClient.PlanqueError.digestMismatch.errorDescription
+            return nil
+        }
+
+        do {
+            _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
+                                      reason: "Connect \(grant.vendor) to \(grant.request.agent)")
+        } catch { return nil }
+        guard gen == accountGeneration else { return nil }
+
+        let connected: PlanqueClient.Grant
+        do {
+            let approved = try await planque.approve(grant)
+            let back = try await vendorSignIn.signIn(at: approved.signInURL)
+            guard let signedIn = PlanqueClient.signedIn(from: back), signedIn.grant == grant.id, signedIn.tenant == tenant else {
+                lastError = "The sign-in at \(grant.vendor) came back without planque's code. Nothing was connected."
+                return nil
+            }
+            guard gen == accountGeneration else { return nil }
+            connected = try await planque.confirm(grantID: grant.id, code: signedIn.code)
+        } catch VendorSignIn.SignInError.cancelled {
+            lastError = "The sign-in was closed. Nothing was connected."
+            await refreshConnections()
+            return nil
+        } catch {
+            lastError = "Not connected: \(error.localizedDescription)"
+            await refreshConnections()
+            return nil
+        }
+        await refreshConnections()
+        return connected
+    }
+
+    /// Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at
+    /// the vendor. Asks for Face ID.
+    func disconnect(grantID: String) async -> Bool {
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant, let grant = grants.first(where: { $0.id == grantID }) else { return false }
+        let gen = accountGeneration
+        do {
+            _ = try await signer.sign(Data("tafs.disconnect.v1|\(tenant)|\(grantID)".utf8), reason: "Disconnect \(grant.vendor)")
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        do {
+            _ = try await planque.disconnect(grantID: grantID)
+        } catch {
+            lastError = "Not disconnected: \(error.localizedDescription)"
+            return false
+        }
+        await refreshConnections()
+        return true
+    }
+
+    // MARK: Setup (kiff/agents#91)
+
+    /// The account's Setup on tafs cloud, once started.
+    @Published private(set) var setupTaf: TafsCloud.CloudTaf?
+    /// Setup's thread: messages and components.
+    @Published private(set) var setupThread = SetupThread()
+    @Published private(set) var setupSending = false
+    @Published private(set) var startingSetup = false
+    @Published var setupError: String?
+    /// The drafts Setup's approvals name, read from KIFF so the owner sees the Cards.
+    @Published private(set) var setupDrafts: [String: KIFFClient.AgentDraft] = [:]
+    /// Components the owner answered on this phone, so their buttons go quiet.
+    @Published private(set) var answered: Set<String> = []
+
+    /// Setup's KIFF agent: one per account.
+    static let setupAgent = "setup"
+
+    /// Reads whether the account has Setup, and its thread.
+    func loadSetup() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        guard let s = try? await cloud.setup(), gen == accountGeneration else { return }
+        setupTaf = s
+        if s != nil { await loadSetupThread() }
+    }
+
+    func loadSetupThread() async {
+        guard mode == .kiff, let s = setupTaf else { return }
+        let gen = accountGeneration
+        do {
+            let thread = try await cloud.setupThread(s.id)
+            guard gen == accountGeneration else { return }
+            setupThread = thread
+            setupError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            setupError = "Setup's chat couldn't be loaded: \(error.localizedDescription)"
+            return
+        }
+        // What an approval needs to be shown: planque's grant and KIFF's draft.
+        let approvals = setupThread.components.map(\.component).filter { $0.type == .approval || $0.type == .signIn }
+        if approvals.contains(where: { c in c.grant.map { g in !grants.contains { $0.id == g } } ?? false }) {
+            await refreshConnections()
+        }
+        for c in approvals {
+            guard let d = c.draft, setupDrafts[d]?.confirmed != true, let draft = try? await kiff.draft(id: d), gen == accountGeneration else { continue }
+            setupDrafts[d] = draft
+        }
+    }
+
+    /// Starts connecting tools, once per account, behind one Face ID: planque gets this
+    /// phone's key and a connector key, and Setup is started from a draft with no tools
+    /// (kiff-cloud#1254), whose key tafs cloud claims. Done before the first message, so
+    /// every grant Setup asks for can be read and shown.
+    func startSetup() async -> Bool {
+        guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
+            setupError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            return false
+        }
+        if planqueReady, setupTaf != nil { return true }
+        guard !startingSetup else { return false }
+        startingSetup = true
+        defer { startingSetup = false }
+        let gen = accountGeneration
+        do {
+            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: "Let Setup connect your tools")
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil; planque.signer = nil }
+        if !planqueReady {
+            guard await enrolPlanque(tenant: tenant, gen: gen) else {
+                setupError = lastError
+                return false
+            }
+        }
+        if setupTaf == nil {
+            do {
+                if let existing = try await cloud.setup() {
+                    setupTaf = existing
+                } else {
+                    let draft = try await kiff.submitNoToolsDraft(agentID: Self.setupAgent, label: "Setup")
+                    guard gen == accountGeneration, let secret = draft.claimSecret else {
+                        setupError = "KIFF didn't give Setup's draft its claim secret. Try again."
+                        return false
+                    }
+                    setupTaf = try await cloud.startSetup(draftID: draft.id, claimSecret: secret)
+                }
+            } catch {
+                guard gen == accountGeneration else { return false }
+                setupError = "Setup isn't started: \(error.localizedDescription)"
+                return false
+            }
+        }
+        await refreshConnections()
+        await loadSetupThread()
+        return true
+    }
+
+    /// Sends the owner's words to Setup; the thread is then reloaded as it answers.
+    @discardableResult
+    func sendSetup(_ text: String) async -> Bool {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return false }
+        setupSending = true
+        defer { setupSending = false }
+        let gen = accountGeneration
+        setupThread.messages.append(TafsCloud.ChatMessage(at: clock(), from: .owner, text: text, session: "pending"))
+        do {
+            _ = try await cloud.sendMessage(s.id, text: text)
+            guard gen == accountGeneration else { return false }
+            await loadSetupThread()
+            return true
+        } catch {
+            guard gen == accountGeneration else { return false }
+            setupThread.messages.removeAll { $0.session == "pending" }
+            setupError = "It wasn't sent: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    /// How often Setup's thread is reloaded while the chat is open, and for how long
+    /// after the owner last wrote (100 × 3 s: five minutes, since setup steps take time).
+    var setupPollInterval: UInt64 = 3_000_000_000
+    var setupPollBudget = 100
+
+    /// Loads Setup's thread, then reloads it while the chat is open and the owner wrote
+    /// recently. Ends when the task is cancelled (the view goes away).
+    func followSetup() async {
+        await loadSetup()
+        var lastOwner: String?
+        var polls = 0
+        while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: setupPollInterval)
+            if Task.isCancelled { return }
+            let mine = setupThread.messages.last(where: { $0.from == .owner })?.id
+            if mine != lastOwner { lastOwner = mine; polls = 0 }
+            guard polls < setupPollBudget else { continue }
+            polls += 1
+            await loadSetupThread()
+        }
+    }
+
+    /// The plan's Stop: Setup's current run is cancelled.
+    func stopSetup() async {
+        guard let s = setupTaf, let session = setupThread.session else { return }
+        do { try await cloud.stop(s.id, session: session) } catch {
+            setupError = "Setup didn't stop: \(error.localizedDescription)"
+        }
+        await loadSetupThread()
+    }
+
+    /// The owner's answer to a component, as contract 1 says: "[<type> <id>] <answer>".
+    func answer(_ component: SetupComponent, _ text: String) async {
+        answered.insert(component.id)
+        if !(await sendSetup("[\(component.type.rawValue) \(component.id)] \(text)")) { answered.remove(component.id) }
+    }
+
+    /// Approve on an approval (contract 4, one Face ID): the vendor's connection, then the
+    /// taf's Cards when it names a draft. The answer says what happened, never more.
+    func approve(_ component: SetupComponent) async {
+        guard let grant = component.grant else { return }
+        let wasConnected = grants.first { $0.id == grant }?.connected ?? false
+        lastError = nil
+        if let done = await connect(grantID: grant, draftID: component.draft), done.connected {
+            if let e = lastError {
+                await answer(component, "failed: \(e)")
+            } else {
+                await answer(component, wasConnected ? "approved" : "approved, signed in")
+            }
+        } else if let e = lastError {
+            await answer(component, "failed: \(e)")
+        }
+        await loadSetupThread()
+    }
+
+    /// Sign in again, for a grant whose sign-in was left: a new approval, one Face ID.
+    func signInAgain(_ component: SetupComponent) async {
+        guard let grant = component.grant else { return }
+        lastError = nil
+        if let done = await connect(grantID: grant), done.connected {
+            await answer(component, "signed in")
+        } else if let e = lastError {
+            await answer(component, "failed: \(e)")
+        }
+    }
+
+    /// The taf a result hands over to, when this phone shows it.
+    func taf(forAgent agent: String) -> UUID? { holderIDs[agent] }
 }

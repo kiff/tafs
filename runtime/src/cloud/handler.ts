@@ -3,6 +3,7 @@ import { JOBS, jobById } from "../jobs.js";
 import { type Agents, AgentsError, type Run, type Schedule, type Session } from "./agents.js";
 import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { setupDefinition } from "./setupdef.js";
 import { definition } from "./tafdef.js";
 
 /**
@@ -46,7 +47,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns">;
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -218,12 +219,25 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return alert(event, deps);
   }
   if (parts[1] === "push") return push(event, method, parts, deps);
-  if (parts[1] !== "tafs") throw new HTTPError(404, "not found");
+  if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
 
   const me = await person(event, deps);
 
+  if (parts[1] === "setup") {
+    // The account's Setup (kiff/agents#91): its chat uses the taf routes, by its id.
+    if (parts.length === 2 && method === "GET") {
+      const setup = await setupOf(me, deps);
+      return { setup: setup ? await view(setup, me, deps) : null };
+    }
+    if (parts.length === 2 && method === "POST") {
+      need(me, "cards.manage");
+      return startSetup(event, me, deps);
+    }
+    throw new HTTPError(404, "not found");
+  }
+
   if (parts.length === 2 && method === "GET") {
-    const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing);
+    const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB);
     // Removed tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
     return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps))), removing: await deps.removals.list(me.tenantID) };
   }
@@ -273,7 +287,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { session, report: report(run) };
   }
   if (parts.length === 4 && method === "GET" && action === "conversation") {
-    return { messages: (await conversation(me, taf, deps)).messages };
+    const { messages, components } = await conversation(me, taf, deps);
+    return { messages, components };
+  }
+  if (parts.length === 4 && method === "POST" && action === "stop") {
+    need(me, "cards.manage");
+    return stop(event, me, taf, deps);
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
     need(me, "cards.manage");
@@ -441,7 +460,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
 
   // Two taps, or a retry, must not start two tafs: the name is claimed first.
   const taken = new HTTPError(409, `you already have a taf named ${name}`);
-  if ((await deps.tafs.list(me.tenantID)).some((t) => t.name === name)) throw taken;
+  if ((await deps.tafs.list(me.tenantID)).some((t) => t.name === name && t.job !== SETUP_JOB)) throw taken;
   // This start's claim on the name; the taf carries it, so only its removal frees it.
   const nameClaim = randomUUID();
   if (!(await deps.names.claim(me.tenantID, name, nameClaim))) {
@@ -529,6 +548,66 @@ async function draftKey(me: KIFFIdentity, name: string, draftID: string, claimSe
   return { agentID, tafID };
 }
 
+/** Setup's job, on its record: it has no schedule and isn't listed with the tafs. */
+export const SETUP_JOB = "setup";
+/** The name Setup claims: no taf can take it, since a taf's name is trimmed. */
+const SETUP_NAME_CLAIM = " setup";
+
+/** The account's Setup, if it has one. */
+async function setupOf(me: KIFFIdentity, deps: Deps): Promise<Taf | undefined> {
+  return (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
+}
+
+/**
+ * Starts the account's Setup, the agent that connects tools in the setup
+ * chat (kiff/agents#91), once. Its key comes from a draft the phone
+ * submitted with no Cards (no_tools, kiff-cloud#1254): tafs cloud claims it
+ * itself, so the key never reaches the phone, as for a taf.
+ */
+async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  const body = parseBody(event);
+  const draftID = str(body.draft_id).trim();
+  const claimSecret = str(body.claim_secret).trim();
+  if (!draftID || !claimSecret) throw new HTTPError(400, "send draft_id and claim_secret");
+  if (!/^drf_[A-Za-z0-9]+$/.test(draftID)) throw new HTTPError(400, "that is not a KIFF draft id");
+  if (await setupOf(me, deps)) throw new HTTPError(409, "this account's Setup is already started");
+  const nameClaim = randomUUID();
+  if (!(await deps.names.claim(me.tenantID, SETUP_NAME_CLAIM, nameClaim))) {
+    throw new HTTPError(409, "Setup is being started already; open it in a moment");
+  }
+  const check = async (key: string): Promise<string> => {
+    let agent: KIFFIdentity;
+    try { agent = await whoIs(key, deps.fetch, deps.kiffBase); } catch (err) {
+      if (err instanceof KIFFError && err.status === 502) throw new HTTPError(502, "KIFF didn't answer about Setup's key; try again");
+      throw new HTTPError(400, "KIFF did not accept Setup's key");
+    }
+    if (agent.tenantID !== me.tenantID) throw new HTTPError(400, "Setup's key belongs to another KIFF account");
+    if (!agent.apiKey || !agent.agentID) throw new HTTPError(400, "Setup's key is not bound to an agent");
+    return agent.agentID;
+  };
+  let tafID = (deps.newID ?? newTafID)();
+  let agentID: string;
+  try {
+    ({ agentID, tafID } = await draftKey(me, SETUP_NAME_CLAIM, draftID, claimSecret, tafID, deps, check));
+  } catch (err) {
+    await deps.names.release(me.tenantID, SETUP_NAME_CLAIM, nameClaim);
+    if (err instanceof HTTPError) throw err;
+    throw new HTTPError(502, `Setup's key couldn't be kept: ${(err as Error).message}`);
+  }
+  const setup: Taf = { id: tafID, name: "Setup", job: SETUP_JOB, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString() };
+  try {
+    await deps.agents.putAgent(me.tenantID, tafID, setupDefinition(tafID));
+    await deps.tafs.put(me.tenantID, setup);
+  } catch (err) {
+    const recordGone = await deps.tafs.remove(me.tenantID, tafID).then(() => true, () => false);
+    const agentGone = await deps.agents.deleteAgent(me.tenantID, tafID).then(() => true, () => false);
+    if (recordGone && agentGone) await deps.names.release(me.tenantID, SETUP_NAME_CLAIM, nameClaim);
+    throw new HTTPError(err instanceof AgentsError && err.status < 500 ? 400 : 502, `Setup couldn't be started: ${(err as Error).message}`);
+  }
+  await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
+  return { setup: await view(setup, me, deps) };
+}
+
 /** A taf's id on kiff/agents. */
 const TAF_ID = /^taf-[0-9a-f]{20}$/;
 
@@ -588,6 +667,18 @@ function report(run: Run) {
 }
 
 /** A message in a taf's thread. A run's opening instruction is the owner's, of kind "kickoff". */
+/**
+ * A component the agent showed in the chat (kiff/agents#91, contract 1): the
+ * app draws the latest of each id, where it first appeared.
+ */
+export interface ThreadComponent {
+  at: string;
+  session: string;
+  run: string;
+  seq: number;
+  component: unknown;
+}
+
 export interface ThreadMessage {
   at: string;
   from: "owner" | "taf";
@@ -602,7 +693,7 @@ export interface ThreadMessage {
  * kept: the owner's messages and the taf's. A run's first owner message is
  * the job's instruction, shown as such.
  */
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ messages: ThreadMessage[]; sessions: Session[] }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
   const picked = [
     ...all.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
@@ -610,10 +701,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ m
   ];
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
+  const components: ThreadComponent[] = [];
   for (const r of read) {
     if (!r) continue;
     const seenRun = new Set<string>();
     for (const e of r.events) {
+      if (e.kind === "component") {
+        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: e.body });
+        continue;
+      }
       if (e.kind !== "owner_message" && e.kind !== "agent_message" && e.kind !== "report") continue;
       const text = typeof (e.body as { text?: unknown })?.text === "string" ? ((e.body as { text: string }).text).trim() : "";
       if (!text) continue;
@@ -628,7 +724,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ m
     }
   }
   messages.sort((a, b) => a.at.localeCompare(b.at));
-  return { messages: messages.slice(-CHAT.maxThread), sessions: picked };
+  components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
+  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
 }
 
 /**
@@ -669,6 +766,28 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   }
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text));
   return { session: run.session, new_session: true };
+}
+
+/**
+ * Stop: the owner ends what the agent is doing in one of its sessions (the
+ * plan's Stop in the setup chat, kiff/agents#91). The session's latest run is
+ * cancelled; one that has already ended stays as it ended.
+ */
+async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  const session = str(parseBody(event).session).trim();
+  if (!session) throw new HTTPError(400, "name the session to stop");
+  const read = await agentsCall(() => deps.agents.session(me.tenantID, session));
+  if (read.session.agent !== taf.id) throw new HTTPError(404, "no such session");
+  const run = read.events.at(-1)?.run;
+  if (!run) return { stopped: false };
+  try {
+    const out = await deps.agents.cancelRun(me.tenantID, taf.id, run);
+    return { stopped: true, run: out.id, status: out.status };
+  } catch (err) {
+    // Already over: nothing is left to stop.
+    if (err instanceof AgentsError && err.status === 409) return { stopped: false };
+    throw err instanceof AgentsError ? new HTTPError(err.status >= 500 ? 502 : err.status, err.message) : err;
+  }
 }
 
 /** A note the taf keeps. Its name is its id. */

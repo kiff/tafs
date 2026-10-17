@@ -73,6 +73,12 @@ export interface AgentDefinition {
   max_cost_micro_usd: number;
   max_turns?: number;
   history: number;
+  /** The show tool: UI components in the owner's chat (kiff/agents#91). Off unless set. */
+  show?: boolean;
+  /** The planque the agent asks for vendor access through (kiff/agents#91). Off unless set. */
+  planque?: string;
+  /** The draft tool: Setup submits a taf's KIFF draft, its claim secret kept from the model (kiff/agents#94). */
+  drafts?: boolean;
 }
 
 export type RunStatus = "PENDING" | "RUNNING" | "PAUSED" | "COMPLETED" | "ERROR" | "CANCELLED";
@@ -121,7 +127,8 @@ export interface SessionEvent {
   run: string;
   seq: number;
   time: string;
-  kind: EventKind;
+  /** A kind the keep rules name, or a `component` the agent showed (kiff/agents#91). */
+  kind: EventKind | "component";
   body: unknown;
 }
 

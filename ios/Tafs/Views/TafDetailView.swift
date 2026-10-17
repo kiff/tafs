@@ -137,6 +137,7 @@ struct TafDetailView: View {
                 }
             }
         }
+        ConnectionsPanel(tafID: taf.id)
         if taf.state != .revoked {
             HStack(spacing: 8) {
                 if model.mode == .sample {
@@ -150,6 +151,54 @@ struct TafDetailView: View {
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
             Button("Remove for good") { confirmRemove = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
+        }
+    }
+}
+
+/// The vendors connected to the taf through planque (#51): whose keys, which tools, what
+/// happened last, and Disconnect, which revokes the sign-in at the vendor.
+struct ConnectionsPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+    @State private var confirming: PlanqueClient.Grant?
+
+    var body: some View {
+        let connections = model.connections(for: tafID)
+        if model.mode == .kiff {
+            Panel {
+                Eyebrow(text: "Connections")
+                ForEach(connections) { grant in
+                    HStack(alignment: .top, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(grant.vendor).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                            Text("Keys held by planque\(grant.account.map { " · \($0)" } ?? "")")
+                                .font(.system(size: 12)).foregroundColor(Theme.dim)
+                            Text(grant.request.tools.map(\.action).joined(separator: ", "))
+                                .font(Theme.mono(12)).foregroundColor(Theme.soft)
+                            if let last = grant.events.last {
+                                Text(last.what).font(.system(size: 12)).foregroundColor(Theme.soft)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        Button("Disconnect") { confirming = grant }
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Theme.no)
+                    }
+                }
+                NavigationLink { SetupChatView() } label: {
+                    Label(connections.isEmpty ? "Connect a tool with Setup" : "Connect another tool with Setup", systemImage: "plus")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+            }
+            .confirmationDialog("Disconnect \(confirming?.vendor ?? "")?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
+                                titleVisibility: .visible) {
+                Button("Disconnect", role: .destructive) {
+                    if let id = confirming?.id { Task { _ = await model.disconnect(grantID: id) } }
+                }
+            } message: {
+                Text("planque revokes the sign-in at the vendor and removes its tools from KIFF. The taf can't use them until you connect again.")
+            }
         }
     }
 }
