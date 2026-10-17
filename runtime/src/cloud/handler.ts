@@ -3,6 +3,7 @@ import { JOBS, jobById } from "../jobs.js";
 import { type Agents, AgentsError, type Run, type Schedule, type Session } from "./agents.js";
 import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { setupDefinition } from "./setupdef.js";
 import { definition } from "./tafdef.js";
 
 /**
@@ -218,12 +219,25 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return alert(event, deps);
   }
   if (parts[1] === "push") return push(event, method, parts, deps);
-  if (parts[1] !== "tafs") throw new HTTPError(404, "not found");
+  if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
 
   const me = await person(event, deps);
 
+  if (parts[1] === "setup") {
+    // The account's Setup (kiff/agents#91): its chat uses the taf routes, by its id.
+    if (parts.length === 2 && method === "GET") {
+      const setup = await setupOf(me, deps);
+      return { setup: setup ? await view(setup, me, deps) : null };
+    }
+    if (parts.length === 2 && method === "POST") {
+      need(me, "cards.manage");
+      return startSetup(event, me, deps);
+    }
+    throw new HTTPError(404, "not found");
+  }
+
   if (parts.length === 2 && method === "GET") {
-    const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing);
+    const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB);
     // Removed tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
     return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps))), removing: await deps.removals.list(me.tenantID) };
   }
@@ -446,7 +460,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
 
   // Two taps, or a retry, must not start two tafs: the name is claimed first.
   const taken = new HTTPError(409, `you already have a taf named ${name}`);
-  if ((await deps.tafs.list(me.tenantID)).some((t) => t.name === name)) throw taken;
+  if ((await deps.tafs.list(me.tenantID)).some((t) => t.name === name && t.job !== SETUP_JOB)) throw taken;
   // This start's claim on the name; the taf carries it, so only its removal frees it.
   const nameClaim = randomUUID();
   if (!(await deps.names.claim(me.tenantID, name, nameClaim))) {
@@ -532,6 +546,66 @@ async function draftKey(me: KIFFIdentity, name: string, draftID: string, claimSe
   await deps.claims.put(me.tenantID, draftID, { secret, name, agentID, tafID })
     .catch((err) => { throw new HTTPError(502, (err as Error).message); });
   return { agentID, tafID };
+}
+
+/** Setup's job, on its record: it has no schedule and isn't listed with the tafs. */
+export const SETUP_JOB = "setup";
+/** The name Setup claims: no taf can take it, since a taf's name is trimmed. */
+const SETUP_NAME_CLAIM = " setup";
+
+/** The account's Setup, if it has one. */
+async function setupOf(me: KIFFIdentity, deps: Deps): Promise<Taf | undefined> {
+  return (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
+}
+
+/**
+ * Starts the account's Setup, the agent that connects tools in the setup
+ * chat (kiff/agents#91), once. Its key comes from a draft the phone
+ * submitted with no Cards (no_tools, kiff-cloud#1254): tafs cloud claims it
+ * itself, so the key never reaches the phone, as for a taf.
+ */
+async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  const body = parseBody(event);
+  const draftID = str(body.draft_id).trim();
+  const claimSecret = str(body.claim_secret).trim();
+  if (!draftID || !claimSecret) throw new HTTPError(400, "send draft_id and claim_secret");
+  if (!/^drf_[A-Za-z0-9]+$/.test(draftID)) throw new HTTPError(400, "that is not a KIFF draft id");
+  if (await setupOf(me, deps)) throw new HTTPError(409, "this account's Setup is already started");
+  const nameClaim = randomUUID();
+  if (!(await deps.names.claim(me.tenantID, SETUP_NAME_CLAIM, nameClaim))) {
+    throw new HTTPError(409, "Setup is being started already; open it in a moment");
+  }
+  const check = async (key: string): Promise<string> => {
+    let agent: KIFFIdentity;
+    try { agent = await whoIs(key, deps.fetch, deps.kiffBase); } catch (err) {
+      if (err instanceof KIFFError && err.status === 502) throw new HTTPError(502, "KIFF didn't answer about Setup's key; try again");
+      throw new HTTPError(400, "KIFF did not accept Setup's key");
+    }
+    if (agent.tenantID !== me.tenantID) throw new HTTPError(400, "Setup's key belongs to another KIFF account");
+    if (!agent.apiKey || !agent.agentID) throw new HTTPError(400, "Setup's key is not bound to an agent");
+    return agent.agentID;
+  };
+  let tafID = (deps.newID ?? newTafID)();
+  let agentID: string;
+  try {
+    ({ agentID, tafID } = await draftKey(me, SETUP_NAME_CLAIM, draftID, claimSecret, tafID, deps, check));
+  } catch (err) {
+    await deps.names.release(me.tenantID, SETUP_NAME_CLAIM, nameClaim);
+    if (err instanceof HTTPError) throw err;
+    throw new HTTPError(502, `Setup's key couldn't be kept: ${(err as Error).message}`);
+  }
+  const setup: Taf = { id: tafID, name: "Setup", job: SETUP_JOB, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString() };
+  try {
+    await deps.agents.putAgent(me.tenantID, tafID, setupDefinition(tafID));
+    await deps.tafs.put(me.tenantID, setup);
+  } catch (err) {
+    const recordGone = await deps.tafs.remove(me.tenantID, tafID).then(() => true, () => false);
+    const agentGone = await deps.agents.deleteAgent(me.tenantID, tafID).then(() => true, () => false);
+    if (recordGone && agentGone) await deps.names.release(me.tenantID, SETUP_NAME_CLAIM, nameClaim);
+    throw new HTTPError(err instanceof AgentsError && err.status < 500 ? 400 : 502, `Setup couldn't be started: ${(err as Error).message}`);
+  }
+  await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
+  return { setup: await view(setup, me, deps) };
 }
 
 /** A taf's id on kiff/agents. */

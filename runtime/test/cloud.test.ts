@@ -34,6 +34,7 @@ const DRAFTS: Drafts = {
   drf_1: { secret: "dcs_1", key: "key_rae", agent: "rae" },
   drf_other: { secret: "dcs_o", key: "key_other", agent: "max" },
   drf_gone: { secret: "dcs_g", key: "key_rae", agent: "rae", status: 410 },
+  drf_setup: { secret: "dcs_s", key: "key_setup", agent: "setup-acme" },
 };
 
 const ids = (...hex: string[]) => hex.map((h) => `taf-${h.padEnd(20, "0")}`);
@@ -74,7 +75,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" } }, w.drafts, w.claimed),
+    fetch: kiff({ ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
   });
   return { status: r.statusCode, body: JSON.parse(r.body) };
@@ -370,5 +371,45 @@ describe("removing a taf", () => {
     w.names.held.set("t_acme#Rae", "newer-start");
     await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
     expect(w.names.held.get("t_acme#Rae")).toBe("newer-start");
+  });
+});
+
+describe("Setup (kiff/agents#91)", () => {
+  const SETUP = { draft_id: "drf_setup", claim_secret: "dcs_s" };
+
+  it("starts once from the phone's no-tools draft: its key claimed here, its definition, no schedule", async () => {
+    const w = world();
+    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null });
+    const r = await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
+    expect(r.status).toBe(200);
+    expect(r.body.setup).toMatchObject({ id: NEW, name: "Setup", job: "setup", kiff_agent: "setup-acme" });
+    expect(JSON.stringify(r.body)).not.toContain("key_setup");
+    expect(w.keys.held.get(`t_acme#${NEW}`)).toBe("key_setup");
+    const def = w.agents.agents.get(`t_acme|${NEW}`)!;
+    expect(def).toMatchObject({ show: true, planque: "https://planque.kiff.dev", key_ref: `kiff/${NEW}`, gateway: KIFF_GATEWAY });
+    expect(w.agents.calls).toEqual([`putAgent ${NEW}`]);
+    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body.setup).toMatchObject({ id: NEW, name: "Setup" });
+    // It's not listed with the tafs, and its chat uses the taf routes by its id.
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
+    expect((await call(w, "GET", `/v1/tafs/${NEW}/conversation`, { token: "ana" })).status).toBe(200);
+  });
+
+  it("starts once, needs the right to manage Cards and a draft, and never takes a taf's name", async () => {
+    const w = world();
+    expect((await call(w, "POST", "/v1/setup", { token: "viewer", body: SETUP })).status).toBe(403);
+    expect((await call(w, "POST", "/v1/setup", { token: "ana", body: {} })).status).toBe(400);
+    expect((await call(w, "POST", "/v1/setup", { token: "ana", body: { draft_id: "x", claim_secret: "y" } })).status).toBe(400);
+    expect((await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP })).status).toBe(200);
+    expect((await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP })).status).toBe(409);
+    // A taf may still be named Setup.
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...START, name: "Setup" } })).status).toBe(200);
+  });
+
+  it("refuses a draft whose key is for another account", async () => {
+    const w = world();
+    const r = await call(w, "POST", "/v1/setup", { token: "ana", body: { draft_id: "drf_other", claim_secret: "dcs_o" } });
+    expect(r.status).toBe(400);
+    expect(w.tafs.held.size).toBe(2);
+    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null });
   });
 });
