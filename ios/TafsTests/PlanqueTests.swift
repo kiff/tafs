@@ -310,7 +310,7 @@ final class PlanqueTests: XCTestCase {
         XCTAssertNil(model.kiff.setupSigner)
 
         // Nothing to confirm: nothing asked.
-        let again = await model(signer: signer, vendor: vendor)
+        let again = await self.model(signer: signer, vendor: vendor)
         again.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(status: "connected"))]}"#)
         _ = await again.connect(grantID: "g_01")
