@@ -7,6 +7,9 @@ final class StubProtocol: URLProtocol {
     nonisolated(unsafe) static var sent: [URLRequest] = []
     /// One request ("METHOD path") to hold until `release` is signalled; `arrived` says it came.
     nonisolated(unsafe) static var holdOnce: String?
+    /// Once a request ("METHOD path") is served, these responses replace others: what a
+    /// server answers after it changed something.
+    nonisolated(unsafe) static var thenRespond: [String: [String: (Int, String)]] = [:]
     static let arrived = DispatchSemaphore(value: 0)
     static let release = DispatchSemaphore(value: 0)
 
@@ -36,6 +39,7 @@ final class StubProtocol: URLProtocol {
             Self.release.wait()
         }
         let (status, body) = Self.responses[key] ?? (404, #"{"error":"not stubbed"}"#)
+        if let next = Self.thenRespond.removeValue(forKey: key) { Self.responses.merge(next) { $1 } }
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data(body.utf8))

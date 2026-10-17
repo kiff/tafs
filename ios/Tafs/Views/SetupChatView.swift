@@ -267,7 +267,9 @@ struct SetupApproval: View {
         let draft = component.draft.flatMap { model.setupDrafts[$0] }
         let cardsWaiting = draft.map { !$0.confirmed } ?? (component.draft != nil)
         let connected = grant?.connected ?? false
-        let finished = connected && !cardsWaiting
+        // Connected first (contract 5): signed in, and Setup reads what the vendor offers.
+        let listed = grant?.listed ?? false
+        let finished = (connected && !cardsWaiting) || (listed && component.draft == nil)
         let busy = model.connecting != nil
         let answered = model.answered.contains(component.id)
         Panel(stroke: finished ? Theme.ok : Theme.amber) {
@@ -276,8 +278,15 @@ struct SetupApproval: View {
                 if connected {
                     Label("\(grant.vendor) is connected · keys held by planque", systemImage: "checkmark.circle.fill")
                         .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
+                } else if listed {
+                    Label("Signed in at \(grant.vendor) · Setup is reading what it offers", systemImage: "checkmark.circle.fill")
+                        .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
                 } else {
                     Text(grant.text).font(.system(size: 15)).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    if grant.signedIn == true {
+                        Text("You're already signed in at \(grant.vendor): approving connects these tools, with no second sign-in.")
+                            .font(.system(size: 13)).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                    }
                     if !grant.digestMatches {
                         Text("planque's request doesn't match what it shows, so it can't be approved.")
                             .font(.system(size: 13)).foregroundColor(Theme.no)
