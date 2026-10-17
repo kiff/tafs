@@ -1248,10 +1248,11 @@ final class AppModel: ObservableObject {
         Keychain.save(tenant, for: Self.planqueAccount)
     }
 
-    /// A taf's connections: the grants made for its KIFF agent, connected now.
+    /// A taf's connections: the grants made for its KIFF agent that are connected, or whose
+    /// sign-in planque holds while Setup chooses the tools, so the owner can end it.
     func connections(for tafID: UUID) -> [PlanqueClient.Grant] {
         guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return [] }
-        return grants.filter { $0.request.agent == agent && $0.connected }
+        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn) }
     }
 
     /// Reads the grants. A read asks for no Face ID; it is signed so planque shows them only
@@ -1329,6 +1330,7 @@ final class AppModel: ObservableObject {
         }
         guard connecting == nil else { return nil }
         connecting = grantID
+        vendorSignedIn = false
         defer { connecting = nil }
         let gen = accountGeneration
         let signer = self.signer
@@ -1387,7 +1389,21 @@ final class AppModel: ObservableObject {
         let connected: PlanqueClient.Grant
         do {
             let approved = try await planque.approve(grant)
-            let back = try await vendorSignIn.signIn(at: approved.signInURL)
+            guard let signInURL = approved.signInURL else {
+                // planque already holds the sign-in (contract 5): approving the tools Setup
+                // chose from the vendor's list connected them, with no second sign-in.
+                await refreshConnections()
+                guard gen == accountGeneration else { return nil }
+                if approved.status == "connected", let done = grants.first(where: { $0.id == grant.id && $0.connected }) {
+                    return done
+                }
+                lastError = approved.status == "connected"
+                    ? "\(grant.vendor) is connected, but the app couldn't read it back yet."
+                    : "planque answered \(approved.status) with no sign-in link. Nothing was connected."
+                return nil
+            }
+            vendorSignedIn = true
+            let back = try await vendorSignIn.signIn(at: signInURL)
             guard let signedIn = PlanqueClient.signedIn(from: back), signedIn.grant == grant.id, signedIn.tenant == tenant else {
                 lastError = "The sign-in at \(grant.vendor) came back without planque's code. Nothing was connected."
                 return nil
@@ -1596,13 +1612,13 @@ final class AppModel: ObservableObject {
     /// taf's Cards when it names a draft. The answer says what happened, never more.
     func approve(_ component: SetupComponent) async {
         guard let grant = component.grant else { return }
-        let wasConnected = grants.first { $0.id == grant }?.connected ?? false
         lastError = nil
-        if let done = await connect(grantID: grant, draftID: component.draft), done.connected {
+        // Connected, or connected first and listed (contract 5): Setup reads what's next.
+        if let done = await connect(grantID: grant, draftID: component.draft), done.connected || done.listed {
             if let e = lastError {
                 await answer(component, "failed: \(e)")
             } else {
-                await answer(component, wasConnected ? "approved" : "approved, signed in")
+                await answer(component, vendorSignedIn ? "approved, signed in" : "approved")
             }
         } else if let e = lastError {
             await answer(component, "failed: \(e)")
@@ -1614,7 +1630,7 @@ final class AppModel: ObservableObject {
     func signInAgain(_ component: SetupComponent) async {
         guard let grant = component.grant else { return }
         lastError = nil
-        if let done = await connect(grantID: grant), done.connected {
+        if let done = await connect(grantID: grant), done.connected || done.listed {
             await answer(component, "signed in")
         } else if let e = lastError {
             await answer(component, "failed: \(e)")
@@ -1623,6 +1639,9 @@ final class AppModel: ObservableObject {
 
     /// The taf a result hands over to, when this phone shows it.
     func taf(forAgent agent: String) -> UUID? { holderIDs[agent] }
+
+    /// Whether the last connect opened the vendor's sign-in: the approval's answer says so.
+    private var vendorSignedIn = false
 
     /// Results whose taf is being started, or failed to start (with why).
     @Published private(set) var startingTafs: Set<String> = []

@@ -115,12 +115,13 @@ final class PlanqueTests: XCTestCase {
     }
 
     /// A grant as planque lists it, over the request whose digest is `PlanqueTests.digest`.
-    static func grantJSONFor(_ id: String = "g_01", status: String = "pending", digest: String = PlanqueTests.digest) -> String {
-        #"{"id":"\#(id)","status":"\#(status)","text":"refunds may refund payments at mcp.stripe.com","digest":"\#(digest)","request":\#(Self.request),"audience":"https://planque.kiff.dev/mcp/t_01/\#(id)","events":[{"at":"2026-10-17T10:00:00.123456789Z","what":"asked by setup-agent"}]}"#
+    static func grantJSONFor(_ id: String = "g_01", status: String = "pending", digest: String = PlanqueTests.digest, signedIn: Bool = false) -> String {
+        #"{"id":"\#(id)","status":"\#(status)",\#(signedIn ? #""signed_in":true,"# : "")"text":"refunds may refund payments at mcp.stripe.com","digest":"\#(digest)","request":\#(Self.request),"audience":"https://planque.kiff.dev/mcp/t_01/\#(id)","events":[{"at":"2026-10-17T10:00:00.123456789Z","what":"asked by setup-agent"}]}"#
     }
 
     private func clients() -> (KIFFClient, PlanqueClient, URLSession) {
         StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
         StubProtocol.sent = []
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubProtocol.self]
@@ -165,7 +166,13 @@ final class PlanqueTests: XCTestCase {
 
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00.5Z"}"#)
         let approved = try await planque.approve(grants[0])
-        XCTAssertEqual(approved.signInURL.host, "access.stripe.com")
+        XCTAssertEqual(approved.signInURL?.host, "access.stripe.com")
+
+        // Tools set on a held sign-in (contract 5): planque connects at once, with no link.
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, grantJSON(status: "connected"))
+        let connected = try await planque.approve(grants[0])
+        XCTAssertEqual(connected.status, "connected")
+        XCTAssertNil(connected.signInURL)
         XCTAssertEqual(body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").last)["digest"] as? String, Self.digest)
     }
 
