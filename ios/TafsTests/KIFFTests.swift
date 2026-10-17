@@ -56,16 +56,24 @@ final class StubProtocol: URLProtocol {
         if let next = Self.thenRespond.removeValue(forKey: key) { Self.responses.merge(next) { $1 } }
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        if let marker = Self.pauseAfter.removeValue(forKey: key), let cut = body.range(of: marker) {
-            // The first part now; the rest once the test releases it, from another queue,
-            // so this loading thread (which other requests need) is never blocked.
+        if let marker = Self.pauseAfter.removeValue(forKey: key) {
+            guard let cut = body.range(of: marker) else {
+                XCTFail("the pause marker isn't in the stubbed body of \(key)")
+                Self.paused.signal()
+                client?.urlProtocol(self, didLoad: Data(body.utf8))
+                client?.urlProtocolDidFinishLoading(self)
+                return
+            }
+            // The first part now; the rest once the test resumes it. The wait is on another
+            // queue, so this loading thread, which every other request needs, never blocks;
+            // the rest is sent back on it, where the client must be called.
             client?.urlProtocol(self, didLoad: Data(body[..<cut.upperBound].utf8))
-            let rest = Data(body[cut.upperBound...].utf8)
+            let rest = Data(body[cut.upperBound...].utf8) as NSData
+            let thread = Thread.current
             Self.paused.signal()
             DispatchQueue.global().async { [self] in
                 Self.resume.wait()
-                client?.urlProtocol(self, didLoad: rest)
-                client?.urlProtocolDidFinishLoading(self)
+                perform(#selector(finishPaused(_:)), on: thread, with: rest, waitUntilDone: false)
             }
             return
         }
@@ -73,7 +81,16 @@ final class StubProtocol: URLProtocol {
         client?.urlProtocolDidFinishLoading(self)
     }
 
-    override func stopLoading() {}
+    /// Whether the load was stopped (cancelled): a paused body isn't finished then.
+    private var stopped = false
+
+    @objc private func finishPaused(_ rest: NSData) {
+        guard !stopped else { return }
+        client?.urlProtocol(self, didLoad: rest as Data)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() { stopped = true }
 }
 
 @MainActor

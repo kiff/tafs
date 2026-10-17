@@ -151,6 +151,9 @@ final class ChatTests: XCTestCase {
         StubProtocol.holdOnce = "GET /v1/tafs/depl_1/conversation"
         let load = Task { await model.loadChat(id) }
         await untilHeldRequestArrives()
+        // Signed out without a request (the stub holds its one loading thread), so the
+        // test doesn't wait out the logout's timeout.
+        model.kiff.token = nil
         await model.signOut()
         StubProtocol.release.signal()
         await load.value
