@@ -136,7 +136,8 @@ final class SetupTests: XCTestCase {
 
         // Sent, and tafs cloud doesn't see the run yet: thinking all the same.
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
-        XCTAssertTrue(await model.sendSetup("Make sure customers can get their refunds"))
+        let delivered = await model.sendSetup("Make sure customers can get their refunds")
+        XCTAssertTrue(delivered)
         XCTAssertTrue(model.setupThinking)
 
         // At work: thinking, and Stop names its session.
