@@ -155,6 +155,82 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A message is streamed (#60): tafs cloud takes it on the stream route, Setup's words
+    /// arrive as written, each tool call reloads the thread (the turn's words are recorded
+    /// by then), and the end reloads it once more. Nothing goes through the plain route.
+    func testSetupsAnswerStreams() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (200, """
+        event: session
+        data: {"session":"s1","new_session":true}
+
+        event: text
+        data: {"text":"I'll connect "}
+
+        event: text
+        data: {"text":"**Stripe**."}
+
+        event: activity
+        data: {"tool":"planque"}
+
+        event: end
+        data: {"status":"COMPLETED","stop":"answered"}
+
+
+        """)
+        StubProtocol.sent = []
+        let delivered = await model.sendSetup("Make sure customers can get their refunds")
+        XCTAssertTrue(delivered)
+        XCTAssertTrue(model.setupStreamWorks)
+        await model.setupStream?.value
+        XCTAssertNil(model.setupLive, "the stream ended")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages/stream").first)["text"] as? String,
+                       "Make sure customers can get their refunds")
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "not sent twice")
+        XCTAssertGreaterThanOrEqual(sent("GET", "cloud.test", "/v1/tafs/taf-setup/conversation").count, 2, "at the tool call and at the end")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// No stream route (an older tafs cloud) or no way to it: the plain send takes the
+    /// message. A refusal on the stream route is the owner's to see, and isn't sent again.
+    func testWithoutAStreamThePlainSendTakesIt() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":true}"#)
+        await model.loadSetup()
+        StubProtocol.sent = []
+        let plain = await model.sendSetup("hello")
+        XCTAssertTrue(plain)
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").count, 1)
+        XCTAssertFalse(model.setupStreamWorks)
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (429, #"{"error":"that's 10 messages in 10 minutes"}"#)
+        StubProtocol.sent = []
+        let refused = await model.sendSetup("again")
+        XCTAssertFalse(refused)
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty)
+        XCTAssertEqual(model.setupError, "It wasn't sent: that's 10 messages in 10 minutes")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// tafs cloud's stream events, read: unknown ones skipped.
+    func testStreamEventsAreRead() {
+        func e(_ name: String, _ json: String) -> TafsCloud.StreamEvent? { TafsCloud.streamEvent(name, data: Data(json.utf8)) }
+        XCTAssertEqual(e("session", #"{"session":"s1","new_session":true}"#), .session("s1", newSession: true))
+        XCTAssertEqual(e("text", #"{"text":"a\nb"}"#), .text("a\nb"))
+        XCTAssertEqual(e("activity", #"{"tool":"planque"}"#), .activity("planque"))
+        XCTAssertEqual(e("component", #"{"component":{}}"#), .component)
+        XCTAssertEqual(e("end", #"{"status":"COMPLETED","stop":"answered"}"#), .end(status: "COMPLETED", stop: "answered"))
+        XCTAssertEqual(e("error", #"{"error":"x"}"#), .broken)
+        XCTAssertNil(e("delta", #"{"kind":"tool_result"}"#))
+        XCTAssertEqual(AppModel.activityWords("kiff_draft"), "Preparing the Card…")
+        XCTAssertNil(AppModel.activityWords("show"))
+    }
+
     /// Setup's Markdown is drawn, not shown as symbols (#58 B5).
     func testMarkdownIsDrawn() {
         let blocks = MarkdownBlock.parse("## The plan\nI will **connect** Stripe,\nthen:\n\n- read its `tools`\n2. propose rules\n\n```\nPostRefunds\n```")

@@ -3,6 +3,10 @@
 #
 #   tafs-cloud                 Lambda (Node 22, arm64) with a public function URL;
 #                              the code authenticates every route with KIFF.
+#   tafs-cloud-stream          the same code, handler index.stream, with a public
+#                              function URL in RESPONSE_STREAM mode and 15 minutes:
+#                              one route, a chat message whose run is streamed to
+#                              the phone as it is written (kiff/tafs#60).
 #   tafs-cloud-lambda          its role: logs, the APNs key, this table, calling
 #                              kiff/agents' API, and writing the tafs' KIFF keys and
 #                              the accounts' alert secrets where kiff/agents reads them.
@@ -21,7 +25,7 @@
 #   tafs/apns-key              the "tafs push" APNs key (.p8), made in the Apple
 #                              Developer portal; a person puts it there.
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
-#                              main: update this function's code, nothing else.
+#                              main: update both functions' code, nothing else.
 #
 # Everything is named tafs-*, in us-east-1, and touches nothing of kiff-cloud's.
 # Usage: infra/aws.sh path/to/lambda.zip
@@ -158,8 +162,40 @@ aws lambda add-permission --function-name "$FN" --statement-id public-url-invoke
   --principal '*' --invoked-via-function-url >/dev/null 2>&1 \
   || echo "add the URL-only InvokeFunction permission by hand (see the comment above)" >&2
 
+# The streaming function (kiff/tafs#60): the same code and role, one route
+# (POST /v1/tafs/{id}/messages/stream), and a URL that streams. A run can take
+# minutes, so it has 15; every other route stays on tafs-cloud's 60 seconds.
+SFN=tafs-cloud-stream
+if ! aws lambda get-function --function-name "$SFN" >/dev/null 2>&1; then
+  aws lambda create-function --function-name "$SFN" --runtime nodejs22.x --architectures arm64 \
+    --handler index.stream --role "$LAMBDA_ROLE_ARN" --zip-file "fileb://$ZIP" \
+    --memory-size 512 --timeout 900 --environment "$ENV" --tags project=tafs >/dev/null
+  aws lambda wait function-active-v2 --function-name "$SFN"
+  echo "created function $SFN"
+else
+  aws lambda update-function-configuration --function-name "$SFN" --handler index.stream --memory-size 512 --timeout 900 \
+    --environment "$ENV" >/dev/null
+  aws lambda wait function-updated-v2 --function-name "$SFN"
+  aws lambda update-function-code --function-name "$SFN" --zip-file "fileb://$ZIP" >/dev/null
+  aws lambda wait function-updated-v2 --function-name "$SFN"
+  echo "updated function $SFN"
+fi
+aws logs create-log-group --log-group-name "/aws/lambda/$SFN" 2>/dev/null || true
+aws logs put-retention-policy --log-group-name "/aws/lambda/$SFN" --retention-in-days 30
+if ! STREAM_URL=$(aws lambda get-function-url-config --function-name "$SFN" --query FunctionUrl --output text 2>/dev/null); then
+  STREAM_URL=$(aws lambda create-function-url-config --function-name "$SFN" --auth-type NONE --invoke-mode RESPONSE_STREAM \
+    --query FunctionUrl --output text)
+  echo "created the streaming function URL"
+fi
+aws lambda add-permission --function-name "$SFN" --statement-id public-url --action lambda:InvokeFunctionUrl \
+  --principal '*' --function-url-auth-type NONE >/dev/null 2>&1 || true
+aws lambda add-permission --function-name "$SFN" --statement-id public-url-invoke --action lambda:InvokeFunction \
+  --principal '*' --invoked-via-function-url >/dev/null 2>&1 \
+  || echo "add the URL-only InvokeFunction permission to $SFN by hand (see above)" >&2
+
 # The deploy role, for kiff/tafs main only.
 FN_ARN=$(aws lambda get-function --function-name "$FN" --query Configuration.FunctionArn --output text)
+SFN_ARN=$(aws lambda get-function --function-name "$SFN" --query Configuration.FunctionArn --output text)
 TRUST="{
   \"Version\": \"2012-10-17\",
   \"Statement\": [{
@@ -183,9 +219,10 @@ fi
 aws iam put-role-policy --role-name "$DEPLOY_ROLE" --policy-name deploy-tafs-cloud --policy-document "{
   \"Version\": \"2012-10-17\",
   \"Statement\": [
-    {\"Effect\": \"Allow\", \"Action\": [\"lambda:UpdateFunctionCode\", \"lambda:GetFunction\", \"lambda:GetFunctionConfiguration\"], \"Resource\": \"$FN_ARN\"}
+    {\"Effect\": \"Allow\", \"Action\": [\"lambda:UpdateFunctionCode\", \"lambda:GetFunction\", \"lambda:GetFunctionConfiguration\"], \"Resource\": [\"$FN_ARN\", \"$SFN_ARN\"]}
   ]
 }"
 
 echo "deploy role $(aws iam get-role --role-name "$DEPLOY_ROLE" --query Role.Arn --output text)"
 echo "url $URL"
+echo "stream url $STREAM_URL"

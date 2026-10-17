@@ -72,14 +72,27 @@ struct SetupChatView: View {
                         Group {
                             switch item {
                             case .message(let m):
-                                RevealingBubble(message: m, reveal: m.from == .taf && m.at > openedAt && !revealed.contains(m.id),
+                                // Streamed answers show as written; only without a stream are they revealed.
+                                RevealingBubble(message: m, reveal: !model.setupStreamWorks && m.from == .taf && m.at > openedAt && !revealed.contains(m.id),
                                                 revealed: $revealed, grown: $grown)
                             case .component(let c): SetupComponentView(shown: c)
                             }
                         }
                         .id(item.id)
                     }
-                    if thinking { TypingBubble(taf: nil).id("thinking") }
+                    if let live = model.setupLive, !live.text.isEmpty {
+                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: live.text, session: "live"), taf: nil).id("live")
+                    } else if thinking {
+                        TypingBubble(taf: nil).id("thinking")
+                    }
+                    if let activity = model.setupLive?.activity {
+                        HStack(spacing: 8) {
+                            ProgressView().controlSize(.mini).tint(Theme.dim)
+                            Text(activity).font(.system(size: 13)).foregroundColor(Theme.dim)
+                        }
+                        .padding(.leading, 36)
+                        .accessibilityElement(children: .combine)
+                    }
                     Color.clear.frame(height: 1).id(Self.bottom)
                         .onAppear { atBottom = true; following = true }
                         .onDisappear { atBottom = false }
@@ -112,6 +125,7 @@ struct SetupChatView: View {
             .onChange(of: items.map(\.id)) { _ in follow(proxy) }
             .onChange(of: thinking) { _ in follow(proxy) }
             .onChange(of: grown) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
+            .onChange(of: model.setupLive) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onAppear { proxy.scrollTo(Self.bottom, anchor: .bottom) }
         }
     }

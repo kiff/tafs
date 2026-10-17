@@ -48,13 +48,18 @@ final class TafsCloud {
     }
 
     let baseURL: URL
+    /// tafs-cloud-stream: the one route whose answer streams (#60).
+    let streamURL: URL
     var token: String?
     private let session: URLSession
 
     static let defaultURL = URL(string: "https://qvjurway3eczrk7pqorfuy7z5y0vuztq.lambda-url.us-east-1.on.aws")!
+    static let defaultStreamURL = URL(string: "https://y3mbk66eybe3mmu5loval6asle0kjygr.lambda-url.us-east-1.on.aws")!
 
-    init(baseURL: URL = TafsCloud.defaultURL, token: String? = nil, session: URLSession = .shared) {
+    init(baseURL: URL = TafsCloud.defaultURL, streamURL: URL? = nil, token: String? = nil, session: URLSession = .shared) {
         self.baseURL = baseURL
+        // A test's cloud streams from its own host.
+        self.streamURL = streamURL ?? (baseURL == TafsCloud.defaultURL ? TafsCloud.defaultStreamURL : baseURL)
         self.token = token
         self.session = session
     }
@@ -170,6 +175,80 @@ final class TafsCloud {
     /// Sends the owner's message: into the taf's current run, or a new one.
     func sendMessage(_ id: String, text: String) async throws -> Sent {
         try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: ["text": text])
+    }
+
+    /// What a streamed message's run does, as tafs cloud relays it (#60).
+    enum StreamEvent: Equatable {
+        /// The chat the message went into, first.
+        case session(String, newSession: Bool)
+        /// More of the answer, as it is written.
+        case text(String)
+        /// A tool the agent calls, by name: never what it was given.
+        case activity(String)
+        /// The agent showed a component: the conversation has it.
+        case component
+        /// The run stopped: its status, and why.
+        case end(status: String, stop: String)
+        /// The stream broke on tafs cloud's side; the conversation has the rest.
+        case broken
+    }
+
+    /// Sends the owner's message with its run streamed: returns once tafs cloud took it,
+    /// with the run's events to follow. A refusal throws, as `sendMessage` does.
+    func streamMessage(_ id: String, text: String) async throws -> AsyncThrowingStream<StreamEvent, Error> {
+        guard let url = URL(string: "/v1/tafs/\(escaped(id))/messages/stream", relativeTo: streamURL) else {
+            throw CloudError(status: 0, message: "Bad path")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        // A run can think for minutes between two words.
+        request.timeoutInterval = 900
+        request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["text": text])
+        guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (bytes, response) = try await session.bytes(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard status == 200 else {
+            var data = Data()
+            for try await b in bytes { data.append(b) }
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "tafs cloud answered \(status)"
+            throw CloudError(status: status, message: message)
+        }
+        return AsyncThrowingStream { continuation in
+            let reading = Task {
+                do {
+                    var name = "message"
+                    for try await line in bytes.lines {
+                        if line.hasPrefix("event:") {
+                            name = line.dropFirst(6).trimmingCharacters(in: .whitespaces)
+                        } else if line.hasPrefix("data:"), let e = Self.streamEvent(name, data: Data(line.dropFirst(5).utf8)) {
+                            continuation.yield(e)
+                        }
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in reading.cancel() }
+        }
+    }
+
+    /// One event of tafs cloud's stream, from its name and its line of JSON; nil when unknown.
+    nonisolated static func streamEvent(_ name: String, data: Data) -> StreamEvent? {
+        let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
+        switch name {
+        case "session": return (o["session"] as? String).map { .session($0, newSession: o["new_session"] as? Bool ?? false) }
+        case "text": return (o["text"] as? String).map(StreamEvent.text)
+        case "activity": return (o["tool"] as? String).map(StreamEvent.activity)
+        case "component": return .component
+        case "end": return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "")
+        case "error": return .broken
+        default: return nil
+        }
     }
 
     // MARK: Setup (kiff/agents#91)

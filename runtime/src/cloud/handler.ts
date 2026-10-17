@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
-import { type Agents, AgentsError, type Run, type Schedule, type Session } from "./agents.js";
+import { type Agents, AgentsError, type Run, type RunStreamEvent, type Schedule, type Session } from "./agents.js";
 import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
@@ -47,7 +47,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun">;
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -797,13 +797,36 @@ async function working(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps
  * taf has only its Card's tools, and remembers what its notes say.
  */
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  const text = chatText(event);
+  await claimChatSlot(me, taf, deps);
+  const live = await liveChat(me, taf, deps);
+  if (live) {
+    try {
+      const run = await deps.agents.startRun(me.tenantID, taf.id, text, live);
+      return { session: run.session, new_session: false };
+    } catch (err) {
+      // Refused, for example a chat that is gone or busy: a new one takes the message.
+      if (!(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw err;
+    }
+  }
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text));
+  return { session: run.session, new_session: true };
+}
+
+/** The owner's message, 1 to CHAT.maxText characters. */
+function chatText(event: HTTPEvent): string {
   const text = str(parseBody(event).text).trim();
   if (!text || text.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters`);
-  const now = (deps.now?.() ?? new Date()).getTime();
+  return text;
+}
 
-  // The flood guard: one of 10 slots per taf and 10-minute window, claimed with a
-  // conditional write, so it holds however many chats the messages start and
-  // whatever the thread shows. A window is fixed, so at most 20 can straddle two.
+/**
+ * The flood guard: one of 10 slots per taf and 10-minute window, claimed with a
+ * conditional write, so it holds however many chats the messages start and
+ * whatever the thread shows. A window is fixed, so at most 20 can straddle two.
+ */
+async function claimChatSlot(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<void> {
+  const now = (deps.now?.() ?? new Date()).getTime();
   const windowMs = CHAT.floodMinutes * 60_000;
   const bucket = Math.floor(now / windowMs);
   const expires = new Date((bucket + 2) * windowMs);
@@ -814,20 +837,125 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   if (!slot) {
     throw new HTTPError(429, `that's ${CHAT.floodMessages} messages in ${CHAT.floodMinutes} minutes; wait a little before writing again`);
   }
+}
 
+/** The taf's latest chat when it was active in the last 30 minutes: the message goes on in it. */
+async function liveChat(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
+  const now = (deps.now?.() ?? new Date()).getTime();
   const sessions = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
   const latest = sessions.find((s) => s.kind === "chat");
-  if (latest && now - Date.parse(latest.updated) < CHAT.liveMinutes * 60_000) {
-    try {
-      const run = await deps.agents.startRun(me.tenantID, taf.id, text, latest.id);
-      return { session: run.session, new_session: false };
-    } catch (err) {
-      // Refused, for example a chat that is gone or busy: a new one takes the message.
-      if (!(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw err;
+  return latest && now - Date.parse(latest.updated) < CHAT.liveMinutes * 60_000 ? latest.id : undefined;
+}
+
+/** A response streamed as server-sent events (kiff/tafs#60): its status and headers, then its events. */
+export interface StreamResult {
+  statusCode: number;
+  headers: Record<string, string>;
+  body: AsyncIterable<string>;
+}
+
+/**
+ * POST /v1/tafs/{id}/messages/stream: the owner's message, as `messages`
+ * takes it (the same checks, flood guard and chat), with its run held in the
+ * foreground so the agent's words reach the phone as they are written. What
+ * the phone gets is trimmed to what it shows:
+ *
+ *   event: session    {session, new_session}, first
+ *   event: text       {text}: more of the answer
+ *   event: activity   {tool}: a tool's name as the agent calls it, never its input
+ *   event: component  {component}: a component the agent showed
+ *   event: end        {status, stop}: where the run stopped
+ *   event: error      {error}: the stream broke; the conversation has the rest
+ *
+ * Tool inputs and results never reach the phone. The run is kiff/agents'
+ * invocation's: a phone that goes away loses nothing, and reads the rest in
+ * the conversation.
+ */
+export async function handleStream(event: HTTPEvent, deps: Deps): Promise<StreamResult> {
+  try {
+    const method = event.requestContext.http.method.toUpperCase();
+    const parts = event.rawPath.split("/").filter(Boolean);
+    if (!(method === "POST" && parts.length === 5 && parts[0] === "v1" && parts[1] === "tafs" && parts[3] === "messages" && parts[4] === "stream")) {
+      throw new HTTPError(404, "not found");
     }
+    const me = await person(event, deps);
+    const taf = await owned(me, parts[2] ?? "", deps);
+    need(me, "cards.manage");
+    const text = chatText(event);
+    await claimChatSlot(me, taf, deps);
+    const live = await liveChat(me, taf, deps);
+    let run: AsyncGenerator<RunStreamEvent> | undefined;
+    let first: IteratorResult<RunStreamEvent> | undefined;
+    if (live) {
+      try {
+        run = deps.agents.streamRun(me.tenantID, taf.id, text, live);
+        first = await run.next();
+      } catch (err) {
+        if (!(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw agentsFailure(err);
+        run = undefined;
+      }
+    }
+    const newSession = !run;
+    if (!run) {
+      try {
+        run = deps.agents.streamRun(me.tenantID, taf.id, text);
+        first = await run.next();
+      } catch (err) {
+        throw agentsFailure(err);
+      }
+    }
+    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, newSession) };
+  } catch (err) {
+    const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
+    if (status === 500) console.error(err);
+    const message = status === 500 ? "something went wrong on tafs cloud" : (err as Error).message;
+    return { statusCode: status, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: once(JSON.stringify({ error: message })) };
   }
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text));
-  return { session: run.session, new_session: true };
+}
+
+function agentsFailure(err: unknown): unknown {
+  return err instanceof AgentsError ? new HTTPError(err.status >= 500 ? 502 : err.status, err.message) : err;
+}
+
+async function* once(s: string): AsyncGenerator<string> {
+  yield s;
+}
+
+function sse(name: string, data: unknown): string {
+  return `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+/** kiff/agents' run stream, trimmed to what the phone shows. */
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, newSession: boolean): AsyncGenerator<string> {
+  const out = (e: RunStreamEvent): string | undefined => {
+    const d = (e.data ?? {}) as Record<string, unknown>;
+    switch (e.event) {
+      case "run":
+        return sse("session", { session: d.session, new_session: newSession });
+      case "delta":
+        if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
+        if (d.kind === "tool_call" && typeof d.tool === "string") return sse("activity", { tool: d.tool });
+        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: d.component });
+        return undefined; // tool results stay on the server
+      case "end":
+        return sse("end", { status: d.status ?? "", stop: d.stop ?? "" });
+      default:
+        return undefined; // recorded events: the conversation has them
+    }
+  };
+  try {
+    if (first && !first.done) {
+      const s = out(first.value);
+      if (s) yield s;
+    }
+    for await (const e of run) {
+      const s = out(e);
+      if (s) yield s;
+    }
+  } catch (err) {
+    console.error(err);
+    yield sse("error", { error: "the stream broke; the conversation has the rest" });
+  }
 }
 
 /**
