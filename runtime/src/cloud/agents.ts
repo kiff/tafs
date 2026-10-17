@@ -8,8 +8,10 @@ import { SignatureV4 } from "@smithy/signature-v4";
  * with that role and names the KIFF account in Kiff-Tenant, after tafs cloud
  * has verified the person: the server trusts the header only from that role.
  *
- * Only what tafs needs, in kiff/agents' own shapes. Runs always start in the
- * background: the app reads the conversation, it doesn't hold a stream.
+ * Only what tafs needs, in kiff/agents' own shapes. Runs start in the
+ * background, and the app reads the conversation; the one exception is a
+ * chat message sent to be streamed (kiff/tafs#60), whose run is held here
+ * in the foreground so its words reach the phone as they are written.
  */
 
 export interface Credentials {
@@ -188,6 +190,19 @@ export class Agents {
     return this.call("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}), background: true });
   }
 
+  /**
+   * Starts a run in the foreground and reads its stream (server-sent events):
+   * the run first, what the agent does as it does it, then where it stopped.
+   * A refusal before the stream begins throws, as `startRun` does. The run is
+   * kiff/agents' invocation's, not this reader's: stopping reading stops none of it.
+   */
+  async *streamRun(tenant: string, agent: string, input: string, session?: string): AsyncGenerator<RunStreamEvent> {
+    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}) }, undefined, "text/event-stream");
+    if (!res.ok) throw await failure(res);
+    if (!res.body) throw new AgentsError(502, "kiff/agents answered with no stream");
+    yield* readEvents(res.body);
+  }
+
   getRun(tenant: string, agent: string, run: string): Promise<Run> {
     return this.call("GET", tenant, ["agents", agent, "runs", run]);
   }
@@ -266,6 +281,16 @@ export class Agents {
    * name), escaped into one segment.
    */
   private async call<T>(method: string, tenant: string, segments: Array<string | { text: string }>, body?: unknown, query?: Record<string, string>): Promise<T> {
+    const res = await this.send(method, tenant, segments, body, query);
+    if (res.status === 204) return undefined as T;
+    if (!res.ok) throw await failure(res);
+    const text = await res.text();
+    try { return (text ? JSON.parse(text) : undefined) as T; } catch { return undefined as T; }
+  }
+
+  /** One request, signed with this function's role. */
+  private async send(method: string, tenant: string, segments: Array<string | { text: string }>, body?: unknown, query?: Record<string, string>,
+    accept = "application/json"): Promise<Response> {
     if (!tenant) throw new AgentsError(401, "no KIFF account to call kiff/agents for");
     const path: string[] = [];
     for (const seg of segments) {
@@ -274,7 +299,7 @@ export class Agents {
       path.push(seg);
     }
     const payload = body === undefined ? undefined : JSON.stringify(body);
-    const headers: Record<string, string> = { host: this.base.host, accept: "application/json", "kiff-tenant": tenant };
+    const headers: Record<string, string> = { host: this.base.host, accept, "kiff-tenant": tenant };
     if (payload !== undefined) headers["content-type"] = "application/json";
     const signed = await this.signer.sign(
       {
@@ -292,18 +317,57 @@ export class Agents {
     const url = new URL("/" + path.join("/"), this.base);
     for (const [k, v] of Object.entries(query ?? {})) url.searchParams.set(k, v);
     // fetch sets Host itself, from the URL; it is signed with the same value.
-    const { host: _host, ...send } = signed.headers;
-    const res = await (this.cfg.fetch ?? fetch)(url, { method, headers: send, ...(payload !== undefined ? { body: payload } : {}) });
-    if (res.status === 204) return undefined as T;
-    const text = await res.text();
-    let parsed: unknown;
-    try { parsed = text ? JSON.parse(text) : undefined; } catch { parsed = undefined; }
-    if (!res.ok) {
-      const msg = (parsed as { error?: unknown } | undefined)?.error;
-      throw new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`);
-    }
-    return parsed as T;
+    const { host: _host, ...signedHeaders } = signed.headers;
+    return (this.cfg.fetch ?? fetch)(url, { method, headers: signedHeaders, ...(payload !== undefined ? { body: payload } : {}) });
   }
+}
+
+/** kiff/agents' refusal, as an error with its status and words. */
+async function failure(res: Response): Promise<AgentsError> {
+  const text = await res.text().catch(() => "");
+  let msg: unknown;
+  try { msg = (JSON.parse(text) as { error?: unknown }).error; } catch { msg = undefined; }
+  return new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`);
+}
+
+/**
+ * One event of a run's stream (kiff/agents server/runs.go): `run` (the run,
+ * first), `event` (a recorded session event), `delta` (what the agent does as
+ * it does it: text, tool_call, tool_result, component) and `end` (the run at
+ * its stop).
+ */
+export interface RunStreamEvent {
+  event: string;
+  data: unknown;
+}
+
+/** Reads server-sent events from a stream: each block's event name and its one line of JSON. */
+export async function* readEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<RunStreamEvent> {
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for await (const chunk of body as unknown as AsyncIterable<Uint8Array>) {
+    buffer += decoder.decode(chunk, { stream: true });
+    let cut: number;
+    while ((cut = buffer.indexOf("\n\n")) >= 0) {
+      const block = buffer.slice(0, cut);
+      buffer = buffer.slice(cut + 2);
+      const parsed = parseBlock(block);
+      if (parsed) yield parsed;
+    }
+  }
+  const last = parseBlock(buffer + decoder.decode());
+  if (last) yield last;
+}
+
+function parseBlock(block: string): RunStreamEvent | undefined {
+  let event = "message";
+  const data: string[] = [];
+  for (const line of block.split("\n")) {
+    if (line.startsWith("event:")) event = line.slice(6).trim();
+    else if (line.startsWith("data:")) data.push(line.slice(5).trimStart());
+  }
+  if (!data.length) return undefined;
+  try { return { event, data: JSON.parse(data.join("\n")) }; } catch { return undefined; }
 }
 
 /**

@@ -20,6 +20,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   /** Drafts Setup submitted (kiff/agents#94): draft id → its agent, and where its key was claimed. */
   const setupDrafts = new Map<string, { tenant: string; agent: string; keyRef?: string }>();
   const fail = new Map<string, AgentsError | Error>();
+  /** What a streamed run's agent does, in order: kiff/agents' stream events, or an Error that breaks it. */
+  const streamed: Array<{ event: string; data: unknown } | Error> = [];
   let n = 0;
 
   const k = (t: string, id: string) => `${t}|${id}`;
@@ -75,6 +77,30 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
         s = openSession(tenant, agent, "chat").id;
       }
       return newRun(tenant, agent, s, "owner", input);
+    },
+    /**
+     * A foreground run's stream: the run, then `streamed` (what the test says the
+     * agent does), then its end. `failing("streamRun")` refuses before it begins.
+     */
+    async *streamRun(tenant, agent, input, session) {
+      calls.push(`streamRun ${agent} ${session ?? "new"}`);
+      failing("streamRun");
+      if (!agents.has(k(tenant, agent))) throw gone();
+      let s = session;
+      if (s) {
+        const found = sessions.find((x) => x.tenant === tenant && x.id === s);
+        if (!found || found.agent !== agent) throw gone();
+      } else {
+        s = openSession(tenant, agent, "chat").id;
+      }
+      const r = newRun(tenant, agent, s, "owner", input);
+      yield { event: "run", data: r };
+      for (const e of streamed) {
+        if (e instanceof Error) throw e;
+        yield e;
+      }
+      (r as { status: string }).status = "COMPLETED";
+      yield { event: "end", data: { ...r, stop: "answered" } };
     },
     async sessions(tenant, agent, limit = 20) {
       failing("sessions");
@@ -170,7 +196,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts };
+  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

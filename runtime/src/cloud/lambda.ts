@@ -4,7 +4,7 @@ import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
 import { forwardAlert } from "./forward.js";
-import { type Accounts, type Claims, handle, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs } from "./handler.js";
+import { type Accounts, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
 /**
@@ -312,6 +312,41 @@ const removals: Removals = {
   },
 };
 
-export async function handler(event: HTTPEvent): Promise<HTTPResult> {
-  return handle(event, { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals });
+function deps(): Deps {
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals };
 }
+
+export async function handler(event: HTTPEvent): Promise<HTTPResult> {
+  return handle(event, deps());
+}
+
+/**
+ * The runtime's streaming API (Node.js Lambda response streaming), on the
+ * function's global: only inside Lambda, and only for a function URL in
+ * RESPONSE_STREAM mode.
+ */
+interface ResponseStream {
+  write(chunk: string): boolean;
+  end(): void;
+}
+declare const awslambda: {
+  streamifyResponse(h: (event: HTTPEvent, stream: ResponseStream) => Promise<void>): unknown;
+  HttpResponseStream: { from(stream: ResponseStream, meta: { statusCode: number; headers: Record<string, string> }): ResponseStream };
+};
+
+async function streamed(event: HTTPEvent, out: ResponseStream): Promise<void> {
+  const r = await handleStream(event, deps());
+  const body = awslambda.HttpResponseStream.from(out, { statusCode: r.statusCode, headers: r.headers });
+  try {
+    for await (const chunk of r.body) body.write(chunk);
+  } finally {
+    body.end();
+  }
+}
+
+/**
+ * tafs-cloud-stream's handler (kiff/tafs#60): the same code as `handler`,
+ * deployed to a second function whose URL streams. It serves one route,
+ * POST /v1/tafs/{id}/messages/stream.
+ */
+export const stream = typeof awslambda === "undefined" ? streamed : awslambda.streamifyResponse(streamed);

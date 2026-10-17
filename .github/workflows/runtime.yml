@@ -56,5 +56,8 @@ jobs:
           aws-region: us-east-1
       - name: Deploy tafs cloud
         run: |
-          aws lambda update-function-code --function-name tafs-cloud --zip-file fileb://lambda.zip >/dev/null
-          aws lambda wait function-updated-v2 --function-name tafs-cloud
+          # Both functions run the same code: tafs-cloud, and tafs-cloud-stream (#60).
+          for fn in tafs-cloud tafs-cloud-stream; do
+            aws lambda update-function-code --function-name "$fn" --zip-file fileb://lambda.zip >/dev/null
+            aws lambda wait function-updated-v2 --function-name "$fn"
+          done
