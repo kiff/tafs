@@ -236,15 +236,23 @@ struct SetupComponentView: View {
             if let tools = c.tools, !tools.isEmpty {
                 Text(tools.joined(separator: ", ")).font(Theme.mono(12)).foregroundColor(Theme.soft)
             }
-            if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent) {
+            if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                 NavigationLink {
                     TafDetailView(tafID: tafID)
                 } label: {
                     Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PrimaryButtonStyle())
+            } else if let error = model.tafStartErrors[c.id] {
+                Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+                Button("Try again") { Task { await model.startSetupTaf(c) } }
+                    .buttonStyle(OutlineButtonStyle())
+            } else if c.taf?.job != nil {
+                Text("Starting \(c.taf?.name ?? "the taf")…").font(.system(size: 13)).foregroundColor(Theme.dim)
             }
         }
+        // The hand-over starts the taf (once): tafs cloud stores it and kiff/agents claims its key.
+        .task(id: c.id) { await model.startSetupTaf(c) }
     }
 }
 

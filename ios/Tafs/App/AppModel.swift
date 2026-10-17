@@ -1623,4 +1623,36 @@ final class AppModel: ObservableObject {
 
     /// The taf a result hands over to, when this phone shows it.
     func taf(forAgent agent: String) -> UUID? { holderIDs[agent] }
+
+    /// Results whose taf is being started, or failed to start (with why).
+    @Published private(set) var startingTafs: Set<String> = []
+    @Published private(set) var tafStartErrors: [String: String] = [:]
+
+    /// Starts the taf a result hands over to, once: tafs cloud stores it, and kiff/agents
+    /// claims its key from Setup's draft. Then it shows with the account's other tafs.
+    func startSetupTaf(_ component: SetupComponent) async {
+        guard mode == .kiff, let taf = component.taf, let job = taf.job, let draft = taf.draft else { return }
+        if cloudTafs[taf.agent] != nil || startingTafs.contains(component.id) { return }
+        startingTafs.insert(component.id)
+        defer { startingTafs.remove(component.id) }
+        tafStartErrors[component.id] = nil
+        let gen = accountGeneration
+        var nameTaken = false
+        do {
+            _ = try await cloud.startFromSetup(name: taf.name, job: job, draftID: draft)
+        } catch let e as TafsCloud.CloudError where e.status == 409 && e.message.contains("already have a taf named") {
+            // Started before, by this phone or another, unless another taf has the name.
+            nameTaken = true
+        } catch {
+            guard gen == accountGeneration else { return }
+            tafStartErrors[component.id] = "\(taf.name) isn't started yet: \(error.localizedDescription)"
+            return
+        }
+        guard gen == accountGeneration else { return }
+        await refresh()
+        // A 409 can also mean another taf has the name: say so rather than wait forever.
+        if nameTaken, cloudTafs[taf.agent] == nil {
+            tafStartErrors[component.id] = "\(taf.name) isn't started yet: the account already has a taf by that name."
+        }
+    }
 }

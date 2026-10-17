@@ -206,6 +206,17 @@ final class TafsCloud {
         return r.setup
     }
 
+    /// Starts a taf Setup made (kiff/agents#91): kiff/agents claims its key from the draft
+    /// Setup submitted, so it never reaches the phone or tafs cloud. Runs it once now.
+    func startFromSetup(name: String, job: String, draftID: String, timezone: String = TimeZone.current.identifier) async throws -> Started {
+        struct Body: Encodable {
+            let name: String, job: String, draftID: String, timezone: String
+            let fromSetup = true
+            enum CodingKeys: String, CodingKey { case name, job, timezone, draftID = "draft_id", fromSetup = "from_setup" }
+        }
+        return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, timezone: timezone))
+    }
+
     /// Setup's thread: its messages and the components it showed.
     func setupThread(_ id: String) async throws -> SetupThread {
         struct Response: Decodable { let messages: [ChatMessage]; let components: [LenientShown]? }

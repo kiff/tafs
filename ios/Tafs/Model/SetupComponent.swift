@@ -21,6 +21,10 @@ struct SetupComponent: Decodable, Equatable {
     struct Taf: Decodable, Equatable {
         let agent: String
         let name: String
+        /// One of tafs' jobs (refunds, chargebacks, …): what the taf does.
+        let job: String?
+        /// The taf's KIFF draft, the one the owner confirmed: its key is claimed from it.
+        let draft: String?
     }
 
     let type: Kind

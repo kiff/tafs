@@ -4,7 +4,7 @@ import { type Agents, AgentsError, type Run, type Schedule, type Session } from 
 import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
-import { definition } from "./tafdef.js";
+import { definition, keyRef } from "./tafdef.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -47,7 +47,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun">;
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -441,7 +441,13 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
   // agent_key, from the CLI and app builds from before drafts.
   const draftID = str(body.draft_id).trim();
   const claimSecret = str(body.claim_secret).trim();
-  if (!draftID !== !claimSecret) throw new HTTPError(400, "send both draft_id and claim_secret");
+  // From the setup chat (kiff/agents#91), Setup submitted the draft, so kiff/agents
+  // keeps its claim secret and claims the key itself, into the taf's key reference.
+  const fromSetup = body.from_setup === true;
+  if (fromSetup && (!draftID || claimSecret || body.agent_key !== undefined)) {
+    throw new HTTPError(400, "from_setup takes a draft_id and no claim_secret or agent_key");
+  }
+  if (!fromSetup && !draftID !== !claimSecret) throw new HTTPError(400, "send both draft_id and claim_secret");
   if (draftID && !/^drf_[A-Za-z0-9]+$/.test(draftID)) throw new HTTPError(400, "that is not a KIFF draft id");
   const agentKey = draftID ? "" : str(body.agent_key).trim();
   if (!draftID && !agentKey) throw new HTTPError(400, "send draft_id and claim_secret, or agent_key");
@@ -472,7 +478,8 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
 
   let tafID = (deps.newID ?? newTafID)();
   try {
-    if (draftID) ({ agentID, tafID } = await draftKey(me, name, draftID, claimSecret, tafID, deps, check));
+    if (fromSetup) ({ agentID, tafID } = await setupDraftKey(me, name, draftID, tafID, deps));
+    else if (draftID) ({ agentID, tafID } = await draftKey(me, name, draftID, claimSecret, tafID, deps, check));
     else await deps.keys.put(me.tenantID, tafID, agentKey);
   } catch (err) {
     await deps.names.release(me.tenantID, name, nameClaim);
@@ -606,6 +613,41 @@ async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promi
   }
   await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
   return { setup: await view(setup, me, deps) };
+}
+
+/**
+ * A taf's key from a draft Setup submitted (kiff/agents#94): kiff/agents claims it into
+ * the taf's key reference, so it never reaches tafs cloud, the phone or the model. A
+ * retry resumes with the same taf id, which kiff/agents answers the same.
+ */
+async function setupDraftKey(me: KIFFIdentity, name: string, draftID: string, tafID: string,
+  deps: Deps): Promise<{ agentID: string; tafID: string }> {
+  const held = await deps.claims.get(me.tenantID, draftID);
+  if (held) {
+    if (held.name !== name) throw new HTTPError(409, `this draft is starting the taf ${held.name}; start it with that name`);
+    tafID = held.tafID;
+  } else {
+    // On record before the claim: kiff/agents claims a draft into one key
+    // reference only, so a retry must reuse this taf id whatever happens next.
+    await deps.claims.put(me.tenantID, draftID, { secret: "", name, agentID: "", tafID })
+      .catch((err) => { throw new HTTPError(502, (err as Error).message); });
+  }
+  let agentID: string;
+  try {
+    agentID = (await deps.agents.claimTafDraft(me.tenantID, draftID, keyRef(tafID))).agent_id;
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 404) {
+      // Not Setup's: nothing was claimed, so the record goes and can't stand in the draft's own claim.
+      if (!held) await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
+      throw new HTTPError(404, "Setup submitted no draft by that id on this account");
+    }
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
+    throw new HTTPError(502, `the taf's key couldn't be claimed: ${(err as Error).message}`);
+  }
+  if (!agentID) throw new HTTPError(502, "kiff/agents claimed the key but named no agent");
+  // The taf id is already on record, so losing this write only loses the agent id there.
+  await deps.claims.put(me.tenantID, draftID, { secret: "", name, agentID, tafID }).catch(() => undefined);
+  return { agentID, tafID };
 }
 
 /** A taf's id on kiff/agents. */
