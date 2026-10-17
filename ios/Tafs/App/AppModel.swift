@@ -1630,6 +1630,8 @@ final class AppModel: ObservableObject {
     struct LiveAnswer: Equatable {
         var text = ""
         var activity: String?
+        /// The chat the message went into, as the stream says: what Stop stops.
+        var session: String?
     }
     @Published private(set) var setupLive: LiveAnswer?
     /// Whether a stream has opened here: answers then show as written, not revealed.
@@ -1657,22 +1659,27 @@ final class AppModel: ObservableObject {
             for try await e in events {
                 guard gen == accountGeneration else { return }
                 switch e {
+                case .session(let session, _):
+                    setupLive?.session = session
                 case .text(let t):
                     setupLive?.text += t
                 case .activity(let tool):
                     await loadSetupThread()
-                    setupLive = LiveAnswer(text: "", activity: Self.activityWords(tool))
+                    setupLive?.text = ""
+                    setupLive?.activity = Self.activityWords(tool)
                 case .component:
                     await loadSetupThread()
                     setupLive?.text = ""
-                case .session, .end, .broken:
+                case .end, .broken:
                     break
                 }
             }
         } catch {}
         guard gen == accountGeneration else { return }
-        setupLive = nil
+        // The recorded answer first, then the live one goes: no gap between them.
         await loadSetupThread()
+        guard gen == accountGeneration else { return }
+        setupLive = nil
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.
@@ -1729,7 +1736,9 @@ final class AppModel: ObservableObject {
 
     /// The plan's Stop, and the composer's while Setup works: Setup's current run is cancelled.
     func stopSetup() async {
-        guard let s = setupTaf, let session = setupThread.working ?? setupThread.session else { return }
+        // A streamed message's own chat first: polling, which says what is working, waits
+        // while it streams, and a new chat isn't the thread's latest yet.
+        guard let s = setupTaf, let session = setupLive?.session ?? setupThread.working ?? setupThread.session else { return }
         setupAwaiting = nil
         do { try await cloud.stop(s.id, session: session) } catch {
             setupError = "Setup didn't stop: \(error.localizedDescription)"

@@ -194,6 +194,33 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Stop while a message streams stops that message's chat, a new one included, not
+    /// the thread's previous chat.
+    func testStopWhileStreamingStopsItsOwnChat() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"earlier","session":"s_old"}],"components":[],"working":null}
+        """)
+        await model.loadSetup()
+        // The stream says its chat, then holds (no end yet).
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (200, "event: session\ndata: {\"session\":\"s_new\",\"new_session\":true}\n\n")
+        StubProtocol.responses["POST /v1/tafs/taf-setup/stop"] = (200, #"{"stopped":true}"#)
+        let delivered = await model.sendSetup("start over")
+        XCTAssertTrue(delivered)
+        // Read the session event before the stream ends.
+        for _ in 0..<200 where model.setupLive?.session == nil { try await Task.sleep(nanoseconds: 1_000_000) }
+        // The stream's chat is kept until the thread is reloaded at its end.
+        XCTAssertEqual(model.setupLive?.session, "s_new")
+        await model.stopSetup()
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/stop").last) as? [String: String], ["session": "s_new"],
+                       "the new chat, not s_old")
+        await model.setupStream?.value
+        XCTAssertNil(model.setupLive)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// No stream route (an older tafs cloud) or no way to it: the plain send takes the
     /// message. A refusal on the stream route is the owner's to see, and isn't sent again.
     func testWithoutAStreamThePlainSendTakesIt() async throws {
