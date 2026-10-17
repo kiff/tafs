@@ -204,18 +204,20 @@ final class SetupTests: XCTestCase {
         {"messages":[{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"earlier","session":"s_old"}],"components":[],"working":null}
         """)
         await model.loadSetup()
-        // The stream says its chat, then holds (no end yet).
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (200, "event: session\ndata: {\"session\":\"s_new\",\"new_session\":true}\n\n")
+        // The stream says its chat, then stays open until the test lets it end.
+        let route = "POST /v1/tafs/taf-setup/messages/stream"
+        StubProtocol.responses[route] = (200, "event: session\ndata: {\"session\":\"s_new\",\"new_session\":true}\n\nevent: end\ndata: {\"status\":\"CANCELLED\"}\n\n")
+        StubProtocol.pauseAfter[route] = "\"new_session\":true}\n\n"
         StubProtocol.responses["POST /v1/tafs/taf-setup/stop"] = (200, #"{"stopped":true}"#)
         let delivered = await model.sendSetup("start over")
         XCTAssertTrue(delivered)
-        // Read the session event before the stream ends.
-        for _ in 0..<200 where model.setupLive?.session == nil { try await Task.sleep(nanoseconds: 1_000_000) }
-        // The stream's chat is kept until the thread is reloaded at its end.
+        while StubProtocol.arrived.wait(timeout: .now()) == .timedOut { try await Task.sleep(nanoseconds: 1_000_000) }
+        for _ in 0..<2000 where model.setupLive?.session == nil { try await Task.sleep(nanoseconds: 1_000_000) }
         XCTAssertEqual(model.setupLive?.session, "s_new")
         await model.stopSetup()
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/stop").last) as? [String: String], ["session": "s_new"],
                        "the new chat, not s_old")
+        StubProtocol.release.signal()
         await model.setupStream?.value
         XCTAssertNil(model.setupLive)
         Keychain.delete(AppModel.planqueAccount)

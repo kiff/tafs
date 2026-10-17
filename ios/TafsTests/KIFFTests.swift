@@ -13,6 +13,9 @@ final class StubProtocol: URLProtocol {
     /// Requests ("METHOD path") whose next tries fail as the network does, in order: what
     /// iOS does to a socket while the app is in the background.
     nonisolated(unsafe) static var dropped: [String: [URLError.Code]] = [:]
+    /// A response ("METHOD path") whose body pauses once after this text until `release`
+    /// is signalled; `arrived` says the first part was sent: a stream still open.
+    nonisolated(unsafe) static var pauseAfter: [String: String] = [:]
     static let arrived = DispatchSemaphore(value: 0)
     static let release = DispatchSemaphore(value: 0)
 
@@ -51,7 +54,14 @@ final class StubProtocol: URLProtocol {
         if let next = Self.thenRespond.removeValue(forKey: key) { Self.responses.merge(next) { $1 } }
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        if let marker = Self.pauseAfter.removeValue(forKey: key), let cut = body.range(of: marker) {
+            client?.urlProtocol(self, didLoad: Data(body[..<cut.upperBound].utf8))
+            Self.arrived.signal()
+            Self.release.wait()
+            client?.urlProtocol(self, didLoad: Data(body[cut.upperBound...].utf8))
+        } else {
+            client?.urlProtocol(self, didLoad: Data(body.utf8))
+        }
         client?.urlProtocolDidFinishLoading(self)
     }
 
