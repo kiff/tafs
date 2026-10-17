@@ -43,9 +43,17 @@ final class KIFFClient {
     /// while a start the owner confirmed with Face ID runs, nil otherwise.
     var setupSigner: (@MainActor (Data) throws -> String)?
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
-    /// starts a taf (kiff-cloud #1217, #1225), and the alert target that tells tafs cloud
-    /// when a call is held (#1234).
-    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets"]
+    /// starts a taf (kiff-cloud #1217, #1225), the alert target that tells tafs cloud when a
+    /// call is held (#1234), and the connector key planque keeps (#1251).
+    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys"]
+
+    /// Whether KIFF takes `path` from a phone only with its signature: the paths above, and
+    /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`).
+    static func signsSetup(_ path: String) -> Bool {
+        if signedSetupPaths.contains(path) { return true }
+        let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
+    }
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
          webURL: URL = URL(string: "https://app.kiff.dev")!,
@@ -388,6 +396,12 @@ final class KIFFClient {
         try await send("GET", "/v1/me/agent-drafts/\(escaped(id))")
     }
 
+    /// Confirms a draft another agent submitted, exactly the version the owner was shown
+    /// (kiff-cloud #1237): KIFF issues its Cards. A signed setup call.
+    func confirmDraft(id: String, version: String) async throws -> AgentDraft {
+        try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version])
+    }
+
     /// Discards a draft nobody claimed, and revokes the Cards it issued.
     func discardDraft(id: String) async throws {
         let _: Empty = try await send("DELETE", "/v1/me/agent-drafts/\(escaped(id))")
@@ -408,6 +422,18 @@ final class KIFFClient {
     /// A signed setup call: the owner confirms it with Face ID first.
     func registerAlertTarget(url: URL) async throws -> AlertTarget {
         try await send("POST", "/v1/me/alert-targets", body: ["url": url.absoluteString])
+    }
+
+    // MARK: Connector key
+
+    /// The key planque keeps to register a taf's tools in KIFF (kiff-cloud #1251): it
+    /// connects tools and does nothing else. Minted from the phone with a signed setup call;
+    /// the plaintext is shown this once and goes straight to planque, never to storage.
+    func mintConnectorKey() async throws -> String {
+        struct Minted: Decodable { let plaintext: String }
+        struct Body: Encodable { let label: String; let roles: [String] }
+        let minted: Minted = try await send("POST", "/v1/keys", body: Body(label: "planque", roles: ["connector"]))
+        return minted.plaintext
     }
 
     // MARK: Transport
@@ -432,7 +458,7 @@ final class KIFFClient {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
         }
-        if method == "POST", base == nil, Self.signedSetupPaths.contains(path), let setupSigner, let tenant {
+        if method == "POST", base == nil, Self.signsSetup(path), let setupSigner, let tenant {
             let signedAt = ISO8601DateFormatter().string(from: Date())
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
             let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)
