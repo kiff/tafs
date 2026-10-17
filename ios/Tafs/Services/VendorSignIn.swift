@@ -66,7 +66,7 @@ extension VendorSignIn: ASWebAuthenticationPresentationContextProviding {
 }
 
 /// Resumes a continuation once: later results are dropped.
-final class ResumeOnce<T>: @unchecked Sendable {
+final class ResumeOnce<T: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
     private var continuation: CheckedContinuation<T, Error>?
 
