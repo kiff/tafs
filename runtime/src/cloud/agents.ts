@@ -197,6 +197,16 @@ export class Agents {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "cancel"]);
   }
 
+  /**
+   * Claims the key of a taf's draft that the setup agent submitted (kiff/agents#94):
+   * kiff/agents takes it from KIFF with the claim secret it keeps sealed, and writes it
+   * under keyRef, where the taf's definition will name it. The key never comes here.
+   * The same keyRef again answers the same; another is 409.
+   */
+  claimTafDraft(tenant: string, draftID: string, keyRef: string): Promise<{ agent_id: string }> {
+    return this.call("POST", tenant, ["drafts", draftID, "claim"], { key_ref: keyRef });
+  }
+
   // Sessions and memory.
 
   /** The agent's sessions, newest first. */

@@ -413,3 +413,42 @@ describe("Setup (kiff/agents#91)", () => {
     expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null });
   });
 });
+
+describe("a taf Setup made (kiff/agents#91, #94)", () => {
+  const BODY = { name: "Refunds", job: "refunds", draft_id: "drf_s1", from_setup: true };
+
+  it("starts from Setup's draft: kiff/agents claims the key into the taf's reference", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
+    expect(r.status).toBe(200);
+    expect(r.body.taf).toMatchObject({ id: NEW, name: "Refunds", job: "refunds", kiff_agent: "refunds-x" });
+    expect(w.agents.setupDrafts.get("drf_s1")?.keyRef).toBe(`kiff/${NEW}`);
+    expect(w.keys.held.has(`t_acme#${NEW}`)).toBe(false);
+    expect(w.agents.agents.get(`t_acme|${NEW}`)).toMatchObject({ key_ref: `kiff/${NEW}` });
+    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * `, `trigger ${NEW}`]);
+    expect(w.claims.held.size).toBe(0);
+  });
+
+  it("takes a draft_id and nothing that holds a key, and Setup's draft only", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_other", agent: "refunds-x" });
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, draft_id: undefined } })).status).toBe(400);
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, claim_secret: "dcs_1" } })).status).toBe(400);
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, agent_key: "key_rae" } })).status).toBe(400);
+    expect((await call(w, "POST", "/v1/tafs", { token: "viewer", body: BODY })).status).toBe(403);
+    // Another account's draft is missing here.
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY })).status).toBe(404);
+  });
+
+  it("resumes with the same taf id after a start that failed past the claim", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.fail.set("putAgent", new Error("boom"));
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY })).status).toBe(502);
+    const again = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
+    expect(again.status).toBe(200);
+    expect(again.body.taf.id).toBe(NEW);
+    expect(w.agents.setupDrafts.get("drf_s1")?.keyRef).toBe(`kiff/${NEW}`);
+  });
+});

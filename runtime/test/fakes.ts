@@ -17,6 +17,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const sessions: Array<Session & { tenant: string }> = [];
   const events = new Map<string, SessionEvent[]>();
   const notes = new Map<string, Note[]>();
+  /** Drafts Setup submitted (kiff/agents#94): draft id → its agent, and where its key was claimed. */
+  const setupDrafts = new Map<string, { tenant: string; agent: string; keyRef?: string }>();
   const fail = new Map<string, AgentsError | Error>();
   let n = 0;
 
@@ -120,6 +122,15 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!s) throw gone();
       return newRun(tenant, s.agent, openSession(tenant, s.agent, "run").id, "schedule", s.input, id);
     },
+    async claimTafDraft(tenant, draftID, keyRef) {
+      calls.push(`claimTafDraft ${draftID} ${keyRef}`);
+      failing("claimTafDraft");
+      const d = setupDrafts.get(draftID);
+      if (!d || d.tenant !== tenant) throw gone();
+      if (d.keyRef && d.keyRef !== keyRef) throw new AgentsError(409, "this draft's key was already claimed into another key_ref");
+      d.keyRef = keyRef;
+      return { agent_id: d.agent };
+    },
     async cancelRun(tenant, agent, id) {
       calls.push(`cancelRun ${agent} ${id}`);
       failing("cancelRun");
@@ -153,7 +164,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show };
+  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

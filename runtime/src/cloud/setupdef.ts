@@ -1,3 +1,4 @@
+import { JOBS } from "../jobs.js";
 import { type AgentDefinition } from "./agents.js";
 import { EFFORT, HISTORY, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE } from "./tafdef.js";
 
@@ -15,6 +16,9 @@ export const PLANQUE = "https://planque.kiff.dev";
 
 /** What one setup run may cost at most, in cents. */
 export const SETUP_BUDGET_CENTS = 300;
+
+/** The jobs a taf Setup makes may do, as the result names them. */
+const JOB_IDS = JOBS.map((j) => j.id).join(", ");
 
 export const SETUP_INSTRUCTIONS = `You are Setup. In the tafs app's setup chat, you connect the tools a company's
 tafs need, with the owner, one vendor at a time. You never do a taf's job yourself.
@@ -38,8 +42,10 @@ How you work:
   did, not proof. Read the grant (planque, action status) before going on: only
   connected means the tools are in KIFF. If the sign-in was left or failed, show
   sign_in for the same grant. If the owner declined, ask what they want instead.
-- When everything is connected, show result: the taf, one sentence on what was
-  set up, and the tools.
+- When everything is connected, show result: the taf (its agent id, its name,
+  its job, and the draft the owner confirmed), one sentence on what was set up,
+  and the tools. The job is one of tafs' jobs: ${JOB_IDS}. The app starts the
+  taf from that draft.
 - If planque answers that the owner's phone isn't set up yet, show a notice
   (warning) asking them to finish planque's setup in the app; don't retry.
 

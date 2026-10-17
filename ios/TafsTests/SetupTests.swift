@@ -135,6 +135,31 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// The hand-over starts the taf Setup made, once: tafs cloud stores it from Setup's
+    /// draft (kiff/agents claims the key), and the phone refreshes to show it.
+    func testResultStartsTheTafOnce() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"taf-new","name":"Refunds","job":"refunds","kiff_agent":"refunds-x","status":"active","next_run":null,"last_run":null},"session":"s2"}"#)
+        let result = try SetupTests.component(#"{"type":"result","id":"done","taf":{"agent":"refunds-x","name":"Refunds","job":"refunds","draft":"drf_s1"},"text":"Refunds can refund within its Card.","tools":["refund_payment"]}"#)
+        StubProtocol.sent = []
+        await model.startSetupTaf(result)
+        let start = try XCTUnwrap(sent("POST", "cloud.test", "/v1/tafs").first)
+        XCTAssertEqual(body(start)["from_setup"] as? Bool, true)
+        XCTAssertEqual(body(start)["draft_id"] as? String, "drf_s1")
+        XCTAssertEqual(body(start)["job"] as? String, "refunds")
+        XCTAssertEqual(body(start)["name"] as? String, "Refunds")
+        XCTAssertNil(body(start)["claim_secret"], "the phone holds no claim secret for Setup's draft")
+        XCTAssertFalse(sent("GET", "cloud.test", "/v1/tafs").isEmpty, "then it refreshes")
+        XCTAssertNil(model.tafStartErrors["done"])
+
+        // A result without a job or a draft starts nothing.
+        StubProtocol.sent = []
+        let bare = try SetupTests.component(#"{"type":"result","id":"bare","taf":{"agent":"refunds-x","name":"Refunds"},"text":"Done."}"#)
+        await model.startSetupTaf(bare)
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs").isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Stop cancels the run of the thread's session.
     func testStopNamesTheSession() async throws {
         let model = await model(signer: FaceIDSigner())
