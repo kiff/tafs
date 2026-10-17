@@ -211,15 +211,16 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/taf-setup/stop"] = (200, #"{"stopped":true}"#)
         let delivered = await model.sendSetup("start over")
         XCTAssertTrue(delivered)
-        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
-            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        let paused = await withCheckedContinuation { (done: CheckedContinuation<Bool, Never>) in
+            DispatchQueue.global().async { done.resume(returning: StubProtocol.paused.wait(timeout: .now() + 10) == .success) }
         }
+        XCTAssertTrue(paused, "the stream reached its pause")
         for _ in 0..<2000 where model.setupLive?.session == nil { try await Task.sleep(nanoseconds: 1_000_000) }
         XCTAssertEqual(model.setupLive?.session, "s_new")
         await model.stopSetup()
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/stop").last) as? [String: String], ["session": "s_new"],
                        "the new chat, not s_old")
-        StubProtocol.release.signal()
+        StubProtocol.resume.signal()
         await model.setupStream?.value
         XCTAssertNil(model.setupLive)
         Keychain.delete(AppModel.planqueAccount)
