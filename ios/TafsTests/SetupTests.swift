@@ -211,7 +211,9 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/taf-setup/stop"] = (200, #"{"stopped":true}"#)
         let delivered = await model.sendSetup("start over")
         XCTAssertTrue(delivered)
-        while StubProtocol.arrived.wait(timeout: .now()) == .timedOut { try await Task.sleep(nanoseconds: 1_000_000) }
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
         for _ in 0..<2000 where model.setupLive?.session == nil { try await Task.sleep(nanoseconds: 1_000_000) }
         XCTAssertEqual(model.setupLive?.session, "s_new")
         await model.stopSetup()
