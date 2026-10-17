@@ -1228,11 +1228,23 @@ final class AppModel: ObservableObject {
     @Published private(set) var grants: [PlanqueClient.Grant] = []
     /// The grant being connected now, so a second tap starts nothing.
     @Published private(set) var connecting: String?
-    /// The account this phone enrolled with planque.
+    /// The account this phone enrolled with planque, kept in the Keychain across launches.
     static let planqueAccount = "planque.enrolled"
+    /// The account this phone enrolled with planque, as last read or saved.
+    private var planqueTenant: String?
 
     /// Whether this phone is set up with planque for the signed-in account.
-    var planqueReady: Bool { mode == .kiff && kiffTenant != nil && Keychain.load(Self.planqueAccount) == kiffTenant }
+    var planqueReady: Bool {
+        guard mode == .kiff, let tenant = kiffTenant else { return false }
+        if planqueTenant == nil { planqueTenant = Keychain.load(Self.planqueAccount) }
+        return planqueTenant == tenant
+    }
+
+    /// Records that this phone is enrolled with planque for `tenant`.
+    func planqueSetUp(for tenant: String) {
+        planqueTenant = tenant
+        Keychain.save(tenant, for: Self.planqueAccount)
+    }
 
     /// A taf's connections: the grants made for its KIFF agent, connected now.
     func connections(for tafID: UUID) -> [PlanqueClient.Grant] {
@@ -1288,7 +1300,7 @@ final class AppModel: ObservableObject {
             lastError = "planque isn't set up: \(error.localizedDescription)"
             return false
         }
-        Keychain.save(tenant, for: Self.planqueAccount)
+        planqueSetUp(for: tenant)
         await refreshConnections()
         return true
     }

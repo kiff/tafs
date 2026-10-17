@@ -37,7 +37,7 @@ final class VendorSignIn: NSObject, VendorSigningIn {
 }
 
 // The session asks for its window on the main thread.
-extension VendorSignIn: @preconcurrency ASWebAuthenticationPresentationContextProviding {
+extension VendorSignIn: ASWebAuthenticationPresentationContextProviding {
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first ?? ASPresentationAnchor()
     }

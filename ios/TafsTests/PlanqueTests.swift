@@ -232,7 +232,7 @@ final class PlanqueTests: XCTestCase {
         let signer = FaceIDSigner()
         let vendor = StubVendor()
         let model = await model(signer: signer, vendor: vendor)
-        Keychain.save("t_01", for: AppModel.planqueAccount)
+        model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON())]}"#)
         StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"draft","version":"v3"}"#)
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
@@ -266,7 +266,7 @@ final class PlanqueTests: XCTestCase {
             let signer = FaceIDSigner()
             let vendor = StubVendor()
             let model = await model(signer: signer, vendor: vendor)
-            Keychain.save("t_01", for: AppModel.planqueAccount)
+            model.planqueSetUp(for: "t_01")
             StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON())]}"#)
             StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"draft","version":"v3"}"#)
             StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/a","expires_at":"2026-10-17T10:15:00Z"}"#)
@@ -286,7 +286,7 @@ final class PlanqueTests: XCTestCase {
     func testMismatchedGrantIsNotPutToFaceID() async throws {
         let signer = FaceIDSigner()
         let model = await model(signer: signer, vendor: StubVendor())
-        Keychain.save("t_01", for: AppModel.planqueAccount)
+        model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(digest: String(repeating: "0", count: 64)))]}"#)
         StubProtocol.sent = []
         let connected = await model.connect(grantID: "g_01")
@@ -311,7 +311,7 @@ final class PlanqueTests: XCTestCase {
     func testDisconnectAsksFaceID() async throws {
         let signer = FaceIDSigner()
         let model = await model(signer: signer, vendor: StubVendor())
-        Keychain.save("t_01", for: AppModel.planqueAccount)
+        model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(status: "connected"))]}"#)
         await model.refreshConnections()
         XCTAssertEqual(model.grants.map(\.id), ["g_01"])
