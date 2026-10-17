@@ -4,7 +4,8 @@ name: iOS
 # when the change touches the app's screens, take screenshots.
 # A version tag (v0.1.0) or a manual run: also archive, sign and upload to
 # TestFlight. Internal testers ("Team") get it at once; it also goes to the
-# external group "Beta testers", after Apple's Beta App Review. Its testers
+# external group "Beta testers", after Apple's Beta App Review, unless a manual
+# run sets external to false. Its testers
 # are the BETA_TESTERS secret (this repository's logs are public).
 
 on:
@@ -13,6 +14,11 @@ on:
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      external:
+        description: Also give the build to the external Beta testers (after Apple's review). Off keeps it to Team.
+        type: boolean
+        default: true
 
 # A pull request's runs share one group, so a newer push cancels the older run.
 # Every other run (main, tags, TestFlight builds) has a group of its own, keyed
@@ -267,6 +273,8 @@ jobs:
       # External testers get a build only once it is added to their group and
       # Apple has reviewed it; Team gets it without either.
       - name: Give the build to Beta testers
+        # A tag always goes to them; a manual run unless it says not to.
+        if: github.event_name != 'workflow_dispatch' || inputs.external
         env:
           ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
           BUILD_NUMBER: ${{ github.run_number }}
