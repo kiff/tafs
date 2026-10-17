@@ -8,6 +8,14 @@ struct SetupChatView: View {
     @EnvironmentObject private var model: AppModel
     @State private var draft = ""
     @FocusState private var typing: Bool
+    /// When the chat opened: Setup's messages after it are revealed as they arrive.
+    @State private var openedAt = Date()
+    @State private var revealed: Set<String> = []
+    /// Counts each step of a reveal, so the thread keeps the growing answer in view.
+    @State private var grown = 0
+    /// Whether the bottom of the thread shows, and whether the thread follows what arrives.
+    @State private var atBottom = true
+    @State private var following = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,38 +59,75 @@ struct SetupChatView: View {
 
     private var thread: some View {
         let items = model.setupThread.items
+        let thinking = model.setupThinking
         return ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
-                    if items.isEmpty {
-                        Text("Say what to connect, for example \"Handle refunds from my Stripe\".")
+                    if items.isEmpty && !thinking {
+                        Text("Say what you want done, for example \"Make sure customers can get their refunds\".")
                             .font(.system(size: 14)).foregroundColor(Theme.dim)
                             .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 30)
                     }
                     ForEach(items) { item in
                         Group {
                             switch item {
-                            case .message(let m): ChatBubble(message: m, taf: nil)
+                            case .message(let m):
+                                RevealingBubble(message: m, reveal: m.from == .taf && m.at > openedAt && !revealed.contains(m.id),
+                                                revealed: $revealed, grown: $grown)
                             case .component(let c): SetupComponentView(shown: c)
                             }
                         }
                         .id(item.id)
                     }
+                    if thinking { TypingBubble(taf: nil).id("thinking") }
+                    Color.clear.frame(height: 1).id(Self.bottom)
+                        .onAppear { atBottom = true; following = true }
+                        .onDisappear { atBottom = false }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
             }
             .scrollDismissesKeyboard(.interactively)
-            .onChange(of: items.count) { _ in
-                if let last = items.last?.id { withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(last, anchor: .bottom) } }
+            // The owner scrolling stops the thread following what arrives; reaching the
+            // bottom again, or the button, starts it.
+            .simultaneousGesture(DragGesture().onChanged { _ in following = false })
+            .overlay(alignment: .bottom) {
+                if !atBottom && !following {
+                    Button {
+                        following = true
+                        withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
+                    } label: {
+                        Image(systemName: "arrow.down")
+                            .font(.system(size: 15, weight: .bold)).foregroundColor(Theme.ink)
+                            .frame(width: 38, height: 38)
+                            .background(Theme.panel)
+                            .overlay(Circle().stroke(Theme.line))
+                            .clipShape(Circle())
+                            .shadow(color: Theme.ink.opacity(0.12), radius: 6, y: 2)
+                    }
+                    .padding(.bottom, 10)
+                    .accessibilityLabel("Jump to the latest")
+                }
             }
+            .onChange(of: items.map(\.id)) { _ in follow(proxy) }
+            .onChange(of: thinking) { _ in follow(proxy) }
+            .onChange(of: grown) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
+            .onAppear { proxy.scrollTo(Self.bottom, anchor: .bottom) }
         }
+    }
+
+    private static let bottom = "bottom"
+
+    private func follow(_ proxy: ScrollViewProxy) {
+        guard following else { return }
+        withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
     }
 
     private var composer: some View {
         let empty = draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let thinking = model.setupThinking
         return HStack(alignment: .bottom, spacing: 10) {
-            TextField("Tell Setup what to connect", text: $draft, axis: .vertical)
+            TextField("Tell Setup what you want done", text: $draft, axis: .vertical)
                 .lineLimit(1...5)
                 .focused($typing)
                 .font(.system(size: 16))
@@ -90,24 +135,69 @@ struct SetupChatView: View {
                 .background(Theme.panel)
                 .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            Button {
-                let text = draft
-                draft = ""
-                Task { if !(await model.sendSetup(text)) { if draft.isEmpty { draft = text } } }
-            } label: {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(width: 40, height: 40)
-                    .background(Theme.brand)
-                    .clipShape(Circle())
-                    .opacity(empty || model.setupSending ? 0.4 : 1)
+            if thinking {
+                // While Setup works, Send is Stop: its run is cancelled.
+                Button { Task { await model.stopSetup() } } label: {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(Theme.ink)
+                        .clipShape(Circle())
+                }
+                .accessibilityLabel("Stop")
+            } else {
+                Button {
+                    let text = draft
+                    draft = ""
+                    following = true
+                    Task { if !(await model.sendSetup(text)) { if draft.isEmpty { draft = text } } }
+                } label: {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(Theme.brand)
+                        .clipShape(Circle())
+                        .opacity(empty || model.setupSending ? 0.4 : 1)
+                }
+                .disabled(empty || model.setupSending)
+                .accessibilityLabel("Send")
             }
-            .disabled(empty || model.setupSending)
-            .accessibilityLabel("Send")
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
+    }
+}
+
+/// A message, Setup's revealed as it arrives while the chat is open (kiff/tafs#58): tafs
+/// cloud hands over each of Setup's messages whole, and the reveal shows it being read
+/// in, not written. Older messages show at once.
+struct RevealingBubble: View {
+    let message: TafsCloud.ChatMessage
+    let reveal: Bool
+    @Binding var revealed: Set<String>
+    @Binding var grown: Int
+    @State private var visible: Int?
+
+    var body: some View {
+        ChatBubble(message: message, taf: nil, visible: visible)
+            .task(id: message.id) {
+                guard reveal else { return }
+                let total = MarkdownText(message.text).length
+                // About 400 characters a second, at most two seconds for a long answer.
+                let step = max(8, total / 120)
+                var shown = 0
+                visible = 0
+                while shown < total && !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 16_000_000)
+                    shown = min(total, shown + step)
+                    visible = shown
+                    grown &+= 1
+                }
+                visible = nil
+                revealed.insert(message.id)
+            }
     }
 }
 

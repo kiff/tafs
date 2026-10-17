@@ -88,6 +88,8 @@ struct TafChatView: View {
 struct ChatBubble: View {
     let message: TafsCloud.ChatMessage
     let taf: Taf?
+    /// How much of the taf's message shows, while it is revealed; nil shows it all.
+    var visible: Int? = nil
 
     var body: some View {
         if message.kind == .kickoff {
@@ -108,8 +110,9 @@ struct ChatBubble: View {
         } else {
             HStack(alignment: .bottom, spacing: 8) {
                 if let taf { TafAvatar(taf: taf, size: 28) } else { Mascot(size: 28) }
-                Text(message.text)
-                    .font(.system(size: 15)).foregroundColor(Theme.ink)
+                // The taf writes Markdown: drawn as formatted text, never as symbols (#58).
+                MarkdownText(message.text, visible: visible)
+                    .foregroundColor(Theme.ink)
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(Theme.panel)
                     .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Theme.line))

@@ -110,17 +110,45 @@ final class AppModel: ObservableObject {
     static let keyedAccount = "kiff.session-keyed"
 
     /// Starts signing in with this phone's signing key, so KIFF accepts its answers
-    /// only with that key's signature.
+    /// only with that key's signature. A connection iOS dropped while the app was away
+    /// (`networkConnectionLost`) is tried again before it counts as a failure.
     func startSignIn() async throws -> KIFFClient.DeviceStart {
-        try await kiff.startDeviceSignIn(publicKey: signer.publicKeyDER, deviceName: "tafs on iPhone")
+        signInNudged = false
+        var tries = 0
+        while true {
+            do {
+                return try await kiff.startDeviceSignIn(publicKey: signer.publicKeyDER, deviceName: "tafs on iPhone")
+            } catch where Self.transient(error) && tries < 2 {
+                tries += 1
+                try await Task.sleep(nanoseconds: 500_000_000)
+            }
+        }
     }
 
-    /// Polls until the person approves the code in KIFF, then loads their Cards.
-    func finishSignIn(_ start: KIFFClient.DeviceStart) async throws {
-        var interval = UInt64(max(start.interval, 2))
-        let deadline = clock().addingTimeInterval(TimeInterval(start.expiresIn))
+    /// How long a sign-in poll waits before asking KIFF again, at least; and how often it
+    /// looks whether the app came back meanwhile.
+    var signInSlice: UInt64 = 500_000_000
+    /// The least time between two polls, in seconds, whatever KIFF advertises.
+    var signInMinimumInterval = 2
+    private var signInNudged = false
+
+    /// The app came back to the foreground: the sign-in asks KIFF again at once, so an
+    /// approval made in the browser signs the phone in without a wait.
+    func nudgeSignIn() { signInNudged = true }
+
+    /// Polls until the person approves the code in KIFF, then loads their Cards. It keeps
+    /// polling through a dropped connection or a KIFF error until the code expires: iOS
+    /// closes the app's sockets while the owner approves in the browser.
+    func finishSignIn(_ start: KIFFClient.DeviceStart, startedAt: Date? = nil) async throws {
+        var interval = UInt64(max(start.interval, signInMinimumInterval)) * 1_000_000_000
+        let deadline = (startedAt ?? clock()).addingTimeInterval(TimeInterval(start.expiresIn))
         while clock() < deadline {
-            try await Task.sleep(nanoseconds: interval * 1_000_000_000)
+            var waited: UInt64 = 0
+            while waited < interval && !signInNudged {
+                try await Task.sleep(nanoseconds: min(signInSlice, interval - waited))
+                waited += signInSlice
+            }
+            signInNudged = false
             do {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
                 await useSession(token.accessToken, tenant: token.tenant)
@@ -128,10 +156,22 @@ final class AppModel: ObservableObject {
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
             } catch KIFFClient.KIFFError.slowDown {
-                interval += 5
+                interval += 5_000_000_000
+            } catch where Self.transient(error) {
+                continue
             }
         }
         throw KIFFClient.KIFFError.expired
+    }
+
+    /// A failure worth trying again: the network, or KIFF briefly not answering.
+    static func transient(_ error: Error) -> Bool {
+        if let e = error as? URLError {
+            return [.networkConnectionLost, .notConnectedToInternet, .timedOut, .cannotConnectToHost,
+                    .cannotFindHost, .dnsLookupFailed, .internationalRoamingOff, .dataNotAllowed].contains(e.code)
+        }
+        if case KIFFClient.KIFFError.server(let status, _) = error { return status >= 500 || status == 429 }
+        return false
     }
 
     /// Starts using a KIFF session: keeps it in the Keychain, clears what belonged to any
@@ -154,7 +194,7 @@ final class AppModel: ObservableObject {
         holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
         unfinishedRemovals = []
         grants = []
-        setupTaf = nil; setupThread = SetupThread(); setupDrafts = [:]; answered = []; setupError = nil
+        setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
@@ -178,7 +218,7 @@ final class AppModel: ObservableObject {
         startAttempt = nil
         unfinishedRemovals = []
         grants = []
-        setupTaf = nil; setupThread = SetupThread(); setupDrafts = [:]; answered = []; setupError = nil
+        setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false
@@ -1480,6 +1520,7 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             setupThread = thread
             setupError = nil
+            settleSetupAwaiting()
         } catch {
             guard gen == accountGeneration else { return }
             setupError = "Setup's chat couldn't be loaded: \(error.localizedDescription)"
@@ -1561,6 +1602,7 @@ final class AppModel: ObservableObject {
         do {
             _ = try await cloud.sendMessage(s.id, text: text)
             guard gen == accountGeneration else { return false }
+            setupAwaiting = clock()
             await loadSetupThread()
             return true
         } catch {
@@ -1574,7 +1616,23 @@ final class AppModel: ObservableObject {
     /// How often Setup's thread is reloaded while the chat is open, and for how long
     /// after the owner last wrote (100 × 3 s: five minutes, since setup steps take time).
     var setupPollInterval: UInt64 = 3_000_000_000
+    var setupWorkingPollInterval: UInt64 = 1_000_000_000
     var setupPollBudget = 100
+
+    /// When the owner last wrote, until Setup answers: tafs cloud may not see the run yet.
+    @Published private(set) var setupAwaiting: Date?
+
+    /// Setup is at work: show it thinking, and offer Stop (kiff/tafs#58).
+    var setupThinking: Bool { setupThread.working != nil || setupAwaiting != nil }
+
+    /// The wait ends once tafs cloud says Setup is at work (it then says when it stops),
+    /// once Setup answered after the owner wrote, or after two minutes with no sign.
+    private func settleSetupAwaiting() {
+        guard let since = setupAwaiting else { return }
+        let answered = setupThread.messages.contains { $0.from == .taf && $0.at >= since } ||
+            setupThread.components.contains { $0.firstAt >= since }
+        if setupThread.working != nil || answered || clock().timeIntervalSince(since) > 120 { setupAwaiting = nil }
+    }
 
     /// Loads Setup's thread, then reloads it while the chat is open and the owner wrote
     /// recently. Ends when the task is cancelled (the view goes away).
@@ -1583,7 +1641,8 @@ final class AppModel: ObservableObject {
         var lastOwner: String?
         var polls = 0
         while !Task.isCancelled {
-            try? await Task.sleep(nanoseconds: setupPollInterval)
+            // Every second while Setup works, so its words show as soon as it writes them.
+            try? await Task.sleep(nanoseconds: setupThinking ? setupWorkingPollInterval : setupPollInterval)
             if Task.isCancelled { return }
             let mine = setupThread.messages.last(where: { $0.from == .owner })?.id
             if mine != lastOwner { lastOwner = mine; polls = 0 }
@@ -1593,9 +1652,10 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// The plan's Stop: Setup's current run is cancelled.
+    /// The plan's Stop, and the composer's while Setup works: Setup's current run is cancelled.
     func stopSetup() async {
-        guard let s = setupTaf, let session = setupThread.session else { return }
+        guard let s = setupTaf, let session = setupThread.working ?? setupThread.session else { return }
+        setupAwaiting = nil
         do { try await cloud.stop(s.id, session: session) } catch {
             setupError = "Setup didn't stop: \(error.localizedDescription)"
         }

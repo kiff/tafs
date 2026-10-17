@@ -97,6 +97,74 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A card that asks the owner comes after what Setup wrote with it (#58 B3), even when
+    /// Setup showed it first; a card from an earlier turn stays where it was.
+    func testACardComesAfterSetupsWords() throws {
+        func at(_ s: Int) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + Double(s)) }
+        func shown(_ json: String, _ t: Int) throws -> ShownComponent {
+            ShownComponent(firstAt: at(t), session: "s1", run: "r1", component: try SetupTests.component(json))
+        }
+        var thread = SetupThread()
+        thread.messages = [
+            TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Refunds, please", session: "s1"),
+            TafsCloud.ChatMessage(at: at(3), from: .taf, text: "I'll connect Stripe. Approve below.", session: "s1"),
+            TafsCloud.ChatMessage(at: at(10), from: .owner, text: "[approval connect] approved, signed in", session: "s1"),
+            TafsCloud.ChatMessage(at: at(12), from: .taf, text: "Connected.", session: "s1"),
+        ]
+        thread.components = [try shown(#"{"type":"approval","id":"connect","grant":"g_01"}"#, 2),
+                             try shown(#"{"type":"notice","id":"note","tone":"info","text":"Reading Stripe's tools"}"#, 11)]
+        let order = thread.items.map(\.id)
+        let connect = try XCTUnwrap(order.firstIndex(of: "c|connect"))
+        let words = try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[1].id))
+        let answer = try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[2].id))
+        XCTAssertEqual(connect, words + 1, "the card right after Setup's words")
+        XCTAssertLessThan(connect, answer, "and before the owner's answer")
+        XCTAssertLessThan(try XCTUnwrap(order.firstIndex(of: "c|note")), try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[3].id)),
+                          "a notice stays where it happened")
+    }
+
+    /// While Setup works, the chat shows it thinking and Send is Stop (#58 B1): from the
+    /// owner's message until tafs cloud says the run ended; Stop cancels that run.
+    func testThinkingUntilSetupAnswersAndStopCancels() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":true}"#)
+        await model.loadSetup()
+        XCTAssertFalse(model.setupThinking)
+
+        // Sent, and tafs cloud doesn't see the run yet: thinking all the same.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        let delivered = await model.sendSetup("Make sure customers can get their refunds")
+        XCTAssertTrue(delivered)
+        XCTAssertTrue(model.setupThinking)
+
+        // At work: thinking, and Stop names its session.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":{"session":"s1","run":"r1"}}"#)
+        await model.loadSetupThread()
+        XCTAssertTrue(model.setupThinking)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/stop"] = (200, #"{"stopped":true}"#)
+        await model.stopSetup()
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/stop").last) as? [String: String], ["session": "s1"])
+
+        // The run ended: no longer thinking.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        await model.loadSetupThread()
+        XCTAssertFalse(model.setupThinking)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Setup's Markdown is drawn, not shown as symbols (#58 B5).
+    func testMarkdownIsDrawn() {
+        let blocks = MarkdownBlock.parse("## The plan\nI will **connect** Stripe,\nthen:\n\n- read its `tools`\n2. propose rules\n\n```\nPostRefunds\n```")
+        XCTAssertEqual(blocks.map(\.kind), [.heading, .paragraph, .bullet, .numbered(2), .code])
+        let text = blocks.map { String($0.text.characters) }
+        XCTAssertEqual(text, ["The plan", "I will connect Stripe,\nthen:", "read its tools", "propose rules", "PostRefunds"])
+        XCTAssertFalse(text.joined().contains("*"), "no symbol is left")
+        XCTAssertEqual(MarkdownText("**ab** cd").length, 5)
+    }
+
     /// An approval answers what happened: approved and signed in for a connection, approved
     /// for the Cards of a connected one; a confirm answers with its value.
     func testAnswersFollowContractOne() async throws {
