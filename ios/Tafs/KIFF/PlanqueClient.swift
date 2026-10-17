@@ -80,7 +80,7 @@ final class PlanqueClient {
             let what: String
         }
         let id: String
-        /// pending, approved, signed_in, connected, failed or disconnected.
+        /// pending, approved, signed_in, listed, connected, failed or disconnected.
         let status: String
         /// What the owner reads before approving.
         let text: String
@@ -90,15 +90,32 @@ final class PlanqueClient {
         let tools: [String]?
         let reason: String?
         let events: [Event]
+        /// planque holds a confirmed sign-in for it (contract 5 on kiff/agents#91): a listed
+        /// grant, or one whose tools were set after it, approved with no second sign-in.
+        let signedIn: Bool?
+        /// When planque revokes a held sign-in nothing connected (RFC 3339, Go's nanoseconds
+        /// included, so kept as written).
+        let heldUntil: String?
         /// Whether `digest` is the hash of the request as received: the app shows Approve
         /// only then. Set by `grants()`, never read from planque.
         var digestMatches = false
 
-        enum CodingKeys: String, CodingKey { case id, status, text, digest, request, account, tools, reason, events }
+        enum CodingKeys: String, CodingKey { case id, status, text, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until" }
 
         /// The vendor, as the owner knows it: its server's host.
         var vendor: String { URL(string: request.server)?.host ?? request.server }
         var connected: Bool { status == "connected" }
+        /// Connected first (contract 5): signed in, and planque listed the vendor's tools for
+        /// Setup to choose from. Nothing is in KIFF yet.
+        var listed: Bool { status == "listed" }
+        /// A sign-in planque holds that no taf uses yet: the owner can see and end it.
+        var holdsSignIn: Bool { listed || (status == "pending" && signedIn == true) }
+        /// `heldUntil` as a date: its fraction of a second dropped, which a formatter can't read past milliseconds.
+        var heldUntilDate: Date? {
+            guard let raw = heldUntil else { return nil }
+            let whole = raw.replacingOccurrences(of: #"\.\d+"#, with: "", options: .regularExpression)
+            return ISO8601DateFormatter().date(from: whole)
+        }
     }
 
     /// Every grant for the account, each with its digest checked against its request.
@@ -119,9 +136,10 @@ final class PlanqueClient {
 
     struct Approved: Decodable, Equatable {
         let status: String
-        /// The vendor's own sign-in page, to open in an `ASWebAuthenticationSession`.
-        let signInURL: URL
-        let expiresAt: String
+        /// The vendor's own sign-in page, to open in an `ASWebAuthenticationSession`. None when
+        /// planque already holds the sign-in: approving the tools connected them (contract 5).
+        let signInURL: URL?
+        let expiresAt: String?
         enum CodingKeys: String, CodingKey { case status, signInURL = "sign_in_url", expiresAt = "expires_at" }
     }
 

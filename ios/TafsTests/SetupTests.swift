@@ -9,6 +9,7 @@ final class SetupTests: XCTestCase {
 
     private func model(signer: FaceIDSigner, vendor: StubVendor = StubVendor()) async -> AppModel {
         StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
         StubProtocol.sent = []
         Keychain.delete(AppModel.planqueAccount)
         let config = URLSessionConfiguration.ephemeral
@@ -132,6 +133,50 @@ final class SetupTests: XCTestCase {
         await model.answer(which, "test")
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String, "[confirm which] test")
         XCTAssertTrue(model.answered.contains("which"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Connect first (contract 5 on kiff/agents#91): the first approval signs in and planque
+    /// only lists the vendor's tools; the second approves the tools Setup chose, with no
+    /// second sign-in. Each answers what happened, and a held sign-in shows on the Card tab.
+    func testConnectFirstThenApproveTheTools() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        await model.loadSetup()
+
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/a","expires_at":"2026-10-17T10:15:00Z"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, PlanqueTests.grantJSONFor(status: "listed", signedIn: true))
+        StubProtocol.thenRespond["POST /v1/accounts/t_01/grants/g_01/confirm"] = [
+            "GET /v1/accounts/t_01/grants": (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "listed", signedIn: true))]}"#)]
+        vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
+        await model.refreshConnections()
+        await model.approve(try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01"}"#))
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
+                       "[approval connect-stripe] approved, signed in", "a listed grant is an answer too")
+        XCTAssertTrue(model.grants.first?.listed ?? false)
+        XCTAssertTrue(model.grants.first?.holdsSignIn ?? false)
+
+        // Setup set the tools: pending again, the sign-in held. Approving connects at once.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending", signedIn: true))]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, PlanqueTests.grantJSONFor(status: "connected", signedIn: true))
+        StubProtocol.thenRespond["POST /v1/accounts/t_01/grants/g_01/approve"] = [
+            "GET /v1/accounts/t_01/grants": (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected", signedIn: true))]}"#)]
+        await model.refreshConnections()
+        XCTAssertTrue(model.grants.first?.holdsSignIn ?? false, "a pending grant with a held sign-in is shown")
+        StubProtocol.sent = []
+        await model.approve(try SetupTests.component(#"{"type":"approval","id":"stripe-tools","grant":"g_01"}"#))
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
+                       "[approval stripe-tools] approved", "no sign-in, so the answer doesn't claim one")
+        XCTAssertEqual(vendor.opened.count, 1, "no second sign-in")
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").isEmpty)
+        XCTAssertEqual(signer.prompts.count, 2, "one Face ID per approval")
+        XCTAssertTrue(model.grants.first?.connected ?? false)
+        XCTAssertNil(model.lastError)
         Keychain.delete(AppModel.planqueAccount)
     }
 
