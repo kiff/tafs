@@ -97,6 +97,24 @@ describe("conversation", () => {
     expect(r.body.messages.at(-1).text).toBe(`answer ${CHAT.maxThread + 19}`);
   });
 
+  it("says whether the taf is at work in its latest chat, for the app's thinking and Stop", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 60_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Why was order 7 held?");
+    let r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.working).toEqual({ session: chat.session, run: chat.id });
+    w.agents.say(chat, "It was over the Card's $50.");
+    (chat as { status: string }).status = "COMPLETED";
+    r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.working).toBeNull();
+    // kiff/agents not answering about the run reads as not working; the thread still loads.
+    (chat as { status: string }).status = "RUNNING";
+    w.agents.fail.set("getRun", new Error("down"));
+    r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.working).toBeNull();
+  });
+
   it("answers another account's taf like a missing one", async () => {
     const w = world();
     expect((await call(w, "GET", `/v1/tafs/${MAX}/conversation`, { token: "ana" })).status).toBe(404);

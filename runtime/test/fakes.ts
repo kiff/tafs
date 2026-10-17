@@ -131,6 +131,12 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       d.keyRef = keyRef;
       return { agent_id: d.agent };
     },
+    async getRun(tenant, agent, id) {
+      failing("getRun");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      if (!r) throw gone();
+      return r;
+    },
     async cancelRun(tenant, agent, id) {
       calls.push(`cancelRun ${agent} ${id}`);
       failing("cancelRun");

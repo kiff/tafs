@@ -47,7 +47,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft">;
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -287,8 +287,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { session, report: report(run) };
   }
   if (parts.length === 4 && method === "GET" && action === "conversation") {
-    const { messages, components } = await conversation(me, taf, deps);
-    return { messages, components };
+    const { messages, components, sessions } = await conversation(me, taf, deps);
+    return { messages, components, working: await working(me, taf, sessions, deps) };
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -768,6 +768,26 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ m
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
   return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
+}
+
+/**
+ * Whether the taf is at work in its latest session now, so the app shows it
+ * thinking and offers Stop (kiff/tafs#58): that session's latest run is
+ * pending or running. A run waiting on the owner isn't: it waits for them.
+ * Unknown (kiff/agents not answering) reads as not working.
+ */
+async function working(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ session: string; run: string } | null> {
+  const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
+  if (!latest) return null;
+  try {
+    const read = await deps.agents.session(me.tenantID, latest.id);
+    const run = read.events.at(-1)?.run;
+    if (!run) return null;
+    const r = await deps.agents.getRun(me.tenantID, taf.id, run);
+    return r.status === "PENDING" || r.status === "RUNNING" ? { session: latest.id, run } : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

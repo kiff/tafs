@@ -219,9 +219,11 @@ final class TafsCloud {
 
     /// Setup's thread: its messages and the components it showed.
     func setupThread(_ id: String) async throws -> SetupThread {
-        struct Response: Decodable { let messages: [ChatMessage]; let components: [LenientShown]? }
+        struct Working: Decodable { let session: String }
+        struct Response: Decodable { let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working? }
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/conversation")
-        return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)))
+        return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)),
+                           working: r.working?.session)
     }
 
     /// Stops what the agent is doing in `session`: its latest run is cancelled.

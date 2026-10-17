@@ -59,6 +59,8 @@ struct ShownComponent: Identifiable, Equatable {
 struct SetupThread: Equatable {
     var messages: [TafsCloud.ChatMessage] = []
     var components: [ShownComponent] = []
+    /// The session Setup is at work in now, as tafs cloud says (kiff/tafs#58); nil when idle.
+    var working: String?
 
     /// The plan, shown pinned above the thread rather than in it.
     var plan: ShownComponent? { components.last { $0.component.type == .steps } }
@@ -88,9 +90,26 @@ struct SetupThread: Equatable {
         }
     }
 
+    /// In order, as it happened, with one exception (kiff/tafs#58): a component that asks
+    /// the owner to act comes after what Setup wrote with it, so its words lead to the
+    /// card. That is Setup's messages in the same session after the component, up to the
+    /// owner's next message.
     var items: [Item] {
-        (messages.map(Item.message) + components.filter { $0.component.type != .steps }.map(Item.component))
-            .sorted { $0.at < $1.at }
+        let placed: [(Item, Date)] = messages.map { (Item.message($0), $0.at) } +
+            components.filter { $0.component.type != .steps }.map { c in (Item.component(c), placedAt(c)) }
+        return placed.enumerated().sorted { a, b in
+            if a.element.1 != b.element.1 { return a.element.1 < b.element.1 }
+            return a.offset < b.offset // a message before a component placed at its time
+        }.map(\.element.0)
+    }
+
+    private static let asking: Set<SetupComponent.Kind> = [.confirm, .approval, .signIn, .result]
+
+    private func placedAt(_ c: ShownComponent) -> Date {
+        guard Self.asking.contains(c.component.type) else { return c.firstAt }
+        let nextOwner = messages.first { $0.from == .owner && $0.at > c.firstAt }?.at ?? .distantFuture
+        let after = messages.filter { $0.from == .taf && $0.session == c.session && $0.at >= c.firstAt && $0.at < nextOwner }
+        return after.last?.at ?? c.firstAt
     }
 
     /// Folds components as the conversation lists them, oldest first: the latest

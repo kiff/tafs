@@ -12,6 +12,7 @@ struct SignInView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
     @State private var start: KIFFClient.DeviceStart?
     @State private var problem: String?
     @State private var task: Task<Void, Never>?
@@ -63,6 +64,10 @@ struct SignInView: View {
         }
         .onAppear(perform: begin)
         .onDisappear { task?.cancel() }
+        // Back from approving in the browser: ask KIFF at once.
+        .onChange(of: scenePhase) { phase in
+            if phase == .active { model.nudgeSignIn() }
+        }
     }
 
     private func begin() {
@@ -73,7 +78,7 @@ struct SignInView: View {
             do {
                 let s = try await model.startSignIn()
                 start = s
-                try await model.finishSignIn(s)
+                try await model.finishSignIn(s, startedAt: Date())
                 dismiss()
             } catch is CancellationError {
             } catch {
