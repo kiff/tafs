@@ -63,8 +63,12 @@ KIFF ──(signed alert)───────────────▶ tafs c
 
 - **Managed Agents, being retired (#42).** tafs ran on Claude Managed Agents
   before this. No tafs code uses it any more, and nothing creates anything
-  there: the CLI and CI's `setup` job are gone. What earlier test tafs left
-  (agents, an environment, KIFF skill uploads, deployments, sessions, memory
-  stores, vaults) is deleted as #42's last step.
+  there: the CLI and CI's `setup` job are gone. Checked on 2026-10-17: no
+  tafs deployments, sessions, memory stores or vaults are left, so no taf's
+  KIFF agent key is held there. The Bill pay, Access and Deploys agents are
+  archived (archived, not deleted). Until kiff/agents#3's baseline is graded,
+  the Refunds and Chargebacks agents stay active, with the `tafs` environment
+  and the KIFF skill upload. None of these hold customer data or credentials,
+  and all of them are deleted as #42's last step.
 - **Inference region.** tafs doesn't pin `inference_geo`. Pinning `"us"` keeps
   inference in the US at 1.1x the price. Decide when a customer asks.
