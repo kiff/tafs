@@ -167,13 +167,24 @@ final class PlanqueTests: XCTestCase {
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00.5Z"}"#)
         let approved = try await planque.approve(grants[0])
         XCTAssertEqual(approved.signInURL?.host, "access.stripe.com")
+        XCTAssertEqual(body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").last)["digest"] as? String, Self.digest)
 
         // Tools set on a held sign-in (contract 5): planque connects at once, with no link.
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, grantJSON(status: "connected"))
         let connected = try await planque.approve(grants[0])
         XCTAssertEqual(connected.status, "connected")
         XCTAssertNil(connected.signInURL)
-        XCTAssertEqual(body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").last)["digest"] as? String, Self.digest)
+    }
+
+    /// A held sign-in's end, as Go writes it (nanoseconds), reads as a date; without one, none.
+    func testHeldUntilReadsGoTime() throws {
+        let held = #"{"id":"g_01","status":"listed","signed_in":true,"held_until":"2026-10-18T17:05:00.123456789Z","text":"t","digest":"d","request":{"server":"https://mcp.stripe.com","agent":"refunds","tools":[]},"events":[]}"#
+        let grant = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(held.utf8))
+        XCTAssertTrue(grant.holdsSignIn)
+        XCTAssertEqual(grant.heldUntilDate, ISO8601DateFormatter().date(from: "2026-10-18T17:05:00Z"))
+        let plain = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(PlanqueTests.grantJSONFor(status: "pending").utf8))
+        XCTAssertNil(plain.heldUntilDate)
+        XCTAssertFalse(plain.holdsSignIn)
     }
 
     func testEnrolConfirmAndDisconnectBodies() async throws {

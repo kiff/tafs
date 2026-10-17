@@ -93,11 +93,14 @@ final class PlanqueClient {
         /// planque holds a confirmed sign-in for it (contract 5 on kiff/agents#91): a listed
         /// grant, or one whose tools were set after it, approved with no second sign-in.
         let signedIn: Bool?
+        /// When planque revokes a held sign-in nothing connected (RFC 3339, Go's nanoseconds
+        /// included, so kept as written).
+        let heldUntil: String?
         /// Whether `digest` is the hash of the request as received: the app shows Approve
         /// only then. Set by `grants()`, never read from planque.
         var digestMatches = false
 
-        enum CodingKeys: String, CodingKey { case id, status, text, digest, request, account, tools, reason, events, signedIn = "signed_in" }
+        enum CodingKeys: String, CodingKey { case id, status, text, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until" }
 
         /// The vendor, as the owner knows it: its server's host.
         var vendor: String { URL(string: request.server)?.host ?? request.server }
@@ -107,6 +110,12 @@ final class PlanqueClient {
         var listed: Bool { status == "listed" }
         /// A sign-in planque holds that no taf uses yet: the owner can see and end it.
         var holdsSignIn: Bool { listed || (status == "pending" && signedIn == true) }
+        /// `heldUntil` as a date: its fraction of a second dropped, which a formatter can't read past milliseconds.
+        var heldUntilDate: Date? {
+            guard let raw = heldUntil else { return nil }
+            let whole = raw.replacingOccurrences(of: #"\.\d+"#, with: "", options: .regularExpression)
+            return ISO8601DateFormatter().date(from: whole)
+        }
     }
 
     /// Every grant for the account, each with its digest checked against its request.

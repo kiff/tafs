@@ -180,6 +180,10 @@ struct ConnectionsPanel: View {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
                                 Text(grant.listed ? "Signed in · Setup is choosing the tools" : "Signed in · tools waiting for your approval")
                                     .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.amber)
+                                if let end = grant.heldUntilDate {
+                                    Text("Unless you approve its tools, planque revokes the sign-in \(end.formatted(date: .abbreviated, time: .shortened)).")
+                                        .font(.system(size: 12)).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                                }
                             }
                             if let last = grant.events.last {
                                 Text(last.what).font(.system(size: 12)).foregroundColor(Theme.soft)
