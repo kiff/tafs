@@ -120,6 +120,15 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!s) throw gone();
       return newRun(tenant, s.agent, openSession(tenant, s.agent, "run").id, "schedule", s.input, id);
     },
+    async cancelRun(tenant, agent, id) {
+      calls.push(`cancelRun ${agent} ${id}`);
+      failing("cancelRun");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      if (!r) throw gone();
+      if (r.status !== "PENDING" && r.status !== "RUNNING" && r.status !== "PAUSED") throw new AgentsError(409, "the run is over");
+      r.status = "CANCELLED";
+      return r;
+    },
     async scheduleRuns(tenant, id, limit = 20) {
       if (!schedules.has(k(tenant, id))) throw gone();
       return runs.filter((r) => r.tenant === tenant && r.source === id).slice(0, limit);
@@ -135,7 +144,16 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say };
+  /** A component the agent showed in a run (kiff/agents#91), as kiff/agents records it. */
+  const show = (run: Run, component: object, at?: string) => {
+    const s = sessions.find((x) => x.id === run.session)!;
+    const list = events.get(run.session) ?? [];
+    const time = at ?? now().toISOString();
+    list.push({ session: run.session, run: run.id, seq: list.length + 1, time, kind: "component", body: component });
+    events.set(run.session, list);
+    s.updated = time;
+  };
+  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

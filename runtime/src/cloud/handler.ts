@@ -46,7 +46,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns">;
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -273,7 +273,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { session, report: report(run) };
   }
   if (parts.length === 4 && method === "GET" && action === "conversation") {
-    return { messages: (await conversation(me, taf, deps)).messages };
+    const { messages, components } = await conversation(me, taf, deps);
+    return { messages, components };
+  }
+  if (parts.length === 4 && method === "POST" && action === "stop") {
+    need(me, "cards.manage");
+    return stop(event, me, taf, deps);
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
     need(me, "cards.manage");
@@ -588,6 +593,18 @@ function report(run: Run) {
 }
 
 /** A message in a taf's thread. A run's opening instruction is the owner's, of kind "kickoff". */
+/**
+ * A component the agent showed in the chat (kiff/agents#91, contract 1): the
+ * app draws the latest of each id, where it first appeared.
+ */
+export interface ThreadComponent {
+  at: string;
+  session: string;
+  run: string;
+  seq: number;
+  component: unknown;
+}
+
 export interface ThreadMessage {
   at: string;
   from: "owner" | "taf";
@@ -602,7 +619,7 @@ export interface ThreadMessage {
  * kept: the owner's messages and the taf's. A run's first owner message is
  * the job's instruction, shown as such.
  */
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ messages: ThreadMessage[]; sessions: Session[] }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
   const picked = [
     ...all.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
@@ -610,10 +627,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ m
   ];
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
+  const components: ThreadComponent[] = [];
   for (const r of read) {
     if (!r) continue;
     const seenRun = new Set<string>();
     for (const e of r.events) {
+      if (e.kind === "component") {
+        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: e.body });
+        continue;
+      }
       if (e.kind !== "owner_message" && e.kind !== "agent_message" && e.kind !== "report") continue;
       const text = typeof (e.body as { text?: unknown })?.text === "string" ? ((e.body as { text: string }).text).trim() : "";
       if (!text) continue;
@@ -628,7 +650,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ m
     }
   }
   messages.sort((a, b) => a.at.localeCompare(b.at));
-  return { messages: messages.slice(-CHAT.maxThread), sessions: picked };
+  components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
+  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
 }
 
 /**
@@ -669,6 +692,28 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   }
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text));
   return { session: run.session, new_session: true };
+}
+
+/**
+ * Stop: the owner ends what the agent is doing in one of its sessions (the
+ * plan's Stop in the setup chat, kiff/agents#91). The session's latest run is
+ * cancelled; one that has already ended stays as it ended.
+ */
+async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  const session = str(parseBody(event).session).trim();
+  if (!session) throw new HTTPError(400, "name the session to stop");
+  const read = await agentsCall(() => deps.agents.session(me.tenantID, session));
+  if (read.session.agent !== taf.id) throw new HTTPError(404, "no such session");
+  const run = read.events.at(-1)?.run;
+  if (!run) return { stopped: false };
+  try {
+    const out = await deps.agents.cancelRun(me.tenantID, taf.id, run);
+    return { stopped: true, run: out.id, status: out.status };
+  } catch (err) {
+    // Already over: nothing is left to stop.
+    if (err instanceof AgentsError && err.status === 409) return { stopped: false };
+    throw err instanceof AgentsError ? new HTTPError(err.status >= 500 ? 502 : err.status, err.message) : err;
+  }
 }
 
 /** A note the taf keeps. Its name is its id. */

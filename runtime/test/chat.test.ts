@@ -198,3 +198,59 @@ describe("memory", () => {
     expect(w.agents.calls).toEqual([]);
   });
 });
+
+describe("components (kiff/agents#91)", () => {
+  it("returns what the agent showed next to the messages, in order, the messages unchanged", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe");
+    w.agents.show(chat, { type: "steps", id: "plan", steps: [{ label: "Sign in to Stripe", status: "active" }] }, minutesAgo(59));
+    w.agents.say(chat, "Here's the plan.", minutesAgo(58));
+    w.agents.show(chat, { type: "approval", id: "connect-stripe", grant: "grt_1" }, minutesAgo(57));
+    w.agents.show(chat, { type: "steps", id: "plan", steps: [{ label: "Sign in to Stripe", status: "done" }] }, minutesAgo(56));
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.messages.map((m: { text: string }) => m.text)).toEqual(["Connect my Stripe", "Here's the plan."]);
+    expect(r.body.components.map((c: { component: { id: string } }) => c.component.id)).toEqual(["plan", "connect-stripe", "plan"]);
+    expect(r.body.components[0]).toMatchObject({ session: chat.session, run: chat.id });
+    expect(r.body.components[2].component.steps[0].status).toBe("done");
+  });
+
+  it("a taf that shows nothing has no components", async () => {
+    const w = world();
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.components).toEqual([]);
+  });
+});
+
+describe("stop", () => {
+  it("cancels the session's latest run, once; one already over stays as it ended", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe");
+    w.agents.calls.length = 0;
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/stop`, { token: "ana", body: { session: chat.session } });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ stopped: true, run: chat.id, status: "CANCELLED" });
+    expect(w.agents.calls).toEqual([`cancelRun ${RAE} ${chat.id}`]);
+    const again = await call(w, "POST", `/v1/tafs/${RAE}/stop`, { token: "ana", body: { session: chat.session } });
+    expect(again.body).toEqual({ stopped: false });
+  });
+
+  it("needs the right to manage Cards, a session, and one of this taf's", async () => {
+    const w = world();
+    const mine = await w.agents.api.startRun("t_acme", RAE, "hi");
+    const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/stop`, { token: "viewer", body: { session: mine.session } })).status).toBe(403);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/stop`, { token: "ana", body: {} })).status).toBe(400);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/stop`, { token: "ana", body: { session: theirs.session } })).status).toBe(404);
+    expect(w.agents.runs.find((x) => x.id === theirs.id)?.status).toBe("PENDING");
+    // Another taf's session on the same account is not this taf's to stop.
+    const other = "taf-cccc0000000000000000";
+    await w.agents.api.putAgent("t_acme", other, {} as never);
+    const sibling = await w.agents.api.startRun("t_acme", other, "hi");
+    w.agents.calls.length = 0;
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/stop`, { token: "ana", body: { session: sibling.session } })).status).toBe(404);
+    expect(w.agents.calls.filter((c) => c.startsWith("cancelRun"))).toEqual([]);
+    expect(w.agents.runs.find((x) => x.id === sibling.id)?.status).toBe("PENDING");
+  });
+});
