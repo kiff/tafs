@@ -111,7 +111,7 @@ aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-acce
   \"Version\": \"2012-10-17\",
   \"Statement\": [
     {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$APNS_SECRET_ARN\"]},
-    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:UpdateItem\", \"dynamodb:DeleteItem\"], \"Resource\": \"$TABLE_ARN\"},
+    {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:UpdateItem\", \"dynamodb:DeleteItem\", \"dynamodb:Scan\"], \"Resource\": \"$TABLE_ARN\"},
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunctionUrl\", \"Resource\": \"$AGENTS_FN_ARN\",
      \"Condition\": {\"StringEquals\": {\"lambda:FunctionUrlAuthType\": \"AWS_IAM\"}}},
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$AGENTS_FN_ARN\",
@@ -193,7 +193,9 @@ aws lambda add-permission --function-name "$SFN" --statement-id public-url-invok
   --principal '*' --invoked-via-function-url >/dev/null 2>&1 \
   || echo "add the URL-only InvokeFunction permission to $SFN by hand (see above)" >&2
 
-# The deploy role, for kiff/tafs main only.
+# The deploy role, for kiff/tafs main only: it updates both functions' code,
+# and invokes tafs-cloud directly (never its URL) for the definitions upgrade
+# (kiff/tafs#69, the upgrade workflow).
 FN_ARN=$(aws lambda get-function --function-name "$FN" --query Configuration.FunctionArn --output text)
 SFN_ARN=$(aws lambda get-function --function-name "$SFN" --query Configuration.FunctionArn --output text)
 TRUST="{
@@ -219,7 +221,8 @@ fi
 aws iam put-role-policy --role-name "$DEPLOY_ROLE" --policy-name deploy-tafs-cloud --policy-document "{
   \"Version\": \"2012-10-17\",
   \"Statement\": [
-    {\"Effect\": \"Allow\", \"Action\": [\"lambda:UpdateFunctionCode\", \"lambda:GetFunction\", \"lambda:GetFunctionConfiguration\"], \"Resource\": [\"$FN_ARN\", \"$SFN_ARN\"]}
+    {\"Effect\": \"Allow\", \"Action\": [\"lambda:UpdateFunctionCode\", \"lambda:GetFunction\", \"lambda:GetFunctionConfiguration\"], \"Resource\": [\"$FN_ARN\", \"$SFN_ARN\"]},
+    {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$FN_ARN\"}
   ]
 }"
 

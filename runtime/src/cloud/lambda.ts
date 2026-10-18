@@ -1,10 +1,10 @@
-import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
 import { forwardAlert } from "./forward.js";
-import { type Accounts, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs } from "./handler.js";
+import { type Accounts, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
 /**
@@ -254,6 +254,20 @@ const tafs: Tafs = {
   async remove(tenant, id) {
     await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key: { id: { S: `tafs#${tenant}` } }, UpdateExpression: "REMOVE tafs.#id", ExpressionAttributeNames: { "#id": id } }));
   },
+  /** A scan of the table's tafs#… items, keys only: an upgrade's, by hand, not a request's. */
+  async tenants() {
+    const out: string[] = [];
+    let start: Record<string, AttributeValue> | undefined;
+    do {
+      const page = await dynamo.send(new ScanCommand({
+        TableName: TABLE, ProjectionExpression: "id", FilterExpression: "begins_with(id, :p)",
+        ExpressionAttributeValues: { ":p": { S: "tafs#" } }, ExclusiveStartKey: start,
+      }));
+      for (const item of page.Items ?? []) if (item.id?.S) out.push(item.id.S.slice("tafs#".length));
+      start = page.LastEvaluatedKey;
+    } while (start);
+    return out;
+  },
 };
 
 /**
@@ -316,7 +330,21 @@ function deps(): Deps {
   return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals };
 }
 
-export async function handler(event: HTTPEvent): Promise<HTTPResult> {
+/**
+ * An upgrade (kiff/tafs#69), invoked directly by the upgrade workflow's role,
+ * never through the function's URL: a URL request always arrives as an HTTP
+ * event, with requestContext, so it can't take this shape.
+ */
+interface UpgradeEvent {
+  upgrade: { dry_run?: boolean };
+}
+
+function isUpgrade(event: unknown): event is UpgradeEvent {
+  return typeof event === "object" && event !== null && !("requestContext" in event) && "upgrade" in event;
+}
+
+export async function handler(event: HTTPEvent | UpgradeEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] }> {
+  if (isUpgrade(event)) return { upgraded: await upgradeDefinitions(deps(), { dryRun: event.upgrade.dry_run !== false }) };
   return handle(event, deps());
 }
 

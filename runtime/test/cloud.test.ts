@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
-import { KIFF_GATEWAY, MODEL } from "../src/cloud/tafdef.js";
+import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
+import { setupDefinition } from "../src/cloud/setupdef.js";
+import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
+import { jobById } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -69,7 +71,12 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
     headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {},
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   };
-  const r = await handle(event, {
+  const r = await handle(event, depsOf(w));
+  return { status: r.statusCode, body: JSON.parse(r.body) };
+}
+
+function depsOf(w: World): Deps {
+  return {
     agents: w.agents.api, keys: w.keys, accounts: w.accounts, tafs: w.tafs,
     names: w.names, slots: memorySlots(), claims: w.claims, removals: w.removals,
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
@@ -77,8 +84,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
     forward: async () => undefined,
     fetch: kiff({ ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
-  });
-  return { status: r.statusCode, body: JSON.parse(r.body) };
+  };
 }
 
 const START = { name: "Bo", job: "refunds", agent_key: "key_rae" };
@@ -470,5 +476,78 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.claims.held.size).toBe(0);
     const own = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Refunds", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
     expect(own.status).toBe(200);
+  });
+});
+
+describe("upgrading running tafs (kiff/tafs#69)", () => {
+  it("reads a taf's start notes back from its instructions, paragraphs and all", () => {
+    const notes = "Only EU customers.\n\nNever after 6pm.";
+    expect(ownerNotesIn(instructions(jobById("refunds"), notes))).toBe(notes);
+    expect(ownerNotesIn(instructions(jobById("refunds")))).toBeUndefined();
+  });
+
+  it("digests a definition the same whatever its field order, and without kiff/agents' own fields", () => {
+    const d = definition(RAE, jobById("refunds"));
+    const reordered = Object.fromEntries(Object.entries(d).reverse()) as typeof d;
+    expect(digest(reordered)).toBe(digest(d));
+    expect(digest({ ...d, tenant: "t_acme", id: RAE })).toBe(digest(d));
+    expect(digest({ ...d, instructions: d.instructions + " " })).not.toBe(digest(d));
+  });
+
+  it("keeps a new taf's budget, start notes and digest on its record, so it's current at once", async () => {
+    const w = world();
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...START, budget_cents: 150, notes: "Only EU customers." } });
+    expect(r.status).toBe(200);
+    const rec = (await w.tafs.list("t_acme")).find((t) => t.name === "Bo")!;
+    expect(rec).toMatchObject({ budgetCents: 150, ownerNotes: "Only EU customers.", definition: expect.any(String) });
+    const out = await upgradeDefinitions(depsOf(w), { dryRun: false });
+    expect(out.find((o) => o.taf === rec.id)?.outcome).toBe("current");
+  });
+
+  it("rewrites an older taf whose definition is out of date, once, its budget and notes kept; a dry run writes nothing", async () => {
+    const w = world();
+    const notes = "Only EU customers.\n\nNever after 6pm.";
+    const old = definition(RAE, jobById("refunds"), { budgetCents: 150, ownerNotes: notes });
+    await w.agents.api.putAgent("t_acme", RAE, { ...old, instructions: old.instructions.replace("four ways", "three ways") });
+    // Max (t_other) is held as it is built: only its digest is new.
+    await w.agents.api.putAgent("t_other", MAX, definition(MAX, jobById("refunds")));
+    w.agents.calls.length = 0;
+
+    const dry = await upgradeDefinitions(depsOf(w), { dryRun: true });
+    expect(dry.find((o) => o.taf === RAE)?.outcome).toBe("would write");
+    expect(dry.find((o) => o.taf === MAX)?.outcome).toBe("current");
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([]);
+    expect((await w.tafs.get("t_acme", RAE))?.definition).toBeUndefined();
+
+    const done = await upgradeDefinitions(depsOf(w), { dryRun: false });
+    expect(done.find((o) => o.taf === RAE)?.outcome).toBe("written");
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent"))).toEqual([`putAgent ${RAE}`]);
+    const stored = (await w.agents.api.getAgent("t_acme", RAE))!;
+    expect(digest(stored)).toBe(digest(old));
+    expect(stored.max_cost_micro_usd).toBe(1_500_000);
+    expect(ownerNotesIn(stored.instructions)).toBe(notes);
+    expect(await w.tafs.get("t_acme", RAE)).toMatchObject({ budgetCents: 150, ownerNotes: notes, definition: digest(old) });
+    expect((await w.tafs.get("t_other", MAX))?.definition).toBe(digest(definition(MAX, jobById("refunds"))));
+
+    w.agents.calls.length = 0;
+    const again = await upgradeDefinitions(depsOf(w), { dryRun: false });
+    expect(again.every((o) => o.outcome === "current")).toBe(true);
+    expect(w.agents.calls.filter((c) => c.startsWith("putAgent") || c.startsWith("getAgent"))).toEqual([]);
+  });
+
+  it("builds Setup from its own definition, skips a taf being removed, and says why one fails", async () => {
+    const w = world();
+    const SETUP = "taf-5e70000000000000000a";
+    w.tafs.held.set(`t_acme#${SETUP}`, { id: SETUP, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", SETUP, { ...setupDefinition(SETUP), instructions: "an older Setup" });
+    w.tafs.held.set("t_acme#taf-gone00000000000000000", { id: "taf-gone00000000000000000", name: "Gone", job: "refunds", kiffAgent: "g", nameClaim: "c", created: "2026-10-17T09:00:00Z", removing: true });
+    w.tafs.held.set("t_acme#taf-odd000000000000000000", { id: "taf-odd000000000000000000", name: "Odd", job: "payroll", kiffAgent: "o", nameClaim: "c", created: "2026-10-17T09:00:00Z", budgetCents: 200 });
+    const out = await upgradeDefinitions(depsOf(w), { dryRun: false });
+    expect(out.find((o) => o.taf === SETUP)?.outcome).toBe("written");
+    expect(digest((await w.agents.api.getAgent("t_acme", SETUP))!)).toBe(digest(setupDefinition(SETUP)));
+    expect(out.find((o) => o.taf === "taf-gone00000000000000000")).toBeUndefined();
+    expect(out.find((o) => o.taf === "taf-odd000000000000000000")).toMatchObject({ outcome: "failed", error: expect.stringContaining("payroll") });
+    // Rae's world definition is empty ({}): no budget to read back, so it fails rather than guess.
+    expect(out.find((o) => o.taf === RAE)?.outcome).toBe("failed");
   });
 });
