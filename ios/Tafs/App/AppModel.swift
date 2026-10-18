@@ -1638,12 +1638,12 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupStreamWorks = false
     private(set) var setupStream: Task<Void, Never>?
 
-    /// Opens the streamed send. Nil when the stream couldn't open and the plain send should
-    /// take the message (no network to it, tafs cloud without the route, or failing); a
-    /// refusal (the flood guard, the role) throws, as the plain send's would.
     /// Opens Setup's stream: tafs cloud's, unless a test gives its own.
     var streamOpener: ((String, String) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>)?
 
+    /// Opens the streamed send. Nil when the stream couldn't open and the plain send should
+    /// take the message (no network to it, tafs cloud without the route, or failing); a
+    /// refusal (the flood guard, the role) throws, as the plain send's would.
     private func openSetupStream(_ id: String, text: String) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>? {
         do {
             if let streamOpener { return try await streamOpener(id, text) }
