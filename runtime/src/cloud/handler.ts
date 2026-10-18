@@ -1056,7 +1056,23 @@ export interface UpgradeOutcome {
   taf: string;
   job: string;
   outcome: "current" | "written" | "would write" | "failed";
+  /** Why it failed, by kind only (`upgradeFailure`): the full message goes to the function's own log. */
   error?: string;
+}
+
+/** A reason this code gives for not upgrading a taf: its words name no account and no taf. */
+class UpgradeError extends Error {}
+
+/**
+ * A failure as an upgrade reports it: by kind only, since the report reaches a
+ * public log. An AWS error's message names the account (its ARN), and some of
+ * kiff/agents' name the tenant, so neither message is kept here.
+ */
+export function upgradeFailure(err: unknown): string {
+  if (err instanceof UpgradeError) return err.message;
+  if (err instanceof AgentsError) return `kiff/agents answered ${err.status}`;
+  const name = err instanceof Error && err.name && err.name !== "Error" ? err.name : "an error";
+  return `AWS or the runtime: ${name}`;
 }
 
 /**
@@ -1087,13 +1103,21 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
         let stored: AgentDefinition | undefined;
         if (taf.job !== SETUP_JOB && taf.budgetCents === undefined) {
           stored = await deps.agents.getAgent(tenant, taf.id);
-          if (!stored) throw new Error("kiff/agents holds no definition for it");
+          if (!stored) throw new UpgradeError("kiff/agents holds no definition for it");
+          if (typeof stored.instructions !== "string" || !Number.isInteger(stored.max_cost_micro_usd / 10_000)) {
+            throw new UpgradeError("its stored definition has no budget or instructions to keep");
+          }
           const notes = ownerNotesIn(stored.instructions);
           record = { ...record, budgetCents: stored.max_cost_micro_usd / 10_000, ...(notes ? { ownerNotes: notes } : {}) };
         }
-        const want = record.job === SETUP_JOB
-          ? setupDefinition(record.id)
-          : definition(record.id, jobById(record.job), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes });
+        let want: AgentDefinition;
+        try {
+          want = record.job === SETUP_JOB
+            ? setupDefinition(record.id)
+            : definition(record.id, jobById(record.job), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes });
+        } catch (err) {
+          throw new UpgradeError(`its definition can't be built: ${(err as Error).message}`);
+        }
         const wanted = digest(want);
         // A record with no digest yet: compare with what kiff/agents holds, so an
         // unchanged definition isn't written again.
@@ -1111,7 +1135,8 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
         if (!opts.dryRun && JSON.stringify(record) !== JSON.stringify(taf)) await deps.tafs.put(tenant, record);
       } catch (err) {
         one.outcome = "failed";
-        one.error = (err as Error).message;
+        one.error = upgradeFailure(err);
+        console.error(`upgrade: ${tenant} ${taf.id}:`, err); // the function's own log, which is private
       }
       out.push(one);
     }

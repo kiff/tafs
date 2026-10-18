@@ -4,7 +4,7 @@ import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
 import { forwardAlert } from "./forward.js";
-import { type Accounts, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions } from "./handler.js";
+import { type Accounts, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
 /**
@@ -344,7 +344,15 @@ function isUpgrade(event: unknown): event is UpgradeEvent {
 }
 
 export async function handler(event: HTTPEvent | UpgradeEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] }> {
-  if (isUpgrade(event)) return { upgraded: await upgradeDefinitions(deps(), { dryRun: event.upgrade.dry_run !== false }) };
+  if (isUpgrade(event)) {
+    try {
+      return { upgraded: await upgradeDefinitions(deps(), { dryRun: event.upgrade.dry_run !== false }) };
+    } catch (err) {
+      // Listing the accounts failed. The caller's log is public: it gets the kind, and CloudWatch the rest.
+      console.error("upgrade:", err);
+      throw new Error(`the upgrade couldn't list the tafs: ${upgradeFailure(err)}`);
+    }
+  }
   return handle(event, deps());
 }
 

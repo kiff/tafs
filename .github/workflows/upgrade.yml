@@ -9,8 +9,9 @@ name: Upgrade
 # changed (a digest on its record), since each write costs its next run a
 # fresh prompt cache.
 #
-# The log is public: it shows counts and failures' reasons, never an account
-# or a taf.
+# The log is public: it shows counts per outcome and job, and failures by kind
+# (tafs cloud keeps the full messages in its own log), never an account or a
+# taf.
 on:
   workflow_dispatch:
     inputs:
@@ -75,6 +76,8 @@ jobs:
             exit 1
           fi
           echo "dry run: $DRY_RUN"
-          jq -r '.upgraded | group_by(.outcome) | map("\(.[0].outcome): \(length)") | .[]' out.json
+          # Per job too: the nightly measures Chargebacks only, so a change to another job's
+          # text shows here as that job's "would write".
+          jq -r '.upgraded | group_by(.outcome) | map("\(.[0].outcome): \(length)" + (if .[0].outcome == "current" then "" else " (" + (group_by(.job) | map("\(.[0].job) \(length)") | join(", ")) + ")" end)) | .[]' out.json
           jq -r '.upgraded | map(select(.outcome == "failed")) | group_by(.error) | map("failed (\(length)), \(.[0].job): \(.[0].error | gsub("taf-[A-Za-z0-9]+"; "taf-…"))") | .[]' out.json
           if jq -e '.upgraded | any(.outcome == "failed")' out.json >/dev/null; then exit 1; fi

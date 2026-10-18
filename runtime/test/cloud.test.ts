@@ -548,6 +548,19 @@ describe("upgrading running tafs (kiff/tafs#69)", () => {
     expect(out.find((o) => o.taf === "taf-gone00000000000000000")).toBeUndefined();
     expect(out.find((o) => o.taf === "taf-odd000000000000000000")).toMatchObject({ outcome: "failed", error: expect.stringContaining("payroll") });
     // Rae's world definition is empty ({}): no budget to read back, so it fails rather than guess.
-    expect(out.find((o) => o.taf === RAE)?.outcome).toBe("failed");
+    expect(out.find((o) => o.taf === RAE)).toMatchObject({ outcome: "failed", error: "its stored definition has no budget or instructions to keep" });
+  });
+
+  it("says why one failed by kind only: an AWS or kiff/agents message can name the account or tenant", async () => {
+    const w = world();
+    const denied = Object.assign(new Error("User: arn:aws:sts::123456789012:assumed-role/tafs-cloud-lambda/x is not authorized"), { name: "AccessDeniedException" });
+    w.agents.fail.set("getAgent", denied);
+    let out = await upgradeDefinitions(depsOf(w), { dryRun: true });
+    const first = out.find((o) => o.outcome === "failed")!;
+    expect(first.error).toBe("AWS or the runtime: AccessDeniedException");
+    expect(JSON.stringify(out)).not.toContain("123456789012");
+    w.agents.fail.set("getAgent", new AgentsError(500, "no agent t_acme/taf-aaaa0000000000000000"));
+    out = await upgradeDefinitions(depsOf(w), { dryRun: true });
+    expect(out.find((o) => o.outcome === "failed")?.error).toBe("kiff/agents answered 500");
   });
 });
