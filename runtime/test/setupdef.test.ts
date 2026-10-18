@@ -55,9 +55,15 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("In the owner's language: every message, and every component's title");
     expect(SETUP_INSTRUCTIONS).toContain("one or two short sentences a message (at most about 40 words)");
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
-    expect(SETUP_INSTRUCTIONS).toContain("Show them\n  as a notice");
+    expect(SETUP_INSTRUCTIONS).toContain("as a notice (tone info");
     expect(SETUP_INSTRUCTIONS).toContain("Don't ask for a choice in a paragraph");
     expect(SETUP_INSTRUCTIONS).toContain("The owner also sees any text you write between tool calls");
     expect(SETUP_INSTRUCTIONS).toContain("never ask the owner for it, or for any id");
+    // The agent id's random part comes from planque's tool, not the model (#78).
+    expect(SETUP_INSTRUCTIONS).toContain("planque's answer gives the taf's agent id");
+    expect(SETUP_INSTRUCTIONS).toContain("(name, such as \"reembolsos\")");
+    // planque names each tool per grant in KIFF (kiff/planque#8): the draft uses those names.
+    expect(SETUP_INSTRUCTIONS).toContain("as planque's status lists them (their names in KIFF");
+    expect(SETUP_INSTRUCTIONS).not.toContain("a new agent id for the taf");
   });
 });
