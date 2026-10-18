@@ -65,5 +65,11 @@ describe("Setup's definition on kiff/agents", () => {
     // planque names each tool per grant in KIFF (kiff/planque#8): the draft uses those names.
     expect(SETUP_INSTRUCTIONS).toContain("as planque's status lists them (their names in KIFF");
     expect(SETUP_INSTRUCTIONS).not.toContain("a new agent id for the taf");
+    // The owner's phone test (#82): no planque to the owner, a failed approval is
+    // retried, never "install or set up planque", and a shown plan keeps its steps.
+    expect(SETUP_INSTRUCTIONS).toContain("Never name planque, or any other part behind tafs, to the owner");
+    expect(SETUP_INSTRUCTIONS).toContain("install, open or set up another app");
+    expect(SETUP_INSTRUCTIONS).not.toContain("finish planque's setup");
+    expect(SETUP_INSTRUCTIONS).toContain("its steps stay the same, in the same words");
   });
 });
