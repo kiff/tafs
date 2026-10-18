@@ -119,9 +119,11 @@ final class PlanqueClient {
     }
 
     /// Every grant for the account, each with its digest checked against its request.
-    func grants() async throws -> [Grant] {
+    /// `readSigner` signs this read alone, leaving `signer` as it is: a refresh that runs
+    /// while a Face ID step waits on the vendor's page must not end that step's signer.
+    func grants(signedBy readSigner: (@MainActor (Data) throws -> String)? = nil) async throws -> [Grant] {
         struct Response: Decodable { let grants: [Grant] }
-        let data = try await raw("GET", "grants", body: nil)
+        let data = try await raw("GET", "grants", body: nil, signer: readSigner)
         var grants = try KIFFClient.decoder.decode(Response.self, from: data).grants
         // The request as planque sent it, numbers as written, so the digest is planque's.
         let raws = (try? JCS.parse(data))?["grants"]?.array ?? []
@@ -187,8 +189,9 @@ final class PlanqueClient {
         return try KIFFClient.decoder.decode(T.self, from: data)
     }
 
-    private func raw(_ method: String, _ path: String, body: Data?) async throws -> Data {
-        guard let tenant, let signer else { throw PlanqueError.notSigning }
+    private func raw(_ method: String, _ path: String, body: Data?,
+                     signer override: (@MainActor (Data) throws -> String)? = nil) async throws -> Data {
+        guard let tenant, let signer = override ?? signer else { throw PlanqueError.notSigning }
         guard let url = URL(string: "v1/accounts/\(escaped(tenant))/\(path)", relativeTo: baseURL) else {
             throw PlanqueError.server(status: 0, message: "Bad path")
         }
