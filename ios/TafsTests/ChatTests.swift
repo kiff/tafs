@@ -202,8 +202,8 @@ final class ChatTests: XCTestCase {
     }
 
     /// While the taf works, a message goes to its run, which reads it at its next step
-    /// (kiff/agents#102); it shows until the thread has it. A run that has ended (409)
-    /// leaves it queued, sent once the taf is done.
+    /// (kiff/agents#102). It shows as kiff/agents says: until the run has read it. A
+    /// run that has ended (409) leaves it queued, sent once the taf is done.
     func testAMessageWhileTheTafWorksGoesToItsRun() async throws {
         let (model, id) = await kiffModel()
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"working":{"session":"sesn_9","run":"r1"}}"#)
@@ -214,17 +214,19 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(taken)
         let steer = try XCTUnwrap(StubProtocol.sent.first { $0.url?.path == "/v1/tafs/depl_1/steer" })
         XCTAssertEqual(try JSONSerialization.jsonObject(with: steer.httpBody ?? Data()) as? [String: String], ["run": "r1", "text": "only the €20 one"])
-        XCTAssertEqual(model.chatState(id).steered.map(\.text), ["only the €20 one"])
+        XCTAssertEqual(model.chatState(id).steering?.untaken.map(\.text), ["only the €20 one"], "shown at once")
         XCTAssertNil(model.chatState(id).queued)
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 0)
 
-        // The run read it: the thread has the owner's words, and the note goes.
-        let at = ISO8601DateFormatter().string(from: Date())
+        // kiff/agents holds it unread, then the run reads it.
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
-        {"messages":[{"at":"\(at)","from":"owner","kind":"message","text":"only the €20 one","session":"sesn_9"}],"working":{"session":"sesn_9","run":"r1"}}
+        {"messages":[],"working":{"session":"sesn_9","run":"r1"},"steering":{"run":"r1","status":"RUNNING","untaken":[{"text":"only the €20 one","at":"2026-10-18T09:00:00.123Z"}]}}
         """)
         await model.loadChat(id)
-        XCTAssertTrue(model.chatState(id).steered.isEmpty)
+        XCTAssertEqual(model.chatState(id).steering?.untaken.map(\.text), ["only the €20 one"])
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"working":{"session":"sesn_9","run":"r1"}}"#)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatState(id).steering)
 
         // Ended meanwhile: it waits, and goes once the taf is done.
         StubProtocol.responses["POST /v1/tafs/depl_1/steer"] = (409, #"{"error":"the run has ended: send it as a new message"}"#)
@@ -237,8 +239,8 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
     }
 
-    /// A run that ends for good without reading what the owner wrote to it: the message
-    /// goes as the next one, so nothing written is dropped.
+    /// A run whose stream ends answered, without reading what the owner wrote to it:
+    /// as kiff/agents says, the message goes as the next one, once.
     func testAMessageTheRunNeverReadGoesNext() async throws {
         final class Sent { var texts: [String] = [] }
         let (model, id) = await kiffModel()
@@ -262,13 +264,34 @@ final class ChatTests: XCTestCase {
         for _ in 0..<2000 where model.chatState(id).live?.run == nil { try await Task.sleep(nanoseconds: 1_000_000) }
         let taken = await model.submitChat("skip 4410", to: id)
         XCTAssertTrue(taken)
-        XCTAssertEqual(model.chatState(id).steered.map(\.run), ["r9"])
+        // The run answered without reading it, as the thread now says.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"steering":{"run":"r9","status":"COMPLETED","untaken":[{"text":"skip 4410","at":"2026-10-18T09:00:00.123Z"}]}}
+        """)
         stream.yield(.end(status: "COMPLETED", stop: "answered"))
         stream.finish()
         await model.chatStreams[id]?.value
         for _ in 0..<2000 where sent.texts.count < 2 { try await Task.sleep(nanoseconds: 1_000_000) }
-        XCTAssertEqual(sent.texts, ["Work the queue", "skip 4410"], "the message the run didn't read went next")
-        XCTAssertTrue(model.chatState(id).steered.isEmpty)
+        await model.chatStreams[id]?.value
+        XCTAssertEqual(sent.texts, ["Work the queue", "skip 4410"], "the message the run didn't read went next, once")
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty)
+    }
+
+    /// A run the owner stopped, or one no stream here saw end (the app reopened), keeps
+    /// what it didn't read as not sent, with Retry: the owner decides.
+    func testWhatAStoppedRunDidntReadIsNotSent() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"steering":{"run":"r9","status":"CANCELLED","untaken":[{"text":"skip 4410","at":"yesterday"},{"text":"and 4411","at":"2026-10-18T09:00:01.123456789Z"}]}}
+        """)
+        StubProtocol.sent = []
+        await model.loadChat(id)
+        XCTAssertNil(model.chatErrors[id], "a time the app can't read leaves the thread loading")
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["and 4411"], "the readable one (nanoseconds read too), as not sent")
+        XCTAssertTrue(model.chatState(id).unsent.first?.why.contains("stopped") ?? false)
+        await model.loadChat(id)
+        XCTAssertEqual(model.chatState(id).unsent.count, 1, "dealt with once")
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 0, "nothing sent")
     }
 
     /// A run that fails part-way offers Retry, which sends its message again; a stopped

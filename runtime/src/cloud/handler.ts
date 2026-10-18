@@ -289,7 +289,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "GET" && action === "conversation") {
     const { messages, components, sessions } = await conversation(me, taf, deps);
-    return { messages, components, working: await working(me, taf, sessions, deps) };
+    const latest = await latestRun(me, taf, sessions, deps);
+    return { messages, components, working: latest.working, steering: latest.steering };
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -776,23 +777,42 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ m
 }
 
 /**
- * Whether the taf is at work in its latest session now, so the app shows it
- * thinking and offers Stop (kiff/tafs#58): that session's latest run is
- * pending or running. A run waiting on the owner isn't: it waits for them.
- * Unknown (kiff/agents not answering) reads as not working.
+ * The taf's latest session's latest run. `working`: whether the taf is at work
+ * in it now, so the app shows it thinking and offers Stop (kiff/tafs#58): the
+ * run is pending or running. A run waiting on the owner isn't: it waits for
+ * them. `steering`: what the owner wrote to it that it hasn't read (#64).
+ * Unknown (kiff/agents not answering) reads as neither.
  */
-async function working(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ session: string; run: string } | null> {
+async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string } | null; steering: Steering | null }> {
+  const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
-  if (!latest) return null;
+  if (!latest) return none;
   try {
     const read = await deps.agents.session(me.tenantID, latest.id);
     const run = read.events.at(-1)?.run;
-    if (!run) return null;
+    if (!run) return none;
     const r = await deps.agents.getRun(me.tenantID, taf.id, run);
-    return r.status === "PENDING" || r.status === "RUNNING" ? { session: latest.id, run } : null;
+    // Times as the thread's are (milliseconds): kiff/agents writes nanoseconds, which the app can't read.
+    const untaken = (r.steering ?? []).filter((m) => !m.taken).map(({ text, at }) => ({ text, at: iso(at) }));
+    return {
+      working: r.status === "PENDING" || r.status === "RUNNING" ? { session: latest.id, run } : null,
+      steering: untaken.length ? { run, status: r.status, untaken } : null,
+    };
   } catch {
-    return null;
+    return none;
   }
+}
+
+/**
+ * What the owner wrote to the latest run that it hasn't read (kiff/agents#102), as
+ * kiff/agents says: while the run goes, it reads them at its next step (a paused one,
+ * when it carries on); once it's over, they were never read, and the app offers to
+ * send them again.
+ */
+interface Steering {
+  run: string;
+  status: string;
+  untaken: Array<{ text: string; at: string }>;
 }
 
 /**

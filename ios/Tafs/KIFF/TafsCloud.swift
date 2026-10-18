@@ -166,13 +166,52 @@ final class TafsCloud {
         let working: String?
         /// The run at work in `working`.
         var workingRun: String? = nil
+        /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says.
+        var steering: Steering? = nil
+    }
+
+    /// What the owner wrote to a run that it hasn't read (kiff/agents#102): while the run
+    /// goes, it reads them at its next step; once it's over, they were never read.
+    struct Steering: Decodable, Equatable {
+        struct Message: Decodable, Equatable {
+            let text: String
+            let at: Date
+        }
+        let run: String
+        let status: String
+        let untaken: [Message]
+
+        init(run: String, status: String, untaken: [Message]) {
+            self.run = run; self.status = status; self.untaken = untaken
+        }
+
+        enum CodingKeys: String, CodingKey { case run, status, untaken }
+        /// A message the app can't read (its time) is left out, not the others.
+        private struct LenientMessage: Decodable {
+            let message: Message?
+            init(from decoder: Decoder) throws { message = try? Message(from: decoder) }
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            run = try c.decode(String.self, forKey: .run)
+            status = try c.decode(String.self, forKey: .status)
+            untaken = try c.decode([LenientMessage].self, forKey: .untaken).compactMap(\.message)
+        }
+
+        /// The run is over: what it didn't read, it never will.
+        var over: Bool { ["COMPLETED", "ERROR", "CANCELLED"].contains(status) }
     }
 
     func conversation(_ id: String) async throws -> Thread {
         struct Working: Decodable { let session: String; let run: String? }
-        struct Response: Decodable { let messages: [ChatMessage]; let working: Working? }
+        /// One the app can't read is left out, never the thread with it.
+        struct Lenient: Decodable {
+            let steering: Steering?
+            init(from decoder: Decoder) throws { steering = try? Steering(from: decoder) }
+        }
+        struct Response: Decodable { let messages: [ChatMessage]; let working: Working?; let steering: Lenient? }
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/conversation")
-        return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run)
+        return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering)
     }
 
     /// Writes to the run at work (kiff/tafs#64): it reads the message at its next step.
