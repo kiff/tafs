@@ -196,6 +196,7 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
+        setupUnsent = []; setupQueued = nil; setupEnded = nil
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
@@ -221,6 +222,7 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
+        setupUnsent = []; setupQueued = nil; setupEnded = nil
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false
@@ -1502,6 +1504,22 @@ final class AppModel: ObservableObject {
     /// Components the owner answered on this phone, so their buttons go quiet.
     @Published private(set) var answered: Set<String> = []
 
+    /// A message that didn't reach Setup: it stays in the thread, with why, to send
+    /// again (kiff/tafs#58). Never lost to a failed send.
+    struct UnsentMessage: Identifiable, Equatable {
+        let id = UUID()
+        let text: String
+        let why: String
+        let at: Date
+    }
+    @Published private(set) var setupUnsent: [UnsentMessage] = []
+    /// What the owner wrote while Setup works: sent once it's done (kiff/tafs#58).
+    @Published private(set) var setupQueued: String?
+    /// How Setup's last run ended, when the owner should know: they stopped it, or it
+    /// failed part-way, with the message that started it to send again.
+    enum RunEnd: Equatable { case stopped, failed(retry: String) }
+    @Published private(set) var setupEnded: RunEnd?
+
     /// Setup's KIFF agent: one per account.
     static let setupAgent = "setup"
 
@@ -1537,6 +1555,7 @@ final class AppModel: ObservableObject {
             guard let d = c.draft, setupDrafts[d]?.confirmed != true, let draft = try? await kiff.draft(id: d), gen == accountGeneration else { continue }
             setupDrafts[d] = draft
         }
+        await sendQueuedIfIdle()
     }
 
     /// Starts connecting tools, once per account, behind one Face ID: planque gets this
@@ -1600,6 +1619,7 @@ final class AppModel: ObservableObject {
         setupSending = true
         defer { setupSending = false }
         let gen = accountGeneration
+        setupEnded = nil
         setupThread.messages.append(TafsCloud.ChatMessage(at: clock(), from: .owner, text: text, session: "pending"))
         do {
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
@@ -1609,7 +1629,7 @@ final class AppModel: ObservableObject {
                 setupAwaiting = clock()
                 setupStreamWorks = true
                 setupLive = LiveAnswer()
-                setupStream = Task { await self.followSetupStream(events, gen: gen) }
+                setupStream = Task { await self.followSetupStream(events, text: text, gen: gen) }
                 return true
             }
             _ = try await cloud.sendMessage(s.id, text: text)
@@ -1620,9 +1640,70 @@ final class AppModel: ObservableObject {
         } catch {
             guard gen == accountGeneration else { return false }
             setupThread.messages.removeAll { $0.session == "pending" }
-            setupError = "It wasn't sent: \(error.localizedDescription)"
+            setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
             return false
         }
+    }
+
+    /// The composer's Send: now, or once Setup is done when it's at work (kiff/tafs#58).
+    /// A second message while one waits joins it. False when there was nothing to send.
+    @discardableResult
+    func submitSetup(_ text: String) async -> Bool {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return false }
+        if setupThinking || setupSending {
+            let joined = setupQueued.map { $0 + "\n\n" + text } ?? text
+            guard joined.count <= Self.chatLimit else { return false }
+            setupQueued = joined
+            return true
+        }
+        return await sendSetup(text)
+    }
+
+    /// Takes back what waits to be sent, for the composer.
+    func unqueueSetup() -> String? {
+        defer { setupQueued = nil }
+        return setupQueued
+    }
+
+    private func sendQueuedIfIdle() async {
+        guard let queued = setupQueued, !setupThinking, !setupSending else { return }
+        setupQueued = nil
+        await sendSetup(queued)
+    }
+
+    /// Sends a message that didn't go through again; an answer's card goes quiet again.
+    /// It stays where it was until it's sent or queued: a send that fails puts it back
+    /// with the new why, and one that can't start (too long to join the queue) leaves it.
+    func retrySetup(_ message: UnsentMessage) async {
+        guard !setupSending, let at = setupUnsent.firstIndex(where: { $0.id == message.id }) else { return }
+        let answer = SetupThread.Answer(message.text)
+        // The card was answered since: sending this too would answer it twice.
+        if let answer, setupThread.answer(to: answer.id) != nil {
+            setupUnsent.remove(at: at)
+            return
+        }
+        setupUnsent.remove(at: at)
+        let left = setupUnsent.count
+        if let answer { answered.insert(answer.id) }
+        if !(await submitSetup(message.text)) {
+            if let answer { answered.remove(answer.id) }
+            // Not tried at all, so not kept by the failed send: back in its place.
+            if setupUnsent.count == left { setupUnsent.insert(message, at: min(at, left)) }
+        }
+    }
+
+    /// Drops a message that didn't go through; an answer's card can be answered again.
+    func discardUnsent(_ message: UnsentMessage) {
+        setupUnsent.removeAll { $0.id == message.id }
+        if let answer = SetupThread.Answer(message.text) { answered.remove(answer.id) }
+    }
+
+    /// Retry on a run that failed part-way: its message is sent again.
+    func retrySetupRun() async {
+        guard case .failed(let text) = setupEnded else { return }
+        setupEnded = nil
+        await submitSetup(text)
     }
 
     /// Setup's answer as it is written (#60): its text so far in this turn, and what it is
@@ -1658,7 +1739,8 @@ final class AppModel: ObservableObject {
     /// Draws the stream: text into the live bubble; at each tool call or component the
     /// turn's words are recorded, so the thread is reloaded and the bubble starts again.
     /// A stream that drops leaves the conversation to show the rest, as it does without one.
-    private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, gen: Int) async {
+    private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int) async {
+        var ended: String?
         do {
             for try await e in events {
                 guard gen == accountGeneration else { return }
@@ -1674,16 +1756,23 @@ final class AppModel: ObservableObject {
                 case .component:
                     await loadSetupThread()
                     setupLive?.text = ""
-                case .end, .broken:
+                case .end(let status, _):
+                    ended = status
+                case .broken:
                     break
                 }
             }
         } catch {}
         guard gen == accountGeneration else { return }
+        // The run is over: Setup is no longer at work, whatever it wrote.
+        if ended != nil { setupAwaiting = nil }
+        if ended == "ERROR" { setupEnded = .failed(retry: text) }
+        if ended == "CANCELLED" { setupEnded = .stopped }
         // The recorded answer first, then the live one goes: no gap between them.
         await loadSetupThread()
         guard gen == accountGeneration else { return }
         setupLive = nil
+        await sendQueuedIfIdle()
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.
@@ -1707,7 +1796,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupAwaiting: Date?
 
     /// Setup is at work: show it thinking, and offer Stop (kiff/tafs#58).
-    var setupThinking: Bool { setupThread.working != nil || setupAwaiting != nil }
+    var setupThinking: Bool { setupThread.working != nil || setupAwaiting != nil || setupLive != nil }
 
     /// The wait ends once tafs cloud says Setup is at work (it then says when it stops),
     /// once Setup answered after the owner wrote, or after two minutes with no sign.
@@ -1744,14 +1833,66 @@ final class AppModel: ObservableObject {
         // while it streams, and a new chat isn't the thread's latest yet.
         guard let s = setupTaf, let session = setupLive?.session ?? setupThread.working ?? setupThread.session else { return }
         setupAwaiting = nil
-        do { try await cloud.stop(s.id, session: session) } catch {
+        do {
+            try await cloud.stop(s.id, session: session)
+            setupEnded = .stopped
+        } catch {
             setupError = "Setup didn't stop: \(error.localizedDescription)"
         }
         await loadSetupThread()
     }
 
+    /// Where a card stands (kiff/tafs#58): waiting for the owner, at work, or answered
+    /// with its outcome.
+    enum CardState: Equatable { case needsYou, working, done, declined, failed(String?) }
+
+    /// An approval's or a sign-in's state, from planque's grant, KIFF's draft and the
+    /// owner's answer in the thread.
+    func setupCardState(_ c: SetupComponent) -> CardState {
+        let grant = grants.first { $0.id == c.grant }
+        if let g = c.grant, connecting == g { return .working }
+        let answer = setupThread.answer(to: c.id)
+        if c.type == .approval, approvalFinished(c) { return .done }
+        if answer?.text == "declined" || answer?.text == "not now" { return .declined }
+        if let answer, answer.failed { return .failed(answer.why) }
+        if c.type == .signIn, answer != nil || grant?.connected == true || grant?.listed == true { return .done }
+        if let grant, grant.status == "failed" || grant.status == "disconnected" { return .failed(grant.reason) }
+        return .needsYou
+    }
+
+    /// Connected with its Cards confirmed, or connected first and listed (contract 5).
+    func approvalFinished(_ c: SetupComponent) -> Bool {
+        let grant = grants.first { $0.id == c.grant }
+        let draft = c.draft.flatMap { setupDrafts[$0] }
+        let cardsWaiting = draft.map { !$0.confirmed } ?? (c.draft != nil)
+        return (grant?.connected == true && !cardsWaiting) || (grant?.listed == true && c.draft == nil)
+    }
+
+    /// The card waiting for the owner, if any (kiff/tafs#58): the latest approval they
+    /// haven't answered, or a question or sign-in they haven't answered or written past.
+    var setupWaiting: ShownComponent? {
+        setupThread.asks.last { shown in
+            let c = shown.component
+            guard !answered.contains(c.id) else { return false }
+            switch c.type {
+            case .approval:
+                return setupCardState(c) == .needsYou
+            case .signIn:
+                return setupCardState(c) == .needsYou && !wroteSince(shown.firstAt)
+            default:
+                return setupThread.answer(to: c.id) == nil && !wroteSince(shown.firstAt)
+            }
+        }
+    }
+
+    private func wroteSince(_ at: Date) -> Bool {
+        setupThread.messages.contains { $0.from == .owner && $0.at > at }
+    }
+
     /// The owner's answer to a component, as contract 1 says: "[<type> <id>] <answer>".
+    /// An earlier answer to it that wasn't sent goes: one answer per card.
     func answer(_ component: SetupComponent, _ text: String) async {
+        setupUnsent.removeAll { SetupThread.Answer($0.text)?.id == component.id }
         answered.insert(component.id)
         if !(await sendSetup("[\(component.type.rawValue) \(component.id)] \(text)")) { answered.remove(component.id) }
     }

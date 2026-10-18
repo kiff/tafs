@@ -59,7 +59,7 @@ struct Eyebrow: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(Theme.mono(12))
+            .scaledFont(12, design: .monospaced, relativeTo: .caption)
             .tracking(0.7)
             .foregroundColor(color)
     }
@@ -76,7 +76,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
         var body: some View {
             configuration.label
-                .font(.system(size: 16, weight: .semibold))
+                .scaledFont(16, weight: .semibold)
                 .frame(maxWidth: .infinity, minHeight: 54)
                 .foregroundColor(Theme.amberInk)
                 .background(Theme.brand.opacity(configuration.isPressed ? 0.8 : 1))
@@ -100,7 +100,7 @@ struct OutlineButtonStyle: ButtonStyle {
 
         var body: some View {
             configuration.label
-                .font(.system(size: 15, weight: .medium))
+                .scaledFont(15, weight: .medium)
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .foregroundColor(color)
                 .background(Theme.ink.opacity(configuration.isPressed ? 0.08 : 0))

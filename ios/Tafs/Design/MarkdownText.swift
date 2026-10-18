@@ -8,33 +8,36 @@ struct MarkdownText: View {
     /// How many characters show, for an answer revealed as it arrives; nil shows all.
     var visible: Int?
     var size: CGFloat = 15
+    /// The space added between lines, growing with the text as Dynamic Type does.
+    @ScaledMetric private var spacing: CGFloat
 
     init(_ text: String, visible: Int? = nil, size: CGFloat = 15) {
         blocks = MarkdownBlock.parse(text)
         self.visible = visible
         self.size = size
+        _spacing = ScaledMetric(wrappedValue: size * 0.2, relativeTo: .body)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(Array(shown.enumerated()), id: \.offset) { _, block in
                 switch block.kind {
                 case .paragraph:
-                    Text(block.text).font(.system(size: size))
+                    Text(block.text).scaledFont(size)
                 case .heading:
-                    Text(block.text).font(.system(size: size + 1, weight: .semibold))
+                    Text(block.text).scaledFont(size + 1, weight: .semibold)
                 case .bullet:
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("•").font(.system(size: size))
-                        Text(block.text).font(.system(size: size))
+                        Text("•").scaledFont(size)
+                        Text(block.text).scaledFont(size)
                     }
                 case .numbered(let n):
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text("\(n).").font(.system(size: size).monospacedDigit())
-                        Text(block.text).font(.system(size: size))
+                        Text("\(n).").monospacedDigit().scaledFont(size)
+                        Text(block.text).scaledFont(size)
                     }
                 case .code:
-                    Text(block.text).font(Theme.mono(size - 2))
+                    Text(block.text).scaledFont(size - 2, design: .monospaced)
                         .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Theme.raised)
@@ -42,6 +45,8 @@ struct MarkdownText: View {
                 }
             }
         }
+        // Lines about 1.4 times the text's size apart: the font's own 1.2, and a fifth more.
+        .lineSpacing(spacing)
         .fixedSize(horizontal: false, vertical: true)
     }
 
