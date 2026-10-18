@@ -115,6 +115,27 @@ describe("conversation", () => {
     expect(r.body.working).toBeNull();
   });
 
+  it("says what the owner wrote to the latest run that it hasn't read, while it goes and once it's over", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 60_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue");
+    await w.agents.api.steerRun("t_acme", RAE, chat.id, "only the €20 one");
+    await w.agents.api.steerRun("t_acme", RAE, chat.id, "and say when it's done");
+    const run = w.agents.runs.find((x) => x.id === chat.id)!;
+    run.steering![0]!.taken = true;
+    run.steering![1]!.at = "2026-10-16T11:59:00.123456789Z"; // as kiff/agents writes it
+    let r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.working).toEqual({ session: chat.session, run: chat.id });
+    expect(r.body.steering).toEqual({ run: chat.id, status: "PENDING", untaken: [{ text: "and say when it's done", at: "2026-10-16T11:59:00.123Z" }] });
+    (run as { status: string }).status = "CANCELLED";
+    r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.working).toBeNull();
+    expect(r.body.steering).toMatchObject({ status: "CANCELLED", untaken: [{ text: "and say when it's done" }] });
+    run.steering![1]!.taken = true;
+    r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.steering).toBeNull();
+  });
+
   it("answers another account's taf like a missing one", async () => {
     const w = world();
     expect((await call(w, "GET", `/v1/tafs/${MAX}/conversation`, { token: "ana" })).status).toBe(404);

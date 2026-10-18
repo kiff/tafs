@@ -85,17 +85,18 @@ struct TafChatView: View {
                         }
                         .accessibilityElement(children: .combine)
                     }
-                    // Written to the run at work: it reads them at its next step (#64).
-                    ForEach(state.steered) { m in
-                        VStack(alignment: .trailing, spacing: 4) {
-                            ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
-                                .opacity(0.8)
-                            Text("\(taf?.name ?? "It") reads this at its next step")
-                                .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    // Written to the run while it goes, not read yet, as kiff/agents says (#64).
+                    if let steering = state.steering, !steering.over {
+                        ForEach(Array(steering.untaken.enumerated()), id: \.offset) { _, m in
+                            VStack(alignment: .trailing, spacing: 4) {
+                                ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
+                                    .opacity(0.8)
+                                Text("\(taf?.name ?? "It") reads this " + (steering.status == "PAUSED" ? "when it carries on" : "at its next step"))
+                                    .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .accessibilityElement(children: .combine)
                         }
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .accessibilityElement(children: .combine)
-                        .id(m.id)
                     }
                     if !thinking { ended(taf) }
                     if let queued = state.queued {

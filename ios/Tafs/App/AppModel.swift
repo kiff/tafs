@@ -1100,8 +1100,9 @@ final class AppModel: ObservableObject {
             chatErrors[tafID] = nil
             chatStates[tafID, default: ChatState()].working = thread.working
             chatStates[tafID]?.workingRun = thread.workingRun
+            chatStates[tafID]?.steering = thread.steering
             settleChatAwaiting(tafID)
-            settleSteered(tafID)
+            settleSteering(tafID)
         case .failure(let error):
             chatErrors[tafID] = "The thread couldn't be loaded: \(error.localizedDescription)"
             return
@@ -1187,22 +1188,15 @@ final class AppModel: ObservableObject {
         var ended: RunEnd?
         /// The run at work, as tafs cloud says, for writing to it.
         var workingRun: String?
-        /// What the owner wrote to the run at work, until the thread shows it read.
-        var steered: [Steered] = []
+        /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says
+        /// (kiff/agents#102): shown until the run reads it, and once it's over, offered
+        /// to send again.
+        var steering: TafsCloud.Steering?
+        /// The unread messages of runs that are over, once dealt with here.
+        var settled: Set<String> = []
+        /// The run whose stream ended answered or failed: what it didn't read goes next.
+        var sendNext: String?
     }
-
-    /// A message written to a run while it works (kiff/agents#102): it reads it at its
-    /// next step, before its next turn.
-    struct Steered: Identifiable, Equatable {
-        let id = UUID()
-        let text: String
-        let at: Date
-        let run: String
-    }
-
-    /// How long a message written to a run may wait unread, when no stream says how the
-    /// run ended, before it shows as not sent, for the owner to send again.
-    static let steerWait: TimeInterval = 15 * 60
     @Published private(set) var chatStates: [UUID: ChatState] = [:]
     /// Whether a taf's chat has streamed here: its answers then show as written.
     @Published private(set) var chatStreamWorks = false
@@ -1265,13 +1259,13 @@ final class AppModel: ObservableObject {
         if ended != nil { chatStates[tafID]?.awaiting = nil }
         if ended == "ERROR" { chatStates[tafID]?.ended = .failed(retry: text) }
         if ended == "CANCELLED" { chatStates[tafID]?.ended = .stopped }
-        let run = chatStates[tafID]?.live?.run
+        // A run that answered or failed never reads what it didn't take: it goes next.
+        // One the owner stopped keeps it, not sent, for them to decide.
+        if let run = chatStates[tafID]?.live?.run, ended == "COMPLETED" || ended == "ERROR" { chatStates[tafID]?.sendNext = run }
         // The recorded answer first, then the live one goes: no gap between them.
         await loadChat(tafID)
         guard gen == accountGeneration else { return }
         chatStates[tafID]?.live = nil
-        // A run that ended for good never reads what it didn't take: it goes next.
-        if let run, let ended, ["COMPLETED", "ERROR", "CANCELLED"].contains(ended) { sendOnUnread(tafID, of: run) }
         await sendQueuedChatIfIdle(tafID)
     }
 
@@ -1303,8 +1297,11 @@ final class AppModel: ObservableObject {
             let s = chatState(tafID)
             if s.queued == nil, let run = s.live?.run ?? s.workingRun, let c = cloudTaf(for: tafID) {
                 do {
-                    _ = try await cloud.steer(c.id, run: run, text: text)
-                    chatStates[tafID, default: ChatState()].steered.append(Steered(text: text, at: clock(), run: run))
+                    let status = try await cloud.steer(c.id, run: run, text: text)
+                    // Shown at once, as the run now holds it; the next reload says the same.
+                    let held = chatState(tafID).steering.flatMap { $0.run == run ? $0.untaken : nil } ?? []
+                    chatStates[tafID, default: ChatState()].steering = TafsCloud.Steering(
+                        run: run, status: status, untaken: held + [TafsCloud.Steering.Message(text: text, at: clock())])
                     return true
                 } catch let e as TafsCloud.CloudError where e.status == 429 {
                     keepUnsent(text, tafID, why: "That's a lot of messages in a few minutes. Give \(c.name) a moment, then try again.")
@@ -1327,31 +1324,22 @@ final class AppModel: ObservableObject {
         return chatStates[tafID]?.queued
     }
 
-    /// A message written to the run at work leaves once the thread shows the owner's
-    /// words (the run read and recorded them). One no stream accounts for, still unread
-    /// after `steerWait` while the taf is idle, shows as not sent, for the owner to send.
-    private func settleSteered(_ tafID: UUID) {
-        guard let steered = chatStates[tafID]?.steered, !steered.isEmpty else { return }
-        let said = chats[tafID]?.filter { $0.from == .owner && $0.session != "pending" } ?? []
-        // A minute's slack: tafs cloud's clock and the phone's needn't agree.
-        var left = steered.filter { m in !said.contains { $0.text == m.text && $0.at >= m.at.addingTimeInterval(-60) } }
-        if !chatThinking(tafID) {
-            let stale = left.filter { clock().timeIntervalSince($0.at) > Self.steerWait }
-            for m in stale { keepUnsent(m.text, tafID, why: "It wasn't read before the work ended.") }
-            left.removeAll { m in stale.contains { $0.id == m.id } }
+    /// What a run that's over never read, as kiff/agents says, dealt with once: after a
+    /// streamed answer or failure it goes as the next message; otherwise (the owner
+    /// stopped it, or no stream said how it ended) it shows as not sent, with Retry.
+    private func settleSteering(_ tafID: UUID) {
+        guard let s = chatStates[tafID]?.steering, s.over else { return }
+        func key(_ m: TafsCloud.Steering.Message) -> String { "\(s.run)|\(m.at.timeIntervalSince1970)|\(m.text)" }
+        let fresh = s.untaken.filter { !chatState(tafID).settled.contains(key($0)) }
+        guard !fresh.isEmpty else { return }
+        chatStates[tafID]?.settled.formUnion(fresh.map(key))
+        if chatState(tafID).sendNext == s.run, s.status != "CANCELLED" {
+            let texts = [chatState(tafID).queued].compactMap { $0 } + fresh.map(\.text)
+            chatStates[tafID]?.queued = texts.joined(separator: "\n\n")
+        } else {
+            let why = s.status == "CANCELLED" ? "You stopped it before it read this." : "It wasn't read before the work ended."
+            for m in fresh { keepUnsent(m.text, tafID, why: why) }
         }
-        chatStates[tafID]?.steered = left
-    }
-
-    /// What the owner wrote to `run`, which ended for good without reading it, goes as
-    /// the next message, after anything queued.
-    private func sendOnUnread(_ tafID: UUID, of run: String) {
-        guard let steered = chatStates[tafID]?.steered else { return }
-        let unread = steered.filter { $0.run == run }
-        guard !unread.isEmpty else { return }
-        chatStates[tafID]?.steered.removeAll { $0.run == run }
-        let texts = [chatState(tafID).queued].compactMap { $0 } + unread.map(\.text)
-        chatStates[tafID]?.queued = texts.joined(separator: "\n\n")
     }
 
     private func sendQueuedChatIfIdle(_ tafID: UUID) async {
