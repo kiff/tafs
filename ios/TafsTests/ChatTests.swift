@@ -282,12 +282,12 @@ final class ChatTests: XCTestCase {
     func testWhatAStoppedRunDidntReadIsNotSent() async throws {
         let (model, id) = await kiffModel()
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
-        {"messages":[],"steering":{"run":"r9","status":"CANCELLED","untaken":[{"text":"skip 4410","at":"2026-10-18T09:00:00.123456789Z"},{"text":"and 4411","at":"2026-10-18T09:00:01.000Z"}]}}
+        {"messages":[],"steering":{"run":"r9","status":"CANCELLED","untaken":[{"text":"skip 4410","at":"yesterday"},{"text":"and 4411","at":"2026-10-18T09:00:01.123456789Z"}]}}
         """)
         StubProtocol.sent = []
         await model.loadChat(id)
         XCTAssertNil(model.chatErrors[id], "a time the app can't read leaves the thread loading")
-        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["and 4411"], "the readable one, as not sent")
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["and 4411"], "the readable one (nanoseconds read too), as not sent")
         XCTAssertTrue(model.chatState(id).unsent.first?.why.contains("stopped") ?? false)
         await model.loadChat(id)
         XCTAssertEqual(model.chatState(id).unsent.count, 1, "dealt with once")
