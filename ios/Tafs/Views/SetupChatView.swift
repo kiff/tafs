@@ -95,7 +95,11 @@ struct SetupChatView: View {
                         }
                         .id(item.id)
                     }
-                    ForEach(model.setupUnsent) { unsent in UnsentBubble(message: unsent).id(unsent.id) }
+                    ForEach(model.setupUnsent) { unsent in
+                        UnsentBubble(message: unsent, words: model.setupThread.ownerWords(unsent.text), busy: model.setupSending,
+                                     retry: { await model.retrySetup(unsent) }, discard: { model.discardUnsent(unsent) })
+                            .id(unsent.id)
+                    }
                     if let live = model.setupLive, !live.text.isEmpty {
                         ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: live.text, session: "live"), taf: nil, fullWidth: true).id("live")
                     } else if thinking {
@@ -109,7 +113,7 @@ struct SetupChatView: View {
                         .accessibilityElement(children: .combine)
                     }
                     if !thinking { ended }
-                    if let queued = model.setupQueued { QueuedBubble(text: queued) }
+                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "Setup") { _ = model.unqueueSetup() } }
                     Color.clear.frame(height: 1).id(Self.bottom)
                         .onAppear { atBottom = true; following = true; unseen = false }
                         .onDisappear { atBottom = false }
@@ -300,23 +304,27 @@ struct SetupChatView: View {
     }
 }
 
-/// A message that didn't reach Setup, kept where it was written (#58): why, and Retry.
+/// A message that didn't go through, kept where it was written (#58): why, and Retry.
+/// Setup's chat and a taf's share it.
 struct UnsentBubble: View {
-    @EnvironmentObject private var model: AppModel
     let message: AppModel.UnsentMessage
+    /// What the bubble shows: the owner's words for the message.
+    let words: String
+    let busy: Bool
+    let retry: () async -> Void
+    let discard: () -> Void
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 6) {
-            ChatBubble(message: TafsCloud.ChatMessage(at: message.at, from: .owner, text: model.setupThread.ownerWords(message.text),
-                                                      session: "unsent"), taf: nil)
+            ChatBubble(message: TafsCloud.ChatMessage(at: message.at, from: .owner, text: words, session: "unsent"), taf: nil)
                 .opacity(0.6)
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.circle.fill").foregroundColor(Theme.no)
                 Text("Not sent").foregroundColor(Theme.no)
                 Text("·").foregroundColor(Theme.dim)
-                Button("Retry") { Task { await model.retrySetup(message) } }
+                Button("Retry") { Task { await retry() } }
                     .foregroundColor(Theme.ink).fontWeight(.semibold)
-                    .disabled(model.setupSending)
+                    .disabled(busy)
             }
             .scaledFont(13, relativeTo: .footnote)
             Text(message.why).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
@@ -325,43 +333,44 @@ struct UnsentBubble: View {
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {
             Button("Copy") { UIPasteboard.general.string = message.text }
-            Button("Delete", role: .destructive) { model.discardUnsent(message) }
+            Button("Delete", role: .destructive, action: discard)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityAction(named: "Retry") { Task { await model.retrySetup(message) } }
+        .accessibilityAction(named: "Retry") { Task { await retry() } }
     }
 }
 
-/// What the owner wrote while Setup works: sent once it's done, or taken back to edit.
+/// What the owner wrote while the chat's agent works: sent once it's done, or not.
 struct QueuedBubble: View {
-    @EnvironmentObject private var model: AppModel
     let text: String
+    /// Who it waits for: "Setup", or the taf's name.
+    let who: String
+    let unqueue: () -> Void
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 6) {
             ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .owner, text: text, session: "queued"), taf: nil)
                 .opacity(0.6)
-            Text("Sends when Setup is done").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            Text("Sends when \(who) is done").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {
-            Button("Don't send", role: .destructive) { _ = model.unqueueSetup() }
+            Button("Don't send", role: .destructive, action: unqueue)
         }
         .accessibilityElement(children: .combine)
     }
 }
 
-/// A pinned bar for the card waiting for the owner, when it's out of view (#58).
-struct NeedsYouBar: View {
-    @EnvironmentObject private var model: AppModel
-    let shown: ShownComponent
+/// A pinned bar for what waits for the owner, when it's out of view (#58, #64).
+struct NeedsYouPill: View {
+    let text: String
     let go: () -> Void
 
     var body: some View {
         Button(action: go) {
             HStack(spacing: 10) {
                 Circle().fill(Theme.amber).frame(width: 8, height: 8)
-                Text(what).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
+                Text(text).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.up").font(.system(size: 13, weight: .bold)).foregroundColor(Theme.dim)
             }
@@ -372,8 +381,17 @@ struct NeedsYouBar: View {
             .shadow(color: Theme.ink.opacity(0.12), radius: 6, y: 2)
         }
         .padding(.horizontal, 16)
-        .accessibilityHint("Shows the card")
+        .accessibilityHint("Shows it")
     }
+}
+
+/// Setup's card waiting for the owner, as a pinned bar.
+struct NeedsYouBar: View {
+    @EnvironmentObject private var model: AppModel
+    let shown: ShownComponent
+    let go: () -> Void
+
+    var body: some View { NeedsYouPill(text: what, go: go) }
 
     private var what: String {
         let c = shown.component

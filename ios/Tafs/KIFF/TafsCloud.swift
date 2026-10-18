@@ -160,10 +160,17 @@ final class TafsCloud {
     }
 
     /// The taf's thread, oldest first.
-    func conversation(_ id: String) async throws -> [ChatMessage] {
-        struct Response: Decodable { let messages: [ChatMessage] }
+    /// A taf's thread, oldest first, and the session it's at work in now, if any.
+    struct Thread: Equatable {
+        let messages: [ChatMessage]
+        let working: String?
+    }
+
+    func conversation(_ id: String) async throws -> Thread {
+        struct Working: Decodable { let session: String }
+        struct Response: Decodable { let messages: [ChatMessage]; let working: Working? }
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/conversation")
-        return r.messages
+        return Thread(messages: r.messages, working: r.working?.session)
     }
 
     struct Sent: Decodable, Equatable {
