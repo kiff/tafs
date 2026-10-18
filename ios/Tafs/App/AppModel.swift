@@ -1673,12 +1673,24 @@ final class AppModel: ObservableObject {
     }
 
     /// Sends a message that didn't go through again; an answer's card goes quiet again.
+    /// It stays where it was until it's sent or queued: a send that fails puts it back
+    /// with the new why, and one that can't start (too long to join the queue) leaves it.
     func retrySetup(_ message: UnsentMessage) async {
-        guard !setupSending else { return }
-        setupUnsent.removeAll { $0.id == message.id }
+        guard !setupSending, let at = setupUnsent.firstIndex(where: { $0.id == message.id }) else { return }
         let answer = SetupThread.Answer(message.text)
+        // The card was answered since: sending this too would answer it twice.
+        if let answer, setupThread.answer(to: answer.id) != nil {
+            setupUnsent.remove(at: at)
+            return
+        }
+        setupUnsent.remove(at: at)
+        let left = setupUnsent.count
         if let answer { answered.insert(answer.id) }
-        if !(await submitSetup(message.text)), let answer { answered.remove(answer.id) }
+        if !(await submitSetup(message.text)) {
+            if let answer { answered.remove(answer.id) }
+            // Not tried at all, so not kept by the failed send: back in its place.
+            if setupUnsent.count == left { setupUnsent.insert(message, at: min(at, left)) }
+        }
     }
 
     /// Drops a message that didn't go through; an answer's card can be answered again.
@@ -1878,7 +1890,9 @@ final class AppModel: ObservableObject {
     }
 
     /// The owner's answer to a component, as contract 1 says: "[<type> <id>] <answer>".
+    /// An earlier answer to it that wasn't sent goes: one answer per card.
     func answer(_ component: SetupComponent, _ text: String) async {
+        setupUnsent.removeAll { SetupThread.Answer($0.text)?.id == component.id }
         answered.insert(component.id)
         if !(await sendSetup("[\(component.type.rawValue) \(component.id)] \(text)")) { answered.remove(component.id) }
     }

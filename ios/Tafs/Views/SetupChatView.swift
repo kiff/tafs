@@ -597,6 +597,9 @@ struct SetupApproval: View {
     @EnvironmentObject private var model: AppModel
     let component: SetupComponent
     @State private var open = false
+    /// Whether this phone is approving it: only then does finishing tap (not a refresh
+    /// that finds it approved elsewhere).
+    @State private var approvingHere = false
 
     var body: some View {
         let state = model.setupCardState(component)
@@ -613,7 +616,16 @@ struct SetupApproval: View {
                 card(state, grant)
             }
         }
-        .onChange(of: state) { now in if now == .done { Haptics.success() } }
+        .onChange(of: state) { now in
+            switch now {
+            case .working: approvingHere = true
+            case .done:
+                if approvingHere { Haptics.success() }
+                approvingHere = false
+            case .declined, .failed: approvingHere = false
+            case .needsYou: break // between the approval and the grant's refresh
+            }
+        }
     }
 
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {

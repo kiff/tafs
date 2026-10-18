@@ -427,6 +427,58 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Retry never loses the message: one that can't join the queue (too long with it)
+    /// stays where it was. An answer sent from its card drops the earlier one that
+    /// wasn't sent, and a Retry of an answer the card has since had sends nothing.
+    func testRetryKeepsTheMessageAndAnswersOnce() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (429, #"{"error":"that's 10 messages in 10 minutes"}"#)
+        let short = String(repeating: "x", count: 100)
+        await model.sendSetup(short)
+        XCTAssertEqual(model.setupUnsent.map(\.text), [short])
+
+        // Setup at work, with 1,950 characters queued: the retry can't join them.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":{"session":"s1","run":"r1"}}"#)
+        await model.loadSetupThread()
+        let queued = await model.submitSetup(String(repeating: "y", count: 1950))
+        XCTAssertTrue(queued)
+        await model.retrySetup(try XCTUnwrap(model.setupUnsent.first))
+        XCTAssertEqual(model.setupUnsent.map(\.text), [short], "still there, not lost")
+        _ = model.unqueueSetup()
+        model.discardUnsent(try XCTUnwrap(model.setupUnsent.first))
+
+        // An answer that isn't sent, then the card answered again and sent.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        await model.loadSetupThread()
+        let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
+        await model.answer(which, "live")
+        XCTAssertEqual(model.setupUnsent.map(\.text), ["[confirm which] live"])
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = nil
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        StubProtocol.sent = []
+        await model.answer(which, "test")
+        XCTAssertTrue(model.setupUnsent.isEmpty, "the earlier answer goes")
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").map { body($0)["text"] as? String }, ["[confirm which] test"])
+
+        // A Retry of an answer the thread already has sends nothing.
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (503, #"{"error":"down"}"#)
+        let signIn = try SetupTests.component(#"{"type":"sign_in","id":"in","service":"mcp.stripe.com","grant":"g_01"}"#)
+        await model.answer(signIn, "not now")
+        let unsent = try XCTUnwrap(model.setupUnsent.first)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"[sign_in in] not now","session":"s1"}],"components":[],"working":null}
+        """)
+        await model.loadSetupThread()
+        StubProtocol.sent = []
+        await model.retrySetup(unsent)
+        XCTAssertTrue(model.setupUnsent.isEmpty)
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "not answered twice")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// What the owner writes while Setup works waits, and is sent once Setup is done, as
     /// one message (#58 B1).
     func testWhatsWrittenWhileSetupWorksIsSentWhenItsDone() async throws {

@@ -8,11 +8,14 @@ struct MarkdownText: View {
     /// How many characters show, for an answer revealed as it arrives; nil shows all.
     var visible: Int?
     var size: CGFloat = 15
+    /// The space added between lines, growing with the text as Dynamic Type does.
+    @ScaledMetric private var spacing: CGFloat
 
     init(_ text: String, visible: Int? = nil, size: CGFloat = 15) {
         blocks = MarkdownBlock.parse(text)
         self.visible = visible
         self.size = size
+        _spacing = ScaledMetric(wrappedValue: size * 0.2, relativeTo: .body)
     }
 
     var body: some View {
@@ -43,7 +46,7 @@ struct MarkdownText: View {
             }
         }
         // Lines about 1.4 times the text's size apart: the font's own 1.2, and a fifth more.
-        .lineSpacing(size * 0.2)
+        .lineSpacing(spacing)
         .fixedSize(horizontal: false, vertical: true)
     }
 
