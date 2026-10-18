@@ -104,12 +104,71 @@ struct SetupThread: Equatable {
     }
 
     private static let asking: Set<SetupComponent.Kind> = [.confirm, .approval, .signIn, .result]
+    private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .approval, .signIn]
 
     private func placedAt(_ c: ShownComponent) -> Date {
         guard Self.asking.contains(c.component.type) else { return c.firstAt }
         let nextOwner = messages.first { $0.from == .owner && $0.at > c.firstAt }?.at ?? .distantFuture
         let after = messages.filter { $0.from == .taf && $0.session == c.session && $0.at >= c.firstAt && $0.at < nextOwner }
         return after.last?.at ?? c.firstAt
+    }
+
+    /// The owner's answer to a component (contract 1's "[<type> <id>] <answer>"): its
+    /// component's type and id, and the answer.
+    struct Answer: Equatable {
+        let type: String
+        let id: String
+        let text: String
+
+        init?(_ message: String) {
+            guard message.hasPrefix("["), let close = message.firstIndex(of: "]") else { return nil }
+            let head = message[message.index(after: message.startIndex)..<close].split(separator: " ", maxSplits: 1)
+            guard head.count == 2, SetupComponent.Kind(rawValue: String(head[0])) != nil else { return nil }
+            type = String(head[0])
+            id = String(head[1])
+            text = message[message.index(after: close)...].trimmingCharacters(in: .whitespaces)
+        }
+
+        var failed: Bool { text.hasPrefix("failed") }
+        /// Why it failed, as the app wrote it after "failed: ".
+        var why: String? {
+            guard failed else { return nil }
+            let rest = text.dropFirst("failed".count).drop { $0 == ":" || $0 == " " }
+            return rest.isEmpty ? nil : String(rest)
+        }
+    }
+
+    /// The owner's latest answer to a component, as the thread has it.
+    func answer(to id: String) -> Answer? {
+        messages.lazy.reversed().filter { $0.from == .owner }.compactMap { Answer($0.text) }.first { $0.id == id }
+    }
+
+    /// An owner's message in their own words: an answer to a component reads as what
+    /// they chose ("Refuse it", "Approve"), never as contract 1's form (kiff/tafs#58).
+    func ownerWords(_ text: String) -> String {
+        guard let a = Answer(text) else { return text }
+        switch SetupComponent.Kind(rawValue: a.type) {
+        case .confirm?:
+            let options = components.first { $0.id == a.id }?.component.options ?? []
+            return options.first { $0.value == a.text }?.label ?? a.text
+        case .approval?:
+            if a.failed { return "Approve · it didn't go through" }
+            return a.text == "declined" ? "Decline" : "Approve"
+        case .signIn?:
+            if a.failed { return "Sign in · it didn't go through" }
+            return a.text == "not now" ? "Not now" : "Signed in"
+        default:
+            return a.text
+        }
+    }
+
+    /// The components that ask the owner to act, in the thread's order: an approval, a
+    /// question or a sign-in.
+    var asks: [ShownComponent] {
+        items.compactMap { item in
+            if case .component(let c) = item, Self.needsOwner.contains(c.component.type) { return c }
+            return nil
+        }
     }
 
     /// Folds components as the conversation lists them, oldest first: the latest

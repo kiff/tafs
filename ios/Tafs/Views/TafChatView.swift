@@ -90,6 +90,8 @@ struct ChatBubble: View {
     let taf: Taf?
     /// How much of the taf's message shows, while it is revealed; nil shows it all.
     var visible: Int? = nil
+    /// The taf's words full width, with no bubble, as Setup's are (#58).
+    var fullWidth = false
 
     var body: some View {
         if message.kind == .kickoff {
@@ -100,13 +102,20 @@ struct ChatBubble: View {
             HStack {
                 Spacer(minLength: 48)
                 Text(message.text)
-                    .font(.system(size: 15)).foregroundColor(.white)
+                    .scaledFont(15).foregroundColor(.white)
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(Theme.brand)
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .opacity(message.session == "pending" ? 0.7 : 1)
                     .textSelection(.enabled)
             }
+        } else if fullWidth {
+            // Full width, with no bubble, as Claude and ChatGPT write (#58).
+            MarkdownText(message.text, visible: visible, size: 16)
+                .foregroundColor(Theme.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 2)
+                .textSelection(.enabled)
         } else {
             HStack(alignment: .bottom, spacing: 8) {
                 if let taf { TafAvatar(taf: taf, size: 28) } else { Mascot(size: 28) }
@@ -127,19 +136,34 @@ struct ChatBubble: View {
 /// The taf is working on an answer.
 struct TypingBubble: View {
     let taf: Taf?
+    var fullWidth = false
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            if let taf { TafAvatar(taf: taf, size: 28) } else { Mascot(size: 28) }
-            TimelineView(.animation) { context in
-                let phase = context.date.timeIntervalSinceReferenceDate * 4
-                HStack(spacing: 5) {
-                    ForEach(0..<3, id: \.self) { i in
-                        Circle().fill(Theme.dim).frame(width: 7, height: 7)
-                            .opacity(0.35 + 0.65 * max(0, sin(phase - Double(i) * 0.9)))
-                    }
+        if fullWidth {
+            // The dots sit where the words will, with no bubble.
+            dots.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement().accessibilityLabel("Setup is answering")
+        } else {
+            bubble
+        }
+    }
+
+    private var dots: some View {
+        TimelineView(.animation) { context in
+            let phase = context.date.timeIntervalSinceReferenceDate * 4
+            HStack(spacing: 5) {
+                ForEach(0..<3, id: \.self) { i in
+                    Circle().fill(Theme.dim).frame(width: 7, height: 7)
+                        .opacity(0.35 + 0.65 * max(0, sin(phase - Double(i) * 0.9)))
                 }
             }
+        }
+    }
+
+    private var bubble: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            if let taf { TafAvatar(taf: taf, size: 28) } else { Mascot(size: 28) }
+            dots
             .padding(.horizontal, 14).padding(.vertical, 14)
             .background(Theme.panel)
             .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Theme.line))

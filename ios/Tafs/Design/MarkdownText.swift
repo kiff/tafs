@@ -16,25 +16,25 @@ struct MarkdownText: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(Array(shown.enumerated()), id: \.offset) { _, block in
                 switch block.kind {
                 case .paragraph:
-                    Text(block.text).font(.system(size: size))
+                    Text(block.text).scaledFont(size)
                 case .heading:
-                    Text(block.text).font(.system(size: size + 1, weight: .semibold))
+                    Text(block.text).scaledFont(size + 1, weight: .semibold)
                 case .bullet:
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("•").font(.system(size: size))
-                        Text(block.text).font(.system(size: size))
+                        Text("•").scaledFont(size)
+                        Text(block.text).scaledFont(size)
                     }
                 case .numbered(let n):
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text("\(n).").font(.system(size: size).monospacedDigit())
-                        Text(block.text).font(.system(size: size))
+                        Text("\(n).").monospacedDigit().scaledFont(size)
+                        Text(block.text).scaledFont(size)
                     }
                 case .code:
-                    Text(block.text).font(Theme.mono(size - 2))
+                    Text(block.text).scaledFont(size - 2, design: .monospaced)
                         .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Theme.raised)
@@ -42,6 +42,8 @@ struct MarkdownText: View {
                 }
             }
         }
+        // Lines about 1.4 times the text's size apart: the font's own 1.2, and a fifth more.
+        .lineSpacing(size * 0.2)
         .fixedSize(horizontal: false, vertical: true)
     }
 
