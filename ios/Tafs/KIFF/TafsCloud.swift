@@ -164,13 +164,24 @@ final class TafsCloud {
     struct Thread: Equatable {
         let messages: [ChatMessage]
         let working: String?
+        /// The run at work in `working`.
+        var workingRun: String? = nil
     }
 
     func conversation(_ id: String) async throws -> Thread {
-        struct Working: Decodable { let session: String }
+        struct Working: Decodable { let session: String; let run: String? }
         struct Response: Decodable { let messages: [ChatMessage]; let working: Working? }
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/conversation")
-        return Thread(messages: r.messages, working: r.working?.session)
+        return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run)
+    }
+
+    /// Writes to the run at work (kiff/tafs#64): it reads the message at its next step.
+    /// A run that has ended throws 409, and the message goes as a new one. Returns the
+    /// run's status: a paused run reads it when it carries on.
+    func steer(_ id: String, run: String, text: String) async throws -> String {
+        struct Response: Decodable { let run: String; let status: String }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/steer", body: ["run": run, "text": text])
+        return r.status
     }
 
     struct Sent: Decodable, Equatable {
@@ -186,8 +197,8 @@ final class TafsCloud {
 
     /// What a streamed message's run does, as tafs cloud relays it (#60).
     enum StreamEvent: Equatable {
-        /// The chat the message went into, first.
-        case session(String, newSession: Bool)
+        /// The chat the message went into, first, and the run that answers it.
+        case session(String, newSession: Bool, run: String? = nil)
         /// More of the answer, as it is written.
         case text(String)
         /// A tool the agent calls, by name: never what it was given.
@@ -198,6 +209,8 @@ final class TafsCloud {
         case end(status: String, stop: String)
         /// The stream broke on tafs cloud's side; the conversation has the rest.
         case broken
+        /// The run read a message the owner wrote to it while it went (kiff/tafs#64).
+        case taken
     }
 
     /// Sends the owner's message with its run streamed: returns once tafs cloud took it,
@@ -248,7 +261,8 @@ final class TafsCloud {
     nonisolated static func streamEvent(_ name: String, data: Data) -> StreamEvent? {
         let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
         switch name {
-        case "session": return (o["session"] as? String).map { .session($0, newSession: o["new_session"] as? Bool ?? false) }
+        case "session": return (o["session"] as? String).map { .session($0, newSession: o["new_session"] as? Bool ?? false, run: o["run"] as? String) }
+        case "taken": return .taken
         case "text": return (o["text"] as? String).map(StreamEvent.text)
         case "activity": return (o["tool"] as? String).map(StreamEvent.activity)
         case "component": return .component

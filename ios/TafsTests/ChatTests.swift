@@ -201,6 +201,76 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1, "what waited is sent once the taf is idle")
     }
 
+    /// While the taf works, a message goes to its run, which reads it at its next step
+    /// (kiff/agents#102); it shows until the thread has it. A run that has ended (409)
+    /// leaves it queued, sent once the taf is done.
+    func testAMessageWhileTheTafWorksGoesToItsRun() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"working":{"session":"sesn_9","run":"r1"}}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/steer"] = (200, #"{"run":"r1","status":"RUNNING"}"#)
+        await model.loadChat(id)
+        StubProtocol.sent = []
+        let taken = await model.submitChat("only the €20 one", to: id)
+        XCTAssertTrue(taken)
+        let steer = try XCTUnwrap(StubProtocol.sent.first { $0.url?.path == "/v1/tafs/depl_1/steer" })
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: steer.httpBody ?? Data()) as? [String: String], ["run": "r1", "text": "only the €20 one"])
+        XCTAssertEqual(model.chatState(id).steered.map(\.text), ["only the €20 one"])
+        XCTAssertNil(model.chatState(id).queued)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 0)
+
+        // The run read it: the thread has the owner's words, and the note goes.
+        let at = ISO8601DateFormatter().string(from: Date())
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"\(at)","from":"owner","kind":"message","text":"only the €20 one","session":"sesn_9"}],"working":{"session":"sesn_9","run":"r1"}}
+        """)
+        await model.loadChat(id)
+        XCTAssertTrue(model.chatState(id).steered.isEmpty)
+
+        // Ended meanwhile: it waits, and goes once the taf is done.
+        StubProtocol.responses["POST /v1/tafs/depl_1/steer"] = (409, #"{"error":"the run has ended: send it as a new message"}"#)
+        _ = await model.submitChat("and 4411", to: id)
+        XCTAssertEqual(model.chatState(id).queued, "and 4411")
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"working":null}"#)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatState(id).queued)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
+    }
+
+    /// A run that ends for good without reading what the owner wrote to it: the message
+    /// goes as the next one, so nothing written is dropped.
+    func testAMessageTheRunNeverReadGoesNext() async throws {
+        final class Sent { var texts: [String] = [] }
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/steer"] = (200, #"{"run":"r9","status":"RUNNING"}"#)
+        let sent = Sent()
+        var continuation: AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation?
+        model.streamOpener = { _, text in
+            sent.texts.append(text)
+            if sent.texts.count == 1 {
+                return AsyncThrowingStream { continuation = $0 }
+            }
+            return AsyncThrowingStream { c in
+                c.yield(.end(status: "COMPLETED", stop: "answered"))
+                c.finish()
+            }
+        }
+        await model.sendChat("Work the queue", to: id)
+        let stream = try XCTUnwrap(continuation)
+        stream.yield(.session("sesn_9", newSession: false, run: "r9"))
+        for _ in 0..<2000 where model.chatState(id).live?.run == nil { try await Task.sleep(nanoseconds: 1_000_000) }
+        let taken = await model.submitChat("skip 4410", to: id)
+        XCTAssertTrue(taken)
+        XCTAssertEqual(model.chatState(id).steered.map(\.run), ["r9"])
+        stream.yield(.end(status: "COMPLETED", stop: "answered"))
+        stream.finish()
+        await model.chatStreams[id]?.value
+        for _ in 0..<2000 where sent.texts.count < 2 { try await Task.sleep(nanoseconds: 1_000_000) }
+        XCTAssertEqual(sent.texts, ["Work the queue", "skip 4410"], "the message the run didn't read went next")
+        XCTAssertTrue(model.chatState(id).steered.isEmpty)
+    }
+
     /// A run that fails part-way offers Retry, which sends its message again; a stopped
     /// one is marked stopped.
     func testARunThatFailsPartWayOffersRetry() async throws {

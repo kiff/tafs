@@ -85,6 +85,18 @@ struct TafChatView: View {
                         }
                         .accessibilityElement(children: .combine)
                     }
+                    // Written to the run at work: it reads them at its next step (#64).
+                    ForEach(state.steered) { m in
+                        VStack(alignment: .trailing, spacing: 4) {
+                            ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
+                                .opacity(0.8)
+                            Text("\(taf?.name ?? "It") reads this at its next step")
+                                .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .accessibilityElement(children: .combine)
+                        .id(m.id)
+                    }
                     if !thinking { ended(taf) }
                     if let queued = state.queued {
                         QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
@@ -210,7 +222,8 @@ struct TafChatView: View {
                 }
                 .accessibilityLabel("Stop")
             } else {
-                // While the taf works, what's written waits and is sent once it's done.
+                // While the taf works, what's written goes to its run, which reads it at its
+                // next step; or, behind a queued message, waits for it to be done.
                 Button(action: send) {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 16, weight: .bold))
@@ -221,7 +234,7 @@ struct TafChatView: View {
                         .opacity(empty ? 0.4 : 1)
                 }
                 .disabled(empty)
-                .accessibilityLabel(thinking ? "Send when \(name) is done" : "Send")
+                .accessibilityLabel(thinking ? "Send to \(name) while it works" : "Send")
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
