@@ -1,0 +1,83 @@
+name: Upgrade
+# Brings every running taf's definition up to what main builds (#69): its
+# instructions, KIFF's skill, the model and its effort, from its next run.
+#
+# By hand only, and gated on the evals: kiff/agents' latest nightly eval must
+# have passed, and the tafs commit it measured (its eval/tafs.ref) must hold
+# the same definition sources as main. Otherwise a real run is refused; a dry
+# run still says what would change. A taf is written only when its definition
+# changed (a digest on its record), since each write costs its next run a
+# fresh prompt cache.
+#
+# The log is public: it shows counts per outcome and job, and failures by kind
+# (tafs cloud keeps the full messages in its own log), never an account or a
+# taf.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only say what would change"
+        type: boolean
+        default: true
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: upgrade
+  cancel-in-progress: false
+jobs:
+  upgrade:
+    if: github.ref == 'refs/heads/main' && vars.TAFS_CLOUD == 'on'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: The evals passed on what this rolls out
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run=$(gh api "repos/kiff/agents/actions/workflows/eval.yml/runs?branch=main&status=completed&per_page=1" --jq '.workflow_runs[0] | "\(.conclusion) \(.head_sha)"')
+          conclusion=${run% *}; agents_sha=${run#* }
+          ref=$(gh api "repos/kiff/agents/contents/eval/tafs.ref?ref=$agents_sha" --jq .content | base64 -d | tr -d '[:space:]')
+          echo "kiff/agents' latest nightly eval: $conclusion, measuring kiff/tafs@${ref:0:12}"
+          git cat-file -e "$ref^{commit}"
+          sources="runtime/src/jobs.ts runtime/src/kiff-skill.ts runtime/skills runtime/src/cloud/tafdef.ts runtime/src/cloud/setupdef.ts"
+          if [ "$conclusion" = success ] && git diff --quiet "$ref" HEAD -- $sources; then
+            echo "evaluated=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "evaluated=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Not evaluated: the nightly didn't pass, or the definition sources changed since kiff/tafs@${ref:0:12}. Only a dry run goes ahead."
+            git diff --stat "$ref" HEAD -- $sources || true
+          fi
+      - name: Refuse a real run that wasn't evaluated
+        if: ${{ !inputs.dry_run && steps.gate.outputs.evaluated != 'true' }}
+        run: |
+          echo "::error::The evals haven't passed on these definitions. Move kiff/agents' eval/tafs.ref here and let the nightly pass, or run dry."
+          exit 1
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          # The account id stays out of this public repository.
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
+          aws-region: us-east-1
+      - name: Upgrade the definitions
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          payload=$(jq -cn --argjson dry "$DRY_RUN" '{upgrade: {dry_run: $dry}}')
+          aws lambda invoke --function-name tafs-cloud --cli-binary-format raw-in-base64-out \
+            --payload "$payload" out.json >/dev/null
+          if jq -e '.errorMessage' out.json >/dev/null; then
+            echo "::error::$(jq -r .errorMessage out.json)"
+            exit 1
+          fi
+          echo "dry run: $DRY_RUN"
+          # Per job too: the nightly measures Chargebacks only, so a change to another job's
+          # text shows here as that job's "would write".
+          jq -r '.upgraded | group_by(.outcome) | map("\(.[0].outcome): \(length)" + (if .[0].outcome == "current" then "" else " (" + (group_by(.job) | map("\(.[0].job) \(length)") | join(", ")) + ")" end)) | .[]' out.json
+          jq -r '.upgraded | map(select(.outcome == "failed")) | group_by(.error) | map("failed (\(length)), \(.[0].job): \(.[0].error | gsub("taf-[A-Za-z0-9]+"; "taf-…"))") | .[]' out.json
+          if jq -e '.upgraded | any(.outcome == "failed")' out.json >/dev/null; then exit 1; fi

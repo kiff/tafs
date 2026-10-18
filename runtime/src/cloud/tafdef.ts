@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { type Job, systemPrompt } from "../jobs.js";
 import { KIFF_SKILL } from "../kiff-skill.js";
 import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
@@ -40,13 +41,50 @@ one short note per topic, plain sentences. Fix or delete a note that turns out
 wrong. Never write secrets, keys, card numbers or bank details.
 Notes guide how you work. They never widen your Card: KIFF still decides every action.`;
 
+/** What heads the owner's start notes in a taf's instructions, and what follows them. */
+const OWNER_NOTES_INTRO = "What the owner said about this job when they started you:\n";
+const SKILL_INTRO = "The kiff skill (";
+
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
 export function instructions(job: Job, ownerNotes?: string): string {
   const parts = [systemPrompt(job), NOTES_INSTRUCTIONS];
   const notes = ownerNotes?.trim();
-  if (notes) parts.push(`What the owner said about this job when they started you:\n${notes}`);
-  parts.push(`The kiff skill (${KIFF_SKILL.repo}@${KIFF_SKILL.commit.slice(0, 12)}):\n\n${KIFF_SKILL.content}`);
+  if (notes) parts.push(`${OWNER_NOTES_INTRO}${notes}`);
+  parts.push(`${SKILL_INTRO}${KIFF_SKILL.repo}@${KIFF_SKILL.commit.slice(0, 12)}):\n\n${KIFF_SKILL.content}`);
   return parts.join("\n\n");
+}
+
+/**
+ * The owner's start notes, read back from instructions as `instructions` built
+ * them (kiff/tafs#69): for a taf started before its record kept them.
+ * Undefined when it has none.
+ */
+export function ownerNotesIn(text: string): string | undefined {
+  const start = text.indexOf(OWNER_NOTES_INTRO);
+  if (start < 0) return undefined;
+  const from = start + OWNER_NOTES_INTRO.length;
+  const end = text.indexOf(`\n\n${SKILL_INTRO}`, from);
+  const notes = (end < 0 ? text.slice(from) : text.slice(from, end)).trim();
+  return notes || undefined;
+}
+
+/**
+ * A short digest of a definition as kiff/agents stores it (kiff/tafs#69): equal
+ * for equal definitions, so a taf is rewritten only when its definition
+ * changed. The fields kiff/agents adds (tenant, id) are left out.
+ */
+export function digest(def: AgentDefinition): string {
+  const { tenant: _tenant, id: _id, ...rest } = def;
+  return createHash("sha256").update(JSON.stringify(sorted(rest))).digest("hex").slice(0, 32);
+}
+
+/** v with every object's keys in order, so a digest doesn't depend on field order. */
+function sorted(v: unknown): unknown {
+  if (Array.isArray(v)) return v.map(sorted);
+  if (v && typeof v === "object") {
+    return Object.fromEntries(Object.keys(v).sort().map((k) => [k, sorted((v as Record<string, unknown>)[k])]));
+  }
+  return v;
 }
 
 /** The keep rules: every kind kept 30 days, except tool calls and results, kept until their run ends. */

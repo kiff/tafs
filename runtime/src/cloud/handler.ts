@@ -1,10 +1,10 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
-import { type Agents, AgentsError, type Run, type RunStreamEvent, type Schedule, type Session } from "./agents.js";
+import { type AgentDefinition, type Agents, AgentsError, type Run, type RunStreamEvent, type Schedule, type Session } from "./agents.js";
 import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
-import { definition, keyRef } from "./tafdef.js";
+import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -48,7 +48,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun">;
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -110,6 +110,15 @@ export interface Taf {
   created: string;
   /** Its removal began: gone for everything but finishing it. */
   removing?: boolean;
+  /**
+   * The definition's inputs that only the start knew (kiff/tafs#69): a run's
+   * budget and the owner's start notes, so the definition can be built again.
+   * Absent on a taf started before they were kept.
+   */
+  budgetCents?: number;
+  ownerNotes?: string;
+  /** The digest of the definition kiff/agents holds for it, as last written (`digest`). */
+  definition?: string;
 }
 
 export interface Tafs {
@@ -117,6 +126,8 @@ export interface Tafs {
   get(tenant: string, id: string): Promise<Taf | undefined>;
   put(tenant: string, taf: Taf): Promise<void>;
   remove(tenant: string, id: string): Promise<void>;
+  /** Every account with tafs on record: what an upgrade goes through (kiff/tafs#69). */
+  tenants(): Promise<string[]>;
 }
 
 export interface Names {
@@ -496,9 +507,13 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
   // From the definition on, what this start made is undone if it fails before
   // the taf is on record, and only then is the name freed: a definition or a
   // schedule nobody can see would otherwise run, or block the name for good.
-  const taf: Taf = { id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString() };
+  const def = definition(tafID, job, { budgetCents: budget, ownerNotes: notesText });
+  const taf: Taf = {
+    id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
+    budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def),
+  };
   try {
-    await deps.agents.putAgent(me.tenantID, tafID, definition(tafID, job, { budgetCents: budget, ownerNotes: notesText }));
+    await deps.agents.putAgent(me.tenantID, tafID, def);
     const schedule: Schedule = { id: tafID, agent: tafID, cron, time_zone: timezone, input: job.kickoff, enabled: true };
     await deps.agents.createSchedule(me.tenantID, schedule).catch(async (err) => {
       // A retry of a start whose schedule was made: the same schedule.
@@ -607,9 +622,13 @@ async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promi
     if (err instanceof HTTPError) throw err;
     throw new HTTPError(502, `Setup's key couldn't be kept: ${(err as Error).message}`);
   }
-  const setup: Taf = { id: tafID, name: "Setup", job: SETUP_JOB, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString() };
+  const setupDef = setupDefinition(tafID);
+  const setup: Taf = {
+    id: tafID, name: "Setup", job: SETUP_JOB, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
+    definition: digest(setupDef),
+  };
   try {
-    await deps.agents.putAgent(me.tenantID, tafID, setupDefinition(tafID));
+    await deps.agents.putAgent(me.tenantID, tafID, setupDef);
     await deps.tafs.put(me.tenantID, setup);
   } catch (err) {
     const recordGone = await deps.tafs.remove(me.tenantID, tafID).then(() => true, () => false);
@@ -1028,7 +1047,104 @@ async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): P
   }
 }
 
-/** A note the taf keeps. Its name is its id. */
+/**
+ * What an upgrade did with one taf (kiff/tafs#69): its definition was current,
+ * written (or, in a dry run, would be), or the upgrade failed for it, with why.
+ */
+export interface UpgradeOutcome {
+  tenant: string;
+  taf: string;
+  job: string;
+  outcome: "current" | "written" | "would write" | "failed";
+  /** Why it failed, by kind only (`upgradeFailure`): the full message goes to the function's own log. */
+  error?: string;
+}
+
+/** A reason this code gives for not upgrading a taf: its words name no account and no taf. */
+class UpgradeError extends Error {}
+
+/**
+ * A failure as an upgrade reports it: by kind only, since the report reaches a
+ * public log. An AWS error's message names the account (its ARN), and some of
+ * kiff/agents' name the tenant, so neither message is kept here.
+ */
+export function upgradeFailure(err: unknown): string {
+  if (err instanceof UpgradeError) return err.message;
+  if (err instanceof AgentsError) return `kiff/agents answered ${err.status}`;
+  const name = err instanceof Error && err.name && err.name !== "Error" ? err.name : "an error";
+  return `AWS or the runtime: ${name}`;
+}
+
+/**
+ * Brings every taf's definition up to what this code builds (kiff/tafs#69), so
+ * a change to the shared instructions, a job, KIFF's skill, the model or its
+ * effort reaches the tafs owners already run, from their next run.
+ *
+ * It runs by hand (the upgrade workflow), after kiff/agents' nightly eval has
+ * passed at this tafs commit: evals gate what reaches running tafs. A taf is
+ * written only when its built definition's digest differs from the one on its
+ * record, since each write costs its next run a fresh prompt cache. One
+ * started before the record kept its budget and start notes gets them once,
+ * read back from the definition kiff/agents holds, so its budget is never
+ * changed by an upgrade. A paused run carries on under the new definition
+ * (kiff/agents builds the agent on each execution), at the cost of one fresh
+ * prompt cache.
+ * The definition is the agent's text, model and caps: its KIFF key and Cards
+ * are never touched.
+ */
+export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }): Promise<UpgradeOutcome[]> {
+  const out: UpgradeOutcome[] = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    for (const taf of await deps.tafs.list(tenant)) {
+      if (taf.removing) continue;
+      const one: UpgradeOutcome = { tenant, taf: taf.id, job: taf.job, outcome: "current" };
+      try {
+        let record = taf;
+        let stored: AgentDefinition | undefined;
+        if (taf.job !== SETUP_JOB && taf.budgetCents === undefined) {
+          stored = await deps.agents.getAgent(tenant, taf.id);
+          if (!stored) throw new UpgradeError("kiff/agents holds no definition for it");
+          if (typeof stored.instructions !== "string" || !Number.isInteger(stored.max_cost_micro_usd / 10_000)) {
+            throw new UpgradeError("its stored definition has no budget or instructions to keep");
+          }
+          const notes = ownerNotesIn(stored.instructions);
+          record = { ...record, budgetCents: stored.max_cost_micro_usd / 10_000, ...(notes ? { ownerNotes: notes } : {}) };
+        }
+        let want: AgentDefinition;
+        try {
+          want = record.job === SETUP_JOB
+            ? setupDefinition(record.id)
+            : definition(record.id, jobById(record.job), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes });
+        } catch (err) {
+          throw new UpgradeError(`its definition can't be built: ${(err as Error).message}`);
+        }
+        const wanted = digest(want);
+        // A record with no digest yet: compare with what kiff/agents holds, so an
+        // unchanged definition isn't written again.
+        if (!record.definition) {
+          stored ??= await deps.agents.getAgent(tenant, taf.id);
+          if (stored && digest(stored) === wanted) record = { ...record, definition: wanted };
+        }
+        if (record.definition !== wanted) {
+          one.outcome = opts.dryRun ? "would write" : "written";
+          if (!opts.dryRun) {
+            await deps.agents.putAgent(tenant, taf.id, want);
+            record = { ...record, definition: wanted };
+          }
+        }
+        if (!opts.dryRun && JSON.stringify(record) !== JSON.stringify(taf)) await deps.tafs.put(tenant, record);
+      } catch (err) {
+        one.outcome = "failed";
+        one.error = upgradeFailure(err);
+        console.error(`upgrade: ${tenant} ${taf.id}:`, err); // the function's own log, which is private
+      }
+      out.push(one);
+    }
+  }
+  return out;
+}
+
+/** A note the taf keeps. Its name is its id. *//** A note the taf keeps. Its name is its id. */
 export interface Note {
   id: string;
   path: string;

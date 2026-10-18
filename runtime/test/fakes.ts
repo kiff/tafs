@@ -55,6 +55,11 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       agents.set(k(tenant, id), { ...def, tenant, id });
       return { ...def, tenant, id };
     },
+    async getAgent(tenant, id) {
+      failing("getAgent");
+      const d = agents.get(k(tenant, id));
+      return d ? { ...d } : undefined;
+    },
     async deleteAgent(tenant, id) {
       calls.push(`deleteAgent ${id}`);
       failing("deleteAgent");
@@ -253,6 +258,7 @@ export function memoryTafs(): Tafs & { held: Map<string, Taf> } {
     async get(t, id) { return held.get(`${t}#${id}`); },
     async put(t, taf) { held.set(`${t}#${taf.id}`, { ...taf }); },
     async remove(t, id) { held.delete(`${t}#${id}`); },
+    async tenants() { return [...new Set([...held.keys()].map((k) => k.slice(0, k.indexOf("#"))))]; },
   };
 }
 
