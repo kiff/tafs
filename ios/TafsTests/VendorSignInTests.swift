@@ -25,4 +25,14 @@ final class VendorSignInTests: XCTestCase {
             XCTAssertEqual(error as? VendorSignIn.SignInError, .noCallback)
         }
     }
+
+    /// iOS refusing the page (#72) reads as what happened and what it was given, so a
+    /// screenshot of the failure says which case it was; no window says so too.
+    @MainActor
+    func testAPageIOSWontShowSaysWhy() {
+        let notShown = VendorSignIn.SignInError.notShown(code: 3, context: "UIWindow, key, shown, active")
+        XCTAssertEqual(notShown.localizedDescription, "iOS didn't open the sign-in page (error 3; UIWindow, key, shown, active). Try again with tafs open.")
+        XCTAssertEqual(VendorSignIn.describe(nil), "no window")
+        XCTAssertTrue(VendorSignIn.SignInError.noWindow.localizedDescription.contains("no window on screen"))
+    }
 }

@@ -182,6 +182,26 @@ final class KIFFClient {
         }
     }
 
+    /// The KIFF account this sign-in is in (kiff/tafs#73): its name and slug, and the
+    /// person's email when KIFF says it.
+    struct Account: Decodable, Equatable {
+        let tenantID: String
+        let slug: String
+        let displayName: String?
+        let email: String?
+
+        enum CodingKeys: String, CodingKey {
+            case tenantID = "tenant_id", slug = "tenant_slug", displayName = "tenant_display_name", email
+        }
+
+        /// The account as the owner knows it: its name, else its slug.
+        var name: String { displayName.flatMap { $0.isEmpty ? nil : $0 } ?? slug }
+    }
+
+    func me() async throws -> Account {
+        try await send("GET", "/v1/me")
+    }
+
     func heldCalls() async throws -> [CardException] {
         struct Response: Decodable { let exceptions: [CardException] }
         let response: Response = try await send("GET", "/v1/me/card-exceptions?status=held")

@@ -330,3 +330,57 @@ describe("steer", () => {
     expect(w.agents.runs.find((x) => x.id === theirs.id)?.steering).toBeUndefined();
   });
 });
+
+describe("chats (kiff/tafs#73)", () => {
+  it("lists the taf's chats, newest first, each by its first words; job runs and other tafs' chats left out", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3 * 3600_000));
+    const old = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe for refunds, please, and make sure nothing over fifty euros goes out without me");
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const recent = await w.agents.api.startRun("t_acme", RAE, "Answer customer questions");
+    await jobRun(w, new Date(NOW.getTime() - 1800_000), "Refunded 3 orders.");
+    await w.agents.api.startRun("t_other", MAX, "Max's own chat");
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.chats.map((c: { session: string }) => c.session)).toEqual([recent.session, old.session]);
+    expect(r.body.chats[0].title).toBe("Answer customer questions");
+    expect(r.body.chats[1].title).toHaveLength(80);
+    expect(r.body.chats[1].title.endsWith("…")).toBe(true);
+  });
+
+  it("reads one chat on its own; another taf's chat or a job run is not found", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const old = await w.agents.api.startRun("t_acme", RAE, "First topic");
+    w.agents.say(old, "On it.");
+    w.at(new Date(NOW.getTime() - 60_000));
+    const recent = await w.agents.api.startRun("t_acme", RAE, "Second topic");
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation/${old.session}`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.messages.map((m: { text: string }) => m.text)).toEqual(["First topic", "On it."]);
+    expect(r.body.messages.every((m: { session: string }) => m.session === old.session)).toBe(true);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${recent.session}`, { token: "ana" })).body.messages).toHaveLength(1);
+    const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${theirs.session}`, { token: "ana" })).status).toBe(404);
+    const job = await jobRun(w, NOW, "Done.");
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${job.session}`, { token: "ana" })).status).toBe(404);
+  });
+
+  it("starts a new chat when asked, even with a live one, and goes on in a chat the owner reopened", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const old = await w.agents.api.startRun("t_acme", RAE, "First topic");
+    (w.agents.runs.find((x) => x.id === old.id) as { status: string }).status = "COMPLETED";
+    w.at(new Date(NOW.getTime() - 60_000));
+    const live = await w.agents.api.startRun("t_acme", RAE, "Second topic");
+    (w.agents.runs.find((x) => x.id === live.id) as { status: string }).status = "COMPLETED";
+    w.agents.calls.length = 0;
+    const fresh = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "A new topic", new_chat: true } });
+    expect(fresh.body.new_session).toBe(true);
+    expect(fresh.body.session).not.toBe(live.session);
+    const back = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Back to the first", session: old.session } });
+    expect(back.body).toEqual({ session: old.session, new_session: false });
+    const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "x", session: theirs.session } })).status).toBe(404);
+  });
+});

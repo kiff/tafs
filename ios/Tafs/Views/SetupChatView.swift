@@ -23,6 +23,14 @@ struct SetupChatView: View {
     @State private var cardsInView: Set<String> = []
     /// Whether the chat has landed where it opens: the waiting card, or the latest.
     @State private var landed = false
+    /// As in ChatGPT and Claude (#73): the owner's sent message moves to the top and stays,
+    /// and the answer grows below it without the view following, so they never scroll
+    /// back up to its start. `pinNext` marks the next message the owner sends.
+    @State private var pinNext = false
+    @State private var pinned: String?
+    @State private var viewport: CGFloat = 600
+    /// The list of past conversations, to reopen one (#73).
+    @State private var showingChats = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,6 +49,31 @@ struct SetupChatView: View {
         .screenBackground()
         .navigationTitle("Setup")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if model.setupTaf != nil && model.planqueReady {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button { showingChats = true } label: { Image(systemName: "clock.arrow.circlepath") }
+                        .accessibilityLabel("Past conversations")
+                    Button {
+                        Haptics.tap()
+                        landed = true
+                        pinned = nil
+                        following = true
+                        model.newSetupChat()
+                    } label: { Image(systemName: "square.and.pencil") }
+                        .accessibilityLabel("New conversation")
+                }
+            }
+        }
+        .sheet(isPresented: $showingChats) {
+            SetupChatsList { session in
+                showingChats = false
+                landed = false
+                pinned = nil
+                Task { await model.openSetupChat(session) }
+            }
+            .environmentObject(model)
+        }
         .task { await model.followSetup() }
     }
 
@@ -114,6 +147,8 @@ struct SetupChatView: View {
                     }
                     if !thinking { ended }
                     if let queued = model.setupQueued { QueuedBubble(text: queued, who: "Setup") { _ = model.unqueueSetup() } }
+                    // Room under a pinned message, so it can sit at the top while the answer is short.
+                    if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
                         .onAppear { atBottom = true; following = true; unseen = false }
                         .onDisappear { atBottom = false }
@@ -122,6 +157,9 @@ struct SetupChatView: View {
                 .padding(.vertical, 12)
             }
             .scrollDismissesKeyboard(.interactively)
+            .background(GeometryReader { g in
+                Color.clear.onAppear { viewport = g.size.height }.onChange(of: g.size.height) { viewport = $0 }
+            })
             // The owner scrolling stops the thread following what arrives; reaching the
             // bottom again, or the button, starts it.
             .simultaneousGesture(DragGesture().onChanged { _ in following = false })
@@ -138,6 +176,7 @@ struct SetupChatView: View {
                         Button {
                             following = true
                             unseen = false
+                            pinned = nil
                             withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
                         } label: {
                             Image(systemName: "arrow.down")
@@ -158,7 +197,15 @@ struct SetupChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
-                if !following && !ids.isEmpty { unseen = true }
+                if pinNext, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner } else { return false } })?.id {
+                    // Just sent: it goes to the top, and the answer grows below it.
+                    pinNext = false
+                    pinned = sent
+                    following = false
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(sent, anchor: .top) }
+                    return
+                }
+                if !following && !ids.isEmpty && pinned == nil { unseen = true }
                 land(proxy, waiting: waiting)
                 follow(proxy)
             }
@@ -207,7 +254,7 @@ struct SetupChatView: View {
             ForEach(Self.examples, id: \.self) { example in
                 Button {
                     Haptics.tap()
-                    following = true
+                    pinNext = true
                     Task { await model.submitSetup(example) }
                 } label: {
                     Text(example).scaledFont(15).foregroundColor(Theme.ink).multilineTextAlignment(.leading)
@@ -298,9 +345,44 @@ struct SetupChatView: View {
     private func send() {
         let text = draft
         draft = ""
-        following = true
+        // While Setup works, the message waits or steers: nothing new to pin.
+        if model.setupThinking { following = true } else { pinNext = true }
         Haptics.tap()
         Task { if !(await model.submitSetup(text)), draft.isEmpty { draft = text } }
+    }
+}
+
+/// Setup's past conversations, newest first, each by its first words (#73): one tap
+/// reopens it, and messages go on in it.
+struct SetupChatsList: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    let open: (String) -> Void
+
+    var body: some View {
+        NavigationStack {
+            List(model.setupChats) { chat in
+                Button { open(chat.session) } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(chat.title).scaledFont(15).foregroundColor(Theme.ink).lineLimit(2)
+                        Text(chat.updated.formatted(date: .abbreviated, time: .shortened))
+                            .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    }
+                }
+                .listRowBackground(model.setupChat == chat.session ? Theme.raised : Theme.panel)
+            }
+            .overlay {
+                if model.setupChats.isEmpty {
+                    Text("No conversations yet.").scaledFont(14).foregroundColor(Theme.dim)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .screenBackground()
+            .navigationTitle("Conversations")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .task { await model.loadSetupChats() }
+        }
     }
 }
 
@@ -439,28 +521,49 @@ struct RevealingBubble: View {
 struct SetupPlan: View {
     @EnvironmentObject private var model: AppModel
     let shown: ShownComponent
+    /// Folded to the step in progress until tapped, so the chat comes first (#73).
+    @State private var open = false
 
     var body: some View {
         let steps = shown.component.steps ?? []
         let done = steps.filter { $0.status == "done" }.count
+        let now = SetupPlan.current(steps)
         Panel {
-            HStack {
-                Eyebrow(text: "Plan · \(shown.component.title ?? "Setup") · \(done) of \(steps.count)")
-                Spacer()
-                Button("Stop") { Task { await model.stopSetup() } }
-                    .scaledFont(13, weight: .semibold, relativeTo: .footnote)
-                    .foregroundColor(Theme.no)
-            }
-            ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
+            Button { withAnimation(.easeOut(duration: 0.2)) { open.toggle() } } label: {
                 HStack(spacing: 10) {
-                    StepMark(status: step.status)
-                    Text(step.label)
-                        .scaledFont(14, weight: step.status == "active" ? .semibold : .regular)
-                        .foregroundColor(step.status == "pending" || step.status == "skipped" ? Theme.dim : Theme.ink)
-                        .strikethrough(step.status == "skipped")
+                    if !open, let now { StepMark(status: now.status) }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Eyebrow(text: "Plan · \(done) of \(steps.count)")
+                        if !open {
+                            Text(now?.label ?? (shown.component.title ?? "Setup"))
+                                .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
+                        }
+                    }
+                    Spacer(minLength: 4)
+                    Image(systemName: open ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12, weight: .bold)).foregroundColor(Theme.dim)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(open ? "Folds the plan" : "Shows the whole plan")
+            if open {
+                ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
+                    HStack(spacing: 10) {
+                        StepMark(status: step.status)
+                        Text(step.label)
+                            .scaledFont(14, weight: step.status == "active" ? .semibold : .regular)
+                            .foregroundColor(step.status == "pending" || step.status == "skipped" ? Theme.dim : Theme.ink)
+                            .strikethrough(step.status == "skipped")
+                    }
                 }
             }
         }
+    }
+
+    /// The step the plan is at: the active one, else the first not yet done, else the last.
+    static func current(_ steps: [SetupComponent.Step]) -> SetupComponent.Step? {
+        steps.first { $0.status == "active" } ?? steps.first { $0.status == "pending" || $0.status == "failed" } ?? steps.last
     }
 }
 
