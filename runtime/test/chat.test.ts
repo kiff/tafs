@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, handle, type HTTPEvent, MEMORY, type Taf } from "../src/cloud/handler.js";
-import { fakeAgents, memoryAccounts, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { CHAT, chatTitle, handle, type HTTPEvent, MEMORY, type Taf } from "../src/cloud/handler.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -30,7 +30,7 @@ function world() {
     void agents.api.createSchedule(tenant, { id, agent: id, cron: "*/30 * * * *", input: "Work the refund queue.", enabled: true });
   }
   agents.calls.length = 0;
-  return { agents, tafs, slots: memorySlots(), at: (d: Date) => { clock = d; } };
+  return { agents, tafs, slots: memorySlots(), archived: memoryArchived(), at: (d: Date) => { clock = d; } };
 }
 type World = ReturnType<typeof world>;
 
@@ -43,7 +43,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
   };
   const r = await handle(event, {
     agents: w.agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: w.tafs,
-    names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(),
+    names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: w.archived,
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
@@ -346,6 +346,56 @@ describe("chats (kiff/tafs#73)", () => {
     expect(r.body.chats[0].title).toBe("Answer customer questions");
     expect(r.body.chats[1].title).toHaveLength(80);
     expect(r.body.chats[1].title.endsWith("…")).toBe(true);
+  });
+
+  it("names a chat by what the owner asked, never by a component's answer (kiff/tafs#82)", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const run = await w.agents.api.startRun("t_acme", RAE, "[approval connect-stripe] declined");
+    await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe for refunds", run.session);
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" });
+    expect(r.body.chats.map((c: { title: string }) => c.title)).toEqual(["Connect my Stripe for refunds"]);
+    expect(chatTitle(["[confirm which] live", "[sign_in vendor] not now", "Refunds, please"])).toBe("Refunds, please");
+    expect(chatTitle(["[approval connect-stripe] declined"])).toBe("declined");
+    expect(chatTitle(["[my note] for later"])).toBe("[my note] for later");
+    expect(chatTitle([])).toBe("");
+  });
+
+  it("archives a chat: it leaves the list and the thread, and the next message starts a new one (kiff/tafs#82)", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const old = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe");
+    (w.agents.runs.find((x) => x.id === old.id) as { status: string }).status = "COMPLETED";
+    w.at(new Date(NOW.getTime() - 60_000));
+    const live = await w.agents.api.startRun("t_acme", RAE, "Answer customer questions");
+    (w.agents.runs.find((x) => x.id === live.id) as { status: string }).status = "COMPLETED";
+
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${live.session}/archive`, { token: "viewer" })).status).toBe(403);
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/chats/${live.session}/archive`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ session: live.session, archived: true });
+    expect(w.archived.held.get(`t_acme#${RAE}`)).toEqual(new Set([live.session]));
+
+    const listed = await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" });
+    expect(listed.body.chats.map((c: { session: string }) => c.session)).toEqual([old.session]);
+    const thread = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(thread.body.messages.map((m: { text: string }) => m.text)).not.toContain("Answer customer questions");
+    // Opened by its id, it's still there: archived, not deleted.
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${live.session}`, { token: "ana" })).body.messages).toHaveLength(1);
+
+    const next = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Something else" } });
+    expect(next.body.new_session).toBe(true);
+    expect(next.body.session).not.toBe(live.session);
+  });
+
+  it("archives only the taf's own chats", async () => {
+    const w = world();
+    const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
+    const job = await jobRun(w, NOW, "Done.");
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${theirs.session}/archive`, { token: "ana" })).status).toBe(404);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${job.session}/archive`, { token: "ana" })).status).toBe(404);
+    expect((await call(w, "POST", `/v1/tafs/${MAX}/chats/${theirs.session}/archive`, { token: "ana" })).status).toBe(404);
+    expect(w.archived.held.size).toBe(0);
   });
 
   it("reads one chat on its own; another taf's chat or a job run is not found", async () => {

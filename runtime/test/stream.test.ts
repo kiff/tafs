@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
 import { handleStream, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
-import { fakeAgents, memoryAccounts, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -27,7 +27,7 @@ function world() {
     void agents.api.putAgent(tenant, id, {} as never);
   }
   agents.calls.length = 0;
-  return { agents, tafs, slots: memorySlots(), at: (d: Date) => { clock = d; } };
+  return { agents, tafs, slots: memorySlots(), archived: memoryArchived(), at: (d: Date) => { clock = d; } };
 }
 type World = ReturnType<typeof world>;
 
@@ -41,7 +41,7 @@ async function stream(w: World, path: string, opts: { token?: string; body?: unk
   };
   const r = await handleStream(event, {
     agents: w.agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: w.tafs,
-    names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(),
+    names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: w.archived,
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,

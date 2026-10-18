@@ -21,7 +21,8 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
  *   GET  /v1/tafs/{id}/conversation     the thread: the owner's messages and the taf's
  *   GET  /v1/tafs/{id}/conversation/{session}  one chat of it (kiff/tafs#73)
- *   GET  /v1/tafs/{id}/chats            the taf's chats, newest first, each by its first words (kiff/tafs#73)
+ *   GET  /v1/tafs/{id}/chats            the taf's chats, newest first, each by what the owner asked (kiff/tafs#73, #82)
+ *   POST /v1/tafs/{id}/chats/{session}/archive  hide a chat from the list and the thread (kiff/tafs#82)
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
@@ -75,6 +76,8 @@ export interface Deps {
   apns: Sender;
   /** Removals begun and not finished, so the app can finish them after a refresh. */
   removals: Removals;
+  /** The chats each taf's owner archived (kiff/tafs#82). */
+  archived: Archived;
   /** Hands a KIFF alert tafs cloud has checked to kiff/agents, as KIFF signed it, so a paused run goes on. */
   forward: (signature: string, raw: string) => Promise<void>;
   fetch?: Fetch;
@@ -178,6 +181,19 @@ export interface Removals {
   done(tenant: string, id: string): Promise<void>;
 }
 
+/**
+ * The chats a taf's owner archived (kiff/tafs#82), kept by tafs cloud: kiff/agents
+ * keeps the chat itself, and has no say in what the owner's list shows.
+ */
+export interface Archived {
+  /** The taf's archived chats' sessions. */
+  list(tenant: string, tafID: string): Promise<string[]>;
+  /** Archives one, kept until `until`: past when kiff/agents deletes the chat itself. */
+  add(tenant: string, tafID: string, session: string, until: Date): Promise<void>;
+  /** Forgets the taf's archive, on its removal. */
+  remove(tenant: string, tafID: string): Promise<void>;
+}
+
 export interface Claims {
   get(tenant: string, draftID: string): Promise<Claim | undefined>;
   put(tenant: string, draftID: string, claim: Claim): Promise<void>;
@@ -201,6 +217,8 @@ export const CHAT = {
   chatTitle: 80,
   /** A chat active this recently takes the message instead of a new one. */
   liveMinutes: 30,
+  /** How long an archive is kept: past the 30 days kiff/agents keeps a chat (docs/data.md). */
+  archiveDays: 31,
   floodMessages: 10,
   floodMinutes: 10,
 } as const;
@@ -316,6 +334,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
+  }
+  if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "archive") {
+    need(me, "cards.manage");
+    return archive(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -730,6 +752,8 @@ async function remove(taf: Taf, me: KIFFIdentity, deps: Deps) {
   // Only this taf's own claim: if a newer start holds the name, it keeps it.
   if (failed.length === 0) await step(["name"], () => deps.names.release(me.tenantID, taf.name, taf.nameClaim));
   if (failed.length === 0) {
+    // Only the list's archive is left, and its ttl takes it if this fails.
+    await deps.archived.remove(me.tenantID, taf.id).catch((err) => console.error(`remove ${taf.id}: archive: ${(err as Error).message}`));
     await deps.tafs.remove(me.tenantID, taf.id);
     await deps.removals.done(me.tenantID, taf.id);
   }
@@ -776,9 +800,11 @@ export interface ThreadMessage {
  */
 async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
   const all = only ? [only] : await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
+  // A chat the owner archived is hidden from the thread too (kiff/tafs#82); one they open is shown.
+  const archived = only ? new Set<string>() : new Set(await deps.archived.list(me.tenantID, taf.id));
   const picked = only ? [only] : [
     ...all.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
-    ...all.filter((s) => s.kind === "chat").slice(0, CHAT.chatsInThread),
+    ...all.filter((s) => s.kind === "chat" && !archived.has(s.id)).slice(0, CHAT.chatsInThread),
   ];
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
@@ -945,25 +971,66 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps): Prom
   return read.session;
 }
 
-/** The taf's chats, newest first, each named by the start of its first owner message. */
+/**
+ * The taf's chats, newest first, each named by the start of what the owner asked
+ * (kiff/tafs#82): their first message that isn't a component's answer. Archived
+ * ones are left out.
+ */
 async function chats(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{ session: string; started: string; updated: string; title: string }>> {
-  const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
-  const listed = all.filter((s) => s.kind === "chat").slice(0, CHAT.chatsListed);
+  const [all, archived] = await Promise.all([
+    agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)),
+    deps.archived.list(me.tenantID, taf.id).then((ids) => new Set(ids)),
+  ]);
+  const listed = all.filter((s) => s.kind === "chat" && !archived.has(s.id)).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   return listed.flatMap((s, i) => {
-    const first = read[i]?.events.find((e) => e.kind === "owner_message");
-    const text = typeof (first?.body as { text?: unknown })?.text === "string" ? ((first!.body as { text: string }).text).trim() : "";
+    const text = chatTitle((read[i]?.events ?? []).filter((e) => e.kind === "owner_message").map((e) => {
+      const t = (e.body as { text?: unknown })?.text;
+      return typeof t === "string" ? t.trim() : "";
+    }));
     if (!text) return [];
     const title = text.length > CHAT.chatTitle ? text.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : text;
     return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title }];
   });
 }
 
-/** The taf's latest chat when it was active in the last 30 minutes: the message goes on in it. */
+/**
+ * The owner's answer to a component, as the app writes it (contract 1 on
+ * kiff/agents#91): "[<type> <id>] <answer>", such as "[approval connect-stripe] declined".
+ */
+const COMPONENT_ANSWER = /^\[(?:steps|notice|confirm|approval|sign_in|result) [^\]\s]+\]/;
+
+/**
+ * A chat's title (kiff/tafs#82): the owner's first message that isn't a component's
+ * answer, which says what they asked. A chat of answers alone is named by the first
+ * one's answer, without its component.
+ */
+export function chatTitle(ownerMessages: string[]): string {
+  const said = ownerMessages.filter(Boolean);
+  const asked = said.find((t) => !COMPONENT_ANSWER.test(t));
+  if (asked) return asked;
+  return (said[0] ?? "").replace(COMPONENT_ANSWER, "").trim();
+}
+
+/**
+ * The owner archives one of the taf's chats (kiff/tafs#82): it leaves their list and
+ * the thread, and a message no longer goes on in it as the live chat. It isn't
+ * deleted: kiff/agents keeps it its 30 days, and the owner can still open it by its id.
+ */
+async function archive(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<unknown> {
+  const chat = await ownChat(me, taf, session, deps);
+  const until = new Date((deps.now?.() ?? new Date()).getTime() + CHAT.archiveDays * 24 * 3600_000);
+  await deps.archived.add(me.tenantID, taf.id, chat.id, until);
+  return { session: chat.id, archived: true };
+}
+
+/** The taf's latest chat when it was active in the last 30 minutes and isn't archived: the message goes on in it. */
 async function liveChat(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
   const now = (deps.now?.() ?? new Date()).getTime();
   const sessions = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
   const latest = sessions.find((s) => s.kind === "chat");
+  // An archived chat is put away (kiff/tafs#82): the next message starts a new one.
+  if (latest && (await deps.archived.list(me.tenantID, taf.id)).includes(latest.id)) return undefined;
   return latest && now - Date.parse(latest.updated) < CHAT.liveMinutes * 60_000 ? latest.id : undefined;
 }
 

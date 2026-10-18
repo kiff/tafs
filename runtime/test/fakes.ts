@@ -1,5 +1,5 @@
 import { AgentsError, type AgentDefinition, type Note, type Run, type Schedule, type Session, type SessionEvent } from "../src/cloud/agents.js";
-import type { Accounts, AgentsAPI, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
+import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
 /**
  * kiff/agents in memory, per tenant, as its server behaves where tafs cloud
@@ -294,5 +294,16 @@ export function memorySlots(): Slots & { taken: Set<string> } {
     async release(key) { taken.delete(key); },
     async keep() {},
     async held(key) { return taken.has(key); },
+  };
+}
+
+/** Archived chats, by tenant and taf (kiff/tafs#82). */
+export function memoryArchived(): Archived & { held: Map<string, Set<string>> } {
+  const held = new Map<string, Set<string>>();
+  return {
+    held,
+    async list(t, taf) { return [...(held.get(`${t}#${taf}`) ?? [])]; },
+    async add(t, taf, session) { held.set(`${t}#${taf}`, new Set([...(held.get(`${t}#${taf}`) ?? []), session])); },
+    async remove(t, taf) { held.delete(`${t}#${taf}`); },
   };
 }
