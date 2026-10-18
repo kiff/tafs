@@ -48,8 +48,9 @@ const SKILL_INTRO = "The kiff skill (";
 /**
  * The kiff skill's sections a taf carries, pasted whole after its opening
  * paragraph: the rules, and what each KIFF result means. Not its setup
- * sections (connecting an agent, proposing a Card), which are the owner's steps. Pasting beat reading the
- * skill on demand, 1.00 to 0.83 on Chargebacks (kiff/agents#107).
+ * sections (connecting an agent, proposing a Card), which are the owner's
+ * steps. Pasting beat reading the skill on demand, 1.00 to 0.83 on
+ * Chargebacks (kiff/agents#107).
  */
 export const SKILL_SECTIONS = ["Rules that always apply", "Handle a KIFF result"] as const;
 
