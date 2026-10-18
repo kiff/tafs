@@ -201,6 +201,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]
+        remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
@@ -228,6 +229,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]
+        remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false

@@ -323,6 +323,11 @@ final class ChatTests: XCTestCase {
         let kept = remembered.stringArray(forKey: AppModel.settledKey) ?? []
         XCTAssertEqual(kept.count, 1)
         XCTAssertFalse(kept.joined().contains("skip"), "a hash, not the text")
+
+        // Signing out leaves nothing of the chats on the phone, hashes included.
+        model.kiff.token = nil
+        await model.signOut()
+        XCTAssertNil(remembered.stringArray(forKey: AppModel.settledKey))
     }
 
     /// A run that fails part-way offers Retry, which sends its message again; a stopped

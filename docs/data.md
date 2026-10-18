@@ -39,6 +39,7 @@ runtime: definitions, runs, chats, notes, schedules, the tafs' KIFF keys) in
 | Cards, held calls, answers, receipts | KIFF (`api.kiff.dev`) | KIFF's | Who may do what, what was held, the phone's signed answers, receipts | KIFF's terms | KIFF: [kiff.dev/privacy](https://kiff.dev/privacy) |
 | Push alerts (with #32) | Apple Push Notification service | Apple's | "A taf needs you", the tool name, the held call's id. No amounts or request details: KIFF never sends them | Until delivered, or until the hold expires | Apple |
 | The phone | iPhone Keychain, this device only | The phone | The KIFF session, the account id, the pending alert secret (with #32) | Until sign-out | The app on sign-out |
+| Chat messages dealt with (#67) | The app's UserDefaults, `tafs.chat.settled` | The phone | SHA-256 hashes (run, time and text) of the unread messages of finished runs the app has shown or sent on, the last 500. Never the text | Until sign-out, or another account signs in | The app on sign-out |
 | The phone's signing key | Secure Enclave (a software key in the Simulator) | The phone | The P-256 key that signs answers. Never leaves the phone | Until the app is deleted | iOS |
 | Sample data | The app's Application Support, `sample.json` | The phone | Sample tafs, held calls and the record. Sample mode only; nothing from KIFF | Until sign-out from sample mode | The app |
 
