@@ -303,21 +303,22 @@ final class ChatTests: XCTestCase {
         let thread = """
         {"messages":[],"steering":{"run":"r9","status":"CANCELLED","untaken":[{"text":"skip 4410","at":"2026-10-18T09:00:01.000Z"}]}}
         """
-        func launch() async -> (AppModel, UUID) {
+        /// Signed in the first time; a relaunch restores that sign-in, as the app does.
+        func launch(relaunch: Bool) async -> (AppModel, UUID) {
             let session = stubbedSession()
             let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, session: session)
             let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session)
             let model = AppModel(signer: StubSigner(), kiff: kiff, cloud: cloud, remembered: remembered)
             stubKIFF(cards: [Self.raeCard])
             StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, thread)
-            await model.useSession("kiff_dev_x")
+            if relaunch { await model.restore() } else { await model.useSession("kiff_dev_x") }
             return (model, model.tafs.first { $0.name == "Rae" }!.id)
         }
-        var (model, id) = await launch()
+        var (model, id) = await launch(relaunch: false)
         await model.loadChat(id)
         let shown = try XCTUnwrap(model.chatState(id).unsent.first)
         model.discardUnsentChat(shown, from: id)
-        (model, id) = await launch()
+        (model, id) = await launch(relaunch: true)
         await model.loadChat(id)
         XCTAssertTrue(model.chatState(id).unsent.isEmpty, "deleted before the relaunch, so it stays gone")
         let kept = remembered.stringArray(forKey: AppModel.settledKey) ?? []
