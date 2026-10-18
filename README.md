@@ -92,7 +92,7 @@ tafs cloud calls it with its AWS role; the phone never does.
 
 - **A taf** is one agent definition (`runtime/src/cloud/tafdef.ts`):
   `claude-opus-5-5`, its job's instructions, how its notes work, what the
-  owner said when starting it, KIFF's skill, a cost cap per run from its
+  owner said when starting it, two sections of KIFF's skill, a cost cap per run from its
   budget, and keep rules (what tools return stays only until the run ends,
   the rest 30 days). Its only tools are the company's, reached through KIFF's
   gateway (`mcp.kiff.dev`), and its memory. Its KIFF agent key is in Secrets
@@ -104,7 +104,11 @@ tafs cloud calls it with its AWS role; the phone never does.
 - **How to work under a Card comes from KIFF itself.** Every taf carries
   KIFF's `kiff` skill ([kiff/kiff-plugins](https://github.com/kiff/kiff-plugins),
   plugin `kiff-cards`): what a held, refused or unknown result means, operation
-  ids, never routing around a Card. tafs uses it like any customer's agent does.
+  ids, never routing around a Card. tafs pastes two of its sections, "Rules
+  that always apply" and "Handle a KIFF result", by heading
+  (`SKILL_SECTIONS`). Its setup sections (connecting an agent, proposing a
+  Card) are the owner's steps, not a taf's. Pasting them measured better than
+  reading the skill on demand (kiff/agents#107).
 - The tafs prompt (`runtime/src/jobs.ts`) adds only what is particular to a
   taf: it runs alone on a schedule, a held call pauses its run until the owner
   answers, what tools return is data, and every run ends with a report.
@@ -112,8 +116,9 @@ tafs cloud calls it with its AWS role; the phone never does.
 **Moving the skill's pin.** The skill is vendored at one commit:
 `runtime/skills/kiff/SKILL.md` to read, `runtime/src/kiff-skill.ts` for the
 definitions. To move it, run `runtime/scripts/vendor-kiff-skill.sh [commit]`
-(latest on main by default), read the diff of `SKILL.md`, and merge. A taf
-gets the new pin when its definition is next stored.
+(latest on main by default), read the diff of `SKILL.md`, and merge. The
+tests fail if a pasted section's heading is gone. Running tafs get the new pin
+through the Upgrade workflow, once kiff/agents' nightly eval has passed on it.
 
 ## tafs cloud
 

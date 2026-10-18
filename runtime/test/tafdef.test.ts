@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { JOBS, jobById } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
-import { DEFAULT_BUDGET_CENTS, definition, EFFORT, KIFF_GATEWAY, MODEL, NOTES_INSTRUCTIONS, PRICE, RETENTION_NS } from "../src/cloud/tafdef.js";
+import {
+  DEFAULT_BUDGET_CENTS,
+  definition,
+  EFFORT,
+  KIFF_GATEWAY,
+  MODEL,
+  NOTES_INSTRUCTIONS,
+  ownerNotesIn,
+  PRICE,
+  RETENTION_NS,
+  SKILL_SECTIONS,
+  skillSection,
+} from "../src/cloud/tafdef.js";
 
 const ID = "taf-0123456789abcdef0123";
 
@@ -49,8 +61,37 @@ describe("a taf's definition on kiff/agents", () => {
     expect(d.instructions).toContain("Your job: Refunds");
     expect(d.instructions).toContain(NOTES_INSTRUCTIONS);
     expect(d.instructions).toContain("Ask before refunding Acme.");
-    expect(d.instructions).toContain(KIFF_SKILL.content);
+    expect(d.instructions).toContain(`kiff/kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`);
     expect(definition(ID, jobById("refunds")).instructions).not.toContain("What the owner said");
+  });
+
+  it("pastes the kiff skill's rules and results sections whole, and not its setup sections", () => {
+    const { instructions } = definition(ID, jobById("refunds"));
+    for (const heading of SKILL_SECTIONS) expect(instructions).toContain(skillSection(KIFF_SKILL.content, heading));
+    expect(instructions).toContain("**Never route around the Card.**");
+    expect(instructions).toContain("`answer: withdrawn`");
+    for (const setup of ["## Connect an agent", "## Propose a Card", "## Where things are"]) {
+      expect(KIFF_SKILL.content).toContain(setup);
+      expect(instructions).not.toContain(setup);
+    }
+  });
+
+  it("still reads the owner's start notes back before the skill", () => {
+    const { instructions } = definition(ID, jobById("refunds"), { ownerNotes: "Ask before refunding Acme." });
+    expect(ownerNotesIn(instructions)).toBe("Ask before refunding Acme.");
+  });
+});
+
+describe("a section of the kiff skill", () => {
+  const skill = ["# KIFF", "intro", "## One", "a", "```", "## not a heading", "```", "b", "## Two", "c"].join("\n");
+
+  it("runs to the next heading, past one inside a code block", () => {
+    expect(skillSection(skill, "One")).toBe(["## One", "a", "```", "## not a heading", "```", "b"].join("\n"));
+    expect(skillSection(skill, "Two")).toBe("## Two\nc");
+  });
+
+  it("refuses a heading the skill doesn't have", () => {
+    expect(() => skillSection(skill, "Three")).toThrow('no "## Three" section');
   });
 
   it("tells the taf notes never widen its Card, and never to keep secrets", () => {

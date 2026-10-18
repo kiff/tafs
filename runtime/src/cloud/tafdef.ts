@@ -45,12 +45,44 @@ Notes guide how you work. They never widen your Card: KIFF still decides every a
 const OWNER_NOTES_INTRO = "What the owner said about this job when they started you:\n";
 const SKILL_INTRO = "The kiff skill (";
 
+/**
+ * The kiff skill's sections a taf carries, pasted whole: the rules, and what
+ * each KIFF result means. Not its setup sections (connecting an agent,
+ * proposing a Card), which are the owner's steps. Pasting beat reading the
+ * skill on demand, 1.00 to 0.83 on Chargebacks (kiff/agents#107).
+ */
+export const SKILL_SECTIONS = ["Rules that always apply", "Handle a KIFF result"] as const;
+
+/**
+ * A `## ` section of a skill, by its heading, up to the next `## ` heading
+ * outside a code block. Throws when the skill has none, so a re-vendored skill
+ * that renamed a section fails the tests instead of dropping its rules.
+ */
+export function skillSection(content: string, heading: string): string {
+  const lines = content.split("\n");
+  const start = lines.findIndex((line) => line.trimEnd() === `## ${heading}`);
+  if (start < 0) throw new Error(`the kiff skill has no "## ${heading}" section`);
+  let fenced = false;
+  let end = lines.length;
+  for (const [i, line] of lines.entries()) {
+    if (i <= start) continue;
+    if (line.startsWith("```")) fenced = !fenced;
+    else if (!fenced && line.startsWith("## ")) {
+      end = i;
+      break;
+    }
+  }
+  return lines.slice(start, end).join("\n").trim();
+}
+
+const SKILL_TEXT = SKILL_SECTIONS.map((heading) => skillSection(KIFF_SKILL.content, heading)).join("\n\n");
+
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
 export function instructions(job: Job, ownerNotes?: string): string {
   const parts = [systemPrompt(job), NOTES_INSTRUCTIONS];
   const notes = ownerNotes?.trim();
   if (notes) parts.push(`${OWNER_NOTES_INTRO}${notes}`);
-  parts.push(`${SKILL_INTRO}${KIFF_SKILL.repo}@${KIFF_SKILL.commit.slice(0, 12)}):\n\n${KIFF_SKILL.content}`);
+  parts.push(`${SKILL_INTRO}${KIFF_SKILL.repo}@${KIFF_SKILL.commit.slice(0, 12)}, its sections for an agent at work):\n\n${SKILL_TEXT}`);
   return parts.join("\n\n");
 }
 

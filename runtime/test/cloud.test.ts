@@ -131,7 +131,7 @@ describe("tafs cloud", () => {
     expect(def.keep.tool_result).toEqual({ Keep: 1, Retention: 0 });
     expect(def.keep.owner_message.Keep).toBe(2);
     expect(def.instructions).toContain("Your job: Refunds");
-    expect(def.instructions).toContain("name: kiff");
+    expect(def.instructions).toContain("## Handle a KIFF result");
     expect(w.agents.calls).toEqual([`putAgent ${NEW}`, `createSchedule ${NEW} 0 9 * * 1-5 Europe/Madrid`, `trigger ${NEW}`]);
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Bo", kiffAgent: "rae" });
   });
