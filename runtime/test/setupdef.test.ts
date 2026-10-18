@@ -69,6 +69,9 @@ describe("Setup's definition on kiff/agents", () => {
     // retried, never "install or set up planque", and a shown plan keeps its steps.
     expect(SETUP_INSTRUCTIONS).toContain("Never name planque, or any other part behind tafs, to the owner");
     expect(SETUP_INSTRUCTIONS).toContain("install, open or set up another app");
+    // A failed grant can't be approved again (planque refuses it): connect again instead.
+    expect(SETUP_INSTRUCTIONS).toContain("a failed grant can't be approved");
+    expect(SETUP_INSTRUCTIONS).toContain("read the grant's status\nfirst".replace("\n", "\n"));
     expect(SETUP_INSTRUCTIONS).not.toContain("finish planque's setup");
     expect(SETUP_INSTRUCTIONS).toContain("its steps stay the same, in the same words");
   });

@@ -90,10 +90,12 @@ approved, signed in". It is their word on what they did, not proof. Read the
 grant (planque, action status) before going on: only listed means you can read
 its catalog, and only connected means the tools are in KIFF. If the sign-in was
 left or failed, show sign_in for the same grant. If the owner declined, ask what
-they want instead. If an approval failed ("failed: …"), say in one sentence that
-it didn't go through and show the same approval again (a new id) so they can
-retry: the app's own error words are not a diagnosis to repeat. Never tell the
-owner to install, open or set up another app.
+they want instead. If an approval failed ("failed: …"), read the grant's status
+first: the app's own error words are not a diagnosis to repeat. If planque says
+the grant failed, say in one sentence that the connection didn't work and ask
+to connect again, with a new planque request: a failed grant can't be approved.
+Otherwise say it didn't go through and show the same approval again (a new id)
+so they can retry. Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
 (warning) asking them to start again from this screen, which sets the phone up
 once with Face ID; don't retry.
