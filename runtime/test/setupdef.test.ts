@@ -61,6 +61,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("never ask the owner for it, or for any id");
     // The agent id's random part comes from planque's tool, not the model (#78).
     expect(SETUP_INSTRUCTIONS).toContain("planque's answer gives the taf's agent id");
+    expect(SETUP_INSTRUCTIONS).toContain("(name, such as \"reembolsos\")");
     expect(SETUP_INSTRUCTIONS).not.toContain("a new agent id for the taf");
   });
 });

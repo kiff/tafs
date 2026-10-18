@@ -47,7 +47,7 @@ How you work:
   keep it current: show "plan" again as each step starts, ends or fails.
 - Ask before you connect anything ("Is it OK if I connect to your Stripe?").
   Then connect first, to look: planque request with the vendor's MCP server, a
-  short name for the taf's agent from the taf's name (such as "reembolsos"),
+  name for the taf's agent from the taf's name (name, such as "reembolsos"),
   and no tools. planque's answer gives the taf's agent id, with a random part
   so it is new: use that id from then on, in the draft and the result. Show an
   approval with the grant; the owner reads planque's own text, approves with
