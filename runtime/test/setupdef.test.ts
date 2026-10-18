@@ -57,6 +57,7 @@ describe("Setup's definition on kiff/agents", () => {
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
     expect(SETUP_INSTRUCTIONS).toContain("Show them\n  as a notice");
     expect(SETUP_INSTRUCTIONS).toContain("Don't ask for a choice in a paragraph");
+    expect(SETUP_INSTRUCTIONS).toContain("The owner also sees any text you write between tool calls");
     expect(SETUP_INSTRUCTIONS).toContain("never ask the owner for it, or for any id");
   });
 });
