@@ -62,6 +62,8 @@ describe("Setup's definition on kiff/agents", () => {
     // The agent id's random part comes from planque's tool, not the model (#78).
     expect(SETUP_INSTRUCTIONS).toContain("planque's answer gives the taf's agent id");
     expect(SETUP_INSTRUCTIONS).toContain("(name, such as \"reembolsos\")");
+    // planque names each tool per grant in KIFF (kiff/planque#8): the draft uses those names.
+    expect(SETUP_INSTRUCTIONS).toContain("as planque's status lists them (their names in KIFF");
     expect(SETUP_INSTRUCTIONS).not.toContain("a new agent id for the taf");
   });
 });

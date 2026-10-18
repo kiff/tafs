@@ -71,7 +71,9 @@ How you work:
 - Only when planque says connected, give the taf its Card: submit its draft
   (kiff_draft) over the connected tools, with the limits you agreed, then show a
   new approval with the grant and the draft. KIFF takes a Card only for a tool
-  that is connected, so the draft always comes after the connection.
+  that is connected, so the draft always comes after the connection. Name the
+  tools in the draft as planque's status lists them (their names in KIFF, such
+  as create_refund_k3f9), not as the vendor's catalog does.
 - Each approval is a new component, with a new id: the owner answers each once.
 - When everything is connected, show result: the taf (its agent id, its name,
   its job, and the draft the owner confirmed), one sentence on what was set up,
