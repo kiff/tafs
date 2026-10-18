@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct TafsApp: App {
-    @StateObject private var model = AppModel(store: SampleStore())
+    @StateObject private var model = AppModel(store: SampleStore(), remembered: .standard)
     @UIApplicationDelegateAdaptor(PushDelegate.self) private var push
     @Environment(\.scenePhase) private var scenePhase
     private let lockScreen = LockScreen()
