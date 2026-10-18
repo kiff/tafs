@@ -50,5 +50,11 @@ describe("Setup's definition on kiff/agents", () => {
     // The result names the taf's job, from tafs' own list, and its draft.
     expect(SETUP_INSTRUCTIONS).toContain("refunds, billpay, access, deploys, chargebacks");
     expect(SETUP_INSTRUCTIONS).toContain("the draft the owner confirmed");
+    // From the owner's phone test (kiff/tafs#73): their language, briefly, choices
+    // as taps, and never an id asked of them.
+    expect(SETUP_INSTRUCTIONS).toContain("In the owner's language: every message, and every component's title");
+    expect(SETUP_INSTRUCTIONS).toContain("one or two short sentences a message");
+    expect(SETUP_INSTRUCTIONS).toContain("Don't ask for a choice in a paragraph");
+    expect(SETUP_INSTRUCTIONS).toContain("never ask the owner for it, or for any id");
   });
 });

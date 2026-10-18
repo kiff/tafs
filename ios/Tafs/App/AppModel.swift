@@ -30,6 +30,8 @@ final class AppModel: ObservableObject {
     private let vendorSignIn: VendorSigningIn
     /// The KIFF account this phone signed in to; part of every signed answer.
     var kiffTenant: String?
+    /// The KIFF account signed in to, as KIFF says (kiff/tafs#73): what Settings shows.
+    @Published private(set) var kiffAccount: KIFFClient.Account?
     /// Whether this phone's KIFF session holds its signing key. A session from before
     /// the phone sent its key cannot answer: sign in again.
     var sessionHasKey = false
@@ -199,8 +201,8 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil
-        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []
+        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
@@ -226,8 +228,8 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil
-        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []
+        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         accountGeneration += 1
         kiffTenant = nil
@@ -390,6 +392,11 @@ final class AppModel: ObservableObject {
             show(mandates, exceptions)
             await refreshCloud()
             await refreshConnections()
+            // Which account this is, once a sign-in: it doesn't change under it.
+            if kiffAccount == nil {
+                let gen = accountGeneration
+                if let account = try? await kiff.me(), gen == accountGeneration { kiffAccount = account }
+            }
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
@@ -1830,6 +1837,54 @@ final class AppModel: ObservableObject {
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
     @Published private(set) var setupEnded: RunEnd?
 
+    /// The Setup chat shown (kiff/tafs#73): one the owner reopened or started here, or
+    /// nil for the latest ones together, as before.
+    @Published private(set) var setupChat: String?
+    /// The owner asked for a new conversation: the next message starts one.
+    @Published private(set) var setupFresh = false
+    /// Setup's past chats, to reopen, newest first.
+    @Published private(set) var setupChats: [TafsCloud.Chat] = []
+
+    /// Where Setup's next message goes.
+    private var setupTarget: TafsCloud.ChatTarget {
+        setupFresh ? .new : setupChat.map { TafsCloud.ChatTarget(session: $0) } ?? .live
+    }
+
+    /// A new Setup conversation: an empty chat, and the next message starts it.
+    func newSetupChat() {
+        setupChat = nil
+        setupFresh = true
+        setupThread = SetupThread()
+        setupAwaiting = nil
+        setupUnsent = []
+        setupEnded = nil
+        setupError = nil
+    }
+
+    /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
+    func openSetupChat(_ session: String) async {
+        setupChat = session
+        setupFresh = false
+        setupUnsent = []
+        setupEnded = nil
+        await loadSetupThread()
+    }
+
+    /// Reads Setup's past chats, for the list to reopen.
+    func loadSetupChats() async {
+        guard mode == .kiff, let s = setupTaf else { return }
+        let gen = accountGeneration
+        guard let chats = try? await cloud.chats(s.id), gen == accountGeneration else { return }
+        setupChats = chats
+    }
+
+    /// The chat a message went into is the one shown from then on, once a new one is started.
+    private func settleSetupChat(_ session: String) {
+        guard setupFresh else { return }
+        setupChat = session
+        setupFresh = false
+    }
+
     /// Setup's KIFF agent: one per account.
     static let setupAgent = "setup"
 
@@ -1844,9 +1899,11 @@ final class AppModel: ObservableObject {
 
     func loadSetupThread() async {
         guard mode == .kiff, let s = setupTaf else { return }
+        // A new conversation has nothing to read until its first message is sent.
+        if setupFresh { return }
         let gen = accountGeneration
         do {
-            let thread = try await cloud.setupThread(s.id)
+            let thread = try await cloud.setupThread(s.id, session: setupChat)
             guard gen == accountGeneration else { return }
             setupThread = thread
             setupError = nil
@@ -1940,7 +1997,7 @@ final class AppModel: ObservableObject {
         do {
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
             // when the stream can't open.
-            if let events = try await openStream(s.id, text: text) {
+            if let events = try await openStream(s.id, text: text, to: setupTarget) {
                 guard gen == accountGeneration else { return .notTried }
                 setupAwaiting = clock()
                 setupStreamWorks = true
@@ -1948,7 +2005,8 @@ final class AppModel: ObservableObject {
                 setupStream = Task { await self.followSetupStream(events, text: text, gen: gen) }
                 return .sent
             }
-            _ = try await cloud.sendMessage(s.id, text: text)
+            let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget)
+            settleSetupChat(sent.session)
             guard gen == accountGeneration else { return .notTried }
             setupAwaiting = clock()
             await loadSetupThread()
@@ -2049,10 +2107,10 @@ final class AppModel: ObservableObject {
     /// open and the plain send should take the message (no network to it, tafs cloud
     /// without the route, or failing); a refusal (the flood guard, the role) throws, as
     /// the plain send's would.
-    private func openStream(_ id: String, text: String) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>? {
+    private func openStream(_ id: String, text: String, to target: TafsCloud.ChatTarget = .live) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>? {
         do {
             if let streamOpener { return try await streamOpener(id, text) }
-            return try await cloud.streamMessage(id, text: text)
+            return try await cloud.streamMessage(id, text: text, to: target)
         } catch let e as TafsCloud.CloudError where (400..<500).contains(e.status) && e.status != 404 && e.status != 408 {
             throw e
         } catch {
@@ -2071,6 +2129,7 @@ final class AppModel: ObservableObject {
                 switch e {
                 case .session(let session, _, _):
                     setupLive?.session = session
+                    settleSetupChat(session)
                 case .text(let t):
                     setupLive?.text += t
                 case .activity(let tool):

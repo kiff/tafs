@@ -229,9 +229,48 @@ final class TafsCloud {
         enum CodingKeys: String, CodingKey { case session, newSession = "new_session" }
     }
 
+    /// Which chat a message goes into (kiff/tafs#73): the live one, one the owner
+    /// reopened, or a new one.
+    struct ChatTarget: Equatable {
+        var session: String?
+        var newChat = false
+        static let live = ChatTarget()
+        static let new = ChatTarget(newChat: true)
+    }
+
+    /// A message as tafs cloud takes it: the live chat unless it names one or asks for a new one.
+    private struct MessageBody: Encodable {
+        let text: String
+        let session: String?
+        let newChat: Bool?
+        enum CodingKeys: String, CodingKey { case text, session, newChat = "new_chat" }
+
+        init(_ text: String, _ target: ChatTarget) {
+            self.text = text
+            session = target.session
+            newChat = target.newChat ? true : nil
+        }
+    }
+
     /// Sends the owner's message: into the taf's current run, or a new one.
-    func sendMessage(_ id: String, text: String) async throws -> Sent {
-        try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: ["text": text])
+    func sendMessage(_ id: String, text: String, to target: ChatTarget = .live) async throws -> Sent {
+        try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target))
+    }
+
+    /// One of a taf's chats, to reopen (kiff/tafs#73): named by its first words.
+    struct Chat: Decodable, Equatable, Identifiable {
+        let session: String
+        let started: Date
+        let updated: Date
+        let title: String
+        var id: String { session }
+    }
+
+    /// The taf's chats, newest first.
+    func chats(_ id: String) async throws -> [Chat] {
+        struct Response: Decodable { let chats: [Chat] }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/chats")
+        return r.chats
     }
 
     /// What a streamed message's run does, as tafs cloud relays it (#60).
@@ -254,7 +293,7 @@ final class TafsCloud {
 
     /// Sends the owner's message with its run streamed: returns once tafs cloud took it,
     /// with the run's events to follow. A refusal throws, as `sendMessage` does.
-    func streamMessage(_ id: String, text: String) async throws -> AsyncThrowingStream<StreamEvent, Error> {
+    func streamMessage(_ id: String, text: String, to target: ChatTarget = .live) async throws -> AsyncThrowingStream<StreamEvent, Error> {
         guard let url = URL(string: "/v1/tafs/\(escaped(id))/messages/stream", relativeTo: streamURL) else {
             throw CloudError(status: 0, message: "Bad path")
         }
@@ -264,7 +303,7 @@ final class TafsCloud {
         request.timeoutInterval = 900
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(["text": text])
+        request.httpBody = try JSONEncoder().encode(MessageBody(text, target))
         guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
@@ -356,11 +395,13 @@ final class TafsCloud {
         return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, timezone: timezone))
     }
 
-    /// Setup's thread: its messages and the components it showed.
-    func setupThread(_ id: String) async throws -> SetupThread {
+    /// Setup's thread: its messages and the components it showed. With `session`, that
+    /// one chat only (kiff/tafs#73).
+    func setupThread(_ id: String, session: String? = nil) async throws -> SetupThread {
         struct Working: Decodable { let session: String }
         struct Response: Decodable { let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working? }
-        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/conversation")
+        let path = "/v1/tafs/\(escaped(id))/conversation" + (session.map { "/\(escaped($0))" } ?? "")
+        let r: Response = try await send("GET", path)
         return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)),
                            working: r.working?.session)
     }

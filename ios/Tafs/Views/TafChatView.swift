@@ -17,6 +17,11 @@ struct TafChatView: View {
     /// The held calls on screen, so the "Needs you" bar shows only when the waiting one isn't.
     @State private var heldInView: Set<UUID> = []
     @State private var landed = false
+    /// As in ChatGPT and Claude (#73): a sent message moves to the top and stays while
+    /// the answer grows below it.
+    @State private var pinNext = false
+    @State private var pinned: String?
+    @State private var viewport: CGFloat = 600
 
     var body: some View {
         VStack(spacing: 0) {
@@ -102,6 +107,7 @@ struct TafChatView: View {
                     if let queued = state.queued {
                         QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
                     }
+                    if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
                         .onAppear { atBottom = true; following = true; unseen = false }
                         .onDisappear { atBottom = false }
@@ -110,6 +116,9 @@ struct TafChatView: View {
                 .padding(.vertical, 12)
             }
             .scrollDismissesKeyboard(.interactively)
+            .background(GeometryReader { g in
+                Color.clear.onAppear { viewport = g.size.height }.onChange(of: g.size.height) { viewport = $0 }
+            })
             .simultaneousGesture(DragGesture().onChanged { _ in following = false })
             .overlay(alignment: .bottom) {
                 VStack(spacing: 8) {
@@ -124,6 +133,7 @@ struct TafChatView: View {
                         Button {
                             following = true
                             unseen = false
+                            pinned = nil
                             withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
                         } label: {
                             Image(systemName: "arrow.down")
@@ -143,7 +153,14 @@ struct TafChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
-                if !following && !ids.isEmpty { unseen = true }
+                if pinNext, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner } else { return false } })?.id {
+                    pinNext = false
+                    pinned = sent
+                    following = false
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(sent, anchor: .top) }
+                    return
+                }
+                if !following && !ids.isEmpty && pinned == nil { unseen = true }
                 land(proxy, items: ids, waiting: waiting)
                 follow(proxy)
             }
@@ -245,7 +262,7 @@ struct TafChatView: View {
     private func send() {
         let text = draft
         draft = ""
-        following = true
+        if model.chatThinking(tafID) { following = true } else { pinNext = true }
         Haptics.tap()
         Task { if !(await model.submitChat(text, to: tafID)), draft.isEmpty { draft = text } }
     }

@@ -608,6 +608,64 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A new conversation (#73): the thread is empty and nothing is read until the
+    /// first message, which asks for a new chat; that chat is the one shown from then on.
+    func testANewConversationStartsItsOwnChat() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-18T09:00:00.000Z","from":"owner","kind":"message","text":"An older topic","session":"s_old"}],"components":[]}
+        """)
+        await model.loadSetup()
+        XCTAssertEqual(model.setupThread.messages.count, 1)
+
+        model.newSetupChat()
+        XCTAssertTrue(model.setupThread.messages.isEmpty)
+        StubProtocol.sent = []
+        await model.loadSetupThread()
+        XCTAssertTrue(sent("GET", "cloud.test", "/v1/tafs/taf-setup/conversation").isEmpty, "nothing to read before the first message")
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s_new","new_session":true}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s_new"] = (200, #"{"messages":[],"components":[]}"#)
+        let delivered = await model.sendSetup("Connect my Shopify")
+        XCTAssertTrue(delivered)
+        let post = try XCTUnwrap(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)
+        XCTAssertEqual(body(post)["new_chat"] as? Bool, true)
+        XCTAssertEqual(body(post)["text"] as? String, "Connect my Shopify")
+        XCTAssertEqual(model.setupChat, "s_new")
+        XCTAssertFalse(model.setupFresh)
+        XCTAssertFalse(sent("GET", "cloud.test", "/v1/tafs/taf-setup/conversation/s_new").isEmpty, "then the new chat alone is read")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A past conversation, reopened (#73): it's read alone, and messages go on in it.
+    func testAPastConversationReopens() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, """
+        {"chats":[{"session":"s_2","started":"2026-10-18T10:00:00.000Z","updated":"2026-10-18T10:05:00.000Z","title":"Answer customer questions"},
+                  {"session":"s_1","started":"2026-10-17T09:00:00.000Z","updated":"2026-10-17T09:30:00.000Z","title":"Connect my Stripe"}]}
+        """)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s_1"] = (200, """
+        {"messages":[{"at":"2026-10-17T09:00:00.000Z","from":"owner","kind":"message","text":"Connect my Stripe","session":"s_1"}],"components":[]}
+        """)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s_1","new_session":false}"#)
+        await model.loadSetup()
+        await model.loadSetupChats()
+        XCTAssertEqual(model.setupChats.map(\.title), ["Answer customer questions", "Connect my Stripe"])
+
+        await model.openSetupChat("s_1")
+        XCTAssertEqual(model.setupThread.messages.map(\.text), ["Connect my Stripe"])
+        StubProtocol.sent = []
+        await model.sendSetup("Now with test mode")
+        let post = try XCTUnwrap(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)
+        XCTAssertEqual(body(post)["session"] as? String, "s_1")
+        XCTAssertNil(body(post)["new_chat"], "a reopened chat isn't a new one")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     static func component(_ json: String) throws -> SetupComponent {
         try JSONDecoder().decode(SetupComponent.self, from: Data(json.utf8))
     }

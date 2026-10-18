@@ -20,7 +20,9 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
  *   GET  /v1/tafs/{id}/runs
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
  *   GET  /v1/tafs/{id}/conversation     the thread: the owner's messages and the taf's
- *   POST /v1/tafs/{id}/messages         {text}: into the live chat, or a new one
+ *   GET  /v1/tafs/{id}/conversation/{session}  one chat of it (kiff/tafs#73)
+ *   GET  /v1/tafs/{id}/chats            the taf's chats, newest first, each by its first words (kiff/tafs#73)
+ *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
@@ -194,6 +196,9 @@ export const CHAT = {
   chatsInThread: 5,
   /** Sessions listed to find them. */
   sessionsScanned: 50,
+  /** Chats listed to reopen, and how much of each one's first message names it. */
+  chatsListed: 20,
+  chatTitle: 80,
   /** A chat active this recently takes the message instead of a new one. */
   liveMinutes: 30,
   floodMessages: 10,
@@ -302,6 +307,15 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const { messages, components, sessions } = await conversation(me, taf, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering };
+  }
+  if (parts.length === 5 && method === "GET" && action === "conversation") {
+    const only = await ownChat(me, taf, parts[4] ?? "", deps);
+    const { messages, components, sessions } = await conversation(me, taf, deps, only);
+    const latest = await latestRun(me, taf, sessions, deps);
+    return { messages, components, working: latest.working, steering: latest.steering };
+  }
+  if (parts.length === 4 && method === "GET" && action === "chats") {
+    return { chats: await chats(me, taf, deps) };
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -760,9 +774,9 @@ export interface ThreadMessage {
  * kept: the owner's messages and the taf's. A run's first owner message is
  * the job's instruction, shown as such.
  */
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
-  const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
-  const picked = [
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
+  const all = only ? [only] : await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
+  const picked = only ? [only] : [
     ...all.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
     ...all.filter((s) => s.kind === "chat").slice(0, CHAT.chatsInThread),
   ];
@@ -843,7 +857,7 @@ interface Steering {
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   const text = chatText(event);
   await claimChatSlot(me, taf, deps);
-  const live = await liveChat(me, taf, deps);
+  const live = await chatFor(event, me, taf, deps);
   if (live) {
     try {
       const run = await deps.agents.startRun(me.tenantID, taf.id, text, live);
@@ -904,6 +918,47 @@ async function claimChatSlot(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<vo
   }
 }
 
+/**
+ * The chat a message goes into (kiff/tafs#73): a new one when the owner asked
+ * for it (new_chat), the one they reopened (session, one of this taf's chats),
+ * else the live one.
+ */
+async function chatFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
+  const body = parseBody(event);
+  if (body.new_chat === true) return undefined;
+  const chosen = str(body.session).trim();
+  if (chosen) return (await ownChat(me, taf, chosen, deps)).id;
+  return liveChat(me, taf, deps);
+}
+
+/** One of the taf's chats, by its id: another taf's, a job run's or none is 404. */
+async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps): Promise<Session> {
+  if (!id) throw new HTTPError(404, "no such chat");
+  let read: Awaited<ReturnType<Deps["agents"]["session"]>>;
+  try {
+    read = await deps.agents.session(me.tenantID, id);
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no such chat");
+    throw agentsFailure(err);
+  }
+  if (read.session.agent !== taf.id || read.session.kind !== "chat") throw new HTTPError(404, "no such chat");
+  return read.session;
+}
+
+/** The taf's chats, newest first, each named by the start of its first owner message. */
+async function chats(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{ session: string; started: string; updated: string; title: string }>> {
+  const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
+  const listed = all.filter((s) => s.kind === "chat").slice(0, CHAT.chatsListed);
+  const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
+  return listed.flatMap((s, i) => {
+    const first = read[i]?.events.find((e) => e.kind === "owner_message");
+    const text = typeof (first?.body as { text?: unknown })?.text === "string" ? ((first!.body as { text: string }).text).trim() : "";
+    if (!text) return [];
+    const title = text.length > CHAT.chatTitle ? text.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : text;
+    return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title }];
+  });
+}
+
 /** The taf's latest chat when it was active in the last 30 minutes: the message goes on in it. */
 async function liveChat(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
   const now = (deps.now?.() ?? new Date()).getTime();
@@ -949,7 +1004,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     need(me, "cards.manage");
     const text = chatText(event);
     await claimChatSlot(me, taf, deps);
-    const live = await liveChat(me, taf, deps);
+    const live = await chatFor(event, me, taf, deps);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
     if (live) {

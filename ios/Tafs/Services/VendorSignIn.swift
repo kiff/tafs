@@ -12,18 +12,51 @@ protocol VendorSigningIn {
 
 @MainActor
 final class VendorSignIn: NSObject, VendorSigningIn {
-    enum SignInError: Error { case cancelled, noCallback, noWindow }
+    enum SignInError: LocalizedError, Equatable {
+        case cancelled, noCallback, noWindow
+        /// iOS wouldn't show the page (#72): its error, and what it was given, so a
+        /// screenshot of the failure says which case it was.
+        case notShown(code: Int, context: String)
+
+        var errorDescription: String? {
+            switch self {
+            case .cancelled: return "The sign-in was closed."
+            case .noCallback: return "The sign-in didn't come back to tafs."
+            case .noWindow: return "tafs had no window on screen to open the sign-in over. Open tafs and try again."
+            case .notShown(let code, let context):
+                return "iOS didn't open the sign-in page (error \(code); \(context)). Try again with tafs open."
+            }
+        }
+    }
 
     private var session: ASWebAuthenticationSession?
     private var anchor: ASPresentationAnchor?
 
+    /// How long to wait for the app to be active before opening the page: just after
+    /// Face ID, iOS gives the app back a moment later.
+    var activeWait: Duration = .seconds(2)
+
     func signIn(at url: URL) async throws -> URL {
-        // The window the page opens over, read now: right after Face ID the app may
-        // have no key window for a moment, and a window that isn't on screen makes the
-        // session fail to start.
+        await untilActive()
+        do {
+            return try await attempt(url)
+        } catch let e as ASWebAuthenticationSessionError where e.code == .presentationContextInvalid {
+            // iOS refused the window (error 3): once more, on the next turn, with the
+            // window read again (#72).
+            try? await Task.sleep(for: .milliseconds(300))
+            await untilActive()
+            do {
+                return try await attempt(url)
+            } catch let e as ASWebAuthenticationSessionError where e.code == .presentationContextInvalid {
+                throw SignInError.notShown(code: e.code.rawValue, context: Self.describe(anchor ?? Self.window()))
+            }
+        }
+    }
+
+    private func attempt(_ url: URL) async throws -> URL {
         guard let window = Self.window() else { throw SignInError.noWindow }
         anchor = window
-        defer { anchor = nil; session = nil }
+        defer { session = nil }
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
             // A session that fails to start also calls its completion handler, so the
             // continuation is resumed by whichever comes first, and only once: resuming
@@ -46,22 +79,59 @@ final class VendorSignIn: NSObject, VendorSigningIn {
         }
     }
 
-    /// The app's window on screen: the key window of the active scene, else any window of
-    /// a scene in the foreground.
-    private static func window() -> UIWindow? {
+    /// Waits, at most `activeWait`, for a scene of the app to be active: the page can't
+    /// open over an app iOS hasn't given back yet.
+    private func untilActive() async {
+        if Self.activeScene() != nil { return }
+        let deadline = ContinuousClock.now + activeWait
+        while Self.activeScene() == nil, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+    }
+
+    private static func activeScene() -> UIWindowScene? {
+        UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first { $0.activationState == .foregroundActive }
+    }
+
+    /// The app's own window on screen, the one iOS will present over: the active
+    /// scene's key window, else a visible app window of a scene in the foreground.
+    /// Never the keyboard's or another system window, and never a new empty window,
+    /// which iOS always refuses (error 3).
+    static func window() -> UIWindow? {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         let active = scenes.filter { $0.activationState == .foregroundActive }
         let foreground = scenes.filter { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive }
-        return active.compactMap(\.keyWindow).first
-            ?? foreground.flatMap(\.windows).first { $0.isKeyWindow }
-            ?? foreground.flatMap(\.windows).first
+        if let key = active.compactMap(\.keyWindow).first(where: usable) { return key }
+        return (active + foreground).flatMap(\.windows).first { usable($0) && $0.isKeyWindow }
+            ?? (active + foreground).flatMap(\.windows).first(where: usable)
+    }
+
+    /// A window that's the app's own and on screen: shown, in a scene, with content,
+    /// at the normal level (the keyboard's and alerts' windows sit above it).
+    private static func usable(_ w: UIWindow) -> Bool {
+        !w.isHidden && w.windowScene != nil && w.rootViewController != nil && w.windowLevel == .normal
+    }
+
+    /// What iOS was given, in a few words: for the error the owner sees.
+    static func describe(_ w: UIWindow?) -> String {
+        guard let w else { return "no window" }
+        let state: String
+        switch w.windowScene?.activationState {
+        case .foregroundActive: state = "active"
+        case .foregroundInactive: state = "inactive"
+        case .background: state = "background"
+        default: state = "no scene"
+        }
+        return "\(type(of: w)), \(w.isKeyWindow ? "key" : "not key"), \(w.isHidden ? "hidden" : "shown"), \(state)"
     }
 }
 
 // The session asks for its window on the main thread.
 extension VendorSignIn: ASWebAuthenticationPresentationContextProviding {
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        anchor ?? Self.window() ?? ASPresentationAnchor()
+        // Read when iOS asks: the window may have changed since the session was made.
+        // `attempt` checked there was one, so the last fallback is that window.
+        Self.window() ?? anchor ?? ASPresentationAnchor()
     }
 }
 

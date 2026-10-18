@@ -98,6 +98,16 @@ struct SettingsView: View {
             List {
                 Section("Account") {
                     LabeledContent("Mode", value: modeText)
+                    // Which KIFF account, so the owner can tell (kiff/tafs#73).
+                    if model.mode == .kiff, let account = model.kiffAccount {
+                        LabeledContent("KIFF account", value: account.name)
+                        if account.displayName.map({ !$0.isEmpty && $0 != account.slug }) ?? false {
+                            LabeledContent("Account id", value: account.slug)
+                        }
+                        if let email = account.email, !email.isEmpty {
+                            LabeledContent("Email", value: email)
+                        }
+                    }
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }
                     }

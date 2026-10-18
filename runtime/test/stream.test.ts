@@ -154,3 +154,16 @@ describe("steering in the stream", () => {
     expect(r.raw).not.toContain("only the €20 one");
   });
 });
+
+describe("a new chat, streamed (kiff/tafs#73)", () => {
+  it("starts one when asked, though the latest chat is live", async () => {
+    const w = world();
+    const first = await stream(w, PATH, { token: "ana", body: { text: "First topic" } });
+    const session = first.events[0]!.data.session;
+    const again = await stream(w, PATH, { token: "ana", body: { text: "A new topic", new_chat: true } });
+    expect(again.events[0]!.data).toMatchObject({ new_session: true });
+    expect(again.events[0]!.data.session).not.toBe(session);
+    const back = await stream(w, PATH, { token: "ana", body: { text: "Back", session } });
+    expect(back.events[0]!.data).toMatchObject({ session, new_session: false });
+  });
+});
