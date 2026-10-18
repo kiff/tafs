@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import SwiftUI
 
@@ -68,6 +69,7 @@ final class AppModel: ObservableObject {
          planque: PlanqueClient = PlanqueClient(),
          vendorSignIn: VendorSigningIn = VendorSignIn(),
          store: SampleStore? = nil,
+         remembered: UserDefaults? = nil,
          clock: @escaping () -> Date = Date.init) {
         self.ownerName = ownerName
         self.signer = signer
@@ -76,6 +78,7 @@ final class AppModel: ObservableObject {
         self.planque = planque
         self.vendorSignIn = vendorSignIn
         self.store = store
+        self.remembered = remembered
         self.clock = clock
     }
 
@@ -1324,15 +1327,37 @@ final class AppModel: ObservableObject {
         return chatStates[tafID]?.queued
     }
 
+    /// Where the unread messages already dealt with are kept across launches, so one the
+    /// owner deleted doesn't come back: their hashes, never their text. Nil keeps them in
+    /// memory only (tests).
+    private let remembered: UserDefaults?
+    static let settledKey = "tafs.chat.settled"
+    /// The most hashes kept: older runs are no longer the latest, so theirs don't show.
+    static let settledKept = 500
+
+    private func wasSettled(_ key: String, _ tafID: UUID) -> Bool {
+        chatState(tafID).settled.contains(key) || (remembered?.stringArray(forKey: Self.settledKey) ?? []).contains(key)
+    }
+
+    private func rememberSettled(_ keys: [String], _ tafID: UUID) {
+        chatStates[tafID, default: ChatState()].settled.formUnion(keys)
+        guard let remembered else { return }
+        let kept = (remembered.stringArray(forKey: Self.settledKey) ?? []) + keys
+        remembered.set(Array(kept.suffix(Self.settledKept)), forKey: Self.settledKey)
+    }
+
     /// What a run that's over never read, as kiff/agents says, dealt with once: after a
     /// streamed answer or failure it goes as the next message; otherwise (the owner
     /// stopped it, or no stream said how it ended) it shows as not sent, with Retry.
     private func settleSteering(_ tafID: UUID) {
         guard let s = chatStates[tafID]?.steering, s.over else { return }
-        func key(_ m: TafsCloud.Steering.Message) -> String { "\(s.run)|\(m.at.timeIntervalSince1970)|\(m.text)" }
-        let fresh = s.untaken.filter { !chatState(tafID).settled.contains(key($0)) }
+        func key(_ m: TafsCloud.Steering.Message) -> String {
+            let digest = SHA256.hash(data: Data("\(s.run)|\(m.at.timeIntervalSince1970)|\(m.text)".utf8))
+            return digest.map { String(format: "%02x", $0) }.joined()
+        }
+        let fresh = s.untaken.filter { !wasSettled(key($0), tafID) }
         guard !fresh.isEmpty else { return }
-        chatStates[tafID]?.settled.formUnion(fresh.map(key))
+        rememberSettled(fresh.map(key), tafID)
         if chatState(tafID).sendNext == s.run, s.status != "CANCELLED" {
             let texts = [chatState(tafID).queued].compactMap { $0 } + fresh.map(\.text)
             chatStates[tafID]?.queued = texts.joined(separator: "\n\n")

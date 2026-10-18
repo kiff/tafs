@@ -294,6 +294,37 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 0, "nothing sent")
     }
 
+    /// What was dealt with stays dealt with after a relaunch, where the app keeps it: a
+    /// message the owner deleted doesn't come back. Only a hash is kept, never the text.
+    func testWhatWasDealtWithStaysAfterARelaunch() async throws {
+        let suite = "tafs.tests.settled.\(UUID().uuidString)"
+        let remembered = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { remembered.removePersistentDomain(forName: suite) }
+        let thread = """
+        {"messages":[],"steering":{"run":"r9","status":"CANCELLED","untaken":[{"text":"skip 4410","at":"2026-10-18T09:00:01.000Z"}]}}
+        """
+        func launch() async -> (AppModel, UUID) {
+            let session = stubbedSession()
+            let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, session: session)
+            let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session)
+            let model = AppModel(signer: StubSigner(), kiff: kiff, cloud: cloud, remembered: remembered)
+            stubKIFF(cards: [Self.raeCard])
+            StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, thread)
+            await model.useSession("kiff_dev_x")
+            return (model, model.tafs.first { $0.name == "Rae" }!.id)
+        }
+        var (model, id) = await launch()
+        await model.loadChat(id)
+        let shown = try XCTUnwrap(model.chatState(id).unsent.first)
+        model.discardUnsentChat(shown, from: id)
+        (model, id) = await launch()
+        await model.loadChat(id)
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty, "deleted before the relaunch, so it stays gone")
+        let kept = remembered.stringArray(forKey: AppModel.settledKey) ?? []
+        XCTAssertEqual(kept.count, 1)
+        XCTAssertFalse(kept.joined().contains("skip"), "a hash, not the text")
+    }
+
     /// A run that fails part-way offers Retry, which sends its message again; a stopped
     /// one is marked stopped.
     func testARunThatFailsPartWayOffersRetry() async throws {
