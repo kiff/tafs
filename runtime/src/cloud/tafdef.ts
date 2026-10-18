@@ -46,9 +46,9 @@ const OWNER_NOTES_INTRO = "What the owner said about this job when they started 
 const SKILL_INTRO = "The kiff skill (";
 
 /**
- * The kiff skill's sections a taf carries, pasted whole: the rules, and what
- * each KIFF result means. Not its setup sections (connecting an agent,
- * proposing a Card), which are the owner's steps. Pasting beat reading the
+ * The kiff skill's sections a taf carries, pasted whole after its opening
+ * paragraph: the rules, and what each KIFF result means. Not its setup
+ * sections (connecting an agent, proposing a Card), which are the owner's steps. Pasting beat reading the
  * skill on demand, 1.00 to 0.83 on Chargebacks (kiff/agents#107).
  */
 export const SKILL_SECTIONS = ["Rules that always apply", "Handle a KIFF result"] as const;
@@ -75,7 +75,23 @@ export function skillSection(content: string, heading: string): string {
   return lines.slice(start, end).join("\n").trim();
 }
 
-const SKILL_TEXT = SKILL_SECTIONS.map((heading) => skillSection(KIFF_SKILL.content, heading)).join("\n\n");
+/**
+ * The skill's first paragraph under its `# ` title: what a Card is, and that
+ * KIFF checks every call before it runs. Not the list of situations after it,
+ * which points to sections a taf doesn't carry. Throws when there is none.
+ */
+export function skillIntro(content: string): string {
+  const lines = content.split("\n");
+  const title = lines.findIndex((line) => line.startsWith("# "));
+  const paragraph = title < 0 ? "" : (lines.slice(title + 1).join("\n").trim().split(/\n\s*\n/)[0] ?? "");
+  if (!paragraph || paragraph.startsWith("#")) throw new Error("the kiff skill has no paragraph under its title");
+  return paragraph;
+}
+
+const SKILL_TEXT = [
+  skillIntro(KIFF_SKILL.content),
+  ...SKILL_SECTIONS.map((heading) => skillSection(KIFF_SKILL.content, heading)),
+].join("\n\n");
 
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
 export function instructions(job: Job, ownerNotes?: string): string {

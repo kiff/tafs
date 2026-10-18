@@ -12,6 +12,7 @@ import {
   PRICE,
   RETENTION_NS,
   SKILL_SECTIONS,
+  skillIntro,
   skillSection,
 } from "../src/cloud/tafdef.js";
 
@@ -68,6 +69,9 @@ describe("a taf's definition on kiff/agents", () => {
   it("pastes the kiff skill's rules and results sections whole, and not its setup sections", () => {
     const { instructions } = definition(ID, jobById("refunds"));
     for (const heading of SKILL_SECTIONS) expect(instructions).toContain(skillSection(KIFF_SKILL.content, heading));
+    expect(instructions).toContain(skillIntro(KIFF_SKILL.content));
+    expect(skillIntro(KIFF_SKILL.content)).toMatch(/^KIFF gives each AI agent a \*\*Card\*\*/);
+    expect(instructions).not.toContain("You will be in one of three situations");
     expect(instructions).toContain("**Never route around the Card.**");
     expect(instructions).toContain("`answer: withdrawn`");
     for (const setup of ["## Connect an agent", "## Propose a Card", "## Where things are"]) {
@@ -92,6 +96,12 @@ describe("a section of the kiff skill", () => {
 
   it("refuses a heading the skill doesn't have", () => {
     expect(() => skillSection(skill, "Three")).toThrow('no "## Three" section');
+  });
+
+  it("takes the first paragraph under the title as the intro, and refuses a skill without one", () => {
+    expect(skillIntro("---\nname: x\n---\n\n# KIFF\n\nFirst line,\nsecond line.\n\nNext.\n\n## One")).toBe("First line,\nsecond line.");
+    expect(() => skillIntro("# KIFF\n\n## One\ntext")).toThrow("no paragraph under its title");
+    expect(() => skillIntro("no title")).toThrow("no paragraph under its title");
   });
 
   it("tells the taf notes never widen its Card, and never to keep secrets", () => {
