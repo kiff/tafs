@@ -29,9 +29,13 @@ final class StubVendor: VendorSigningIn {
     var opened: [URL] = []
     var callback: URL?
     var cancel = false
+    /// What happens while the owner is on the vendor's page, such as the app's refresh
+    /// when it comes back to the front.
+    var meanwhile: (@MainActor () async -> Void)?
 
     func signIn(at url: URL) async throws -> URL {
         opened.append(url)
+        await meanwhile?()
         if cancel { throw VendorSignIn.SignInError.cancelled }
         return try XCTUnwrap(callback)
     }
@@ -276,6 +280,29 @@ final class PlanqueTests: XCTestCase {
         XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts/d_01/confirm").isEmpty)
         XCTAssertNil(model.kiff.setupSigner)
         XCTAssertNil(model.planque.signer)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Coming back from the vendor's page brings the app to the front, which refreshes the
+    /// connections. That refresh must not end the Face ID step's signer: the sign-in is still
+    /// confirmed (the owner's phone test, kiff/tafs#73: "This step needs your Face ID first").
+    func testARefreshWhileSigningInDoesNotEndTheStep() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON())]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grantJSON(status: "connected"))
+        vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
+        vendor.meanwhile = { await model.refreshConnections() }
+        StubProtocol.sent = []
+
+        let connected = await model.connect(grantID: "g_01")
+        XCTAssertEqual(connected?.status, "connected", model.lastError ?? "")
+        XCTAssertEqual(signer.prompts.count, 1, "still one Face ID")
+        XCTAssertFalse(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").isEmpty, "the sign-in is confirmed")
+        XCTAssertNil(model.planque.signer, "nothing signs afterwards")
         Keychain.delete(AppModel.planqueAccount)
     }
 

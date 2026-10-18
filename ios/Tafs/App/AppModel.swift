@@ -1617,15 +1617,16 @@ final class AppModel: ObservableObject {
     }
 
     /// Reads the grants. A read asks for no Face ID; it is signed so planque shows them only
-    /// to the enrolled phone.
+    /// to the enrolled phone. It signs with its own signer and never touches
+    /// `planque.signer`: it runs whenever the app comes back to the front, which is also
+    /// when the owner returns from the vendor's sign-in, mid-way through a Face ID step that
+    /// still needs its signer to confirm the sign-in.
     func refreshConnections() async {
         let gen = accountGeneration
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return }
         let signer = self.signer
         planque.tenant = tenant
-        planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
-        guard let list = try? await planque.grants(), gen == accountGeneration else { return }
+        guard let list = try? await planque.grants(signedBy: { try signer.signConfirmed($0) }), gen == accountGeneration else { return }
         grants = list
     }
 
