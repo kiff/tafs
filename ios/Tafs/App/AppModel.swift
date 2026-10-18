@@ -1110,14 +1110,16 @@ final class AppModel: ObservableObject {
     /// Sends the owner's message to the taf. It shows at once; on KIFF the thread is then
     /// reloaded from tafs cloud, where the taf's answer arrives as it works.
     @discardableResult
-    func sendChat(_ text: String, to tafID: UUID) async -> Bool {
+    func sendChat(_ text: String, to tafID: UUID) async -> Bool { await deliverChat(text, to: tafID) == .sent }
+
+    private func deliverChat(_ text: String, to tafID: UUID) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return false }
+        guard !text.isEmpty else { return .notTried }
         guard text.count <= Self.chatLimit else {
             chatErrors[tafID] = "That's longer than \(Self.chatLimit) characters. Say it in fewer words."
-            return false
+            return .notTried
         }
-        guard chatSending.insert(tafID).inserted else { return false }
+        guard chatSending.insert(tafID).inserted else { return .notTried }
         defer { chatSending.remove(tafID) }
         let gen = accountGeneration
         /// After each wait: is this still the session the message was sent in?
@@ -1128,42 +1130,42 @@ final class AppModel: ObservableObject {
 
         if mode == .sample {
             try? await Task.sleep(nanoseconds: sampleReplyDelay)
-            guard current(), mode == .sample else { return false }
+            guard current(), mode == .sample else { return .notTried }
             chats[tafID, default: []].append(sampleMessage(.taf, sampleReply(to: text, tafID: tafID)))
-            return true
+            return .sent
         }
         guard let c = cloudTaf(for: tafID) else {
             chats[tafID]?.removeAll { $0 == pending }
             chatErrors[tafID] = "This taf isn't running on tafs cloud, so it can't be messaged."
-            return false
+            return .notTried
         }
         chatStates[tafID, default: ChatState()].ended = nil
         do {
             // Streamed, so the taf's words show as it writes them (#64); sent plainly
             // when the stream can't open.
             if let events = try await openStream(c.id, text: text) {
-                guard current() else { return false }
+                guard current() else { return .notTried }
                 chatStates[tafID, default: ChatState()].awaiting = clock()
                 chatStates[tafID]?.live = LiveAnswer()
                 chatStreamWorks = true
                 chatStreams[tafID] = Task { await self.followChatStream(events, tafID: tafID, text: text, gen: gen) }
-                return true
+                return .sent
             }
             _ = try await cloud.sendMessage(c.id, text: text)
-            guard current() else { return false }
+            guard current() else { return .notTried }
             chatStates[tafID, default: ChatState()].awaiting = clock()
             await loadChat(tafID)
-            return true
+            return .sent
         } catch let e as TafsCloud.CloudError where e.status == 429 {
-            guard current() else { return false }
+            guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0 == pending }
             keepUnsent(text, tafID, why: "That's a lot of messages in a few minutes. Give \(c.name) a moment, then try again.")
-            return false
+            return .kept
         } catch {
-            guard current() else { return false }
+            guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0 == pending }
             keepUnsent(text, tafID, why: error.localizedDescription)
-            return false
+            return .kept
         }
     }
 
@@ -1253,7 +1255,12 @@ final class AppModel: ObservableObject {
         switch tool {
         case "memory": return "Reading its notes…"
         case "kiff_pending": return "Checking what waits for you…"
-        default: return "Asking KIFF to run \(tool.split(separator: "_").joined(separator: " "))…"
+        default:
+            // The tool's own name, past any server prefix ("stripe.create_refund",
+            // "kiff__refund_order"), in words.
+            let name = tool.components(separatedBy: "__").last?.split(separator: ".").last.map(String.init) ?? tool
+            let words = name.split(whereSeparator: { $0 == "_" || $0 == "-" }).joined(separator: " ")
+            return "Asking KIFF to run \(words.isEmpty ? tool : words)…"
         }
     }
 
@@ -1270,7 +1277,7 @@ final class AppModel: ObservableObject {
             chatStates[tafID, default: ChatState()].queued = joined
             return true
         }
-        return await sendChat(text, to: tafID) || chatState(tafID).unsent.contains { $0.text == text }
+        return await deliverChat(text, to: tafID) != .notTried
     }
 
     /// Takes back what waits to be sent, for the composer.
@@ -1834,9 +1841,15 @@ final class AppModel: ObservableObject {
 
     /// Sends the owner's words to Setup; the thread is then reloaded as it answers.
     @discardableResult
-    func sendSetup(_ text: String) async -> Bool {
+    func sendSetup(_ text: String) async -> Bool { await deliverSetup(text) == .sent }
+
+    /// What a send did with a message: sent it, kept it in the thread as not sent (it
+    /// was tried and failed), or didn't try (nothing to send, too long, or busy).
+    enum Delivery { case sent, kept, notTried }
+
+    private func deliverSetup(_ text: String) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return false }
+        guard !text.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
         setupSending = true
         defer { setupSending = false }
         let gen = accountGeneration
@@ -1846,23 +1859,23 @@ final class AppModel: ObservableObject {
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
             // when the stream can't open.
             if let events = try await openStream(s.id, text: text) {
-                guard gen == accountGeneration else { return false }
+                guard gen == accountGeneration else { return .notTried }
                 setupAwaiting = clock()
                 setupStreamWorks = true
                 setupLive = LiveAnswer()
                 setupStream = Task { await self.followSetupStream(events, text: text, gen: gen) }
-                return true
+                return .sent
             }
             _ = try await cloud.sendMessage(s.id, text: text)
-            guard gen == accountGeneration else { return false }
+            guard gen == accountGeneration else { return .notTried }
             setupAwaiting = clock()
             await loadSetupThread()
-            return true
+            return .sent
         } catch {
-            guard gen == accountGeneration else { return false }
+            guard gen == accountGeneration else { return .notTried }
             setupThread.messages.removeAll { $0.session == "pending" }
             setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
-            return false
+            return .kept
         }
     }
 
@@ -1880,7 +1893,7 @@ final class AppModel: ObservableObject {
             setupQueued = joined
             return true
         }
-        return await sendSetup(text) || setupUnsent.contains { $0.text == text }
+        return await deliverSetup(text) != .notTried
     }
 
     /// Takes back what waits to be sent, for the composer.

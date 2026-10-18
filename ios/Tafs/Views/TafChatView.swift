@@ -40,7 +40,7 @@ struct TafChatView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     if items.isEmpty && state.unsent.isEmpty {
-                        Text("Ask \(taf?.name ?? "it") what it did, or tell it what to do differently. It stays inside its Card.")
+                        Text("Ask \(taf?.name ?? "it") what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.")
                             .scaledFont(14).foregroundColor(Theme.dim)
                             .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 30)
                     }

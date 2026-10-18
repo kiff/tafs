@@ -171,6 +171,8 @@ final class ChatTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(count("GET", "/v1/tafs/depl_1/conversation"), 2, "at the tool call and at the end")
         XCTAssertEqual(AppModel.tafActivityWords("memory"), "Reading its notes…")
         XCTAssertEqual(AppModel.tafActivityWords("refund_order"), "Asking KIFF to run refund order…")
+        XCTAssertEqual(AppModel.tafActivityWords("stripe.create_refund"), "Asking KIFF to run create refund…", "past the server's prefix")
+        XCTAssertEqual(AppModel.tafActivityWords("kiff__issue-credit"), "Asking KIFF to run issue credit…")
     }
 
     /// What the owner writes while the taf works waits, and is sent once it's done, as
