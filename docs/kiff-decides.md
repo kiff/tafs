@@ -71,4 +71,5 @@ phone. It was a €50 refund, over a €20 call limit, against Stripe in test mo
 - **11:36:** the owner approved it once on app.kiff.dev.
 - **11:46:** the run collected it, sent it once, and completed. With no alert
   target registered, the answer reached the run when the hold's 10 minutes
-  were up. With the app's push registration, it takes about a minute.
+  were up. With the app's push registration, the run goes on when KIFF's
+  signed alert arrives, not at the hold's end.
