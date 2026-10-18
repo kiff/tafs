@@ -272,3 +272,40 @@ describe("stop", () => {
     expect(w.agents.runs.find((x) => x.id === sibling.id)?.status).toBe("PENDING");
   });
 });
+
+describe("steer", () => {
+  it("writes to the run at work, which reads it at its next step; the flood guard counts it", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue");
+    w.agents.calls.length = 0;
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: chat.id, text: "  only the €20 one  " } });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ run: chat.id, status: "PENDING" });
+    expect(w.agents.calls).toEqual([`steerRun ${RAE} ${chat.id}`]);
+    expect(w.agents.runs.find((x) => x.id === chat.id)?.steering?.map((m) => m.text)).toEqual(["only the €20 one"]);
+    for (let n = 1; n < CHAT.floodMessages; n++) {
+      await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: chat.id, text: `more ${n}` } });
+    }
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: chat.id, text: "one too many" } })).status).toBe(429);
+  });
+
+  it("says a run that ended is over, so the app sends it as a new message", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "hi");
+    (w.agents.runs.find((x) => x.id === chat.id) as { status: string }).status = "COMPLETED";
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: chat.id, text: "and the other one" } });
+    expect(r.status).toBe(409);
+    expect(r.body.error).toContain("send it as a new message");
+  });
+
+  it("needs the right to manage Cards, a run, a message, and one of this taf's runs", async () => {
+    const w = world();
+    const mine = await w.agents.api.startRun("t_acme", RAE, "hi");
+    const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "viewer", body: { run: mine.id, text: "x" } })).status).toBe(403);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { text: "x" } })).status).toBe(400);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: mine.id, text: " " } })).status).toBe(400);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: theirs.id, text: "x" } })).status).toBe(404);
+    expect(w.agents.runs.find((x) => x.id === theirs.id)?.steering).toBeUndefined();
+  });
+});

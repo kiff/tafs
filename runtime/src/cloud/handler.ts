@@ -21,6 +21,7 @@ import { definition, keyRef } from "./tafdef.js";
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
  *   GET  /v1/tafs/{id}/conversation     the thread: the owner's messages and the taf's
  *   POST /v1/tafs/{id}/messages         {text}: into the live chat, or a new one
+ *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
@@ -47,7 +48,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun">;
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -293,6 +294,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
     return stop(event, me, taf, deps);
+  }
+  if (parts.length === 4 && method === "POST" && action === "steer") {
+    need(me, "cards.manage");
+    return steer(event, me, taf, deps);
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
     need(me, "cards.manage");
@@ -813,6 +818,27 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   return { session: run.session, new_session: true };
 }
 
+/**
+ * The owner writes to a run that is at work (kiff/tafs#64): kiff/agents keeps the
+ * message on the run, and the run reads it at its next step, before its next turn
+ * (kiff/agents#102). The flood guard counts it as a message. A run that has ended,
+ * or was asked to stop, is 409: the app sends the message as a new one. The run must
+ * be this taf's: kiff/agents answers another agent's as not found.
+ */
+async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  const run = str(parseBody(event).run).trim();
+  if (!run) throw new HTTPError(400, "name the run to write to");
+  const text = chatText(event);
+  await claimChatSlot(me, taf, deps);
+  try {
+    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text);
+    return { run: out.id, status: out.status };
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, "the run has ended: send it as a new message");
+    throw agentsFailure(err);
+  }
+}
+
 /** The owner's message, 1 to CHAT.maxText characters. */
 function chatText(event: HTTPEvent): string {
   const text = str(parseBody(event).text).trim();
@@ -860,7 +886,8 @@ export interface StreamResult {
  * foreground so the agent's words reach the phone as they are written. What
  * the phone gets is trimmed to what it shows:
  *
- *   event: session    {session, new_session}, first
+ *   event: session    {session, new_session, run}, first
+ *   event: taken      {}: the run read a message the owner wrote while it went (steer)
  *   event: text       {text}: more of the answer
  *   event: activity   {tool}: a tool's name as the agent calls it, never its input
  *   event: component  {component}: a component the agent showed
@@ -931,11 +958,12 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     const d = (e.data ?? {}) as Record<string, unknown>;
     switch (e.event) {
       case "run":
-        return sse("session", { session: d.session, new_session: newSession });
+        return sse("session", { session: d.session, new_session: newSession, run: d.id });
       case "delta":
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
         if (d.kind === "tool_call" && typeof d.tool === "string") return sse("activity", { tool: d.tool });
         if (d.kind === "component" && d.component !== undefined) return sse("component", { component: d.component });
+        if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
         return undefined; // tool results stay on the server
       case "end":
         return sse("end", { status: d.status ?? "", stop: d.stop ?? "" });

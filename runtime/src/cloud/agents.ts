@@ -111,6 +111,8 @@ export interface Run {
   turns: number;
   requirements?: Requirement[];
   cancel_requested?: boolean;
+  /** What the owner wrote to the run while it went (kiff/agents#102), each marked once the run took it. */
+  steering?: Array<{ text: string; at: string; taken?: boolean }>;
   created: string;
   updated: string;
 }
@@ -205,6 +207,14 @@ export class Agents {
 
   getRun(tenant: string, agent: string, run: string): Promise<Run> {
     return this.call("GET", tenant, ["agents", agent, "runs", run]);
+  }
+
+  /**
+   * Steers a run that hasn't ended (kiff/agents#102): the owner's message, taken at
+   * the run's next checkpoint. A run that ended, or was asked to stop, is 409.
+   */
+  steerRun(tenant: string, agent: string, run: string, text: string): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text });
   }
 
   /** Cancels a run; a paused one has its held calls withdrawn in KIFF first. */

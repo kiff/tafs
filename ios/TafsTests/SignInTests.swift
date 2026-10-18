@@ -50,7 +50,9 @@ final class SignInTests: XCTestCase {
         // The 503 is served, then the approval.
         let s = try start()
         let finished = Task { try await model.finishSignIn(s, startedAt: Date()) }
-        while polls() < 4 { try await Task.sleep(nanoseconds: 1_000_000) }
+        // A poll is counted when it's sent, before its answer is chosen: once the fifth
+        // is sent, the fourth was answered 503, so the approval can't pre-empt it.
+        while polls() < 5 { try await Task.sleep(nanoseconds: 1_000_000) }
         StubProtocol.responses[poll] = (200, Self.token)
         try await finished.value
         XCTAssertEqual(model.mode, .kiff)

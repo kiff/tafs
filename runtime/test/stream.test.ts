@@ -87,7 +87,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     const first = await stream(w, PATH, { token: "ana", body: { text: "hi" } });
     const session = first.events[0]!.data.session;
     const again = await stream(w, PATH, { token: "ana", body: { text: "and then?" } });
-    expect(again.events[0]!.data).toEqual({ session, new_session: false });
+    expect(again.events[0]!.data).toEqual({ session, new_session: false, run: expect.any(String) });
     w.agents.fail.set("streamRun", new AgentsError(409, "the chat is busy"));
     const busy = await stream(w, PATH, { token: "ana", body: { text: "one more" } });
     expect(busy.status).toBe(200);
@@ -139,5 +139,18 @@ describe("reading kiff/agents' run stream", () => {
       { event: "delta", data: { kind: "text", text: "a\nb" } },
       { event: "end", data: { status: "COMPLETED" } },
     ]);
+  });
+});
+
+describe("steering in the stream", () => {
+  it("names the run first, and says when the run read a message the owner wrote while it went", async () => {
+    const w = world();
+    w.agents.streamed.push({ event: "delta", data: { kind: "text", text: "Refunding." } }, { event: "delta", data: { kind: "owner_message", text: "only the €20 one" } });
+    const r = await stream(w, PATH, { token: "ana", body: { text: "refund 4502" } });
+    expect(r.status).toBe(200);
+    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "taken", "end"]);
+    expect(r.events[0]!.data.run).toBe(w.agents.runs.at(-1)!.id);
+    expect(r.events[2]!.data).toEqual({});
+    expect(r.raw).not.toContain("only the €20 one");
   });
 });
