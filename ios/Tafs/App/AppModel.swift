@@ -122,7 +122,7 @@ final class AppModel: ObservableObject {
         var tries = 0
         while true {
             do {
-                return try await kiff.startDeviceSignIn(publicKey: signer.publicKeyDER, deviceName: "tafs on \(ThisDevice.kind)")
+                return try await kiff.startDeviceSignIn(publicKey: signer.publicKeyDER, deviceName: "tafs on \(ThisDevice.kind)", platform: ThisDevice.platform)
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
                 try await Task.sleep(nanoseconds: 500_000_000)
