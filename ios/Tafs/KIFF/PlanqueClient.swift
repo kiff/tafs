@@ -82,14 +82,9 @@ final class PlanqueClient {
         struct Event: Decodable, Equatable {
             /// RFC 3339, as planque writes it (Go's nanoseconds included).
             let at: String
+            /// In the owner's words, as planque writes it: the device's name, never an id
+            /// (kiff/planque#16). Shown as it is.
             let what: String
-
-            /// `what` for the owner: planque's record names who signed by ids ("by user_…
-            /// on device dev_…", or a key's fingerprint), which the owner never reads.
-            var plain: String {
-                what.replacingOccurrences(of: #" (by \S+ on device dev_[a-z0-9]+|on the phone [0-9a-f]{4}( [0-9a-f]{4}){3})"#,
-                                          with: "", options: .regularExpression)
-            }
         }
         let id: String
         /// pending, approved, signed_in, listed, connected, failed or disconnected.
@@ -112,10 +107,13 @@ final class PlanqueClient {
         /// only then. Set by `grants()`, never read from planque.
         var digestMatches = false
 
-        enum CodingKeys: String, CodingKey { case id, status, text, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until" }
+        enum CodingKeys: String, CodingKey { case id, status, text, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor" }
 
         /// The vendor, as the owner knows it: its server's host.
-        var vendor: String { URL(string: request.server)?.host ?? request.server }
+        /// The vendor's name, as planque gives it: what its server calls itself, else its
+        /// host (kiff/planque#17). Shown as it is.
+        let vendorName: String?
+        var vendor: String { vendorName ?? request.server }
         var connected: Bool { status == "connected" }
         /// Connected first (contract 5): signed in, and planque listed the vendor's tools for
         /// Setup to choose from. Nothing is in KIFF yet.

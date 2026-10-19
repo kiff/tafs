@@ -56,7 +56,7 @@ final class SetupShapeTests: XCTestCase {
         let shape = SetupShape(thread: thread, grants: grants, drafts: [:], waiting: "connect", states: ["connect": .needsYou])
         XCTAssertEqual(shape.steps, [
             SetupShape.Step(label: "Which account?", state: .done),
-            SetupShape.Step(label: "Approve mcp.stripe.com", state: .needsYou),
+            SetupShape.Step(label: "Approve Stripe", state: .needsYou),
         ], "a notice asks nothing")
 
         let declined = SetupShape(thread: thread, grants: grants, drafts: [:], waiting: nil, states: ["connect": .declined])
@@ -77,7 +77,7 @@ final class SetupShapeTests: XCTestCase {
         func tools(_ g: PlanqueClient.Grant) -> [SetupShape.Tool] {
             SetupShape(thread: thread, grants: [g], drafts: [:], waiting: nil, states: [:]).tools
         }
-        XCTAssertEqual(tools(try grant("pending")), [SetupShape.Tool(id: "g_01", vendor: "mcp.stripe.com", state: .waiting, actions: [])],
+        XCTAssertEqual(tools(try grant("pending")), [SetupShape.Tool(id: "g_01", vendor: "Stripe", state: .waiting, actions: [])],
                        "once, and a grant planque hasn't shown is left out")
         XCTAssertEqual(tools(try grant("listed", signedIn: true)).first?.state, .signedIn)
         XCTAssertEqual(tools(try grant("pending", signedIn: true)).first?.state, .signedIn)
