@@ -304,6 +304,7 @@ export function memoryArchived(): Archived & { held: Map<string, Set<string>> } 
     held,
     async list(t, taf) { return [...(held.get(`${t}#${taf}`) ?? [])]; },
     async add(t, taf, session) { held.set(`${t}#${taf}`, new Set([...(held.get(`${t}#${taf}`) ?? []), session])); },
+    async unarchive(t, taf, session) { held.get(`${t}#${taf}`)?.delete(session); },
     async remove(t, taf) { held.delete(`${t}#${taf}`); },
   };
 }

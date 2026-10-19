@@ -239,7 +239,7 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         planque.deviceID = nil
         accountGeneration += 1
@@ -269,7 +269,7 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
@@ -1962,6 +1962,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupFresh = false
     /// Setup's past chats, to reopen, newest first.
     @Published private(set) var setupChats: [TafsCloud.Chat] = []
+    /// Setup's archived chats, under Archived (kiff/tafs#97).
+    @Published private(set) var archivedSetupChats: [TafsCloud.Chat] = []
     /// What the owner sent that tafs cloud's thread doesn't have yet (kiff/tafs#82): shown
     /// at once, and kept across reloads until tafs cloud's copy arrives, so a tapped choice
     /// shows when it's tapped, and once. A reload while the send is on its way would
@@ -2023,6 +2025,33 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return false }
         setupChats.removeAll { $0.session == session }
         if setupChat == session || (setupChat == nil && setupThread.session == session) { newSetupChat() }
+        return true
+    }
+
+    /// Reads Setup's archived chats, for Archived (kiff/tafs#97).
+    func loadArchivedSetupChats() async {
+        guard mode == .kiff, let s = setupTaf else { return }
+        let gen = accountGeneration
+        guard let chats = try? await cloud.archivedChats(s.id), gen == accountGeneration else { return }
+        archivedSetupChats = chats
+    }
+
+    /// Puts an archived chat of Setup's back in the list (kiff/tafs#97). False, with why in
+    /// `lastError`, when tafs cloud didn't take it.
+    @discardableResult
+    func unarchiveSetupChat(_ session: String) async -> Bool {
+        guard mode == .kiff, let s = setupTaf else { return false }
+        let gen = accountGeneration
+        do {
+            try await cloud.unarchiveChat(s.id, session: session)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            lastError = "Not put back: \(error.localizedDescription)"
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        archivedSetupChats.removeAll { $0.session == session }
+        await loadSetupChats()
         return true
     }
 

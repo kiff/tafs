@@ -839,6 +839,21 @@ final class SetupTests: XCTestCase {
         XCTAssertFalse(refused)
         XCTAssertEqual(model.setupChats.map(\.session), ["s_1"], "still listed")
         XCTAssertEqual(model.lastError, "Not archived: tafs cloud is down")
+        model.lastError = nil
+
+        // Archived lists it, and Put back returns it to the list (#97).
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats/archived"] = (200, """
+        {"chats":[{"session":"s_2","started":"2026-10-18T10:00:00.000Z","updated":"2026-10-18T10:05:00.000Z","title":"Answer customer questions"}]}
+        """)
+        await model.loadArchivedSetupChats()
+        XCTAssertEqual(model.archivedSetupChats.map(\.title), ["Answer customer questions"])
+        StubProtocol.responses["POST /v1/tafs/taf-setup/chats/s_2/unarchive"] = (200, #"{"session":"s_2","archived":false}"#)
+        StubProtocol.sent = []
+        let back = await model.unarchiveSetupChat("s_2")
+        XCTAssertTrue(back)
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/chats/s_2/unarchive").count, 1)
+        XCTAssertTrue(model.archivedSetupChats.isEmpty)
+        XCTAssertFalse(sent("GET", "cloud.test", "/v1/tafs/taf-setup/chats").isEmpty, "the list is read again")
         Keychain.delete(AppModel.planqueAccount)
     }
 

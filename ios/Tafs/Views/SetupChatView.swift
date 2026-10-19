@@ -405,13 +405,16 @@ struct SetupChatView: View {
 
 /// Setup's recent conversations, newest first, each by what the owner asked (#73, #82):
 /// one tap reopens it, and messages go on in it. Swiping left archives it, on tafs cloud,
-/// so it stays out of the list on every phone.
+/// so it stays out of the list on every phone, once the owner confirms (#97); Archived,
+/// at the end, lists them to reopen or put back.
 struct SetupChatsList: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     let open: (String) -> Void
     /// Why the last archive didn't go through.
     @State private var notArchived: String?
+    /// The conversation waiting for the owner's yes to archive it.
+    @State private var confirming: TafsCloud.Chat?
 
     var body: some View {
         NavigationStack {
@@ -430,10 +433,23 @@ struct SetupChatsList: View {
                     }
                     .listRowBackground(model.setupChat == chat.session ? Theme.raised : Theme.panel)
                     .swipeActions(edge: .trailing) {
-                        Button { archive(chat.session) } label: { Label("Archive", systemImage: "archivebox") }
+                        Button { confirming = chat } label: { Label("Archive", systemImage: "archivebox") }
                             .tint(Theme.soft)
                     }
                 }
+                NavigationLink {
+                    ArchivedSetupChats(open: open)
+                } label: {
+                    Label("Archived", systemImage: "archivebox").scaledFont(15).foregroundColor(Theme.ink)
+                }
+                .listRowBackground(Theme.panel)
+            }
+            .confirmationDialog("Archive this conversation?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
+                                titleVisibility: .visible, presenting: confirming) { chat in
+                Button("Archive") { archive(chat.session) }
+                Button("Cancel", role: .cancel) {}
+            } message: { _ in
+                Text("It leaves this list on all your devices. You'll find it under Archived, where you can open it or put it back.")
             }
             .overlay {
                 if model.setupChats.isEmpty {
@@ -456,6 +472,57 @@ struct SetupChatsList: View {
             if !(await model.archiveSetupChat(session)) {
                 // Said here, under the sheet the app's alert would wait behind.
                 notArchived = model.lastError ?? "Not archived. Try again."
+                model.lastError = nil
+            }
+        }
+    }
+}
+
+/// Setup's archived conversations (#97): one tap opens it, Put back returns it to the list.
+struct ArchivedSetupChats: View {
+    @EnvironmentObject private var model: AppModel
+    let open: (String) -> Void
+    @State private var notPutBack: String?
+
+    var body: some View {
+        List {
+            if let notPutBack {
+                Text(notPutBack).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                    .listRowBackground(Color.clear)
+            }
+            ForEach(model.archivedSetupChats) { chat in
+                Button { open(chat.session) } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(chat.title).scaledFont(15).foregroundColor(Theme.ink).lineLimit(2)
+                        Text(chat.updated.formatted(date: .abbreviated, time: .shortened))
+                            .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    }
+                }
+                .listRowBackground(Theme.panel)
+                .swipeActions(edge: .trailing) {
+                    Button { putBack(chat.session) } label: { Label("Put back", systemImage: "tray.and.arrow.up") }
+                        .tint(Theme.soft)
+                }
+            }
+        }
+        .overlay {
+            if model.archivedSetupChats.isEmpty {
+                Text("Nothing archived.").scaledFont(14).foregroundColor(Theme.dim)
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .screenBackground()
+        .navigationTitle("Archived")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await model.loadArchivedSetupChats() }
+    }
+
+    private func putBack(_ session: String) {
+        Haptics.tap()
+        notPutBack = nil
+        Task {
+            if !(await model.unarchiveSetupChat(session)) {
+                notPutBack = model.lastError ?? "Not put back. Try again."
                 model.lastError = nil
             }
         }

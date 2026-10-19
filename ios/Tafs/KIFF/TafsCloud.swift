@@ -280,6 +280,19 @@ final class TafsCloud {
         let _: Response = try await send("POST", "/v1/tafs/\(escaped(id))/chats/\(escaped(session))/archive")
     }
 
+    /// The chats the owner archived, to find and reopen one (kiff/tafs#97).
+    func archivedChats(_ id: String) async throws -> [Chat] {
+        struct Response: Decodable { let chats: [Chat] }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/chats/archived")
+        return r.chats
+    }
+
+    /// Puts an archived chat back in the list (kiff/tafs#97).
+    func unarchiveChat(_ id: String, session: String) async throws {
+        struct Response: Decodable { let archived: Bool }
+        let _: Response = try await send("POST", "/v1/tafs/\(escaped(id))/chats/\(escaped(session))/unarchive")
+    }
+
     /// What a streamed message's run does, as tafs cloud relays it (#60).
     enum StreamEvent: Equatable {
         /// The chat the message went into, first, and the run that answers it.
