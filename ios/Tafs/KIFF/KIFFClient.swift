@@ -224,13 +224,6 @@ final class KIFFClient {
         try await send("GET", "/v1/me")
     }
 
-    /// Sets the account's time zone (an IANA name), as KIFF allows its owner or an admin.
-    func setTimeZone(_ zone: String) async throws -> String {
-        struct Saved: Decodable { let timeZone: String; enum CodingKeys: String, CodingKey { case timeZone = "time_zone" } }
-        let saved: Saved = try await send("PUT", "/v1/me/time-zone", body: ["time_zone": zone])
-        return saved.timeZone
-    }
-
     func heldCalls() async throws -> [CardException] {
         struct Response: Decodable { let exceptions: [CardException] }
         let response: Response = try await send("GET", "/v1/me/card-exceptions?status=held")
