@@ -370,7 +370,7 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(body(start)["job"] as? String, "refunds")
         XCTAssertEqual(body(start)["name"] as? String, "Refunds")
         XCTAssertNil(body(start)["claim_secret"], "the phone holds no claim secret for Setup's draft")
-        XCTAssertFalse(sent("GET", "cloud.test", "/v1/tafs").isEmpty, "then it refreshes")
+        XCTAssertFalse(sent("GET", "cloud.test", "/v1/home").isEmpty, "then it refreshes")
         XCTAssertNil(model.tafStartErrors["done"])
 
         // A result without a job or a draft starts nothing.
