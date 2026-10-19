@@ -32,6 +32,24 @@ final class AppModel: ObservableObject {
     var kiffTenant: String?
     /// The KIFF account signed in to, as KIFF says (kiff/tafs#73): what Settings shows.
     @Published private(set) var kiffAccount: KIFFClient.Account?
+    /// Why the account's time zone didn't change, when it didn't.
+    @Published private(set) var timeZoneError: String?
+
+    /// Sets the account's time zone to this device's, so a Card's day ends at the owner's
+    /// midnight (kiff/tafs#96). KIFF decides who may; the account is read again after.
+    func useThisDevicesTimeZone() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        timeZoneError = nil
+        do {
+            _ = try await kiff.setTimeZone(TimeZone.current.identifier)
+            guard gen == accountGeneration else { return }
+            if let account = try? await kiff.me(), gen == accountGeneration { kiffAccount = account }
+        } catch {
+            guard gen == accountGeneration else { return }
+            timeZoneError = "The time zone didn't change: \(error.localizedDescription)"
+        }
+    }
     /// Whether this phone's KIFF session holds its signing key. A session from before
     /// the phone sent its key cannot answer: sign in again.
     var sessionHasKey = false

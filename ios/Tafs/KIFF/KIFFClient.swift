@@ -208,9 +208,12 @@ final class KIFFClient {
         let slug: String
         let displayName: String?
         let email: String?
+        /// The account's time zone, which ends a Card's day (kiff-cloud #1121).
+        var timeZone: String? = nil
 
         enum CodingKeys: String, CodingKey {
             case tenantID = "tenant_id", slug = "tenant_slug", displayName = "tenant_display_name", email
+            case timeZone = "time_zone"
         }
 
         /// The account as the owner knows it: its name, else its slug.
@@ -219,6 +222,13 @@ final class KIFFClient {
 
     func me() async throws -> Account {
         try await send("GET", "/v1/me")
+    }
+
+    /// Sets the account's time zone (an IANA name), as KIFF allows its owner or an admin.
+    func setTimeZone(_ zone: String) async throws -> String {
+        struct Saved: Decodable { let timeZone: String; enum CodingKeys: String, CodingKey { case timeZone = "time_zone" } }
+        let saved: Saved = try await send("PUT", "/v1/me/time-zone", body: ["time_zone": zone])
+        return saved.timeZone
     }
 
     func heldCalls() async throws -> [CardException] {

@@ -107,6 +107,16 @@ struct SettingsView: View {
                         if let email = account.email, !email.isEmpty {
                             LabeledContent("Email", value: email)
                         }
+                        // A Card's day ends at midnight here (kiff/tafs#96).
+                        LabeledContent("Time zone", value: account.timeZone ?? "UTC")
+                        if (account.timeZone ?? "UTC") != TimeZone.current.identifier {
+                            Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") {
+                                Task { await model.useThisDevicesTimeZone() }
+                            }
+                        }
+                        if let why = model.timeZoneError {
+                            Text(why).font(.system(size: 13)).foregroundColor(Theme.no)
+                        }
                     }
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }
