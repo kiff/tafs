@@ -54,6 +54,10 @@ struct HeldCallCard: View {
             if !call.proposed.context.isEmpty {
                 Text(call.proposed.context).font(.system(size: 14)).foregroundColor(Theme.soft)
             }
+            // What it's on, as KIFF keeps the call (kiff/tafs#102): the payment, not a tool-call id.
+            ForEach(call.details ?? [], id: \.self) { line in
+                Text(line).font(Theme.mono(12)).foregroundColor(Theme.soft).textSelection(.enabled)
+            }
             Text(call.reason)
                 .font(.system(size: 12, weight: .medium))
                 .padding(.horizontal, 10).padding(.vertical, 5)

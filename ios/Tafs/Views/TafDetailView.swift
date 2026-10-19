@@ -145,7 +145,7 @@ struct TafDetailView: View {
             }
             Eyebrow(text: "Card")
             CardFace(name: taf.name, rules: taf.card.rules, issuedBy: taf.card.issuedBy,
-                     expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked)
+                     expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), used: taf.used, revoked: taf.card.revoked)
             Button("All of the Card") { section = 2 }
                 .buttonStyle(OutlineButtonStyle())
         }
@@ -154,7 +154,7 @@ struct TafDetailView: View {
     @ViewBuilder
     private func card(_ taf: Taf) -> some View {
         CardFace(name: taf.name, rules: taf.card.rules, issuedBy: taf.card.issuedBy,
-                 expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked)
+                 expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), used: taf.used, revoked: taf.card.revoked)
         Panel {
             ForEach(taf.card.rules) { rule in
                 HStack(alignment: .firstTextBaseline) {
@@ -329,6 +329,8 @@ struct CardFace: View {
     let issuedBy: String
     let expires: Date?
     let color: Color
+    /// What each rule has used this window, as KIFF says: the face shows what's left.
+    var used: [String: Money] = [:]
     var revoked = false
 
     var body: some View {
@@ -341,6 +343,10 @@ struct CardFace: View {
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(rules) { rule in
                     Text("\(rule.label.lowercased()) \(rule.summary)").font(Theme.mono(13))
+                    // What's left of the window's total, as the owner spends it (kiff/tafs#102).
+                    if let left = rule.left(used: used[rule.action]) {
+                        Text(left).font(Theme.mono(12, weight: .semibold)).opacity(0.85)
+                    }
                 }
                 if rules.isEmpty { Text("no actions yet").font(Theme.mono(13)) }
             }

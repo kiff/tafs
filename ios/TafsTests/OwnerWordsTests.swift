@@ -69,3 +69,51 @@ final class TafToolsTests: XCTestCase {
         XCTAssertNil(taf.card.expires, "no valid_until: no end date")
     }
 }
+
+/// From the owner's test of 291 (kiff/tafs#102): what a held call is on, what's left on the
+/// Card, and what a taf did, as KIFF says them.
+final class AfterTheTestTests: XCTestCase {
+    private let decoder: JSONDecoder = KIFFClient.decoder
+
+    func testAHeldGatewayCallSaysWhatItIsOnNotItsToolCallID() throws {
+        let json = #"""
+        {"exceptions":[{"id":"ce_1","subject":"refunds-k5j6m5qx","action":"create_refund","title":"Refund a payment","entity_id":"tc-bc422e3c",
+          "status":"held","breaches":[{"outcome":"per_action_exceeded","reason":"150.00 EUR is above the 100.00 EUR limit for one call","quantity":"sum(amount)","limit":10000,"unit":"EUR","scale":2}],
+          "parameters":{"amount":15000},"parameter_units":{"amount":{"unit":"EUR","scale":2}},
+          "arguments":{"payment_intent":"pi_3USLXh","amount":15000,"kiff_operation_id":"op_1"},
+          "created_at":"2026-10-19T19:00:00.000Z","expires_at":"2026-10-19T19:10:00Z"}]}
+        """#
+        struct List: Decodable { let exceptions: [KIFFClient.CardException] }
+        let e = try decoder.decode(List.self, from: Data(json.utf8)).exceptions[0]
+        let held = KIFFMapping.held(e, tafID: UUID())
+        XCTAssertEqual(held.proposed.summary, "Refund a payment · create_refund", "no tool-call id")
+        XCTAssertEqual(held.details, ["payment_intent: pi_3USLXh"], "the amount shows above it, and KIFF's operation id isn't the owner's")
+        XCTAssertEqual(held.reason, "150.00 EUR is above the 100.00 EUR limit for one call", "KIFF's words, in the unit")
+    }
+
+    func testTheCardSaysWhatsLeft() {
+        var rule = CardRule(action: "create_refund", label: "Refund a payment")
+        rule.perWindow = Money(minor: 100000, currency: "EUR", scale: 2)
+        let left = rule.left(used: Money(minor: 20000, currency: "EUR", scale: 2))
+        XCTAssertEqual(left, "\(Money(minor: 80000, currency: "EUR", scale: 2).formatted) left today")
+        XCTAssertNil(rule.left(used: .bare(5)), "a use in another unit says nothing")
+        XCTAssertNil(rule.left(used: nil))
+    }
+
+    func testTheRecordIsWhatKIFFRecorded() throws {
+        let json = #"""
+        {"calls":[
+          {"proposal_id":"p3","action_name":"create_refund","title":"Refund a payment","actor_id":"refunds-k5j6m5qx","outcome":"allowed","held":true,"created_at":"2026-10-19T19:02:09Z","tool_outcome":{"status":"done"}},
+          {"proposal_id":"p2","action_name":"create_refund","actor_id":"refunds-k5j6m5qx","outcome":"allowed","held":false,"created_at":"2026-10-19T19:02:08Z","tool_outcome":{"status":"done"}},
+          {"proposal_id":"p1","action_name":"create_refund","actor_id":"someone-else","outcome":"allowed","held":false,"created_at":"2026-10-19T18:57:48Z"}]}
+        """#
+        struct List: Decodable { let calls: [KIFFClient.ActivityCall] }
+        let calls = try decoder.decode(List.self, from: Data(json.utf8)).calls
+        let taf = UUID()
+        let record = KIFFMapping.record(calls, ids: ["refunds-k5j6m5qx": taf])
+        XCTAssertEqual(record.map(\.kind), [.approved, .done], "a call of an agent the app doesn't show is left out")
+        XCTAssertEqual(record.map(\.title), ["Refund a payment", "create_refund"])
+        XCTAssertEqual(record.first?.tafID, taf)
+        XCTAssertEqual(KIFFMapping.record(calls, ids: ["refunds-k5j6m5qx": taf]).map(\.id), record.map(\.id), "the same ids on every refresh")
+    }
+}
