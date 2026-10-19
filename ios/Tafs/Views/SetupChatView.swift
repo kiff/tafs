@@ -71,6 +71,10 @@ struct SetupChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         // A focused task (#82): the app's tabs stay out of it.
         .toolbar(.hidden, for: .tabBar)
+        // Its own bar on a wide screen (kiff/tafs#96): the chat doesn't run under the title,
+        // and the conversations button sits in the bar, not over the panel.
+        .toolbarBackground(sizeClass == .regular ? Visibility.visible : .automatic, for: .navigationBar)
+        .toolbarBackground(Theme.background, for: .navigationBar)
         .toolbar {
             if model.setupTaf != nil && model.planqueReady {
                 ToolbarItem(placement: .navigationBarTrailing) { conversations }
