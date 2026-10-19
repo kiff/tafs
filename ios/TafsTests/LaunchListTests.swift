@@ -82,7 +82,8 @@ final class LaunchListTests: XCTestCase {
         kiffUnreachable()
         let next = model()
         XCTAssertTrue(next.tafs.isEmpty)
-        await next.restore()
+        // restore()'s KIFF branch, with the session it reads from the Keychain.
+        await next.resumeSession("kiff_dev_x", tenant: "tenant-a", keyed: true)
         XCTAssertEqual(next.tafs.map(\.id), shownBefore.map(\.id), "the same tafs, with the same ids")
         XCTAssertEqual(next.tafs.map(\.name), shownBefore.map(\.name))
         XCTAssertEqual(next.tafs.first { $0.name == "Rae" }?.state, .paused)
@@ -97,11 +98,14 @@ final class LaunchListTests: XCTestCase {
         await first.useSession("kiff_dev_x", tenant: "tenant-a")
         XCTAssertFalse(first.tafs.isEmpty)
 
-        Keychain.save("tenant-b", for: AppModel.tenantAccount)
         kiffUnreachable()
         let other = model()
-        await other.restore()
+        await other.resumeSession("kiff_dev_x", tenant: "tenant-b", keyed: true)
         XCTAssertTrue(other.tafs.isEmpty, "tenant-a's tafs never show for tenant-b")
+        // The same session for tenant-a shows them: the empty list above is the tenant's doing.
+        let same = model()
+        await same.resumeSession("kiff_dev_x", tenant: "tenant-a", keyed: true)
+        XCTAssertFalse(same.tafs.isEmpty)
     }
 
     func testSignOutForgetsTheList() async throws {

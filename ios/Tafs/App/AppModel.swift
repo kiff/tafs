@@ -98,18 +98,24 @@ final class AppModel: ObservableObject {
     /// Restores where the owner left off: signed in to KIFF, or the saved sample.
     func restore() async {
         if let token = Keychain.load(Self.tokenAccount) {
-            kiff.token = token
-            cloud.token = token
-            kiffTenant = Keychain.load(Self.tenantAccount)
-            sessionHasKey = Keychain.load(Self.keyedAccount) == "1"
-            showRememberedList()
-            mode = .kiff
-            await refresh()
-            await syncPush()
+            await resumeSession(token, tenant: Keychain.load(Self.tenantAccount), keyed: Keychain.load(Self.keyedAccount) == "1")
         } else if let snapshot = store?.load() {
             apply(snapshot)
             mode = .sample
         }
+    }
+
+    /// Goes on with a KIFF session kept from an earlier launch: the remembered list in the
+    /// first frame (#91), then KIFF's.
+    func resumeSession(_ token: String, tenant: String?, keyed: Bool) async {
+        kiff.token = token
+        cloud.token = token
+        kiffTenant = tenant
+        sessionHasKey = keyed
+        showRememberedList()
+        mode = .kiff
+        await refresh()
+        await syncPush()
     }
 
     // MARK: Reading
