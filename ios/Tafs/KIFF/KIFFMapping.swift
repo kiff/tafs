@@ -80,9 +80,22 @@ enum KIFFMapping {
 
     /// One taf per holder; `ids` keeps each holder's taf id stable across refreshes.
     static func tafs(from mandates: [KIFFClient.Mandate], ids: inout [String: UUID], owner: String) -> [Taf] {
+        var colors: [String: Int] = [:]
+        return tafs(from: mandates, ids: &ids, colors: &colors, owner: owner)
+    }
+
+    /// One taf per holder; `ids` and `colors` keep each holder's taf id and colour across
+    /// refreshes (#91). A new holder takes the first colour no other taf has, so a taf that
+    /// sorts before the others doesn't take their colours.
+    static func tafs(from mandates: [KIFFClient.Mandate], ids: inout [String: UUID], colors: inout [String: Int], owner: String) -> [Taf] {
         let live = mandates.filter { $0.revokedAt == nil }
         let holders = Array(Set(live.map(\.subject))).sorted()
-        return holders.enumerated().map { index, holder in
+        colors = colors.filter { holders.contains($0.key) }
+        for holder in holders where colors[holder] == nil {
+            let taken = Set(colors.values)
+            colors[holder] = (0..<Theme.tafColorCount).first { !taken.contains($0) } ?? colors.count
+        }
+        return holders.map { holder in
             let cards = live.filter { $0.subject == holder }
             let id = ids[holder] ?? UUID()
             ids[holder] = id
@@ -93,7 +106,7 @@ enum KIFFMapping {
                 revoked: cards.allSatisfy { !$0.active }
             )
             var taf = Taf(id: id, name: holder, job: "Works under \(cards.count) KIFF Card\(cards.count == 1 ? "" : "s").",
-                          tools: [], colorIndex: index, card: card)
+                          tools: [], colorIndex: colors[holder] ?? 0, card: card)
             taf.state = card.revoked ? .revoked : .working
             taf.now = card.revoked ? "Card not active" : "Acting under KIFF"
             taf.kiffCardIDs = cards.map(\.id)

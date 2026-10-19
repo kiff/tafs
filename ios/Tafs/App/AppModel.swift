@@ -41,6 +41,15 @@ final class AppModel: ObservableObject {
     private var scriptPosition: [UUID: Int] = [:]
     private var templateOf: [UUID: String] = [:]
     private var holderIDs: [String: UUID] = [:]
+    /// Each holder's colour, kept while it holds a Card (#91).
+    private var holderColors: [String: Int] = [:]
+    /// Whether tafs cloud's listing was read in this session: until then a holder it doesn't
+    /// list may still be one of its tafs.
+    private var cloudListed = false
+    /// Whether the tafs shown are this account's: remembered, or read from KIFF (#91).
+    @Published private(set) var listLoaded = false
+    /// Signed in to KIFF and its tafs not shown yet: the first launch after a sign-in.
+    var loadingList: Bool { mode == .kiff && !listLoaded }
 
     /// Called whenever the held calls change, so the lock screen can follow.
     var onHeldChanged: (@MainActor ([HeldCall], [Taf]) -> Void)?
@@ -91,6 +100,7 @@ final class AppModel: ObservableObject {
             cloud.token = token
             kiffTenant = Keychain.load(Self.tenantAccount)
             sessionHasKey = Keychain.load(Self.keyedAccount) == "1"
+            showRememberedList()
             mode = .kiff
             await refresh()
             await syncPush()
@@ -197,6 +207,8 @@ final class AppModel: ObservableObject {
         cloud.token = token
         startAttempt = nil
         holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
+        holderColors = [:]; cloudListed = false; listLoaded = false
+        remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
@@ -224,6 +236,8 @@ final class AppModel: ObservableObject {
         cloudTafs = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
         holderIDs = [:]
+        holderColors = [:]; cloudListed = false; listLoaded = false
+        remembered?.removeObject(forKey: Self.listKey)
         startAttempt = nil
         unfinishedRemovals = []
         grants = []
@@ -386,13 +400,34 @@ final class AppModel: ObservableObject {
     func refresh() async {
         guard mode == .kiff else { playNextDemoActions(); return }
         refreshing = true
-        defer { refreshing = false }
+        let gen = accountGeneration
+        defer {
+            refreshing = false
+            // Read or not, this account's list is no longer loading (KIFF's error shows).
+            if mode == .kiff, gen == accountGeneration { listLoaded = true }
+        }
         do {
+            // One list per refresh (#91): KIFF's Cards and held calls with tafs cloud's
+            // listing, so a taf doesn't show as working first and as paused a moment later.
             async let cards = kiff.cards()
             async let calls = kiff.heldCalls()
+            async let listing = cloudListing()
             let (mandates, exceptions) = try await (cards, calls)
+            let list = await listing
+            guard gen == accountGeneration else { return }
+            if let list {
+                var byAgent: [String: TafsCloud.CloudTaf] = [:]
+                for t in list.tafs { if let a = t.kiffAgent { byAgent[a] = t } }
+                cloudTafs = byAgent
+                cloudListed = true
+                unfinishedRemovals = list.removing
+            }
             show(mandates, exceptions)
-            await refreshCloud()
+            if let removing = list?.removing, !removing.isEmpty {
+                await finishRemovals(removing, gen: gen)
+                // Finishing waited: another account may be signed in now, with its own tafs.
+                guard gen == accountGeneration else { return }
+            }
             await refreshConnections()
             // Which account this is, once a sign-in: it doesn't change under it.
             if kiffAccount == nil {
@@ -410,17 +445,74 @@ final class AppModel: ObservableObject {
     /// Shows what KIFF returned. A held call keeps its id across refreshes (it is derived
     /// from KIFF's id), so the lock screen notifies once and rows are not recreated.
     func show(_ mandates: [KIFFClient.Mandate], _ exceptions: [KIFFClient.CardException]) {
-        tafs = KIFFMapping.tafs(from: mandates, ids: &holderIDs, owner: ownerName)
+        let previous = Dictionary(tafs.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        var next = KIFFMapping.tafs(from: mandates, ids: &holderIDs, colors: &holderColors, owner: ownerName)
         held = exceptions.map { e in
             let id = holderIDs[e.subject] ?? UUID()
             holderIDs[e.subject] = id
             return KIFFMapping.held(e, tafID: id)
         }
-        for i in tafs.indices where held.contains(where: { $0.tafID == tafs[i].id }) {
-            tafs[i].state = .waiting
-            tafs[i].now = "Waiting on you"
+        let agentOf = Dictionary(holderIDs.map { ($0.value, $0.key) }, uniquingKeysWith: { a, _ in a })
+        for i in next.indices {
+            if let agent = agentOf[next[i].id], let c = cloudTafs[agent] {
+                next[i].name = c.name
+                next[i].state = c.paused ? .paused : .working
+                next[i].now = c.paused ? "Paused" : c.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
+            } else if next[i].state != .working {
+                continue // a Card no longer active: stopped, whatever tafs cloud says
+            } else if cloudListed {
+                // An agent tafs cloud doesn't run (made through KIFF's API): it acts under its
+                // Card when its own software calls, so it isn't one of the tafs working.
+                next[i].state = .idle
+            } else if let p = previous[next[i].id] {
+                // tafs cloud not read yet: what was last known, rather than "working".
+                next[i].name = p.name
+                next[i].state = p.state == .waiting ? .idle : p.state
+                next[i].now = p.now
+            }
         }
+        for i in next.indices where held.contains(where: { $0.tafID == next[i].id }) {
+            next[i].state = .waiting
+            next[i].now = "Waiting on you"
+        }
+        tafs = next
+        listLoaded = true
+        rememberList()
         notifyHeld()
+    }
+
+    private func cloudListing() async -> (tafs: [TafsCloud.CloudTaf], removing: [TafsCloud.PendingRemoval])? {
+        try? await cloud.listing()
+    }
+
+    // MARK: The remembered list (#91)
+
+    /// The tafs last shown for this account, so the next launch shows them in its first
+    /// frame. Names, states, colours and the Cards' summary: never a chat (docs/data.md).
+    private struct RememberedList: Codable {
+        var tenant: String?
+        var ids: [String: UUID]
+        var colors: [String: Int]
+        var tafs: [Taf]
+    }
+
+    static let listKey = "tafs.list"
+
+    private func rememberList() {
+        guard mode == .kiff, let remembered else { return }
+        let list = RememberedList(tenant: kiffTenant, ids: holderIDs, colors: holderColors, tafs: tafs)
+        if let data = try? JSONEncoder().encode(list) { remembered.set(data, forKey: Self.listKey) }
+    }
+
+    /// Shows the remembered list when it is this account's.
+    private func showRememberedList() {
+        guard let data = remembered?.data(forKey: Self.listKey),
+              let list = try? JSONDecoder().decode(RememberedList.self, from: data),
+              list.tenant == kiffTenant else { return }
+        holderIDs = list.ids
+        holderColors = list.colors
+        tafs = list.tafs
+        listLoaded = true
     }
 
     // MARK: Sample mode
@@ -738,30 +830,6 @@ final class AppModel: ObservableObject {
     /// Removals tafs cloud began and didn't finish (a step failed, or the answer was lost).
     /// Archived tafs aren't listed, so the app finishes these itself on each refresh.
     @Published private(set) var unfinishedRemovals: [TafsCloud.PendingRemoval] = []
-
-    /// Reads which tafs tafs cloud runs; KIFF stays the source of the Cards and held calls.
-    func refreshCloud() async {
-        let gen = accountGeneration
-        guard mode == .kiff, let listing = try? await cloud.listing(), gen == accountGeneration else { return }
-        let list = listing.tafs, removing = listing.removing
-        unfinishedRemovals = removing
-        if !removing.isEmpty {
-            await finishRemovals(removing, gen: gen)
-            // Finishing waited: another account may be signed in now, with its own tafs.
-            guard gen == accountGeneration else { return }
-        }
-        var byAgent: [String: TafsCloud.CloudTaf] = [:]
-        for t in list { if let a = t.kiffAgent { byAgent[a] = t } }
-        cloudTafs = byAgent
-        for i in tafs.indices {
-            guard let holder = holderIDs.first(where: { $0.value == tafs[i].id })?.key, let c = byAgent[holder] else { continue }
-            tafs[i].name = c.name
-            if tafs[i].state != .waiting {
-                tafs[i].state = c.paused ? .paused : .working
-                tafs[i].now = c.paused ? "Paused" : c.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
-            }
-        }
-    }
 
     /// The tafs cloud taf behind a taf, when there is one.
     func cloudTaf(for tafID: UUID) -> TafsCloud.CloudTaf? {

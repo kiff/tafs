@@ -54,7 +54,7 @@ struct HomeView: View {
                     }
                 }
 
-                if model.mode == .kiff, model.tafs.isEmpty {
+                if model.mode == .kiff, model.listLoaded, model.tafs.isEmpty {
                     Panel {
                         Text("No Cards yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
                         Text("Cards you issue in KIFF show up here, one taf per agent that holds them. Pull down to refresh.")
@@ -125,10 +125,16 @@ struct HomeView: View {
         let working = model.workingCount
         let waiting = model.held.count
         return VStack(alignment: .leading, spacing: 0) {
-            Text("\(working) \(working == 1 ? "taf" : "tafs") working.")
-                .foregroundColor(Theme.ink)
-            Text(waiting == 0 ? "Nothing needs you." : "\(waiting) \(waiting == 1 ? "needs" : "need") you.")
-                .foregroundColor(Theme.dim)
+            if model.loadingList {
+                // Never "0 tafs working" before the tafs are read (#91).
+                Text("Loading your tafs…")
+                    .foregroundColor(Theme.dim)
+            } else {
+                Text("\(working) \(working == 1 ? "taf" : "tafs") working.")
+                    .foregroundColor(Theme.ink)
+                Text(waiting == 0 ? "Nothing needs you." : "\(waiting) \(waiting == 1 ? "needs" : "need") you.")
+                    .foregroundColor(Theme.dim)
+            }
         }
         .font(Theme.display(36))
     }
