@@ -35,6 +35,19 @@ describe("jobs", () => {
     }
   });
 
+  it("answers the owner briefly, in their words, and acts on their own request (kiff/tafs#102)", () => {
+    for (const j of JOBS) {
+      const flat = systemPrompt(j).replace(/\s+/g, " ");
+      expect(flat).toContain("A request the owner makes in the chat (\"refund this payment\") is enough to act on: do it within your Card, without the checks your job runs on work you find yourself");
+      expect(flat).toContain("one or two short sentences (at most about 40 words)");
+      expect(flat).toContain("amounts in the owner's currency with its symbol (€150), never in cents");
+      expect(flat).toContain("no ids (payments, refunds, operations, cards) unless the owner asks for one");
+      expect(flat).toContain("nothing about your notes, earlier runs, or what you checked and didn't change");
+      // The scheduled run's report still names each item by its reference.
+      expect(flat).toContain("End every scheduled run with a short report");
+    }
+  });
+
   it("refuses an unknown job", () => {
     expect(() => jobById("payroll")).toThrow(/no job "payroll"/);
   });
