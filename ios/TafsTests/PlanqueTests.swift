@@ -210,6 +210,42 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(StubProtocol.sent.filter { $0.value(forHTTPHeaderField: "Planque-Device-Signature") == nil }.count, 0)
     }
 
+    /// A device KIFF knows names itself in each signature (kiff/planque#10), and still sends
+    /// its key at enrolment for a planque from before that.
+    func testADeviceKIFFKnowsSignsWithItsID() async throws {
+        let (_, planque, _) = clients()
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_ipad01"
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"dev_ipad01"}"#)
+        let enrolled = try await planque.enrol(deviceKey: Data([0x30, 0x59, 0x01]), connectorKey: "kiff_live_connector")
+        XCTAssertEqual(enrolled.device, "dev_ipad01")
+        let header = try XCTUnwrap(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
+        XCTAssertTrue(header.hasPrefix("t=") && header.hasSuffix(",v1=sig,d=dev_ipad01"), header)
+        XCTAssertEqual(body(StubProtocol.sent.last) as? [String: String], ["device_key": "MFkB", "connector_key": "kiff_live_connector"])
+    }
+
+    /// Setting up on a second device: the app reads its KIFF device id and signs with it,
+    /// so planque asks KIFF instead of refusing a second phone (kiff/planque#10).
+    func testSetUpPlanqueSignsAsTheKIFFDevice() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer, vendor: StubVendor())
+        StubProtocol.responses["GET /v1/me/devices"] = (200, #"{"devices":[{"id":"dev_iphone01","this_device":false},{"id":"dev_ipad01","this_device":true}]}"#)
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"dev_ipad01"}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+
+        let ready = await model.setUpPlanque()
+        XCTAssertTrue(ready, model.lastError ?? "")
+        for path in ["/v1/accounts/t_01/enrolment", "/v1/accounts/t_01/grants"] {
+            let method = path.hasSuffix("enrolment") ? "POST" : "GET"
+            let header = try XCTUnwrap(sent(method, "planque.test", path).last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
+            XCTAssertTrue(header.hasSuffix(",d=dev_ipad01"), "\(path): \(header)")
+        }
+        XCTAssertEqual(sent("GET", "api.test", "/v1/me/devices").count, 1, "read once")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     // MARK: Connecting a taf's tools
 
     private func model(signer: FaceIDSigner, vendor: StubVendor) async -> AppModel {

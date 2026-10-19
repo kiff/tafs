@@ -129,6 +129,20 @@ final class KIFFClient {
         let _: Empty = try await send("POST", "/v1/auth/device/logout", body: [String: String]())
     }
 
+    /// This device's id in KIFF (`dev_…`, kiff-cloud #1267), from the person's device list:
+    /// planque asks KIFF about the device by it (kiff/planque#10). Nil when KIFF lists
+    /// this session without a device yet.
+    func thisDeviceID() async throws -> String? {
+        struct Device: Decodable {
+            let id: String
+            let thisDevice: Bool?
+            enum CodingKeys: String, CodingKey { case id, thisDevice = "this_device" }
+        }
+        struct Response: Decodable { let devices: [Device] }
+        let r: Response = try await send("GET", "/v1/me/devices")
+        return r.devices.first { $0.thisDevice == true && $0.id.hasPrefix("dev_") }?.id
+    }
+
     // MARK: Held calls
 
     struct CardException: Decodable, Equatable {
