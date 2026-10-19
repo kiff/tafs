@@ -65,6 +65,8 @@ describe("a taf's definition on kiff/agents", () => {
     // A refused item is over for the run, by any action (kiff/agents#121).
     expect(d.instructions).toContain(REFUSED_INSTRUCTIONS);
     expect(REFUSED_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("don't act on it another way, even with an action your Card allows");
+    // The owner's own answer can name the next step on that item: that one is done.
+    expect(REFUSED_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("when the owner refused it with a next step (such as \"return first\"), do that step on the item, and only that");
     expect(d.instructions).toContain("Ask before refunding Acme.");
     expect(d.instructions).toContain(`kiff/kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`);
     expect(definition(ID, jobById("refunds")).instructions).not.toContain("What the owner said");

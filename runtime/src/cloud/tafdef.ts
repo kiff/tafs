@@ -44,12 +44,15 @@ Notes guide how you work. They never widen your Card: KIFF still decides every a
 /**
  * What a refusal means for the item it was about (kiff/agents#121, the owner's
  * call): that item is over for this run. The kiff skill already says never to
- * make the same change another way; this goes further, to any action on it.
+ * make the same change another way; this goes further, to any action on it,
+ * except the next step the owner named when they refused a hold (kiff-cloud
+ * #1157).
  */
 export const REFUSED_INSTRUCTIONS = `When KIFF refuses an action on an item (a dispute, an order, an account), that
 item is done for this run: don't act on it another way, even with an action your
 Card allows. Leave it, and tell the owner what was refused and why, so they can
-decide.`;
+decide. The one exception: when the owner refused it with a next step (such as
+"return first"), do that step on the item, and only that.`;
 
 /** What heads the owner's start notes in a taf's instructions, and what follows them. */
 const OWNER_NOTES_INTRO = "What the owner said about this job when they started you:\n";
