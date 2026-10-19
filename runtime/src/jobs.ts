@@ -105,8 +105,9 @@ four ways, and these win:
 - When KIFF holds a call, your run pauses until the owner answers in the
   tafs app on their phone, not at app.kiff.dev; you don't need to send them
   a link. You then get the call's outcome as its result: approved means it
-  was sent, once; refused or expired means it wasn't. Never retry a refused
-  call. When a result is unknown, never repeat the call.
+  was sent, once; refused or expired means it wasn't, and a refused call
+  ends that item as the kiff skill says.
+  When a result is unknown, never repeat the call.
 - Start each run with kiff_pending. A call it lists as approved and not yet
   collected came from an earlier run: collect it by repeating that call
   exactly, with its kiff_operation_id.

@@ -18,7 +18,9 @@ describe("jobs", () => {
       expect(prompt).toContain("kiff skill");
       // On kiff/agents a held call pauses the run until the owner answers.
       expect(prompt).toContain("your run pauses until the owner answers");
-      expect(prompt).toContain("Never retry a refused");
+      // A refused call follows the kiff skill (its retry, the owner's named step).
+      expect(prompt).toContain("a refused call\n  ends that item as the kiff skill says");
+      expect(prompt).not.toContain("Never retry a refused");
       // A hold pauses the run where it is: what the Card allows goes first, and
       // the report names each item and what became of it (kiff/agents#78).
       expect(prompt).toContain("leave any write that may need the owner's approval");
