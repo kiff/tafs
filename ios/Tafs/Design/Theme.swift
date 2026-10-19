@@ -31,6 +31,8 @@ enum Theme {
         Color(hex: 0x2F6BFF), Color(hex: 0x0FA3D6), Color(hex: 0x16A37A),
     ]
 
+    static var tafColorCount: Int { tafColors.count }
+
     static func tafColor(_ index: Int) -> Color {
         tafColors[((index % tafColors.count) + tafColors.count) % tafColors.count]
     }
