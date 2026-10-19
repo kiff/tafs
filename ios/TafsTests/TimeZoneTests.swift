@@ -39,15 +39,19 @@ final class TimeZoneTests: XCTestCase {
         let here = TimeZone.current.identifier
         StubProtocol.responses["PUT /v1/me/time-zone"] = (200, #"{"time_zone":"\#(here)"}"#)
         StubProtocol.thenRespond["PUT /v1/me/time-zone"] = ["GET /v1/me": (200, #"{"tenant_id":"t1","tenant_slug":"acme","time_zone":"\#(here)"}"#)]
-        let unlocksBefore = signer.signed.count // signing in may unlock too (alerts)
+        let unlocksBefore = signer.signed.count // signing in signs too
         await model.useThisDevicesTimeZone()
 
         let put = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PUT" })
         XCTAssertEqual(try JSONDecoder().decode([String: String].self, from: try XCTUnwrap(put.httpBody)), ["time_zone": here])
         let header = try XCTUnwrap(put.value(forHTTPHeaderField: "KIFF-Device-Signature"), "a signed setup call, as KIFF asks of a phone")
         XCTAssertTrue(header.hasPrefix("t="), header)
-        XCTAssertEqual(signer.signed.count - unlocksBefore, 1, "one unlock for it")
-        XCTAssertTrue(signer.signed.last?.hasPrefix("tafs.time-zone.v1|t1|") ?? false, signer.signed.last ?? "")
+        // One unlock (sign), whose confirmation then signs KIFF's request (signConfirmed): the
+        // signer records both, in that order.
+        let during = Array(signer.signed.dropFirst(unlocksBefore))
+        XCTAssertEqual(during.count, 2, "\(during)")
+        XCTAssertTrue(during.first?.hasPrefix("tafs.time-zone.v1|t1|") ?? false, "the unlock: \(during)")
+        XCTAssertTrue(during.last?.hasPrefix("kiff.request.v1") ?? false, "KIFF's request message: \(during)")
         XCTAssertEqual(model.kiffAccount?.timeZone, here, "read again from KIFF")
         XCTAssertNil(model.timeZoneError)
 
