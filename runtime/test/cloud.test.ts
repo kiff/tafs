@@ -4,7 +4,7 @@ import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upg
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import { jobById } from "../src/jobs.js";
-import { fakeAgents, memoryAccounts, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -48,7 +48,7 @@ function world() {
   const tafs = memoryTafs();
   const w = {
     agents, tafs,
-    names: memoryNames(), claims: memoryClaims(), removals: memoryRemovals(), keys: memoryKeys(), accounts: memoryAccounts(),
+    names: memoryNames(), claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(), keys: memoryKeys(), accounts: memoryAccounts(),
     claimed: [] as string[], drafts: DRAFTS, newIDs: [NEW, NEW2],
   };
   for (const [tenant, id, name] of [["t_acme", RAE, "Rae"], ["t_other", MAX, "Max"]] as const) {
@@ -78,7 +78,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
 function depsOf(w: World): Deps {
   return {
     agents: w.agents.api, keys: w.keys, accounts: w.accounts, tafs: w.tafs,
-    names: w.names, slots: memorySlots(), claims: w.claims, removals: w.removals,
+    names: w.names, slots: memorySlots(), claims: w.claims, removals: w.removals, archived: w.archived,
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
@@ -315,6 +315,7 @@ describe("calmEnough", () => {
 describe("removing a taf", () => {
   it("removes it from kiff/agents, then its key, then frees its name", async () => {
     const w = world();
+    await w.archived.add("t_acme", RAE, "sess_x", new Date("2026-11-16T12:00:00Z"));
     const r = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
     expect(r.status).toBe(200);
     expect(r.body).toEqual({ taf: RAE, name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });
@@ -323,6 +324,7 @@ describe("removing a taf", () => {
     expect(w.names.held.has("t_acme#Rae")).toBe(false);
     expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
     expect(w.removals.held.size).toBe(0);
+    expect(w.archived.held.size).toBe(0); // its archived chats are forgotten too
   });
 
   it("takes the right to manage Cards, and another account's taf answers like a missing one", async () => {

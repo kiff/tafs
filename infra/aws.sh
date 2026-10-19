@@ -17,6 +17,8 @@
 #                              key it is, never the key), kept 30 days.
 #                              Also each account's phones and KIFF alert secrets
 #                              (push#tenant), and delivered alert ids (ttl).
+#                              And the chats each taf's owner archived
+#                              (archived#tenant#taf, ttl), kiff/tafs#82.
 #   tafs/anthropic-api-key     the model key; a person creates it before this script
 #                              runs and replicates it to eu-west-1 (see README). Made
 #                              here only when it doesn't exist, holding "unset".

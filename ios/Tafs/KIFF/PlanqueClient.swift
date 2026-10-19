@@ -16,8 +16,8 @@ final class PlanqueClient {
 
         var errorDescription: String? {
             switch self {
-            case .notSigning: return "This step needs your Face ID first."
-            case .digestMismatch: return "planque's grant doesn't match what it asks for. Nothing was approved."
+            case .notSigning: return "This step needs your confirmation first."
+            case .digestMismatch: return "This request doesn't match what it asks for. Nothing was approved."
             case .server(_, let message): return message
             }
         }
@@ -29,6 +29,10 @@ final class PlanqueClient {
     /// Signs one request: set while a step the owner confirmed with Face ID runs, and for
     /// reads, which ask for nothing.
     var signer: (@MainActor (Data) throws -> String)?
+    /// This device's id in KIFF, sent with each signature (`d=`) so planque asks KIFF
+    /// whether the device signed (kiff/planque#10). Without it, planque checks the key
+    /// this phone enrolled with.
+    var deviceID: String?
     private let session: URLSession
 
     init(baseURL: URL = URL(string: "https://planque.kiff.dev")!, session: URLSession = .shared) {
@@ -52,8 +56,9 @@ final class PlanqueClient {
         let device: String
     }
 
-    /// Enrols this phone's key with planque, and hands it the KIFF connector key it keeps
-    /// to register tools. The same phone may enrol again to hand it a new key.
+    /// Hands planque the KIFF connector key it keeps to register tools. Signed with
+    /// `deviceID`, any of the owner's devices may (kiff/planque#10). The device's key goes
+    /// too, for a planque from before that, which enrols one phone by its key.
     func enrol(deviceKey: Data, connectorKey: String) async throws -> Enrolment {
         try await send("POST", "enrolment", body: ["device_key": deviceKey.base64EncodedString(), "connector_key": connectorKey])
     }
@@ -78,6 +83,13 @@ final class PlanqueClient {
             /// RFC 3339, as planque writes it (Go's nanoseconds included).
             let at: String
             let what: String
+
+            /// `what` for the owner: planque's record names who signed by ids ("by user_…
+            /// on device dev_…", or a key's fingerprint), which the owner never reads.
+            var plain: String {
+                what.replacingOccurrences(of: #" (by \S+ on device dev_[a-z0-9]+|on the phone [0-9a-f]{4}( [0-9a-f]{4}){3})"#,
+                                          with: "", options: .regularExpression)
+            }
         }
         let id: String
         /// pending, approved, signed_in, listed, connected, failed or disconnected.
@@ -119,9 +131,11 @@ final class PlanqueClient {
     }
 
     /// Every grant for the account, each with its digest checked against its request.
-    func grants() async throws -> [Grant] {
+    /// `readSigner` signs this read alone, leaving `signer` as it is: a refresh that runs
+    /// while a Face ID step waits on the vendor's page must not end that step's signer.
+    func grants(signedBy readSigner: (@MainActor (Data) throws -> String)? = nil) async throws -> [Grant] {
         struct Response: Decodable { let grants: [Grant] }
-        let data = try await raw("GET", "grants", body: nil)
+        let data = try await raw("GET", "grants", body: nil, signer: readSigner)
         var grants = try KIFFClient.decoder.decode(Response.self, from: data).grants
         // The request as planque sent it, numbers as written, so the digest is planque's.
         let raws = (try? JCS.parse(data))?["grants"]?.array ?? []
@@ -187,8 +201,9 @@ final class PlanqueClient {
         return try KIFFClient.decoder.decode(T.self, from: data)
     }
 
-    private func raw(_ method: String, _ path: String, body: Data?) async throws -> Data {
-        guard let tenant, let signer else { throw PlanqueError.notSigning }
+    private func raw(_ method: String, _ path: String, body: Data?,
+                     signer override: (@MainActor (Data) throws -> String)? = nil) async throws -> Data {
+        guard let tenant, let signer = override ?? signer else { throw PlanqueError.notSigning }
         guard let url = URL(string: "v1/accounts/\(escaped(tenant))/\(path)", relativeTo: baseURL) else {
             throw PlanqueError.server(status: 0, message: "Bad path")
         }
@@ -204,12 +219,13 @@ final class PlanqueClient {
         // Signed as planque reads it: the path and query as sent, percent-encoded.
         let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
         let message = Self.message(base: baseURL, tenant: tenant, method: method, uri: uri, body: body ?? Data(), signedAt: signedAt)
-        request.setValue("t=\(signedAt),v1=\(try signer(message))", forHTTPHeaderField: "Planque-Device-Signature")
+        let device = deviceID.map { ",d=\($0)" } ?? ""
+        request.setValue("t=\(signedAt),v1=\(try signer(message))\(device)", forHTTPHeaderField: "Planque-Device-Signature")
 
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "planque answered \(status)"
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "The connection answered \(status)"
             throw PlanqueError.server(status: status, message: message)
         }
         return data

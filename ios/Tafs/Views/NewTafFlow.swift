@@ -114,7 +114,7 @@ struct NewTafFlow: View {
                     if started != nil { dismiss() }
                 }
             } label: {
-                Label("Issue with Face ID", systemImage: "faceid")
+                Label("Issue with \(Biometry.name)", systemImage: Biometry.symbol)
             }
             .buttonStyle(PrimaryButtonStyle())
             .disabled(issuing)

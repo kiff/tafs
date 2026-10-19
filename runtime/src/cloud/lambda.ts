@@ -4,7 +4,7 @@ import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
 import { forwardAlert } from "./forward.js";
-import { type Accounts, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
 /**
@@ -326,8 +326,31 @@ const removals: Removals = {
   },
 };
 
+/**
+ * The chats each taf's owner archived (kiff/tafs#82), in one item per taf
+ * (archived#tenant#taf): a string set of sessions. Each archive moves its ttl
+ * past when kiff/agents deletes the chats, so the item goes once they have.
+ */
+const archived: Archived = {
+  async list(tenant, tafID) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } }, ConsistentRead: true }));
+    return out.Item?.chats?.SS ?? [];
+  },
+  async add(tenant, tafID, session, until) {
+    await dynamo.send(new UpdateItemCommand({
+      TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } },
+      UpdateExpression: "ADD chats :s SET #ttl = :ttl",
+      ExpressionAttributeNames: { "#ttl": "ttl" },
+      ExpressionAttributeValues: { ":s": { SS: [session] }, ":ttl": { N: String(Math.floor(until.getTime() / 1000)) } },
+    }));
+  },
+  async remove(tenant, tafID) {
+    await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } } }));
+  },
+};
+
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived };
 }
 
 /**

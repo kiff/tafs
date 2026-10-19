@@ -273,6 +273,13 @@ final class TafsCloud {
         return r.chats
     }
 
+    /// Archives one of the taf's chats (kiff/tafs#82): tafs cloud leaves it out of `chats`
+    /// and the thread from then on. It isn't deleted.
+    func archiveChat(_ id: String, session: String) async throws {
+        struct Response: Decodable { let archived: Bool }
+        let _: Response = try await send("POST", "/v1/tafs/\(escaped(id))/chats/\(escaped(session))/archive")
+    }
+
     /// What a streamed message's run does, as tafs cloud relays it (#60).
     enum StreamEvent: Equatable {
         /// The chat the message went into, first, and the run that answers it.

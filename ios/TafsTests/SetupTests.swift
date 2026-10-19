@@ -666,6 +666,164 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A tapped choice shows at once as the owner's message (#82), before tafs cloud
+    /// answers; a reload that doesn't have it yet keeps it, and tafs cloud's copy takes
+    /// its place without showing it twice.
+    func testATappedChoiceShowsAtOnceAndOnce() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        // A stream the test holds open: Setup hasn't answered, nor recorded the message.
+        var continuation: AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation?
+        let events = AsyncThrowingStream<TafsCloud.StreamEvent, Error> { continuation = $0 }
+        let stream = try XCTUnwrap(continuation)
+        model.streamOpener = { _, _ in events }
+        let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
+        await model.answer(which, "live")
+        let mine = { model.setupThread.messages.filter { $0.from == .owner && $0.text == "[confirm which] live" } }
+        XCTAssertEqual(mine().count, 1, "shown as soon as it's tapped")
+        XCTAssertEqual(model.setupThread.answer(to: "which")?.text, "live", "the card shows the choice")
+
+        // A reload while it's on its way: tafs cloud doesn't have it yet, and it stays.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        await model.loadSetupThread()
+        XCTAssertEqual(mine().count, 1, "a reload doesn't drop it")
+
+        // tafs cloud has it: its copy, once.
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let at = iso.string(from: Date())
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[{"at":"\(at)","from":"owner","kind":"message","text":"[confirm which] live","session":"s1"}],"components":[],"working":null}
+        """)
+        await model.loadSetupThread()
+        XCTAssertEqual(mine().map(\.session), ["s1"], "tafs cloud's copy, not twice")
+        await model.loadSetupThread()
+        XCTAssertEqual(mine().count, 1)
+        stream.yield(.end(status: "COMPLETED", stop: "answered"))
+        stream.finish()
+        await model.setupStream?.value
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Streams the test holds open, one per send, so Setup never answers or records.
+    private final class OpenStreams {
+        var continuations: [AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation] = []
+        func open() -> AsyncThrowingStream<TafsCloud.StreamEvent, Error> {
+            AsyncThrowingStream { self.continuations.append($0) }
+        }
+        func close() {
+            for c in continuations { c.yield(.end(status: "COMPLETED", stop: "answered")); c.finish() }
+        }
+    }
+
+    /// A sent message shows last, even when the phone's clock is behind tafs cloud's (the
+    /// #84 review): it's stamped no earlier than the thread's latest item.
+    func testASentMessageShowsLastWhenThePhoneClockIsBehind() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        // tafs cloud's time is a minute ahead of the phone's.
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let ahead = iso.string(from: Date().addingTimeInterval(60))
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[{"at":"\(ahead)","from":"taf","kind":"message","text":"¿Prueba o real?","session":"s1"}],"components":[],"working":null}
+        """)
+        await model.loadSetup()
+        await model.loadSetupThread()
+        let streams = OpenStreams()
+        model.streamOpener = { _, _ in streams.open() }
+        await model.sendSetup("Prueba")
+        guard case .message(let last)? = model.setupThread.items.last else { return XCTFail("no message last") }
+        XCTAssertEqual(last.text, "Prueba", "the owner's message is last, under Setup's question")
+        streams.close()
+        await model.setupStream?.value
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Two identical messages sent close together stay two until tafs cloud has both (the
+    /// #84 review): one copy takes the place of one sent message.
+    func testTwoIdenticalMessagesStayTwo() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        let streams = OpenStreams()
+        model.streamOpener = { _, _ in streams.open() }
+        await model.sendSetup("Sí")
+        await model.sendSetup("Sí")
+        let mine = { model.setupThread.messages.filter { $0.from == .owner && $0.text == "Sí" } }
+        XCTAssertEqual(mine().count, 2)
+
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let at = iso.string(from: Date())
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[{"at":"\(at)","from":"owner","kind":"message","text":"Sí","session":"s1"}],"components":[],"working":null}
+        """)
+        await model.loadSetupThread()
+        XCTAssertEqual(mine().map(\.session).sorted(), ["pending", "s1"], "tafs cloud has one: the other still shows")
+
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[{"at":"\(at)","from":"owner","kind":"message","text":"Sí","session":"s1"},
+                     {"at":"\(at)","from":"owner","kind":"message","text":"Sí","session":"s1"}],"components":[],"working":null}
+        """)
+        await model.loadSetupThread()
+        XCTAssertEqual(mine().map(\.session), ["s1", "s1"], "both copies, none twice")
+        streams.close()
+        await model.setupStream?.value
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A message on its way to tafs cloud isn't the thread's session: Stop and the like
+    /// name the session tafs cloud gave (#82).
+    func testAMessageOnItsWayHasNoSession() {
+        var thread = SetupThread()
+        thread.messages = [
+            TafsCloud.ChatMessage(at: Date(timeIntervalSince1970: 1_800_000_000), from: .owner, text: "hi", session: "s9"),
+            TafsCloud.ChatMessage(at: Date(timeIntervalSince1970: 1_800_000_060), from: .owner, text: "again", session: "pending"),
+        ]
+        XCTAssertEqual(thread.session, "s9")
+    }
+
+    /// Archiving a conversation (#82) asks tafs cloud, so it stays archived on every
+    /// phone: it leaves the list, and the one shown gives way to a new conversation.
+    /// One tafs cloud didn't archive stays, with why.
+    func testArchivingAConversation() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, """
+        {"chats":[{"session":"s_2","started":"2026-10-18T10:00:00.000Z","updated":"2026-10-18T10:05:00.000Z","title":"Answer customer questions"},
+                  {"session":"s_1","started":"2026-10-17T09:00:00.000Z","updated":"2026-10-17T09:30:00.000Z","title":"Connect my Stripe"}]}
+        """)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s_2"] = (200, """
+        {"messages":[{"at":"2026-10-18T10:00:00.000Z","from":"owner","kind":"message","text":"Answer customer questions","session":"s_2"}],"components":[]}
+        """)
+        await model.loadSetup()
+        await model.loadSetupChats()
+        await model.openSetupChat("s_2")
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/chats/s_2/archive"] = (200, #"{"session":"s_2","archived":true}"#)
+        StubProtocol.sent = []
+        let archived = await model.archiveSetupChat("s_2")
+        XCTAssertTrue(archived)
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/chats/s_2/archive").count, 1, "kept on tafs cloud")
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_1"])
+        XCTAssertNil(model.setupChat, "the archived one isn't shown")
+        XCTAssertTrue(model.setupFresh, "a new conversation instead")
+        XCTAssertTrue(model.setupThread.messages.isEmpty)
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/chats/s_1/archive"] = (503, #"{"error":"tafs cloud is down"}"#)
+        let refused = await model.archiveSetupChat("s_1")
+        XCTAssertFalse(refused)
+        XCTAssertEqual(model.setupChats.map(\.session), ["s_1"], "still listed")
+        XCTAssertEqual(model.lastError, "Not archived: tafs cloud is down")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     static func component(_ json: String) throws -> SetupComponent {
         try JSONDecoder().decode(SetupComponent.self, from: Data(json.utf8))
     }

@@ -67,7 +67,8 @@ struct SetupThread: Equatable {
 
     /// The session the thread is in now: the latest one anything happened in.
     var session: String? {
-        let lastMessage = messages.last.map { ($0.at, $0.session) }
+        // A message on its way to tafs cloud has no session yet (kiff/tafs#82).
+        let lastMessage = messages.last { $0.session != "pending" }.map { ($0.at, $0.session) }
         let lastShown = components.max { $0.firstAt < $1.firstAt }.map { ($0.firstAt, $0.session) }
         return [lastMessage, lastShown].compactMap { $0 }.max { $0.0 < $1.0 }?.1
     }

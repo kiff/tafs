@@ -201,8 +201,9 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
+        planque.deviceID = nil
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
@@ -228,9 +229,10 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
+        planque.deviceID = nil
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false
@@ -443,7 +445,7 @@ final class AppModel: ObservableObject {
             do {
                 _ = try await signer.sign(answer: .approveOnce, heldID: "card-\(UUID().uuidString)", reason: "Issue \(draft.name)'s Card")
             } catch {
-                lastError = "The Card was not issued: Face ID did not confirm."
+                lastError = "The Card was not issued: it wasn't confirmed."
                 return nil
             }
         }
@@ -469,7 +471,7 @@ final class AppModel: ObservableObject {
         static func < (a: StartStep, b: StartStep) -> Bool { a.rawValue < b.rawValue }
         var label: String {
             switch self {
-            case .confirm: return "Confirm with Face ID"
+            case .confirm: return "Confirm with \(Biometry.name)"
             case .cards: return "Issue its Cards in KIFF"
             case .run: return "Hand it to tafs cloud and start its first run"
             }
@@ -540,7 +542,7 @@ final class AppModel: ObservableObject {
         do {
             _ = try await signer.sign(answer: .approveOnce, heldID: "start-\(a.agent)", reason: "Start \(name) with \(cards.count) Card\(cards.count == 1 ? "" : "s")")
         } catch {
-            throw StartFailure(step: .confirm, message: a.draft == nil ? "Nothing was started: Face ID did not confirm." : "Face ID did not confirm; nothing more was done.")
+            throw StartFailure(step: .confirm, message: a.draft == nil ? "Nothing was started: it wasn't confirmed." : "It wasn't confirmed; nothing more was done.")
         }
         guard accountGeneration == gen else { throw Self.signedOut(.confirm) }
         // The owner just confirmed with Face ID: a phone session bound to its key signs the
@@ -852,7 +854,7 @@ final class AppModel: ObservableObject {
                 signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)
             }
         } catch {
-            lastError = "Not sent: Face ID did not confirm."
+            lastError = "Not sent: it wasn't confirmed."
             return
         }
 
@@ -1617,15 +1619,18 @@ final class AppModel: ObservableObject {
     }
 
     /// Reads the grants. A read asks for no Face ID; it is signed so planque shows them only
-    /// to the enrolled phone.
+    /// to the enrolled phone. It signs with its own signer and never touches
+    /// `planque.signer`: it runs whenever the app comes back to the front, which is also
+    /// when the owner returns from the vendor's sign-in, mid-way through a Face ID step that
+    /// still needs its signer to confirm the sign-in.
     func refreshConnections() async {
         let gen = accountGeneration
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return }
+        await loadDeviceID()
+        guard gen == accountGeneration else { return }
         let signer = self.signer
         planque.tenant = tenant
-        planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
-        guard let list = try? await planque.grants(), gen == accountGeneration else { return }
+        guard let list = try? await planque.grants(signedBy: { try signer.signConfirmed($0) }), gen == accountGeneration else { return }
         grants = list
     }
 
@@ -1640,8 +1645,9 @@ final class AppModel: ObservableObject {
         }
         if planqueReady { return true }
         let gen = accountGeneration
+        await loadDeviceID()
         do {
-            _ = try await signer.sign(Data("tafs.planque.v1|\(tenant)".utf8), reason: "Let planque keep your tools' sign-ins")
+            _ = try await signer.sign(Data("tafs.planque.v1|\(tenant)".utf8), reason: "Keep your tools' sign-ins sealed")
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
@@ -1655,6 +1661,17 @@ final class AppModel: ObservableObject {
         return true
     }
 
+    /// Reads this device's id in KIFF once per sign-in, so each signature planque gets
+    /// names the device and planque asks KIFF about it (kiff/planque#10): any of the
+    /// owner's devices then connects tools, not only the first phone. Unread (an older
+    /// KIFF, no network), planque checks the key this phone enrolled with, as before.
+    private func loadDeviceID() async {
+        guard planque.deviceID == nil, mode == .kiff, sessionHasKey else { return }
+        let gen = accountGeneration
+        guard let id = try? await kiff.thisDeviceID(), gen == accountGeneration else { return }
+        planque.deviceID = id
+    }
+
     /// Enrols this phone with planque and hands it a fresh connector key, as a step the
     /// owner just confirmed with Face ID: the caller has set `kiff.setupSigner` and
     /// `planque.signer`. Sets `lastError` and returns false when it can't.
@@ -1664,13 +1681,13 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return false }
             _ = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: key)
         } catch KIFFClient.KIFFError.server(403, _) {
-            lastError = "Only an admin of this KIFF account can set up planque."
+            lastError = "Only an admin of this KIFF account can connect tools."
             return false
         } catch PlanqueClient.PlanqueError.server(409, _) {
-            lastError = "Another iPhone is set up with planque for this account. Connect tools from that one."
+            lastError = "Another iPhone connects this account's tools. Connect them from that one."
             return false
         } catch {
-            lastError = "planque isn't set up: \(error.localizedDescription)"
+            lastError = "Connecting tools isn't set up: \(error.localizedDescription)"
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -1686,7 +1703,7 @@ final class AppModel: ObservableObject {
     /// Returns the grant, or nil with `lastError`.
     func connect(grantID: String, draftID: String? = nil) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Set up planque on this iPhone first."
+            lastError = "Start from Connected tools on this iPhone first."
             return nil
         }
         guard connecting == nil else { return nil }
@@ -1705,7 +1722,7 @@ final class AppModel: ObservableObject {
         var draft: KIFFClient.AgentDraft?
         do {
             guard let found = try await planque.grants().first(where: { $0.id == grantID }) else {
-                lastError = "planque has no connection with that id."
+                lastError = "There's no connection with that id."
                 return nil
             }
             grant = found
@@ -1760,13 +1777,13 @@ final class AppModel: ObservableObject {
                 }
                 lastError = approved.status == "connected"
                     ? "\(grant.vendor) is connected, but the app couldn't read it back yet."
-                    : "planque answered \(approved.status) with no sign-in link. Nothing was connected."
+                    : "The connection came back \(approved.status) with no sign-in link. Nothing was connected."
                 return nil
             }
             vendorSignedIn = true
             let back = try await vendorSignIn.signIn(at: signInURL)
             guard let signedIn = PlanqueClient.signedIn(from: back), signedIn.grant == grant.id, signedIn.tenant == tenant else {
-                lastError = "The sign-in at \(grant.vendor) came back without planque's code. Nothing was connected."
+                lastError = "The sign-in at \(grant.vendor) came back without its confirmation code. Nothing was connected."
                 return nil
             }
             guard gen == accountGeneration else { return nil }
@@ -1844,6 +1861,14 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupFresh = false
     /// Setup's past chats, to reopen, newest first.
     @Published private(set) var setupChats: [TafsCloud.Chat] = []
+    /// What the owner sent that tafs cloud's thread doesn't have yet (kiff/tafs#82): shown
+    /// at once, and kept across reloads until tafs cloud's copy arrives, so a tapped choice
+    /// shows when it's tapped, and once. A reload while the send is on its way would
+    /// otherwise drop it until tafs cloud has it.
+    private var setupSent: [TafsCloud.ChatMessage] = []
+    /// How long a sent message waits for tafs cloud's copy, and how far apart the phone's
+    /// clock and tafs cloud's may be.
+    static let sentKept: TimeInterval = 120
 
     /// Where Setup's next message goes.
     private var setupTarget: TafsCloud.ChatTarget {
@@ -1855,6 +1880,7 @@ final class AppModel: ObservableObject {
         setupChat = nil
         setupFresh = true
         setupThread = SetupThread()
+        setupSent = []
         setupAwaiting = nil
         setupUnsent = []
         setupEnded = nil
@@ -1866,6 +1892,7 @@ final class AppModel: ObservableObject {
         setupChat = session
         setupFresh = false
         setupUnsent = []
+        setupSent = []
         setupEnded = nil
         await loadSetupThread()
     }
@@ -1876,6 +1903,26 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         guard let chats = try? await cloud.chats(s.id), gen == accountGeneration else { return }
         setupChats = chats
+    }
+
+    /// Archives one of Setup's chats (kiff/tafs#82): tafs cloud keeps it out of the list
+    /// and the thread from then on, on every phone. The one shown gives way to a new
+    /// conversation. False, with why in `lastError`, when tafs cloud didn't take it.
+    @discardableResult
+    func archiveSetupChat(_ session: String) async -> Bool {
+        guard mode == .kiff, let s = setupTaf else { return false }
+        let gen = accountGeneration
+        do {
+            try await cloud.archiveChat(s.id, session: session)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            lastError = "Not archived: \(error.localizedDescription)"
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        setupChats.removeAll { $0.session == session }
+        if setupChat == session || (setupChat == nil && setupThread.session == session) { newSetupChat() }
+        return true
     }
 
     /// The chat a message went into is the one shown from then on, once a new one is started.
@@ -1905,12 +1952,12 @@ final class AppModel: ObservableObject {
         do {
             let thread = try await cloud.setupThread(s.id, session: setupChat)
             guard gen == accountGeneration else { return }
-            setupThread = thread
+            setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
         } catch {
             guard gen == accountGeneration else { return }
-            setupError = "Setup's chat couldn't be loaded: \(error.localizedDescription)"
+            setupError = "The conversation couldn't be loaded: \(error.localizedDescription)"
             return
         }
         // What an approval needs to be shown: planque's grant and KIFF's draft.
@@ -1940,7 +1987,7 @@ final class AppModel: ObservableObject {
         defer { startingSetup = false }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: "Let Setup connect your tools")
+            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: "Connect your tools")
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
@@ -1962,20 +2009,43 @@ final class AppModel: ObservableObject {
                 } else {
                     let draft = try await kiff.submitNoToolsDraft(agentID: Self.setupAgent, label: "Setup")
                     guard gen == accountGeneration, let secret = draft.claimSecret else {
-                        setupError = "KIFF didn't give Setup's draft its claim secret. Try again."
+                        setupError = "KIFF didn't answer as expected. Try again."
                         return false
                     }
                     setupTaf = try await cloud.startSetup(draftID: draft.id, claimSecret: secret)
                 }
             } catch {
                 guard gen == accountGeneration else { return false }
-                setupError = "Setup isn't started: \(error.localizedDescription)"
+                setupError = "Couldn't start: \(error.localizedDescription)"
                 return false
             }
         }
         await refreshConnections()
         await loadSetupThread()
         return true
+    }
+
+    /// tafs cloud's thread, with what the owner sent that it doesn't have yet (kiff/tafs#82).
+    /// A sent message goes once tafs cloud has it (the same words, written about when it
+    /// was sent), or after `sentKept`, when it either has it or the send says why not.
+    private func withSent(_ thread: SetupThread) -> SetupThread {
+        let now = clock()
+        // One copy takes the place of one sent message, oldest first: two "Sí" sent close
+        // together stay two until tafs cloud has both.
+        var taken = Set<Int>()
+        setupSent = setupSent.filter { sent in
+            if now.timeIntervalSince(sent.at) > Self.sentKept { return false }
+            let copy = thread.messages.indices.first { i in
+                let m = thread.messages[i]
+                return !taken.contains(i) && m.from == .owner && m.text == sent.text && m.at >= sent.at.addingTimeInterval(-Self.sentKept)
+            }
+            guard let copy else { return true }
+            taken.insert(copy)
+            return false
+        }
+        var out = thread
+        out.messages += setupSent
+        return out
     }
 
     /// Sends the owner's words to Setup; the thread is then reloaded as it answers.
@@ -1993,7 +2063,13 @@ final class AppModel: ObservableObject {
         defer { setupSending = false }
         let gen = accountGeneration
         setupEnded = nil
-        setupThread.messages.append(TafsCloud.ChatMessage(at: clock(), from: .owner, text: text, session: "pending"))
+        // Shown at once, the way it was sent (kiff/tafs#82), until tafs cloud's copy takes its place.
+        // Stamped no earlier than the thread's latest item: Setup's messages carry tafs
+        // cloud's time, so a phone clock a little behind would place it above them.
+        let latest = setupThread.items.map(\.at).max().map { $0.addingTimeInterval(0.001) } ?? .distantPast
+        let mine = TafsCloud.ChatMessage(at: max(clock(), latest), from: .owner, text: text, session: "pending")
+        setupSent.append(mine)
+        setupThread.messages.append(mine)
         do {
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
             // when the stream can't open.
@@ -2013,7 +2089,8 @@ final class AppModel: ObservableObject {
             return .sent
         } catch {
             guard gen == accountGeneration else { return .notTried }
-            setupThread.messages.removeAll { $0.session == "pending" }
+            setupSent.removeAll { $0 == mine }
+            setupThread.messages.removeAll { $0 == mine }
             setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
             return .kept
         }
@@ -2161,7 +2238,7 @@ final class AppModel: ObservableObject {
     /// What Setup is doing, in the owner's words, from the tool it calls.
     static func activityWords(_ tool: String) -> String? {
         switch tool {
-        case "planque": return "Working with planque on the connection…"
+        case "planque": return "Working on the connection…"
         case "kiff_draft": return "Preparing the Card…"
         case "kiff_card", "kiff_pending": return "Checking KIFF…"
         case "show": return nil
@@ -2220,7 +2297,7 @@ final class AppModel: ObservableObject {
             try await cloud.stop(s.id, session: session)
             setupEnded = .stopped
         } catch {
-            setupError = "Setup didn't stop: \(error.localizedDescription)"
+            setupError = "It didn't stop: \(error.localizedDescription)"
         }
         await loadSetupThread()
     }

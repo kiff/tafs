@@ -327,7 +327,7 @@ struct TypingBubble: View {
         if fullWidth {
             // The dots sit where the words will, with no bubble.
             dots.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement().accessibilityLabel("Setup is answering")
+                .accessibilityElement().accessibilityLabel("Answering")
         } else {
             bubble
         }
