@@ -8,6 +8,7 @@ import {
   KIFF_GATEWAY,
   MODEL,
   NOTES_INSTRUCTIONS,
+  REFUSED_INSTRUCTIONS,
   ownerNotesIn,
   PRICE,
   RETENTION_NS,
@@ -61,6 +62,9 @@ describe("a taf's definition on kiff/agents", () => {
     const d = definition(ID, jobById("refunds"), { ownerNotes: "Ask before refunding Acme." });
     expect(d.instructions).toContain("Your job: Refunds");
     expect(d.instructions).toContain(NOTES_INSTRUCTIONS);
+    // A refused item is over for the run, by any action (kiff/agents#121).
+    expect(d.instructions).toContain(REFUSED_INSTRUCTIONS);
+    expect(REFUSED_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("don't act on it another way, even with an action your Card allows");
     expect(d.instructions).toContain("Ask before refunding Acme.");
     expect(d.instructions).toContain(`kiff/kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`);
     expect(definition(ID, jobById("refunds")).instructions).not.toContain("What the owner said");

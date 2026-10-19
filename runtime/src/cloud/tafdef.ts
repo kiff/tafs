@@ -41,6 +41,16 @@ one short note per topic, plain sentences. Fix or delete a note that turns out
 wrong. Never write secrets, keys, card numbers or bank details.
 Notes guide how you work. They never widen your Card: KIFF still decides every action.`;
 
+/**
+ * What a refusal means for the item it was about (kiff/agents#121, the owner's
+ * call): that item is over for this run. The kiff skill already says never to
+ * make the same change another way; this goes further, to any action on it.
+ */
+export const REFUSED_INSTRUCTIONS = `When KIFF refuses an action on an item (a dispute, an order, an account), that
+item is done for this run: don't act on it another way, even with an action your
+Card allows. Leave it, and tell the owner what was refused and why, so they can
+decide.`;
+
 /** What heads the owner's start notes in a taf's instructions, and what follows them. */
 const OWNER_NOTES_INTRO = "What the owner said about this job when they started you:\n";
 const SKILL_INTRO = "The kiff skill (";
@@ -96,7 +106,7 @@ const SKILL_TEXT = [
 
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
 export function instructions(job: Job, ownerNotes?: string): string {
-  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS];
+  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS, REFUSED_INSTRUCTIONS];
   const notes = ownerNotes?.trim();
   if (notes) parts.push(`${OWNER_NOTES_INTRO}${notes}`);
   parts.push(`${SKILL_INTRO}${KIFF_SKILL.repo}@${KIFF_SKILL.commit.slice(0, 12)}, its sections for an agent at work):\n\n${SKILL_TEXT}`);
