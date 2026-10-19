@@ -122,7 +122,7 @@ final class AppModel: ObservableObject {
         var tries = 0
         while true {
             do {
-                return try await kiff.startDeviceSignIn(publicKey: signer.publicKeyDER, deviceName: "tafs on iPhone")
+                return try await kiff.startDeviceSignIn(publicKey: signer.publicKeyDER, deviceName: "tafs on \(ThisDevice.kind)")
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
                 try await Task.sleep(nanoseconds: 500_000_000)
@@ -1668,7 +1668,7 @@ final class AppModel: ObservableObject {
             lastError = "Only an admin of this KIFF account can connect tools."
             return false
         } catch PlanqueClient.PlanqueError.server(409, _) {
-            lastError = "Another iPhone connects this account's tools. Connect them from that one."
+            lastError = "Another device connects this account's tools for now. Connect them from that one."
             return false
         } catch {
             lastError = "Connecting tools isn't set up: \(error.localizedDescription)"
