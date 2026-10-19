@@ -97,7 +97,7 @@ struct SetupChatView: View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
             Text("Connect your tools").font(Theme.display(30)).foregroundColor(Theme.ink)
-            Text("Tell Setup what a taf should work with, like your Stripe. You sign in on the tool's own page; your sign-in stays with planque, never with Setup, tafs or KIFF. Each connection and each Card waits for your Face ID.")
+            Text("Name a tool a taf should work with, like your Stripe. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
             if let error = model.setupError ?? model.lastError {
@@ -107,7 +107,7 @@ struct SetupChatView: View {
             Button(model.startingSetup ? "Starting…" : "Start") { Task { _ = await model.startSetup() } }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(model.startingSetup || model.mode != .kiff)
-            Text("Starting asks for Face ID once.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+            Text("Starting asks for \(Biometry.name) once.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 .frame(maxWidth: .infinity)
         }
         .padding(20)
@@ -162,7 +162,7 @@ struct SetupChatView: View {
                         .accessibilityElement(children: .combine)
                     }
                     if !thinking { ended }
-                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "Setup") { _ = model.unqueueSetup() } }
+                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() } }
                     // Room under a pinned message, so it can sit at the top while the answer is short.
                     if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
@@ -269,7 +269,7 @@ struct SetupChatView: View {
                 .font(Theme.display(26)).foregroundColor(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            Text("Setup connects your tools and sets up a taf to work with them. Each connection and each Card waits for your approval.")
+            Text("Connects your tools and sets up a taf to work with them. Each connection and each Card waits for your approval.")
                 .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             ForEach(Self.examples, id: \.self) { example in
                 Button {
@@ -305,7 +305,7 @@ struct SetupChatView: View {
                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         case .failed?:
             HStack(spacing: 10) {
-                Text("Setup stopped part-way, before it finished.")
+                Text("This stopped part-way, before it finished.")
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button("Retry") { Task { await model.retrySetupRun() } }
@@ -324,7 +324,7 @@ struct SetupChatView: View {
         let empty = draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let thinking = model.setupThinking
         return HStack(alignment: .bottom, spacing: 10) {
-            TextField(thinking ? "Write the next message" : "Tell Setup what you want done", text: $draft, axis: .vertical)
+            TextField(thinking ? "Write the next message" : "What do you want to connect?", text: $draft, axis: .vertical)
                 .lineLimit(1...6)
                 .focused($typing)
                 .scaledFont(16)
@@ -355,7 +355,7 @@ struct SetupChatView: View {
                         .opacity(empty ? 0.4 : 1)
                 }
                 .disabled(empty)
-                .accessibilityLabel(thinking ? "Send when Setup is done" : "Send")
+                .accessibilityLabel(thinking ? "Send when this answer is done" : "Send")
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
@@ -482,7 +482,7 @@ struct UnsentBubble: View {
 /// What the owner wrote while the chat's agent works: sent once it's done, or not.
 struct QueuedBubble: View {
     let text: String
-    /// Who it waits for: "Setup", or the taf's name.
+    /// Who it waits for: "this answer" in the setup chat, or the taf's name.
     let who: String
     let unqueue: () -> Void
 
@@ -538,7 +538,7 @@ struct NeedsYouBar: View {
         switch c.type {
         case .approval: return "Needs you · approve" + (vendor.map { " \($0)" } ?? "")
         case .signIn: return "Needs you · sign in" + (vendor.map { " at \($0)" } ?? "")
-        default: return "Needs you · Setup asks"
+        default: return "Needs you · a question"
         }
     }
 }
@@ -592,7 +592,7 @@ struct SetupPlan: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Eyebrow(text: "Plan · \(done) of \(steps.count)")
                         if !open {
-                            Text(now?.label ?? (shown.component.title ?? "Setup"))
+                            Text(now?.label ?? (shown.component.title ?? "Plan"))
                                 .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
                         }
                     }
@@ -682,7 +682,7 @@ struct SetupComponentView: View {
         return VStack(alignment: .leading, spacing: 8) {
             if let chosen {
                 // Answered: one line, with what was chosen (#58).
-                OutcomeLine(text: (c.text ?? "Setup's question") + " · " + chosen, tone: Theme.ok)
+                OutcomeLine(text: (c.text ?? "The question") + " · " + chosen, tone: Theme.ok)
             } else {
                 Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 FlowRow(spacing: 8) {
@@ -723,7 +723,7 @@ struct SetupComponentView: View {
                     Text(why.map { "It didn't go through: \($0)" } ?? "It didn't go through.")
                         .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                 }
-                Text("The vendor's own page opens. Setup never sees your password or the key; planque keeps the sign-in.")
+                Text("The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed.")
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 Button(state == .working ? "Opening the sign-in…" : state.isFailure ? "Try again" : "Open \(c.service ?? "the sign-in")") {
                     Task { await model.signInAgain(c) }
@@ -809,7 +809,7 @@ struct SetupApproval: View {
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
         let vendor = grant?.vendor ?? component.service ?? "the vendor"
         if state == .declined { return "Declined · \(vendor)" }
-        if grant?.connected == true { return "Approved · \(vendor) is connected, keys held by planque" }
+        if grant?.connected == true { return "Approved · \(vendor) is connected, keys kept sealed" }
         return "Approved · signed in at \(vendor)"
     }
 
@@ -840,21 +840,21 @@ struct SetupApproval: View {
             }
             if let grant {
                 if connected {
-                    Label("\(grant.vendor) is connected · keys held by planque", systemImage: "checkmark.circle.fill")
+                    Label("\(grant.vendor) is connected · keys kept sealed", systemImage: "checkmark.circle.fill")
                         .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
                 } else if listed {
-                    Label("Signed in at \(grant.vendor) · Setup is reading what it offers", systemImage: "checkmark.circle.fill")
+                    Label("Signed in at \(grant.vendor) · reading what it offers", systemImage: "checkmark.circle.fill")
                         .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
                 } else {
                     // planque's text says when the sign-in is already held (kiff/planque#7).
                     Text(grant.text).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                     if !grant.digestMatches {
-                        Text("planque's request doesn't match what it shows, so it can't be approved.")
+                        Text("This request doesn't match what it shows, so it can't be approved.")
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                     }
                 }
             } else {
-                Text("Reading what planque asks…").scaledFont(14).foregroundColor(Theme.dim)
+                Text("Reading the request…").scaledFont(14).foregroundColor(Theme.dim)
             }
             if let draft, let cards = draft.cards {
                 VStack(alignment: .leading, spacing: 6) {
@@ -883,7 +883,7 @@ struct SetupApproval: View {
                     .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil))
                 }
                 .disabled(busy || (answered && !state.isFailure))
-                Text("Approving asks for Face ID.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
+                Text("Approving asks for \(Biometry.name).").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
             }
         }
     }

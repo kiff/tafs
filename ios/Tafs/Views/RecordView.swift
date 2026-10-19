@@ -109,7 +109,7 @@ struct ReceiptView: View {
                         Panel(stroke: Theme.ok.opacity(0.4)) {
                             Label("Signed on this iPhone", systemImage: "checkmark.seal.fill")
                                 .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
-                            Text("Your answer was signed with a key that never leaves this phone, after Face ID.")
+                            Text("Your answer was signed with a key that never leaves this device, after \(Biometry.name).")
                                 .font(.system(size: 13)).foregroundColor(Theme.soft)
                             Text(signature)
                                 .font(Theme.mono(11)).foregroundColor(Theme.dim)

@@ -33,7 +33,7 @@ struct HomeView: View {
                                 .frame(width: 36, height: 36).background(Theme.brand).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Connect a tool").font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.ink)
-                                Text("Setup connects it; you sign in and approve").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                Text("You sign in and approve each step").font(.system(size: 13)).foregroundColor(Theme.dim)
                             }
                             Spacer()
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
