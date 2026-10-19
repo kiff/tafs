@@ -123,7 +123,11 @@ jobs:
             sleep 8
             xcrun simctl io "$DEVICE_ID" screenshot "$RUNNER_TEMP/shots/$name.png"
             # DEBUG (#87): what the app's main thread does on the iPad's Tafs tab.
-            case $name in ipad-2*) sample "${out##*: }" 3 -file "$RUNNER_TEMP/shots/$name-sample.txt" || true ;; esac
+            case $name in ipad-2*)
+              sleep 15
+              xcrun simctl io "$DEVICE_ID" screenshot "$RUNNER_TEMP/shots/$name-late.png"
+              xcrun simctl spawn "$DEVICE_ID" log show --last 2m --style compact --predicate 'process == "Tafs"' > "$RUNNER_TEMP/shots/$name-log.txt" 2>&1 || true
+              ;; esac
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
           shoot 1-welcome
