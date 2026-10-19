@@ -74,5 +74,17 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("the app's own error words are not a diagnosis to repeat");
     expect(SETUP_INSTRUCTIONS).not.toContain("finish planque's setup");
     expect(SETUP_INSTRUCTIONS).toContain("its steps stay the same, in the same words");
+    // Phrases checked on the rules with their line breaks as spaces, so a rewrap never fails them.
+    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    // kiff/agents#115's "keeps its plan": a changed plan is a new plan, by its id.
+    expect(flat).toContain("show a new plan, with a new id (such as plan-2)");
+    // The owner's phone test (#89): Setup chose live mode itself, said "connected"
+    // before checking, and showed a declined step as failed.
+    expect(flat).toContain("Test or live is the owner's choice, never yours");
+    expect(flat).toContain('"Test mode (no real money), recommended to start" or "Live mode (real money)"');
+    expect(flat).toContain("Never carry a mode over from an earlier conversation, or from rules from last time, without asking again");
+    expect(flat).not.toContain("such as the account or test mode");
+    expect(flat).toContain("Say a step is done (signed in, connected, set up) only after the grant's status says so, never before");
+    expect(flat).toContain("A step the owner declined is skipped, not failed");
   });
 });
