@@ -13,13 +13,13 @@ final class OwnerWordsTests: XCTestCase {
     func testADraftsLinesSayTheAmountsInTheirUnit() throws {
         let d = try draft(#"""
         {"id":"drf_1","agent_id":"refunds-k5j6m5qx","label":"Refunds assistant","status":"draft","version":"v1",
-         "cards":[{"grants":[{"action":"create_refund","per_action_max":[{"quantity":"sum(amount)","max":10000,"unit":"EUR","scale":2}]}],
+         "cards":[{"grants":[{"action":"create_refund_k3f9","title":"Refund a payment","per_action_max":[{"quantity":"sum(amount)","max":10000,"unit":"EUR","scale":2}]}],
                    "aggregates":[{"quantity":"sum(amount)","limit":100000,"window":"calendar_day","unit":"EUR","scale":2},
                                  {"quantity":"count","limit":20,"window":"calendar_day"}]}]}
         """#)
         let euros = { (minor: Int64) in Money(minor: minor, currency: "EUR", scale: 2).formatted }
         XCTAssertEqual(d.cards?.flatMap(\.lines), [
-            "Create refund: up to \(euros(10000)) each",
+            "Refund a payment: up to \(euros(10000)) each",
             "\(euros(100000)) in total a day",
             "20 calls a day",
         ])
@@ -27,6 +27,7 @@ final class OwnerWordsTests: XCTestCase {
         for line in d.cards?.flatMap(\.lines) ?? [] {
             XCTAssertFalse(line.contains("sum("), line)
             XCTAssertFalse(line.contains("10000"), line)
+            XCTAssertFalse(line.contains("k3f9"), line)
         }
     }
 

@@ -675,7 +675,7 @@ final class AppModel: ObservableObject {
         if a.draft == nil {
             progress(.cards)
             let draft: KIFFClient.AgentDraft
-            do { draft = try await kiff.submitDraft(agentID: a.agent, label: "tafs · \(name)", cards: cards) } catch {
+            do { draft = try await kiff.submitDraft(agentID: a.agent, label: name, cards: cards) } catch {
                 // The agent's name is taken in KIFF: the next try starts over with a new one.
                 if case KIFFClient.KIFFError.server(409, _) = error { startAttempt = nil }
                 throw StartFailure(step: .cards, message: Self.startMessage(.cards, error))

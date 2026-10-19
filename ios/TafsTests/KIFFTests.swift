@@ -102,7 +102,7 @@ final class KIFFTests: XCTestCase {
     func testHeldCallsDecodeAndMap() async throws {
         let client = makeClient()
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, """
-        {"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"refund-agent","action":"refund_order","entity_id":"ord_4502",
+        {"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"refund-agent","action":"refund_order","title":"Refund an order","entity_id":"ord_4502",
           "status":"held","breaches":[{"mandate_id":"m1","outcome":"per_action_exceeded","quantity":"sum(amount_cents)","limit":15000,"used":0,"draw":48000,"reason":"Over $150 each"}],
           "parameters":{"amount_cents":48000},"next_steps":["return first"],
           "created_at":"2026-10-14T10:41:00.123Z","expires_at":"2026-10-14T10:51:00Z"}]}
@@ -115,7 +115,7 @@ final class KIFFTests: XCTestCase {
         XCTAssertEqual(held.proposed.amount, .bare(48000), "no declared unit: a bare number, never US cents")
         XCTAssertEqual(held.reason, "Over $150 each")
         XCTAssertEqual(held.nextSteps, ["return first"])
-        XCTAssertEqual(held.proposed.summary, "Refund order ord_4502")
+        XCTAssertEqual(held.proposed.summary, "Refund an order ord_4502", "the tool's title, as KIFF gives it")
     }
 
     func testAnswersHitTheRightEndpoints() async throws {

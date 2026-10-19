@@ -41,15 +41,17 @@ enum KIFFMapping {
         }
     }
 
-    static func label(_ action: String) -> String {
-        let words = action.replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: ".", with: " ")
-        return words.prefix(1).uppercased() + words.dropFirst()
+    /// What the owner reads for an action: its tool's title as KIFF gives it (from the
+    /// vendor, kiff-cloud#1277), else the action as KIFF sends it. Never a name made up here.
+    static func name(_ action: String, title: String?) -> String {
+        let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return t.isEmpty ? action : t
     }
 
     static func rules(_ mandate: KIFFClient.Mandate) -> [CardRule] {
         let outside: Outside = mandate.onExceed == "refuse" ? .refuse : .hold
         var rules = mandate.grants.map { grant -> CardRule in
-            var rule = CardRule(action: grant.action, label: label(grant.action), outside: outside)
+            var rule = CardRule(action: grant.action, label: name(grant.action, title: grant.title), outside: outside)
             if let cap = grant.perActionMax?.first { rule.perAction = money(cap.max, unit: cap.unit, scale: cap.scale) }
             return rule
         }
@@ -132,7 +134,7 @@ enum KIFFMapping {
         var call = HeldCall(
             id: heldID(e.id),
             tafID: tafID,
-            proposed: ProposedAction(action: e.action, summary: "\(label(e.action)) \(e.entityID)", amount: amount(of: e)),
+            proposed: ProposedAction(action: e.action, summary: "\(name(e.action, title: e.title)) \(e.entityID)", amount: amount(of: e)),
             reason: reason,
             heldAt: e.createdAt,
             expiresAt: e.expiresAt ?? e.createdAt.addingTimeInterval(10 * 60)

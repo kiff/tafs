@@ -190,8 +190,11 @@ final class KIFFClient {
         /// counts only for the hold as it stood when the owner saw it.
         let accountingVersion: Int?
 
+        /// The held call's tool, as KIFF names it for people (kiff-cloud#1277).
+        var title: String? = nil
+
         enum CodingKeys: String, CodingKey {
-            case id, subject, action, status, breaches, parameters, reason
+            case id, subject, action, title, status, breaches, parameters, reason
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
             case createdAt = "created_at", expiresAt = "expires_at"
@@ -280,11 +283,13 @@ final class KIFFClient {
                 var scale: Int? = nil
             }
             let action: String
+            /// The tool's name for people, as KIFF keeps it from the vendor (kiff-cloud#1277).
+            var title: String? = nil
             let perActionMax: [PerAction]?
             let nextSteps: [String]?
 
             enum CodingKeys: String, CodingKey {
-                case action, perActionMax = "per_action_max", nextSteps = "next_steps"
+                case action, title, perActionMax = "per_action_max", nextSteps = "next_steps"
             }
         }
 
@@ -436,17 +441,18 @@ final class KIFFClient {
             /// `unit` and `scale` when the tool declares them (kiff-cloud #1274).
             struct PerAction: Decodable, Equatable { let quantity: String; let max: Int64; var unit: String?; var scale: Int? }
             let action: String
+            var title: String?
             let perActionMax: [PerAction]?
-            enum CodingKeys: String, CodingKey { case action, perActionMax = "per_action_max" }
+            enum CodingKeys: String, CodingKey { case action, title, perActionMax = "per_action_max" }
         }
         struct Aggregate: Decodable, Equatable { let quantity: String; let limit: Int64; let window: String; var unit: String?; var scale: Int? }
         let grants: [Grant]?
         let aggregates: [Aggregate]?
 
-        /// The lines the owner approves, in their words (kiff/tafs#94): "Create refund: up to
-        /// €100.00 each", "€1,000.00 in total a day", "20 calls a day". An amount carries the
-        /// unit KIFF declares, or stays a bare number: never a guessed currency, never
-        /// "sum(amount)".
+        /// The lines the owner approves, in their words (kiff/tafs#94): "Refund a payment: up
+        /// to €100.00 each", "€1,000.00 in total a day", "20 calls a day". The tool's title and
+        /// an amount's unit are KIFF's; without them, the action and a bare number as KIFF
+        /// sends them: never a guessed name or currency, never "sum(amount)".
         var lines: [String] {
             var out: [String] = []
             for g in grants ?? [] {
@@ -455,7 +461,7 @@ final class KIFFClient {
                         ? "up to \(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted) each"
                         : "up to \(cap.max) each"
                 }
-                let action = KIFFMapping.label(g.action)
+                let action = KIFFMapping.name(g.action, title: g.title)
                 out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", "))
             }
             for a in aggregates ?? [] {

@@ -101,7 +101,8 @@ final class SetupShapeTests: XCTestCase {
         XCTAssertFalse(card.confirmed)
         XCTAssertEqual(card.agent, "refunds-x")
         // No unit declared: bare numbers, in words (kiff/tafs#94).
-        XCTAssertEqual(card.lines, ["Refund payment: up to \(Money.bare(15000).formatted) each", "\(Money.bare(200000).formatted) in total a day"])
+        // No title or unit from KIFF: the action and a bare number as KIFF sends them.
+        XCTAssertEqual(card.lines, ["refund_payment: up to \(Money.bare(15000).formatted) each", "\(Money.bare(200000).formatted) in total a day"])
 
         let confirmed = SetupShape(thread: thread, grants: [], drafts: ["drf_1": try draft("confirmed")], waiting: nil, states: [:])
         XCTAssertEqual(confirmed.card?.confirmed, true)
