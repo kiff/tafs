@@ -93,5 +93,20 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).not.toContain("such as the account or test mode");
     expect(flat).toContain("Say a step is done (signed in, connected, set up) only after the grant's status says so, never before");
     expect(flat).toContain("A step the owner declined is skipped, not failed");
+    // The owner's iPad test (#95): no device's biometry or screen position, a taf that
+    // can find its work, the plan finished, and a day that is the account's day.
+    // Face ID is named only to say not to name it.
+    expect(SETUP_INSTRUCTIONS.match(/Face ID/g)?.length).toBe(1);
+    expect(flat).not.toContain("approves with Face ID");
+    expect(flat).toContain("Don't name how the owner approves (Face ID, Touch ID or a passcode), where a card is on the screen (above, below) or a button's words");
+    expect(flat).toContain("where the work comes from (for refunds: where customers ask for them)");
+    expect(flat).toContain("A taf needs a way to find its work, not only a way to act");
+    // The batch measurement: asked for Gmail's MCP server address and looped.
+    expect(flat).toContain("Never ask the owner for a server address, a URL or anything technical to connect");
+    expect(flat).toContain("or from the owner, who can tell it in its chat");
+    expect(flat).toContain("Never call a taf ready when it can only act");
+    expect(flat).toContain("Show plan again with every step done or skipped");
+    expect(flat).toContain("a day ends at midnight in your account's time zone\")");
+    expect(flat).not.toContain("KIFF's settings");
   });
 });
