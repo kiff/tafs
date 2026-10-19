@@ -39,6 +39,9 @@ describe("jobs", () => {
     for (const j of JOBS) {
       const flat = systemPrompt(j).replace(/\s+/g, " ");
       expect(flat).toContain("A request the owner makes in the chat (\"refund this payment\") is enough to act on: do it within your Card, without the checks your job runs on work you find yourself");
+      // The owner's request skips the job's checks, never its "Never" rules (review on #103).
+      expect(flat).toContain("since the owner has decided. Your job's \"Never\" rules still hold for the owner's requests too.");
+      expect(j.instructions).toMatch(/Never /);
       expect(flat).toContain("one or two short sentences (at most about 40 words)");
       expect(flat).toContain("amounts in the owner's currency with its symbol (€150), never in cents");
       expect(flat).toContain("no ids (payments, refunds, operations, cards) unless the owner asks for one");
