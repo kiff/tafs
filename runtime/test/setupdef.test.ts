@@ -82,7 +82,14 @@ describe("Setup's definition on kiff/agents", () => {
     // before checking, and showed a declined step as failed.
     expect(flat).toContain("Test or live is the owner's choice, never yours");
     expect(flat).toContain('"Test mode (no real money), recommended to start" or "Live mode (real money)"');
-    expect(flat).toContain("Never carry a mode over from an earlier conversation, or from rules from last time, without asking again");
+    expect(flat).toContain("Never carry a mode over from an earlier conversation, or from rules from last time: read it or ask again");
+    // The vendor knows what the owner signed in to (kiff/tafs#89, planque describe):
+    // pin what it reports, and ask only when it doesn't say.
+    expect(flat).toContain("call it with planque describe before you propose");
+    expect(flat).toContain("If the vendor said which mode the sign-in is in (describe), pin that and say so in plain words");
+    expect(flat).toContain("Ask only when the vendor doesn't say, or reports more than one");
+    // The money argument and read-only tools are part of looking, not of the mode rule.
+    expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only\.\s+- Test or live/);
     expect(flat).not.toContain("such as the account or test mode");
     expect(flat).toContain("Say a step is done (signed in, connected, set up) only after the grant's status says so, never before");
     expect(flat).toContain("A step the owner declined is skipped, not failed");
