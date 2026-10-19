@@ -71,7 +71,7 @@ struct SetupShape: Equatable {
                 switch c.type {
                 case .approval: label = "Approve " + (vendor ?? "the connection")
                 case .signIn: label = "Sign in at " + (vendor ?? "the vendor")
-                default: label = c.text ?? c.title ?? "Answer Setup"
+                default: label = c.text ?? c.title ?? "Answer"
                 }
                 if ask.id == waiting { return Step(label: label, state: .needsYou) }
                 if c.type == .confirm {

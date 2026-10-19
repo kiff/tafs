@@ -17,7 +17,7 @@ struct SetupShapePanel: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if shape.isEmpty {
-                        Text("As you and Setup talk, the plan, the tools it connects and the taf's Card show here.")
+                        Text("As the conversation goes, the plan, the tools being connected and the taf's Card show here.")
                             .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -87,7 +87,7 @@ struct SetupShapePanel: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .accessibilityElement(children: .combine)
             }
-            Text("Keys held by planque, never by Setup, tafs or KIFF.")
+            Text("Sign-ins are kept sealed: no taf ever sees them.")
                 .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
         }
     }
