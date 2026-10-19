@@ -30,7 +30,7 @@ final class TimeZoneTests: XCTestCase {
         let model = AppModel(signer: signer,
                              kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
                              cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
-        for path in ["GET /v1/me/mandates", "GET /v1/me/mandates?include=use"] { StubProtocol.responses[path] = (200, #"{"mandates":[]}"#) }
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
         StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme","time_zone":"UTC"}"#)

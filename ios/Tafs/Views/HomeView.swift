@@ -25,6 +25,17 @@ struct HomeView: View {
                     }
                 }
 
+                if !model.otherAgents.isEmpty {
+                    // Agents made through KIFF's API, not run by tafs: their Cards, apart.
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(text: "Other agents with Cards")
+                        ForEach(model.otherAgents) { taf in
+                            NavigationLink(value: taf.id) { TafRow(taf: taf) }
+                                .buttonStyle(.plain)
+                        }
+                    }
+                }
+
                 if model.mode == .kiff {
                     // Setup (kiff/tafs#50): connect the tools a taf works with.
                     NavigationLink { SetupChatView() } label: {
@@ -56,8 +67,8 @@ struct HomeView: View {
 
                 if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
                     Panel {
-                        Text("No Cards yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
-                        Text("Cards you issue in KIFF show up here, one taf per agent that holds them. Pull down to refresh.")
+                        Text("No tafs yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                        Text("Connect a tool to set up your first taf. Pull down to refresh.")
                             .font(.system(size: 14)).foregroundColor(Theme.soft)
                     }
                 }

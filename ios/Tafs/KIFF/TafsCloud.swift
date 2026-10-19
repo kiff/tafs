@@ -74,6 +74,84 @@ final class TafsCloud {
         let name: String
     }
 
+    /// One holder of Cards on the home list, as tafs cloud makes it from its records and
+    /// KIFF's Cards and held calls (#91): the app shows it and combines nothing itself.
+    struct HomeTaf: Decodable, Equatable {
+        /// An amount and what KIFF says it means ("EUR", 2); no unit for a bare number.
+        struct Amount: Decodable, Equatable {
+            let minor: Int64
+            let unit: String?
+            let scale: Int
+        }
+
+        struct Rule: Decodable, Equatable {
+            let action: String
+            let label: String
+            let outside: String
+            let perAction: Amount?
+            let perWindow: Amount?
+            let countPerWindow: Int?
+            let window: String
+
+            enum CodingKeys: String, CodingKey {
+                case action, label, outside, window
+                case perAction = "per_action", perWindow = "per_window", countPerWindow = "count_per_window"
+            }
+        }
+
+        struct CardSummary: Decodable, Equatable {
+            /// The live Cards: what revoking stops.
+            let ids: [String]
+            let active: Bool
+            let expires: Date?
+            let tools: [String]
+            let rules: [Rule]
+            let used: [String: Amount]
+            let usageUnknown: [String]
+
+            enum CodingKeys: String, CodingKey {
+                case ids, active, expires, tools, rules, used, usageUnknown = "usage_unknown"
+            }
+        }
+
+        /// tafs cloud's id; nil for an agent tafs doesn't run.
+        let id: String?
+        let name: String
+        let job: String?
+        let kiffAgent: String
+        let status: String?
+        let nextRun: Date?
+        let lastRun: Date?
+        let color: Int
+        /// working, paused, waiting, idle (an agent tafs doesn't run) or stopped (no active Card).
+        let state: String
+        /// Its calls held for the owner.
+        let waiting: Int
+        let card: CardSummary
+
+        enum CodingKeys: String, CodingKey {
+            case id, name, job, status, color, state, waiting, card
+            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
+        }
+
+        /// tafs cloud's record of it, for its chat, runs and schedule; nil for another agent.
+        var cloudTaf: CloudTaf? {
+            id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun) }
+        }
+    }
+
+    /// The home list: the account's tafs, its other agents with Cards (listed apart), and
+    /// the removals still to finish.
+    struct Home: Decodable, Equatable {
+        let tafs: [HomeTaf]
+        let others: [HomeTaf]
+        let removing: [PendingRemoval]
+    }
+
+    func home() async throws -> Home {
+        try await send("GET", "/v1/home")
+    }
+
     /// The account's tafs, and the removals still to finish.
     func listing() async throws -> (tafs: [CloudTaf], removing: [PendingRemoval]) {
         struct Response: Decodable { let tafs: [CloudTaf]; let removing: [PendingRemoval]? }

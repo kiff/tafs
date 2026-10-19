@@ -14,6 +14,9 @@ final class AppModel: ObservableObject {
 
     @Published private(set) var mode: Mode = .signedOut
     @Published private(set) var tafs: [Taf] = []
+    /// The account's other agents with Cards, the ones tafs doesn't run (made through KIFF's
+    /// API): listed apart, never counted as working.
+    @Published private(set) var otherAgents: [Taf] = []
     @Published private(set) var held: [HeldCall] = []
     @Published private(set) var record: [RecordEntry] = []
     @Published private(set) var refreshing = false
@@ -68,11 +71,6 @@ final class AppModel: ObservableObject {
     private var scriptPosition: [UUID: Int] = [:]
     private var templateOf: [UUID: String] = [:]
     private var holderIDs: [String: UUID] = [:]
-    /// Each holder's colour, kept while it holds a Card (#91).
-    private var holderColors: [String: Int] = [:]
-    /// Whether tafs cloud's listing was read in this session: until then a holder it doesn't
-    /// list may still be one of its tafs.
-    private var cloudListed = false
     /// Whether the tafs shown are this account's: remembered, or read from KIFF (#91).
     @Published private(set) var listLoaded = false
     /// Signed in to KIFF and its tafs not shown yet: the first launch after a sign-in.
@@ -148,7 +146,7 @@ final class AppModel: ObservableObject {
     // MARK: Reading
 
     var signedIn: Bool { mode != .signedOut }
-    func taf(_ id: UUID) -> Taf? { tafs.first { $0.id == id } }
+    func taf(_ id: UUID) -> Taf? { tafs.first { $0.id == id } ?? otherAgents.first { $0.id == id } }
     func entries(for tafID: UUID) -> [RecordEntry] { record.filter { $0.tafID == tafID } }
     func heldCalls(for tafID: UUID) -> [HeldCall] { held.filter { $0.tafID == tafID } }
     var workingCount: Int { tafs.filter { $0.state == .working }.count }
@@ -242,7 +240,7 @@ final class AppModel: ObservableObject {
         cloud.token = token
         startAttempt = nil
         holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
-        holderColors = [:]; cloudListed = false; listLoaded = false; listUnread = false
+        listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
         grants = []
@@ -252,7 +250,7 @@ final class AppModel: ObservableObject {
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; held = []; record = []
+        tafs = []; otherAgents = []; held = []; record = []
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -271,7 +269,7 @@ final class AppModel: ObservableObject {
         cloudTafs = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
         holderIDs = [:]
-        holderColors = [:]; cloudListed = false; listLoaded = false; listUnread = false
+        listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         startAttempt = nil
         unfinishedRemovals = []
@@ -445,29 +443,22 @@ final class AppModel: ObservableObject {
             if mode == .kiff, gen == accountGeneration { listLoaded = true }
         }
         do {
-            // One list per refresh (#91): KIFF's Cards and held calls with tafs cloud's
-            // listing, so a taf doesn't show as working first and as paused a moment later.
-            async let cards = kiff.cards()
+            // One list per refresh (#91), made by tafs cloud from its tafs and KIFF's Cards
+            // and held calls. The held calls themselves are read from KIFF here: the owner
+            // answers what KIFF holds, as KIFF sent it.
+            async let home = cloud.home()
             async let calls = kiff.heldCalls()
-            async let listing = cloudListing()
             async let activity = activityCalls()
-            let (mandates, exceptions) = try await (cards, calls)
-            let list = await listing
+            let exceptions = try await calls
+            let list = try await home
             let done = await activity
             guard gen == accountGeneration else { return }
-            if let list {
-                var byAgent: [String: TafsCloud.CloudTaf] = [:]
-                for t in list.tafs { if let a = t.kiffAgent { byAgent[a] = t } }
-                cloudTafs = byAgent
-                cloudListed = true
-                unfinishedRemovals = list.removing
-            }
-            show(mandates, exceptions)
+            show(list, exceptions)
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
             if let done { record = KIFFMapping.record(done, ids: holderIDs) }
-            if let removing = list?.removing, !removing.isEmpty {
-                await finishRemovals(removing, gen: gen)
+            if !list.removing.isEmpty {
+                await finishRemovals(list.removing, gen: gen)
                 // Finishing waited: another account may be signed in now, with its own tafs.
                 guard gen == accountGeneration else { return }
             }
@@ -480,54 +471,38 @@ final class AppModel: ObservableObject {
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
+        } catch let error as TafsCloud.CloudError {
+            lastError = "Couldn't load your tafs: \(error.localizedDescription)"
+            if !listLoaded { listUnread = true }
         } catch {
             lastError = "Couldn't reach KIFF: \(error.localizedDescription)"
             if !listLoaded { listUnread = true }
         }
     }
 
-    /// Shows what KIFF returned. A held call keeps its id across refreshes (it is derived
-    /// from KIFF's id), so the lock screen notifies once and rows are not recreated.
-    func show(_ mandates: [KIFFClient.Mandate], _ exceptions: [KIFFClient.CardException]) {
-        let previous = Dictionary(tafs.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        var next = KIFFMapping.tafs(from: mandates, ids: &holderIDs, colors: &holderColors, owner: ownerName)
-        held = exceptions.map { e in
-            let id = holderIDs[e.subject] ?? UUID()
-            holderIDs[e.subject] = id
-            return KIFFMapping.held(e, tafID: id)
-        }
-        let agentOf = Dictionary(holderIDs.map { ($0.value, $0.key) }, uniquingKeysWith: { a, _ in a })
-        for i in next.indices {
-            if let agent = agentOf[next[i].id], let c = cloudTafs[agent] {
-                next[i].name = c.name
-                next[i].state = c.paused ? .paused : .working
-                next[i].now = c.paused ? "Paused" : c.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
-            } else if next[i].state != .working {
-                continue // a Card no longer active: stopped, whatever tafs cloud says
-            } else if cloudListed {
-                // An agent tafs cloud doesn't run (made through KIFF's API): it acts under its
-                // Card when its own software calls, so it isn't one of the tafs working.
-                next[i].state = .idle
-            } else if let p = previous[next[i].id] {
-                // tafs cloud not read yet: what was last known, rather than "working".
-                next[i].name = p.name
-                next[i].state = p.state == .waiting ? .idle : p.state
-                next[i].now = p.now
-            }
-        }
-        for i in next.indices where held.contains(where: { $0.tafID == next[i].id }) {
-            next[i].state = .waiting
-            next[i].now = "Waiting on you"
-        }
-        tafs = next
+    /// Shows tafs cloud's list as it is, and KIFF's held calls. A taf keeps its id for its
+    /// agent and a held call its id from KIFF's, so the lock screen notifies once and rows
+    /// are not recreated.
+    func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
+        var running: [String: TafsCloud.CloudTaf] = [:]
+        for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
+        cloudTafs = running
+        unfinishedRemovals = home.removing
+        tafs = home.tafs.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
+        otherAgents = home.others.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
+        held = exceptions.map { KIFFMapping.held($0, tafID: holderID($0.subject)) }
         listLoaded = true
         listUnread = false
         rememberList()
         notifyHeld()
     }
 
-    private func cloudListing() async -> (tafs: [TafsCloud.CloudTaf], removing: [TafsCloud.PendingRemoval])? {
-        try? await cloud.listing()
+    /// The app's id for a KIFF agent's taf, the same for the whole session.
+    private func holderID(_ agent: String) -> UUID {
+        if let id = holderIDs[agent] { return id }
+        let id = UUID()
+        holderIDs[agent] = id
+        return id
     }
 
     private func activityCalls() async -> [KIFFClient.ActivityCall]? {
@@ -541,15 +516,15 @@ final class AppModel: ObservableObject {
     private struct RememberedList: Codable {
         var tenant: String?
         var ids: [String: UUID]
-        var colors: [String: Int]
         var tafs: [Taf]
+        var others: [Taf]?
     }
 
     static let listKey = "tafs.list"
 
     private func rememberList() {
         guard mode == .kiff, let remembered else { return }
-        let list = RememberedList(tenant: kiffTenant, ids: holderIDs, colors: holderColors, tafs: tafs)
+        let list = RememberedList(tenant: kiffTenant, ids: holderIDs, tafs: tafs, others: otherAgents)
         if let data = try? JSONEncoder().encode(list) { remembered.set(data, forKey: Self.listKey) }
     }
 
@@ -559,8 +534,8 @@ final class AppModel: ObservableObject {
               let list = try? JSONDecoder().decode(RememberedList.self, from: data),
               list.tenant == kiffTenant else { return }
         holderIDs = list.ids
-        holderColors = list.colors
         tafs = list.tafs
+        otherAgents = list.others ?? []
         listLoaded = true
     }
 
@@ -1706,7 +1681,7 @@ final class AppModel: ObservableObject {
         return a.id == b.id
     }
 
-    private func notifyHeld() { onHeldChanged?(held, tafs) }
+    private func notifyHeld() { onHeldChanged?(held, tafs + otherAgents) }
 
     private func amountLine(_ p: ProposedAction, _ tail: String) -> String {
         if let amount = p.amount { return "\(amount.formatted), \(tail)" }

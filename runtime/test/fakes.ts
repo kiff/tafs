@@ -257,6 +257,12 @@ export function memoryTafs(): Tafs & { held: Map<string, Taf> } {
     async list(t) { return [...held.entries()].filter(([k]) => k.startsWith(`${t}#`)).map(([, x]) => x); },
     async get(t, id) { return held.get(`${t}#${id}`); },
     async put(t, taf) { held.set(`${t}#${taf.id}`, { ...taf }); },
+    async putIf(t, taf, read) {
+      const now = held.get(`${t}#${taf.id}`);
+      if (!now || JSON.stringify(now) !== JSON.stringify(read)) return false;
+      held.set(`${t}#${taf.id}`, { ...taf });
+      return true;
+    },
     async remove(t, id) { held.delete(`${t}#${id}`); },
     async tenants() { return [...new Set([...held.keys()].map((k) => k.slice(0, k.indexOf("#"))))]; },
   };

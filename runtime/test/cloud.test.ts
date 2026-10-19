@@ -3,6 +3,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
+import type { Mandate } from "../src/cloud/home.js";
 import { jobById } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -13,10 +14,18 @@ const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id
 /** Drafts KIFF would let be claimed: draft id → its claim secret and agent key. Each claims once. */
 type Drafts = Record<string, { secret: string; key: string; agent: string; status?: number }>;
 
-/** KIFF's /v1/me, answering per bearer token, and its draft claims. */
-function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]) {
+/** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
+interface Account { mandates: Mandate[]; held: { subject: string }[]; status?: number }
+
+/** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
+function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
+    if (url.includes("/v1/me/mandates") || url.includes("/v1/me/card-exceptions")) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.status) return new Response(JSON.stringify({ error: "down" }), { status: account.status });
+      return new Response(JSON.stringify(url.includes("mandates") ? { mandates: account.mandates } : { exceptions: account.held }), { status: 200 });
+    }
     const claim = /\/v1\/agent-drafts\/([^/]+)\/claim$/.exec(url);
     if (claim) {
       const id = claim[1]!;
@@ -50,6 +59,7 @@ function world() {
     agents, tafs,
     names: memoryNames(), claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(), keys: memoryKeys(), accounts: memoryAccounts(),
     claimed: [] as string[], drafts: DRAFTS, newIDs: [NEW, NEW2],
+    account: { mandates: [], held: [] } as Account,
   };
   for (const [tenant, id, name] of [["t_acme", RAE, "Rae"], ["t_other", MAX, "Max"]] as const) {
     const taf: Taf = { id, name, job: "refunds", kiffAgent: name.toLowerCase(), nameClaim: `claim-${id}`, created: "2026-10-15T09:00:00Z" };
@@ -82,7 +92,7 @@ function depsOf(w: World): Deps {
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed),
+    fetch: kiff({ ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
   };
 }
@@ -309,6 +319,140 @@ describe("calmEnough", () => {
   it("agrees on equivalent forms", () => {
     expect(calmEnough("0,15,30,45 * * * *")).toBe(calmEnough("*/15 * * * *"));
     expect(calmEnough("50,5 * * * *")).toBe(true);
+  });
+});
+
+describe("the home list", () => {
+  /** Rae's refund Card: €100 a call, €1,000 a day with €200 used, 20 calls a day. */
+  const raeCard: Mandate = {
+    id: "card_rae", subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
+    grants: [{ action: "stripe_refund", title: "Create refund", per_action_max: [{ quantity: "sum(amount)", max: 10000, unit: "EUR", scale: 2 }] }],
+    aggregates: [{ quantity: "sum(amount)", limit: 100000, window: "1d", unit: "EUR", scale: 2 }, { quantity: "count", limit: 20, window: "1d" }],
+    limits: [{ quantity: "sum(amount)", window: "1d", limit: 100000, used: 20000, status: "ok", unit: "EUR", scale: 2 }],
+  };
+  const demoCard: Mandate = { id: "card_demo", subject: "support-demo", active: true, grants: [{ action: "lookup" }], aggregates: [] };
+
+  it("gives each taf its state, colour and Card summary, so the app combines nothing", async () => {
+    const w = world();
+    w.account.mandates = [raeCard];
+    const r = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.tafs).toEqual([{
+      id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null,
+      color: 0, state: "working", waiting: 0,
+      card: {
+        ids: ["card_rae"], active: true, expires: "2026-12-31T00:00:00Z", tools: ["Create refund"],
+        rules: [{
+          action: "stripe_refund", label: "Create refund", outside: "hold",
+          per_action: { minor: 10000, unit: "EUR", scale: 2 }, per_window: { minor: 100000, unit: "EUR", scale: 2 },
+          count_per_window: 20, window: "day",
+        }],
+        used: { stripe_refund: { minor: 20000, unit: "EUR", scale: 2 } }, usage_unknown: [],
+      },
+    }]);
+    expect(r.body.others).toEqual([]);
+    expect(r.body.removing).toEqual([]);
+    // The colour is kept, so the next taf takes another.
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.color).toBe(0);
+  });
+
+  it("says paused, waiting and stopped from tafs cloud's schedule and KIFF's holds and Cards", async () => {
+    const w = world();
+    w.account.mandates = [raeCard];
+    await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" });
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].state).toBe("paused");
+
+    w.account.held = [{ subject: "rae" }, { subject: "rae" }];
+    const waiting = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0];
+    expect(waiting).toMatchObject({ state: "waiting", waiting: 2 });
+
+    w.account.held = [];
+    w.account.mandates = [{ ...raeCard, revoked_at: "2026-10-19T10:00:00Z", active: false }];
+    const stopped = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0];
+    expect(stopped.state).toBe("stopped");
+    expect(stopped.card).toMatchObject({ ids: [], active: false, rules: [] });
+  });
+
+  it("lists the account's other agents with Cards apart: idle, and never Setup's or a taf being removed", async () => {
+    const w = world();
+    await w.tafs.put("t_acme", { id: NEW, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-14T09:00:00Z" });
+    await w.tafs.put("t_acme", { id: NEW2, name: "Old", job: "refunds", kiffAgent: "old", nameClaim: "c2", created: "2026-10-13T09:00:00Z", removing: true });
+    w.account.mandates = [raeCard, demoCard, { ...demoCard, id: "card_setup", subject: "setup-acme" }, { ...demoCard, id: "card_old", subject: "old" }];
+    const r = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
+    expect(r.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
+    expect(r.others).toEqual([{
+      id: null, name: "support-demo", job: null, kiff_agent: "support-demo", status: null, next_run: null, last_run: null,
+      color: 1, state: "idle", waiting: 0,
+      card: { ids: ["card_demo"], active: true, expires: null, tools: ["lookup"], rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "day" }], used: {}, usage_unknown: [] },
+    }]);
+  });
+
+  it("keeps each taf's colour, and gives a new one the first nobody has", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, color: 2 });
+    await w.tafs.put("t_acme", { id: NEW, name: "Bo", job: "refunds", kiffAgent: "bo", nameClaim: "c", created: "2026-10-01T09:00:00Z" });
+    const r = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
+    // Bo was made first and sorts first, but doesn't take Rae's colour.
+    expect(r.tafs.map((t: { name: string; color: number }) => [t.name, t.color])).toEqual([["Bo", 0], ["Rae", 2]]);
+  });
+
+  it("gives a new taf its colour at its start: the first no other taf has", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, color: 0 });
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: START })).status).toBe(200);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.color).toBe(1);
+  });
+
+  it("never writes back over a removal that lands while it lists", async () => {
+    const w = world();
+    const list = w.tafs.list.bind(w.tafs);
+    // The owner removes Rae just after the list read it.
+    w.tafs.list = async (t) => {
+      const read = await list(t);
+      const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+      w.tafs.held.set(`t_acme#${RAE}`, { ...rae, removing: true });
+      return read;
+    };
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).status).toBe(200);
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rae.removing).toBe(true);
+    expect(rae.color).toBeUndefined();
+  });
+
+  it("shows use KIFF couldn't read as unknown, and a total in the unit KIFF declares, else bare", async () => {
+    const w = world();
+    w.account.mandates = [{ ...raeCard, limits: [{ ...raeCard.limits![0]!, status: "unavailable", used: null }] }, {
+      ...demoCard, subject: "rae", id: "card_count", grants: [{ action: "send_email" }],
+      aggregates: [{ quantity: "sum(units)", limit: 10, window: "7d" }], limits: [{ quantity: "sum(units)", window: "7d", limit: 10, used: 3, status: "ok" }],
+    }];
+    const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
+    expect(card.usage_unknown).toEqual(["stripe_refund"]);
+    expect(card.used).toEqual({ send_email: { minor: 3, unit: null, scale: 0 } });
+    expect(card.rules[1]).toMatchObject({ action: "send_email", per_window: { minor: 10, unit: null, scale: 0 }, window: "week" });
+  });
+
+  it("pairs a total with its own use: the day's ceiling with its extra room, and the day's use, not the month's", async () => {
+    const w = world();
+    w.account.mandates = [{
+      ...raeCard,
+      aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d", unit: "EUR", scale: 2 }, { quantity: "sum(amount)", limit: 900000, window: "30d", unit: "EUR", scale: 2 }],
+      limits: [
+        { quantity: "sum(amount)", window: "30d", limit: 900000, used: 400000, status: "ok", unit: "EUR", scale: 2 },
+        { quantity: "sum(amount)", window: "1d", limit: 60000, used: 21200, status: "ok", unit: "EUR", scale: 2 },
+      ],
+    }, { ...demoCard, id: "card_old_api", subject: "rae", grants: [{ action: "pay_invoice" }], aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d" }] }];
+    const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
+    expect(card.rules[0]).toMatchObject({ window: "day", per_window: { minor: 60000, unit: "EUR", scale: 2 }, count_per_window: null });
+    expect(card.used).toEqual({ stripe_refund: { minor: 21200, unit: "EUR", scale: 2 } });
+    expect(card.usage_unknown).toEqual(["pay_invoice"]);
+  });
+
+  it("fails rather than list tafs without their Cards, and a sign-in KIFF refuses is a 401", async () => {
+    const w = world();
+    w.account.status = 503;
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).status).toBe(502);
+    expect((await call(w, "GET", "/v1/home")).status).toBe(401);
+    expect((await call(w, "GET", "/v1/home", { token: "key_rae" })).status).toBe(403);
   });
 });
 

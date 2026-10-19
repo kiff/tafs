@@ -22,7 +22,7 @@ runtime: definitions, runs, chats, notes, schedules, the tafs' KIFF keys) in
 | What | Where | Region | What's in it | How long | Who deletes it |
 |---|---|---|---|---|---|
 | tafs cloud logs | AWS CloudWatch, `/aws/lambda/tafs-cloud` | `us-east-1` | Lambda start and end lines, and the error a failed request hit (`console.error` in `handler.ts`; push, alert and removal steps log a short reason). Bodies, keys, tokens and secrets are not logged on purpose. An error from kiff/agents or KIFF can include a taf's id or name. | 30 days (`infra/aws.sh`, checked live) | CloudWatch, on expiry |
-| Tafs | DynamoDB `tafs-cloud-names`, item `tafs#tenant` | `us-east-1` | Per taf: its id, name, job, KIFF agent id, the claim on its name, when it started; its run budget, the owner's start notes and a digest of its definition, so a new definition can be built for it (#69) | Until the taf is removed | tafs cloud on remove |
+| Tafs | DynamoDB `tafs-cloud-names`, item `tafs#tenant` | `us-east-1` | Per taf: its id, name, job, KIFF agent id, the claim on its name, when it started; its run budget, the owner's start notes and a digest of its definition, so a new definition can be built for it (#69); its colour in the app (#91) | Until the taf is removed | tafs cloud on remove |
 | Taf names | Same table, `tenant#name` | `us-east-1` | The KIFF account id and the taf's name | Until the taf is removed (#34) | tafs cloud when a taf is removed or fails to start |
 | Chat flood slots | Same table, `rate#tenant#taf#window#n` | `us-east-1` | Account id, taf id, a 10-minute window number | About 10 minutes; DynamoDB's ttl deletes it, usually within 48 hours | DynamoDB ttl |
 | Archived chats (#82, #97) | Same table, `archived#tenant#taf` | `us-east-1` | Account id, taf id, the session ids of the chats the owner archived, listed under Archived until put back. Never their text | 31 days after the latest archive (ttl), past when kiff/agents deletes the chats; or until the taf is removed | tafs cloud on remove; DynamoDB ttl |
@@ -41,16 +41,17 @@ runtime: definitions, runs, chats, notes, schedules, the tafs' KIFF keys) in
 | Push alerts (with #32) | Apple Push Notification service | Apple's | "A taf needs you", the tool name, the held call's id. No amounts or request details: KIFF never sends them | Until delivered, or until the hold expires | Apple |
 | The phone | iPhone Keychain, this device only | The phone | The KIFF session, the account id, the pending alert secret (with #32) | Until sign-out | The app on sign-out |
 | Chat messages dealt with (#67) | The app's UserDefaults, `tafs.chat.settled` | The phone | SHA-256 hashes (run, time and text) of the unread messages of finished runs the app has shown or sent on, the last 500. Never the text | Until sign-out (another account signs in only after one) | The app on sign-out |
-| The tafs list shown last (#91) | The app's UserDefaults, `tafs.list` | The phone | For the account signed in to: each taf's name, state, colour and its Cards' summary (rules, limits, use), and which KIFF agent each taf is. So the next launch shows the list in its first frame. Never a chat, a memory or a held call | Until sign-out or a new session (another account's list is never shown) | The app on sign-out |
+| The tafs list shown last (#91) | The app's UserDefaults, `tafs.list` | The phone | For the account signed in to: each taf's name, state, colour and its Cards' summary (rules, limits, use), the same for the account's other agents with Cards, and which KIFF agent each is. So the next launch shows the list in its first frame. Never a chat, a memory or a held call | Until sign-out or a new session (another account's list is never shown) | The app on sign-out |
 | The phone's signing key | Secure Enclave (a software key in the Simulator) | The phone | The P-256 key that signs answers. Never leaves the phone | Until the app is deleted | iOS |
 | Sample data | The app's Application Support, `sample.json` | The phone | Sample tafs, held calls and the record. Sample mode only; nothing from KIFF | Until sign-out from sample mode | The app |
 
 ## What goes where
 
 ```
-phone ──(KIFF session)──────────────▶ KIFF        Cards, held calls, signed answers
-phone ──(KIFF session)──────────────▶ tafs cloud  start, chat, memory, remove, push token
+phone ──(KIFF session)──────────────▶ KIFF        held calls, signed answers, revoking a Card
+phone ──(KIFF session)──────────────▶ tafs cloud  the home list, start, chat, memory, remove, push token
 tafs cloud ──(who is this?)─────────▶ KIFF        /v1/me with the person's session
+tafs cloud ──(person's session)─────▶ KIFF        Cards and held calls, read for the home list, never kept
 tafs cloud ──(its AWS role)─────────▶ kiff/agents definitions, runs, chats, notes, schedules
 kiff/agents ──(model key)───────────▶ Anthropic   one model turn at a time
 kiff/agents ──(agent key)───────────▶ KIFF gateway ──(Card checked)──▶ the company's tools

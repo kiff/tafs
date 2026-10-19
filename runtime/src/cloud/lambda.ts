@@ -251,6 +251,20 @@ const tafs: Tafs = {
     await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key, UpdateExpression: "SET tafs = if_not_exists(tafs, :empty)", ExpressionAttributeValues: { ":empty": { M: {} } } }));
     await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key, UpdateExpression: "SET tafs.#id = :taf", ExpressionAttributeNames: { "#id": taf.id }, ExpressionAttributeValues: { ":taf": { S: JSON.stringify(taf) } } }));
   },
+  async putIf(tenant, taf, read) {
+    try {
+      await dynamo.send(new UpdateItemCommand({
+        TableName: TABLE, Key: { id: { S: `tafs#${tenant}` } },
+        UpdateExpression: "SET tafs.#id = :taf", ConditionExpression: "tafs.#id = :read",
+        ExpressionAttributeNames: { "#id": taf.id },
+        ExpressionAttributeValues: { ":taf": { S: JSON.stringify(taf) }, ":read": { S: JSON.stringify(read) } },
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
   async remove(tenant, id) {
     await dynamo.send(new UpdateItemCommand({ TableName: TABLE, Key: { id: { S: `tafs#${tenant}` } }, UpdateExpression: "REMOVE tafs.#id", ExpressionAttributeNames: { "#id": id } }));
   },

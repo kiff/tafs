@@ -58,6 +58,28 @@ final class StubProtocol: URLProtocol {
     override func stopLoading() {}
 }
 
+/// tafs cloud's home list (#91), as tests serve it at `GET /v1/home`.
+enum HomeJSON {
+    /// A taf tafs cloud runs (`id` set) or another agent with Cards (`id` nil), holding `cards`.
+    static func entry(agent: String, name: String, id: String? = "depl_1", status: String = "active", state: String? = nil,
+                      cards: [String]? = nil, color: Int = 0, waiting: Int = 0) -> String {
+        let ids = (cards ?? ["\(agent)-card"]).map { "\"\($0)\"" }.joined(separator: ",")
+        let state = state ?? (id == nil ? "idle" : status == "paused" ? "paused" : "working")
+        let idJSON = id.map { "\"\($0)\"" } ?? "null"
+        let statusJSON = id == nil ? "null" : "\"\(status)\""
+        let job = id == nil ? "null" : "\"refunds\""
+        return #"{"id":\#(idJSON),"name":"\#(name)","job":\#(job),"kiff_agent":"\#(agent)","status":\#(statusJSON),"next_run":null,"last_run":null,"color":\#(color),"state":"\#(state)","waiting":\#(waiting),"card":{"ids":[\#(ids)],"active":true,"expires":null,"tools":[],"rules":[],"used":{},"usage_unknown":[]}}"#
+    }
+
+    static func list(_ tafs: [String] = [], others: [String] = [], removing: String = "[]") -> String {
+        #"{"tafs":[\#(tafs.joined(separator: ","))],"others":[\#(others.joined(separator: ","))],"removing":\#(removing)}"#
+    }
+
+    /// Rae, run by tafs cloud as depl_1, acting as rae-k3f9 under its refund Card.
+    static let rae = entry(agent: "rae-k3f9", name: "Rae", cards: ["rae-k3f9-stripe_refund"])
+    static let empty = list()
+}
+
 @MainActor
 final class KIFFTests: XCTestCase {
     /// A client whose requests are answered by `StubProtocol`, with nothing sent yet.
@@ -129,9 +151,9 @@ final class KIFFTests: XCTestCase {
 
     func testUnauthorizedIsItsOwnError() async {
         let client = makeClient()
-        StubProtocol.responses["GET /v1/me/mandates?include=use"] = (401, #"{"error":"bad token"}"#)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (401, #"{"error":"bad token"}"#)
         do {
-            _ = try await client.cards()
+            _ = try await client.heldCalls()
             XCTFail("expected unauthorized")
         } catch let error as KIFFClient.KIFFError {
             XCTAssertEqual(error, .unauthorized)
@@ -140,93 +162,51 @@ final class KIFFTests: XCTestCase {
         }
     }
 
-    func testCardsBecomeOneTafPerHolder() async throws {
-        let client = makeClient()
-        StubProtocol.responses["GET /v1/me/mandates?include=use"] = (200, """
-        {"mandates":[
-          {"id":"m1","subject":"refund-agent","domain":"d","environment":"production","active":true,"on_exceed":"owner",
-           "grants":[{"action":"refund_order","entity_states":[],"per_action_max":[{"quantity":"sum(amount_cents)","max":15000,"unit":"USD","scale":2}]}],
-           "aggregates":[{"quantity":"sum(amount_cents)","limit":200000,"window":"1d","unit":"USD","scale":2}],
-           "limits":[{"quantity":"sum(amount_cents)","window":"1d","limit":200000,"used":21200,"remaining":178800,"status":"ok","unit":"USD","scale":2}]},
-          {"id":"m2","subject":"deploy-agent","domain":"d","environment":"production","active":true,
-           "grants":[{"action":"deploy","entity_states":[]}],
-           "aggregates":[{"quantity":"count","limit":10,"window":"1d"}]},
-          {"id":"m3","subject":"old-agent","domain":"d","environment":"production","active":false,"revoked_at":"2026-10-01T00:00:00Z",
-           "grants":[],"aggregates":[]}
-        ]}
-        """)
-        var ids: [String: UUID] = [:]
-        let tafs = KIFFMapping.tafs(from: try await client.cards(), ids: &ids, owner: "You")
-        XCTAssertEqual(tafs.map(\.name), ["deploy-agent", "refund-agent"], "revoked Cards drop out")
-        let refunds = try XCTUnwrap(tafs.first { $0.name == "refund-agent" })
-        XCTAssertEqual(refunds.card.rules.first?.perAction, Money(minor: 15000, currency: "USD", scale: 2), "$150.00 each, in KIFF's unit")
-        XCTAssertEqual(refunds.card.rules.first?.perWindow, Money(minor: 200000, currency: "USD", scale: 2))
-        XCTAssertEqual(refunds.used["refund_order"], Money(minor: 21200, currency: "USD", scale: 2), "$212.00 used today, from the list")
-        XCTAssertEqual(refunds.kiffCardIDs, ["m1"])
-        let deploys = try XCTUnwrap(tafs.first { $0.name == "deploy-agent" })
-        XCTAssertEqual(deploys.card.rules.first?.countPerWindow, 10, "a count stays a count, never money")
-        XCTAssertTrue(deploys.used.isEmpty, "no use line, nothing shown as used")
-        XCTAssertEqual(refunds.usageUnknown, [])
+    /// A held call's decimal arguments read as written, never in exponent form (#104 review).
+    func testADecimalArgumentIsWrittenPlainly() throws {
+        let json = #"{"rate":1.5e-05,"share":0.1,"amount":2550,"weight":2.5}"#
+        let args = try KIFFClient.decoder.decode([String: KIFFClient.CardException.ArgumentText].self, from: Data(json.utf8))
+        XCTAssertEqual(args["rate"]?.text, "0.000015")
+        XCTAssertEqual(args["share"]?.text, "0.1")
+        XCTAssertEqual(args["amount"]?.text, "2550")
+        XCTAssertEqual(args["weight"]?.text, "2.5")
     }
 
-    /// The meter pairs a total with its own use: a Card capping the same amount a day and
-    /// a month shows the daily total with today's use, at its ceiling now (extra room in).
-    func testUseMatchesTheTotalShown() async throws {
-        let client = makeClient()
-        StubProtocol.responses["GET /v1/me/mandates?include=use"] = (200, """
-        {"mandates":[{"id":"m1","subject":"refund-agent","active":true,"on_exceed":"owner",
-           "grants":[{"action":"refund_order","entity_states":[]}],
-           "aggregates":[{"quantity":"sum(amount_cents)","limit":50000,"window":"1d","unit":"EUR","scale":2},
-                         {"quantity":"sum(amount_cents)","limit":900000,"window":"30d","unit":"EUR","scale":2}],
-           "limits":[{"quantity":"sum(amount_cents)","window":"30d","limit":900000,"used":400000,"status":"ok","unit":"EUR","scale":2},
-                     {"quantity":"sum(amount_cents)","window":"1d","limit":60000,"used":21200,"status":"ok","unit":"EUR","scale":2}]}]}
-        """)
-        var ids: [String: UUID] = [:]
-        let cards = try await client.cards()
-        let taf = try XCTUnwrap(KIFFMapping.tafs(from: cards, ids: &ids, owner: "You").first)
-        let rule = try XCTUnwrap(taf.card.rules.first)
-        XCTAssertEqual(rule.window, .day)
-        XCTAssertEqual(rule.perWindow, Money(minor: 60000, currency: "EUR", scale: 2), "today's ceiling with its extra room")
-        XCTAssertEqual(taf.used["refund_order"], Money(minor: 21200, currency: "EUR", scale: 2), "today's use, not the month's")
-    }
+    /// The home list is tafs cloud's (#91): the app shows each entry as it is, its state in
+    /// the app's words and its Card's lines and use in KIFF's units.
+    func testATafFromTafsCloudIsShownAsItIs() throws {
+        let json = #"""
+        {"tafs":[{"id":"taf-1","name":"Rae","job":"refunds","kiff_agent":"rae","status":"active","next_run":null,"last_run":null,
+          "color":3,"state":"working","waiting":0,
+          "card":{"ids":["m1"],"active":true,"expires":null,"tools":["Refund a payment","list_charges"],
+            "rules":[{"action":"refund","label":"Refund a payment","outside":"hold","per_action":{"minor":15000,"unit":"USD","scale":2},
+                      "per_window":{"minor":200000,"unit":"USD","scale":2},"count_per_window":10,"window":"day"}],
+            "used":{"refund":{"minor":21200,"unit":"USD","scale":2}},"usage_unknown":["list_charges"]}}],
+         "others":[{"id":null,"name":"support-demo","job":null,"kiff_agent":"support-demo","status":null,"next_run":null,"last_run":null,
+          "color":4,"state":"idle","waiting":0,
+          "card":{"ids":["m2"],"active":true,"expires":null,"tools":[],"rules":[],"used":{},"usage_unknown":[]}}],
+         "removing":[]}
+        """#
+        let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(json.utf8))
+        let rae = KIFFMapping.taf(home.tafs[0], id: UUID(), owner: "You")
+        XCTAssertEqual(rae.name, "Rae")
+        XCTAssertEqual(rae.state, .working)
+        XCTAssertEqual(rae.now, "Running")
+        XCTAssertEqual(rae.colorIndex, 3, "tafs cloud's colour")
+        XCTAssertEqual(rae.tools, ["Refund a payment", "list_charges"])
+        let rule = try XCTUnwrap(rae.card.rules.first)
+        XCTAssertEqual(rule.label, "Refund a payment")
+        XCTAssertEqual(rule.perAction, Money(minor: 15000, currency: "USD", scale: 2), "$150.00 each, in KIFF's unit")
+        XCTAssertEqual(rule.perWindow, Money(minor: 200000, currency: "USD", scale: 2))
+        XCTAssertEqual(rule.countPerWindow, 10)
+        XCTAssertEqual(rae.used["refund"], Money(minor: 21200, currency: "USD", scale: 2))
+        XCTAssertEqual(rae.usageUnknown, ["list_charges"])
+        XCTAssertEqual(rae.kiffCardIDs, ["m1"])
+        XCTAssertNil(rae.card.expires, "no end date")
+        XCTAssertEqual(home.tafs[0].cloudTaf?.id, "taf-1")
 
-    /// Use KIFF couldn't read is unknown, never zero.
-    func testUnreadableUseIsUnknown() async throws {
-        let client = makeClient()
-        StubProtocol.responses["GET /v1/me/mandates?include=use"] = (200, """
-        {"mandates":[{"id":"m1","subject":"refund-agent","active":true,
-           "grants":[{"action":"refund_order","entity_states":[]}],
-           "aggregates":[{"quantity":"sum(amount_cents)","limit":50000,"window":"1d","unit":"EUR","scale":2}],
-           "limits":[{"quantity":"sum(amount_cents)","window":"1d","limit":50000,"status":"unavailable"}]},
-          {"id":"m2","subject":"old-api-agent","active":true,
-           "grants":[{"action":"pay_invoice","entity_states":[]}],
-           "aggregates":[{"quantity":"sum(amount_cents)","limit":50000,"window":"1d"}]}]}
-        """)
-        var ids: [String: UUID] = [:]
-        let tafs = KIFFMapping.tafs(from: try await client.cards(), ids: &ids, owner: "You")
-        let refunds = try XCTUnwrap(tafs.first { $0.name == "refund-agent" })
-        XCTAssertNil(refunds.used["refund_order"])
-        XCTAssertEqual(refunds.usageUnknown, ["refund_order"])
-        XCTAssertEqual(refunds.card.rules.first?.perWindow, Money(minor: 50000, currency: "EUR", scale: 2))
-        let old = try XCTUnwrap(tafs.first { $0.name == "old-api-agent" })
-        XCTAssertEqual(old.usageUnknown, ["pay_invoice"], "no use line from KIFF is unknown too")
-    }
-}
-
-final class SampleStoreTests: XCTestCase {
-    @MainActor
-    func testSampleSurvivesARestart() async {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("sample-\(UUID()).json")
-        let store = SampleStore(url: url)
-        let first = AppModel(signer: StubSigner(), store: store)
-        await first.startSample()
-        XCTAssertFalse(first.tafs.isEmpty)
-
-        let second = AppModel(signer: StubSigner(), store: store)
-        await second.restore()
-        XCTAssertEqual(second.mode, .sample)
-        XCTAssertEqual(second.tafs.map(\.id), first.tafs.map(\.id))
-        XCTAssertEqual(second.held.count, first.held.count)
-        store.clear()
+        let demo = KIFFMapping.taf(home.others[0], id: UUID(), owner: "You")
+        XCTAssertEqual(demo.state, .idle)
+        XCTAssertNil(home.others[0].cloudTaf, "an agent tafs doesn't run has no chat or schedule")
     }
 }

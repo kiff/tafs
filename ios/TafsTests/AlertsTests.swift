@@ -24,7 +24,7 @@ final class AlertsTests: XCTestCase {
     }
 
     private func signedIn(_ model: AppModel) async {
-        for path in ["GET /v1/me/mandates", "GET /v1/me/mandates?include=use"] { StubProtocol.responses[path] = (200, #"{"mandates":[]}"#) }
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
         await model.useSession("kiff_dev_x", tenant: "t1")

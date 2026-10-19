@@ -19,7 +19,7 @@ final class SetupTests: XCTestCase {
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: session)
         let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
         let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: vendor)
-        for path in ["GET /v1/me/mandates", "GET /v1/me/mandates?include=use"] { StubProtocol.responses[path] = (200, #"{"mandates":[]}"#) }
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":null}"#)
@@ -370,7 +370,7 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(body(start)["job"] as? String, "refunds")
         XCTAssertEqual(body(start)["name"] as? String, "Refunds")
         XCTAssertNil(body(start)["claim_secret"], "the phone holds no claim secret for Setup's draft")
-        XCTAssertFalse(sent("GET", "cloud.test", "/v1/tafs").isEmpty, "then it refreshes")
+        XCTAssertFalse(sent("GET", "cloud.test", "/v1/home").isEmpty, "then it refreshes")
         XCTAssertNil(model.tafStartErrors["done"])
 
         // A result without a job or a draft starts nothing.

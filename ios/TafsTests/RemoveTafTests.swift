@@ -5,14 +5,14 @@ import XCTest
 /// runs, chats and memory, its key and its name.
 @MainActor
 final class RemoveTafTests: XCTestCase {
-    private static let raeCard = #"{"id":"rae-k3f9-stripe_refund","subject":"rae-k3f9","grants":[],"aggregates":[],"active":true}"#
+    private static let raeCard = "rae-k3f9-stripe_refund"
 
     override func tearDown() {
         Keychain.delete(AppModel.tokenAccount)
         super.tearDown()
     }
 
-    private static let raeLookupCard = #"{"id":"rae-k3f9-stripe_get_charge","subject":"rae-k3f9","grants":[],"aggregates":[],"active":true}"#
+    private static let raeLookupCard = "rae-k3f9-stripe_get_charge"
 
     private func signedIn(signer: ApprovalSigning = StubSigner(), cards: [String] = [raeCard]) async throws -> (AppModel, UUID) {
         StubProtocol.responses = [:]
@@ -23,8 +23,7 @@ final class RemoveTafTests: XCTestCase {
         let model = AppModel(signer: signer,
                              kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
                              cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
-        let list = #"{"mandates":["# + cards.joined(separator: ",") + "]}"
-        for path in ["GET /v1/me/mandates", "GET /v1/me/mandates?include=use"] { StubProtocol.responses[path] = (200, list) }
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.entry(agent: "rae-k3f9", name: "Rae", cards: cards)]))
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
         await model.useSession("kiff_dev_x")
@@ -88,7 +87,7 @@ final class RemoveTafTests: XCTestCase {
         _ = await model.removeTaf(rae)
 
         // Refresh: tafs cloud no longer lists it as a taf, only as a removal to finish.
-        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[],"removing":[{"id":"depl_1","name":"Rae"}]}"#)
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list(removing: #"[{"id":"depl_1","name":"Rae"}]"#))
         StubProtocol.responses["DELETE /v1/tafs/depl_1"] = (502, #"{"error":"kiff/agents is down"}"#)
         await model.refresh()
         XCTAssertEqual(model.unfinishedRemovals.map(\.name), ["Rae"], "shown, and tried again")
@@ -145,7 +144,7 @@ final class RemoveTafTests: XCTestCase {
     /// refresh read is dropped, not shown after the switch.
     func testARefreshFinishingARemovalDoesntOutliveItsAccount() async throws {
         let (model, _) = try await signedIn()
-        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}],"removing":[{"id":"depl_9","name":"Old"}]}"#)
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae], removing: #"[{"id":"depl_9","name":"Old"}]"#))
         StubProtocol.responses["DELETE /v1/tafs/depl_9"] = (200, #"{"done":true,"removed":["schedule","memory","key","name"],"failed":[]}"#)
         StubProtocol.holdOnce = "DELETE /v1/tafs/depl_9"
         let refresh = Task { await model.refresh() }

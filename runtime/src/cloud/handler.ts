@@ -5,6 +5,7 @@ import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./k
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
+import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -14,6 +15,7 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
  * and only on that account's tafs.
  *
  *   GET  /v1/jobs
+ *   GET  /v1/home                       the app's list: each taf's state, colour and Card summary, and the account's other agents with Cards
  *   GET  /v1/tafs
  *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?}
  *   POST /v1/tafs/{id}/pause | resume | run
@@ -126,12 +128,19 @@ export interface Taf {
   ownerNotes?: string;
   /** The digest of the definition kiff/agents holds for it, as last written (`digest`). */
   definition?: string;
+  /** Its colour in the app (`home.COLORS`), kept so a new taf never takes it. Given at its start. */
+  color?: number;
 }
 
 export interface Tafs {
   list(tenant: string): Promise<Taf[]>;
   get(tenant: string, id: string): Promise<Taf | undefined>;
   put(tenant: string, taf: Taf): Promise<void>;
+  /**
+   * Sets `taf` only while its entry is still exactly `read`: false, and nothing
+   * written, when anything changed it since (a removal, an upgrade).
+   */
+  putIf(tenant: string, taf: Taf, read: Taf): Promise<boolean>;
   remove(tenant: string, id: string): Promise<void>;
   /** Every account with tafs on record: what an upgrade goes through (kiff/tafs#69). */
   tenants(): Promise<string[]>;
@@ -258,6 +267,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return alert(event, deps);
   }
   if (parts[1] === "push") return push(event, method, parts, deps);
+  if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
 
   const me = await person(event, deps);
@@ -432,10 +442,13 @@ async function forwardTried(deps: Deps, eventID: string, now: Date): Promise<boo
   return true;
 }
 
-async function person(event: HTTPEvent, deps: Deps): Promise<KIFFIdentity> {
+function bearer(event: HTTPEvent): string {
   const auth = header(event, "authorization");
-  const token = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
-  const me = await whoIs(token, deps.fetch, deps.kiffBase);
+  return auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
+}
+
+async function person(event: HTTPEvent, deps: Deps): Promise<KIFFIdentity> {
+  const me = await whoIs(bearer(event), deps.fetch, deps.kiffBase);
   if (me.apiKey) throw new HTTPError(403, "sign in as a person, not with a key");
   return me;
 }
@@ -555,9 +568,11 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
   // the taf is on record, and only then is the name freed: a definition or a
   // schedule nobody can see would otherwise run, or block the name for good.
   const def = definition(tafID, job, { budgetCents: budget, ownerNotes: notesText });
+  // Its colour: the first no other taf of the account has (kiff/tafs#91).
+  const color = freeColor((await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB && t.color !== undefined).map((t) => t.color!));
   const taf: Taf = {
     id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
-    budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def),
+    budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -1329,6 +1344,55 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule)
     next_run: s?.enabled && s.next ? iso(s.next) : null,
     last_run: last ? iso(last.created) : null,
   };
+}
+
+/**
+ * The app's home list (kiff/tafs#91): every taf with its state, colour and
+ * Card summary, then the account's other agents with Cards, the ones tafs
+ * doesn't run (made through KIFF's API), listed apart. KIFF's Cards and held
+ * calls are read with the owner's session; a KIFF that can't be read fails the
+ * list rather than showing tafs without their Cards.
+ */
+async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
+  const [records, removing, kiff] = await Promise.all([
+    deps.tafs.list(me.tenantID),
+    deps.removals.list(me.tenantID),
+    readKIFF(bearer(event), deps.fetch, deps.kiffBase),
+  ]);
+  const { cards, waiting } = byHolder(kiff.mandates, kiff.held);
+  const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB)
+    .sort((a, b) => a.created.localeCompare(b.created) || a.id.localeCompare(b.id));
+  // A taf keeps the colour it got at its start. One started before colours takes
+  // the first nobody has, kept only if its record is still what was read here:
+  // the list never writes back over a removal or an upgrade.
+  const taken = tafs.flatMap((t) => (t.color === undefined ? [] : [t.color]));
+  const colors = new Map<string, number>();
+  for (const t of tafs) {
+    if (t.color !== undefined) continue;
+    const color = freeColor(taken);
+    taken.push(color);
+    colors.set(t.id, color);
+    await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
+  }
+  const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
+  const listed = tafs.map((t, i) => {
+    const v = views[i]!;
+    const card = summary(cards.get(t.kiffAgent) ?? []);
+    const held = waiting.get(t.kiffAgent) ?? 0;
+    return { ...v, color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
+  });
+  // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
+  // Another agent's colour isn't kept: it can change when a taf is added.
+  const ours = new Set(records.map((t) => t.kiffAgent).filter(Boolean));
+  const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a)).sort();
+  const others = agents.map((agent) => {
+    const card = summary(cards.get(agent) ?? []);
+    const held = waiting.get(agent) ?? 0;
+    const color = freeColor(taken);
+    taken.push(color);
+    return { id: null, name: agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card };
+  });
+  return { tafs: listed, others, removing };
 }
 
 /** A kiff/agents call a route depends on: its 404 is the taf's, anything else says the runtime didn't answer. */
