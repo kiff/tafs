@@ -381,6 +381,24 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// The hand-over starts its taf when it arrives, wherever the owner is (kiff/tafs#96):
+    /// no result card on screen needed, so the new taf reaches the list.
+    func testAHandOverStartsItsTafWithoutTheCardOnScreen() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"taf-new","name":"Refunds","job":"refunds","kiff_agent":"refunds-x","status":"active","next_run":null,"last_run":null},"session":"s2"}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[],"components":[
+          {"at":"2026-10-17T10:00:06.000Z","session":"s1","run":"r1","seq":6,"component":{"type":"result","id":"done","taf":{"agent":"refunds-x","name":"Refunds","job":"refunds","draft":"drf_s1"},"text":"Done."}}]}
+        """)
+        StubProtocol.sent = []
+        await model.loadSetup()
+        for _ in 0..<50 where sent("POST", "cloud.test", "/v1/tafs").isEmpty { await Task.yield(); try await Task.sleep(nanoseconds: 20_000_000) }
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs").count, 1, "started once, by the model")
+        XCTAssertEqual(body(try XCTUnwrap(sent("POST", "cloud.test", "/v1/tafs").first))["draft_id"] as? String, "drf_s1")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Stop cancels the run of the thread's session.
     func testStopNamesTheSession() async throws {
         let model = await model(signer: FaceIDSigner())

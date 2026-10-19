@@ -273,6 +273,9 @@ final class AppModel: ObservableObject {
 
     /// A tab to show, asked for by a tapped alert; the root view shows it and clears this.
     @Published var requestedTab: Tab?
+    /// A taf to select in the iPad's sidebar, asked for by "See it on…" (kiff/tafs#96); the
+    /// split view selects it and clears this.
+    @Published var requestedTaf: UUID?
 
     /// Opens where a tapped alert points.
     func open(_ destination: String) {
@@ -1907,7 +1910,9 @@ final class AppModel: ObservableObject {
     /// The account's Setup on tafs cloud, once started.
     @Published private(set) var setupTaf: TafsCloud.CloudTaf?
     /// Setup's thread: messages and components.
-    @Published private(set) var setupThread = SetupThread()
+    @Published private(set) var setupThread = SetupThread() {
+        didSet { startHandedOverTafs() }
+    }
     @Published private(set) var setupSending = false
     @Published private(set) var startingSetup = false
     @Published var setupError: String?
@@ -2473,6 +2478,17 @@ final class AppModel: ObservableObject {
     /// Results whose taf is being started, or failed to start (with why).
     @Published private(set) var startingTafs: Set<String> = []
     @Published private(set) var tafStartErrors: [String: String] = [:]
+
+    /// Setup's hand-over starts its taf once, wherever the owner is (kiff/tafs#96): not
+    /// only while the result card is on screen, so the taf reaches the list either way. One
+    /// that didn't start waits for the card's Try again.
+    private func startHandedOverTafs() {
+        for c in setupThread.components.map(\.component) where c.type == .result {
+            guard let taf = c.taf, taf.job != nil, taf.draft != nil else { continue }
+            if cloudTafs[taf.agent] != nil || startingTafs.contains(c.id) || tafStartErrors[c.id] != nil { continue }
+            Task { await startSetupTaf(c) }
+        }
+    }
 
     /// Starts the taf a result hands over to, once: tafs cloud stores it, and kiff/agents
     /// claims its key from Setup's draft. Then it shows with the account's other tafs.

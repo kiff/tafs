@@ -671,6 +671,7 @@ struct StepMark: View {
 /// One component in the thread.
 struct SetupComponentView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
     let shown: ShownComponent
 
     var body: some View {
@@ -769,12 +770,20 @@ struct SetupComponentView: View {
                 Text(tools.joined(separator: ", ")).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.soft)
             }
             if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
-                NavigationLink {
-                    TafDetailView(tafID: tafID)
-                } label: {
-                    Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                if sizeClass == .regular {
+                    // Beside the sidebar: select it there, so the list says which taf is open.
+                    Button { model.requestedTaf = tafID } label: {
+                        Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    NavigationLink {
+                        TafDetailView(tafID: tafID)
+                    } label: {
+                        Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
                 }
-                .buttonStyle(PrimaryButtonStyle())
             } else if let error = model.tafStartErrors[c.id] {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                 Button("Try again") { Task { await model.startSetupTaf(c) } }
@@ -783,8 +792,6 @@ struct SetupComponentView: View {
                 Text("Starting \(c.taf?.name ?? "the taf")…").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
         }
-        // The hand-over starts the taf (once): tafs cloud stores it and kiff/agents claims its key.
-        .task(id: c.id) { await model.startSetupTaf(c) }
     }
 }
 
