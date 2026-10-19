@@ -9,7 +9,8 @@ final class OwnerWordsTests: XCTestCase {
     }
 
     /// The owner's iPad test: "create_refund: at most 10000 sum(amount) each" while the chat
-    /// said €100. With the units KIFF now gives (kiff-cloud #1274), the lines say €100.00.
+    /// said €100. With the units KIFF now gives (kiff-cloud #1274), the lines say €100.00, and
+    /// the vendor's title stands beside KIFF's action (an approval names what KIFF decides on).
     func testADraftsLinesSayTheAmountsInTheirUnit() throws {
         let d = try draft(#"""
         {"id":"drf_1","agent_id":"refunds-k5j6m5qx","label":"Refunds assistant","status":"draft","version":"v1",
@@ -19,7 +20,7 @@ final class OwnerWordsTests: XCTestCase {
         """#)
         let euros = { (minor: Int64) in Money(minor: minor, currency: "EUR", scale: 2).formatted }
         XCTAssertEqual(d.cards?.flatMap(\.lines), [
-            "Refund a payment: up to \(euros(10000)) each",
+            "Refund a payment · create_refund_k3f9: up to \(euros(10000)) each",
             "\(euros(100000)) in total a day",
             "20 calls a day",
         ])
@@ -27,7 +28,6 @@ final class OwnerWordsTests: XCTestCase {
         for line in d.cards?.flatMap(\.lines) ?? [] {
             XCTAssertFalse(line.contains("sum("), line)
             XCTAssertFalse(line.contains("10000"), line)
-            XCTAssertFalse(line.contains("k3f9"), line)
         }
     }
 

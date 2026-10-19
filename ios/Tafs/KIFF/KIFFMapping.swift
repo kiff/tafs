@@ -48,6 +48,14 @@ enum KIFFMapping {
         return t.isEmpty ? action : t
     }
 
+    /// What an approval names (a held call, a draft's Card): the vendor's title beside
+    /// KIFF's own action, never instead of it. The words on an approval are part of what's
+    /// approved, and a vendor chooses its titles (kiff-cloud#1277 review).
+    static func approvalName(_ action: String, title: String?) -> String {
+        let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return t.isEmpty || t == action ? action : "\(t) · \(action)"
+    }
+
     static func rules(_ mandate: KIFFClient.Mandate) -> [CardRule] {
         let outside: Outside = mandate.onExceed == "refuse" ? .refuse : .hold
         var rules = mandate.grants.map { grant -> CardRule in
@@ -141,7 +149,7 @@ enum KIFFMapping {
         var call = HeldCall(
             id: heldID(e.id),
             tafID: tafID,
-            proposed: ProposedAction(action: e.action, summary: "\(name(e.action, title: e.title)) \(e.entityID)", amount: amount(of: e)),
+            proposed: ProposedAction(action: e.action, summary: "\(approvalName(e.action, title: e.title)) \(e.entityID)", amount: amount(of: e)),
             reason: reason,
             heldAt: e.createdAt,
             expiresAt: e.expiresAt ?? e.createdAt.addingTimeInterval(10 * 60)

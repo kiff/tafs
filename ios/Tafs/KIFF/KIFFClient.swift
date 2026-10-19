@@ -449,10 +449,11 @@ final class KIFFClient {
         let grants: [Grant]?
         let aggregates: [Aggregate]?
 
-        /// The lines the owner approves, in their words (kiff/tafs#94): "Refund a payment: up
-        /// to €100.00 each", "€1,000.00 in total a day", "20 calls a day". The tool's title and
-        /// an amount's unit are KIFF's; without them, the action and a bare number as KIFF
-        /// sends them: never a guessed name or currency, never "sum(amount)".
+        /// The lines the owner approves, in their words (kiff/tafs#94): "Refund a payment ·
+        /// create_refund_k3f9: up to €100.00 each", "€1,000.00 in total a day", "20 calls a
+        /// day". The vendor's title stands beside KIFF's action, never instead of it; an
+        /// amount's unit is KIFF's, or the number stays bare: never a guessed name or
+        /// currency, never "sum(amount)".
         var lines: [String] {
             var out: [String] = []
             for g in grants ?? [] {
@@ -461,7 +462,7 @@ final class KIFFClient {
                         ? "up to \(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted) each"
                         : "up to \(cap.max) each"
                 }
-                let action = KIFFMapping.name(g.action, title: g.title)
+                let action = KIFFMapping.approvalName(g.action, title: g.title)
                 out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", "))
             }
             for a in aggregates ?? [] {

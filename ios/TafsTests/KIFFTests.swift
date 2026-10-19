@@ -115,7 +115,7 @@ final class KIFFTests: XCTestCase {
         XCTAssertEqual(held.proposed.amount, .bare(48000), "no declared unit: a bare number, never US cents")
         XCTAssertEqual(held.reason, "Over $150 each")
         XCTAssertEqual(held.nextSteps, ["return first"])
-        XCTAssertEqual(held.proposed.summary, "Refund an order ord_4502", "the tool's title, as KIFF gives it")
+        XCTAssertEqual(held.proposed.summary, "Refund an order · refund_order ord_4502", "the vendor's title beside KIFF's action, on an approval")
     }
 
     func testAnswersHitTheRightEndpoints() async throws {
