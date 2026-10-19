@@ -39,13 +39,15 @@ final class TimeZoneTests: XCTestCase {
         let here = TimeZone.current.identifier
         StubProtocol.responses["PUT /v1/me/time-zone"] = (200, #"{"time_zone":"\#(here)"}"#)
         StubProtocol.thenRespond["PUT /v1/me/time-zone"] = ["GET /v1/me": (200, #"{"tenant_id":"t1","tenant_slug":"acme","time_zone":"\#(here)"}"#)]
+        let unlocksBefore = signer.signed.count // signing in may unlock too (alerts)
         await model.useThisDevicesTimeZone()
 
         let put = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PUT" })
         XCTAssertEqual(try JSONDecoder().decode([String: String].self, from: try XCTUnwrap(put.httpBody)), ["time_zone": here])
         let header = try XCTUnwrap(put.value(forHTTPHeaderField: "KIFF-Device-Signature"), "a signed setup call, as KIFF asks of a phone")
         XCTAssertTrue(header.hasPrefix("t="), header)
-        XCTAssertEqual(signer.signed.count, 1, "one unlock for it")
+        XCTAssertEqual(signer.signed.count - unlocksBefore, 1, "one unlock for it")
+        XCTAssertTrue(signer.signed.last?.hasPrefix("tafs.time-zone.v1|t1|") ?? false, signer.signed.last ?? "")
         XCTAssertEqual(model.kiffAccount?.timeZone, here, "read again from KIFF")
         XCTAssertNil(model.timeZoneError)
 
