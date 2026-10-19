@@ -44,8 +44,9 @@ final class KIFFClient {
     var setupSigner: (@MainActor (Data) throws -> String)?
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
     /// starts a taf (kiff-cloud #1217, #1225), the alert target that tells tafs cloud when a
-    /// call is held (#1234), and the connector key planque keeps (#1251).
-    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys"]
+    /// call is held (#1234), the connector key planque keeps (#1251), and the account's
+    /// time zone (#1278).
+    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone"]
 
     /// Whether KIFF takes `path` from a phone only with its signature: the paths above, and
     /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`).
@@ -165,6 +166,20 @@ final class KIFFClient {
             }
         }
 
+        /// One argument of a held call, as text: a string as it is, a number or a flag
+        /// written out, anything else left as "…".
+        struct ArgumentText: Decodable, Equatable {
+            let text: String
+            init(from decoder: Decoder) throws {
+                let c = try decoder.singleValueContainer()
+                if let s = try? c.decode(String.self) { text = s }
+                else if let i = try? c.decode(Int64.self) { text = String(i) }
+                else if let d = try? c.decode(Double.self) { text = String(d) }
+                else if let b = try? c.decode(Bool.self) { text = b ? "true" : "false" }
+                else { text = "…" }
+            }
+        }
+
         /// A parameter's declared unit and decimal places ("EUR", 2).
         struct ParameterUnit: Decodable, Equatable {
             let unit: String
@@ -192,9 +207,12 @@ final class KIFFClient {
 
         /// The held call's tool, as KIFF names it for people (kiff-cloud#1277).
         var title: String? = nil
+        /// What a held gateway call asks, as KIFF keeps it (its arguments), each as text:
+        /// what the call is on, which the tool-call id it's filed under doesn't say.
+        var arguments: [String: ArgumentText]? = nil
 
         enum CodingKeys: String, CodingKey {
-            case id, subject, action, title, status, breaches, parameters, reason
+            case id, subject, action, title, arguments, status, breaches, parameters, reason
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
             case createdAt = "created_at", expiresAt = "expires_at"
@@ -222,6 +240,40 @@ final class KIFFClient {
 
     func me() async throws -> Account {
         try await send("GET", "/v1/me")
+    }
+
+    /// Sets the account's time zone (an IANA name): a signed setup call from a phone
+    /// (kiff-cloud #1278), which only the account's owner or an admin may make.
+    func setTimeZone(_ zone: String) async throws -> String {
+        struct Saved: Decodable { let timeZone: String; enum CodingKeys: String, CodingKey { case timeZone = "time_zone" } }
+        let saved: Saved = try await send("PUT", "/v1/me/time-zone", body: ["time_zone": zone])
+        return saved.timeZone
+    }
+
+    /// One call of the account's, as KIFF's activity records it (kiff-cloud #1279): what a
+    /// taf did, newest first, with the tool's title for people.
+    struct ActivityCall: Decodable, Equatable {
+        struct ToolOutcome: Decodable, Equatable { let status: String }
+        let proposalID: String
+        let actionName: String
+        var title: String?
+        var actorID: String?
+        let outcome: String
+        let createdAt: Date
+        let held: Bool
+        var toolOutcome: ToolOutcome?
+        enum CodingKeys: String, CodingKey {
+            case title, outcome, held
+            case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
+            case createdAt = "created_at", toolOutcome = "tool_outcome"
+        }
+    }
+
+    /// The account's latest calls, for Activity and Record.
+    func activity(limit: Int = 100) async throws -> [ActivityCall] {
+        struct Response: Decodable { let calls: [ActivityCall] }
+        let r: Response = try await send("GET", "/v1/me/activity?limit=\(limit)")
+        return r.calls
     }
 
     func heldCalls() async throws -> [CardException] {
@@ -567,7 +619,7 @@ final class KIFFClient {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
         }
-        if method == "POST", base == nil, Self.signsSetup(path), let setupSigner, let tenant {
+        if method == "POST" || method == "PUT", base == nil, Self.signsSetup(path), let setupSigner, let tenant {
             let signedAt = ISO8601DateFormatter().string(from: Date())
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
             let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)

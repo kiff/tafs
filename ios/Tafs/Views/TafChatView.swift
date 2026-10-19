@@ -114,6 +114,10 @@ struct TafChatView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+                // A readable column on a wide screen (kiff/tafs#102): the owner's words and the
+                // taf's sit together, not at the screen's far edges.
+                .frame(maxWidth: Self.readable)
+                .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)
             .background(GeometryReader { g in
@@ -256,15 +260,26 @@ struct TafChatView: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
+        .frame(maxWidth: Self.readable)
+        .frame(maxWidth: .infinity)
         .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
     }
+
+    /// The chat's widest column: about 75 characters of text.
+    static let readable: CGFloat = 720
 
     private func send() {
         let text = draft
         draft = ""
         if model.chatThinking(tafID) { following = true } else { pinNext = true }
         Haptics.tap()
-        Task { if !(await model.submitChat(text, to: tafID)), draft.isEmpty { draft = text } }
+        // The keyboard stays for the next message (kiff/tafs#102): the composer changes
+        // around the field as the taf starts, which drops its focus.
+        typing = true
+        Task {
+            if !(await model.submitChat(text, to: tafID)), draft.isEmpty { draft = text }
+            typing = true
+        }
     }
 }
 
