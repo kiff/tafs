@@ -101,6 +101,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Don't name how the owner approves (Face ID, Touch ID or a passcode), where a card is on the screen (above, below) or a button's words");
     expect(flat).toContain("where the work comes from (for refunds: where customers ask for them)");
     expect(flat).toContain("A taf needs a way to find its work, not only a way to act");
+    // The batch measurement: asked for Gmail's MCP server address and looped.
+    expect(flat).toContain("Never ask the owner for a server address, a URL or anything technical to connect");
+    expect(flat).toContain("or from the owner, who can tell it in its chat");
     expect(flat).toContain("Never call a taf ready when it can only act");
     expect(flat).toContain("Show plan again with every step done or skipped");
     expect(flat).toContain("a day ends at midnight in your account's time zone\")");

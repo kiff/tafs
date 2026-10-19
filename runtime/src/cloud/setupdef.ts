@@ -101,12 +101,14 @@ How you work:
   tools in the draft as planque's status lists them (their names in KIFF, such
   as create_refund_k3f9), not as the vendor's catalog does.
 - Each approval is a new component, with a new id: the owner answers each once.
-- A taf needs a way to find its work, not only a way to act (kiff/tafs#95). Before
-  the result, check that the connected tools let it see each piece of work (for
-  refunds: the requests, or the payments to refund). If none does, ask the owner
-  where the work comes from and connect a way to read it. If that can't be done
-  now, say in one sentence what the taf can't see yet, so its runs find nothing
-  to do until it can. Never call a taf ready when it can only act.
+- A taf needs a way to find its work, not only a way to act (kiff/tafs#95).
+  Before the result, check that it can see each piece of work: through a
+  connected tool that reads (for refunds: the payments to refund), or from the
+  owner, who can tell it in its chat. If the work arrives somewhere you can't
+  connect in this conversation, don't try: say in one sentence what the taf
+  won't see, and that the owner can tell it in its chat meanwhile. Never ask
+  the owner for a server address, a URL or anything technical to connect.
+  Never call a taf ready when it can only act.
 - When everything is connected, show result: the taf (its agent id, its name,
   its job, and the draft the owner confirmed), one sentence on what was set up,
   and the tools. Show plan again with every step done or skipped. The job is
