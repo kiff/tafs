@@ -32,6 +32,33 @@ final class AppModel: ObservableObject {
     var kiffTenant: String?
     /// The KIFF account signed in to, as KIFF says (kiff/tafs#73): what Settings shows.
     @Published private(set) var kiffAccount: KIFFClient.Account?
+    /// Why the account's time zone didn't change, when it didn't.
+    @Published private(set) var timeZoneError: String?
+
+    /// Sets the account's time zone to this device's, so a Card's day ends at the owner's
+    /// midnight (kiff/tafs#96): a signed setup call (kiff-cloud #1278), which KIFF takes from
+    /// the account's owner or an admin. The account is read again after.
+    func useThisDevicesTimeZone() async {
+        guard mode == .kiff, let tenant = kiffTenant else { return }
+        let gen = accountGeneration
+        timeZoneError = nil
+        let zone = TimeZone.current.identifier
+        // The owner's act, behind the device's unlock, as KIFF asks of a phone.
+        do { _ = try await signer.sign(Data("tafs.time-zone.v1|\(tenant)|\(zone)".utf8), reason: "Set your account's time zone to \(zone)") } catch { return }
+        guard gen == accountGeneration else { return }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            _ = try await kiff.setTimeZone(zone)
+            guard gen == accountGeneration else { return }
+            if let account = try? await kiff.me(), gen == accountGeneration { kiffAccount = account }
+        } catch {
+            guard gen == accountGeneration else { return }
+            timeZoneError = "The time zone didn't change: \(error.localizedDescription)"
+        }
+    }
     /// Whether this phone's KIFF session holds its signing key. A session from before
     /// the phone sent its key cannot answer: sign in again.
     var sessionHasKey = false
@@ -423,8 +450,10 @@ final class AppModel: ObservableObject {
             async let cards = kiff.cards()
             async let calls = kiff.heldCalls()
             async let listing = cloudListing()
+            async let activity = activityCalls()
             let (mandates, exceptions) = try await (cards, calls)
             let list = await listing
+            let done = await activity
             guard gen == accountGeneration else { return }
             if let list {
                 var byAgent: [String: TafsCloud.CloudTaf] = [:]
@@ -434,6 +463,9 @@ final class AppModel: ObservableObject {
                 unfinishedRemovals = list.removing
             }
             show(mandates, exceptions)
+            // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
+            // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
+            if let done { record = KIFFMapping.record(done, ids: holderIDs) }
             if let removing = list?.removing, !removing.isEmpty {
                 await finishRemovals(removing, gen: gen)
                 // Finishing waited: another account may be signed in now, with its own tafs.
@@ -496,6 +528,10 @@ final class AppModel: ObservableObject {
 
     private func cloudListing() async -> (tafs: [TafsCloud.CloudTaf], removing: [TafsCloud.PendingRemoval])? {
         try? await cloud.listing()
+    }
+
+    private func activityCalls() async -> [KIFFClient.ActivityCall]? {
+        try? await kiff.activity()
     }
 
     // MARK: The remembered list (#91)
@@ -953,6 +989,12 @@ final class AppModel: ObservableObject {
         }
 
         resolve(call)
+        if call.kiffID != nil {
+            // The paused run goes on with the answer (kiff/tafs#102): the chat shows it working
+            // and then its reply, as after a message, and KIFF is read again for the Card's use.
+            chatStates[call.tafID, default: ChatState()].awaiting = clock()
+            Task { await refresh() }
+        }
         guard let i = tafs.firstIndex(where: { $0.id == call.tafID }) else { return }
         switch answer {
         case .approveOnce:
@@ -1192,6 +1234,8 @@ final class AppModel: ObservableObject {
         case .success(let thread):
             chats[tafID] = thread.messages
             chatErrors[tafID] = nil
+            // A run seen at work here is over now: what it did reaches the Card and the record.
+            if chatStates[tafID]?.working != nil, thread.working == nil { Task { await refresh() } }
             chatStates[tafID, default: ChatState()].working = thread.working
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
@@ -1348,6 +1392,11 @@ final class AppModel: ObservableObject {
                 }
             }
         } catch {}
+        guard gen == accountGeneration else { return }
+        // The run is over or paused on a held call (kiff/tafs#102): KIFF is read at once, so the
+        // held call shows under the answer that names it, not at the next refresh, and the
+        // Card's use and the record follow what it did.
+        if ended != nil { await refresh() }
         guard gen == accountGeneration else { return }
         // The run is over (or paused on a held call): the taf is no longer at work.
         if ended != nil { chatStates[tafID]?.awaiting = nil }

@@ -99,6 +99,20 @@ struct CardRule: Identifiable, Hashable, Codable {
     /// Answers the owner may give besides approve and refuse, when held.
     var nextSteps: [String] = []
 
+    /// What's left of its total this window ("€800 left today"), given what it has used,
+    /// when both are in the same unit; nil otherwise.
+    func left(used: Money?) -> String? {
+        guard let total = perWindow, let used, total.currency == used.currency, total.scale == used.scale else { return nil }
+        let left = Money(minor: max(0, total.minor - used.minor), currency: total.currency, scale: total.scale)
+        let when: String
+        switch window {
+        case .day: when = "today"
+        case .week: when = "this week"
+        case .month: when = "this month"
+        }
+        return "\(left.formatted) left \(when)"
+    }
+
     var summary: String {
         if never { return "never" }
         if alwaysAsk { return "always asks you" }
@@ -177,6 +191,9 @@ struct HeldCall: Identifiable, Hashable, Codable {
     var accountingVersion: Int?
     /// Other answers the Card allows besides approve and refuse ("return first").
     var nextSteps: [String] = []
+    /// What the call is on, one line each, as KIFF keeps its arguments. Optional, so a
+    /// saved sample from before it still loads.
+    var details: [String]?
 }
 
 /// The owner's answer to a held call: approve it once, refuse it, or refuse it with

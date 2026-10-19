@@ -144,12 +144,49 @@ enum KIFFMapping {
         }
     }
 
+    /// What a taf did, as KIFF's activity records it (kiff/tafs#102): one entry a call of a
+    /// holder the app shows, newest first, each with an id the same on every refresh.
+    static func record(_ calls: [KIFFClient.ActivityCall], ids: [String: UUID]) -> [RecordEntry] {
+        calls.compactMap { c in
+            guard let actor = c.actorID, let tafID = ids[actor] else { return nil }
+            let kind: RecordEntry.Kind
+            let detail: String
+            switch c.outcome {
+            case "allowed":
+                switch (c.held, c.toolOutcome?.status) {
+                case (_, "unknown"?): kind = .unknown; detail = "Sent, and the tool's answer was lost: check the tool's own records"
+                case (true, _): kind = .approved; detail = "Approved by you, then sent"
+                default: kind = .done; detail = "Done, within its Card"
+                }
+            case "owner_required", "approval_required":
+                kind = .held; detail = "Waiting for you"
+            default:
+                kind = .refused; detail = "Not sent"
+            }
+            return RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
+                               detail: detail, at: c.createdAt)
+        }
+    }
+
+    /// A record entry's id, from KIFF's call id: the same on every refresh.
+    static func recordID(_ proposalID: String) -> UUID {
+        var bytes = Array(SHA256.hash(data: Data("tafs.record|\(proposalID)".utf8)).prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x50
+        bytes[8] = (bytes[8] & 0x3F) | 0x80
+        return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+                           bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
+    }
+
     static func held(_ e: KIFFClient.CardException, tafID: UUID) -> HeldCall {
         let reason = e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
+        // A gateway call is filed under its tool call's id, which says nothing to the owner:
+        // what it's on is in its arguments, as KIFF keeps them (kiff/tafs#102).
+        let name = approvalName(e.action, title: e.title)
+        let summary = e.arguments == nil ? "\(name) \(e.entityID)" : name
         var call = HeldCall(
             id: heldID(e.id),
             tafID: tafID,
-            proposed: ProposedAction(action: e.action, summary: "\(approvalName(e.action, title: e.title)) \(e.entityID)", amount: amount(of: e)),
+            proposed: ProposedAction(action: e.action, summary: summary, amount: amount(of: e)),
             reason: reason,
             heldAt: e.createdAt,
             expiresAt: e.expiresAt ?? e.createdAt.addingTimeInterval(10 * 60)
@@ -157,7 +194,20 @@ enum KIFFMapping {
         call.kiffID = e.id
         call.accountingVersion = e.accountingVersion
         call.nextSteps = e.nextSteps ?? []
+        call.details = details(of: e)
         return call
+    }
+
+    /// What a held gateway call is on, one line an argument, as KIFF keeps them ("payment_intent:
+    /// pi_…"). The amount isn't repeated (it's shown above), nor KIFF's own operation id.
+    static func details(of e: KIFFClient.CardException) -> [String] {
+        guard let arguments = e.arguments else { return [] }
+        let shown = Set((e.parameterUnits ?? [:]).keys.map { $0.lowercased() }).union((e.parameters ?? [:]).keys.map { $0.lowercased() })
+        return arguments.keys.sorted().compactMap { key in
+            let k = key.lowercased()
+            guard !shown.contains(k), k != "kiff_operation_id", let text = arguments[key]?.text, !text.isEmpty else { return nil }
+            return "\(key): \(text)"
+        }
     }
 
     /// The amount to show above the answer: a parameter KIFF declares a unit for, in that
