@@ -171,17 +171,17 @@ struct ConnectionsPanel: View {
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(grant.vendor).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
-                            Text("Keys held by planque\(grant.account.map { " · \($0)" } ?? "")")
+                            Text("Keys kept sealed\(grant.account.map { " · \($0)" } ?? "")")
                                 .font(.system(size: 12)).foregroundColor(Theme.dim)
                             if grant.connected {
                                 Text(grant.request.tools.map(\.action).joined(separator: ", "))
                                     .font(Theme.mono(12)).foregroundColor(Theme.soft)
                             } else {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
-                                Text(grant.listed ? "Signed in · Setup is choosing the tools" : "Signed in · tools waiting for your approval")
+                                Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
                                     .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.amber)
                                 if let end = grant.heldUntilDate {
-                                    Text("Unless you approve its tools, planque revokes the sign-in \(end.formatted(date: .abbreviated, time: .shortened)).")
+                                    Text("Unless you approve its tools, the sign-in is revoked \(end.formatted(date: .abbreviated, time: .shortened)).")
                                         .font(.system(size: 12)).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
                                 }
                             }
@@ -197,7 +197,7 @@ struct ConnectionsPanel: View {
                     }
                 }
                 NavigationLink { SetupChatView() } label: {
-                    Label(connections.isEmpty ? "Connect a tool with Setup" : "Connect another tool with Setup", systemImage: "plus")
+                    Label(connections.isEmpty ? "Connect a tool" : "Connect another tool", systemImage: "plus")
                         .font(.system(size: 15, weight: .semibold))
                 }
             }
@@ -207,7 +207,7 @@ struct ConnectionsPanel: View {
                     if let id = confirming?.id { Task { _ = await model.disconnect(grantID: id) } }
                 }
             } message: {
-                Text("planque revokes the sign-in at the vendor and removes its tools from KIFF. The taf can't use them until you connect again.")
+                Text("The sign-in at the vendor is revoked and its tools are removed from KIFF. The taf can't use them until you connect again.")
             }
         }
     }

@@ -17,7 +17,7 @@ final class PlanqueClient {
         var errorDescription: String? {
             switch self {
             case .notSigning: return "This step needs your Face ID first."
-            case .digestMismatch: return "planque's grant doesn't match what it asks for. Nothing was approved."
+            case .digestMismatch: return "This request doesn't match what it asks for. Nothing was approved."
             case .server(_, let message): return message
             }
         }
@@ -212,7 +212,7 @@ final class PlanqueClient {
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "planque answered \(status)"
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "The connection answered \(status)"
             throw PlanqueError.server(status: status, message: message)
         }
         return data
