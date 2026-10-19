@@ -115,7 +115,8 @@ struct CardRule: Identifiable, Hashable, Codable {
 struct Card: Hashable, Codable {
     var rules: [CardRule]
     var issuedBy: String
-    var expires: Date
+    /// When the Card ends; nil when it has no end (KIFF gives no valid_until).
+    var expires: Date?
     var revoked = false
 }
 

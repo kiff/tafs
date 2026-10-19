@@ -104,7 +104,7 @@ enum KIFFMapping {
             let card = Card(
                 rules: cards.flatMap(rules),
                 issuedBy: owner,
-                expires: cards.compactMap(\.validUntil).min() ?? .distantFuture,
+                expires: cards.compactMap(\.validUntil).min(),
                 revoked: cards.allSatisfy { !$0.active }
             )
             var taf = Taf(id: id, name: holder, job: "Works under \(cards.count) KIFF Card\(cards.count == 1 ? "" : "s").",

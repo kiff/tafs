@@ -11,6 +11,8 @@ struct RecordView: View {
                     .font(.system(size: 14)).foregroundColor(Theme.soft)
                 ForEach(model.record) { RecordRow(entry: $0, showTaf: true) }
             }
+            // The full width on an iPad, as the other tabs (kiff/tafs#96).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
