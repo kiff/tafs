@@ -72,6 +72,7 @@ final class TafToolsTests: XCTestCase {
 
 /// From the owner's test of 291 (kiff/tafs#102): what a held call is on, what's left on the
 /// Card, and what a taf did, as KIFF says them.
+@MainActor
 final class AfterTheTestTests: XCTestCase {
     private let decoder: JSONDecoder = KIFFClient.decoder
 
