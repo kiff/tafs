@@ -107,8 +107,15 @@ enum KIFFMapping {
                 expires: cards.compactMap(\.validUntil).min(),
                 revoked: cards.allSatisfy { !$0.active }
             )
+            // Its tools are what its Cards grant, as KIFF names them (kiff/tafs#96): never "No tools yet"
+            // for a taf that holds one.
+            var tools: [String] = []
+            for g in cards.flatMap(\.grants) where g.action != "" {
+                let tool = name(g.action, title: g.title)
+                if !tools.contains(tool) { tools.append(tool) }
+            }
             var taf = Taf(id: id, name: holder, job: "Works under \(cards.count) KIFF Card\(cards.count == 1 ? "" : "s").",
-                          tools: [], colorIndex: colors[holder] ?? 0, card: card)
+                          tools: tools, colorIndex: colors[holder] ?? 0, card: card)
             taf.state = card.revoked ? .revoked : .working
             taf.now = card.revoked ? "Card not active" : "Acting under KIFF"
             taf.kiffCardIDs = cards.map(\.id)

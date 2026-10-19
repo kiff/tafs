@@ -51,3 +51,21 @@ final class OwnerWordsTests: XCTestCase {
         XCTAssertEqual(rule.summary, "≤ 50 each · \(Money(minor: 100000, currency: "EUR", scale: 2).formatted) a day · 1 call a day")
     }
 }
+
+/// A taf's tools are what its Cards grant, under KIFF's titles (kiff/tafs#96).
+final class TafToolsTests: XCTestCase {
+    func testATafListsTheToolsItsCardsGrant() throws {
+        let json = #"""
+        {"mandates":[{"id":"m1","subject":"refunds-k5j6m5qx","active":true,
+          "grants":[{"action":"create_refund_k3f9","title":"Refund a payment"},{"action":"list_charges_k3f9"}],"aggregates":[]}]}
+        """#
+        struct List: Decodable { let mandates: [KIFFClient.Mandate] }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let mandates = try decoder.decode(List.self, from: Data(json.utf8)).mandates
+        var ids: [String: UUID] = [:]
+        let taf = try XCTUnwrap(KIFFMapping.tafs(from: mandates, ids: &ids, owner: "You").first)
+        XCTAssertEqual(taf.tools, ["Refund a payment", "list_charges_k3f9"], "KIFF's title, else the action as KIFF sends it")
+        XCTAssertNil(taf.card.expires, "no valid_until: no end date")
+    }
+}
