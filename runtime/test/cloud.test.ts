@@ -396,6 +396,29 @@ describe("the home list", () => {
     expect(r.tafs.map((t: { name: string; color: number }) => [t.name, t.color])).toEqual([["Bo", 0], ["Rae", 2]]);
   });
 
+  it("gives a new taf its colour at its start: the first no other taf has", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, color: 0 });
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: START })).status).toBe(200);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.color).toBe(1);
+  });
+
+  it("never writes back over a removal that lands while it lists", async () => {
+    const w = world();
+    const list = w.tafs.list.bind(w.tafs);
+    // The owner removes Rae just after the list read it.
+    w.tafs.list = async (t) => {
+      const read = await list(t);
+      const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+      w.tafs.held.set(`t_acme#${RAE}`, { ...rae, removing: true });
+      return read;
+    };
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).status).toBe(200);
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rae.removing).toBe(true);
+    expect(rae.color).toBeUndefined();
+  });
+
   it("shows use KIFF couldn't read as unknown, and a total in the unit KIFF declares, else bare", async () => {
     const w = world();
     w.account.mandates = [{ ...raeCard, limits: [{ ...raeCard.limits![0]!, status: "unavailable", used: null }] }, {

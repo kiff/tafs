@@ -128,7 +128,7 @@ export interface Taf {
   ownerNotes?: string;
   /** The digest of the definition kiff/agents holds for it, as last written (`digest`). */
   definition?: string;
-  /** Its colour in the app (`home.COLORS`), kept so a new taf never takes it. Given on the first list. */
+  /** Its colour in the app (`home.COLORS`), kept so a new taf never takes it. Given at its start. */
   color?: number;
 }
 
@@ -136,6 +136,11 @@ export interface Tafs {
   list(tenant: string): Promise<Taf[]>;
   get(tenant: string, id: string): Promise<Taf | undefined>;
   put(tenant: string, taf: Taf): Promise<void>;
+  /**
+   * Sets `taf` only while its entry is still exactly `read`: false, and nothing
+   * written, when anything changed it since (a removal, an upgrade).
+   */
+  putIf(tenant: string, taf: Taf, read: Taf): Promise<boolean>;
   remove(tenant: string, id: string): Promise<void>;
   /** Every account with tafs on record: what an upgrade goes through (kiff/tafs#69). */
   tenants(): Promise<string[]>;
@@ -563,9 +568,11 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
   // the taf is on record, and only then is the name freed: a definition or a
   // schedule nobody can see would otherwise run, or block the name for good.
   const def = definition(tafID, job, { budgetCents: budget, ownerNotes: notesText });
+  // Its colour: the first no other taf of the account has (kiff/tafs#91).
+  const color = freeColor((await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB && t.color !== undefined).map((t) => t.color!));
   const taf: Taf = {
     id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
-    budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def),
+    budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -1355,22 +1362,27 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const { cards, waiting } = byHolder(kiff.mandates, kiff.held);
   const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB)
     .sort((a, b) => a.created.localeCompare(b.created) || a.id.localeCompare(b.id));
-  // A taf keeps its colour; one without takes the first nobody has, and keeps it.
+  // A taf keeps the colour it got at its start. One started before colours takes
+  // the first nobody has, kept only if its record is still what was read here:
+  // the list never writes back over a removal or an upgrade.
   const taken = tafs.flatMap((t) => (t.color === undefined ? [] : [t.color]));
+  const colors = new Map<string, number>();
   for (const t of tafs) {
     if (t.color !== undefined) continue;
-    t.color = freeColor(taken);
-    taken.push(t.color);
-    await deps.tafs.put(me.tenantID, t);
+    const color = freeColor(taken);
+    taken.push(color);
+    colors.set(t.id, color);
+    await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
   const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const card = summary(cards.get(t.kiffAgent) ?? []);
     const held = waiting.get(t.kiffAgent) ?? 0;
-    return { ...v, color: t.color ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
+    return { ...v, color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
+  // Another agent's colour isn't kept: it can change when a taf is added.
   const ours = new Set(records.map((t) => t.kiffAgent).filter(Boolean));
   const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a)).sort();
   const others = agents.map((agent) => {
