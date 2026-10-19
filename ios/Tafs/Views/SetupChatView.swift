@@ -29,7 +29,7 @@ struct SetupChatView: View {
     @State private var pinNext = false
     @State private var pinned: String?
     @State private var viewport: CGFloat = 600
-    /// The list of past conversations, to reopen one (#73).
+    /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
 
     var body: some View {
@@ -47,22 +47,14 @@ struct SetupChatView: View {
             }
         }
         .screenBackground()
-        .navigationTitle("Setup")
+        // Named for what it does (kiff/tafs#82): it connects the owner's tools.
+        .navigationTitle("Connected tools")
         .navigationBarTitleDisplayMode(.inline)
+        // A focused task (#82): the app's tabs stay out of it.
+        .toolbar(.hidden, for: .tabBar)
         .toolbar {
             if model.setupTaf != nil && model.planqueReady {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button { showingChats = true } label: { Image(systemName: "clock.arrow.circlepath") }
-                        .accessibilityLabel("Past conversations")
-                    Button {
-                        Haptics.tap()
-                        landed = true
-                        pinned = nil
-                        following = true
-                        model.newSetupChat()
-                    } label: { Image(systemName: "square.and.pencil") }
-                        .accessibilityLabel("New conversation")
-                }
+                ToolbarItem(placement: .navigationBarTrailing) { conversations }
             }
         }
         .sheet(isPresented: $showingChats) {
@@ -75,6 +67,30 @@ struct SetupChatView: View {
             .environmentObject(model)
         }
         .task { await model.followSetup() }
+    }
+
+    /// One button for conversations (#82), so nothing else sits above the thread: a new
+    /// one, or the recent ones to reopen or archive.
+    private var conversations: some View {
+        Menu {
+            Button {
+                Haptics.tap()
+                landed = true
+                pinned = nil
+                following = true
+                model.newSetupChat()
+                typing = true
+            } label: { Label("New conversation", systemImage: "square.and.pencil") }
+            Divider()
+            Button { showingChats = true } label: { Label("Recent conversations", systemImage: "clock.arrow.circlepath") }
+        } label: {
+            Image(systemName: "bubble.left.and.bubble.right")
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundColor(Theme.ink)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel("Conversations")
     }
 
     private var intro: some View {
@@ -246,9 +262,13 @@ struct SetupChatView: View {
         return Calendar.current.isDateInToday(at) ? at.shortTime : at.formatted(date: .abbreviated, time: .shortened)
     }
 
-    /// The empty chat: what Setup does, and ways to start (#58).
+    /// The empty chat: the question it answers (#82), what Setup does, and ways to start (#58).
     private var starts: some View {
         VStack(alignment: .leading, spacing: 12) {
+            Text("What do you want to connect?")
+                .font(Theme.display(26)).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
             Text("Setup connects your tools and sets up a taf to work with them. Each connection and each Card waits for your approval.")
                 .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             ForEach(Self.examples, id: \.self) { example in
@@ -340,6 +360,18 @@ struct SetupChatView: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
+        // Ready to type (#82): the keyboard shows when the chat opens. Just after the
+        // push, since a field focused while the view still slides in isn't. Not over a
+        // card that waits for the owner: that card is what they came back to answer.
+        .task {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            if model.setupWaiting == nil { typing = true }
+        }
+        // A card that comes to wait once the thread loads takes the keyboard down,
+        // unless the owner has started writing.
+        .onChange(of: model.setupWaiting?.id) { id in
+            if id != nil, draft.isEmpty { typing = false }
+        }
     }
 
     private func send() {
@@ -352,24 +384,37 @@ struct SetupChatView: View {
     }
 }
 
-/// Setup's past conversations, newest first, each by its first words (#73): one tap
-/// reopens it, and messages go on in it.
+/// Setup's recent conversations, newest first, each by what the owner asked (#73, #82):
+/// one tap reopens it, and messages go on in it. Swiping left archives it, on tafs cloud,
+/// so it stays out of the list on every phone.
 struct SetupChatsList: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     let open: (String) -> Void
+    /// Why the last archive didn't go through.
+    @State private var notArchived: String?
 
     var body: some View {
         NavigationStack {
-            List(model.setupChats) { chat in
-                Button { open(chat.session) } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(chat.title).scaledFont(15).foregroundColor(Theme.ink).lineLimit(2)
-                        Text(chat.updated.formatted(date: .abbreviated, time: .shortened))
-                            .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+            List {
+                if let notArchived {
+                    Text(notArchived).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                        .listRowBackground(Color.clear)
+                }
+                ForEach(model.setupChats) { chat in
+                    Button { open(chat.session) } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(chat.title).scaledFont(15).foregroundColor(Theme.ink).lineLimit(2)
+                            Text(chat.updated.formatted(date: .abbreviated, time: .shortened))
+                                .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        }
+                    }
+                    .listRowBackground(model.setupChat == chat.session ? Theme.raised : Theme.panel)
+                    .swipeActions(edge: .trailing) {
+                        Button { archive(chat.session) } label: { Label("Archive", systemImage: "archivebox") }
+                            .tint(Theme.soft)
                     }
                 }
-                .listRowBackground(model.setupChat == chat.session ? Theme.raised : Theme.panel)
             }
             .overlay {
                 if model.setupChats.isEmpty {
@@ -378,10 +423,22 @@ struct SetupChatsList: View {
             }
             .scrollContentBackground(.hidden)
             .screenBackground()
-            .navigationTitle("Conversations")
+            .navigationTitle("Recent conversations")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .task { await model.loadSetupChats() }
+        }
+    }
+
+    private func archive(_ session: String) {
+        Haptics.tap()
+        notArchived = nil
+        Task {
+            if !(await model.archiveSetupChat(session)) {
+                // Said here, under the sheet the app's alert would wait behind.
+                notArchived = model.lastError ?? "Not archived. Try again."
+                model.lastError = nil
+            }
         }
     }
 }

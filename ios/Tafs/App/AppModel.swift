@@ -201,7 +201,7 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         accountGeneration += 1
         tafs = []; held = []; record = []
@@ -228,7 +228,7 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         accountGeneration += 1
@@ -1845,6 +1845,14 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupFresh = false
     /// Setup's past chats, to reopen, newest first.
     @Published private(set) var setupChats: [TafsCloud.Chat] = []
+    /// What the owner sent that tafs cloud's thread doesn't have yet (kiff/tafs#82): shown
+    /// at once, and kept across reloads until tafs cloud's copy arrives, so a tapped choice
+    /// shows when it's tapped, and once. A reload while the send is on its way would
+    /// otherwise drop it until tafs cloud has it.
+    private var setupSent: [TafsCloud.ChatMessage] = []
+    /// How long a sent message waits for tafs cloud's copy, and how far apart the phone's
+    /// clock and tafs cloud's may be.
+    static let sentKept: TimeInterval = 120
 
     /// Where Setup's next message goes.
     private var setupTarget: TafsCloud.ChatTarget {
@@ -1856,6 +1864,7 @@ final class AppModel: ObservableObject {
         setupChat = nil
         setupFresh = true
         setupThread = SetupThread()
+        setupSent = []
         setupAwaiting = nil
         setupUnsent = []
         setupEnded = nil
@@ -1867,6 +1876,7 @@ final class AppModel: ObservableObject {
         setupChat = session
         setupFresh = false
         setupUnsent = []
+        setupSent = []
         setupEnded = nil
         await loadSetupThread()
     }
@@ -1877,6 +1887,26 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         guard let chats = try? await cloud.chats(s.id), gen == accountGeneration else { return }
         setupChats = chats
+    }
+
+    /// Archives one of Setup's chats (kiff/tafs#82): tafs cloud keeps it out of the list
+    /// and the thread from then on, on every phone. The one shown gives way to a new
+    /// conversation. False, with why in `lastError`, when tafs cloud didn't take it.
+    @discardableResult
+    func archiveSetupChat(_ session: String) async -> Bool {
+        guard mode == .kiff, let s = setupTaf else { return false }
+        let gen = accountGeneration
+        do {
+            try await cloud.archiveChat(s.id, session: session)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            lastError = "Not archived: \(error.localizedDescription)"
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        setupChats.removeAll { $0.session == session }
+        if setupChat == session || (setupChat == nil && setupThread.session == session) { newSetupChat() }
+        return true
     }
 
     /// The chat a message went into is the one shown from then on, once a new one is started.
@@ -1906,7 +1936,7 @@ final class AppModel: ObservableObject {
         do {
             let thread = try await cloud.setupThread(s.id, session: setupChat)
             guard gen == accountGeneration else { return }
-            setupThread = thread
+            setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
         } catch {
@@ -1979,6 +2009,21 @@ final class AppModel: ObservableObject {
         return true
     }
 
+    /// tafs cloud's thread, with what the owner sent that it doesn't have yet (kiff/tafs#82).
+    /// A sent message goes once tafs cloud has it (the same words, written about when it
+    /// was sent), or after `sentKept`, when it either has it or the send says why not.
+    private func withSent(_ thread: SetupThread) -> SetupThread {
+        let now = clock()
+        setupSent.removeAll { sent in
+            now.timeIntervalSince(sent.at) > Self.sentKept || thread.messages.contains {
+                $0.from == .owner && $0.text == sent.text && $0.at >= sent.at.addingTimeInterval(-Self.sentKept)
+            }
+        }
+        var out = thread
+        out.messages += setupSent
+        return out
+    }
+
     /// Sends the owner's words to Setup; the thread is then reloaded as it answers.
     @discardableResult
     func sendSetup(_ text: String) async -> Bool { await deliverSetup(text) == .sent }
@@ -1994,7 +2039,10 @@ final class AppModel: ObservableObject {
         defer { setupSending = false }
         let gen = accountGeneration
         setupEnded = nil
-        setupThread.messages.append(TafsCloud.ChatMessage(at: clock(), from: .owner, text: text, session: "pending"))
+        // Shown at once, the way it was sent (kiff/tafs#82), until tafs cloud's copy takes its place.
+        let mine = TafsCloud.ChatMessage(at: clock(), from: .owner, text: text, session: "pending")
+        setupSent.append(mine)
+        setupThread.messages.append(mine)
         do {
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
             // when the stream can't open.
@@ -2014,7 +2062,8 @@ final class AppModel: ObservableObject {
             return .sent
         } catch {
             guard gen == accountGeneration else { return .notTried }
-            setupThread.messages.removeAll { $0.session == "pending" }
+            setupSent.removeAll { $0 == mine }
+            setupThread.messages.removeAll { $0 == mine }
             setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
             return .kept
         }
