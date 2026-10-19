@@ -443,7 +443,7 @@ final class AppModel: ObservableObject {
             do {
                 _ = try await signer.sign(answer: .approveOnce, heldID: "card-\(UUID().uuidString)", reason: "Issue \(draft.name)'s Card")
             } catch {
-                lastError = "The Card was not issued: Face ID did not confirm."
+                lastError = "The Card was not issued: it wasn't confirmed."
                 return nil
             }
         }
@@ -469,7 +469,7 @@ final class AppModel: ObservableObject {
         static func < (a: StartStep, b: StartStep) -> Bool { a.rawValue < b.rawValue }
         var label: String {
             switch self {
-            case .confirm: return "Confirm with Face ID"
+            case .confirm: return "Confirm with \(Biometry.name)"
             case .cards: return "Issue its Cards in KIFF"
             case .run: return "Hand it to tafs cloud and start its first run"
             }
@@ -540,7 +540,7 @@ final class AppModel: ObservableObject {
         do {
             _ = try await signer.sign(answer: .approveOnce, heldID: "start-\(a.agent)", reason: "Start \(name) with \(cards.count) Card\(cards.count == 1 ? "" : "s")")
         } catch {
-            throw StartFailure(step: .confirm, message: a.draft == nil ? "Nothing was started: Face ID did not confirm." : "Face ID did not confirm; nothing more was done.")
+            throw StartFailure(step: .confirm, message: a.draft == nil ? "Nothing was started: it wasn't confirmed." : "It wasn't confirmed; nothing more was done.")
         }
         guard accountGeneration == gen else { throw Self.signedOut(.confirm) }
         // The owner just confirmed with Face ID: a phone session bound to its key signs the
@@ -852,7 +852,7 @@ final class AppModel: ObservableObject {
                 signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)
             }
         } catch {
-            lastError = "Not sent: Face ID did not confirm."
+            lastError = "Not sent: it wasn't confirmed."
             return
         }
 

@@ -16,7 +16,7 @@ final class PlanqueClient {
 
         var errorDescription: String? {
             switch self {
-            case .notSigning: return "This step needs your Face ID first."
+            case .notSigning: return "This step needs your confirmation first."
             case .digestMismatch: return "This request doesn't match what it asks for. Nothing was approved."
             case .server(_, let message): return message
             }

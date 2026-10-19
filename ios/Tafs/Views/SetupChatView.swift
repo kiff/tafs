@@ -97,7 +97,7 @@ struct SetupChatView: View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
             Text("Connect your tools").font(Theme.display(30)).foregroundColor(Theme.ink)
-            Text("Name a tool a taf should work with, like your Stripe. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for your Face ID.")
+            Text("Name a tool a taf should work with, like your Stripe. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
             if let error = model.setupError ?? model.lastError {
@@ -107,7 +107,7 @@ struct SetupChatView: View {
             Button(model.startingSetup ? "Starting…" : "Start") { Task { _ = await model.startSetup() } }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(model.startingSetup || model.mode != .kiff)
-            Text("Starting asks for Face ID once.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+            Text("Starting asks for \(Biometry.name) once.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 .frame(maxWidth: .infinity)
         }
         .padding(20)
@@ -883,7 +883,7 @@ struct SetupApproval: View {
                     .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil))
                 }
                 .disabled(busy || (answered && !state.isFailure))
-                Text("Approving asks for Face ID.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
+                Text("Approving asks for \(Biometry.name).").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
             }
         }
     }

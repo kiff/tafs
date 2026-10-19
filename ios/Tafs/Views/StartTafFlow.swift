@@ -148,7 +148,7 @@ struct StartTafFlow: View {
                 Button {
                     Task { await start() }
                 } label: {
-                    Label(failure == nil ? "Start with Face ID" : "Try again with Face ID", systemImage: "faceid")
+                    Label(failure == nil ? "Start with \(Biometry.name)" : "Try again with \(Biometry.name)", systemImage: Biometry.symbol)
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(reached != nil && failure == nil)

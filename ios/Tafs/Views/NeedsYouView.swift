@@ -65,7 +65,7 @@ struct HeldCallCard: View {
                 Button {
                     send(.approveOnce)
                 } label: {
-                    Label("Approve once with Face ID", systemImage: "faceid")
+                    Label("Approve once with \(Biometry.name)", systemImage: Biometry.symbol)
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(sending)
