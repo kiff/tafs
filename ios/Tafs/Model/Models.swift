@@ -104,8 +104,9 @@ struct CardRule: Identifiable, Hashable, Codable {
         if alwaysAsk { return "always asks you" }
         var parts: [String] = []
         if let perAction { parts.append("≤ \(perAction.formatted) each") }
-        if let perWindow { parts.append("\(perWindow.formatted) \(window.label)") }
-        if let countPerWindow { parts.append("\(countPerWindow) \(window.label)") }
+        // A bare total and a count read apart (kiff/tafs#94): "10 in total a day · 20 calls a day".
+        if let perWindow { parts.append(perWindow.hasUnit ? "\(perWindow.formatted) \(window.label)" : "\(perWindow.formatted) in total \(window.label)") }
+        if let countPerWindow { parts.append("\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label)") }
         return parts.joined(separator: " · ")
     }
 }

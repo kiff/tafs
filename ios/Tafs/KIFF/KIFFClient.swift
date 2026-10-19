@@ -415,34 +415,54 @@ final class KIFFClient {
         var cards: [DraftCard]?
         /// An agent that holds no tools (kiff-cloud#1254): Setup.
         var noTools: Bool?
+        /// The name it was submitted with, such as the taf's ("Refunds assistant").
+        var label: String?
         enum CodingKeys: String, CodingKey {
-            case id, status, version, reason, cards
+            case id, status, version, reason, cards, label
             case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids", noTools = "no_tools"
         }
         var confirmed: Bool { status == "confirmed" }
+        /// "Refunds assistant's Card": the name it was submitted with, never its agent id
+        /// (kiff/tafs#94).
+        var cardTitle: String {
+            let name = (label ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return name.isEmpty ? "The taf's Card" : "\(name)'s Card"
+        }
     }
 
     /// One Card of a draft, as the owner reads it: each action and its limits.
     struct DraftCard: Decodable, Equatable {
         struct Grant: Decodable, Equatable {
-            struct PerAction: Decodable, Equatable { let quantity: String; let max: Int64 }
+            /// `unit` and `scale` when the tool declares them (kiff-cloud #1274).
+            struct PerAction: Decodable, Equatable { let quantity: String; let max: Int64; var unit: String?; var scale: Int? }
             let action: String
             let perActionMax: [PerAction]?
             enum CodingKeys: String, CodingKey { case action, perActionMax = "per_action_max" }
         }
-        struct Aggregate: Decodable, Equatable { let quantity: String; let limit: Int64; let window: String }
+        struct Aggregate: Decodable, Equatable { let quantity: String; let limit: Int64; let window: String; var unit: String?; var scale: Int? }
         let grants: [Grant]?
         let aggregates: [Aggregate]?
 
-        /// Plain lines: "refund_payment: at most 15000 sum(amount) each", "200000 sum(amount) per calendar day".
+        /// The lines the owner approves, in their words (kiff/tafs#94): "Create refund: up to
+        /// €100.00 each", "€1,000.00 in total a day", "20 calls a day". An amount carries the
+        /// unit KIFF declares, or stays a bare number: never a guessed currency, never
+        /// "sum(amount)".
         var lines: [String] {
             var out: [String] = []
             for g in grants ?? [] {
-                let caps = (g.perActionMax ?? []).map { "at most \($0.max) \($0.quantity) each" }
-                out.append(caps.isEmpty ? g.action : "\(g.action): " + caps.joined(separator: ", "))
+                let caps = (g.perActionMax ?? []).map { cap in
+                    KIFFMapping.isSum(cap.quantity)
+                        ? "up to \(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted) each"
+                        : "up to \(cap.max) each"
+                }
+                let action = KIFFMapping.label(g.action)
+                out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", "))
             }
             for a in aggregates ?? [] {
-                out.append("\(a.limit) \(a.quantity) per \(a.window.replacingOccurrences(of: "_", with: " "))")
+                let window = KIFFMapping.window(a.window).label
+                out.append(KIFFMapping.isSum(a.quantity)
+                    ? "\(KIFFMapping.money(a.limit, unit: a.unit, scale: a.scale).formatted) in total \(window)"
+                    : "\(a.limit) \(a.limit == 1 ? "call" : "calls") \(window)")
             }
             return out
         }

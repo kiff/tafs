@@ -829,6 +829,10 @@ struct SetupApproval: View {
 
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
         let vendor = grant?.vendor ?? component.service ?? "the vendor"
+        // An approval with the taf's Card is the Card's (kiff/tafs#94), not the tool's again.
+        if let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true {
+            return state == .declined ? "Declined · \(draft.cardTitle)" : "Approved · \(draft.cardTitle)"
+        }
         if state == .declined { return "Declined · \(vendor)" }
         if grant?.connected == true { return "Approved · \(vendor) is connected, keys kept sealed" }
         return "Approved · signed in at \(vendor)"
@@ -879,7 +883,7 @@ struct SetupApproval: View {
             }
             if let draft, let cards = draft.cards {
                 VStack(alignment: .leading, spacing: 6) {
-                    Eyebrow(text: "\(draft.agentID)'s Card")
+                    Eyebrow(text: draft.cardTitle)
                     ForEach(Array(cards.flatMap(\.lines).enumerated()), id: \.offset) { _, line in
                         Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.ink)
                     }

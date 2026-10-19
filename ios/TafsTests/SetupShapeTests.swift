@@ -100,7 +100,8 @@ final class SetupShapeTests: XCTestCase {
         let card = try XCTUnwrap(drafted.card)
         XCTAssertFalse(card.confirmed)
         XCTAssertEqual(card.agent, "refunds-x")
-        XCTAssertEqual(card.lines, ["refund_payment: at most 15000 sum(amount) each", "200000 sum(amount) per calendar day"])
+        // No unit declared: bare numbers, in words (kiff/tafs#94).
+        XCTAssertEqual(card.lines, ["Refund payment: up to \(Money.bare(15000).formatted) each", "\(Money.bare(200000).formatted) in total a day"])
 
         let confirmed = SetupShape(thread: thread, grants: [], drafts: ["drf_1": try draft("confirmed")], waiting: nil, states: [:])
         XCTAssertEqual(confirmed.card?.confirmed, true)

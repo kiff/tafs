@@ -25,6 +25,8 @@ struct SetupShape: Equatable {
     /// The taf's Cards as KIFF drafted them: a draft until the owner confirms it.
     struct Card: Equatable {
         let agent: String
+        /// What the owner reads it as: "Refunds assistant's Card".
+        var title = ""
         let lines: [String]
         let confirmed: Bool
     }
@@ -109,7 +111,7 @@ struct SetupShape: Equatable {
         // The latest draft an approval names that KIFF has shown the app.
         let named = shown.filter { $0.type == .approval }.compactMap { c in c.draft.flatMap { id in drafts[id] } }
         if let draft = named.last(where: { $0.noTools != true }) {
-            card = Card(agent: draft.agentID, lines: (draft.cards ?? []).flatMap(\.lines), confirmed: draft.confirmed)
+            card = Card(agent: draft.agentID, title: draft.cardTitle, lines: (draft.cards ?? []).flatMap(\.lines), confirmed: draft.confirmed)
         }
     }
 }
