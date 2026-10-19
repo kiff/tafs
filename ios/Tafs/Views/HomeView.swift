@@ -54,7 +54,7 @@ struct HomeView: View {
                     }
                 }
 
-                if model.mode == .kiff, model.listLoaded, model.tafs.isEmpty {
+                if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
                     Panel {
                         Text("No Cards yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
                         Text("Cards you issue in KIFF show up here, one taf per agent that holds them. Pull down to refresh.")
@@ -128,6 +128,9 @@ struct HomeView: View {
             if model.loadingList {
                 // Never "0 tafs working" before the tafs are read (#91).
                 Text("Loading your tafs…")
+                    .foregroundColor(Theme.dim)
+            } else if model.listUnread {
+                Text("Couldn't load your tafs.")
                     .foregroundColor(Theme.dim)
             } else {
                 Text("\(working) \(working == 1 ? "taf" : "tafs") working.")

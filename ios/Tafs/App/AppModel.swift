@@ -50,6 +50,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var listLoaded = false
     /// Signed in to KIFF and its tafs not shown yet: the first launch after a sign-in.
     var loadingList: Bool { mode == .kiff && !listLoaded }
+    /// KIFF couldn't be read and no list was shown yet: "Couldn't load", never "No tafs yet".
+    @Published private(set) var listUnread = false
 
     /// Called whenever the held calls change, so the lock screen can follow.
     var onHeldChanged: (@MainActor ([HeldCall], [Taf]) -> Void)?
@@ -207,7 +209,7 @@ final class AppModel: ObservableObject {
         cloud.token = token
         startAttempt = nil
         holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
-        holderColors = [:]; cloudListed = false; listLoaded = false
+        holderColors = [:]; cloudListed = false; listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
         grants = []
@@ -236,7 +238,7 @@ final class AppModel: ObservableObject {
         cloudTafs = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
         holderIDs = [:]
-        holderColors = [:]; cloudListed = false; listLoaded = false
+        holderColors = [:]; cloudListed = false; listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         startAttempt = nil
         unfinishedRemovals = []
@@ -439,6 +441,7 @@ final class AppModel: ObservableObject {
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
         } catch {
             lastError = "Couldn't reach KIFF: \(error.localizedDescription)"
+            if !listLoaded { listUnread = true }
         }
     }
 
@@ -477,6 +480,7 @@ final class AppModel: ObservableObject {
         }
         tafs = next
         listLoaded = true
+        listUnread = false
         rememberList()
         notifyHeld()
     }

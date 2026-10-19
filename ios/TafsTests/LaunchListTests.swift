@@ -128,6 +128,22 @@ final class LaunchListTests: XCTestCase {
         XCTAssertFalse(model.loadingList)
     }
 
+    /// A first launch where KIFF can't be read and nothing is remembered says so, rather
+    /// than "No tafs yet"; the next list read clears it.
+    func testAFirstLaunchKIFFCantReadSaysItCouldntLoad() async throws {
+        serve(cards: [Self.raeCard])
+        kiffUnreachable()
+        let model = model()
+        await model.useSession("kiff_dev_x", tenant: "tenant-a")
+        XCTAssertTrue(model.listUnread)
+        XCTAssertFalse(model.loadingList)
+
+        serve(cards: [Self.raeCard])
+        await model.refresh()
+        XCTAssertFalse(model.listUnread)
+        XCTAssertFalse(model.tafs.isEmpty)
+    }
+
     /// A new taf that sorts first doesn't take the others' colours (the owner took the new
     /// Refunds assistant for the old Refunds when it did).
     func testATafKeepsItsColourWhenANewOneSortsBeforeIt() async throws {
