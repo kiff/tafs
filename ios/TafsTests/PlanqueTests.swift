@@ -120,7 +120,7 @@ final class PlanqueTests: XCTestCase {
 
     /// A grant as planque lists it, over the request whose digest is `PlanqueTests.digest`.
     static func grantJSONFor(_ id: String = "g_01", status: String = "pending", digest: String = PlanqueTests.digest, signedIn: Bool = false) -> String {
-        #"{"id":"\#(id)","status":"\#(status)",\#(signedIn ? #""signed_in":true,"# : "")"text":"refunds may refund payments at mcp.stripe.com","digest":"\#(digest)","request":\#(Self.request),"audience":"https://planque.kiff.dev/mcp/t_01/\#(id)","events":[{"at":"2026-10-17T10:00:00.123456789Z","what":"asked by setup-agent"}]}"#
+        #"{"id":"\#(id)","status":"\#(status)",\#(signedIn ? #""signed_in":true,"# : "")"text":"refunds may refund payments at mcp.stripe.com","digest":"\#(digest)","request":\#(Self.request),"audience":"https://planque.kiff.dev/mcp/t_01/\#(id)","vendor":"Stripe","events":[{"at":"2026-10-17T10:00:00.123456789Z","what":"asked by setup-agent"}]}"#
     }
 
     private func clients() -> (KIFFClient, PlanqueClient, URLSession) {
@@ -155,7 +155,7 @@ final class PlanqueTests: XCTestCase {
 
         let grants = try await planque.grants()
         XCTAssertEqual(grants.map(\.digestMatches), [true, false])
-        XCTAssertEqual(grants[0].vendor, "mcp.stripe.com")
+        XCTAssertEqual(grants[0].vendor, "Stripe")
         XCTAssertEqual(grants[0].request.tools.map(\.action), ["refund_payment", "list_payments"])
         XCTAssertEqual(grants[0].events.first?.what, "asked by setup-agent")
         let header = try XCTUnwrap(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
@@ -225,12 +225,12 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(body(StubProtocol.sent.last) as? [String: String], ["device_key": "MFkB", "connector_key": "kiff_live_connector"])
     }
 
-    /// The owner reads what happened, not who signed by id.
-    func testAnEventReadsWithoutIDs() {
-        let plain = { (what: String) in PlanqueClient.Grant.Event(at: "2026-10-19T12:00:00Z", what: what).plain }
-        XCTAssertEqual(plain("disconnected by user_2abc on device dev_ipad01: token deleted"), "disconnected: token deleted")
-        XCTAssertEqual(plain("sign-in confirmed on the phone ab12 cd34 ef56 7890"), "sign-in confirmed")
-        XCTAssertEqual(plain("signed in at mcp.stripe.com"), "signed in at mcp.stripe.com")
+    /// The vendor and a grant's events are planque's words, shown as they are
+    /// (kiff/planque#16, #17): the app makes up no name from a host or an id.
+    func testTheVendorAndEventsAreAsPlanqueSaysThem() throws {
+        let g = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(PlanqueTests.grantJSONFor().utf8))
+        XCTAssertEqual(g.vendor, "Stripe")
+        XCTAssertEqual(g.events.first?.what, "asked by setup-agent")
     }
 
     /// Setting up on a second device: the app reads its KIFF device id and signs with it,
