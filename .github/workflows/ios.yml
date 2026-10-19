@@ -122,11 +122,9 @@ jobs:
             out=$(xcrun simctl launch "$DEVICE_ID" bot.tafs.app "$@"); echo "$out"
             sleep 8
             xcrun simctl io "$DEVICE_ID" screenshot "$RUNNER_TEMP/shots/$name.png"
-            # DEBUG (#87): what the app's main thread does on the iPad's Tafs tab.
+            # DEBUG (#87): when the iPad's Tafs tab first draws, every 3 s up to 24 s.
             case $name in ipad-2*)
-              sleep 15
-              xcrun simctl io "$DEVICE_ID" screenshot "$RUNNER_TEMP/shots/$name-late.png"
-              xcrun simctl spawn "$DEVICE_ID" log show --last 2m --style compact --predicate 'process == "Tafs"' > "$RUNNER_TEMP/shots/$name-log.txt" 2>&1 || true
+              for t in 11 14 17 20 23; do sleep 3; xcrun simctl io "$DEVICE_ID" screenshot "$RUNNER_TEMP/shots/$name-t$t.png"; done
               ;; esac
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
@@ -152,8 +150,9 @@ jobs:
           xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
           xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
           shoot ipad-1-welcome
-          shoot ipad-2-taf -screenshots YES -tab tafs -screen taf
           shoot ipad-3-needs-you -screenshots YES -tab needs-you
+          shoot ipad-2b-tafs -screenshots YES -tab tafs
+          shoot ipad-2-taf -screenshots YES -tab tafs -screen taf
           ls -la "$RUNNER_TEMP/shots"
 
       - uses: actions/upload-artifact@v5
