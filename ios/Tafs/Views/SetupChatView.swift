@@ -31,21 +31,40 @@ struct SetupChatView: View {
     @State private var viewport: CGFloat = 600
     /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    /// The screen's width, so the "Taking shape" panel shows only where it fits beside the chat.
+    @State private var width: CGFloat = 0
+
+    /// A wide screen (kiff/tafs#85): the conversation, and beside it what it has made so far.
+    /// A compact width, the iPhone's or an iPad's narrow split, keeps the chat alone.
+    private var shaping: Bool {
+        sizeClass == .regular && width >= 780 && model.setupTaf != nil && model.planqueReady
+    }
 
     var body: some View {
-        VStack(spacing: 0) {
-            if model.setupTaf == nil || !model.planqueReady {
-                intro
-            } else {
-                if let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
-                thread
-                if let error = model.setupError {
-                    Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
+        HStack(spacing: 0) {
+            VStack(spacing: 0) {
+                if model.setupTaf == nil || !model.planqueReady {
+                    intro
+                } else {
+                    // Beside the chat, the plan is in the panel.
+                    if !shaping, let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
+                    thread
+                    if let error = model.setupError {
+                        Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
+                    }
+                    composer
                 }
-                composer
+            }
+            if shaping {
+                Rectangle().fill(Theme.line).frame(width: 1).ignoresSafeArea()
+                SetupShapePanel().frame(width: 420)
             }
         }
+        .background(GeometryReader { g in
+            Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { width = $0 }
+        })
         .screenBackground()
         // Named for what it does (kiff/tafs#82): it connects the owner's tools.
         .navigationTitle("Connected tools")
@@ -624,7 +643,9 @@ struct SetupPlan: View {
     }
 }
 
-private struct StepMark: View {
+/// A plan step's mark: done, failed, at work or to do. The plan above the thread and the
+/// "Taking shape" panel share it.
+struct StepMark: View {
     let status: String
 
     var body: some View {

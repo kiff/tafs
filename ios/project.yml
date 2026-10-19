@@ -28,6 +28,12 @@ targets:
         UILaunchScreen:
           UIColorName: Background
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # iPad (kiff/tafs#85): every orientation, which iPad multitasking requires.
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         UIUserInterfaceStyle: Light
         NSFaceIDUsageDescription: tafs asks for Face ID before an approval is signed and sent.
         ITSAppUsesNonExemptEncryption: false
@@ -47,7 +53,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
         # Set by CI for a manually signed TestFlight build; empty otherwise.
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_APP)
-        TARGETED_DEVICE_FAMILY: "1"
+        # iPhone and iPad (kiff/tafs#85).
+        TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       configs:
         Debug:
@@ -76,7 +83,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.widgets
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WIDGETS)
-        TARGETED_DEVICE_FAMILY: "1"
+        # As the app: an extension supports every device its app does.
+        TARGETED_DEVICE_FAMILY: "1,2"
   TafsTests:
     type: bundle.unit-test
     platform: iOS

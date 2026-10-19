@@ -11,6 +11,12 @@ struct TafDetailView: View {
     @State private var removal: String?
     /// Set on the tap itself, before the request starts, so a second tap can't send one.
     @State private var runTapped = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var width: CGFloat = 0
+
+    /// A wide screen (kiff/tafs#85): beside the chat or the activity, a second column with
+    /// the call waiting for the owner and the Card. A compact width keeps one column.
+    private var sideColumn: Bool { sizeClass == .regular && width >= 700 && section != 2 }
 
     var body: some View {
         if let taf = model.taf(tafID) {
@@ -28,18 +34,27 @@ struct TafDetailView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 4)
 
-                if section == 0 && model.canChat(taf.id) {
-                    TafChatView(tafID: taf.id)
-                } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
-                            if section == 2 { card(taf) } else { activity(taf) }
+                HStack(alignment: .top, spacing: 0) {
+                    if section == 0 && model.canChat(taf.id) {
+                        TafChatView(tafID: taf.id)
+                    } else {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 16) {
+                                if section == 2 { card(taf) } else { activity(taf) }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                    }
+                    if sideColumn {
+                        ScrollView { side(taf).padding(.horizontal, 16).padding(.vertical, 12) }
+                            .frame(width: 360)
                     }
                 }
             }
+            .background(GeometryReader { g in
+                Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { width = $0 }
+            })
             .screenBackground()
             .navigationBarTitleDisplayMode(.inline)
             .confirmationDialog("Revoke \(taf.name)'s Card?", isPresented: $confirmRevoke, titleVisibility: .visible) {
@@ -107,12 +122,29 @@ struct TafDetailView: View {
             RunReportPanel(report: model.reports[cloud.id]) { Task { await model.loadReport(cloud) } }
                 .task(id: cloud.id) { await model.loadReport(cloud) }
         }
-        ForEach(model.heldCalls(for: taf.id)) { HeldCallCard(call: $0) }
+        // Beside it on a wide screen, in the second column.
+        if !sideColumn { ForEach(model.heldCalls(for: taf.id)) { HeldCallCard(call: $0) } }
         let entries = model.entries(for: taf.id)
         if entries.isEmpty {
             Text("Nothing yet.").foregroundColor(Theme.dim)
         }
         ForEach(entries) { RecordRow(entry: $0) }
+    }
+
+    /// The second column on a wide screen: what waits for the owner, then the Card.
+    private func side(_ taf: Taf) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            let held = model.heldCalls(for: taf.id)
+            if !held.isEmpty {
+                Eyebrow(text: "Needs you", color: Theme.amber)
+                ForEach(held) { HeldCallCard(call: $0) }
+            }
+            Eyebrow(text: "Card")
+            CardFace(name: taf.name, rules: taf.card.rules, issuedBy: taf.card.issuedBy,
+                     expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked)
+            Button("All of the Card") { section = 2 }
+                .buttonStyle(OutlineButtonStyle())
+        }
     }
 
     @ViewBuilder

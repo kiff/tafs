@@ -68,7 +68,8 @@ struct RootView: View {
         Group {
             if model.signedIn {
                 TabView(selection: $tab) {
-                    NavigationStack { HomeView(tab: $tab) }
+                    // A sidebar beside the open taf on a wide screen (kiff/tafs#85).
+                    TafsTab(tab: $tab)
                         .tabItem { Label("Tafs", systemImage: "square.stack") }
                         .tag(Tab.tafs)
                     NavigationStack { NeedsYouView() }

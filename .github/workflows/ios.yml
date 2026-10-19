@@ -131,6 +131,23 @@ jobs:
           shoot 5-taf -screenshots YES -tab tafs -screen taf
           shoot 6-new-taf -screenshots YES -tab tafs -screen new
           shoot 7-chat -screenshots YES -tab tafs -screen chat
+          # The iPad (kiff/tafs#85): the sidebar beside the open taf. The largest iPad,
+          # whose portrait width still fits the taf's second column.
+          xcrun simctl shutdown "$DEVICE_ID" || true
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted(k for k in devices if "iOS" in k)
+          ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
+          print(next((d for d in ipads if "13-inch" in d["name"]), ipads[0])["udid"])
+          ')
+          xcrun simctl boot "$DEVICE_ID" || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+          xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
+          shoot ipad-1-welcome
+          shoot ipad-2-taf -screenshots YES -tab tafs -screen taf
+          shoot ipad-3-needs-you -screenshots YES -tab needs-you
           ls -la "$RUNNER_TEMP/shots"
 
       - uses: actions/upload-artifact@v5
