@@ -15,11 +15,11 @@ export const MODEL = "claude-opus-5-5";
 export const PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000 } as const;
 export const MAX_TOKENS = 16_000;
 /**
- * How hard the model works on each turn: what tafs ran at on Managed Agents.
- * Without it, kiff/agents runs at the API's default (medium on Opus 5.5).
- * Not a measured best: kiff/agents' evals (kiff/agents#78) compare settings.
+ * How hard the model works on each turn. Medium, Opus 5.5's own default: a taf's
+ * steps ("refund this payment") need no long thinking, and the owner waits on each
+ * answer (kiff/tafs#102). Measured against high through kiff/agents' gate.
  */
-export const EFFORT: Effort = "high";
+export const EFFORT: Effort = "medium";
 export const KIFF_GATEWAY = "https://mcp.kiff.dev/mcp";
 /** Finished runs of a session the model gets before a new one: the thread it remembers. */
 export const HISTORY = 10;

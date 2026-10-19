@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_INSTRUCTIONS, setupDefinition } from "../src/cloud/setupdef.js";
+import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_EFFORT, SETUP_INSTRUCTIONS, setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, KIFF_GATEWAY, MODEL } from "../src/cloud/tafdef.js";
 import { jobById } from "../src/jobs.js";
 
@@ -18,11 +18,13 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.drafts).toBe(true);
   });
 
-  it("runs as a taf runs, with its own cost cap", () => {
+  it("runs as a taf runs, with its own cost cap and effort", () => {
     const d = setupDefinition(ID);
     const taf = definition(ID, jobById("refunds"));
     expect(d.model).toBe(MODEL);
-    expect(d.effort).toBe(taf.effort);
+    // Setup plans and judges more than a taf's steps (kiff/tafs#102): it keeps high.
+    expect(d.effort).toBe(SETUP_EFFORT);
+    expect(SETUP_EFFORT).toBe("high");
     expect(d.keep).toEqual(taf.keep);
     expect(d.max_cost_micro_usd).toBe(SETUP_BUDGET_CENTS * 10_000);
   });

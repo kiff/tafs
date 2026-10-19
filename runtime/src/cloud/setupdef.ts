@@ -1,6 +1,6 @@
 import { JOBS } from "../jobs.js";
-import { type AgentDefinition } from "./agents.js";
-import { EFFORT, HISTORY, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE } from "./tafdef.js";
+import { type AgentDefinition, type Effort } from "./agents.js";
+import { HISTORY, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE } from "./tafdef.js";
 
 /**
  * Setup, the agent that connects a company's tools for its tafs in the app's
@@ -13,6 +13,12 @@ import { EFFORT, HISTORY, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PR
 
 /** The planque Setup asks for vendor access through. kiff/agents must list it. */
 export const PLANQUE = "https://planque.kiff.dev";
+
+/**
+ * How hard Setup works on each turn: high, as measured through kiff/agents' gate.
+ * A taf runs lower (tafdef's EFFORT); Setup's conversation plans and judges more.
+ */
+export const SETUP_EFFORT: Effort = "high";
 
 /** What one setup run may cost at most, in cents. */
 export const SETUP_BUDGET_CENTS = 300;
@@ -148,7 +154,7 @@ export function setupDefinition(id: string): AgentDefinition {
     model: MODEL,
     price: { ...PRICE },
     max_tokens: MAX_TOKENS,
-    effort: EFFORT,
+    effort: SETUP_EFFORT,
     gateway: KIFF_GATEWAY,
     key_ref: keyRef(id),
     keep: keepRules(),

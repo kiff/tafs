@@ -40,8 +40,8 @@ describe("a taf's definition on kiff/agents", () => {
   it("runs on the current Opus at its price and high effort, with a cost cap from the budget", () => {
     const d = definition(ID, jobById("refunds"));
     expect(d.model).toBe(MODEL);
-    expect(d.effort).toBe("high");
-    expect(EFFORT).toBe("high");
+    expect(d.effort).toBe("medium");
+    expect(EFFORT).toBe("medium");
     expect(d.price).toEqual(PRICE);
     expect(d.max_cost_micro_usd).toBe(DEFAULT_BUDGET_CENTS * 10_000);
     expect(definition(ID, jobById("refunds"), { budgetCents: 300 }).max_cost_micro_usd).toBe(3_000_000);
