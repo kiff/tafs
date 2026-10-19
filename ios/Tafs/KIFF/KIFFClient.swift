@@ -104,10 +104,12 @@ final class KIFFClient {
 
     /// Starts signing in. `publicKey` (SPKI DER) is the phone's signing key: KIFF shows its
     /// fingerprint when the owner approves in their browser, and binds it to this session.
-    func startDeviceSignIn(publicKey: Data? = nil, deviceName: String? = nil) async throws -> DeviceStart {
+    func startDeviceSignIn(publicKey: Data? = nil, deviceName: String? = nil, platform: String? = nil) async throws -> DeviceStart {
         var body: [String: String] = [:]
         if let publicKey { body["public_key"] = publicKey.base64EncodedString() }
         if let deviceName { body["device_name"] = deviceName }
+        // KIFF's device list names the platform (kiff/kiff-cloud#1267): ios, ipados, macos.
+        if let platform { body["platform"] = platform }
         return try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
     }
 
