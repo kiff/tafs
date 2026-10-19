@@ -361,10 +361,16 @@ struct SetupChatView: View {
         .padding(.horizontal, 12).padding(.vertical, 10)
         .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
         // Ready to type (#82): the keyboard shows when the chat opens. Just after the
-        // push, since a field focused while the view still slides in isn't.
+        // push, since a field focused while the view still slides in isn't. Not over a
+        // card that waits for the owner: that card is what they came back to answer.
         .task {
             try? await Task.sleep(nanoseconds: 350_000_000)
-            typing = true
+            if model.setupWaiting == nil { typing = true }
+        }
+        // A card that comes to wait once the thread loads takes the keyboard down,
+        // unless the owner has started writing.
+        .onChange(of: model.setupWaiting?.id) { id in
+            if id != nil, draft.isEmpty { typing = false }
         }
     }
 
