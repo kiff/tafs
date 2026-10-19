@@ -52,24 +52,6 @@ final class OwnerWordsTests: XCTestCase {
     }
 }
 
-/// A taf's tools are what its Cards grant, under KIFF's titles (kiff/tafs#96).
-final class TafToolsTests: XCTestCase {
-    func testATafListsTheToolsItsCardsGrant() throws {
-        let json = #"""
-        {"mandates":[{"id":"m1","subject":"refunds-k5j6m5qx","active":true,
-          "grants":[{"action":"create_refund_k3f9","title":"Refund a payment"},{"action":"list_charges_k3f9"}],"aggregates":[]}]}
-        """#
-        struct List: Decodable { let mandates: [KIFFClient.Mandate] }
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let mandates = try decoder.decode(List.self, from: Data(json.utf8)).mandates
-        var ids: [String: UUID] = [:]
-        let taf = try XCTUnwrap(KIFFMapping.tafs(from: mandates, ids: &ids, owner: "You").first)
-        XCTAssertEqual(taf.tools, ["Refund a payment", "list_charges_k3f9"], "KIFF's title, else the action as KIFF sends it")
-        XCTAssertNil(taf.card.expires, "no valid_until: no end date")
-    }
-}
-
 /// From the owner's test of 291 (kiff/tafs#102): what a held call is on, what's left on the
 /// Card, and what a taf did, as KIFF says them.
 @MainActor

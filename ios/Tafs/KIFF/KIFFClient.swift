@@ -2,8 +2,9 @@ import CryptoKit
 import Foundation
 
 /// The KIFF API as the iPhone uses it: device sign-in (RFC 034-B), held calls
-/// (`/v1/me/card-exceptions`), Cards (`/v1/me/mandates`), and what starting a taf
-/// needs: the gateway's connected tools, a new agent, its Cards and its key.
+/// (`/v1/me/card-exceptions`), revoking a Card, and what starting a taf needs: the
+/// gateway's connected tools, a new agent, its Cards and its key. The Cards themselves
+/// reach the app through tafs cloud's list (`TafsCloud.home`).
 ///
 /// tafs is a KIFF customer like any other: it only uses the public API.
 @MainActor
@@ -174,9 +175,20 @@ final class KIFFClient {
                 let c = try decoder.singleValueContainer()
                 if let s = try? c.decode(String.self) { text = s }
                 else if let i = try? c.decode(Int64.self) { text = String(i) }
-                else if let d = try? c.decode(Double.self) { text = String(d) }
+                else if let d = try? c.decode(Double.self) { text = Self.plain(d) }
                 else if let b = try? c.decode(Bool.self) { text = b ? "true" : "false" }
                 else { text = "…" }
+            }
+
+            /// A decimal written out plainly, as sent: "0.000015", never "1.5e-05".
+            static func plain(_ d: Double) -> String {
+                let f = NumberFormatter()
+                f.locale = Locale(identifier: "en_US_POSIX")
+                f.numberStyle = .decimal
+                f.usesGroupingSeparator = false
+                f.usesSignificantDigits = true
+                f.maximumSignificantDigits = 15
+                return f.string(from: NSNumber(value: d)) ?? String(d)
             }
         }
 
@@ -327,72 +339,6 @@ final class KIFFClient {
     }
 
     // MARK: Cards
-
-    struct Mandate: Decodable, Equatable {
-        struct Grant: Decodable, Equatable {
-            struct PerAction: Decodable, Equatable {
-                let quantity: String
-                let max: Int64
-                /// What a summed limit means ("EUR", 2), when KIFF can say.
-                var unit: String? = nil
-                var scale: Int? = nil
-            }
-            let action: String
-            /// The tool's name for people, as KIFF keeps it from the vendor (kiff-cloud#1277).
-            var title: String? = nil
-            let perActionMax: [PerAction]?
-            let nextSteps: [String]?
-
-            enum CodingKeys: String, CodingKey {
-                case action, title, perActionMax = "per_action_max", nextSteps = "next_steps"
-            }
-        }
-
-        struct Aggregate: Decodable, Equatable {
-            let quantity: String
-            let limit: Int64
-            let window: String
-            var unit: String? = nil
-            var scale: Int? = nil
-        }
-
-        /// A limit's use in its current window (`?include=use`, the same lines as the
-        /// Card's statement). `used` is absent when KIFF could not read it.
-        struct Limit: Decodable, Equatable {
-            let quantity: String
-            let window: String?
-            /// The ceiling now, extra room included.
-            let limit: Int64
-            let used: Int64?
-            let remaining: Int64?
-            let status: String?
-            var unit: String? = nil
-            var scale: Int? = nil
-        }
-
-        let id: String
-        let subject: String
-        let grants: [Grant]
-        let aggregates: [Aggregate]
-        let active: Bool
-        let validUntil: Date?
-        let revokedAt: Date?
-        let onExceed: String?
-        let limits: [Limit]?
-
-        enum CodingKeys: String, CodingKey {
-            case id, subject, grants, aggregates, active, limits
-            case validUntil = "valid_until", revokedAt = "revoked_at", onExceed = "on_exceed"
-        }
-    }
-
-    func cards() async throws -> [Mandate] {
-        struct Response: Decodable { let mandates: [Mandate] }
-        // With each limit's use, so the app shows "$212 of $500 today" without a
-        // statement call per Card.
-        let response: Response = try await send("GET", "/v1/me/mandates?include=use")
-        return response.mandates
-    }
 
     func revoke(cardID: String) async throws {
         let _: Empty = try await send("POST", "/v1/me/mandates/\(escaped(cardID))/revoke", body: [String: String]())

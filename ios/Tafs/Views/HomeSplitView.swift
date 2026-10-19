@@ -97,11 +97,19 @@ struct HomeSplitView: View {
                     NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
                 }
                 if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
-                    Text("Cards you issue in KIFF show up here, one taf per agent that holds them.")
+                    Text("Connect a tool to set up your first taf.")
                         .scaledFont(13).foregroundColor(Theme.dim)
                         .listRowBackground(Color.clear)
                 }
             } header: { Eyebrow(text: "Your tafs") }
+            if !model.otherAgents.isEmpty {
+                // Agents made through KIFF's API, not run by tafs: their Cards, apart.
+                Section {
+                    ForEach(model.otherAgents) { taf in
+                        NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
+                    }
+                } header: { Eyebrow(text: "Other agents with Cards") }
+            }
             if model.mode == .kiff {
                 Section {
                     // Setup (kiff/tafs#50, #82): connect the tools a taf works with.

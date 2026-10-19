@@ -5,8 +5,6 @@ import XCTest
 /// Resuming puts it back on its schedule. Its Cards aren't touched.
 @MainActor
 final class PauseTafTests: XCTestCase {
-    private static let raeCard = #"{"id":"rae-k3f9-stripe_refund","subject":"rae-k3f9","grants":[],"aggregates":[],"active":true}"#
-
     override func tearDown() {
         Keychain.delete(AppModel.tokenAccount)
         super.tearDown()
@@ -21,8 +19,7 @@ final class PauseTafTests: XCTestCase {
         let model = AppModel(signer: StubSigner(),
                              kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
                              cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
-        let list = #"{"mandates":["# + Self.raeCard + "]}"
-        for path in ["GET /v1/me/mandates", "GET /v1/me/mandates?include=use"] { StubProtocol.responses[path] = (200, list) }
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
         await model.useSession("kiff_dev_x")

@@ -97,7 +97,7 @@ final class KIFFAnswerTests: XCTestCase {
         let model = AppModel(signer: signer, kiff: client, clock: { fixed })
         model.kiffTenant = "t1"
         model.sessionHasKey = keyed
-        model.show([], try await client.heldCalls())
+        model.show(TafsCloud.Home(tafs: [], others: [], removing: []), try await client.heldCalls())
         StubProtocol.sent = []
         return model
     }
@@ -178,7 +178,7 @@ final class KIFFAnswerTests: XCTestCase {
     func testAHeldCallKeepsItsIdentityAcrossRefreshes() async throws {
         let model = try await makeModel(verifies: true, signer: RecordingSigner())
         let first = model.held.map(\.id)
-        model.show([], try await model.kiff.heldCalls())
+        model.show(TafsCloud.Home(tafs: [], others: [], removing: []), try await model.kiff.heldCalls())
         XCTAssertEqual(model.held.map(\.id), first)
         XCTAssertEqual(first, [KIFFMapping.heldID("ce_1")])
         XCTAssertNotEqual(KIFFMapping.heldID("ce_1"), KIFFMapping.heldID("ce_2"))
@@ -189,7 +189,7 @@ final class KIFFAnswerTests: XCTestCase {
         let model = try await makeModel(verifies: true, signer: signer)
         let calls = try await model.kiff.heldCalls()
         // The refresh lands while Face ID is up.
-        signer.whileSigning = { model.show([], calls) }
+        signer.whileSigning = { model.show(TafsCloud.Home(tafs: [], others: [], removing: []), calls) }
         // Answered from a row whose local id predates the refresh.
         var stale = try XCTUnwrap(model.held.first)
         stale.id = UUID()

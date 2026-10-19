@@ -1,9 +1,10 @@
 import CryptoKit
 import Foundation
 
-/// Turns KIFF's Cards and held calls into the app's tafs and held calls.
+/// Turns tafs cloud's list and KIFF's held calls and activity into what the app shows.
 ///
-/// One taf per Card holder (the agent KIFF knows as the Card's subject). An amount
+/// tafs cloud makes the list from KIFF's Cards (one taf per Card holder); the app reads
+/// held calls from KIFF itself, to answer them as KIFF sent them. An amount
 /// carries the unit and decimal places KIFF declares for it; where KIFF declares
 /// none, or could not read it, the amount is a bare number. The app never guesses a
 /// currency or a scale from a parameter's name.
@@ -56,92 +57,30 @@ enum KIFFMapping {
         return t.isEmpty || t == action ? action : "\(t) · \(action)"
     }
 
-    static func rules(_ mandate: KIFFClient.Mandate) -> [CardRule] {
-        let outside: Outside = mandate.onExceed == "refuse" ? .refuse : .hold
-        var rules = mandate.grants.map { grant -> CardRule in
-            var rule = CardRule(action: grant.action, label: name(grant.action, title: grant.title), outside: outside)
-            if let cap = grant.perActionMax?.first { rule.perAction = money(cap.max, unit: cap.unit, scale: cap.scale) }
-            return rule
+    /// A taf as tafs cloud lists it (#91), for the screen: its state in the app's words, its
+    /// Card's lines and use as tafs cloud read them from KIFF. Nothing is worked out here.
+    static func taf(_ h: TafsCloud.HomeTaf, id: UUID, owner: String) -> Taf {
+        func amount(_ a: TafsCloud.HomeTaf.Amount?) -> Money? { a.map { money($0.minor, unit: $0.unit, scale: $0.scale) } }
+        let rules = h.card.rules.map { r in
+            CardRule(action: r.action, label: r.label, perAction: amount(r.perAction), perWindow: amount(r.perWindow),
+                     countPerWindow: r.countPerWindow, window: Window(rawValue: r.window) ?? .day,
+                     outside: r.outside == "refuse" ? .refuse : .hold)
         }
-        // A Card's totals cover all its grants; show one of each, on the first line: the
-        // first summed total, with the ceiling it has now (extra room included), and the
-        // first count.
-        guard !rules.isEmpty else { return rules }
-        let count = mandate.aggregates.first { !isSum($0.quantity) }
-        if let count { rules[0].countPerWindow = Int(count.limit) }
-        if let shown = shownTotal(mandate) {
-            let (total, line) = shown
-            let ceiling = line.flatMap { $0.status == "ok" ? $0.limit : nil } ?? total.limit
-            rules[0].perWindow = money(ceiling, unit: line?.unit ?? total.unit, scale: line?.scale ?? total.scale)
-            rules[0].window = window(total.window)
-        } else if let count {
-            rules[0].window = window(count.window)
+        let count = h.card.ids.count
+        var taf = Taf(id: id, name: h.name, job: "Works under \(count) KIFF Card\(count == 1 ? "" : "s").",
+                      tools: h.card.tools, colorIndex: h.color,
+                      card: Card(rules: rules, issuedBy: owner, expires: h.card.expires, revoked: !h.card.active))
+        switch h.state {
+        case "waiting": taf.state = .waiting; taf.now = "Waiting on you"
+        case "paused": taf.state = .paused; taf.now = "Paused"
+        case "working": taf.state = .working; taf.now = h.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
+        case "idle": taf.state = .idle; taf.now = "Acting under KIFF"
+        default: taf.state = .revoked; taf.now = "Card not active"
         }
-        return rules
-    }
-
-    /// The summed total a Card shows, and its use line from `?include=use`: the same
-    /// quantity and window, so the meter never divides one window's use by another's.
-    static func shownTotal(_ mandate: KIFFClient.Mandate) -> (KIFFClient.Mandate.Aggregate, KIFFClient.Mandate.Limit?)? {
-        guard let total = mandate.aggregates.first(where: { isSum($0.quantity) }) else { return nil }
-        let line = mandate.limits?.first { $0.quantity == total.quantity && $0.window == total.window }
-        return (total, line)
-    }
-
-    /// One taf per holder; `ids` keeps each holder's taf id stable across refreshes.
-    static func tafs(from mandates: [KIFFClient.Mandate], ids: inout [String: UUID], owner: String) -> [Taf] {
-        var colors: [String: Int] = [:]
-        return tafs(from: mandates, ids: &ids, colors: &colors, owner: owner)
-    }
-
-    /// One taf per holder; `ids` and `colors` keep each holder's taf id and colour across
-    /// refreshes (#91). A new holder takes the first colour no other taf has, so a taf that
-    /// sorts before the others doesn't take their colours.
-    static func tafs(from mandates: [KIFFClient.Mandate], ids: inout [String: UUID], colors: inout [String: Int], owner: String) -> [Taf] {
-        let live = mandates.filter { $0.revokedAt == nil }
-        let holders = Array(Set(live.map(\.subject))).sorted()
-        colors = colors.filter { holders.contains($0.key) }
-        for holder in holders where colors[holder] == nil {
-            let taken = Set(colors.values)
-            colors[holder] = (0..<Theme.tafColorCount).first { !taken.contains($0) } ?? colors.count
-        }
-        return holders.map { holder in
-            let cards = live.filter { $0.subject == holder }
-            let id = ids[holder] ?? UUID()
-            ids[holder] = id
-            let card = Card(
-                rules: cards.flatMap(rules),
-                issuedBy: owner,
-                expires: cards.compactMap(\.validUntil).min(),
-                revoked: cards.allSatisfy { !$0.active }
-            )
-            // Its tools are what its Cards grant, as KIFF names them (kiff/tafs#96): never "No tools yet"
-            // for a taf that holds one.
-            var tools: [String] = []
-            for g in cards.flatMap(\.grants) where g.action != "" {
-                let tool = name(g.action, title: g.title)
-                if !tools.contains(tool) { tools.append(tool) }
-            }
-            var taf = Taf(id: id, name: holder, job: "Works under \(cards.count) KIFF Card\(cards.count == 1 ? "" : "s").",
-                          tools: tools, colorIndex: colors[holder] ?? 0, card: card)
-            taf.state = card.revoked ? .revoked : .working
-            taf.now = card.revoked ? "Card not active" : "Acting under KIFF"
-            taf.kiffCardIDs = cards.map(\.id)
-            // What each Card has used of the total it shows. When KIFF could not read it,
-            // the taf says so instead of showing nothing used.
-            var unknown = Set<String>()
-            for card in cards {
-                guard let action = card.grants.first?.action, let shown = shownTotal(card) else { continue }
-                let (total, line) = shown
-                if let line, line.status == "ok", let used = line.used {
-                    taf.used[action] = money(used, unit: line.unit ?? total.unit, scale: line.scale ?? total.scale)
-                } else {
-                    unknown.insert(action)
-                }
-            }
-            taf.usageUnknown = unknown
-            return taf
-        }
+        taf.kiffCardIDs = h.card.ids
+        taf.used = h.card.used.compactMapValues { amount($0) }
+        taf.usageUnknown = Set(h.card.usageUnknown)
+        return taf
     }
 
     /// What a taf did, as KIFF's activity records it (kiff/tafs#102): one entry a call of a

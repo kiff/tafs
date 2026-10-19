@@ -16,25 +16,25 @@ final class ChatTests: XCTestCase {
         super.tearDown()
     }
 
-    private static let raeCard = #"{"id":"rae-k3f9-stripe_refund","subject":"rae-k3f9","grants":[],"aggregates":[],"active":true}"#
+    private static let raeCard = HomeJSON.rae
 
     /// A model signed in with KIFF (as sign-in ends, through useSession) whose one taf is
     /// Rae, run by tafs cloud as depl_1.
-    private func kiffModel(cards: [String] = [raeCard]) async -> (AppModel, UUID) {
+    private func kiffModel(cards: [String] = [raeCard], others: [String] = []) async -> (AppModel, UUID) {
         let session = stubbedSession()
         let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, session: session)
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session)
         let model = AppModel(signer: StubSigner(), kiff: kiff, cloud: cloud)
-        stubKIFF(cards: cards)
+        stubKIFF(cards: cards, others: others)
         await model.useSession("kiff_dev_x")
         XCTAssertEqual(model.mode, .kiff)
         let rae = model.tafs.first { $0.name == "Rae" }
         return (model, try! XCTUnwrap(rae?.id, "Rae is named by tafs cloud"))
     }
 
-    private func stubKIFF(cards: [String]) {
-        let list = #"{"mandates":["# + cards.joined(separator: ",") + "]}"
-        for path in ["GET /v1/me/mandates", "GET /v1/me/mandates?include=use"] { StubProtocol.responses[path] = (200, list) }
+    /// tafs cloud's list with `cards` as its tafs and `others` as other agents, and no held calls.
+    private func stubKIFF(cards: [String], others: [String] = []) {
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list(cards, others: others))
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
     }
@@ -433,10 +433,10 @@ final class ChatTests: XCTestCase {
     }
 
     func testATafNotOnTafsCloudCannotChat() async throws {
-        let maxCard = #"{"id":"max-card","subject":"max","grants":[],"aggregates":[],"active":true}"#
-        let (model, raeID) = await kiffModel(cards: [Self.raeCard, maxCard])
+        let maxCard = HomeJSON.entry(agent: "max", name: "max", id: nil, cards: ["max-card"])
+        let (model, raeID) = await kiffModel(cards: [Self.raeCard], others: [maxCard])
         XCTAssertTrue(model.canChat(raeID))
-        let max = try XCTUnwrap(model.tafs.first { $0.id != raeID })
+        let max = try XCTUnwrap(model.otherAgents.first, "listed apart")
         XCTAssertFalse(model.canChat(max.id), "an agent holding Cards that tafs cloud doesn't run has no thread")
     }
 
