@@ -106,7 +106,11 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("or from the owner, who can tell it in its chat");
     expect(flat).toContain("Never call a taf ready when it can only act");
     expect(flat).toContain("Show plan again with every step done or skipped");
-    expect(flat).toContain("a day ends at midnight in your account's time zone\")");
+    // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
+    // of the rules notice, not repeated in every message.
+    expect(flat).toContain("say so as a line of the rules notice (\"a day ends at midnight in your account's time zone\"), not in a message: messages stay short");
+    expect(flat).toContain("as a line of the rules notice (\"test mode, no real money\" or \"live mode, real money\"), not again in every message");
+    expect(flat).not.toContain("in every message about those tools");
     expect(flat).not.toContain("KIFF's settings");
   });
 });
