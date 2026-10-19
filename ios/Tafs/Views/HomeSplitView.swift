@@ -45,7 +45,8 @@ struct HomeSplitView: View {
                 case nil:
                     VStack(spacing: 12) {
                         Mascot(size: 72)
-                        Text(model.tafs.isEmpty ? "No tafs yet." : "Choose a taf.").scaledFont(16).foregroundColor(Theme.dim)
+                        Text(model.loadingList ? "Loading your tafs…" : model.tafs.isEmpty ? "No tafs yet." : "Choose a taf.")
+                            .scaledFont(16).foregroundColor(Theme.dim)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .screenBackground()
@@ -88,7 +89,7 @@ struct HomeSplitView: View {
                 ForEach(model.tafs) { taf in
                     NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
                 }
-                if model.mode == .kiff, model.tafs.isEmpty {
+                if model.mode == .kiff, model.listLoaded, model.tafs.isEmpty {
                     Text("Cards you issue in KIFF show up here, one taf per agent that holds them.")
                         .scaledFont(13).foregroundColor(Theme.dim)
                         .listRowBackground(Color.clear)
