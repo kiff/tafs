@@ -186,7 +186,7 @@ struct ConnectionsPanel: View {
                                 }
                             }
                             if let last = grant.events.last {
-                                Text(last.what).font(.system(size: 12)).foregroundColor(Theme.soft)
+                                Text(last.plain).font(.system(size: 12)).foregroundColor(Theme.soft)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }

@@ -29,6 +29,10 @@ final class PlanqueClient {
     /// Signs one request: set while a step the owner confirmed with Face ID runs, and for
     /// reads, which ask for nothing.
     var signer: (@MainActor (Data) throws -> String)?
+    /// This device's id in KIFF, sent with each signature (`d=`) so planque asks KIFF
+    /// whether the device signed (kiff/planque#10). Without it, planque checks the key
+    /// this phone enrolled with.
+    var deviceID: String?
     private let session: URLSession
 
     init(baseURL: URL = URL(string: "https://planque.kiff.dev")!, session: URLSession = .shared) {
@@ -52,8 +56,9 @@ final class PlanqueClient {
         let device: String
     }
 
-    /// Enrols this phone's key with planque, and hands it the KIFF connector key it keeps
-    /// to register tools. The same phone may enrol again to hand it a new key.
+    /// Hands planque the KIFF connector key it keeps to register tools. Signed with
+    /// `deviceID`, any of the owner's devices may (kiff/planque#10). The device's key goes
+    /// too, for a planque from before that, which enrols one phone by its key.
     func enrol(deviceKey: Data, connectorKey: String) async throws -> Enrolment {
         try await send("POST", "enrolment", body: ["device_key": deviceKey.base64EncodedString(), "connector_key": connectorKey])
     }
@@ -78,6 +83,13 @@ final class PlanqueClient {
             /// RFC 3339, as planque writes it (Go's nanoseconds included).
             let at: String
             let what: String
+
+            /// `what` for the owner: planque's record names who signed by ids ("by user_…
+            /// on device dev_…", or a key's fingerprint), which the owner never reads.
+            var plain: String {
+                what.replacingOccurrences(of: #" (by \S+ on device dev_[a-z0-9]+|on the phone [0-9a-f]{4}( [0-9a-f]{4}){3})"#,
+                                          with: "", options: .regularExpression)
+            }
         }
         let id: String
         /// pending, approved, signed_in, listed, connected, failed or disconnected.
@@ -207,7 +219,8 @@ final class PlanqueClient {
         // Signed as planque reads it: the path and query as sent, percent-encoded.
         let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
         let message = Self.message(base: baseURL, tenant: tenant, method: method, uri: uri, body: body ?? Data(), signedAt: signedAt)
-        request.setValue("t=\(signedAt),v1=\(try signer(message))", forHTTPHeaderField: "Planque-Device-Signature")
+        let device = deviceID.map { ",d=\($0)" } ?? ""
+        request.setValue("t=\(signedAt),v1=\(try signer(message))\(device)", forHTTPHeaderField: "Planque-Device-Signature")
 
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0

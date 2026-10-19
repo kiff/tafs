@@ -203,6 +203,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
+        planque.deviceID = nil
         accountGeneration += 1
         tafs = []; held = []; record = []
         alertsReady = nil
@@ -231,6 +232,7 @@ final class AppModel: ObservableObject {
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
+        planque.deviceID = nil
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false
@@ -1624,6 +1626,8 @@ final class AppModel: ObservableObject {
     func refreshConnections() async {
         let gen = accountGeneration
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return }
+        await loadDeviceID()
+        guard gen == accountGeneration else { return }
         let signer = self.signer
         planque.tenant = tenant
         guard let list = try? await planque.grants(signedBy: { try signer.signConfirmed($0) }), gen == accountGeneration else { return }
@@ -1641,6 +1645,7 @@ final class AppModel: ObservableObject {
         }
         if planqueReady { return true }
         let gen = accountGeneration
+        await loadDeviceID()
         do {
             _ = try await signer.sign(Data("tafs.planque.v1|\(tenant)".utf8), reason: "Keep your tools' sign-ins sealed")
         } catch { return false }
@@ -1654,6 +1659,17 @@ final class AppModel: ObservableObject {
         guard await enrolPlanque(tenant: tenant, gen: gen) else { return false }
         await refreshConnections()
         return true
+    }
+
+    /// Reads this device's id in KIFF once per sign-in, so each signature planque gets
+    /// names the device and planque asks KIFF about it (kiff/planque#10): any of the
+    /// owner's devices then connects tools, not only the first phone. Unread (an older
+    /// KIFF, no network), planque checks the key this phone enrolled with, as before.
+    private func loadDeviceID() async {
+        guard planque.deviceID == nil, mode == .kiff, sessionHasKey else { return }
+        let gen = accountGeneration
+        guard let id = try? await kiff.thisDeviceID(), gen == accountGeneration else { return }
+        planque.deviceID = id
     }
 
     /// Enrols this phone with planque and hands it a fresh connector key, as a step the
