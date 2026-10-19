@@ -103,6 +103,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A taf needs a way to find its work, not only a way to act");
     expect(flat).toContain("Never call a taf ready when it can only act");
     expect(flat).toContain("Show plan again with every step done or skipped");
-    expect(flat).toContain("a day ends at midnight in your account's time zone");
+    expect(flat).toContain("a day ends at midnight in your account's time zone\")");
+    expect(flat).not.toContain("KIFF's settings");
   });
 });
