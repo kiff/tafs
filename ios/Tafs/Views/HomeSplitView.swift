@@ -57,6 +57,12 @@ struct HomeSplitView: View {
             .id(selection)
         }
         .navigationSplitViewStyle(.balanced)
+        // "See it on…" in Setup selects the taf it made (kiff/tafs#96).
+        .onChange(of: model.requestedTaf) { id in
+            guard let id else { return }
+            selection = .taf(id)
+            model.requestedTaf = nil
+        }
         .sheet(isPresented: $showingNew) {
             if model.mode == .kiff { StartTafFlow().environmentObject(model) } else { NewTafFlow().environmentObject(model) }
         }

@@ -388,6 +388,25 @@ describe("chats (kiff/tafs#73)", () => {
     expect(next.body.session).not.toBe(live.session);
   });
 
+  it("lists the archived chats and puts one back (kiff/tafs#97)", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const old = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe");
+    (w.agents.runs.find((x) => x.id === old.id) as { status: string }).status = "COMPLETED";
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${old.session}/archive`, { token: "ana" })).status).toBe(200);
+
+    const archived = await call(w, "GET", `/v1/tafs/${RAE}/chats/archived`, { token: "viewer" });
+    expect(archived.status).toBe(200);
+    expect(archived.body.chats.map((c: { session: string; title: string }) => [c.session, c.title])).toEqual([[old.session, "Connect my Stripe"]]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.chats).toEqual([]);
+
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${old.session}/unarchive`, { token: "viewer" })).status).toBe(403);
+    const back = await call(w, "POST", `/v1/tafs/${RAE}/chats/${old.session}/unarchive`, { token: "ana" });
+    expect(back.body).toEqual({ session: old.session, archived: false });
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.chats.map((c: { session: string }) => c.session)).toEqual([old.session]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats/archived`, { token: "ana" })).body.chats).toEqual([]);
+  });
+
   it("archives only the taf's own chats", async () => {
     const w = world();
     const theirs = await w.agents.api.startRun("t_other", MAX, "hi");

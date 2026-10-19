@@ -105,7 +105,7 @@ struct SetupShapePanel: View {
         VStack(alignment: .leading, spacing: 10) {
             Eyebrow(text: card.confirmed ? "Card · confirmed by KIFF" : "Card · draft · by KIFF")
             VStack(alignment: .leading, spacing: 6) {
-                Text(card.agent).scaledFont(13, weight: .semibold, design: .monospaced, relativeTo: .caption)
+                Text(card.title).scaledFont(13, weight: .semibold, design: .monospaced, relativeTo: .caption)
                 ForEach(Array(card.lines.enumerated()), id: \.offset) { _, line in
                     Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption)
                         .fixedSize(horizontal: false, vertical: true)

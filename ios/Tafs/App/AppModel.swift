@@ -221,7 +221,7 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         planque.deviceID = nil
         accountGeneration += 1
@@ -251,7 +251,7 @@ final class AppModel: ObservableObject {
         grants = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; setupSent = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
@@ -273,6 +273,9 @@ final class AppModel: ObservableObject {
 
     /// A tab to show, asked for by a tapped alert; the root view shows it and clears this.
     @Published var requestedTab: Tab?
+    /// A taf to select in the iPad's sidebar, asked for by "See it on…" (kiff/tafs#96); the
+    /// split view selects it and clears this.
+    @Published var requestedTaf: UUID?
 
     /// Opens where a tapped alert points.
     func open(_ destination: String) {
@@ -675,7 +678,7 @@ final class AppModel: ObservableObject {
         if a.draft == nil {
             progress(.cards)
             let draft: KIFFClient.AgentDraft
-            do { draft = try await kiff.submitDraft(agentID: a.agent, label: "tafs · \(name)", cards: cards) } catch {
+            do { draft = try await kiff.submitDraft(agentID: a.agent, label: name, cards: cards) } catch {
                 // The agent's name is taken in KIFF: the next try starts over with a new one.
                 if case KIFFClient.KIFFError.server(409, _) = error { startAttempt = nil }
                 throw StartFailure(step: .cards, message: Self.startMessage(.cards, error))
@@ -1907,7 +1910,9 @@ final class AppModel: ObservableObject {
     /// The account's Setup on tafs cloud, once started.
     @Published private(set) var setupTaf: TafsCloud.CloudTaf?
     /// Setup's thread: messages and components.
-    @Published private(set) var setupThread = SetupThread()
+    @Published private(set) var setupThread = SetupThread() {
+        didSet { startHandedOverTafs() }
+    }
     @Published private(set) var setupSending = false
     @Published private(set) var startingSetup = false
     @Published var setupError: String?
@@ -1939,6 +1944,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupFresh = false
     /// Setup's past chats, to reopen, newest first.
     @Published private(set) var setupChats: [TafsCloud.Chat] = []
+    /// Setup's archived chats, under Archived (kiff/tafs#97).
+    @Published private(set) var archivedSetupChats: [TafsCloud.Chat] = []
     /// What the owner sent that tafs cloud's thread doesn't have yet (kiff/tafs#82): shown
     /// at once, and kept across reloads until tafs cloud's copy arrives, so a tapped choice
     /// shows when it's tapped, and once. A reload while the send is on its way would
@@ -2000,6 +2007,33 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return false }
         setupChats.removeAll { $0.session == session }
         if setupChat == session || (setupChat == nil && setupThread.session == session) { newSetupChat() }
+        return true
+    }
+
+    /// Reads Setup's archived chats, for Archived (kiff/tafs#97).
+    func loadArchivedSetupChats() async {
+        guard mode == .kiff, let s = setupTaf else { return }
+        let gen = accountGeneration
+        guard let chats = try? await cloud.archivedChats(s.id), gen == accountGeneration else { return }
+        archivedSetupChats = chats
+    }
+
+    /// Puts an archived chat of Setup's back in the list (kiff/tafs#97). False, with why in
+    /// `lastError`, when tafs cloud didn't take it.
+    @discardableResult
+    func unarchiveSetupChat(_ session: String) async -> Bool {
+        guard mode == .kiff, let s = setupTaf else { return false }
+        let gen = accountGeneration
+        do {
+            try await cloud.unarchiveChat(s.id, session: session)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            lastError = "Not put back: \(error.localizedDescription)"
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        archivedSetupChats.removeAll { $0.session == session }
+        await loadSetupChats()
         return true
     }
 
@@ -2473,6 +2507,17 @@ final class AppModel: ObservableObject {
     /// Results whose taf is being started, or failed to start (with why).
     @Published private(set) var startingTafs: Set<String> = []
     @Published private(set) var tafStartErrors: [String: String] = [:]
+
+    /// Setup's hand-over starts its taf once, wherever the owner is (kiff/tafs#96): not
+    /// only while the result card is on screen, so the taf reaches the list either way. One
+    /// that didn't start waits for the card's Try again.
+    private func startHandedOverTafs() {
+        for c in setupThread.components.map(\.component) where c.type == .result {
+            guard let taf = c.taf, taf.job != nil, taf.draft != nil else { continue }
+            if cloudTafs[taf.agent] != nil || startingTafs.contains(c.id) || tafStartErrors[c.id] != nil { continue }
+            Task { await startSetupTaf(c) }
+        }
+    }
 
     /// Starts the taf a result hands over to, once: tafs cloud stores it, and kiff/agents
     /// claims its key from Setup's draft. Then it shows with the account's other tafs.

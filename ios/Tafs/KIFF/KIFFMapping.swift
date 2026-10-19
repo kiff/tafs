@@ -41,15 +41,25 @@ enum KIFFMapping {
         }
     }
 
-    static func label(_ action: String) -> String {
-        let words = action.replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: ".", with: " ")
-        return words.prefix(1).uppercased() + words.dropFirst()
+    /// What the owner reads for an action: its tool's title as KIFF gives it (from the
+    /// vendor, kiff-cloud#1277), else the action as KIFF sends it. Never a name made up here.
+    static func name(_ action: String, title: String?) -> String {
+        let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return t.isEmpty ? action : t
+    }
+
+    /// What an approval names (a held call, a draft's Card): the vendor's title beside
+    /// KIFF's own action, never instead of it. The words on an approval are part of what's
+    /// approved, and a vendor chooses its titles (kiff-cloud#1277 review).
+    static func approvalName(_ action: String, title: String?) -> String {
+        let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return t.isEmpty || t == action ? action : "\(t) · \(action)"
     }
 
     static func rules(_ mandate: KIFFClient.Mandate) -> [CardRule] {
         let outside: Outside = mandate.onExceed == "refuse" ? .refuse : .hold
         var rules = mandate.grants.map { grant -> CardRule in
-            var rule = CardRule(action: grant.action, label: label(grant.action), outside: outside)
+            var rule = CardRule(action: grant.action, label: name(grant.action, title: grant.title), outside: outside)
             if let cap = grant.perActionMax?.first { rule.perAction = money(cap.max, unit: cap.unit, scale: cap.scale) }
             return rule
         }
@@ -102,11 +112,18 @@ enum KIFFMapping {
             let card = Card(
                 rules: cards.flatMap(rules),
                 issuedBy: owner,
-                expires: cards.compactMap(\.validUntil).min() ?? .distantFuture,
+                expires: cards.compactMap(\.validUntil).min(),
                 revoked: cards.allSatisfy { !$0.active }
             )
+            // Its tools are what its Cards grant, as KIFF names them (kiff/tafs#96): never "No tools yet"
+            // for a taf that holds one.
+            var tools: [String] = []
+            for g in cards.flatMap(\.grants) where g.action != "" {
+                let tool = name(g.action, title: g.title)
+                if !tools.contains(tool) { tools.append(tool) }
+            }
             var taf = Taf(id: id, name: holder, job: "Works under \(cards.count) KIFF Card\(cards.count == 1 ? "" : "s").",
-                          tools: [], colorIndex: colors[holder] ?? 0, card: card)
+                          tools: tools, colorIndex: colors[holder] ?? 0, card: card)
             taf.state = card.revoked ? .revoked : .working
             taf.now = card.revoked ? "Card not active" : "Acting under KIFF"
             taf.kiffCardIDs = cards.map(\.id)
@@ -132,7 +149,7 @@ enum KIFFMapping {
         var call = HeldCall(
             id: heldID(e.id),
             tafID: tafID,
-            proposed: ProposedAction(action: e.action, summary: "\(label(e.action)) \(e.entityID)", amount: amount(of: e)),
+            proposed: ProposedAction(action: e.action, summary: "\(approvalName(e.action, title: e.title)) \(e.entityID)", amount: amount(of: e)),
             reason: reason,
             heldAt: e.createdAt,
             expiresAt: e.expiresAt ?? e.createdAt.addingTimeInterval(10 * 60)

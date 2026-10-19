@@ -344,6 +344,13 @@ const archived: Archived = {
       ExpressionAttributeValues: { ":s": { SS: [session] }, ":ttl": { N: String(Math.floor(until.getTime() / 1000)) } },
     }));
   },
+  async unarchive(tenant, tafID, session) {
+    await dynamo.send(new UpdateItemCommand({
+      TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } },
+      UpdateExpression: "DELETE chats :s",
+      ExpressionAttributeValues: { ":s": { SS: [session] } },
+    }));
+  },
   async remove(tenant, tafID) {
     await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } } }));
   },

@@ -96,6 +96,10 @@ struct TafDetailView: View {
             Eyebrow(text: "The job")
             Text(taf.job).font(.system(size: 15)).foregroundColor(Theme.ink)
         }
+        // How it does the job, beside the job: not part of its Card (kiff/tafs#96).
+        if model.mode == .sample || model.cloudTaf(for: taf.id) != nil {
+            MemoryPanel(tafID: taf.id)
+        }
         if let cloud = model.cloudTaf(for: taf.id) {
             let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
             Panel {
@@ -149,9 +153,6 @@ struct TafDetailView: View {
 
     @ViewBuilder
     private func card(_ taf: Taf) -> some View {
-        if model.mode == .sample || model.cloudTaf(for: taf.id) != nil {
-            MemoryPanel(tafID: taf.id)
-        }
         CardFace(name: taf.name, rules: taf.card.rules, issuedBy: taf.card.issuedBy,
                  expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked)
         Panel {
@@ -304,7 +305,8 @@ struct RunReportPanel: View {
                         .font(Theme.mono(12)).foregroundColor(Theme.dim)
                 }
                 if !report.text.isEmpty {
-                    Text(report.text).font(.system(size: 14)).foregroundColor(Theme.ink).textSelection(.enabled)
+                    // A taf writes markdown: shown as the chat shows it, never raw (kiff/tafs#96).
+                    MarkdownText(report.text, size: 14).foregroundColor(Theme.ink).textSelection(.enabled)
                 } else if report.session == nil && report.error == nil {
                     Text("No run yet.").font(.system(size: 14)).foregroundColor(Theme.dim)
                 } else if !report.finished && report.error == nil {
@@ -325,7 +327,7 @@ struct CardFace: View {
     let name: String
     let rules: [CardRule]
     let issuedBy: String
-    let expires: Date
+    let expires: Date?
     let color: Color
     var revoked = false
 
@@ -350,8 +352,9 @@ struct CardFace: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(revoked ? "Revoked" : "Until").font(.system(size: 11)).opacity(0.7)
-                    Text(expires.formatted(date: .abbreviated, time: .omitted)).font(.system(size: 13, weight: .semibold))
+                    // A Card with no end says so, never a far-off date (kiff/tafs#96).
+                    Text(revoked ? "Revoked" : expires == nil ? "Ends" : "Until").font(.system(size: 11)).opacity(0.7)
+                    Text(expires?.formatted(date: .abbreviated, time: .omitted) ?? "No end date").font(.system(size: 13, weight: .semibold))
                 }
             }
         }

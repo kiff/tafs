@@ -23,6 +23,8 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
  *   GET  /v1/tafs/{id}/conversation/{session}  one chat of it (kiff/tafs#73)
  *   GET  /v1/tafs/{id}/chats            the taf's chats, newest first, each by what the owner asked (kiff/tafs#73, #82)
  *   POST /v1/tafs/{id}/chats/{session}/archive  hide a chat from the list and the thread (kiff/tafs#82)
+ *   GET  /v1/tafs/{id}/chats/archived   the chats the owner archived, to find and reopen one (kiff/tafs#97)
+ *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
@@ -190,6 +192,8 @@ export interface Archived {
   list(tenant: string, tafID: string): Promise<string[]>;
   /** Archives one, kept until `until`: past when kiff/agents deletes the chat itself. */
   add(tenant: string, tafID: string, session: string, until: Date): Promise<void>;
+  /** Puts one back in the owner's list (kiff/tafs#97). */
+  unarchive(tenant: string, tafID: string, session: string): Promise<void>;
   /** Forgets the taf's archive, on its removal. */
   remove(tenant: string, tafID: string): Promise<void>;
 }
@@ -335,9 +339,16 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
   }
+  if (parts.length === 5 && method === "GET" && action === "chats" && parts[4] === "archived") {
+    return { chats: await chats(me, taf, deps, true) };
+  }
   if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "archive") {
     need(me, "cards.manage");
     return archive(me, taf, parts[4] ?? "", deps);
+  }
+  if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "unarchive") {
+    need(me, "cards.manage");
+    return unarchive(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
     need(me, "cards.manage");
@@ -974,14 +985,14 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps): Prom
 /**
  * The taf's chats, newest first, each named by the start of what the owner asked
  * (kiff/tafs#82): their first message that isn't a component's answer. Archived
- * ones are left out.
+ * ones are left out, or, with `archivedOnly`, are the only ones (kiff/tafs#97).
  */
-async function chats(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{ session: string; started: string; updated: string; title: string }>> {
+async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string }>> {
   const [all, archived] = await Promise.all([
     agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)),
     deps.archived.list(me.tenantID, taf.id).then((ids) => new Set(ids)),
   ]);
-  const listed = all.filter((s) => s.kind === "chat" && !archived.has(s.id)).slice(0, CHAT.chatsListed);
+  const listed = all.filter((s) => s.kind === "chat" && archived.has(s.id) === archivedOnly).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   return listed.flatMap((s, i) => {
     const text = chatTitle((read[i]?.events ?? []).filter((e) => e.kind === "owner_message").map((e) => {
@@ -1022,6 +1033,16 @@ async function archive(me: KIFFIdentity, taf: Taf, session: string, deps: Deps):
   const until = new Date((deps.now?.() ?? new Date()).getTime() + CHAT.archiveDays * 24 * 3600_000);
   await deps.archived.add(me.tenantID, taf.id, chat.id, until);
   return { session: chat.id, archived: true };
+}
+
+/**
+ * The owner puts an archived chat back in their list (kiff/tafs#97). It goes back in the
+ * thread too; the live chat stays the newest one.
+ */
+async function unarchive(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<unknown> {
+  const chat = await ownChat(me, taf, session, deps);
+  await deps.archived.unarchive(me.tenantID, taf.id, chat.id);
+  return { session: chat.id, archived: false };
 }
 
 /** The taf's latest chat when it was active in the last 30 minutes and isn't archived: the message goes on in it. */

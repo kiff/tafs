@@ -71,6 +71,10 @@ struct SetupChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         // A focused task (#82): the app's tabs stay out of it.
         .toolbar(.hidden, for: .tabBar)
+        // Its own bar on a wide screen (kiff/tafs#96): the chat doesn't run under the title,
+        // and the conversations button sits in the bar, not over the panel.
+        .toolbarBackground(sizeClass == .regular ? Visibility.visible : .automatic, for: .navigationBar)
+        .toolbarBackground(Theme.background, for: .navigationBar)
         .toolbar {
             if model.setupTaf != nil && model.planqueReady {
                 ToolbarItem(placement: .navigationBarTrailing) { conversations }
@@ -405,13 +409,16 @@ struct SetupChatView: View {
 
 /// Setup's recent conversations, newest first, each by what the owner asked (#73, #82):
 /// one tap reopens it, and messages go on in it. Swiping left archives it, on tafs cloud,
-/// so it stays out of the list on every phone.
+/// so it stays out of the list on every phone, once the owner confirms (#97); Archived,
+/// at the end, lists them to reopen or put back.
 struct SetupChatsList: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     let open: (String) -> Void
     /// Why the last archive didn't go through.
     @State private var notArchived: String?
+    /// The conversation waiting for the owner's yes to archive it.
+    @State private var confirming: TafsCloud.Chat?
 
     var body: some View {
         NavigationStack {
@@ -430,10 +437,23 @@ struct SetupChatsList: View {
                     }
                     .listRowBackground(model.setupChat == chat.session ? Theme.raised : Theme.panel)
                     .swipeActions(edge: .trailing) {
-                        Button { archive(chat.session) } label: { Label("Archive", systemImage: "archivebox") }
+                        Button { confirming = chat } label: { Label("Archive", systemImage: "archivebox") }
                             .tint(Theme.soft)
                     }
                 }
+                NavigationLink {
+                    ArchivedSetupChats(open: open)
+                } label: {
+                    Label("Archived", systemImage: "archivebox").scaledFont(15).foregroundColor(Theme.ink)
+                }
+                .listRowBackground(Theme.panel)
+            }
+            .confirmationDialog("Archive this conversation?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
+                                titleVisibility: .visible, presenting: confirming) { chat in
+                Button("Archive") { archive(chat.session) }
+                Button("Cancel", role: .cancel) {}
+            } message: { _ in
+                Text("It leaves this list on all your devices. You'll find it under Archived, where you can open it or put it back.")
             }
             .overlay {
                 if model.setupChats.isEmpty {
@@ -456,6 +476,57 @@ struct SetupChatsList: View {
             if !(await model.archiveSetupChat(session)) {
                 // Said here, under the sheet the app's alert would wait behind.
                 notArchived = model.lastError ?? "Not archived. Try again."
+                model.lastError = nil
+            }
+        }
+    }
+}
+
+/// Setup's archived conversations (#97): one tap opens it, Put back returns it to the list.
+struct ArchivedSetupChats: View {
+    @EnvironmentObject private var model: AppModel
+    let open: (String) -> Void
+    @State private var notPutBack: String?
+
+    var body: some View {
+        List {
+            if let notPutBack {
+                Text(notPutBack).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                    .listRowBackground(Color.clear)
+            }
+            ForEach(model.archivedSetupChats) { chat in
+                Button { open(chat.session) } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(chat.title).scaledFont(15).foregroundColor(Theme.ink).lineLimit(2)
+                        Text(chat.updated.formatted(date: .abbreviated, time: .shortened))
+                            .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    }
+                }
+                .listRowBackground(Theme.panel)
+                .swipeActions(edge: .trailing) {
+                    Button { putBack(chat.session) } label: { Label("Put back", systemImage: "tray.and.arrow.up") }
+                        .tint(Theme.soft)
+                }
+            }
+        }
+        .overlay {
+            if model.archivedSetupChats.isEmpty {
+                Text("Nothing archived.").scaledFont(14).foregroundColor(Theme.dim)
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .screenBackground()
+        .navigationTitle("Archived")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await model.loadArchivedSetupChats() }
+    }
+
+    private func putBack(_ session: String) {
+        Haptics.tap()
+        notPutBack = nil
+        Task {
+            if !(await model.unarchiveSetupChat(session)) {
+                notPutBack = model.lastError ?? "Not put back. Try again."
                 model.lastError = nil
             }
         }
@@ -671,6 +742,7 @@ struct StepMark: View {
 /// One component in the thread.
 struct SetupComponentView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
     let shown: ShownComponent
 
     var body: some View {
@@ -769,12 +841,20 @@ struct SetupComponentView: View {
                 Text(tools.joined(separator: ", ")).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.soft)
             }
             if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
-                NavigationLink {
-                    TafDetailView(tafID: tafID)
-                } label: {
-                    Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                if sizeClass == .regular {
+                    // Beside the sidebar: select it there, so the list says which taf is open.
+                    Button { model.requestedTaf = tafID } label: {
+                        Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    NavigationLink {
+                        TafDetailView(tafID: tafID)
+                    } label: {
+                        Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
                 }
-                .buttonStyle(PrimaryButtonStyle())
             } else if let error = model.tafStartErrors[c.id] {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                 Button("Try again") { Task { await model.startSetupTaf(c) } }
@@ -783,8 +863,6 @@ struct SetupComponentView: View {
                 Text("Starting \(c.taf?.name ?? "the taf")…").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
         }
-        // The hand-over starts the taf (once): tafs cloud stores it and kiff/agents claims its key.
-        .task(id: c.id) { await model.startSetupTaf(c) }
     }
 }
 
@@ -829,6 +907,10 @@ struct SetupApproval: View {
 
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
         let vendor = grant?.vendor ?? component.service ?? "the vendor"
+        // An approval with the taf's Card is the Card's (kiff/tafs#94), not the tool's again.
+        if let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true {
+            return state == .declined ? "Declined · \(draft.cardTitle)" : "Approved · \(draft.cardTitle)"
+        }
         if state == .declined { return "Declined · \(vendor)" }
         if grant?.connected == true { return "Approved · \(vendor) is connected, keys kept sealed" }
         return "Approved · signed in at \(vendor)"
@@ -879,7 +961,7 @@ struct SetupApproval: View {
             }
             if let draft, let cards = draft.cards {
                 VStack(alignment: .leading, spacing: 6) {
-                    Eyebrow(text: "\(draft.agentID)'s Card")
+                    Eyebrow(text: draft.cardTitle)
                     ForEach(Array(cards.flatMap(\.lines).enumerated()), id: \.offset) { _, line in
                         Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.ink)
                     }

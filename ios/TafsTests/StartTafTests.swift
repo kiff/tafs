@@ -142,7 +142,7 @@ final class StartTafTests: XCTestCase {
         XCTAssertEqual(Array(sent.prefix(2)), ["POST api.test/v1/me/agent-drafts", "POST cloud.test/v1/tafs"])
         let draft = body(StubProtocol.sent[0])
         XCTAssertEqual(draft["agent_id"] as? String, "rae-k3f9")
-        XCTAssertEqual(draft["label"] as? String, "tafs · Rae")
+        XCTAssertEqual(draft["label"] as? String, "Rae", "the taf's name, which the approval shows")
         let card = try XCTUnwrap((draft["cards"] as? [[String: Any]])?.first)
         XCTAssertEqual(card["subject"] as? String, "rae-k3f9")
         XCTAssertEqual(card["domain"] as? String, "gateway")
