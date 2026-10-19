@@ -225,6 +225,14 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(body(StubProtocol.sent.last) as? [String: String], ["device_key": "MFkB", "connector_key": "kiff_live_connector"])
     }
 
+    /// The owner reads what happened, not who signed by id.
+    func testAnEventReadsWithoutIDs() {
+        let plain = { (what: String) in PlanqueClient.Grant.Event(at: "2026-10-19T12:00:00Z", what: what).plain }
+        XCTAssertEqual(plain("disconnected by user_2abc on device dev_ipad01: token deleted"), "disconnected: token deleted")
+        XCTAssertEqual(plain("sign-in confirmed on the phone ab12 cd34 ef56 7890"), "sign-in confirmed")
+        XCTAssertEqual(plain("signed in at mcp.stripe.com"), "signed in at mcp.stripe.com")
+    }
+
     /// Setting up on a second device: the app reads its KIFF device id and signs with it,
     /// so planque asks KIFF instead of refusing a second phone (kiff/planque#10).
     func testSetUpPlanqueSignsAsTheKIFFDevice() async throws {

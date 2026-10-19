@@ -83,6 +83,13 @@ final class PlanqueClient {
             /// RFC 3339, as planque writes it (Go's nanoseconds included).
             let at: String
             let what: String
+
+            /// `what` for the owner: planque's record names who signed by ids ("by user_…
+            /// on device dev_…", or a key's fingerprint), which the owner never reads.
+            var plain: String {
+                what.replacingOccurrences(of: #" (by \S+ on device dev_[a-z0-9]+|on the phone [0-9a-f]{4}( [0-9a-f]{4}){3})"#,
+                                          with: "", options: .regularExpression)
+            }
         }
         let id: String
         /// pending, approved, signed_in, listed, connected, failed or disconnected.
