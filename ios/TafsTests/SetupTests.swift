@@ -866,7 +866,11 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(signIn.note, "Se abre la página de Stripe.")
         let result = try Self.component(#"{"type":"result","id":"r1","text":"Listo.","taf":{"agent":"reembolsos-x","name":"Reembolsos"},"yes":"Ver Reembolsos"}"#)
         XCTAssertEqual(result.yes, "Ver Reembolsos")
+        // Where a sign-in goes comes from its service, whatever Setup's button says.
+        let steered = try Self.component(#"{"type":"sign_in","id":"s3","grant":"g1","service":"mcp.evil.example","yes":"Abrir Stripe"}"#)
+        XCTAssertEqual(steered.destination, "mcp.evil.example")
         let plain = try Self.component(#"{"type":"sign_in","id":"s2","grant":"g1"}"#)
+        XCTAssertEqual(plain.destination, "the vendor's page")
         XCTAssertNil(plain.yes)
         XCTAssertNil(plain.note)
     }

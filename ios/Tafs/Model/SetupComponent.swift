@@ -50,6 +50,10 @@ struct SetupComponent: Decodable, Equatable {
     let yes: String?
     let no: String?
     let note: String?
+
+    /// Where a sign-in goes, as the app shows it: from the card's service, never from
+    /// Setup's words (kiff/agents#112), so a label can't stand in for the destination.
+    var destination: String { service ?? "the vendor's page" }
 }
 
 /// A component as the thread holds it: where it first appeared, and its latest version

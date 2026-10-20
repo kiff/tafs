@@ -823,6 +823,10 @@ struct SetupComponentView: View {
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(busy || (answered && !state.isFailure))
+                // Where it goes is always the app's own words, whatever the button says.
+                Text("Opens \(c.destination)")
+                    .scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .frame(maxWidth: .infinity)
                 if !state.isFailure {
                     Button(c.no ?? "Not now") { Task { await model.answer(c, "not now") } }
                         .scaledFont(14).foregroundColor(Theme.dim)
