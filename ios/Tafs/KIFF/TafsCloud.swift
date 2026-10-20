@@ -591,6 +591,15 @@ final class TafsCloud {
         try await versionState(id).versions
     }
 
+    /// Stores the taf's next version as Setup drafted it (kiff/tafs#107), once per result
+    /// (`from`): nothing goes live. Returns its number.
+    func createVersion(_ id: String, note: String, notes: String?, draft: String?, from: String) async throws -> Int {
+        struct Body: Encodable { let note: String; let notes: String?; let draft: String?; let from: String }
+        struct Response: Decodable { let version: Int }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions", body: Body(note: note, notes: notes, draft: draft, from: from))
+        return r.version
+    }
+
     /// Begins the switch to version n: from then on nothing of the taf runs until it ends.
     /// Refused (409) while a run of the taf is going or waiting on the owner.
     func beginSwitch(_ id: String, version n: Int) async throws -> Switching {

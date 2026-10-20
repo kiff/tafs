@@ -23,8 +23,16 @@ struct SetupComponent: Decodable, Equatable {
         let name: String
         /// One of tafs' jobs (refunds, chargebacks, …): what the taf does.
         let job: String?
-        /// The taf's KIFF draft, the one the owner confirmed: its key is claimed from it.
+        /// The taf's KIFF draft, the one the owner confirmed: its key is claimed from it. For
+        /// an improvement, the draft revising its Cards, confirmed only at the switch.
         let draft: String?
+        /// The tafs id of the taf this is the next version of (kiff/tafs#107): an
+        /// improvement, never a new taf.
+        var improves: String?
+        /// What changed, in the owner's language (an improvement).
+        var note: String?
+        /// The taf's full new instructions from the owner; nil keeps them (an improvement).
+        var notes: String?
     }
 
     let type: Kind
