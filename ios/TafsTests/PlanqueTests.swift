@@ -160,7 +160,7 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(grants[0].request.tools.map(\.action), ["refund_payment", "list_payments"])
         XCTAssertEqual(grants[0].events.first?.what, "asked by setup-agent")
         let header = try XCTUnwrap(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
-        XCTAssertTrue(header.hasPrefix("t=") && header.hasSuffix(",v1=sig"), header)
+        XCTAssertTrue(header.hasPrefix("t=") && header.hasSuffix(",v1=sig,d=dev_phone01"), header)
         XCTAssertTrue(signed.last?.hasPrefix("planque.request.v1\nhttps://planque.test\nt_01\nGET\n/v1/accounts/t_01/grants\n") ?? false)
 
         StubProtocol.sent = []
@@ -348,7 +348,8 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(Self.digest)"], "one Face ID, naming the grant")
         XCTAssertEqual(vendor.opened, [URL(string: "https://access.stripe.com/authorize?x=1")!])
 
-        let order = StubProtocol.sent.map { "\($0.httpMethod ?? "") \($0.url?.path ?? "")" }
+        // planque's requests, in order (KIFF's device read goes to its own host).
+        let order = StubProtocol.sent.filter { $0.url?.host == "planque.test" }.map { "\($0.httpMethod ?? "") \($0.url?.path ?? "")" }
         XCTAssertEqual(Array(order.prefix(3)), ["GET /v1/accounts/t_01/grants", "POST /v1/accounts/t_01/grants/g_01/approve",
                                                 "POST /v1/accounts/t_01/grants/g_01/confirm"])
         XCTAssertEqual(body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").first)["confirm"] as? String, "c0de")
