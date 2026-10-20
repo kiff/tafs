@@ -138,3 +138,9 @@ extension Date {
         return f.string(from: self)
     }
 }
+
+/// kiff.dev's Terms and Privacy policy, which cover tafs.
+enum Legal {
+    static let terms = URL(string: "https://kiff.dev/terms#tafs")!
+    static let privacy = URL(string: "https://kiff.dev/privacy#tafs")!
+}

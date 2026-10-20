@@ -484,6 +484,10 @@ final class AppModel: ObservableObject {
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
+        } catch is CancellationError {
+            // A refresh the app itself dropped (a newer one, a view that went away): not an
+            // error to show (the Mac's "Couldn't reach KIFF: cancelled", kiff/tafs#85).
+        } catch let error as URLError where error.code == .cancelled {
         } catch let error as TafsCloud.CloudError {
             lastError = "Couldn't load your tafs: \(error.localizedDescription)"
             if !listLoaded { listUnread = true }
