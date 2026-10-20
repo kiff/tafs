@@ -2763,9 +2763,13 @@ final class AppModel: ObservableObject {
     /// Connected with its Cards confirmed, or connected first and listed (contract 5), as
     /// planque says after this approval appeared; or the owner's answer to it says so.
     func approvalFinished(_ c: SetupComponent) -> Bool {
-        if let a = setupThread.answer(to: c.id), !a.failed, a.text.hasPrefix("approved") { return true }
-        guard grantsReadFor.contains(c.id) else { return false }
         let grant = grants.first { $0.id == c.grant }
+        let readSince = grantsReadFor.contains(c.id)
+        // planque failed the grant after the owner approved (at connect, or later): the
+        // card says so with planque's reason, whatever the answer said.
+        if readSince, let grant, grant.status == "failed" || grant.status == "disconnected" { return false }
+        if let a = setupThread.answer(to: c.id), !a.failed, a.text.hasPrefix("approved") { return true }
+        guard readSince else { return false }
         let draft = c.draft.flatMap { setupDrafts[$0] }
         let cardsWaiting = draft.map { !$0.confirmed } ?? (c.draft != nil)
         return (grant?.connected == true && !cardsWaiting) || (grant?.listed == true && c.draft == nil)

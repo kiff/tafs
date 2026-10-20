@@ -676,6 +676,20 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(model.grants.first?.status, "pending", "the grant is read again for the new approval")
         XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)), .needsYou)
         XCTAssertEqual(model.setupWaiting?.id, "read", "its Approve button shows")
+
+        // Approved, then planque failed the grant at connect: the card says it didn't go
+        // through, with planque's reason, though the answer reads approved.
+        let answered = #"""
+        [{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"Refunds, please","session":"s1"},
+         {"at":"2026-10-17T10:00:05.000Z","from":"owner","kind":"message","text":"[approval connect] approved, signed in","session":"s1"},
+         {"at":"2026-10-17T10:02:00.000Z","from":"owner","kind":"message","text":"[approval read] approved, signed in","session":"s1"}]
+        """#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":\#(answered),"components":[\#(connect),\#(read)]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "failed", reason: "a read-only tool isn't read-only at the vendor"))]}"#)
+        await model.loadSetupThread()
+        await model.refreshConnections()
+        XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)),
+                       .failed("a read-only tool isn't read-only at the vendor"))
         Keychain.delete(AppModel.planqueAccount)
     }
 
