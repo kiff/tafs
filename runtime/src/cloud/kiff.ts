@@ -46,20 +46,25 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
 }
 
 /**
- * Claims a confirmed draft's agent key (kiff-cloud #1217): the draft's claim
- * secret, shown once to whoever submitted it, buys the key once. The key comes
- * straight here and goes into Secrets Manager, where kiff/agents reads it for the
- * taf's runs; the phone never holds it.
+ * Whether a KIFF draft is confirmed, read with the owner's own session
+ * (kiff/tafs#107): its Cards are issued. A claimed draft is later still, with
+ * the same Cards, so it counts too.
  */
-/** Whether a KIFF draft is confirmed, read with the owner's own session (kiff/tafs#107). */
 export async function draftConfirmed(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<boolean> {
   const res = await doFetch(`${base}/v1/me/agent-drafts/${encodeURIComponent(draftID)}`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
   if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
   if (res.status === 404) return false;
   if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status} for the draft`);
-  return ((await res.json()) as { status?: string }).status === "confirmed";
+  const { status } = (await res.json()) as { status?: string };
+  return status === "confirmed" || status === "claimed";
 }
 
+/**
+ * Claims a confirmed draft's agent key (kiff-cloud #1217): the draft's claim
+ * secret, shown once to whoever submitted it, buys the key once. The key comes
+ * straight here and goes into Secrets Manager, where kiff/agents reads it for the
+ * taf's runs; the phone never holds it.
+ */
 export async function claimDraft(draftID: string, claimSecret: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<{ agentID: string; key: string }> {
   if (!/^drf_[A-Za-z0-9]+$/.test(draftID)) throw new KIFFError(400, "that is not a KIFF draft id");
   if (!claimSecret) throw new KIFFError(400, "the draft's claim secret is missing");

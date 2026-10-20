@@ -844,4 +844,12 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" })).body).toEqual({ live: 1 });
     expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(1);
   });
+
+  it("takes a claimed draft as confirmed: its Cards are issued all the same", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "claimed" };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
+    w.account.drafts = { drf_v2: "discarded" };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).status).toBe(409);
+  });
 });
