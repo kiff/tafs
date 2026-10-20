@@ -602,9 +602,13 @@ final class TafsCloud {
 
     /// Begins the switch to version n: from then on nothing of the taf runs until it ends.
     /// Refused (409) while a run of the taf is going or waiting on the owner.
-    func beginSwitch(_ id: String, version n: Int) async throws -> Switching {
+    /// tafs cloud prepares the Card draft it waits for (kiff/tafs#122): the version's own,
+    /// drafted again (`redraft`, or once it expired), a restore of the Cards it ran under
+    /// when going back, or none.
+    func beginSwitch(_ id: String, version n: Int, redraft: Bool = false) async throws -> Switching {
+        struct Body: Encodable { let redraft: Bool }
         struct Response: Decodable { let switching: Switching }
-        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/switch")
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/switch", body: Body(redraft: redraft))
         return r.switching
     }
 
