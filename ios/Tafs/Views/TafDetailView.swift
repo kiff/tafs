@@ -409,7 +409,10 @@ struct VersionCardSheet: View {
                         .fixedSize(horizontal: false, vertical: true)
                     if let cards = draft?.cards {
                         ForEach(Array(cards.enumerated()), id: \.offset) { _, card in cardView(card) }
-                        Text("While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF, then this version goes live.")
+                        ForEach(draft?.retires ?? [], id: \.id) { retiredView($0) }
+                        Text(draft?.retires?.isEmpty == false
+                             ? "While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
+                             : "While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF, then this version goes live.")
                             .font(.system(size: 12)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     } else if loaded {
                         Text(model.versionErrors[tafID] ?? "This version's Card couldn't be read.")
@@ -449,6 +452,17 @@ struct VersionCardSheet: View {
             if let changed = model.changedVersionCards[tafID], changed.id == model.switchDraft(version, of: tafID) { draft = changed }
             else { draft = await model.versionCard(version, of: tafID) }
             loaded = true
+        }
+    }
+
+    /// A Card this version doesn't have: confirming removes it, so what it allows stops.
+    private func retiredView(_ card: KIFFClient.AgentDraft.Retired) -> some View {
+        Panel {
+            Eyebrow(text: "Removes a Card")
+            ForEach(card.current?.lines ?? [], id: \.self) {
+                Text($0).font(.system(size: 14)).foregroundColor(Theme.soft).strikethrough()
+            }
+            Text("Your taf can't do this any more.").font(.system(size: 12)).foregroundColor(Theme.dim)
         }
     }
 
