@@ -4,7 +4,7 @@ import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upg
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
-import { type ActivityCall, improveContext, recentCalls } from "../src/cloud/improve.js";
+import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -16,7 +16,7 @@ const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id
 type Drafts = Record<string, { secret: string; key: string; agent: string; status?: number }>;
 
 /** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
-interface Account { mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[]; drafts?: Record<string, string | { status: string; expires_at: string }>; status?: number }
+interface Account { mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[]; drafts?: Record<string, string | { status: string; expires_at?: string; agent_id?: string }>; status?: number }
 
 /** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
 function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }) {
@@ -762,6 +762,39 @@ describe("improving a taf (kiff/tafs#107)", () => {
     expect(first.text.endsWith("The owner says: It can't find the payments to refund.")).toBe(true);
   });
 
+  it("gives Setup the taf's instructions and its Cards as KIFF holds them, to revise under the same ids", async () => {
+    const w = withSetup();
+    const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rec, ownerNotes: "Offer store credit first." });
+    w.account.mandates = [raeCard, { ...raeCard, id: "card_other", subject: "someone-else" }, { ...raeCard, id: "card_old", active: false }];
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "Let it refund up to 200." } });
+    const first = (w.agents.events.get(r.body.session)?.[0]?.body as { text: string }).text;
+    expect(first).toContain("Its instructions from the owner, as its live version has them: Offer store credit first.");
+    expect(first).toContain("draft it again under the same id");
+    // As a draft takes it: its holder named, and nothing KIFF's view adds (a grant's title).
+    expect(first).toContain(`- ${JSON.stringify({ id: "card_rae", subject: "rae", on_exceed: "hold",
+      grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 10000 }] }], aggregates: [] })}`);
+    expect(first).not.toContain("card_other");
+    expect(first).not.toContain("card_old");
+  });
+
+  it("copies only a draft body's keys from a Card as KIFF lists it", () => {
+    const listed = {
+      id: "card_rae", subject: "rae", subjects: ["rae"], active: true, domain: "gateway", environment: "live", on_exceed: "hold",
+      location: "Europe/Madrid", hold_expiry_seconds: 86400, domain_id: "dom_1",
+      grants: [{ action: "create_refund_k3f9", title: "Refund a charge", entity_states: ["requested"],
+        per_action_max: [{ quantity: "sum(amount)", max: 500, unit: "EUR", scale: 2 }], resources: { parameter: "charge", values: ["ch_1"], extra: 1 } }],
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects", unit: "EUR", scale: 2, room_grants: [{ amount: 1000 }] }],
+    };
+    expect(heldCards([listed], "rae")).toEqual([{
+      id: "card_rae", subject: "rae", domain: "gateway", environment: "live", on_exceed: "hold",
+      grants: [{ action: "create_refund_k3f9", entity_states: ["requested"], resources: { parameter: "charge", values: ["ch_1"] },
+        per_action_max: [{ quantity: "sum(amount)", max: 500 }] }],
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects" }],
+    }]);
+    expect(heldCards([{ ...listed, subjects: ["rae", "bo"] }], "rae")).toEqual([]);
+  });
+
   it("shows the owner only their own words, in the thread and the chat's title", async () => {
     const w = withSetup();
     const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "It can't find the payments to refund." } });
@@ -909,6 +942,57 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     // The Card is the owner's already: the switch can only end.
     expect((await call(w, "DELETE", `/v1/tafs/${RAE}/switching`, { token: "ana" })).body).toEqual({ cancelled: false, live: 2 });
     expect(w.agents.switching.size).toBe(0);
+  });
+
+  it("stores the version Setup drafted, built by tafdef, with nothing live", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v3: { status: "draft", agent_id: "rae" } };
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Refunds up to 200", notes: "Ask before refunds over 200.", draft: "drf_v3" } });
+    expect(r).toMatchObject({ status: 200, body: { version: 3 } });
+    const v3 = w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.n === 3)!;
+    expect(v3).toMatchObject({ note: "Refunds up to 200", by: "setup", draft: "drf_v3", live: false });
+    const def = w.agents.versionDefs.get(`t_acme|${RAE}|3`)!;
+    expect(ownerNotesIn(def.instructions)).toBe("Ask before refunds over 200.");
+    expect(def.instructions).toBe(instructions(jobById("refunds"), "Ask before refunds over 200."));
+    // Instructions only: no draft, and the taf's own notes when none are given.
+    const r2 = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Same rules" } });
+    expect(r2.body).toEqual({ version: 4 });
+    expect(w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.live)?.n).toBe(1);
+  });
+
+  it("makes a result's version once, however often it's handed over", async () => {
+    const w = twoVersions();
+    const first = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first", from: "sess9/v2-improve" } });
+    const again = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first", from: "sess9/v2-improve" } });
+    expect(again.body).toEqual(first.body);
+    expect(w.agents.calls.filter((c) => c === `createVersion ${RAE}`)).toHaveLength(1);
+    const other = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Another", from: "sess9/v3" } });
+    expect(other.body.version).toBe((first.body.version as number) + 1);
+  });
+
+  it("names only a waiting draft of this taf's own agent", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_other: { status: "draft", agent_id: "someone-else" }, drf_done: { status: "confirmed", agent_id: "rae" } };
+    for (const [draft, want] of [["drf_other", "isn't this taf's"], ["drf_done", "confirmed"], ["drf_gone", "isn't this taf's"]] as const) {
+      const r = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "x", draft } });
+      expect(r.status).toBe(409);
+      expect(String(r.body.error)).toContain(want);
+    }
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: {} })).status).toBe(400);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "viewer", body: { note: "x" } })).status).toBe(403);
+    expect(w.agents.calls).not.toContain(`createVersion ${RAE}`);
+  });
+
+  it("keeps the record's instructions in step with the live version, so an upgrade never reverts them", async () => {
+    const w = twoVersions();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const created = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first", notes: "Ask before every refund." } });
+    const n = created.body.version as number;
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
+    const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rec.ownerNotes).toBe("Ask before every refund.");
+    const upgraded = await upgradeDefinitions(depsOf(w), { dryRun: true });
+    expect(upgraded.find((u) => u.taf === RAE)?.outcome).toBe("current");
   });
 
   it("takes a claimed draft as confirmed: its Cards are issued all the same", async () => {

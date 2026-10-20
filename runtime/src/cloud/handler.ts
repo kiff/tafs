@@ -1,12 +1,12 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { type AgentDefinition, type Agents, AgentsError, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
-import { claimDraft, draftConfirmed, draftStatus, dropped, type Fetch, issued, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
+import { claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, issued, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
-import { improveContext, ownerWords, recentCalls } from "./improve.js";
+import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -31,6 +31,7 @@ import { improveContext, ownerWords, recentCalls } from "./improve.js";
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
+ *   POST /v1/tafs/{id}/versions         {note, notes?, draft?, from?}: its next version, as Setup drafted it, once per result (kiff/tafs#107); nothing goes live
  *   POST /v1/tafs/{id}/versions/{n}/switch  begin the switch to version n: nothing of the taf runs until it ends
  *   DELETE /v1/tafs/{id}/switching      drop a switch whose Card isn't confirmed yet
  *   POST /v1/tafs/{id}/versions/{n}/trial  {input?}: a trial of version n, its writes decided by KIFF, nothing sent
@@ -64,7 +65,7 @@ export interface HTTPResult {
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
-  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "cancelSwitch">;
+  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "cancelSwitch" | "createVersion" | "getVersion">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -139,6 +140,12 @@ export interface Taf {
   definition?: string;
   /** Its colour in the app (`home.COLORS`), kept so a new taf never takes it. Given at its start. */
   color?: number;
+  /**
+   * The versions made from Setup's results (kiff/tafs#107), by the result
+   * they came from: a result makes its version once, however often the app
+   * hands it over.
+   */
+  versionsFrom?: Record<string, number>;
 }
 
 export interface Tafs {
@@ -955,6 +962,10 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     const state = await settleSwitch(event, me, taf, deps);
     return { versions: state.versions, ...(state.switching ? { switching: state.switching } : {}) };
   }
+  if (action === "versions" && parts.length === 4 && method === "POST") {
+    need(me, "cards.manage");
+    return createVersion(event, me, taf, deps);
+  }
   if (action === "switching" && parts.length === 4 && method === "DELETE") {
     need(me, "cards.manage");
     return cancelSwitch(event, me, taf, deps);
@@ -983,9 +994,79 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
       throw new HTTPError(409, "confirm this version's Card first");
     }
     await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n));
+    await keepNotes(me, taf, n, deps);
     return { live: n };
   }
   throw new HTTPError(404, "not found");
+}
+
+/** Most characters a version's note and its instructions from the owner may have. */
+const VERSION_NOTE = 2000;
+const VERSION_NOTES = 4000;
+
+/**
+ * The taf's next version, as Setup drafted it in an improvement (kiff/tafs#107):
+ * tafs cloud builds its definition from its job and budget, with the new
+ * instructions from the owner or its own, and stores it in kiff/agents with
+ * the KIFF draft revising its Cards. Nothing goes live: the owner tries it and
+ * switches to it from the taf's Versions. The draft must be this taf's agent's,
+ * still waiting for the owner, so a version never names another's Cards.
+ */
+async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
+  const body = parseBody(event);
+  const note = str(body.note).trim();
+  if (!note || note.length > VERSION_NOTE) throw new HTTPError(400, `say what changed in 1 to ${VERSION_NOTE} characters`);
+  const notes = body.notes === undefined || body.notes === null ? undefined : str(body.notes).trim();
+  if (notes !== undefined && notes.length > VERSION_NOTES) throw new HTTPError(400, `the instructions are at most ${VERSION_NOTES} characters`);
+  const draft = str(body.draft).trim() || undefined;
+  // The result it comes from: the version it already made, if any.
+  const from = str(body.from).trim() || undefined;
+  if (from && from.length > 128) throw new HTTPError(400, "from is at most 128 characters");
+  const made = from ? taf.versionsFrom?.[from] : undefined;
+  if (made !== undefined) return { version: made };
+  if (draft) {
+    const d = await draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))());
+    if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
+    if (d.status !== "draft") throw new HTTPError(409, `that draft is ${d.status}: draft it again`);
+  }
+  let def: AgentDefinition;
+  try {
+    def = definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined });
+  } catch (err) {
+    throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
+  }
+  const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", ...(draft ? { draft } : {}) }));
+  if (from) {
+    // Kept so the same result hands over this version again. A record that
+    // changed meanwhile is read again once.
+    for (let tries = 0; tries < 2; tries++) {
+      const cur = tries === 0 ? taf : await deps.tafs.get(me.tenantID, taf.id);
+      if (!cur) break;
+      if (await deps.tafs.putIf(me.tenantID, { ...cur, versionsFrom: { ...cur.versionsFrom, [from]: n } }, cur)) break;
+    }
+  }
+  return { version: n };
+}
+
+/**
+ * Keeps tafs cloud's record of the taf in step with the version now live:
+ * its instructions from the owner, read from that version's definition at
+ * kiff/agents, and the digest of what tafs would build from them. An upgrade
+ * rebuilds a taf from this record, so it never reverts a version's
+ * instructions. A record that changed meanwhile is left for the next switch.
+ */
+async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
+  try {
+    const { definition: live } = await deps.agents.getVersion(me.tenantID, taf.id, n);
+    const notes = typeof live.instructions === "string" ? ownerNotesIn(live.instructions) : undefined;
+    const next: Taf = { ...taf, definition: digest(definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes })) };
+    if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
+    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition) await deps.tafs.putIf(me.tenantID, next, taf);
+  } catch (err) {
+    // The switch stands; the next switch, or the upgrade's read-back, catches the record up.
+    console.error(`keep notes: ${taf.id} v${n}:`, err);
+  }
 }
 
 /**
@@ -1002,6 +1083,7 @@ async function settleSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: 
   const status = await draftStatus(bearer(event), sw.draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))()).catch(() => "unknown");
   if (issued(status)) {
     await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, sw.n));
+    await keepNotes(me, taf, sw.n, deps);
   } else if (dropped(status)) {
     await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id));
   } else {
@@ -1020,6 +1102,7 @@ async function cancelSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: 
   if (!sw) return { cancelled: false };
   if (sw.draft && issued(await draftStatus(bearer(event), sw.draft, deps.fetch, deps.kiffBase))) {
     await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, sw.n));
+    await keepNotes(me, taf, sw.n, deps);
     return { cancelled: false, live: sw.n };
   }
   return { cancelled: await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id)) };
@@ -1043,7 +1126,8 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
     recentCalls(token, taf.kiffAgent, deps.fetch, deps.kiffBase),
   ]);
   const card = summary(byHolder(kiff.mandates, kiff.held).cards.get(taf.kiffAgent) ?? []);
-  const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent }, card, calls, text);
+  const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
+    heldCards(kiff.mandates, taf.kiffAgent));
   await claimChatSlot(me, setup, deps);
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input));
   return { setup: setup.id, session: run.session, new_session: true };
