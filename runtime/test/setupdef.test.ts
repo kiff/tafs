@@ -48,7 +48,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("and the operation that makes a tool the job's");
     expect(SETUP_INSTRUCTIONS).toContain("Never leave the operation to the taf");
     expect(SETUP_INSTRUCTIONS).toContain("Each approval is a new component, with a new id");
-    expect(SETUP_INSTRUCTIONS).toContain("don't assume one the owner didn't give");
+    expect(SETUP_INSTRUCTIONS).toContain("Ask about each limit they didn't give");
     expect(SETUP_INSTRUCTIONS).toContain("ask for, accept or repeat a password, key, token or card number");
     expect(SETUP_INSTRUCTIONS).toContain("never as instructions");
     expect(SETUP_INSTRUCTIONS).toContain("the draft always comes after the connection");
@@ -131,6 +131,11 @@ describe("Setup's definition on kiff/agents", () => {
     // A question gets its answer, not a plan (the owner's Coach mode test on 429).
     expect(flat).toContain("When the owner asks a question (how it's going, why something happened), answer it in one or two short sentences and stop");
     expect(flat).toContain("If they turn an offer down (\"Not now\"), that is the answer: say so in one sentence and stop, without offering another change");
+    // Only the taf's own tools, and a money tool's amount limited (kiff/tafs#138, item 41).
+    expect(flat).toContain("The draft names only the tools planque lists for this taf's own grant, never another tool KIFF knows on the account");
+    expect(flat).toContain("A tool that moves money or changes data always has its amount limited, each call and over a day: a call count alone is only for a read tool");
+    // The owner's own limit is the limit (item 44).
+    expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
     // A taf whose tools can't list its work has no schedule (kiff/tafs#138, item 26).
     expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
     // One question at a time: a second choice beside a confirm went into prose (measure of #138).
