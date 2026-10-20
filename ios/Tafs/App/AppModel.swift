@@ -1220,9 +1220,8 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Tries version n: a run whose writes KIFF decides and none is sent (its reads go
-    /// through, under the live Cards). It is followed
-    /// here until its run stops, so the page shows each decision as it comes.
+    /// Tries version n: a run whose calls KIFF decides and none is sent, reads included. It
+    /// is followed here until its run stops, so the page shows each decision as it comes.
     func tryVersion(_ n: Int, of tafID: UUID, input: String = "") async {
         guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
         // One trial at a time on a taf's page.

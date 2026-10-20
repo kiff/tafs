@@ -271,7 +271,7 @@ struct VersionsScreen: View {
 }
 
 /// The taf's versions, like app builds (kiff/tafs#107): newest first, the live one marked.
-/// Try it runs a version with KIFF deciding each write and no write sent; Use this version
+/// Try it runs a version with KIFF deciding each call and none sent; Use this version
 /// makes it live, forward or back, with one Face ID.
 struct VersionsPanel: View {
     @EnvironmentObject private var model: AppModel
@@ -368,8 +368,8 @@ struct VersionsPanel: View {
     }
 }
 
-/// A trial as it goes: each write the version made, with what KIFF decided. No write was sent;
-/// its reads went through as usual, under the live Cards.
+/// A trial as it goes: each call the version made, with what KIFF decided. No call was sent,
+/// reads included (kiff-cloud#1285): a read had no data, and the version went on without it.
 struct TrialView: View {
     let trial: AppModel.VersionTrial
 
@@ -405,7 +405,7 @@ struct TrialView: View {
             } else {
                 ProgressView().tint(Theme.amber)
             }
-            Text("No write was sent: KIFF decided each one and stopped there.")
+            Text("No call was sent, reads included: KIFF decided each one and stopped there.")
                 .font(.system(size: 12)).foregroundColor(Theme.soft)
         }
     }

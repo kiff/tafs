@@ -617,7 +617,7 @@ final class TafsCloud {
         var finished: Bool { ["COMPLETED", "ERROR", "CANCELLED"].contains(status) }
     }
 
-    /// One write a trial made: what KIFF would decide. It was not sent.
+    /// One call a trial made, a read or a write: what KIFF would decide. It was not sent.
     struct TrialWrite: Decodable, Equatable {
         let tool: String
         let title: String?
