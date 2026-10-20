@@ -255,7 +255,11 @@ final class VersionsTests: XCTestCase {
         XCTAssertEqual(shown?.id, "drf_restore1", "the sheet reads the draft the switch waits for")
         let done = await model.useVersion(v1, of: id, shownDraft: shown?.version)
         XCTAssertTrue(done, model.versionErrors[id] ?? "")
-        XCTAssertEqual(signer.signed, ["tafs.cards.v1|t_01|drf_restore1|v9"])
+        // One Face ID signs exactly the restore draft shown; its confirmation then signs
+        // KIFF's request (signConfirmed, no second Face ID): the signer records both.
+        XCTAssertEqual(signer.signed.count, 2, "\(signer.signed)")
+        XCTAssertEqual(signer.signed.first, "tafs.cards.v1|t_01|drf_restore1|v9")
+        XCTAssertTrue(signer.signed.last?.hasPrefix("kiff.request.v1\nt_01\nPOST\n/v1/me/agent-drafts/drf_restore1/confirm\n") ?? false, "\(signer.signed)")
         XCTAssertEqual(sent("POST", "/v1/me/agent-drafts/drf_restore1/confirm").count, 1)
     }
 
