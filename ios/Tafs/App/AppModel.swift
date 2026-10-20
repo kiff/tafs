@@ -239,7 +239,7 @@ final class AppModel: ObservableObject {
         kiff.token = token
         cloud.token = token
         startAttempt = nil
-        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
+        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -267,7 +267,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
-        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]
         holderIDs = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
@@ -1174,6 +1174,129 @@ final class AppModel: ObservableObject {
         return notes.enumerated().map { i, n in
             TafsCloud.Note(id: "sample-\(taf.id.uuidString)-\(i)", path: n.0, content: n.1, updatedAt: now.addingTimeInterval(-n.2))
         }
+    }
+
+    // MARK: Versions (kiff/tafs#107)
+
+    /// Each taf's versions, oldest first, as tafs cloud keeps them: like app builds, any one
+    /// can be live.
+    @Published private(set) var versions: [UUID: [TafsCloud.Version]] = [:]
+    @Published var versionErrors: [UUID: String] = [:]
+
+    /// A trial the owner started on a taf's page: which version, and the trial so far.
+    struct VersionTrial: Equatable {
+        let version: Int
+        var trial: TafsCloud.Trial
+    }
+
+    /// The latest trial on each taf's page, followed until its run stops.
+    @Published private(set) var trials: [UUID: VersionTrial] = [:]
+    /// The version being made live on a taf, while the switch runs.
+    @Published private(set) var switchingVersion: [UUID: Int] = [:]
+    /// How often a trial is read again while it runs.
+    var trialPollInterval: UInt64 = 2_000_000_000
+
+    /// Reloads a taf's versions from tafs cloud.
+    func loadVersions(_ tafID: UUID) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        let result: Result<[TafsCloud.Version], Error>
+        do { result = .success(try await cloud.versions(c.id)) } catch { result = .failure(error) }
+        guard gen == accountGeneration, mode == .kiff else { return }
+        switch result {
+        case .success(let list): versions[tafID] = list; versionErrors[tafID] = nil
+        case .failure(let error): versionErrors[tafID] = "Its versions couldn't be loaded: \(error.localizedDescription)"
+        }
+    }
+
+    /// Tries version n: a run whose writes KIFF decides and nothing is sent. It is followed
+    /// here until its run stops, so the page shows each decision as it comes.
+    func tryVersion(_ n: Int, of tafID: UUID, input: String = "") async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
+        // One trial at a time on a taf's page.
+        if let running = trials[tafID], !running.trial.run.finished { return }
+        let gen = accountGeneration
+        versionErrors[tafID] = nil
+        do {
+            let run = try await cloud.startTrial(c.id, version: n, input: input)
+            guard gen == accountGeneration else { return }
+            trials[tafID] = VersionTrial(version: n, trial: TafsCloud.Trial(run: run, writes: []))
+            // A trial is a run: minutes at most. Followed for up to ten.
+            var reads = 0
+            while reads < 300, trials[tafID]?.trial.run.finished == false {
+                reads += 1
+                try await Task.sleep(nanoseconds: trialPollInterval)
+                let now = try await cloud.trial(c.id, run: run.id)
+                guard gen == accountGeneration, trials[tafID]?.trial.run.id == run.id else { return }
+                trials[tafID]?.trial = now
+            }
+        } catch is CancellationError {
+            return
+        } catch {
+            guard gen == accountGeneration else { return }
+            versionErrors[tafID] = "The trial didn't run: \(error.localizedDescription)"
+        }
+    }
+
+    /// Makes a version live, forward or back. One Face ID does it: when the version brings
+    /// a Card revision, it confirms that draft in KIFF, as connecting does; otherwise it
+    /// approves the switch itself. tafs cloud switches only once KIFF has the revision, so
+    /// the version's tools and limits go live together.
+    @discardableResult
+    func useVersion(_ version: TafsCloud.Version, of tafID: UUID) async -> Bool {
+        guard mode == .kiff, let tenant = kiffTenant, let c = cloudTaf(for: tafID), let taf = taf(tafID) else { return false }
+        guard !version.live, switchingVersion[tafID] == nil else { return false }
+        switchingVersion[tafID] = version.n
+        defer { switchingVersion[tafID] = nil }
+        versionErrors[tafID] = nil
+        let gen = accountGeneration
+        let signer = self.signer
+        kiff.tenant = tenant
+        defer { kiff.setupSigner = nil }
+
+        var draft: KIFFClient.AgentDraft?
+        if let id = version.draft {
+            guard sessionHasKey else {
+                versionErrors[tafID] = "Start from Connected tools on this iPhone first."
+                return false
+            }
+            do { draft = try await kiff.draft(id: id) } catch {
+                guard gen == accountGeneration else { return false }
+                versionErrors[tafID] = "Couldn't read this version's Card: \(error.localizedDescription)"
+                return false
+            }
+        }
+        guard gen == accountGeneration else { return false }
+        if let draft, !draft.confirmed {
+            do {
+                _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
+                                          reason: "Use version \(version.n) of \(taf.name), with its Card")
+            } catch { return false }
+            guard gen == accountGeneration else { return false }
+            kiff.setupSigner = { try signer.signConfirmed($0) }
+            do {
+                _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
+            } catch {
+                guard gen == accountGeneration else { return false }
+                versionErrors[tafID] = "KIFF didn't confirm this version's Card: \(error.localizedDescription)"
+                return false
+            }
+        } else {
+            do {
+                _ = try await signer.sign(Data("tafs.version.v1|\(tenant)|\(c.id)|\(version.n)".utf8),
+                                          reason: "Use version \(version.n) of \(taf.name)")
+            } catch { return false }
+        }
+        guard gen == accountGeneration else { return false }
+        do {
+            try await cloud.makeLive(c.id, version: version.n)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            versionErrors[tafID] = "Version \(version.n) isn't live: \(error.localizedDescription)"
+            return false
+        }
+        await loadVersions(tafID)
+        return gen == accountGeneration
     }
 
     // MARK: Chat

@@ -171,6 +171,9 @@ struct TafDetailView: View {
             }
         }
         ConnectionsPanel(tafID: taf.id)
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
+            VersionsPanel(tafID: taf.id)
+        }
         if taf.state != .revoked {
             HStack(spacing: 8) {
                 if model.mode == .sample {
@@ -243,6 +246,134 @@ struct ConnectionsPanel: View {
             } message: {
                 Text("The sign-in at the vendor is revoked and its tools are removed from KIFF. The taf can't use them until you connect again.")
             }
+        }
+    }
+}
+
+/// The taf's versions, like app builds (kiff/tafs#107): newest first, the live one marked.
+/// Try it runs a version with KIFF deciding each write and nothing sent; Use this version
+/// makes it live, forward or back, with one Face ID.
+struct VersionsPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+
+    var body: some View {
+        Panel {
+            Eyebrow(text: "Versions")
+            if let list = model.versions[tafID] {
+                if list.isEmpty {
+                    Text("One version so far. When you improve it, each change is kept here.")
+                        .font(.system(size: 14)).foregroundColor(Theme.soft)
+                }
+                ForEach(list.reversed()) { row($0) }
+            } else if model.versionErrors[tafID] == nil {
+                ProgressView().tint(Theme.amber)
+            }
+            if let trial = model.trials[tafID] { TrialView(trial: trial) }
+            if let error = model.versionErrors[tafID] {
+                Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+            }
+        }
+        .task(id: tafID) { await model.loadVersions(tafID) }
+    }
+
+    private func row(_ v: TafsCloud.Version) -> some View {
+        let trying = model.trials[tafID].map { !$0.trial.run.finished } ?? false
+        let switching = model.switchingVersion[tafID]
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text("Version \(v.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                if v.live {
+                    Text("Live").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Theme.ok).clipShape(Capsule())
+                }
+                Spacer(minLength: 0)
+            }
+            if let note = v.note, !note.isEmpty {
+                Text(note).font(.system(size: 14)).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            }
+            Text("\(v.by == "setup" ? "By Setup" : "By you") · \(v.created.formatted(date: .abbreviated, time: .shortened))\(v.draft == nil ? "" : " · brings a new Card")")
+                .font(.system(size: 12)).foregroundColor(Theme.dim)
+            HStack(spacing: 8) {
+                Button("Try it") { Task { await model.tryVersion(v.n, of: tafID) } }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(trying)
+                if !v.live {
+                    Button(switching == v.n ? "Switching…" : "Use this version") {
+                        Task { await model.useVersion(v, of: tafID) }
+                    }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(switching != nil)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// A trial as it goes: each write the version made, with what KIFF decided. Nothing was sent.
+struct TrialView: View {
+    let trial: AppModel.VersionTrial
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+            Text(trial.trial.run.finished ? "Trial of version \(trial.version)" : "Trying version \(trial.version)…")
+                .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+            ForEach(Array(trial.trial.writes.enumerated()), id: \.offset) { _, write in
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: Self.symbol(write.decision)).foregroundColor(Self.color(write.decision))
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(write.title ?? write.tool).font(.system(size: 14)).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(Self.words(write.decision) + (write.reason.map { ": \($0)" } ?? ""))
+                            .font(.system(size: 12)).foregroundColor(Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .accessibilityElement(children: .combine)
+            }
+            if trial.trial.run.finished {
+                if trial.trial.writes.isEmpty {
+                    Text("It made no writes.").font(.system(size: 13)).foregroundColor(Theme.dim)
+                }
+                if let output = trial.trial.run.output, !output.isEmpty {
+                    MarkdownText(output, size: 14).foregroundColor(Theme.ink)
+                }
+                if let error = trial.trial.run.error, !error.isEmpty {
+                    Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+                }
+            } else {
+                ProgressView().tint(Theme.amber)
+            }
+            Text("Nothing was sent: KIFF decided each write and stopped there.")
+                .font(.system(size: 12)).foregroundColor(Theme.soft)
+        }
+    }
+
+    static func words(_ decision: String) -> String {
+        switch decision {
+        case "allowed": return "KIFF would allow it"
+        case "held": return "KIFF would hold it for you"
+        default: return "KIFF would refuse it"
+        }
+    }
+
+    static func symbol(_ decision: String) -> String {
+        switch decision {
+        case "allowed": return "checkmark.circle.fill"
+        case "held": return "pause.circle.fill"
+        default: return "xmark.octagon.fill"
+        }
+    }
+
+    static func color(_ decision: String) -> Color {
+        switch decision {
+        case "allowed": return Theme.ok
+        case "held": return Theme.amber
+        default: return Theme.no
         }
     }
 }
