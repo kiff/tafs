@@ -103,7 +103,7 @@ describe("Setup's definition on kiff/agents", () => {
     // Face ID is named only to say not to name it.
     expect(SETUP_INSTRUCTIONS.match(/Face ID/g)?.length).toBe(1);
     expect(flat).not.toContain("approves with Face ID");
-    expect(flat).toContain("Don't name how the owner approves (Face ID, Touch ID or a passcode), where a card is on the screen (above, below) or a button's words");
+    expect(flat).toContain("Don't name how the owner approves (Face ID, Touch ID or a passcode), where a card, the plan or anything else is on the screen (above, below, beside, in the panel) or a button's words");
     expect(flat).toContain("where the work comes from (for refunds: where customers ask for them)");
     expect(flat).toContain("A taf needs a way to find its work, not only a way to act");
     // The batch measurement: asked for Gmail's MCP server address and looped.
@@ -128,6 +128,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).not.toContain("A taf can't move to a new version yet");
     // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
     expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
+    // A question gets its answer, not a plan (the owner's Coach mode test on 429).
+    expect(flat).toContain("When the owner asks a question (how it's going, why something happened), answer it in one or two short sentences and stop");
+    expect(flat).toContain("If they turn an offer down (\"Not now\"), that is the answer: say so in one sentence and stop, without offering another change");
     // One question at a time: a second choice beside a confirm went into prose (measure of #138).
     expect(flat).toContain("while a confirm asks something, the message asks nothing else, and a choice among a few options");
     // An operation's fields come from the vendor, never Setup's guess (kiff/tafs#138, item 1).
