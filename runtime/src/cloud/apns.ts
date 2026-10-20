@@ -27,6 +27,8 @@ export interface APNsConfig {
   teamID: string;
   /** The app's bundle id. */
   topic: string;
+  /** Apple's host for each environment; a test points both at its own server. */
+  host?: string;
 }
 
 /** Sends through Apple's HTTP/2 push API, one connection per environment, kept while it lives. */
@@ -34,6 +36,8 @@ export function apnsSender(config: APNsConfig): Sender {
   let key: Promise<KeyObject> | undefined;
   let token: { value: string; at: number } | undefined;
   const sessions: Partial<Record<Device["environment"], http2.ClientHttp2Session>> = {};
+  /** Pushes waiting on each connection's answer. */
+  const inFlight = new WeakMap<http2.ClientHttp2Session, number>();
 
   const bearer = async () => {
     key ??= config.keyPEM().then((pem) => createPrivateKey(pem));
@@ -48,7 +52,7 @@ export function apnsSender(config: APNsConfig): Sender {
   const session = (env: Device["environment"]) => {
     const open = sessions[env];
     if (open && !open.closed && !open.destroyed) return open;
-    const s = http2.connect(HOSTS[env]);
+    const s = http2.connect(config.host ?? HOSTS[env]);
     s.on("error", () => { if (sessions[env] === s) delete sessions[env]; });
     s.on("close", () => { if (sessions[env] === s) delete sessions[env]; });
     s.unref();
@@ -75,8 +79,14 @@ export function apnsSender(config: APNsConfig): Sender {
         "content-type": "application/json",
       };
       if (n.collapseID) headers["apns-collapse-id"] = n.collapseID;
+      // The connection is unref'd so an idle one never holds the process. While
+      // a push is in flight it must: in a Lambda nothing else may be pending,
+      // and Node would exit before Apple answers (kiff/tafs#138, item 32).
+      const s = session(device.environment);
+      inFlight.set(s, (inFlight.get(s) ?? 0) + 1);
+      s.ref();
       try {
-        const { status, reason } = await request(session(device.environment), headers, JSON.stringify(n.payload));
+        const { status, reason } = await request(s, headers, JSON.stringify(n.payload));
         if (status === 200) return "sent";
         if (status === 410 || GONE.has(reason)) return "gone";
         console.error(`APNs answered ${status} ${reason}`);
@@ -84,6 +94,10 @@ export function apnsSender(config: APNsConfig): Sender {
       } catch (err) {
         console.error(`APNs: ${(err as Error).message}`);
         return "failed";
+      } finally {
+        const left = (inFlight.get(s) ?? 1) - 1;
+        inFlight.set(s, left);
+        if (left === 0 && !s.destroyed) s.unref();
       }
     },
   };
