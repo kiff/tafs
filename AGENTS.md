@@ -23,3 +23,28 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs -destination 'platform=iOS 
 ```
 
 New behaviour gets tests. Feature branches only; never push to `main`.
+
+## Public contribution and review rules
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for scope and checks,
+[SECURITY.md](SECURITY.md) for private vulnerability reporting, and
+[docs/maintaining.md](docs/maintaining.md) for release checks.
+
+- Follow the user's authorized scope. Audit work does not authorize fixes,
+  deployment, merging, or changes to customer accounts. An explicit user
+  instruction takes precedence over general workflow guidance here.
+- Before posting an issue, comment, PR, or review, verify the authorized
+  GitHub identity. Do not impersonate another maintainer. An author cannot
+  approve their own PR; request an independent review of the final revision.
+- Search existing work before opening an issue or changing shared code. Use
+  an isolated branch or worktree and preserve other contributors' edits.
+- Public commits, PRs, issues, fixtures, screenshots, and Actions logs must
+  contain no live credentials, customer data, private infrastructure details,
+  or private assistant-session links. Use synthetic evidence. Report new
+  vulnerabilities through the private channel, not a public exploit report.
+- State what checks actually ran, their results, and any limitations. Do not
+  substitute prompt wording tests for measured agent behavior or a happy-path
+  test for approval, failure, retry, concurrency, and account-isolation checks.
+- Update Unreleased in [CHANGELOG.md](CHANGELOG.md) for user-visible or
+  compatibility changes. Do not claim a deployment, release, or security fix
+  is complete solely because code merged.

@@ -1,0 +1,26 @@
+name: Bug report
+description: Report a reproducible, non-sensitive problem.
+title: "bug: "
+body:
+  - type: markdown
+    attributes:
+      value: "For vulnerabilities or sensitive details, use SECURITY.md and report privately. Use synthetic data here."
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Include the affected release/commit and relevant environment.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Minimal steps, expected behavior, and observed behavior. Redact logs and screenshots.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact and related work
+      description: Who is affected, any workaround, and related issues or service dependencies.

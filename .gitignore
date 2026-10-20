@@ -8,3 +8,11 @@ node_modules/
 runtime/dist/
 runtime/dist-lambda/
 runtime/lambda.zip
+
+# Local credentials, review scratch files, and build output
+.env
+.env.local
+.env.*.local
+.tmp-*
+*.xcarchive/
+*.ipa

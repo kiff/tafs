@@ -197,3 +197,15 @@ later. App Store builds come from CI.
 [FSL-1.1-ALv2](LICENSE.md), the Functional Source License. You may use, change
 and share tafs for anything except a product that competes with it. Each version
 becomes Apache 2.0 two years after its release.
+
+## Contributing and project policies
+
+This public repository is source-available under [FSL-1.1-ALv2](LICENSE.md).
+The license contains its future Apache-2.0 grant.
+
+- [Contributing and checks](CONTRIBUTING.md)
+- [Report a security issue privately](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+- [Community conduct](CODE_OF_CONDUCT.md)
+- [Instructions for coding agents](AGENTS.md)
+- [Maintainer and release checklist](docs/maintaining.md)

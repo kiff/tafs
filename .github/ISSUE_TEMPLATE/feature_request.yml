@@ -1,0 +1,23 @@
+name: Feature proposal
+description: Explain a user need and discuss a focused change.
+title: "proposal: "
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: User need
+      description: Who needs this, what task is blocked, and what evidence supports it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the desired outcome, alternatives, and existing related work.
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Boundaries and validation
+      description: Note service dependencies, security/privacy implications, and how the result could be verified.
