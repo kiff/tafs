@@ -250,6 +250,18 @@ final class VersionsTests: XCTestCase {
         XCTAssertFalse(fresh.isUnchanged, "a new Card isn't unchanged")
     }
 
+    /// A connection none of whose tools is on the taf's Card any more is left over
+    /// (kiff/tafs#138): the owner's broken read_payment after version 3 moved its Card to
+    /// read_payment_by_id. One with a tool still on the Card isn't, and nothing is said
+    /// before the Card is read.
+    func testAConnectionTheCardNoLongerUsesIsLeftOver() {
+        let card = ["create_refund", "read_payment_by_id", "list_stripe_accounts"]
+        XCTAssertTrue(AppModel.leftOver(tools: ["read_payment"], onCard: card))
+        XCTAssertFalse(AppModel.leftOver(tools: ["read_payment_by_id", "list_stripe_accounts"], onCard: card))
+        XCTAssertFalse(AppModel.leftOver(tools: ["create_refund", "read_payment"], onCard: card), "one tool still on the Card")
+        XCTAssertFalse(AppModel.leftOver(tools: ["read_payment"], onCard: []), "the Card not read yet")
+    }
+
     /// Going back to a version that didn't hold a Card (kiff/tafs#107): KIFF's restore draft
     /// lists it as retired, with its terms now, and the sheet reads them as it does a Card.
     func testARestoreDraftReadsTheCardsItRetires() throws {

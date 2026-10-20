@@ -222,6 +222,12 @@ struct ConnectionsPanel: View {
                             if grant.connected {
                                 Text(grant.request.tools.map(\.action).joined(separator: ", "))
                                     .font(Theme.mono(12)).foregroundColor(Theme.soft)
+                                if model.leftOver(grant, of: tafID) {
+                                    // Left over after a version moved its Card (kiff/tafs#138).
+                                    Text("Not on its Card any more: nothing of the taf uses it. You can disconnect it.")
+                                        .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.amber)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
                             } else {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
                                 Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")

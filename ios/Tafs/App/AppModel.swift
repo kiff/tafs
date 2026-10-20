@@ -1981,6 +1981,20 @@ final class AppModel: ObservableObject {
         return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn) }
     }
 
+    /// A connection none of whose tools is on the taf's Card any more (kiff/tafs#138): left
+    /// over after a version moved its Card to a fixed tool. Nothing of the taf uses it; the
+    /// owner can disconnect it. Unknown while the Card isn't read, so never said then.
+    func leftOver(_ grant: PlanqueClient.Grant, of tafID: UUID) -> Bool {
+        guard grant.connected, let rules = taf(tafID)?.card.rules else { return false }
+        return Self.leftOver(tools: grant.request.tools.map(\.action), onCard: rules.map(\.action))
+    }
+
+    /// Whether none of a connection's tools is among the Card's actions; never with no Card read.
+    static func leftOver(tools: [String], onCard: [String]) -> Bool {
+        guard !onCard.isEmpty else { return false }
+        return !tools.contains { onCard.contains($0) }
+    }
+
     /// Reads the grants. A read asks for no Face ID; it is signed so planque shows them only
     /// to the enrolled phone. It signs with its own signer and never touches
     /// `planque.signer`: it runs whenever the app comes back to the front, which is also
