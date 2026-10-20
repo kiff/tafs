@@ -816,15 +816,19 @@ struct SetupComponentView: View {
                     Text(why.map { "It didn't go through: \($0)" } ?? "It didn't go through.")
                         .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                 }
-                Text("The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed.")
+                Text(c.note ?? "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed.")
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                Button(state == .working ? "Opening the sign-in…" : state.isFailure ? "Try again" : "Open \(c.service ?? "the sign-in")") {
+                Button(state == .working ? "Opening the sign-in…" : state.isFailure ? "Try again" : c.yes ?? "Open \(c.service ?? "the sign-in")") {
                     Task { await model.signInAgain(c) }
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(busy || (answered && !state.isFailure))
+                // Where it goes is always the app's own words, whatever the button says.
+                Text("Opens \(c.destination)")
+                    .scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .frame(maxWidth: .infinity)
                 if !state.isFailure {
-                    Button("Not now") { Task { await model.answer(c, "not now") } }
+                    Button(c.no ?? "Not now") { Task { await model.answer(c, "not now") } }
                         .scaledFont(14).foregroundColor(Theme.dim)
                         .frame(maxWidth: .infinity)
                         .disabled(busy || answered)
@@ -844,14 +848,14 @@ struct SetupComponentView: View {
                 if sizeClass == .regular {
                     // Beside the sidebar: select it there, so the list says which taf is open.
                     Button { model.requestedTaf = tafID } label: {
-                        Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                        Text(c.yes ?? "See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 } else {
                     NavigationLink {
                         TafDetailView(tafID: tafID)
                     } label: {
-                        Text("See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                        Text(c.yes ?? "See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 }

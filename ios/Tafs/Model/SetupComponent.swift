@@ -43,6 +43,17 @@ struct SetupComponent: Decodable, Equatable {
     let service: String?
     let taf: Taf?
     let tools: [String]?
+    /// The card's own button words and note, in the owner's language, as Setup wrote
+    /// them (kiff/tafs#75, kiff/agents#112). Only a sign-in and the hand-over carry them;
+    /// an approval never does, since the owner's tap grants. The app's English is the
+    /// fallback.
+    let yes: String?
+    let no: String?
+    let note: String?
+
+    /// Where a sign-in goes, as the app shows it: from the card's service, never from
+    /// Setup's words (kiff/agents#112), so a label can't stand in for the destination.
+    var destination: String { service ?? "the vendor's page" }
 }
 
 /// A component as the thread holds it: where it first appeared, and its latest version

@@ -857,6 +857,24 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    // A sign-in and the hand-over carry Setup's own words, in the owner's language;
+    // without them the app's English stays (kiff/tafs#75).
+    func testCardsCarryTheirOwnWords() throws {
+        let signIn = try Self.component(#"{"type":"sign_in","id":"s1","grant":"g1","service":"mcp.stripe.com","yes":"Abrir Stripe","no":"Ahora no","note":"Se abre la página de Stripe."}"#)
+        XCTAssertEqual(signIn.yes, "Abrir Stripe")
+        XCTAssertEqual(signIn.no, "Ahora no")
+        XCTAssertEqual(signIn.note, "Se abre la página de Stripe.")
+        let result = try Self.component(#"{"type":"result","id":"r1","text":"Listo.","taf":{"agent":"reembolsos-x","name":"Reembolsos"},"yes":"Ver Reembolsos"}"#)
+        XCTAssertEqual(result.yes, "Ver Reembolsos")
+        // Where a sign-in goes comes from its service, whatever Setup's button says.
+        let steered = try Self.component(#"{"type":"sign_in","id":"s3","grant":"g1","service":"mcp.evil.example","yes":"Abrir Stripe"}"#)
+        XCTAssertEqual(steered.destination, "mcp.evil.example")
+        let plain = try Self.component(#"{"type":"sign_in","id":"s2","grant":"g1"}"#)
+        XCTAssertEqual(plain.destination, "the vendor's page")
+        XCTAssertNil(plain.yes)
+        XCTAssertNil(plain.note)
+    }
+
     static func component(_ json: String) throws -> SetupComponent {
         try JSONDecoder().decode(SetupComponent.self, from: Data(json.utf8))
     }
