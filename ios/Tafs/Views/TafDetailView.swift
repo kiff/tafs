@@ -11,7 +11,11 @@ struct TafDetailView: View {
     @State private var removal: String?
     /// Set on the tap itself, before the request starts, so a second tap can't send one.
     @State private var runTapped = false
+    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
+    #else
+    private let sizeClass: UserInterfaceSizeClass? = .regular
+    #endif
     @State private var width: CGFloat = 0
 
     /// A wide screen (kiff/tafs#85): beside the chat or the activity, a second column with
@@ -56,7 +60,7 @@ struct TafDetailView: View {
                 Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { width = $0 }
             })
             .screenBackground()
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineTitle()
             .confirmationDialog("Revoke \(taf.name)'s Card?", isPresented: $confirmRevoke, titleVisibility: .visible) {
                 Button("Revoke and stop", role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
@@ -266,7 +270,7 @@ struct VersionsScreen: View {
         }
         .screenBackground()
         .navigationTitle("Versions")
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineTitle()
     }
 }
 
@@ -401,7 +405,7 @@ struct VersionCardSheet: View {
     @State private var loaded = false
 
     var body: some View {
-        NavigationStack {
+        NavStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Version \(version.n)\(version.note.map { ": \($0)" } ?? "")")
@@ -425,7 +429,7 @@ struct VersionCardSheet: View {
             }
             .screenBackground()
             .navigationTitle("Its Card")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     // Not now: the switch it began is dropped, and the taf runs as it was.

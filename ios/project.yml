@@ -100,10 +100,16 @@ targets:
       - path: Tafs
         excludes:
           - App/TafsApp.swift
-          - Views
+          # The iPhone's home, sign-in and new-taf flows: the Mac has its own window, and
+          # starting a taf needs a signature, given on the iPhone.
+          - Views/HomeView.swift
+          - Views/HomeSplitView.swift
+          - Views/SignInView.swift
+          - Views/OnboardingView.swift
+          - Views/NewTafFlow.swift
+          - Views/StartTafFlow.swift
           - Services/LockScreen.swift
           - Services/PushDelegate.swift
-          - Design/MarkdownText.swift
           - Info.plist
       - path: Shared
         excludes: [HeldActivity.swift]
