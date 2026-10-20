@@ -244,7 +244,7 @@ final class AppModel: ObservableObject {
         kiff.token = token
         cloud.token = token
         startAttempt = nil
-        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]
+        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -272,7 +272,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
-        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]
         holderIDs = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
@@ -1196,8 +1196,11 @@ final class AppModel: ObservableObject {
 
     /// The latest trial on each taf's page, followed until its run stops.
     @Published private(set) var trials: [UUID: VersionTrial] = [:]
-    /// The version being made live on a taf, while the switch runs.
+    /// The version being made live on a taf, while this phone works on it.
     @Published private(set) var switchingVersion: [UUID: Int] = [:]
+    /// A switch under way on each taf, as tafs cloud keeps it: one that didn't finish shows
+    /// here, to finish or cancel. Nothing of the taf runs meanwhile.
+    @Published private(set) var switches: [UUID: TafsCloud.Switching] = [:]
     /// How often a trial is read again while it runs.
     var trialPollInterval: UInt64 = 2_000_000_000
 
@@ -1205,11 +1208,14 @@ final class AppModel: ObservableObject {
     func loadVersions(_ tafID: UUID) async {
         guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
         let gen = accountGeneration
-        let result: Result<[TafsCloud.Version], Error>
-        do { result = .success(try await cloud.versions(c.id)) } catch { result = .failure(error) }
+        let result: Result<TafsCloud.VersionState, Error>
+        do { result = .success(try await cloud.versionState(c.id)) } catch { result = .failure(error) }
         guard gen == accountGeneration, mode == .kiff else { return }
         switch result {
-        case .success(let list): versions[tafID] = list; versionErrors[tafID] = nil
+        case .success(let state):
+            versions[tafID] = state.versions
+            switches[tafID] = state.switching
+            versionErrors[tafID] = nil
         case .failure(let error): versionErrors[tafID] = "Its versions couldn't be loaded: \(error.localizedDescription)"
         }
     }
@@ -1245,9 +1251,11 @@ final class AppModel: ObservableObject {
     }
 
     /// Makes a version live, forward or back, with one Face ID. When the version brings a
-    /// Card revision, that Face ID signs the draft's confirmation, which KIFF verifies, as
-    /// connecting does; tafs cloud switches only once KIFF has the revision, so the
-    /// version's tools and limits go live together. Otherwise it only asks for Face ID:
+    /// Card revision, the switch begins first, so nothing of the taf runs from then until
+    /// it ends; then that Face ID signs the draft's confirmation, which KIFF verifies, as
+    /// connecting does; then the version goes live. A switch that stops half way stays
+    /// begun (the taf doesn't run), and tafs cloud ends it once KIFF has the Card, or this
+    /// phone finishes or cancels it. Otherwise it only asks for Face ID:
     /// nobody checks that signature, so it is the owner's presence, never a record. Such a
     /// switch changes no authority; KIFF decides every call under the live Cards.
     @discardableResult
@@ -1268,6 +1276,13 @@ final class AppModel: ObservableObject {
                 versionErrors[tafID] = "Start from Connected tools on this iPhone first."
                 return false
             }
+            // Begun before the Card changes: from here nothing of the taf runs.
+            do { switches[tafID] = try await cloud.beginSwitch(c.id, version: version.n) } catch {
+                guard gen == accountGeneration else { return false }
+                versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
+                return false
+            }
+            guard gen == accountGeneration else { return false }
             do { draft = try await kiff.draft(id: id) } catch {
                 guard gen == accountGeneration else { return false }
                 versionErrors[tafID] = "Couldn't read this version's Card: \(error.localizedDescription)"
@@ -1280,14 +1295,19 @@ final class AppModel: ObservableObject {
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
                                           reason: "Use version \(version.n) of \(taf.name), with its Card")
-            } catch { return false }
+            } catch {
+                // The owner backed out before the Card changed: the taf runs again as it was.
+                guard gen == accountGeneration else { return false }
+                await cancelSwitch(tafID)
+                return false
+            }
             guard gen == accountGeneration else { return false }
             kiff.setupSigner = { try signer.signConfirmed($0) }
             do {
                 _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
             } catch {
                 guard gen == accountGeneration else { return false }
-                versionErrors[tafID] = "KIFF didn't confirm this version's Card: \(error.localizedDescription)"
+                versionErrors[tafID] = "Switching to version \(version.n) didn't finish: KIFF didn't confirm its Card (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
                 return false
             }
         } else {
@@ -1301,11 +1321,26 @@ final class AppModel: ObservableObject {
             try await cloud.makeLive(c.id, version: version.n)
         } catch {
             guard gen == accountGeneration else { return false }
-            versionErrors[tafID] = "Version \(version.n) isn't live: \(error.localizedDescription)"
+            versionErrors[tafID] = version.draft == nil
+                ? "Version \(version.n) isn't live: \(error.localizedDescription)"
+                : "Switching to version \(version.n) didn't finish (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
             return false
         }
         await loadVersions(tafID)
         return gen == accountGeneration
+    }
+
+    /// Drops a taf's switch under way, while its Card isn't confirmed: the live version
+    /// stays and the taf runs again. Once its Card is confirmed, tafs cloud ends the switch
+    /// instead. Either way the versions are read again.
+    func cancelSwitch(_ tafID: UUID) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        do { try await cloud.cancelSwitch(c.id) } catch {
+            guard gen == accountGeneration else { return }
+            versionErrors[tafID] = "The switch wasn't cancelled: \(error.localizedDescription)"
+        }
+        await loadVersions(tafID)
     }
 
     // MARK: Chat

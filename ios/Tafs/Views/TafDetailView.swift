@@ -280,6 +280,7 @@ struct VersionsPanel: View {
     var body: some View {
         Panel {
             Eyebrow(text: "Versions")
+            if let sw = model.switches[tafID] { switchUnderWay(sw) }
             if let list = model.versions[tafID] {
                 if list.isEmpty {
                     Text("One version so far. When you improve it, each change is kept here.")
@@ -323,8 +324,31 @@ struct VersionsPanel: View {
                         Task { await model.useVersion(v, of: tafID) }
                     }
                     .buttonStyle(OutlineButtonStyle())
-                    .disabled(switching != nil)
+                    // One switch at a time: another waits for the one under way.
+                    .disabled(switching != nil || model.switches[tafID].map { $0.n != v.n } ?? false)
                 }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    /// A switch that didn't finish: the taf doesn't run until it's finished or cancelled.
+    private func switchUnderWay(_ sw: TafsCloud.Switching) -> some View {
+        let version = model.versions[tafID]?.first { $0.n == sw.n }
+        let working = model.switchingVersion[tafID] != nil
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("Switching to version \(sw.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.amber)
+            Text("Your taf doesn't run until the switch finishes or you cancel it.")
+                .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                if let version {
+                    Button(working ? "Switching…" : "Finish") { Task { await model.useVersion(version, of: tafID) } }
+                        .buttonStyle(OutlineButtonStyle())
+                        .disabled(working)
+                }
+                Button("Cancel") { Task { await model.cancelSwitch(tafID) } }
+                    .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                    .disabled(working)
             }
         }
         .padding(.vertical, 4)
