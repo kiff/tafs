@@ -845,6 +845,61 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(1);
   });
 
+  it("begins a switch, and the next read of the versions ends it once KIFF has the Card", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    const begun = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect(begun).toMatchObject({ status: 200, body: { switching: { n: 2, draft: "drf_v2" } } });
+    // Not confirmed yet: it waits, and nothing switches.
+    const waiting = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
+    expect(waiting.body.switching).toMatchObject({ n: 2 });
+    expect(w.agents.calls).not.toContain(`switchVersion ${RAE} 2`);
+    // The phone stopped after its Face ID: the next read ends the switch.
+    w.account.drafts = { drf_v2: "confirmed" };
+    const ended = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
+    expect(ended.body.switching).toBeUndefined();
+    expect((ended.body.versions as Array<{ n: number; live: boolean }>).find((v) => v.live)?.n).toBe(2);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).status).toBe(409);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/1/switch`, { token: "viewer" })).status).toBe(403);
+  });
+
+  it("begins no switch while a run of the taf is going or waiting", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    for (const status of ["RUNNING", "PAUSED"] as const) {
+      w.agents.runs.unshift({ tenant: "t_acme", id: `run_${status}`, agent: RAE, session: "s", trigger: "owner", status, cost_micro_usd: 0, turns: 1, created: "2026-10-20T09:00:00Z", updated: "2026-10-20T09:00:00Z" });
+      const r = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+      expect(r.status).toBe(409);
+      expect(String(r.body.error)).toContain("answer it, stop it or let it finish");
+      w.agents.runs.shift();
+    }
+    expect(w.agents.switching.size).toBe(0);
+  });
+
+  it("drops a switch whose draft KIFF discarded, and the live version stays", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    w.account.drafts = { drf_v2: "discarded" };
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
+    expect(r.body.switching).toBeUndefined();
+    expect((r.body.versions as Array<{ n: number; live: boolean }>).find((v) => v.live)?.n).toBe(1);
+    expect(w.agents.calls).toContain(`cancelSwitch ${RAE}`);
+  });
+
+  it("cancels a switch before its Card is confirmed, and ends one after", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/switching`, { token: "ana" })).body).toEqual({ cancelled: true });
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/switching`, { token: "ana" })).body).toEqual({ cancelled: false });
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    w.account.drafts = { drf_v2: "confirmed" };
+    // The Card is the owner's already: the switch can only end.
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/switching`, { token: "ana" })).body).toEqual({ cancelled: false, live: 2 });
+    expect(w.agents.switching.size).toBe(0);
+  });
+
   it("takes a claimed draft as confirmed: its Cards are issued all the same", async () => {
     const w = twoVersions();
     w.account.drafts = { drf_v2: "claimed" };

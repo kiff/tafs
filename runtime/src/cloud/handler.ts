@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
-import { type AgentDefinition, type Agents, AgentsError, type Run, type RunStreamEvent, type Schedule, type Session } from "./agents.js";
-import { claimDraft, draftConfirmed, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
+import { type AgentDefinition, type Agents, AgentsError, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
+import { claimDraft, draftConfirmed, draftStatus, dropped, type Fetch, issued, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
@@ -30,7 +30,9 @@ import { improveContext, ownerWords, recentCalls } from "./improve.js";
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
- *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked (kiff/tafs#107)
+ *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
+ *   POST /v1/tafs/{id}/versions/{n}/switch  begin the switch to version n: nothing of the taf runs until it ends
+ *   DELETE /v1/tafs/{id}/switching      drop a switch whose Card isn't confirmed yet
  *   POST /v1/tafs/{id}/versions/{n}/trial  {input?}: a trial of version n, its writes decided by KIFF, nothing sent
  *   GET  /v1/tafs/{id}/trials/{run}     a trial so far: its run and what KIFF decided for each write
  *   POST /v1/tafs/{id}/versions/{n}/live   make version n live, once its Card revision is confirmed in KIFF
@@ -62,7 +64,7 @@ export interface HTTPResult {
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
-  "versions" | "switchVersion" | "startTrial" | "trial">;
+  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "cancelSwitch">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -379,7 +381,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     need(me, "cards.manage");
     return message(event, me, taf, deps);
   }
-  if (action === "versions" || action === "trials") return versionRoute(event, method, parts, me, taf, deps);
+  if (action === "versions" || action === "trials" || action === "switching") return versionRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && method === "POST" && action === "improve") {
     need(me, "cards.manage");
     return improve(event, me, taf, deps);
@@ -937,16 +939,25 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
 
 /**
  * A taf's versions (kiff/tafs#107), as kiff/agents keeps them: listed, tried
- * and made live. Making one live is the owner's act in two steps: they confirm
- * its Card revision in KIFF with the phone's signature (as for any draft),
- * then tafs cloud switches the definition, and only once KIFF says that
- * revision is confirmed, so tools and limits always go live together.
+ * and made live. Making one that brings a Card revision live is the owner's
+ * act in three steps, so nothing ever runs with one version's definition
+ * under another's Cards: tafs cloud begins the switch, from which point
+ * nothing of the taf runs (kiff/agents#137); the owner confirms the
+ * revision in KIFF with the phone's signature, as for any draft; then the
+ * switch ends with that version live. If the phone stops after its Face ID,
+ * the next read of the versions ends it, and a switch whose draft was
+ * discarded is dropped, the live version staying.
  */
 async function versionRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
   const [, , , action, rawN, sub] = parts;
   if (action === "versions" && parts.length === 4 && method === "GET") {
-    return { versions: await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)) };
+    const state = await settleSwitch(event, me, taf, deps);
+    return { versions: state.versions, ...(state.switching ? { switching: state.switching } : {}) };
+  }
+  if (action === "switching" && parts.length === 4 && method === "DELETE") {
+    need(me, "cards.manage");
+    return cancelSwitch(event, me, taf, deps);
   }
   if (action === "trials" && parts.length === 5 && method === "GET") {
     return agentsCall(() => deps.agents.trial(me.tenantID, taf.id, rawN ?? ""));
@@ -954,7 +965,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   const n = Number(rawN);
   if (action !== "versions" || parts.length !== 6 || method !== "POST" || !Number.isInteger(n) || n < 1) throw new HTTPError(404, "not found");
   need(me, "cards.manage");
-  const version = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).find((v) => v.n === n);
+  const version = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.n === n);
   if (!version) throw new HTTPError(404, "no such version");
   if (sub === "trial") {
     // What a trial works on: the owner's words, else what each scheduled run asks of it.
@@ -962,6 +973,10 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     const input = asked || JOBS.find((j) => j.id === taf.job)?.kickoff || "";
     if (!input || input.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters for the trial`);
     return { run: await agentsCall(() => deps.agents.startTrial(me.tenantID, taf.id, n, input)) };
+  }
+  if (sub === "switch") {
+    if (version.live) throw new HTTPError(409, "that version is live already");
+    return { switching: await agentsCall(() => deps.agents.beginSwitch(me.tenantID, taf.id, n, version.draft)) };
   }
   if (sub === "live") {
     if (version.draft && !(await draftConfirmed(bearer(event), version.draft, deps.fetch, deps.kiffBase))) {
@@ -971,6 +986,42 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     return { live: n };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * The taf's versions with a switch under way settled as far as KIFF allows:
+ * ended once its draft is confirmed, dropped once its draft never will be,
+ * and left waiting otherwise. KIFF unreachable leaves it waiting: nothing
+ * runs meanwhile, which is the safe side.
+ */
+async function settleSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<VersionState> {
+  const state = await agentsCall(() => deps.agents.versions(me.tenantID, taf.id));
+  const sw = state.switching;
+  if (!sw?.draft) return state;
+  const status = await draftStatus(bearer(event), sw.draft, deps.fetch, deps.kiffBase).catch(() => "unknown");
+  if (issued(status)) {
+    await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, sw.n));
+  } else if (dropped(status)) {
+    await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id));
+  } else {
+    return state;
+  }
+  return agentsCall(() => deps.agents.versions(me.tenantID, taf.id));
+}
+
+/**
+ * The owner drops a switch before confirming its Card: the live version
+ * stays and the taf runs again. Once the Card is confirmed the switch can
+ * only end, so it does: the version it was going to goes live.
+ */
+async function cancelSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  const { switching: sw } = await agentsCall(() => deps.agents.versions(me.tenantID, taf.id));
+  if (!sw) return { cancelled: false };
+  if (sw.draft && issued(await draftStatus(bearer(event), sw.draft, deps.fetch, deps.kiffBase))) {
+    await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, sw.n));
+    return { cancelled: false, live: sw.n };
+  }
+  return { cancelled: await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id)) };
 }
 
 /**
