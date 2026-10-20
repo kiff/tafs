@@ -107,7 +107,7 @@ final class VersionsTests: XCTestCase {
         await model.loadVersions(id)
         let v2 = try XCTUnwrap(model.versions[id]?.last)
 
-        let done = await model.useVersion(v2, of: id)
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertTrue(done, model.versionErrors[id] ?? "")
         XCTAssertEqual(signer.signed.first, "tafs.cards.v1|t_01|d_02|v7")
         let confirm = try XCTUnwrap(sent("POST", "/v1/me/agent-drafts/d_02/confirm").first)
@@ -147,10 +147,55 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
         let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
 
-        let done = await model.useVersion(v2, of: id)
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertTrue(done, model.versionErrors[id] ?? "")
         XCTAssertEqual(signer.signed, ["tafs.version.v1|t_01|depl_1|2"])
         XCTAssertTrue(sent("POST", "/v1/me/agent-drafts/d_02/confirm").isEmpty)
+    }
+
+    /// A version that brings a Card with nothing shown: nothing begins, nothing is signed.
+    func testNothingShownNothingSigned() async throws {
+        let signer = RecordingSigner()
+        let (model, id) = await kiffModel(signer: signer)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+        let done = await model.useVersion(v2, of: id)
+        XCTAssertFalse(done)
+        XCTAssertTrue(signer.signed.isEmpty)
+        XCTAssertTrue(sent("POST", "/v1/tafs/depl_1/versions/2/switch").isEmpty)
+    }
+
+    /// The Card changed between the screen and the tap (kiff/tafs#115): the new one goes on
+    /// screen, the switch is dropped, and nothing is signed or confirmed.
+    func testACardChangedSinceShownIsNotSigned() async throws {
+        let signer = RecordingSigner()
+        let (model, id) = await kiffModel(signer: signer)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v8"}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/switching"] = (200, #"{"cancelled":true}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
+        XCTAssertFalse(done)
+        XCTAssertTrue(signer.signed.isEmpty, "no Face ID over terms that weren't shown")
+        XCTAssertTrue(sent("POST", "/v1/me/agent-drafts/d_02/confirm").isEmpty)
+        XCTAssertEqual(sent("DELETE", "/v1/tafs/depl_1/switching").count, 1)
+        XCTAssertEqual(model.changedVersionCards[id]?.version, "v8")
+        XCTAssertTrue(model.versionErrors[id]?.contains("changed since it was shown") ?? false)
+    }
+
+    /// The Card a version brings reads now → after (kiff-cloud#1287).
+    func testAVersionsCardReadsNowAndAfter() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7","cards":[{"revises":"m_refund","current":{"grants":[{"action":"create_refund","per_action_max":[{"quantity":"sum(amount)","max":500,"unit":"EUR","scale":2}]}]},"grants":[{"action":"create_refund","per_action_max":[{"quantity":"sum(amount)","max":2000,"unit":"EUR","scale":2}]}]},{"grants":[{"action":"retrieve_charge"}]}]}"#)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+        let draft = await model.versionCard(v2, of: id)
+        let cards = try XCTUnwrap(draft?.cards)
+        XCTAssertEqual(cards.count, 2)
+        XCTAssertEqual(cards[0].revises, "m_refund")
+        XCTAssertEqual(cards[0].current?.lines.count, 1)
+        XCTAssertNotEqual(cards[0].current?.lines, cards[0].lines, "now and after differ")
+        XCTAssertNil(cards[1].current, "a new Card has no now")
     }
 
     /// The owner backs out at Face ID: the switch is dropped, so the taf runs again, and
@@ -163,7 +208,7 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
         let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
 
-        let done = await model.useVersion(v2, of: id)
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertFalse(done)
         XCTAssertEqual(sent("DELETE", "/v1/tafs/depl_1/switching").count, 1)
         XCTAssertTrue(sent("POST", "/v1/me/agent-drafts/d_02/confirm").isEmpty)
@@ -180,7 +225,7 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["POST /v1/me/agent-drafts/d_02/confirm"] = (502, #"{"error":"try again"}"#)
         let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
 
-        let done = await model.useVersion(v2, of: id)
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertFalse(done)
         XCTAssertEqual(model.switches[id]?.n, 2)
         XCTAssertTrue(model.versionErrors[id]?.contains("didn't finish") ?? false, model.versionErrors[id] ?? "")
@@ -195,7 +240,7 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (409, #"{"error":"a run of this agent is going or waiting on its owner: answer it, stop it or let it finish, then switch"}"#)
         let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
 
-        let done = await model.useVersion(v2, of: id)
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertFalse(done)
         XCTAssertTrue(signer.signed.isEmpty)
         XCTAssertTrue(model.versionErrors[id]?.contains("answer it, stop it or let it finish") ?? false)

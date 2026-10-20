@@ -449,6 +449,17 @@ final class KIFFClient {
         struct Aggregate: Decodable, Equatable { let quantity: String; let limit: Int64; let window: String; var unit: String?; var scale: Int? }
         let grants: [Grant]?
         let aggregates: [Aggregate]?
+        /// A revision draft's Card for one the agent holds (kiff-cloud#1287): that Card's id,
+        /// and its terms as they are now, so the owner reads now → after.
+        var revises: String?
+        var current: Terms?
+
+        /// A Card's terms alone: what `current` holds.
+        struct Terms: Decodable, Equatable {
+            let grants: [Grant]?
+            let aggregates: [Aggregate]?
+            var lines: [String] { DraftCard(grants: grants, aggregates: aggregates).lines }
+        }
 
         /// The lines the owner approves, in their words (kiff/tafs#94): "Refund a payment ·
         /// create_refund_k3f9: up to €100.00 each", "€1,000.00 in total a day", "20 calls a

@@ -244,7 +244,7 @@ final class AppModel: ObservableObject {
         kiff.token = token
         cloud.token = token
         startAttempt = nil
-        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]
+        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -272,7 +272,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
-        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]
         holderIDs = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
@@ -1257,8 +1257,31 @@ final class AppModel: ObservableObject {
     /// phone finishes or cancels it. Otherwise it only asks for Face ID:
     /// nobody checks that signature, so it is the owner's presence, never a record. Such a
     /// switch changes no authority; KIFF decides every call under the live Cards.
+    /// The Card a version brings, as the owner reads it before Face ID (kiff/tafs#107):
+    /// its draft, each revised Card with its terms now. Nil with `versionErrors` when it
+    /// can't be read.
+    func versionCard(_ version: TafsCloud.Version, of tafID: UUID) async -> KIFFClient.AgentDraft? {
+        guard mode == .kiff, let tenant = kiffTenant, let id = version.draft else { return nil }
+        let gen = accountGeneration
+        kiff.tenant = tenant
+        do {
+            let draft = try await kiff.draft(id: id)
+            return gen == accountGeneration ? draft : nil
+        } catch {
+            guard gen == accountGeneration else { return nil }
+            versionErrors[tafID] = "Couldn't read this version's Card: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    /// A version's Card that changed between the screen and the tap (kiff/tafs#115): put
+    /// on screen to read again; nothing was signed.
+    @Published private(set) var changedVersionCards: [UUID: KIFFClient.AgentDraft] = [:]
+
+    /// `shownDraft` is the version of the draft the owner's screen showed: Face ID signs
+    /// exactly that, and a version that brings a Card with nothing shown signs nothing.
     @discardableResult
-    func useVersion(_ version: TafsCloud.Version, of tafID: UUID) async -> Bool {
+    func useVersion(_ version: TafsCloud.Version, of tafID: UUID, shownDraft: String? = nil) async -> Bool {
         guard mode == .kiff, let tenant = kiffTenant, let c = cloudTaf(for: tafID), let taf = taf(tafID) else { return false }
         guard !version.live, switchingVersion[tafID] == nil else { return false }
         switchingVersion[tafID] = version.n
@@ -1270,7 +1293,10 @@ final class AppModel: ObservableObject {
         defer { kiff.setupSigner = nil }
 
         var draft: KIFFClient.AgentDraft?
+        changedVersionCards[tafID] = nil
         if let id = version.draft {
+            // Nothing shown, nothing signed.
+            guard shownDraft != nil else { return false }
             guard sessionHasKey else {
                 versionErrors[tafID] = "Start from Connected tools on this iPhone first."
                 return false
@@ -1289,6 +1315,14 @@ final class AppModel: ObservableObject {
             }
         }
         guard gen == accountGeneration else { return false }
+        // The Card changed since it was shown: the new one goes on screen, the switch is
+        // dropped, and the owner reads it again before any Face ID.
+        if let draft, draft.version != shownDraft, !draft.confirmed, draft.status != "claimed" {
+            changedVersionCards[tafID] = draft
+            await cancelSwitch(tafID)
+            versionErrors[tafID] = "What you're asked to approve changed since it was shown. Read it again, then approve."
+            return false
+        }
         // A claimed draft is later than confirmed, its Cards issued all the same.
         if let draft, !draft.confirmed, draft.status != "claimed" {
             do {
