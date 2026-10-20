@@ -222,7 +222,14 @@ final class PlanqueClient {
         }
         let signedAt = ISO8601DateFormatter().string(from: Date())
         // Signed as planque reads it: the path and query as sent, percent-encoded.
-        let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
+        let uri: String
+        if #available(macOS 13, iOS 16, *) {
+            uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
+        } else {
+            // macOS 12, the Mac app's oldest (kiff/tafs#85): the same, read through URLComponents.
+            let parts = URLComponents(url: url, resolvingAgainstBaseURL: true)
+            uri = (parts?.percentEncodedPath ?? "") + (parts?.percentEncodedQuery.map { "?" + $0 } ?? "")
+        }
         let message = Self.message(base: baseURL, tenant: tenant, method: method, uri: uri, body: body ?? Data(), signedAt: signedAt)
         // planque asks KIFF whether this device signed (kiff/planque#12): never a key alone.
         if deviceID == nil, let load = deviceLoader { deviceID = await load() }

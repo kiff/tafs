@@ -170,7 +170,11 @@ final class AppModel: ObservableObject {
         var tries = 0
         while true {
             do {
-                return try await kiff.startDeviceSignIn(publicKey: signer.publicKeyDER, deviceName: "tafs on \(ThisDevice.kind)", platform: ThisDevice.platform)
+                // A Mac without a Secure Enclave holds no key (kiff/tafs#85): it signs in
+                // without one, and KIFF takes a platform only with a key.
+                let key = signer.publicKeyDER
+                return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key, deviceName: "tafs on \(ThisDevice.kind)",
+                                                        platform: key.isEmpty ? nil : ThisDevice.platform)
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
                 try await Task.sleep(nanoseconds: 500_000_000)
@@ -2914,3 +2918,6 @@ final class AppModel: ObservableObject {
         }
     }
 }
+
+/// The app's tabs: the tafs, the calls waiting on the owner, and the record.
+enum Tab: Hashable { case tafs, needsYou, record }

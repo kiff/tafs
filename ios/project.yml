@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: bot.tafs
   deploymentTarget:
     iOS: "16.0"
+    macOS: "12.0"
   createIntermediateGroups: true
 settings:
   base:
@@ -85,6 +86,47 @@ targets:
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WIDGETS)
         # As the app: an extension supports every device its app does.
         TARGETED_DEVICE_FAMILY: "1,2"
+  # The Mac app (kiff/tafs#85): native SwiftUI on macOS 12, the owner's Mac's last system.
+  # The model, clients and services are the iPhone app's; its window is its own (Mac/).
+  # Never above 12.0, and never a software signing key: a Mac without a Secure Enclave
+  # approves on the iPhone.
+  TafsMac:
+    type: application
+    platform: macOS
+    deploymentTarget: "12.0"
+    sources:
+      - path: Mac
+        excludes: [Info.plist, TafsMac.entitlements]
+      - path: Tafs
+        excludes:
+          - App/TafsApp.swift
+          - Views
+          - Services/LockScreen.swift
+          - Services/PushDelegate.swift
+          - Design/MarkdownText.swift
+          - Info.plist
+      - path: Shared
+        excludes: [HeldActivity.swift]
+    info:
+      path: Mac/Info.plist
+      properties:
+        CFBundleDisplayName: tafs
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.productivity
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLName: bot.tafs.app
+            CFBundleURLSchemes: [tafs]
+    entitlements:
+      path: Mac/TafsMac.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
   TafsTests:
     type: bundle.unit-test
     platform: iOS
@@ -102,3 +144,7 @@ schemes:
         TafsTests: [test]
     test:
       targets: [TafsTests]
+  TafsMac:
+    build:
+      targets:
+        TafsMac: all

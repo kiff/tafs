@@ -1,5 +1,9 @@
 import AuthenticationServices
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 /// The vendor's own sign-in page, opened for a grant the owner approved. It ends at
 /// planque, which sends the browser back to `tafs://planque/signed-in` with a one-time
@@ -34,7 +38,7 @@ final class VendorSignIn: NSObject, VendorSigningIn {
 
     /// How long to wait for the app to be active before opening the page: just after
     /// Face ID, iOS gives the app back a moment later.
-    var activeWait: Duration = .seconds(2)
+    var activeWait: TimeInterval = 2
 
     func signIn(at url: URL) async throws -> URL {
         await untilActive()
@@ -43,7 +47,7 @@ final class VendorSignIn: NSObject, VendorSigningIn {
         } catch let e as ASWebAuthenticationSessionError where e.code == .presentationContextInvalid {
             // iOS refused the window (error 3): once more, on the next turn, with the
             // window read again (#72).
-            try? await Task.sleep(for: .milliseconds(300))
+            try? await Task.sleep(nanoseconds: 300_000_000)
             await untilActive()
             do {
                 return try await attempt(url)
@@ -82,12 +86,15 @@ final class VendorSignIn: NSObject, VendorSigningIn {
     /// Waits, at most `activeWait`, for a scene of the app to be active: the page can't
     /// open over an app iOS hasn't given back yet.
     private func untilActive() async {
-        if Self.activeScene() != nil { return }
-        let deadline = ContinuousClock.now + activeWait
-        while Self.activeScene() == nil, ContinuousClock.now < deadline {
-            try? await Task.sleep(for: .milliseconds(50))
+        if Self.isActive() { return }
+        let deadline = Date().addingTimeInterval(activeWait)
+        while !Self.isActive(), Date() < deadline {
+            try? await Task.sleep(nanoseconds: 50_000_000)
         }
     }
+
+    #if canImport(UIKit)
+    private static func isActive() -> Bool { activeScene() != nil }
 
     private static func activeScene() -> UIWindowScene? {
         UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first { $0.activationState == .foregroundActive }
@@ -124,6 +131,19 @@ final class VendorSignIn: NSObject, VendorSigningIn {
         }
         return "\(type(of: w)), \(w.isKeyWindow ? "key" : "not key"), \(w.isHidden ? "hidden" : "shown"), \(state)"
     }
+    #else
+    // The Mac (kiff/tafs#85): the app's key window, else a visible one.
+    private static func isActive() -> Bool { NSApp.isActive }
+
+    static func window() -> NSWindow? {
+        NSApp.keyWindow ?? NSApp.windows.first { $0.isVisible && $0.canBecomeKey }
+    }
+
+    static func describe(_ w: NSWindow?) -> String {
+        guard let w else { return "no window" }
+        return "\(type(of: w)), \(w.isKeyWindow ? "key" : "not key"), \(w.isVisible ? "shown" : "hidden")"
+    }
+    #endif
 }
 
 // The session asks for its window on the main thread.

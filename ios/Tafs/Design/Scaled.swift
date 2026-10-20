@@ -1,5 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 
 /// A system font at `size` points at the default text size, growing and shrinking with
 /// the owner's Dynamic Type setting (kiff/tafs#58).
@@ -30,6 +32,12 @@ extension View {
 /// approval completes.
 @MainActor
 enum Haptics {
+    #if canImport(UIKit)
     static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
     static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+    #else
+    // A Mac has no taps to give.
+    static func tap() {}
+    static func success() {}
+    #endif
 }

@@ -41,7 +41,8 @@ struct Money: Hashable, Comparable, Codable {
         }
         let f = NumberFormatter()
         let whole = minor % Self.power(scale) == 0
-        if Locale.commonISOCurrencyCodes.contains(currency.uppercased()) {
+        // NSLocale's list: Locale's is macOS 13 and later, and the Mac app runs on 12 (kiff/tafs#85).
+        if NSLocale.commonISOCurrencyCodes.contains(currency.uppercased()) {
             f.numberStyle = .currency
             f.currencyCode = currency.uppercased()
             f.minimumFractionDigits = whole ? 0 : scale
