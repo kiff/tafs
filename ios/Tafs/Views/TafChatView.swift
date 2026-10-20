@@ -21,6 +21,8 @@ struct TafChatView: View {
     /// the answer grows below it.
     @State private var pinNext = false
     @State private var pinned: String?
+    /// The owner has scrolled since the chat opened: a late landing leaves them where they are.
+    @State private var touched = false
     /// What the owner just sent, while it isn't in the thread yet (steering a run, or queued
     /// behind one): its bubble is pinned, then the thread's copy, without the view moving.
     @State private var pinText: String?
@@ -127,7 +129,7 @@ struct TafChatView: View {
             .background(GeometryReader { g in
                 Color.clear.onAppear { viewport = g.size.height }.onChange(of: g.size.height) { viewport = $0 }
             })
-            .simultaneousGesture(DragGesture().onChanged { _ in following = false })
+            .simultaneousGesture(DragGesture().onChanged { _ in following = false; touched = true })
             .overlay(alignment: .bottom) {
                 VStack(spacing: 8) {
                     // The held call waiting for the owner, when it's out of view.
@@ -229,14 +231,23 @@ struct TafChatView: View {
 
     /// Opening the chat lands at the held call waiting for the owner, or at the latest.
     private func land(_ proxy: ScrollViewProxy, items: [String], waiting: HeldCall?) {
-        guard !landed else { return }
-        guard !items.isEmpty else { proxy.scrollTo(Self.bottom, anchor: .bottom); return }
+        // Only once the thread is in: landing on an empty chat would count as landed.
+        guard !landed, !items.isEmpty else { return }
         landed = true
-        if let waiting {
-            following = false
-            proxy.scrollTo("h|" + waiting.id.uuidString, anchor: .center)
-        } else {
-            proxy.scrollTo(Self.bottom, anchor: .bottom)
+        if waiting != nil { following = false }
+        let (target, anchor): (String, UnitPoint) = waiting.map { ("h|" + $0.id.uuidString, .center) } ?? (Self.bottom, .bottom)
+        landAgain(proxy, target, anchor)
+    }
+
+    /// Coming back to the app rebuilds the chat, and its lazy rows aren't laid out on the
+    /// first pass, so one scroll lands nowhere and the chat opens at its top (kiff/tafs#138).
+    /// It lands now and again once they're laid out, unless the owner has scrolled meanwhile.
+    private func landAgain(_ proxy: ScrollViewProxy, _ target: String, _ anchor: UnitPoint) {
+        proxy.scrollTo(target, anchor: anchor)
+        for delay in [0.05, 0.3] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                if !touched { proxy.scrollTo(target, anchor: anchor) }
+            }
         }
     }
 
