@@ -239,6 +239,16 @@ export class Agents {
     return (await this.call<{ switching: Switching }>("POST", tenant, ["agents", id, "versions", String(n), "pending"], draft ? { draft } : {})).switching;
   }
 
+  /**
+   * Puts `draft` in place of the one the switch to version n under way waits
+   * for, keeping its mark, so nothing of the agent runs in between (the
+   * version's Cards drafted again, kiff/agents#150). 409 when it isn't
+   * switching to n.
+   */
+  async replaceSwitchDraft(tenant: string, id: string, n: number, draft: string): Promise<Switching> {
+    return (await this.call<{ switching: Switching }>("POST", tenant, ["agents", id, "versions", String(n), "pending"], { draft, replace: true })).switching;
+  }
+
   /** Drops the switch under way; the live version stays. True when there was one. */
   async cancelSwitch(tenant: string, id: string): Promise<boolean> {
     return (await this.call<{ cancelled: boolean }>("DELETE", tenant, ["agents", id, "switching"])).cancelled;
