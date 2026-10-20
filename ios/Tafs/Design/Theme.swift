@@ -23,6 +23,8 @@ enum Theme {
     /// Coach mode's own blue, and its wash (kiff/tafs#138): never a taf's chat.
     static let coach = Color(hex: 0x2F6BFF)
     static let coachWash = Color(hex: 0xEEF3FF)
+    /// What Coach mode has made so far, beside the conversation: a shade deeper than its wash.
+    static let coachPanel = Color(hex: 0xE3EBFF)
     static let sky = Color(hex: 0x3EC2FF)
 
     /// The mascot's sweep, for the main button and the brand.

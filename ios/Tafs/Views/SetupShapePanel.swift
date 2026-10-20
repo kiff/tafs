@@ -27,7 +27,8 @@ struct SetupShapePanel: View {
             }
             .padding(20)
         }
-        .background(Theme.raised.ignoresSafeArea())
+        // Coach mode's blue, a shade deeper than the conversation beside it (kiff/tafs#138).
+        .background(Theme.coachPanel.ignoresSafeArea())
     }
 
     private func plan(_ steps: [SetupShape.Step]) -> some View {
