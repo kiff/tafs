@@ -182,6 +182,12 @@ struct SetupThread: Equatable {
         }
     }
 
+    /// Whether `stored` is the message the owner sent as `sent`, trimmed (kiff/tafs#138): itself,
+    /// or the end of the one it was joined to while queued behind a reply ("…\n\n" + sent).
+    static func matchesSent(_ stored: String, _ sent: String) -> Bool {
+        stored == sent || stored.hasSuffix("\n\n" + sent)
+    }
+
     /// Whether a newer approval in the thread asks about the same connection (kiff/tafs#138):
     /// then this one is history. Only the newest card for a connection shows its live state,
     /// so one failure doesn't show on every card that names the connection.

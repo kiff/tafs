@@ -34,6 +34,9 @@ struct SetupChatView: View {
     /// back up to its start. `pinNext` marks the next message the owner sends.
     @State private var pinNext = false
     @State private var pinned: String?
+    /// What the owner just sent, while it waits behind Setup's answer: its bubble is pinned,
+    /// then the thread's copy, without the view moving (kiff/tafs#138).
+    @State private var pinText: String?
     @State private var viewport: CGFloat = 600
     /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
@@ -199,7 +202,7 @@ struct SetupChatView: View {
                         .accessibilityElement(children: .combine)
                     }
                     if !thinking { ended }
-                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() } }
+                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() }.id("queued") }
                     // Room under a pinned message, so it can sit at the top while the answer is short.
                     if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
@@ -250,12 +253,21 @@ struct SetupChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
-                if pinNext, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner } else { return false } })?.id {
-                    // Just sent: it goes to the top, and the answer grows below it.
+                // The message the owner just sent is in the thread: it goes to the top and stays
+                // (kiff/tafs#138). Matched by its words, so a reply arriving first doesn't pin an
+                // older message. If its bubble was already pinned while the taf (or Setup) worked,
+                // the pin moves to it without animating, so the view doesn't move.
+                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
+                    let animate = pinNext
                     pinNext = false
+                    pinText = nil
                     pinned = sent
                     following = false
-                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(sent, anchor: .top) }
+                    if animate {
+                        withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(sent, anchor: .top) }
+                    } else {
+                        proxy.scrollTo(sent, anchor: .top)
+                    }
                     return
                 }
                 if !following && !ids.isEmpty && pinned == nil { unseen = true }
@@ -265,7 +277,25 @@ struct SetupChatView: View {
             .onChange(of: thinking) { _ in follow(proxy) }
             .onChange(of: grown) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: model.setupLive) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
-            .onChange(of: model.setupUnsent) { _ in follow(proxy) }
+            .onChange(of: model.setupQueued) { queued in
+                // Waiting behind Setup's answer: its bubble goes to the top at once.
+                if pinNext, let text = pinText, let queued, SetupThread.matchesSent(queued, text) {
+                    pinNext = false
+                    pinned = "queued"
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("queued", anchor: .top) }
+                }
+            }
+            .onChange(of: model.setupUnsent) { unsent in
+                // Not sent: its bubble, with Retry, is the one at the top.
+                if pinNext, let last = unsent.last {
+                    pinNext = false
+                    pinText = nil
+                    pinned = last.id.uuidString
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(last.id, anchor: .top) }
+                    return
+                }
+                follow(proxy)
+            }
             .onAppear { land(proxy, waiting: waiting) }
         }
     }
@@ -454,8 +484,12 @@ struct SetupChatView: View {
     private func send() {
         let text = draft
         draft = ""
-        // While Setup works, the message waits or steers: nothing new to pin.
-        if model.setupThinking { following = true } else { pinNext = true }
+        // A sent message goes to the top of the view and stays (kiff/tafs#138), even while
+        // Setup works: the message waits there, and the answer fills the space below.
+        pinNext = true
+        // As the model keeps it: trimmed (review on #154).
+        pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        following = false
         Haptics.tap()
         Task { if !(await model.submitSetup(text)), draft.isEmpty { draft = text } }
     }
