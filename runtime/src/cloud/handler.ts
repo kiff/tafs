@@ -65,7 +65,7 @@ export interface HTTPResult {
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
-  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "cancelSwitch" | "createVersion" | "getVersion">;
+  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -994,7 +994,9 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     // The version it leaves keeps the Cards it ran under, for going back to it.
     await recordLiveCards(event, me, taf, state, deps);
     const draft = await draftFor(event, me, taf, version, again, deps);
-    // Drafted again for a switch under way: it waits for the new draft instead.
+    // Drafted again for a switch under way: it waits for the new draft instead,
+    // its mark kept, so no run starts in between.
+    if (sw && sw.n === n && draft) return { switching: await agentsCall(() => deps.agents.replaceSwitchDraft(me.tenantID, taf.id, n, draft)) };
     if (sw && sw.n === n) await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id));
     return { switching: await agentsCall(() => deps.agents.beginSwitch(me.tenantID, taf.id, n, draft)) };
   }

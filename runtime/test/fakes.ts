@@ -110,6 +110,14 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       switching.set(k(tenant, id), sw);
       return { ...sw };
     },
+    async replaceSwitchDraft(tenant, id, n, draft) {
+      calls.push(`replaceSwitchDraft ${id} ${n}`);
+      const was = switching.get(k(tenant, id));
+      if (!was || was.n !== n) throw new AgentsError(409, "this agent isn't switching to that version: begin the switch first");
+      const sw: Switching = { ...was, draft };
+      switching.set(k(tenant, id), sw);
+      return { ...sw };
+    },
     async cancelSwitch(tenant, id) {
       calls.push(`cancelSwitch ${id}`);
       return switching.delete(k(tenant, id));

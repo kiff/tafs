@@ -1043,9 +1043,14 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     await call(w, "DELETE", `/v1/tafs/${RAE}/switching`, { token: "ana" });
     w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae" } };
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).body.switching.draft).toBe("drf_v2");
-    // Asked while the switch waits for the stale one: it waits for the new draft instead.
+    // Asked while the switch waits for the stale one: it waits for the new draft
+    // instead, the same switch, never dropped in between (kiff/agents#150).
+    const at = (await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" })).body.switching.at;
+    w.agents.calls.length = 0;
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { redraft: true } })).body.switching.draft).toBe("drf_again2");
-    expect((await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" })).body.switching).toMatchObject({ n: 2, draft: "drf_again2" });
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" })).body.switching).toEqual({ n: 2, draft: "drf_again2", at });
+    expect(w.agents.calls).toContain(`replaceSwitchDraft ${RAE} 2`);
+    expect(w.agents.calls.filter((c) => c.startsWith("cancelSwitch") || c.startsWith("beginSwitch"))).toEqual([]);
   });
 
   it("going back restores the Card revisions the version ran under, and needs none when they're in force", async () => {
