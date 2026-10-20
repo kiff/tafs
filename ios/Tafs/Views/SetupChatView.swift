@@ -864,7 +864,38 @@ struct SetupComponentView: View {
         }
     }
 
+    @ViewBuilder
     private func result(_ c: SetupComponent) -> some View {
+        if c.taf?.improves != nil { improvement(c) } else { handOver(c) }
+    }
+
+    /// An improvement's result (kiff/tafs#107): the taf's next version, made once, to try
+    /// and switch to from its Versions.
+    private func improvement(_ c: SetupComponent) -> some View {
+        Panel(stroke: Theme.ok) {
+            Eyebrow(text: "New version · \(c.taf?.name ?? "")", color: Theme.ok)
+            Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            if let note = c.taf?.note, !note.isEmpty {
+                Text(note).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            }
+            if let n = model.improvedVersions[c.id], let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent) {
+                NavigationLink {
+                    VersionsScreen(tafID: tafID)
+                } label: {
+                    Text(c.yes ?? "Try version \(n)").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+            } else if let error = model.improveErrors[c.id] {
+                Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                Button("Try again") { Task { await model.makeImprovedVersion(c) } }
+                    .buttonStyle(OutlineButtonStyle())
+            } else {
+                Text("Preparing the new version…").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            }
+        }
+    }
+
+    private func handOver(_ c: SetupComponent) -> some View {
         Panel(stroke: Theme.ok) {
             Eyebrow(text: "Set up · \(c.taf?.name ?? "")", color: Theme.ok)
             Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)

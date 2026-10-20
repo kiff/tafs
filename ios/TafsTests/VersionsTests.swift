@@ -198,6 +198,40 @@ final class VersionsTests: XCTestCase {
         XCTAssertNil(cards[1].current, "a new Card has no now")
     }
 
+    private func improvement(_ json: String) throws -> SetupComponent {
+        try KIFFClient.decoder.decode(SetupComponent.self, from: Data(json.utf8))
+    }
+
+    /// An improvement's result makes the taf's next version through tafs cloud, never a
+    /// new taf (kiff/tafs#107), and names the result it came from, so a repeat is the same.
+    func testAnImprovementResultMakesTheNextVersion() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions"] = (200, #"{"version":2}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        let c = try improvement(#"{"type":"result","id":"v2","text":"Ready as version 2.","taf":{"agent":"rae-k3f9","name":"Rae","job":"refunds","improves":"depl_1","note":"Asks before refunds over 50 EUR.","notes":"Ask first.","draft":"d_02"}}"#)
+        await model.makeImprovedVersion(c)
+        XCTAssertEqual(model.improvedVersions["v2"], 2, model.improveErrors["v2"] ?? "")
+        let posted = try XCTUnwrap(sent("POST", "/v1/tafs/depl_1/versions").first)
+        let body = try XCTUnwrap(try JSONSerialization.jsonObject(with: posted.httpBody ?? Data()) as? [String: String])
+        XCTAssertEqual(body["note"], "Asks before refunds over 50 EUR.")
+        XCTAssertEqual(body["notes"], "Ask first.")
+        XCTAssertEqual(body["draft"], "d_02")
+        XCTAssertEqual(body["from"], "v2|d_02")
+        XCTAssertNotNil(model.versions[id], "its versions read again")
+
+        await model.startSetupTaf(c)
+        XCTAssertTrue(sent("POST", "/v1/tafs").isEmpty, "an improvement never starts a new taf")
+    }
+
+    func testAnImprovementThatFailsSaysWhy() async throws {
+        let (model, _) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions"] = (409, #"{"error":"that draft isn't this taf's"}"#)
+        let c = try improvement(#"{"type":"result","id":"v2","text":"x","taf":{"agent":"rae-k3f9","name":"Rae","job":"refunds","improves":"depl_1","note":"x","draft":"d_09"}}"#)
+        await model.makeImprovedVersion(c)
+        XCTAssertNil(model.improvedVersions["v2"])
+        XCTAssertTrue(model.improveErrors["v2"]?.contains("isn't this taf's") ?? false)
+    }
+
     /// The owner backs out at Face ID: the switch is dropped, so the taf runs again, and
     /// nothing reaches KIFF.
     func testBackingOutAtFaceIDDropsTheSwitch() async throws {

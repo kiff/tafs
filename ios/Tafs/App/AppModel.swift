@@ -244,7 +244,7 @@ final class AppModel: ObservableObject {
         kiff.token = token
         cloud.token = token
         startAttempt = nil
-        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]
+        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -272,7 +272,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
-        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         holderIDs = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
@@ -2797,16 +2797,53 @@ final class AppModel: ObservableObject {
     /// that didn't start waits for the card's Try again.
     private func startHandedOverTafs() {
         for c in setupThread.components.map(\.component) where c.type == .result {
+            // An improvement makes the taf's next version, never a new taf (kiff/tafs#107).
+            if c.taf?.improves != nil {
+                if improvedVersions[c.id] == nil, !makingVersions.contains(c.id), improveErrors[c.id] == nil {
+                    Task { await makeImprovedVersion(c) }
+                }
+                continue
+            }
             guard let taf = c.taf, taf.job != nil, taf.draft != nil else { continue }
             if cloudTafs[taf.agent] != nil || startingTafs.contains(c.id) || tafStartErrors[c.id] != nil { continue }
             Task { await startSetupTaf(c) }
         }
     }
 
+    /// The version each improvement result made, by the result's id, and those being made
+    /// or that failed (with why).
+    @Published private(set) var improvedVersions: [String: Int] = [:]
+    @Published private(set) var makingVersions: Set<String> = []
+    @Published private(set) var improveErrors: [String: String] = [:]
+
+    /// Makes the version an improvement result hands over, once: tafs cloud builds it from
+    /// Setup's words and keeps one per result, so a repeat gives the same version. Nothing
+    /// goes live: the owner tries it and switches from the taf's Versions.
+    func makeImprovedVersion(_ component: SetupComponent) async {
+        guard mode == .kiff, let taf = component.taf, let improves = taf.improves else { return }
+        guard !makingVersions.contains(component.id) else { return }
+        makingVersions.insert(component.id)
+        defer { makingVersions.remove(component.id) }
+        improveErrors[component.id] = nil
+        let gen = accountGeneration
+        // The result, by its card and what it carries: a later result with the same id is
+        // another version.
+        let what = taf.draft ?? SHA256.hash(data: Data((taf.note ?? "").utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
+        do {
+            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: "\(component.id)|\(what)")
+            guard gen == accountGeneration else { return }
+            improvedVersions[component.id] = n
+            if let tafID = self.taf(forAgent: taf.agent) { await loadVersions(tafID) }
+        } catch {
+            guard gen == accountGeneration else { return }
+            improveErrors[component.id] = "\(taf.name)'s new version isn't ready: \(error.localizedDescription)"
+        }
+    }
+
     /// Starts the taf a result hands over to, once: tafs cloud stores it, and kiff/agents
     /// claims its key from Setup's draft. Then it shows with the account's other tafs.
     func startSetupTaf(_ component: SetupComponent) async {
-        guard mode == .kiff, let taf = component.taf, let job = taf.job, let draft = taf.draft else { return }
+        guard mode == .kiff, let taf = component.taf, taf.improves == nil, let job = taf.job, let draft = taf.draft else { return }
         if cloudTafs[taf.agent] != nil || startingTafs.contains(component.id) { return }
         startingTafs.insert(component.id)
         defer { startingTafs.remove(component.id) }
