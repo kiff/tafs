@@ -113,6 +113,11 @@ struct TafDetailView: View {
             let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
             Panel {
                 Eyebrow(text: "Runs")
+                if cloud.worksFromChat {
+                    // Its tools can't find its work by themselves (kiff/tafs#138): no schedule.
+                    Text("It works when you tell it, in its chat: no schedule runs it.")
+                        .font(.system(size: 15)).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                } else {
                 Text(cloud.paused ? "Paused" : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? "On its schedule")
                     .font(.system(size: 15)).foregroundColor(Theme.ink)
                 HStack(spacing: 8) {
@@ -130,6 +135,7 @@ struct TafDetailView: View {
                         Task { await model.setPaused(taf.id, !cloud.paused) }
                     }
                     .buttonStyle(OutlineButtonStyle())
+                }
                 }
             }
             RunReportPanel(report: model.reports[cloud.id]) { Task { await model.loadReport(cloud) } }

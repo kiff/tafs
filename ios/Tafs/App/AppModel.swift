@@ -2993,7 +2993,7 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         var nameTaken = false
         do {
-            _ = try await cloud.startFromSetup(name: taf.name, job: job, draftID: draft)
+            _ = try await cloud.startFromSetup(name: taf.name, job: job, draftID: draft, unscheduled: taf.unscheduled == true)
         } catch let e as TafsCloud.CloudError where e.status == 409 && e.message.contains("already have a taf named") {
             // Started before, by this phone or another, unless another taf has the name.
             nameTaken = true

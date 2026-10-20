@@ -19,7 +19,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
  *   GET  /v1/jobs
  *   GET  /v1/home                       the app's list: each taf's state, colour and Card summary, and the account's other agents with Cards
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?}
+ *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}
  *   POST /v1/tafs/{id}/pause | resume | run
  *   GET  /v1/tafs/{id}/runs
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
@@ -140,6 +140,11 @@ export interface Taf {
   ownerNotes?: string;
   /** The digest of the definition kiff/agents holds for it, as last written (`digest`). */
   definition?: string;
+  /**
+   * Its tools can't find its work by themselves (kiff/tafs#138): it has no
+   * running schedule, and works on what the owner tells it in its chat.
+   */
+  unscheduled?: boolean;
   /** Its colour in the app (`home.COLORS`), kept so a new taf never takes it. Given at its start. */
   color?: number;
   /**
@@ -334,6 +339,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   const taf = await owned(me, parts[2] ?? "", deps);
   const action = parts[3];
+  if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume" || action === "run") && taf.unscheduled) {
+    throw new HTTPError(409, `${taf.name} works from its chat: it has no schedule to ${action === "run" ? "run" : action}. Tell it what to do there`);
+  }
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume")) {
     need(me, "cards.manage");
     const s = await agentsCall(() => deps.agents.switchSchedule(me.tenantID, taf.id, action === "resume"));
@@ -568,6 +576,9 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
   // From the setup chat (kiff/agents#91), Setup submitted the draft, so kiff/agents
   // keeps its claim secret and claims the key itself, into the taf's key reference.
   const fromSetup = body.from_setup === true;
+  // Setup's word that the taf's tools can't find its work (kiff/tafs#138): no
+  // running schedule and no first run; the owner hands it work in its chat.
+  const unscheduled = body.unscheduled === true;
   if (fromSetup && (!draftID || claimSecret || body.agent_key !== undefined)) {
     throw new HTTPError(400, "from_setup takes a draft_id and no claim_secret or agent_key");
   }
@@ -620,10 +631,12 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
   const taf: Taf = {
     id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
     budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
+    ...(unscheduled ? { unscheduled: true } : {}),
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
-    const schedule: Schedule = { id: tafID, agent: tafID, cron, time_zone: timezone, input: job.kickoff, enabled: true };
+    // Kept off for a taf that works from its chat, so the rest of tafs reads it as any other.
+    const schedule: Schedule = { id: tafID, agent: tafID, cron, time_zone: timezone, input: job.kickoff, enabled: !unscheduled };
     await deps.agents.createSchedule(me.tenantID, schedule).catch(async (err) => {
       // A retry of a start whose schedule was made: the same schedule.
       if (err instanceof AgentsError && err.status === 409 && await deps.agents.getSchedule(me.tenantID, tafID)) return;
@@ -643,7 +656,8 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
   }
   if (draftID) await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
 
-  // It runs once now as well.
+  // It runs once now as well, unless it works from its chat: then it waits for the owner.
+  if (unscheduled) return { taf: await view(taf, me, deps), session: null };
   let run: Run;
   try { run = await deps.agents.trigger(me.tenantID, tafID); } catch (err) {
     throw new HTTPError(502, `${name} is started, but its first run didn't start (${(err as Error).message}). Run it now from the app`);
@@ -1681,7 +1695,9 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule)
     job: taf.job,
     /** The KIFF agent the taf acts as: the holder of its Cards. */
     kiff_agent: taf.kiffAgent || null,
-    status: s && !s.enabled ? "paused" : "active",
+    status: s && !s.enabled && !taf.unscheduled ? "paused" : "active",
+    /** It works from its chat: no schedule runs it (kiff/tafs#138). Only said when so. */
+    ...(taf.unscheduled ? { unscheduled: true } : {}),
     next_run: s?.enabled && s.next ? iso(s.next) : null,
     last_run: last ? iso(last.created) : null,
   };

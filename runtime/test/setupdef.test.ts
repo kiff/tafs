@@ -131,6 +131,8 @@ describe("Setup's definition on kiff/agents", () => {
     // A question gets its answer, not a plan (the owner's Coach mode test on 429).
     expect(flat).toContain("When the owner asks a question (how it's going, why something happened), answer it in one or two short sentences and stop");
     expect(flat).toContain("If they turn an offer down (\"Not now\"), that is the answer: say so in one sentence and stop, without offering another change");
+    // A taf whose tools can't list its work has no schedule (kiff/tafs#138, item 26).
+    expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
     // One question at a time: a second choice beside a confirm went into prose (measure of #138).
     expect(flat).toContain("while a confirm asks something, the message asks nothing else, and a choice among a few options");
     // An operation's fields come from the vendor, never Setup's guess (kiff/tafs#138, item 1).

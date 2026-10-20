@@ -33,6 +33,8 @@ struct SetupComponent: Decodable, Equatable {
         var note: String?
         /// The taf's full new instructions from the owner; nil keeps them (an improvement).
         var notes: String?
+        /// Its tools can't find its work by themselves (kiff/tafs#138): it works from its chat.
+        var unscheduled: Bool?
     }
 
     let type: Kind
