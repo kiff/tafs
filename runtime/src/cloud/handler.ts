@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { type AgentDefinition, type Agents, AgentsError, type Run, type RunStreamEvent, type Schedule, type Session } from "./agents.js";
-import { claimDraft, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
+import { claimDraft, draftConfirmed, type Fetch, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
@@ -30,6 +30,10 @@ import { improveContext, ownerWords, recentCalls } from "./improve.js";
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
+ *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked (kiff/tafs#107)
+ *   POST /v1/tafs/{id}/versions/{n}/trial  {input?}: a trial of version n, its writes decided by KIFF, nothing sent
+ *   GET  /v1/tafs/{id}/trials/{run}     a trial so far: its run and what KIFF decided for each write
+ *   POST /v1/tafs/{id}/versions/{n}/live   make version n live, once its Card revision is confirmed in KIFF
  *   POST /v1/tafs/{id}/improve          {text}: a new conversation with the account's Setup, opening on this taf (kiff/tafs#107)
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
@@ -57,7 +61,8 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent">;
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
+  "versions" | "switchVersion" | "startTrial" | "trial">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -374,6 +379,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     need(me, "cards.manage");
     return message(event, me, taf, deps);
   }
+  if (action === "versions" || action === "trials") return versionRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && method === "POST" && action === "improve") {
     need(me, "cards.manage");
     return improve(event, me, taf, deps);
@@ -927,6 +933,44 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   }
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text));
   return { session: run.session, new_session: true };
+}
+
+/**
+ * A taf's versions (kiff/tafs#107), as kiff/agents keeps them: listed, tried
+ * and made live. Making one live is the owner's act in two steps: they confirm
+ * its Card revision in KIFF with the phone's signature (as for any draft),
+ * then tafs cloud switches the definition, and only once KIFF says that
+ * revision is confirmed, so tools and limits always go live together.
+ */
+async function versionRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
+  const [, , , action, rawN, sub] = parts;
+  if (action === "versions" && parts.length === 4 && method === "GET") {
+    return { versions: await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)) };
+  }
+  if (action === "trials" && parts.length === 5 && method === "GET") {
+    return agentsCall(() => deps.agents.trial(me.tenantID, taf.id, rawN ?? ""));
+  }
+  const n = Number(rawN);
+  if (action !== "versions" || parts.length !== 6 || method !== "POST" || !Number.isInteger(n) || n < 1) throw new HTTPError(404, "not found");
+  need(me, "cards.manage");
+  const version = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).find((v) => v.n === n);
+  if (!version) throw new HTTPError(404, "no such version");
+  if (sub === "trial") {
+    // What a trial works on: the owner's words, else what each scheduled run asks of it.
+    const asked = str(parseBody(event).input).trim();
+    const input = asked || JOBS.find((j) => j.id === taf.job)?.kickoff || "";
+    if (!input || input.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters for the trial`);
+    return { run: await agentsCall(() => deps.agents.startTrial(me.tenantID, taf.id, n, input)) };
+  }
+  if (sub === "live") {
+    if (version.draft && !(await draftConfirmed(bearer(event), version.draft, deps.fetch, deps.kiffBase))) {
+      throw new HTTPError(409, "confirm this version's Card first");
+    }
+    await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n));
+    return { live: n };
+  }
+  throw new HTTPError(404, "not found");
 }
 
 /**

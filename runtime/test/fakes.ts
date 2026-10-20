@@ -1,4 +1,4 @@
-import { AgentsError, type AgentDefinition, type Note, type Run, type Schedule, type Session, type SessionEvent } from "../src/cloud/agents.js";
+import { AgentsError, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type TrialWrite } from "../src/cloud/agents.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
 /**
@@ -48,7 +48,34 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     return r;
   };
 
+  /** Each agent's versions (kiff/tafs#107), and each trial's writes, by run. */
+  const versions = new Map<string, AgentVersion[]>();
+  const trialWrites = new Map<string, TrialWrite[]>();
   const api: AgentsAPI = {
+    async versions(tenant, id) {
+      calls.push(`versions ${id}`);
+      if (!agents.has(k(tenant, id))) throw gone();
+      return (versions.get(k(tenant, id)) ?? []).map((v) => ({ ...v }));
+    },
+    async switchVersion(tenant, id, n) {
+      calls.push(`switchVersion ${id} ${n}`);
+      const list = versions.get(k(tenant, id)) ?? [];
+      if (!list.some((v) => v.n === n)) throw gone();
+      for (const v of list) v.live = v.n === n;
+    },
+    async startTrial(tenant, id, n, input) {
+      calls.push(`startTrial ${id} ${n}`);
+      if (!(versions.get(k(tenant, id)) ?? []).some((v) => v.n === n)) throw gone();
+      const s = openSession(tenant, id, "trial" as Session["kind"]).id;
+      const run = newRun(tenant, id, s, "trial", input);
+      trialWrites.set(run.id, []);
+      return run;
+    },
+    async trial(tenant, id, run) {
+      const r = runs.find((x) => x.tenant === tenant && x.agent === id && x.id === run && x.trigger === "trial");
+      if (!r) throw gone();
+      return { run: { ...r }, writes: trialWrites.get(run) ?? [] };
+    },
     async putAgent(tenant, id, def) {
       calls.push(`putAgent ${id}`);
       failing("putAgent");
@@ -210,7 +237,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed };
+  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
