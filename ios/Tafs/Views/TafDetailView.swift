@@ -275,15 +275,19 @@ struct VersionsScreen: View {
 }
 
 /// The taf's versions, like app builds (kiff/tafs#107): newest first, the live one marked.
-/// Try it runs a version with KIFF deciding each call and none sent; Use this version
-/// makes it live, forward or back, with one Face ID.
+/// Try it first runs a version on what the owner asks, with KIFF deciding each call and
+/// none sent; Install this version makes it live, forward or back, with one approval
+/// (kiff/tafs#138).
 struct VersionsPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     /// The version whose Card the owner reads before Face ID.
     @State private var reading: TafsCloud.Version?
+    /// The version the owner is about to try, and what it should try (kiff/tafs#138).
+    @State private var trying: Int?
+    @State private var trialInput = ""
 
-    /// Use this version: the switch begins, with the Card draft tafs cloud prepared (its own,
+    /// Install this version: the switch begins, with the Card draft tafs cloud prepared (its own,
     /// drafted again, or a restore when going back), which is read first, now → after
     /// (kiff/tafs#107, #122). With no Card to change, one Face ID makes it live.
     private func use(_ v: TafsCloud.Version, redraft: Bool = false) {
@@ -296,6 +300,8 @@ struct VersionsPanel: View {
     var body: some View {
         Panel {
             Eyebrow(text: "Versions")
+            Text("Try a version first: it does the work you give it, and KIFF decides each call without sending any. Installing one makes it the live version.")
+                .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             if let sw = model.switches[tafID] { switchUnderWay(sw) }
             if let n = model.staleVersionCards[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
                 Button("Draft its Card again") { use(v, redraft: true) }
@@ -310,7 +316,6 @@ struct VersionsPanel: View {
             } else if model.versionErrors[tafID] == nil {
                 ProgressView().tint(Theme.amber)
             }
-            if let trial = model.trials[tafID] { TrialView(trial: trial) }
             if let error = model.versionErrors[tafID] {
                 Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
             }
@@ -324,13 +329,13 @@ struct VersionsPanel: View {
     }
 
     private func row(_ v: TafsCloud.Version) -> some View {
-        let trying = model.trials[tafID].map { !$0.trial.run.finished } ?? false
+        let running = model.trials[tafID].map { !$0.trial.run.finished } ?? false
         let switching = model.switchingVersion[tafID]
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Text("Version \(v.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
                 if v.live {
-                    Text("Live").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                    Text("Live now").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(Theme.ok).clipShape(Capsule())
                 }
@@ -340,12 +345,36 @@ struct VersionsPanel: View {
                 Text(note).font(.system(size: 14)).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             }
             Text(Self.byline(v)).font(.system(size: 12)).foregroundColor(Theme.dim)
+            if trying == v.n {
+                // What to try (kiff/tafs#138): the owner's words, from the version's note.
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("What should it try?").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
+                    TextField("For example: look up payment pi_…", text: $trialInput)
+                        .textFieldStyle(.roundedBorder)
+                    HStack(spacing: 8) {
+                        Button("Run the trial") {
+                            let input = trialInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                            trying = nil
+                            Task { await model.tryVersion(v.n, of: tafID, input: input) }
+                        }
+                        .buttonStyle(OutlineButtonStyle())
+                        .disabled(trialInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        Button("Cancel") { trying = nil }
+                            .buttonStyle(OutlineButtonStyle(color: Theme.dim))
+                    }
+                }
+            }
             HStack(spacing: 8) {
-                Button("Try it") { Task { await model.tryVersion(v.n, of: tafID) } }
+                if trying != v.n {
+                    Button("Try it first") {
+                        trialInput = v.note ?? ""
+                        trying = v.n
+                    }
                     .buttonStyle(OutlineButtonStyle())
-                    .disabled(trying)
+                    .disabled(running)
+                }
                 if !v.live {
-                    Button(switching == v.n ? "Switching…" : "Use this version") {
+                    Button(switching == v.n ? "Installing…" : "Install this version") {
                         use(v)
                     }
                     .buttonStyle(OutlineButtonStyle())
@@ -353,6 +382,8 @@ struct VersionsPanel: View {
                     .disabled(switching != nil || model.switches[tafID].map { $0.n != v.n } ?? false)
                 }
             }
+            // The trial's calls under the version tried, as they come.
+            if let trial = model.trials[tafID], trial.version == v.n { TrialView(trial: trial) }
         }
         .padding(.vertical, 4)
     }
@@ -362,12 +393,12 @@ struct VersionsPanel: View {
         let version = model.versions[tafID]?.first { $0.n == sw.n }
         let working = model.switchingVersion[tafID] != nil
         return VStack(alignment: .leading, spacing: 6) {
-            Text("Switching to version \(sw.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.amber)
-            Text("Your taf doesn't run until the switch finishes or you cancel it.")
+            Text("Installing version \(sw.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.amber)
+            Text("Your taf doesn't run until it's installed or you cancel.")
                 .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
                 if let version {
-                    Button(working ? "Switching…" : "Finish") { use(version) }
+                    Button(working ? "Installing…" : "Finish") { use(version) }
                         .buttonStyle(OutlineButtonStyle())
                         .disabled(working)
                 }
@@ -394,7 +425,7 @@ struct VersionsPanel: View {
 }
 
 /// The Card a version brings, read before Face ID (kiff/tafs#107): each Card it revises as
-/// it is now and as it will be, and each new one. Use this version signs exactly what this
+/// it is now and as it will be, and each new one. Install this version signs exactly what this
 /// sheet shows (kiff/tafs#115).
 struct VersionCardSheet: View {
     @EnvironmentObject private var model: AppModel
@@ -439,7 +470,7 @@ struct VersionCardSheet: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Use this version") {
+                    Button("Install this version") {
                         let shown = draft?.version
                         dismiss()
                         Task { await model.useVersion(version, of: tafID, shownDraft: shown) }

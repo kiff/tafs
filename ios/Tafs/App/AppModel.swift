@@ -1384,7 +1384,7 @@ final class AppModel: ObservableObject {
                     staleVersionCards[tafID] = version.n
                     versionErrors[tafID] = "Version \(version.n)'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve."
                 } else {
-                    versionErrors[tafID] = "Switching to version \(version.n) didn't finish: KIFF didn't confirm its Card (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
+                    versionErrors[tafID] = "Installing version \(version.n) didn't finish: KIFF didn't confirm its Card (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
                 }
                 return false
             }
@@ -1406,7 +1406,7 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return false }
             versionErrors[tafID] = sw.draft == nil
                 ? "Version \(version.n) isn't live: \(error.localizedDescription)"
-                : "Switching to version \(version.n) didn't finish (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
+                : "Installing version \(version.n) didn't finish (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
             return false
         }
         await loadVersions(tafID)
