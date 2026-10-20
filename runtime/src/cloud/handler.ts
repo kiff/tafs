@@ -6,6 +6,7 @@ import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, typ
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
+import { improveContext, ownerWords, recentCalls } from "./improve.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -29,6 +30,7 @@ import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
+ *   POST /v1/tafs/{id}/improve          {text}: a new conversation with the account's Setup, opening on this taf (kiff/tafs#107)
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
@@ -371,6 +373,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "POST" && action === "messages") {
     need(me, "cards.manage");
     return message(event, me, taf, deps);
+  }
+  if (parts.length === 4 && method === "POST" && action === "improve") {
+    need(me, "cards.manage");
+    return improve(event, me, taf, deps);
   }
   if (parts.length === 4 && method === "GET" && action === "memory") {
     return { notes: await notes(me, taf, deps) };
@@ -850,7 +856,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         // Each job run opens with the job's instruction: not something the owner typed.
         const kind = r.session.kind === "run" && !seenRun.has(e.run) ? "kickoff" : "message";
         seenRun.add(e.run);
-        messages.push({ at: iso(e.time), from: "owner", kind, text, session: r.session.id });
+        messages.push({ at: iso(e.time), from: "owner", kind, text: ownerWords(text), session: r.session.id });
       } else {
         messages.push({ at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id });
       }
@@ -921,6 +927,30 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   }
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text));
   return { session: run.session, new_session: true };
+}
+
+/**
+ * The owner improves a taf (kiff/tafs#107): a new conversation with the
+ * account's Setup, whose first message is the owner's words with this taf's
+ * context in front: its job, its Card and its latest calls, read from KIFF with
+ * the owner's own session. Setup starts from how the taf is doing, not from
+ * scratch, and the app assembles nothing.
+ */
+async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  if (taf.job === SETUP_JOB) throw new HTTPError(400, "Setup improves tafs, not itself");
+  const setup = await setupOf(me, deps);
+  if (!setup) throw new HTTPError(409, "this account has no Setup yet");
+  const text = chatText(event);
+  const token = bearer(event);
+  const [kiff, calls] = await Promise.all([
+    readKIFF(token, deps.fetch, deps.kiffBase),
+    recentCalls(token, taf.kiffAgent, deps.fetch, deps.kiffBase),
+  ]);
+  const card = summary(byHolder(kiff.mandates, kiff.held).cards.get(taf.kiffAgent) ?? []);
+  const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent }, card, calls, text);
+  await claimChatSlot(me, setup, deps);
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input));
+  return { setup: setup.id, session: run.session, new_session: true };
 }
 
 /**
@@ -1012,7 +1042,7 @@ async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = fals
   return listed.flatMap((s, i) => {
     const text = chatTitle((read[i]?.events ?? []).filter((e) => e.kind === "owner_message").map((e) => {
       const t = (e.body as { text?: unknown })?.text;
-      return typeof t === "string" ? t.trim() : "";
+      return typeof t === "string" ? ownerWords(t.trim()) : "";
     }));
     if (!text) return [];
     const title = text.length > CHAT.chatTitle ? text.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : text;

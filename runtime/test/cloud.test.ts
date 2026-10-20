@@ -4,6 +4,7 @@ import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upg
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
+import type { ActivityCall } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -15,12 +16,16 @@ const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id
 type Drafts = Record<string, { secret: string; key: string; agent: string; status?: number }>;
 
 /** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
-interface Account { mandates: Mandate[]; held: { subject: string }[]; status?: number }
+interface Account { mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[]; status?: number }
 
 /** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
 function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
+    if (url.includes("/v1/me/activity")) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      return new Response(JSON.stringify({ calls: account.calls ?? [] }), { status: 200 });
+    }
     if (url.includes("/v1/me/mandates") || url.includes("/v1/me/card-exceptions")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
       if (account.status) return new Response(JSON.stringify({ error: "down" }), { status: account.status });
@@ -708,5 +713,61 @@ describe("upgrading running tafs (kiff/tafs#69)", () => {
     w.agents.fail.set("getAgent", new AgentsError(500, "no agent t_acme/taf-aaaa0000000000000000"));
     out = await upgradeDefinitions(depsOf(w), { dryRun: true });
     expect(out.find((o) => o.outcome === "failed")?.error).toBe("kiff/agents answered 500");
+  });
+});
+
+describe("improving a taf (kiff/tafs#107)", () => {
+  const SETUP = "taf-5e70000000000000000a";
+  const raeCard: Mandate = {
+    id: "card_rae", subject: "rae", active: true, on_exceed: "hold",
+    grants: [{ action: "create_refund_k3f9", title: "Refund a charge", per_action_max: [{ quantity: "sum(amount)", max: 10000, unit: "EUR", scale: 2 }] }],
+    aggregates: [],
+  };
+  const withSetup = () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${SETUP}`, { id: SETUP, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    void w.agents.api.putAgent("t_acme", SETUP, setupDefinition(SETUP));
+    w.account.mandates = [raeCard];
+    w.account.calls = [
+      { actor_id: "rae", action_name: "create_refund_k3f9", title: "Refund a charge", outcome: "allowed", created_at: "2026-10-19T09:00:00Z", tool_outcome: { status: "done" } },
+      { actor_id: "rae", action_name: "create_refund_k3f9", title: "Refund a charge", outcome: "owner_required", created_at: "2026-10-19T10:00:00Z" },
+      { actor_id: "someone-else", action_name: "payout", outcome: "allowed", created_at: "2026-10-19T11:00:00Z" },
+    ];
+    return w;
+  };
+
+  it("opens a new Setup conversation on the taf: its job, Card and latest calls, then the owner's words", async () => {
+    const w = withSetup();
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "It can't find the payments to refund." } });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ setup: SETUP, new_session: true });
+    const first = w.agents.events.get(r.body.session)?.[0]?.body as { text: string };
+    expect(first.text.startsWith(`[improve taf ${RAE}]`)).toBe(true);
+    expect(first.text).toContain("Name: Rae. Job: refunds. Its agent in KIFF: rae.");
+    expect(first.text).toContain("Tools on its Card: Refund a charge.");
+    expect(first.text).toContain("- Refund a charge: at most 100.00 EUR a call, held for the owner beyond that");
+    // Newest first, its own calls only.
+    expect(first.text.indexOf("owner_required")).toBeLessThan(first.text.indexOf("allowed, done"));
+    expect(first.text).not.toContain("payout");
+    expect(first.text.endsWith("The owner says: It can't find the payments to refund.")).toBe(true);
+  });
+
+  it("shows the owner only their own words, in the thread and the chat's title", async () => {
+    const w = withSetup();
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "It can't find the payments to refund." } });
+    const thread = await call(w, "GET", `/v1/tafs/${SETUP}/conversation`, { token: "ana" });
+    const mine = (thread.body.messages as Array<{ from: string; text: string }>).filter((m) => m.from === "owner");
+    expect(mine.map((m) => m.text)).toEqual(["It can't find the payments to refund."]);
+    const chats = await call(w, "GET", `/v1/tafs/${SETUP}/chats`, { token: "ana" });
+    expect((chats.body.chats as Array<{ session: string; title: string }>).find((c) => c.session === r.body.session)?.title).toBe("It can't find the payments to refund.");
+  });
+
+  it("needs the account's Setup and a manager, and never improves Setup itself", async () => {
+    const w = world();
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "x" } })).status).toBe(409);
+    const v = withSetup();
+    expect((await call(v, "POST", `/v1/tafs/${RAE}/improve`, { token: "viewer", body: { text: "x" } })).status).toBe(403);
+    expect((await call(v, "POST", `/v1/tafs/${SETUP}/improve`, { token: "ana", body: { text: "x" } })).status).toBe(400);
+    expect((await call(v, "POST", `/v1/tafs/${MAX}/improve`, { token: "ana", body: { text: "x" } })).status).toBe(404);
   });
 });

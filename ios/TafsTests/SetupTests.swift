@@ -225,6 +225,30 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Improving a taf (kiff/tafs#107): opened from the taf's page, the conversation's first
+    /// message goes to tafs cloud's improve route for that taf, which adds its context; the
+    /// conversation then goes on as any other.
+    func testImprovingATafSendsItsFirstMessageThroughImprove() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        await model.refresh()
+        await model.loadSetup()
+        let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" })
+        StubProtocol.responses["POST /v1/tafs/depl_1/improve"] = (200, #"{"setup":"taf-setup","session":"s_imp","new_session":true}"#)
+        model.improveTaf(rae.id)
+        XCTAssertEqual(model.setupImproving?.id, "depl_1")
+        let delivered = await model.sendSetup("How is it going?")
+        XCTAssertTrue(delivered)
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/depl_1/improve").last) as? [String: String], ["text": "How is it going?"])
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "not as a plain Setup message")
+        XCTAssertNil(model.setupImproving, "only the first message carries the taf")
+        model.newSetupChat()
+        XCTAssertNil(model.setupImproving)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// No stream route (an older tafs cloud) or no way to it: the plain send takes the
     /// message. A refusal on the stream route is the owner's to see, and isn't sent again.
     func testWithoutAStreamThePlainSendTakesIt() async throws {
