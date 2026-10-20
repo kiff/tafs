@@ -941,6 +941,16 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.live)?.n).toBe(1);
   });
 
+  it("makes a result's version once, however often it's handed over", async () => {
+    const w = twoVersions();
+    const first = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first", from: "sess9/v2-improve" } });
+    const again = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first", from: "sess9/v2-improve" } });
+    expect(again.body).toEqual(first.body);
+    expect(w.agents.calls.filter((c) => c === `createVersion ${RAE}`)).toHaveLength(1);
+    const other = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Another", from: "sess9/v3" } });
+    expect(other.body.version).toBe((first.body.version as number) + 1);
+  });
+
   it("names only a waiting draft of this taf's own agent", async () => {
     const w = twoVersions();
     w.account.drafts = { drf_other: { status: "draft", agent_id: "someone-else" }, drf_done: { status: "confirmed", agent_id: "rae" } };

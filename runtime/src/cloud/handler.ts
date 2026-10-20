@@ -31,7 +31,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
- *   POST /v1/tafs/{id}/versions         {note, notes?, draft?}: its next version, as Setup drafted it (kiff/tafs#107); nothing goes live
+ *   POST /v1/tafs/{id}/versions         {note, notes?, draft?, from?}: its next version, as Setup drafted it, once per result (kiff/tafs#107); nothing goes live
  *   POST /v1/tafs/{id}/versions/{n}/switch  begin the switch to version n: nothing of the taf runs until it ends
  *   DELETE /v1/tafs/{id}/switching      drop a switch whose Card isn't confirmed yet
  *   POST /v1/tafs/{id}/versions/{n}/trial  {input?}: a trial of version n, its writes decided by KIFF, nothing sent
@@ -140,6 +140,12 @@ export interface Taf {
   definition?: string;
   /** Its colour in the app (`home.COLORS`), kept so a new taf never takes it. Given at its start. */
   color?: number;
+  /**
+   * The versions made from Setup's results (kiff/tafs#107), by the result
+   * they came from: a result makes its version once, however often the app
+   * hands it over.
+   */
+  versionsFrom?: Record<string, number>;
 }
 
 export interface Tafs {
@@ -1014,6 +1020,11 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   const notes = body.notes === undefined || body.notes === null ? undefined : str(body.notes).trim();
   if (notes !== undefined && notes.length > VERSION_NOTES) throw new HTTPError(400, `the instructions are at most ${VERSION_NOTES} characters`);
   const draft = str(body.draft).trim() || undefined;
+  // The result it comes from: the version it already made, if any.
+  const from = str(body.from).trim() || undefined;
+  if (from && from.length > 128) throw new HTTPError(400, "from is at most 128 characters");
+  const made = from ? taf.versionsFrom?.[from] : undefined;
+  if (made !== undefined) return { version: made };
   if (draft) {
     const d = await draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))());
     if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
@@ -1026,6 +1037,15 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", ...(draft ? { draft } : {}) }));
+  if (from) {
+    // Kept so the same result hands over this version again. A record that
+    // changed meanwhile is read again once.
+    for (let tries = 0; tries < 2; tries++) {
+      const cur = tries === 0 ? taf : await deps.tafs.get(me.tenantID, taf.id);
+      if (!cur) break;
+      if (await deps.tafs.putIf(me.tenantID, { ...cur, versionsFrom: { ...cur.versionsFrom, [from]: n } }, cur)) break;
+    }
+  }
   return { version: n };
 }
 
