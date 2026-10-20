@@ -50,10 +50,24 @@ export interface ImprovedTaf {
 /** A Card the taf holds, as Setup revises it: KIFF's fields a draft names again under the same id. */
 export type HeldCard = Record<string, unknown> & { id: string };
 
+/** Only `keys` of an object, those it has. */
+function only(o: unknown, keys: string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (o && typeof o === "object") for (const k of keys) if ((o as Record<string, unknown>)[k] !== undefined) out[k] = (o as Record<string, unknown>)[k];
+  return out;
+}
+
+function list(v: unknown): unknown[] {
+  return Array.isArray(v) ? v : [];
+}
+
 /**
- * The taf's active Cards as KIFF shows them, each with the fields a revision
- * draft names again (kiff-cloud#1287): its id, domain and environment, what
- * happens past a limit, and its grants and limits.
+ * The taf's active Cards, each as a revision draft takes it (kiff-cloud#1287):
+ * a draft's Cards are decoded with unknown fields refused, so only a draft
+ * body's keys are copied from KIFF's view, never what the view adds (a
+ * grant's title, a limit's unit and scale, an aggregate's room), and each
+ * names its holder. An aggregate's limit is the Card's base: extra room isn't
+ * folded into it.
  */
 export function heldCards(mandates: unknown[], agent: string): HeldCard[] {
   const out: HeldCard[] = [];
@@ -61,9 +75,19 @@ export function heldCards(mandates: unknown[], agent: string): HeldCard[] {
     const m = raw as Record<string, unknown>;
     const holders = Array.isArray(m.subjects) ? (m.subjects as unknown[]) : [m.subject];
     if (typeof m.id !== "string" || m.active === false || holders.length !== 1 || holders[0] !== agent) continue;
-    const card: HeldCard = { id: m.id };
-    for (const k of ["domain", "environment", "on_exceed", "grants", "aggregates"]) if (m[k] !== undefined) card[k] = m[k];
-    out.push(card);
+    out.push({
+      id: m.id,
+      subject: agent,
+      ...only(m, ["domain", "environment", "on_exceed"]),
+      grants: list(m.grants).map((g) => {
+        const gv = only(g, ["action", "entity_states", "resources", "next_steps"]);
+        const caps = list((g as Record<string, unknown>).per_action_max).map((c) => only(c, ["quantity", "max"]));
+        if (caps.length) gv.per_action_max = caps;
+        if (gv.resources) gv.resources = only(gv.resources, ["parameter", "values"]);
+        return gv;
+      }),
+      aggregates: list(m.aggregates).map((a) => only(a, ["quantity", "limit", "window", "measure"])),
+    });
   }
   return out;
 }

@@ -4,7 +4,7 @@ import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upg
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
-import { type ActivityCall, improveContext, recentCalls } from "../src/cloud/improve.js";
+import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -771,9 +771,28 @@ describe("improving a taf (kiff/tafs#107)", () => {
     const first = (w.agents.events.get(r.body.session)?.[0]?.body as { text: string }).text;
     expect(first).toContain("Its instructions from the owner, as its live version has them: Offer store credit first.");
     expect(first).toContain("draft it again under the same id");
-    expect(first).toContain(`- ${JSON.stringify({ id: "card_rae", on_exceed: "hold", grants: raeCard.grants, aggregates: [] })}`);
+    // As a draft takes it: its holder named, and nothing KIFF's view adds (a grant's title).
+    expect(first).toContain(`- ${JSON.stringify({ id: "card_rae", subject: "rae", on_exceed: "hold",
+      grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 10000 }] }], aggregates: [] })}`);
     expect(first).not.toContain("card_other");
     expect(first).not.toContain("card_old");
+  });
+
+  it("copies only a draft body's keys from a Card as KIFF lists it", () => {
+    const listed = {
+      id: "card_rae", subject: "rae", subjects: ["rae"], active: true, domain: "gateway", environment: "live", on_exceed: "hold",
+      location: "Europe/Madrid", hold_expiry_seconds: 86400, domain_id: "dom_1",
+      grants: [{ action: "create_refund_k3f9", title: "Refund a charge", entity_states: ["requested"],
+        per_action_max: [{ quantity: "sum(amount)", max: 500, unit: "EUR", scale: 2 }], resources: { parameter: "charge", values: ["ch_1"], extra: 1 } }],
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects", unit: "EUR", scale: 2, room_grants: [{ amount: 1000 }] }],
+    };
+    expect(heldCards([listed], "rae")).toEqual([{
+      id: "card_rae", subject: "rae", domain: "gateway", environment: "live", on_exceed: "hold",
+      grants: [{ action: "create_refund_k3f9", entity_states: ["requested"], resources: { parameter: "charge", values: ["ch_1"] },
+        per_action_max: [{ quantity: "sum(amount)", max: 500 }] }],
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects" }],
+    }]);
+    expect(heldCards([{ ...listed, subjects: ["rae", "bo"] }], "rae")).toEqual([]);
   });
 
   it("shows the owner only their own words, in the thread and the chat's title", async () => {
