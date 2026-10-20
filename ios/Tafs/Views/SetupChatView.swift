@@ -265,7 +265,15 @@ struct SetupChatView: View {
             .onChange(of: thinking) { _ in follow(proxy) }
             .onChange(of: grown) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: model.setupLive) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
-            .onChange(of: model.setupUnsent) { _ in follow(proxy) }
+            .onChange(of: model.setupUnsent) { unsent in
+                // Not sent: its bubble, with Retry, is the one at the top.
+                if pinNext, let last = unsent.last {
+                    pinned = last.id.uuidString
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(last.id, anchor: .top) }
+                    return
+                }
+                follow(proxy)
+            }
             .onAppear { land(proxy, waiting: waiting) }
         }
     }
@@ -454,8 +462,10 @@ struct SetupChatView: View {
     private func send() {
         let text = draft
         draft = ""
-        // While Setup works, the message waits or steers: nothing new to pin.
-        if model.setupThinking { following = true } else { pinNext = true }
+        // A sent message goes to the top of the view and stays (kiff/tafs#138), even while
+        // Setup works: the message waits there, and the answer fills the space below.
+        pinNext = true
+        following = false
         Haptics.tap()
         Task { if !(await model.submitSetup(text)), draft.isEmpty { draft = text } }
     }

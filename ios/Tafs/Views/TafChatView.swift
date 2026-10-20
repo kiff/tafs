@@ -169,7 +169,15 @@ struct TafChatView: View {
             }
             .onChange(of: thinking) { _ in follow(proxy) }
             .onChange(of: state.live) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
-            .onChange(of: state.unsent) { _ in follow(proxy) }
+            .onChange(of: state.unsent) { unsent in
+                // Not sent: its bubble, with Retry, is the one at the top.
+                if pinNext, let last = unsent.last {
+                    pinned = last.id.uuidString
+                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(last.id, anchor: .top) }
+                    return
+                }
+                follow(proxy)
+            }
             .onAppear { land(proxy, items: items.map(\.id), waiting: waiting) }
         }
     }
@@ -269,7 +277,11 @@ struct TafChatView: View {
     private func send() {
         let text = draft
         draft = ""
-        if model.chatThinking(tafID) { following = true } else { pinNext = true }
+        // A sent message goes to the top of the view and stays (kiff/tafs#138): the reply,
+        // and a card with it, fill the space below without the view moving, even while the
+        // taf is still at work.
+        pinNext = true
+        following = false
         Haptics.tap()
         // The keyboard stays for the next message (kiff/tafs#102): the composer changes
         // around the field as the taf starts, which drops its focus.
