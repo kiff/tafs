@@ -693,6 +693,30 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A request refused for itself (kiff/tafs#138: a tool name already connected) isn't
+    /// offered again unchanged: a 4xx is the request's own, a lapsed sign-in or a timeout
+    /// isn't, and a grant planque failed can't be approved again either.
+    func testARequestRefusedForItselfIsntSentAgainUnchanged() async throws {
+        XCTAssertTrue(AppModel.refusesTheRequest(PlanqueClient.PlanqueError.server(status: 409, message: "a tool named read_payment is already connected")))
+        XCTAssertTrue(AppModel.refusesTheRequest(PlanqueClient.PlanqueError.server(status: 422, message: "bad field")))
+        for status in [401, 403, 408, 429, 500, 502] {
+            XCTAssertFalse(AppModel.refusesTheRequest(PlanqueClient.PlanqueError.server(status: status, message: "")), "\(status) is worth trying again")
+        }
+        XCTAssertFalse(AppModel.refusesTheRequest(URLError(.timedOut)))
+
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[{"at":"2026-10-17T10:00:02.000Z","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"read","grant":"g_01"}}]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "failed", reason: "a tool named read_payment is already connected"))]}"#)
+        await model.loadSetup()
+        XCTAssertTrue(model.requestRefused(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)))
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        await model.refreshConnections()
+        XCTAssertFalse(model.requestRefused(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)), "a pending request can be approved")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A new conversation (#73): the thread is empty and nothing is read until the
     /// first message, which asks for a new chat; that chat is the one shown from then on.
     func testANewConversationStartsItsOwnChat() async throws {

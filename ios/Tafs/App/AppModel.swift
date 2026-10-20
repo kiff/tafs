@@ -254,6 +254,7 @@ final class AppModel: ObservableObject {
         unfinishedRemovals = []
         grants = []
         grantsReadFor = []
+        refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
@@ -285,6 +286,7 @@ final class AppModel: ObservableObject {
         unfinishedRemovals = []
         grants = []
         grantsReadFor = []
+        refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
@@ -1951,6 +1953,11 @@ final class AppModel: ObservableObject {
 
     /// The account's planque grants: connections, and connections waiting for the owner.
     @Published private(set) var grants: [PlanqueClient.Grant] = []
+    /// Approvals refused for the request itself (kiff/tafs#138): "<card id>|<grant digest>".
+    /// Sent again unchanged, they'd fail the same way: Setup has to change the request.
+    @Published private(set) var refusedRequests: Set<String> = []
+    /// Set by connect when its failure is the request's own, not the network's or a sign-in's.
+    private var failureIsTheRequests = false
     /// The approval cards whose grant was read since the app first saw them (kiff/tafs#138):
     /// a grant read before a new approval of it says nothing about that approval.
     private var grantsReadFor: Set<String> = []
@@ -2124,6 +2131,7 @@ final class AppModel: ObservableObject {
             return grant
         }
         guard ["pending", "approved", "signed_in"].contains(grant.status) else {
+            failureIsTheRequests = grant.status == "failed"
             lastError = "This connection is \(grant.status.replacingOccurrences(of: "_", with: " "))\(grant.reason.map { ": \($0)" } ?? ".")"
             return nil
         }
@@ -2173,6 +2181,7 @@ final class AppModel: ObservableObject {
             return nil
         } catch {
             lastError = "Not connected: \(error.localizedDescription)"
+            failureIsTheRequests = Self.refusesTheRequest(error)
             await refreshConnections()
             return nil
         }
@@ -2811,6 +2820,7 @@ final class AppModel: ObservableObject {
         guard let grant = component.grant else { return }
         lastError = nil
         shownTermsChanged = false
+        failureIsTheRequests = false
         // Connected, or connected first and listed (contract 5): Setup reads what's next.
         let done = await connect(grantID: grant, shown: shown, draftID: component.draft, shownDraft: shownDraft)
         // Changed terms aren't a failure to tell Setup: the owner reads them and approves again.
@@ -2822,9 +2832,32 @@ final class AppModel: ObservableObject {
                 await answer(component, vendorSignedIn ? "approved, signed in" : "approved")
             }
         } else if let e = lastError {
-            await answer(component, "failed: \(e)")
+            if failureIsTheRequests, let shown {
+                // The request itself was refused (kiff/tafs#138): Setup changes it before
+                // asking again, and the card doesn't offer to send it unchanged.
+                refusedRequests.insert("\(component.id)|\(shown)")
+                await answer(component, "failed: \(e)")
+            } else {
+                await answer(component, "failed: \(e)")
+            }
         }
         await loadSetupThread()
+    }
+
+    /// Whether this approval, as it reads now, was refused for the request itself: sent
+    /// again unchanged it fails the same way (kiff/tafs#138). A grant planque failed can't
+    /// be approved again either.
+    func requestRefused(_ c: SetupComponent) -> Bool {
+        guard let g = c.grant, let grant = grants.first(where: { $0.id == g }) else { return false }
+        return grant.status == "failed" || refusedRequests.contains("\(c.id)|\(grant.digest)")
+    }
+
+    /// A refusal of the request, not of the moment: planque or KIFF answered 4xx (a tool
+    /// name already in use, a field it won't take). Not a sign-in that lapsed (401, 403),
+    /// a timeout or too many calls.
+    static func refusesTheRequest(_ error: Error) -> Bool {
+        guard case PlanqueClient.PlanqueError.server(let status, _) = error else { return false }
+        return (400..<500).contains(status) && ![401, 403, 408, 429].contains(status)
     }
 
     /// Sign in again, for a grant whose sign-in was left: a new approval, one Face ID.

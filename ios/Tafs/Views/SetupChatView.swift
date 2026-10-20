@@ -1067,7 +1067,11 @@ struct SetupApproval: View {
                 Text(why.map { "It didn't go through: \($0)" } ?? "It didn't go through. Nothing was connected.")
                     .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
-            if state == .needsYou || state == .working || state.isFailure {
+            if state.isFailure && model.requestRefused(component) {
+                // Sent again unchanged, it would fail the same way (kiff/tafs#138).
+                Text("Setup has to change this request before you can approve it.")
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            } else if state == .needsYou || state == .working || state.isFailure {
                 HStack(spacing: 10) {
                     Button("Decline") { Task { await model.answer(component, "declined") } }
                         .buttonStyle(OutlineButtonStyle())
