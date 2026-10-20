@@ -592,11 +592,12 @@ final class TafsCloud {
     }
 
     /// Stores the taf's next version as Setup drafted it (kiff/tafs#107), once per result
-    /// (`from`): nothing goes live. Returns its number.
-    func createVersion(_ id: String, note: String, notes: String?, draft: String?, from: String) async throws -> Int {
-        struct Body: Encodable { let note: String; let notes: String?; let draft: String?; let from: String }
+    /// (`from`): nothing goes live. Returns its number. `agent` is the result's: tafs cloud
+    /// refuses an improvement of another taf's agent.
+    func createVersion(_ id: String, note: String, notes: String?, draft: String?, from: String, agent: String? = nil) async throws -> Int {
+        struct Body: Encodable { let note: String; let notes: String?; let draft: String?; let from: String; let agent: String? }
         struct Response: Decodable { let version: Int }
-        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions", body: Body(note: note, notes: notes, draft: draft, from: from))
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions", body: Body(note: note, notes: notes, draft: draft, from: from, agent: agent))
         return r.version
     }
 
