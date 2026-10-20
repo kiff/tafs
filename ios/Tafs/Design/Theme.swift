@@ -20,6 +20,9 @@ enum Theme {
     static let orange = Color(hex: 0xFF9A2E)
     static let pink = Color(hex: 0xFF4F7B)
     static let blue = Color(hex: 0x2F6BFF)
+    /// Coach mode's own blue, and its wash (kiff/tafs#138): never a taf's chat.
+    static let coach = Color(hex: 0x2F6BFF)
+    static let coachWash = Color(hex: 0xEEF3FF)
     static let sky = Color(hex: 0x3EC2FF)
 
     /// The mascot's sweep, for the main button and the brand.

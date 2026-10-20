@@ -2272,6 +2272,27 @@ final class AppModel: ObservableObject {
     /// front. Nil for any other conversation.
     @Published private(set) var setupImproving: TafsCloud.CloudTaf?
 
+    // MARK: Coach mode (kiff/tafs#138)
+
+    /// Coach mode is open: Setup's conversation, over whatever is on screen.
+    @Published var coachOpen = false
+    /// The taf whose page is on screen, the context Coach mode opens with; nil elsewhere.
+    @Published var tafOnScreen: UUID?
+
+    /// Opens Coach mode. Closing never ends a conversation, so one in progress reopens as
+    /// it was; a new one, not yet written in, takes the taf on screen as its context.
+    func openCoach() {
+        if setupFresh && setupThread.messages.isEmpty && setupUnsent.isEmpty, let taf = tafOnScreen {
+            improveTaf(taf)
+        }
+        coachOpen = true
+    }
+
+    /// A new conversation in Coach mode: on the taf on screen, else on none.
+    func newCoachConversation() {
+        if let taf = tafOnScreen { improveTaf(taf) } else { newSetupChat() }
+    }
+
     /// A new Setup conversation on one taf, to improve it (kiff/tafs#107).
     func improveTaf(_ tafID: UUID) {
         newSetupChat()

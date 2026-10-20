@@ -39,7 +39,11 @@ struct TafsApp: App {
 
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
+
+    /// Coach mode works with the owner's KIFF account, once signed in.
+    private var coachAvailable: Bool { model.signedIn && model.mode == .kiff }
 
     private func showRequestedTab(_ requested: Tab?) {
         guard let requested else { return }
@@ -66,6 +70,19 @@ struct RootView: View {
             } else {
                 OnboardingView()
             }
+        }
+        // Coach mode (kiff/tafs#138): ✦ on every screen, above the tab bar and a chat's field.
+        .overlay(alignment: .bottomTrailing) {
+            if coachAvailable && !model.coachOpen {
+                CoachButton(wide: sizeClass == .regular).padding(.trailing, 16).padding(.bottom, 112)
+            }
+        }
+        // A wide screen: a panel beside what's open. A phone: a sheet, with Close, that a drag
+        // down closes too; either way the conversation stays for ✦ to reopen.
+        .overlay { if coachAvailable && sizeClass == .regular { CoachPanel() } }
+        .sheet(isPresented: Binding(get: { coachAvailable && sizeClass != .regular && model.coachOpen },
+                                    set: { model.coachOpen = $0 })) {
+            CoachView().environmentObject(model)
         }
         .onOpenURL { url in
             if url.host == "needs-you" { tab = .needsYou }
