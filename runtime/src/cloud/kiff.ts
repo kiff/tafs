@@ -99,3 +99,42 @@ export async function claimDraft(draftID: string, claimSecret: string, doFetch: 
   if (!body.plaintext || !body.agent_id) throw new KIFFError(502, "KIFF claimed the draft but sent no key");
   return { agentID: body.agent_id, key: body.plaintext };
 }
+
+/** Asks KIFF with the owner's session; a refused or failed answer throws. */
+async function ask<T>(token: string, method: string, path: string, body: unknown, doFetch: Fetch, base: string): Promise<T> {
+  const res = await doFetch(`${base}${path}`, {
+    method, headers: { authorization: `Bearer ${token}`, accept: "application/json", ...(body === undefined ? {} : { "content-type": "application/json" }) },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+  if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
+  const out = (await res.json().catch(() => ({}))) as T & { error?: string };
+  if (!res.ok) throw new KIFFError(res.status === 404 || res.status === 409 ? res.status : 502, out.error ?? `KIFF answered ${res.status}`);
+  return out;
+}
+
+/**
+ * The revision each of these Cards is at now, from its statement (kiff/tafs#107):
+ * what a version runs under, recorded when it goes live.
+ */
+export async function cardRevisions(token: string, ids: string[], doFetch: Fetch = fetch, base = KIFF_API): Promise<Array<{ id: string; revision: number }>> {
+  return Promise.all(ids.map(async (id) => {
+    const s = await ask<{ revisions?: Array<{ revision: number }> }>(token, "GET", `/v1/me/mandates/${encodeURIComponent(id)}/statement`, undefined, doFetch, base);
+    const revision = Math.max(0, ...(s.revisions ?? []).map((r) => r.revision));
+    if (!revision) throw new KIFFError(502, `KIFF keeps no revision of Card ${id}`);
+    return { id, revision };
+  }));
+}
+
+/**
+ * A draft that brings back these Cards' terms at these revisions, for going back
+ * to the version that ran under them (kiff-cloud#1288). It only waits: the owner
+ * confirms it with the phone's signature.
+ */
+export async function restoreDraft(token: string, agent: string, revisions: Array<{ id: string; revision: number }>, label: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<string> {
+  return (await ask<{ id: string }>(token, "POST", "/v1/me/agent-drafts/restore", { agent_id: agent, label, revisions }, doFetch, base)).id;
+}
+
+/** A revision draft submitted again, for one that expired or went stale (kiff-cloud#1288). It only waits. */
+export async function redraft(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<string> {
+  return (await ask<{ id: string }>(token, "POST", `/v1/me/agent-drafts/${encodeURIComponent(draftID)}/redraft`, {}, doFetch, base)).id;
+}

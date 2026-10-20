@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
-import { type AgentDefinition, type Agents, AgentsError, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
-import { claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, issued, KIFFError, type KIFFIdentity, whoIs } from "./kiff.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
+import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, issued, KIFFError, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
@@ -32,7 +32,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
  *   POST /v1/tafs/{id}/versions         {note, notes?, draft?, from?}: its next version, as Setup drafted it, once per result (kiff/tafs#107); nothing goes live
- *   POST /v1/tafs/{id}/versions/{n}/switch  begin the switch to version n: nothing of the taf runs until it ends
+ *   POST /v1/tafs/{id}/versions/{n}/switch  {redraft?}: begin the switch to version n, with the Card draft it waits for: nothing of the taf runs until it ends
  *   DELETE /v1/tafs/{id}/switching      drop a switch whose Card isn't confirmed yet
  *   POST /v1/tafs/{id}/versions/{n}/trial  {input?}: a trial of version n, its writes decided by KIFF, nothing sent
  *   GET  /v1/tafs/{id}/trials/{run}     a trial so far: its run and what KIFF decided for each write
@@ -987,14 +987,29 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   }
   if (sub === "switch") {
     if (version.live) throw new HTTPError(409, "that version is live already");
-    return { switching: await agentsCall(() => deps.agents.beginSwitch(me.tenantID, taf.id, n, version.draft)) };
+    const again = parseBody(event).redraft === true;
+    const sw = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).switching;
+    if (sw && sw.n === n && !again) return { switching: sw };
+    const draft = await draftFor(event, me, taf, version, again, deps);
+    // Drafted again for a switch under way: it waits for the new draft instead.
+    if (sw && sw.n === n) await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id));
+    return { switching: await agentsCall(() => deps.agents.beginSwitch(me.tenantID, taf.id, n, draft)) };
   }
   if (sub === "live") {
-    if (version.draft && !(await draftConfirmed(bearer(event), version.draft, deps.fetch, deps.kiffBase))) {
+    // The draft the switch waits for: prepared by switch, or the version's own.
+    const sw = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).switching;
+    const pending = sw && sw.n === n;
+    const draft = pending ? sw.draft : version.draft;
+    if (draft && !(await draftConfirmed(bearer(event), draft, deps.fetch, deps.kiffBase))) {
       throw new HTTPError(409, "confirm this version's Card first");
     }
-    await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n));
-    await keepNotes(me, taf, n, deps);
+    // Going back without a switch: a version that ran under other Card revisions
+    // goes live only once a switch has restored them, never under the Cards in
+    // force, whether or not it once went live through a draft of its own.
+    if (!pending && version.cards?.length && !sameCards(await liveCards(event, taf, deps), version.cards)) {
+      throw new HTTPError(409, "begin the switch: this version's Cards need restoring first");
+    }
+    await goLive(event, me, taf, n, deps);
     return { live: n };
   }
   throw new HTTPError(404, "not found");
@@ -1036,6 +1051,13 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
+  // The version live now records its Cards first, so going back to it brings them back.
+  const state = await agentsCall(() => deps.agents.versions(me.tenantID, taf.id));
+  const live = state.versions.find((v) => v.live);
+  if (live && !live.cards?.length && !state.switching) {
+    const cards = await liveCards(event, taf, deps);
+    if (cards.length) await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, live.n, cards));
+  }
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", ...(draft ? { draft } : {}) }));
   if (from) {
     // Kept so the same result hands over this version again. A record that
@@ -1047,6 +1069,68 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
     }
   }
   return { version: n };
+}
+
+/**
+ * The KIFF Cards the taf holds now, each at its revision: what a version runs
+ * under. Nothing when KIFF can't say, so a switch never waits on it.
+ */
+async function liveCards(event: HTTPEvent, taf: Taf, deps: Deps): Promise<CardRevision[]> {
+  try {
+    const token = bearer(event);
+    const { mandates } = await readKIFF(token, deps.fetch, deps.kiffBase);
+    return await cardRevisions(token, heldCards(mandates, taf.kiffAgent).map((c) => c.id), deps.fetch, deps.kiffBase);
+  } catch (err) {
+    console.error(`live cards: ${taf.id}:`, err);
+    return [];
+  }
+}
+
+/** Makes version n live, recording the Cards it runs under, and keeps the record in step. */
+async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
+  const cards = await liveCards(event, taf, deps);
+  await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
+  await keepNotes(me, taf, n, deps);
+}
+
+function sameCards(a: CardRevision[], b: CardRevision[]): boolean {
+  const key = (cs: CardRevision[]) => cs.map((c) => `${c.id}@${c.revision}`).sort().join(",");
+  return key(a) === key(b);
+}
+
+/**
+ * The KIFF draft a switch to `version` waits for (kiff/tafs#107):
+ * - its own draft, while it waits for the owner (once confirmed, that draft
+ *   only says how it first went live, so going back goes by its Cards);
+ * - its Cards drafted again, when that draft expired or failed, or the owner
+ *   asks (`redraft`: KIFF refused it at confirm because a Card moved on);
+ * - for a version with no draft of its own that ran under other Card revisions
+ *   (going back), a draft that restores those revisions;
+ * - none when the Cards in force are the ones it runs under.
+ */
+async function draftFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, version: AgentVersion, again: boolean, deps: Deps): Promise<string | undefined> {
+  const token = bearer(event);
+  const now = (deps.now ?? (() => new Date()))();
+  const kiffCall = async <T>(work: () => Promise<T>): Promise<T> => {
+    try { return await work(); } catch (err) {
+      if (err instanceof KIFFError && (err.status === 404 || err.status === 409)) throw new HTTPError(409, `KIFF can't prepare this version's Card: ${err.message}`);
+      throw err;
+    }
+  };
+  if (version.draft) {
+    const d = await draftInfo(token, version.draft, deps.fetch, deps.kiffBase, now);
+    if (!d || d.status === "discarded") throw new HTTPError(409, "this version's Card draft is gone: improve the taf again");
+    if (!issued(d.status)) {
+      if (d.status === "draft" && !again) return version.draft;
+      return kiffCall(() => redraft(token, version.draft!, deps.fetch, deps.kiffBase));
+    }
+    // Issued: it says how the version first went live. Going back to it is
+    // then as for any version: by the Cards it recorded.
+  }
+  if (!version.cards?.length) return undefined;
+  const now2 = await liveCards(event, taf, deps);
+  if (sameCards(now2, version.cards)) return undefined;
+  return kiffCall(() => restoreDraft(token, taf.kiffAgent, version.cards!, `${taf.name}, version ${version.n}`, deps.fetch, deps.kiffBase));
 }
 
 /**
@@ -1082,8 +1166,7 @@ async function settleSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: 
   if (!sw?.draft) return state;
   const status = await draftStatus(bearer(event), sw.draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))()).catch(() => "unknown");
   if (issued(status)) {
-    await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, sw.n));
-    await keepNotes(me, taf, sw.n, deps);
+    await goLive(event, me, taf, sw.n, deps);
   } else if (dropped(status)) {
     await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id));
   } else {
@@ -1101,8 +1184,7 @@ async function cancelSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: 
   const { switching: sw } = await agentsCall(() => deps.agents.versions(me.tenantID, taf.id));
   if (!sw) return { cancelled: false };
   if (sw.draft && issued(await draftStatus(bearer(event), sw.draft, deps.fetch, deps.kiffBase))) {
-    await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, sw.n));
-    await keepNotes(me, taf, sw.n, deps);
+    await goLive(event, me, taf, sw.n, deps);
     return { cancelled: false, live: sw.n };
   }
   return { cancelled: await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id)) };

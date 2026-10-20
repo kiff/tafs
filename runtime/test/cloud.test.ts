@@ -16,7 +16,14 @@ const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id
 type Drafts = Record<string, { secret: string; key: string; agent: string; status?: number }>;
 
 /** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
-interface Account { mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[]; drafts?: Record<string, string | { status: string; expires_at?: string; agent_id?: string }>; status?: number }
+interface Account {
+  mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[];
+  drafts?: Record<string, string | { status: string; expires_at?: string; agent_id?: string }>; status?: number;
+  /** Each Card's latest revision, as its statement says (kiff/tafs#107). */
+  revisions?: Record<string, number>;
+  /** The restores and redrafts asked of KIFF, in order, as their bodies or draft ids. */
+  restored?: unknown[]; redrafted?: string[];
+}
 
 /** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
 function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }) {
@@ -28,6 +35,27 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       const actor = new URL(url).searchParams.get("actor");
       const calls = (account.calls ?? []).filter((c) => actor === null || c.actor_id === actor);
       return new Response(JSON.stringify({ calls }), { status: 200 });
+    }
+    if (url.endsWith("/v1/me/agent-drafts/restore")) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      (account.restored ??= []).push(JSON.parse(String(init?.body)));
+      const id = `drf_restore${account.restored.length}`;
+      (account.drafts ??= {})[id] = { status: "draft", agent_id: (JSON.parse(String(init?.body)) as { agent_id: string }).agent_id };
+      return new Response(JSON.stringify({ id, status: "draft" }), { status: 201 });
+    }
+    const re = /\/v1\/me\/agent-drafts\/([^/?]+)\/redraft$/.exec(url);
+    if (re) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      (account.redrafted ??= []).push(re[1]!);
+      const id = `drf_again${account.redrafted.length}`;
+      (account.drafts ??= {})[id] = { status: "draft", agent_id: "rae" };
+      return new Response(JSON.stringify({ id, status: "draft" }), { status: 201 });
+    }
+    const statement = /\/v1\/me\/mandates\/([^/?]+)\/statement$/.exec(url);
+    if (statement) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      const n = account.revisions?.[decodeURIComponent(statement[1]!)] ?? 1;
+      return new Response(JSON.stringify({ revisions: Array.from({ length: n }, (_, i) => ({ revision: i + 1 })) }), { status: 200 });
     }
     const draft = /\/v1\/me\/agent-drafts\/([^/?]+)$/.exec(url);
     if (draft) {
@@ -993,6 +1021,80 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(rec.ownerNotes).toBe("Ask before every refund.");
     const upgraded = await upgradeDefinitions(depsOf(w), { dryRun: true });
     expect(upgraded.find((u) => u.taf === RAE)?.outcome).toBe("current");
+  });
+
+  it("records the Cards a version runs under when it goes live", async () => {
+    const w = twoVersions();
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] } as Mandate];
+    w.account.revisions = { card_rae: 3 };
+    w.account.drafts = { drf_v2: { status: "confirmed", agent_id: "rae" } };
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
+    expect(w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.n === 2)?.cards).toEqual([{ id: "card_rae", revision: 3 }]);
+  });
+
+  it("drafts a version's Cards again when its draft expired, or when the owner asks", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: { status: "draft", expires_at: "2020-01-01T00:00:00Z", agent_id: "rae" } };
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect(r.body.switching).toMatchObject({ n: 2, draft: "drf_again1" });
+    expect(w.account.redrafted).toEqual(["drf_v2"]);
+    // A waiting draft KIFF refused at confirm (a Card moved on): the owner asks again.
+    await call(w, "DELETE", `/v1/tafs/${RAE}/switching`, { token: "ana" });
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae" } };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" })).body.switching.draft).toBe("drf_v2");
+    // Asked while the switch waits for the stale one: it waits for the new draft instead.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { redraft: true } })).body.switching.draft).toBe("drf_again2");
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" })).body.switching).toMatchObject({ n: 2, draft: "drf_again2" });
+  });
+
+  it("going back restores the Card revisions the version ran under, and needs none when they're in force", async () => {
+    const w = twoVersions();
+    const vs = w.agents.versions.get(`t_acme|${RAE}`)!;
+    vs[0] = { ...vs[0]!, live: false, cards: [{ id: "card_rae", revision: 1 }] };
+    vs[1] = { ...vs[1]!, live: true, draft: undefined };
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] } as Mandate];
+    w.account.revisions = { card_rae: 2 };
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/versions/1/switch`, { token: "ana" });
+    expect(r.body.switching).toMatchObject({ n: 1, draft: "drf_restore1" });
+    expect(w.account.restored).toEqual([{ agent_id: "rae", label: "Rae, version 1", revisions: [{ id: "card_rae", revision: 1 }] }]);
+    await call(w, "DELETE", `/v1/tafs/${RAE}/switching`, { token: "ana" });
+    // Straight to live, with no switch: refused, the restore isn't skipped.
+    const direct = await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" });
+    expect(direct.status).toBe(409);
+    expect(String(direct.body.error)).toContain("need restoring first");
+    expect(w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.live)?.n).toBe(2);
+    // The Cards are at the revisions it ran under already: a plain switch.
+    w.account.revisions = { card_rae: 1 };
+    const plain = await call(w, "POST", `/v1/tafs/${RAE}/versions/1/switch`, { token: "ana" });
+    expect(plain.body.switching.draft).toBeUndefined();
+    expect(w.account.restored).toHaveLength(1);
+  });
+
+  it("going back to a version whose own draft was confirmed restores by its Cards, not that draft", async () => {
+    const w = twoVersions();
+    const vs = w.agents.versions.get(`t_acme|${RAE}`)!;
+    // v2 went live through its confirmed draft at revision 2; v3 revised again and is live.
+    vs[0] = { ...vs[0]!, live: false };
+    vs[1] = { ...vs[1]!, live: false, draft: "drf_v2", cards: [{ id: "card_rae", revision: 2 }] };
+    vs.push({ n: 3, note: "Revised again", by: "setup", created: "2026-10-20T10:00:00Z", digest: "d3", live: true });
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [], aggregates: [] } as Mandate];
+    w.account.revisions = { card_rae: 3 };
+    w.account.drafts = { drf_v2: { status: "confirmed", agent_id: "rae" } };
+    const direct = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
+    expect(direct.status).toBe(409);
+    expect(String(direct.body.error)).toContain("need restoring first");
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect(r.body.switching).toMatchObject({ n: 2, draft: "drf_restore1" });
+    expect(w.account.restored).toEqual([{ agent_id: "rae", label: "Rae, version 2", revisions: [{ id: "card_rae", revision: 2 }] }]);
+  });
+
+  it("records the live version's Cards before making the next one, so going back can restore them", async () => {
+    const w = twoVersions();
+    w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] } as Mandate];
+    w.account.revisions = { card_rae: 4 };
+    await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first" } });
+    expect(w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.n === 1)).toMatchObject({ live: true, cards: [{ id: "card_rae", revision: 4 }] });
   });
 
   it("takes a claimed draft as confirmed: its Cards are issued all the same", async () => {
