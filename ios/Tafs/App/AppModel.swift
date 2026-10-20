@@ -244,7 +244,7 @@ final class AppModel: ObservableObject {
         kiff.token = token
         cloud.token = token
         startAttempt = nil
-        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -272,7 +272,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
-        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         holderIDs = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
@@ -1261,7 +1261,7 @@ final class AppModel: ObservableObject {
     /// its draft, each revised Card with its terms now. Nil with `versionErrors` when it
     /// can't be read.
     func versionCard(_ version: TafsCloud.Version, of tafID: UUID) async -> KIFFClient.AgentDraft? {
-        guard mode == .kiff, let tenant = kiffTenant, let id = version.draft else { return nil }
+        guard mode == .kiff, let tenant = kiffTenant, let id = switchDraft(version, of: tafID) else { return nil }
         let gen = accountGeneration
         kiff.tenant = tenant
         do {
@@ -1270,6 +1270,37 @@ final class AppModel: ObservableObject {
         } catch {
             guard gen == accountGeneration else { return nil }
             versionErrors[tafID] = "Couldn't read this version's Card: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    /// The Card draft a switch to `version` waits for: the one tafs cloud prepared when it
+    /// began (kiff/tafs#122), else the version's own.
+    func switchDraft(_ version: TafsCloud.Version, of tafID: UUID) -> String? {
+        if let sw = switches[tafID], sw.n == version.n { return sw.draft }
+        return version.draft
+    }
+
+    /// Versions whose Card KIFF refused at confirm because a Card moved on since it was
+    /// drafted: the owner drafts it again, and reads it before any Face ID.
+    @Published private(set) var staleVersionCards: [UUID: Int] = [:]
+
+    /// Begins the switch to a version (kiff/tafs#122): tafs cloud prepares the Card draft it
+    /// waits for, which the owner then reads, and from here nothing of the taf runs. With
+    /// `redraft`, its Cards are drafted again. Nil with `versionErrors` when it can't begin.
+    func prepareSwitch(_ version: TafsCloud.Version, of tafID: UUID, redraft: Bool = false) async -> TafsCloud.Switching? {
+        guard mode == .kiff, let c = cloudTaf(for: tafID), !version.live else { return nil }
+        let gen = accountGeneration
+        versionErrors[tafID] = nil
+        do {
+            let sw = try await cloud.beginSwitch(c.id, version: version.n, redraft: redraft)
+            guard gen == accountGeneration else { return nil }
+            switches[tafID] = sw
+            staleVersionCards[tafID] = nil
+            return sw
+        } catch {
+            guard gen == accountGeneration else { return nil }
+            versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
             return nil
         }
     }
@@ -1294,20 +1325,23 @@ final class AppModel: ObservableObject {
 
         var draft: KIFFClient.AgentDraft?
         changedVersionCards[tafID] = nil
-        if let id = version.draft {
+        // Begun before any Card changes, with the draft tafs cloud prepared: from here
+        // nothing of the taf runs. Again for a switch under way is the same switch.
+        let sw: TafsCloud.Switching
+        do { sw = try await cloud.beginSwitch(c.id, version: version.n) } catch {
+            guard gen == accountGeneration else { return false }
+            versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        switches[tafID] = sw
+        if let id = sw.draft {
             // Nothing shown, nothing signed.
             guard shownDraft != nil else { return false }
             guard sessionHasKey else {
                 versionErrors[tafID] = "Start from Connected tools on this iPhone first."
                 return false
             }
-            // Begun before the Card changes: from here nothing of the taf runs.
-            do { switches[tafID] = try await cloud.beginSwitch(c.id, version: version.n) } catch {
-                guard gen == accountGeneration else { return false }
-                versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
-                return false
-            }
-            guard gen == accountGeneration else { return false }
             do { draft = try await kiff.draft(id: id) } catch {
                 guard gen == accountGeneration else { return false }
                 versionErrors[tafID] = "Couldn't read this version's Card: \(error.localizedDescription)"
@@ -1340,21 +1374,32 @@ final class AppModel: ObservableObject {
                 _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
             } catch {
                 guard gen == accountGeneration else { return false }
-                versionErrors[tafID] = "Switching to version \(version.n) didn't finish: KIFF didn't confirm its Card (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
+                if error.localizedDescription.contains("changed since this draft was made") {
+                    // A Card moved on since it was drafted: drafted again, it's read again.
+                    staleVersionCards[tafID] = version.n
+                    versionErrors[tafID] = "Version \(version.n)'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve."
+                } else {
+                    versionErrors[tafID] = "Switching to version \(version.n) didn't finish: KIFF didn't confirm its Card (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
+                }
                 return false
             }
         } else {
             do {
                 _ = try await signer.sign(Data("tafs.version.v1|\(tenant)|\(c.id)|\(version.n)".utf8),
                                           reason: "Use version \(version.n) of \(taf.name)")
-            } catch { return false }
+            } catch {
+                // Backed out: the switch it began is dropped, and the taf runs again as it was.
+                guard gen == accountGeneration else { return false }
+                await cancelSwitch(tafID)
+                return false
+            }
         }
         guard gen == accountGeneration else { return false }
         do {
             try await cloud.makeLive(c.id, version: version.n)
         } catch {
             guard gen == accountGeneration else { return false }
-            versionErrors[tafID] = version.draft == nil
+            versionErrors[tafID] = sw.draft == nil
                 ? "Version \(version.n) isn't live: \(error.localizedDescription)"
                 : "Switching to version \(version.n) didn't finish (\(error.localizedDescription)). Your taf doesn't run until you finish or cancel it."
             return false

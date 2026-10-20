@@ -279,15 +279,24 @@ struct VersionsPanel: View {
     /// The version whose Card the owner reads before Face ID.
     @State private var reading: TafsCloud.Version?
 
-    /// Use this version: one that brings a Card is read first, now → after (kiff/tafs#107).
-    private func use(_ v: TafsCloud.Version) {
-        if v.draft == nil { Task { await model.useVersion(v, of: tafID) } } else { reading = v }
+    /// Use this version: the switch begins, with the Card draft tafs cloud prepared (its own,
+    /// drafted again, or a restore when going back), which is read first, now → after
+    /// (kiff/tafs#107, #122). With no Card to change, one Face ID makes it live.
+    private func use(_ v: TafsCloud.Version, redraft: Bool = false) {
+        Task {
+            guard let sw = await model.prepareSwitch(v, of: tafID, redraft: redraft) else { return }
+            if sw.draft == nil { await model.useVersion(v, of: tafID) } else { reading = v }
+        }
     }
 
     var body: some View {
         Panel {
             Eyebrow(text: "Versions")
             if let sw = model.switches[tafID] { switchUnderWay(sw) }
+            if let n = model.staleVersionCards[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
+                Button("Draft its Card again") { use(v, redraft: true) }
+                    .buttonStyle(OutlineButtonStyle())
+            }
             if let list = model.versions[tafID] {
                 if list.isEmpty {
                     Text("One version so far. When you improve it, each change is kept here.")
@@ -306,7 +315,7 @@ struct VersionsPanel: View {
         .sheet(item: $reading) { v in VersionCardSheet(version: v, tafID: tafID) }
         // Terms that changed between the screen and the tap open again, to read anew.
         .onChange(of: model.changedVersionCards[tafID]) { changed in
-            if changed != nil, reading == nil, let v = model.versions[tafID]?.first(where: { $0.draft == changed?.id }) { reading = v }
+            if changed != nil, reading == nil, let v = model.versions[tafID]?.first(where: { model.switchDraft($0, of: tafID) == changed?.id }) { reading = v }
         }
     }
 
@@ -415,7 +424,13 @@ struct VersionCardSheet: View {
             .navigationTitle("Its Card")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    // Not now: the switch it began is dropped, and the taf runs as it was.
+                    Button("Cancel") {
+                        dismiss()
+                        Task { await model.cancelSwitch(tafID) }
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Use this version") {
                         let shown = draft?.version
@@ -428,7 +443,7 @@ struct VersionCardSheet: View {
         }
         .task {
             // The terms that changed since last shown, when that's why this opened.
-            if let changed = model.changedVersionCards[tafID], changed.id == version.draft { draft = changed }
+            if let changed = model.changedVersionCards[tafID], changed.id == model.switchDraft(version, of: tafID) { draft = changed }
             else { draft = await model.versionCard(version, of: tafID) }
             loaded = true
         }
