@@ -987,9 +987,12 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   }
   if (sub === "switch") {
     if (version.live) throw new HTTPError(409, "that version is live already");
+    const again = parseBody(event).redraft === true;
     const sw = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).switching;
-    if (sw && sw.n === n) return { switching: sw };
-    const draft = await draftFor(event, me, taf, version, parseBody(event).redraft === true, deps);
+    if (sw && sw.n === n && !again) return { switching: sw };
+    const draft = await draftFor(event, me, taf, version, again, deps);
+    // Drafted again for a switch under way: it waits for the new draft instead.
+    if (sw && sw.n === n) await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id));
     return { switching: await agentsCall(() => deps.agents.beginSwitch(me.tenantID, taf.id, n, draft)) };
   }
   if (sub === "live") {
