@@ -34,6 +34,8 @@ struct SetupChatView: View {
     /// back up to its start. `pinNext` marks the next message the owner sends.
     @State private var pinNext = false
     @State private var pinned: String?
+    /// The owner has scrolled since the chat opened: a late landing leaves them where they are.
+    @State private var touched = false
     /// What the owner just sent, while it waits behind Setup's answer: its bubble is pinned,
     /// then the thread's copy, without the view moving (kiff/tafs#138).
     @State private var pinText: String?
@@ -218,7 +220,7 @@ struct SetupChatView: View {
             })
             // The owner scrolling stops the thread following what arrives; reaching the
             // bottom again, or the button, starts it.
-            .simultaneousGesture(DragGesture().onChanged { _ in following = false })
+            .simultaneousGesture(DragGesture().onChanged { _ in following = false; touched = true })
             .overlay(alignment: .bottom) {
                 VStack(spacing: 8) {
                     // The card that needs the owner, when it's out of view (#58).
@@ -309,16 +311,19 @@ struct SetupChatView: View {
 
     /// Opening the chat lands at the card waiting for the owner, or at the latest (#58).
     private func land(_ proxy: ScrollViewProxy, waiting: ShownComponent?) {
-        guard !landed, !model.setupThread.items.isEmpty else {
-            if !landed { proxy.scrollTo(Self.bottom, anchor: .bottom) }
-            return
-        }
+        // Only once the thread is in: landing on an empty chat would count as landed.
+        guard !landed, !model.setupThread.items.isEmpty else { return }
         landed = true
-        if let waiting {
-            following = false
-            proxy.scrollTo("c|" + waiting.id, anchor: .center)
-        } else {
-            proxy.scrollTo(Self.bottom, anchor: .bottom)
+        if waiting != nil { following = false }
+        let (target, anchor): (String, UnitPoint) = waiting.map { ("c|" + $0.id, .center) } ?? (Self.bottom, .bottom)
+        // Lazy rows aren't laid out on the first pass after the app comes back, so one
+        // scroll lands nowhere (kiff/tafs#138): it lands again once they are, unless the
+        // owner has scrolled meanwhile.
+        proxy.scrollTo(target, anchor: anchor)
+        for delay in [0.05, 0.3] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                if !touched { proxy.scrollTo(target, anchor: anchor) }
+            }
         }
     }
 
@@ -490,6 +495,8 @@ struct SetupChatView: View {
         // As the model keeps it: trimmed (review on #154).
         pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         following = false
+        // The keyboard goes down once it's sent (kiff/tafs#138): the answer gets the screen.
+        typing = false
         Haptics.tap()
         Task { if !(await model.submitSetup(text)), draft.isEmpty { draft = text } }
     }
