@@ -41,6 +41,27 @@ final class VersionsTests: XCTestCase {
 
     private static let twoVersions = #"{"versions":[{"n":1,"by":"setup","created":"2026-10-19T09:00:00Z","digest":"d1","live":true},{"n":2,"note":"Asks for the order number first","by":"setup","created":"2026-10-20T07:00:00.5Z","digest":"d2","live":false,"draft":"d_02"}]}"#
 
+    /// Coach mode (kiff/tafs#138): opened on a taf, a new conversation takes that taf as its
+    /// context; closed and opened again elsewhere, it's as it was; New conversation takes the
+    /// taf on screen, else none.
+    func testCoachModeOpensOnTheTafOnScreenAndKeepsAConversation() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        let cloudID = try XCTUnwrap(model.cloudTaf(for: id)?.id)
+        model.newSetupChat()
+        model.tafOnScreen = id
+        model.openCoach()
+        XCTAssertTrue(model.coachOpen)
+        XCTAssertEqual(model.setupImproving?.id, cloudID, "a new conversation takes the taf on screen")
+
+        model.coachOpen = false
+        model.tafOnScreen = nil
+        model.openCoach()
+        XCTAssertEqual(model.setupImproving?.id, cloudID, "closing kept it, and ✦ reopens it")
+
+        model.newCoachConversation()
+        XCTAssertNil(model.setupImproving, "a new one anywhere else has no taf in mind")
+    }
+
     func testLoadsATafsVersions() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
@@ -64,7 +85,7 @@ final class VersionsTests: XCTestCase {
         let upgrade = TafsCloud.Version(n: 3, note: "Its rules were updated", by: nil, created: at, live: true, draft: nil)
         XCTAssertFalse(VersionsPanel.byline(upgrade).contains("By"))
         let setup = TafsCloud.Version(n: 2, note: nil, by: "setup", created: at, live: false, draft: "d_02")
-        XCTAssertTrue(VersionsPanel.byline(setup).hasPrefix("By Setup · "))
+        XCTAssertTrue(VersionsPanel.byline(setup).hasPrefix("By Coach mode · "))
         XCTAssertTrue(VersionsPanel.byline(setup).hasSuffix(" · brings a new Card"))
     }
 

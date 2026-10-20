@@ -61,6 +61,9 @@ struct TafDetailView: View {
             })
             .screenBackground()
             .inlineTitle()
+            // Coach mode opened from here works on this taf (kiff/tafs#138).
+            .onAppear { model.tafOnScreen = tafID }
+            .onDisappear { if model.tafOnScreen == tafID { model.tafOnScreen = nil } }
             .confirmationDialog("Revoke \(taf.name)'s Card?", isPresented: $confirmRevoke, titleVisibility: .visible) {
                 Button("Revoke and stop", role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
@@ -249,11 +252,6 @@ struct ConnectionsPanel: View {
                             .foregroundColor(Theme.no)
                     }
                 }
-                // Setup on this taf (kiff/tafs#107): from how it's doing, not from scratch.
-                NavigationLink { SetupChatView(improving: tafID) } label: {
-                    Label("Improve this taf", systemImage: "wand.and.stars")
-                        .font(.system(size: 15, weight: .semibold))
-                }
             }
             .confirmationDialog("Disconnect \(confirming?.vendor ?? "")?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
                                 titleVisibility: .visible) {
@@ -424,7 +422,7 @@ struct VersionsPanel: View {
         var by: String?
         switch v.by {
         case nil, "": by = nil
-        case "setup": by = "By Setup"
+        case "setup": by = "By Coach mode"
         default: by = "By you"
         }
         return [by, v.created.formatted(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]

@@ -108,6 +108,8 @@ targets:
           - Views/OnboardingView.swift
           - Views/NewTafFlow.swift
           - Views/StartTafFlow.swift
+          # Coach mode's button, panel and sheet: the iPhone's and iPad's (kiff/tafs#138).
+          - Views/CoachMode.swift
           - Services/LockScreen.swift
           - Services/PushDelegate.swift
           - Info.plist

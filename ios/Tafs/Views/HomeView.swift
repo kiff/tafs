@@ -37,8 +37,8 @@ struct HomeView: View {
                 }
 
                 if model.mode == .kiff {
-                    // Setup (kiff/tafs#50): connect the tools a taf works with.
-                    NavigationLink { SetupChatView() } label: {
+                    // Connecting tools is Coach mode's (kiff/tafs#138).
+                    Button { model.openCoach() } label: {
                         HStack(spacing: 12) {
                             Image(systemName: "plus").font(.system(size: 16, weight: .bold)).foregroundColor(.white)
                                 .frame(width: 36, height: 36).background(Theme.brand).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

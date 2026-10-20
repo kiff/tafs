@@ -64,7 +64,7 @@ struct SetupShapePanel: View {
 
     private func tools(_ tools: [SetupShape.Tool]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Eyebrow(text: "Connected tools")
+            Eyebrow(text: "Tools")
             ForEach(tools) { tool in
                 let status = Self.status(tool.state)
                 VStack(alignment: .leading, spacing: 3) {

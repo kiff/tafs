@@ -77,7 +77,7 @@ struct SetupChatView: View {
         })
         .screenBackground()
         // Named for what it does (kiff/tafs#82): it connects the owner's tools.
-        .navigationTitle("Connected tools")
+        .navigationTitle("Coach mode")
         .inlineTitle()
         .setupChrome(wide: sizeClass == .regular)
         .toolbar {
@@ -114,7 +114,7 @@ struct SetupChatView: View {
                 landed = true
                 pinned = nil
                 following = true
-                model.newSetupChat()
+                model.newCoachConversation()
                 typing = true
             } label: { Label("New conversation", systemImage: "square.and.pencil") }
             Divider()
@@ -330,7 +330,7 @@ struct SetupChatView: View {
                     .font(Theme.display(26)).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                Text("Say what should change, or ask how it's going. Setup starts from what \(taf.name) did and what its Card allows.")
+                Text("Say what should change, or ask how it's going. Coach mode starts from what \(taf.name) did and what its Card allows.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("What do you want to connect?")
@@ -935,7 +935,7 @@ struct SetupComponentView: View {
             if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                 if sizeClass == .regular {
                     // Beside the sidebar: select it there, so the list says which taf is open.
-                    Button { model.requestedTaf = tafID } label: {
+                    Button { model.requestedTaf = tafID; model.coachOpen = false } label: {
                         Text(c.yes ?? "See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
@@ -1069,7 +1069,7 @@ struct SetupApproval: View {
             }
             if state.isFailure && model.requestRefused(component) {
                 // Sent again unchanged, it would fail the same way (kiff/tafs#138).
-                Text("Setup has to change this request before you can approve it.")
+                Text("Coach mode has to change this request before you can approve it.")
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else if state == .needsYou || state == .working || state.isFailure {
                 HStack(spacing: 10) {

@@ -20,8 +20,6 @@ enum HomeSelection: Hashable {
     case taf(UUID)
     /// A held call, shown on its taf's page.
     case held(UUID, taf: UUID)
-    /// Setup, which connects the owner's tools.
-    case setup
 }
 
 /// The sidebar (Theme.raised): the calls waiting for the owner, the tafs with a line on
@@ -40,8 +38,6 @@ struct HomeSplitView: View {
                 switch selection {
                 case .taf(let id)?, .held(_, let id)?:
                     TafDetailView(tafID: id)
-                case .setup?:
-                    SetupChatView()
                 case nil:
                     VStack(spacing: 12) {
                         Mascot(size: 72)
@@ -73,7 +69,6 @@ struct HomeSplitView: View {
             if let selected = selection {
                 switch selected {
                 case .taf(let id), .held(_, let id): if model.taf(id) != nil { return }
-                case .setup: return
                 }
             }
             let screenshot = Screenshots.enabled ? model.tafs.first(where: { $0.name == "Refunds" })?.id : nil
@@ -112,9 +107,9 @@ struct HomeSplitView: View {
             }
             if model.mode == .kiff {
                 Section {
-                    // Setup (kiff/tafs#50, #82): connect the tools a taf works with.
-                    NavigationLink(value: HomeSelection.setup) {
-                        Label("Connected tools", systemImage: "link").scaledFont(15).foregroundColor(Theme.ink)
+                    // Coach mode (kiff/tafs#138): sets up, connects and changes tafs.
+                    Button { model.openCoach() } label: {
+                        Label("Coach mode", systemImage: "sparkle").scaledFont(15).foregroundColor(Theme.coach)
                     }
                 }
             }
