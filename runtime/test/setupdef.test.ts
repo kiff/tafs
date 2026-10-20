@@ -113,6 +113,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("reading in the owner's account is open, with no limits");
     expect(flat).toContain("check that its tools cover the whole job: find the work, check an item, act on it, and say what it did");
     expect(flat).not.toContain("the fewest tools");
+    // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
+    expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
+    expect(flat).toContain("A read tool's line has no amount limit, only a call count generous enough never to get in the way, and you don't ask the owner to set it");
     expect(flat).toContain("Show plan again with every step done or skipped");
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.
