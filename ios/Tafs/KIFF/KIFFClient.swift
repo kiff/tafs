@@ -428,9 +428,17 @@ final class KIFFClient {
         var noTools: Bool?
         /// The name it was submitted with, such as the taf's ("Refunds assistant").
         var label: String?
+        /// The agent's Cards confirming it revokes: going back to a version that didn't hold
+        /// them (kiff/tafs#107), so its tools and limits go back together. Each with its terms
+        /// now, for the owner to read before confirming; the draft's version names them.
+        var retires: [Retired]?
         enum CodingKeys: String, CodingKey {
-            case id, status, version, reason, cards, label
+            case id, status, version, reason, cards, label, retires
             case agentID = "agent_id", claimSecret = "claim_secret", cardIDs = "card_ids", noTools = "no_tools"
+        }
+        struct Retired: Decodable, Equatable {
+            let id: String
+            var current: DraftCard.Terms?
         }
         var confirmed: Bool { status == "confirmed" }
         /// "Refunds assistant's Card": the name it was submitted with, never its agent id

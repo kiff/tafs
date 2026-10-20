@@ -237,6 +237,19 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(model.improveErrors["v2"]?.contains("isn't this taf's") ?? false)
     }
 
+    /// Going back to a version that didn't hold a Card (kiff/tafs#107): KIFF's restore draft
+    /// lists it as retired, with its terms now, and the sheet reads them as it does a Card.
+    func testARestoreDraftReadsTheCardsItRetires() throws {
+        let json = #"{"id":"drf_restore1","agent_id":"rae-k3f9","status":"draft","version":"v9","revision":true,"cards":[{"id":"card_rae","revises":"card_rae","grants":[{"action":"refund","per_action_max":[{"quantity":"sum(amount)","max":500}]}],"current":{"grants":[{"action":"refund","per_action_max":[{"quantity":"sum(amount)","max":1000}]}]}}],"retires":[{"id":"card_read","revision":2,"current":{"grants":[{"action":"retrieve_charge"}],"aggregates":[{"quantity":"count","limit":200,"window":"calendar_day"}]}}]}"#
+        let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(json.utf8))
+        let retired = try XCTUnwrap(d.retires?.first)
+        XCTAssertEqual(retired.id, "card_read")
+        XCTAssertFalse(retired.current?.lines.isEmpty ?? true, "its terms now, to read before confirming")
+        // A draft from before retires decodes with none.
+        let plain = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"{"id":"d","agent_id":"a","status":"draft","version":"v"}"#.utf8))
+        XCTAssertNil(plain.retires)
+    }
+
     /// Going back (kiff/tafs#122): tafs cloud prepares a draft restoring the Cards the
     /// version ran under; the owner reads that one, and Face ID confirms exactly it.
     func testGoingBackReadsAndConfirmsTheRestoreDraft() async throws {
