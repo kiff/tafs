@@ -133,6 +133,20 @@ export interface AgentVersion {
   draft?: string;
 }
 
+/** A switch to version n under way (kiff/agents#137): nothing of the agent runs until it ends. */
+export interface Switching {
+  n: number;
+  /** The KIFF draft the switch waits for. */
+  draft?: string;
+  at: string;
+}
+
+/** An agent's versions, and the switch under way. */
+export interface VersionState {
+  versions: AgentVersion[];
+  switching?: Switching;
+}
+
 /** A trial write: what KIFF would decide, nothing sent (kiff/tafs#107). */
 export interface TrialWrite {
   tool: string;
@@ -202,9 +216,24 @@ export class Agents {
 
   // Versions (kiff/tafs#107).
 
-  /** The agent's versions, oldest first. */
-  async versions(tenant: string, id: string): Promise<AgentVersion[]> {
-    return (await this.call<{ versions: AgentVersion[] }>("GET", tenant, ["agents", id, "versions"])).versions;
+  /** The agent's versions, oldest first, and the switch under way, if any. */
+  async versions(tenant: string, id: string): Promise<VersionState> {
+    const r = await this.call<{ versions: AgentVersion[]; switching?: Switching }>("GET", tenant, ["agents", id, "versions"]);
+    return { versions: r.versions, ...(r.switching ? { switching: r.switching } : {}) };
+  }
+
+  /**
+   * Begins the switch to version n, waiting for `draft`'s confirmation: from
+   * then on nothing of the agent runs (kiff/agents#137). 409 while a run of it
+   * is going or waiting, or another switch is under way.
+   */
+  async beginSwitch(tenant: string, id: string, n: number, draft?: string): Promise<Switching> {
+    return (await this.call<{ switching: Switching }>("POST", tenant, ["agents", id, "versions", String(n), "pending"], draft ? { draft } : {})).switching;
+  }
+
+  /** Drops the switch under way; the live version stays. True when there was one. */
+  async cancelSwitch(tenant: string, id: string): Promise<boolean> {
+    return (await this.call<{ cancelled: boolean }>("DELETE", tenant, ["agents", id, "switching"])).cancelled;
   }
 
   /** Makes version n live, forward or back. */

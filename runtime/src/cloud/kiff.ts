@@ -46,17 +46,34 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
 }
 
 /**
- * Whether a KIFF draft is confirmed, read with the owner's own session
- * (kiff/tafs#107): its Cards are issued. A claimed draft is later still, with
- * the same Cards, so it counts too.
+ * A KIFF draft's status, read with the owner's own session (kiff/tafs#107);
+ * undefined when KIFF has no such draft on the account. A draft still
+ * unconfirmed past its expiry reads "expired": KIFF keeps it as `draft`,
+ * and refuses to confirm it.
  */
-export async function draftConfirmed(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<boolean> {
+export async function draftStatus(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API, now: Date = new Date()): Promise<string | undefined> {
   const res = await doFetch(`${base}/v1/me/agent-drafts/${encodeURIComponent(draftID)}`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
   if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
-  if (res.status === 404) return false;
+  if (res.status === 404) return undefined;
   if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status} for the draft`);
-  const { status } = (await res.json()) as { status?: string };
+  const { status, expires_at: expires } = (await res.json()) as { status?: string; expires_at?: string };
+  if (status === "draft" && expires && new Date(expires).getTime() <= now.getTime()) return "expired";
+  return status ?? "";
+}
+
+/** Whether a draft's Cards are issued: confirmed, or claimed, which is later still with the same Cards. */
+export function issued(status: string | undefined): boolean {
   return status === "confirmed" || status === "claimed";
+}
+
+/** Whether a draft will never be confirmed: discarded, failed, expired, or not there. */
+export function dropped(status: string | undefined): boolean {
+  return status === undefined || status === "discarded" || status === "failed" || status === "expired";
+}
+
+/** Whether a KIFF draft is confirmed (see issued), read with the owner's own session. */
+export async function draftConfirmed(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<boolean> {
+  return issued(await draftStatus(token, draftID, doFetch, base));
 }
 
 /**

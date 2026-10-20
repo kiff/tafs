@@ -1,4 +1,4 @@
-import { AgentsError, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type Switching, type TrialWrite } from "../src/cloud/agents.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
 /**
@@ -51,17 +51,42 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   /** Each agent's versions (kiff/tafs#107), and each trial's writes, by run. */
   const versions = new Map<string, AgentVersion[]>();
   const trialWrites = new Map<string, TrialWrite[]>();
+  /** A switch under way, by agent, as kiff/agents keeps it (kiff/agents#137). */
+  const switching = new Map<string, Switching>();
   const api: AgentsAPI = {
     async versions(tenant, id) {
       calls.push(`versions ${id}`);
       if (!agents.has(k(tenant, id))) throw gone();
-      return (versions.get(k(tenant, id)) ?? []).map((v) => ({ ...v }));
+      const sw = switching.get(k(tenant, id));
+      return { versions: (versions.get(k(tenant, id)) ?? []).map((v) => ({ ...v })), ...(sw ? { switching: { ...sw } } : {}) };
     },
     async switchVersion(tenant, id, n) {
       calls.push(`switchVersion ${id} ${n}`);
       const list = versions.get(k(tenant, id)) ?? [];
       if (!list.some((v) => v.n === n)) throw gone();
+      const sw = switching.get(k(tenant, id));
+      if (sw && sw.n !== n) throw new AgentsError(409, "this agent is switching versions");
       for (const v of list) v.live = v.n === n;
+      switching.delete(k(tenant, id));
+    },
+    async beginSwitch(tenant, id, n, draft) {
+      calls.push(`beginSwitch ${id} ${n}`);
+      if (!(versions.get(k(tenant, id)) ?? []).some((v) => v.n === n)) throw gone();
+      const was = switching.get(k(tenant, id));
+      if (was) {
+        if (was.n !== n) throw new AgentsError(409, "this agent is switching versions");
+        return { ...was };
+      }
+      if (runs.some((r) => r.tenant === tenant && r.agent === id && r.trigger !== "trial" && !["COMPLETED", "ERROR", "CANCELLED"].includes(r.status))) {
+        throw new AgentsError(409, "a run of this agent is going or waiting on its owner: answer it, stop it or let it finish, then switch");
+      }
+      const sw: Switching = { n, ...(draft ? { draft } : {}), at: now().toISOString() };
+      switching.set(k(tenant, id), sw);
+      return { ...sw };
+    },
+    async cancelSwitch(tenant, id) {
+      calls.push(`cancelSwitch ${id}`);
+      return switching.delete(k(tenant, id));
     },
     async startTrial(tenant, id, n, input) {
       calls.push(`startTrial ${id} ${n}`);
@@ -237,7 +262,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites };
+  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
