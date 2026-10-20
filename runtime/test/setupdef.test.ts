@@ -116,9 +116,16 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("reading in the owner's account is open, with no limits");
     expect(flat).toContain("check that its tools cover the whole job: find the work, check an item, act on it, and say what it did");
     expect(flat).not.toContain("the fewest tools");
-    // Improving a taf: from its context, the change agreed, nothing new connected yet (kiff/tafs#107).
+    // Improving a taf: from its context, the change made as its next version (kiff/tafs#107).
     expect(flat).toContain('A conversation that starts with "[improve taf <id>]" improves that taf; it doesn\'t set up a new one');
-    expect(flat).toContain("A taf can't move to a new version yet, so don't connect, set tools or submit a draft for it");
+    expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
+    expect(flat).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
+    // The revision is confirmed at the switch, never in the chat (finding 1 on #107).
+    expect(flat).toContain("Don't show an approval for this draft: the owner confirms it when they switch to the new version");
+    expect(flat).toContain("planque request with agent set to the taf's own agent id (never name, which makes a new agent)");
+    expect(flat).toContain("improves: the taf's id from the first line");
+    expect(flat).toContain("Never say it's live: the owner decides");
+    expect(flat).not.toContain("A taf can't move to a new version yet");
     // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
     expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
     expect(flat).toContain("A read tool's line has no amount limit, only a call count generous enough never to get in the way, and you don't ask the owner to set it");
