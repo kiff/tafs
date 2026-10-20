@@ -276,7 +276,7 @@ struct VersionsScreen: View {
 
 /// The taf's versions, like app builds (kiff/tafs#107): newest first, the live one marked.
 /// Try it first runs a version on what the owner asks, with KIFF deciding each call and
-/// none sent; Install this version makes it live, forward or back, with one approval
+/// none sent; Install this version makes it live, forward or back, with one Face ID
 /// (kiff/tafs#138).
 struct VersionsPanel: View {
     @EnvironmentObject private var model: AppModel
@@ -346,10 +346,11 @@ struct VersionsPanel: View {
             }
             Text(Self.byline(v)).font(.system(size: 12)).foregroundColor(Theme.dim)
             if trying == v.n {
-                // What to try (kiff/tafs#138): the owner's words, from the version's note.
+                // What to try (kiff/tafs#138): a task in the owner's words. The version's note
+                // describes the change, so it's the hint, not the task.
                 VStack(alignment: .leading, spacing: 6) {
                     Text("What should it try?").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
-                    TextField("For example: look up payment pi_…", text: $trialInput)
+                    TextField(v.note.map { "For example, to check: \($0)" } ?? "For example: look up payment pi_…", text: $trialInput)
                         .textFieldStyle(.roundedBorder)
                     HStack(spacing: 8) {
                         Button("Run the trial") {
@@ -367,7 +368,7 @@ struct VersionsPanel: View {
             HStack(spacing: 8) {
                 if trying != v.n {
                     Button("Try it first") {
-                        trialInput = v.note ?? ""
+                        trialInput = ""
                         trying = v.n
                     }
                     .buttonStyle(OutlineButtonStyle())
