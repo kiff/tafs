@@ -151,6 +151,7 @@ final class PlanqueTests: XCTestCase {
         }
         var signed: [String] = []
         planque.signer = { signed.append(String(decoding: $0, as: UTF8.self)); return "sig" }
+        planque.deviceID = "dev_phone01"
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON()),\#(grantJSON("g_02", digest: String(repeating: "0", count: 64)))]}"#)
 
         let grants = try await planque.grants()
@@ -159,7 +160,7 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(grants[0].request.tools.map(\.action), ["refund_payment", "list_payments"])
         XCTAssertEqual(grants[0].events.first?.what, "asked by setup-agent")
         let header = try XCTUnwrap(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
-        XCTAssertTrue(header.hasPrefix("t=") && header.hasSuffix(",v1=sig"), header)
+        XCTAssertTrue(header.hasPrefix("t=") && header.hasSuffix(",v1=sig,d=dev_phone01"), header)
         XCTAssertTrue(signed.last?.hasPrefix("planque.request.v1\nhttps://planque.test\nt_01\nGET\n/v1/accounts/t_01/grants\n") ?? false)
 
         StubProtocol.sent = []
@@ -195,6 +196,7 @@ final class PlanqueTests: XCTestCase {
         let (_, planque, _) = clients()
         planque.tenant = "t_01"
         planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_phone01"
         StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12 cd34 ef56 7890"}"#)
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grantJSON(status: "connected"))
         StubProtocol.responses["DELETE /v1/accounts/t_01/grants/g_01"] = (200, grantJSON(status: "disconnected"))
@@ -223,6 +225,35 @@ final class PlanqueTests: XCTestCase {
         let header = try XCTUnwrap(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
         XCTAssertTrue(header.hasPrefix("t=") && header.hasSuffix(",v1=sig,d=dev_ipad01"), header)
         XCTAssertEqual(body(StubProtocol.sent.last) as? [String: String], ["device_key": "MFkB", "connector_key": "kiff_live_connector"])
+    }
+
+    /// planque takes no signature without the device's KIFF id (kiff/planque#12): the client
+    /// reads it right before signing when it isn't known, and sends nothing without it.
+    func testASignatureAlwaysNamesTheDevice() async throws {
+        let (_, planque, _) = clients()
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        var reads = 0
+        planque.deviceLoader = { reads += 1; return "dev_late01" }
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        _ = try await planque.grants()
+        let header = try XCTUnwrap(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
+        XCTAssertTrue(header.hasSuffix(",d=dev_late01"), header)
+        _ = try await planque.grants()
+        XCTAssertEqual(reads, 1, "read once, then kept")
+
+        let (_, unknown, _) = clients()
+        unknown.tenant = "t_01"
+        unknown.signer = { _ in "sig" }
+        unknown.deviceLoader = { nil }
+        StubProtocol.sent = []
+        do {
+            _ = try await unknown.grants()
+            XCTFail("signed without the device's id")
+        } catch let error as PlanqueClient.PlanqueError {
+            XCTAssertEqual(error, .noDevice)
+        }
+        XCTAssertTrue(StubProtocol.sent.isEmpty, "nothing sent")
     }
 
     /// The vendor and a grant's events are planque's words, shown as they are
@@ -264,6 +295,7 @@ final class PlanqueTests: XCTestCase {
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/me/devices"] = (200, #"{"devices":[{"id":"dev_phone01","this_device":true}]}"#)
         await model.useSession("kiff_dev_x", tenant: "t_01")
         return model
     }
@@ -316,7 +348,8 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(Self.digest)"], "one Face ID, naming the grant")
         XCTAssertEqual(vendor.opened, [URL(string: "https://access.stripe.com/authorize?x=1")!])
 
-        let order = StubProtocol.sent.map { "\($0.httpMethod ?? "") \($0.url?.path ?? "")" }
+        // planque's requests, in order (KIFF's device read goes to its own host).
+        let order = StubProtocol.sent.filter { $0.url?.host == "planque.test" }.map { "\($0.httpMethod ?? "") \($0.url?.path ?? "")" }
         XCTAssertEqual(Array(order.prefix(3)), ["GET /v1/accounts/t_01/grants", "POST /v1/accounts/t_01/grants/g_01/approve",
                                                 "POST /v1/accounts/t_01/grants/g_01/confirm"])
         XCTAssertEqual(body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").first)["confirm"] as? String, "c0de")

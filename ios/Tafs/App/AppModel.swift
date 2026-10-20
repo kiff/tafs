@@ -118,6 +118,11 @@ final class AppModel: ObservableObject {
         self.store = store
         self.remembered = remembered
         self.clock = clock
+        // The device's id, read when a signature needs it and it isn't known (kiff/planque#12).
+        self.planque.deviceLoader = { [weak self] in
+            guard let self, self.mode == .kiff, self.sessionHasKey else { return nil }
+            return try? await self.kiff.thisDeviceID()
+        }
     }
 
     /// Restores where the owner left off: signed in to KIFF, or the saved sample.

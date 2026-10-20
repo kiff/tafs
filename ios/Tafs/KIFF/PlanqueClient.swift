@@ -10,6 +10,9 @@ import Foundation
 final class PlanqueClient {
     enum PlanqueError: Error, Equatable, LocalizedError {
         case notSigning
+        /// This device's id in KIFF couldn't be read: planque takes no signature without it
+        /// (kiff/planque#12), so nothing is sent.
+        case noDevice
         /// The grant's digest isn't the hash of the request shown: nothing is approved.
         case digestMismatch
         case server(status: Int, message: String)
@@ -17,6 +20,7 @@ final class PlanqueClient {
         var errorDescription: String? {
             switch self {
             case .notSigning: return "This step needs your confirmation first."
+            case .noDevice: return "Couldn't reach KIFF to name this device. Check the connection and try again."
             case .digestMismatch: return "This request doesn't match what it asks for. Nothing was approved."
             case .server(_, let message): return message
             }
@@ -33,6 +37,9 @@ final class PlanqueClient {
     /// whether the device signed (kiff/planque#10). Without it, planque checks the key
     /// this phone enrolled with.
     var deviceID: String?
+    /// Reads `deviceID` from KIFF when it isn't known yet, right before a signature: planque
+    /// refuses one without it (kiff/planque#12).
+    var deviceLoader: (@MainActor () async -> String?)?
     private let session: URLSession
 
     init(baseURL: URL = URL(string: "https://planque.kiff.dev")!, session: URLSession = .shared) {
@@ -217,8 +224,10 @@ final class PlanqueClient {
         // Signed as planque reads it: the path and query as sent, percent-encoded.
         let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
         let message = Self.message(base: baseURL, tenant: tenant, method: method, uri: uri, body: body ?? Data(), signedAt: signedAt)
-        let device = deviceID.map { ",d=\($0)" } ?? ""
-        request.setValue("t=\(signedAt),v1=\(try signer(message))\(device)", forHTTPHeaderField: "Planque-Device-Signature")
+        // planque asks KIFF whether this device signed (kiff/planque#12): never a key alone.
+        if deviceID == nil, let load = deviceLoader { deviceID = await load() }
+        guard let device = deviceID else { throw PlanqueError.noDevice }
+        request.setValue("t=\(signedAt),v1=\(try signer(message)),d=\(device)", forHTTPHeaderField: "Planque-Device-Signature")
 
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
