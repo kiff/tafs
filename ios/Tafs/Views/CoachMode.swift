@@ -50,9 +50,10 @@ struct CoachView: View {
 }
 
 /// On a wide screen, Coach mode slides in from the right, next to what's open, which stays
-/// in view. It opens at a third of the screen, the width the owner last chose: its left
-/// edge drags it wider, up to full screen, or narrower, and past its narrowest it closes,
-/// as a swipe of the panel to the right, a tap outside it, or its Close do.
+/// in view. It opens at a third of the screen, or the width the owner last chose: its left
+/// edge drags it wider, up to full screen, and back, never narrower than a third, the width
+/// it opens at. Dragged past that, it closes, as a swipe of the conversation to the right,
+/// a tap outside it, or its Close do.
 struct CoachPanel: View {
     @EnvironmentObject private var model: AppModel
     /// The width the owner chose, as a share of the screen: kept for the next time.
@@ -74,22 +75,25 @@ struct CoachPanel: View {
                         .ignoresSafeArea()
                         .contentShape(Rectangle())
                         .onTapGesture { model.coachOpen = false }
+                        .allowsHitTesting(!full)
                         .transition(.opacity)
                         .accessibilityLabel("Close Coach mode")
                         .accessibilityAddTraits(.isButton)
                     HStack(spacing: 0) {
                         handle(screen: screen)
                         CoachView(fullScreen: $full)
+                            // A swipe of the conversation to the right closes it; a scroll is
+                            // left alone. Not on the handle: a drag there only resizes, and
+                            // closes only past the narrowest (review on #148).
+                            .simultaneousGesture(DragGesture(minimumDistance: 30).onEnded { v in
+                                if v.translation.width > 140, abs(v.translation.height) < 60 { model.coachOpen = false }
+                            })
                     }
                     .frame(width: width)
                     .background(Theme.background)
                     .clipShape(RoundedRectangle(cornerRadius: full ? 0 : 18, style: .continuous))
                     .shadow(color: .black.opacity(0.18), radius: 24, x: -4)
                     .padding(.vertical, full ? 0 : 8).padding(.trailing, full ? 0 : 8)
-                    // A swipe of the panel to the right closes it; a scroll is left alone.
-                    .simultaneousGesture(DragGesture(minimumDistance: 30).onEnded { v in
-                        if v.translation.width > 140, abs(v.translation.height) < 60 { model.coachOpen = false }
-                    })
                     .transition(.move(edge: .trailing))
                 }
             }
