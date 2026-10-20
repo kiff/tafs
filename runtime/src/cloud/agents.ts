@@ -131,6 +131,14 @@ export interface AgentVersion {
   revisions?: string[];
   /** The KIFF draft whose confirmation brings those revisions, while it isn't confirmed. */
   draft?: string;
+  /** The KIFF Cards it ran under, each at its revision when it went live (kiff/agents#142). */
+  cards?: CardRevision[];
+}
+
+/** One KIFF Card at one revision. */
+export interface CardRevision {
+  id: string;
+  revision: number;
 }
 
 /** A switch to version n under way (kiff/agents#137): nothing of the agent runs until it ends. */
@@ -250,9 +258,9 @@ export class Agents {
     return this.call("GET", tenant, ["agents", id, "versions", String(n)]);
   }
 
-  /** Makes version n live, forward or back. */
-  async switchVersion(tenant: string, id: string, n: number): Promise<void> {
-    await this.call("POST", tenant, ["agents", id, "versions", String(n), "live"], {});
+  /** Makes version n live, forward or back, recording the KIFF Cards it runs under, if given. */
+  async switchVersion(tenant: string, id: string, n: number, cards?: CardRevision[]): Promise<void> {
+    await this.call("POST", tenant, ["agents", id, "versions", String(n), "live"], cards?.length ? { cards } : {});
   }
 
   /** Starts a trial of version n: a run whose writes KIFF decides without sending. */

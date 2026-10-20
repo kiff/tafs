@@ -62,13 +62,14 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const sw = switching.get(k(tenant, id));
       return { versions: (versions.get(k(tenant, id)) ?? []).map((v) => ({ ...v })), ...(sw ? { switching: { ...sw } } : {}) };
     },
-    async switchVersion(tenant, id, n) {
+    async switchVersion(tenant, id, n, cards) {
       calls.push(`switchVersion ${id} ${n}`);
       const list = versions.get(k(tenant, id)) ?? [];
       if (!list.some((v) => v.n === n)) throw gone();
       const sw = switching.get(k(tenant, id));
       if (sw && sw.n !== n) throw new AgentsError(409, "this agent is switching versions");
       for (const v of list) v.live = v.n === n;
+      if (cards?.length) list.find((v) => v.n === n)!.cards = cards.map((c) => ({ ...c }));
       const def = versionDefs.get(`${k(tenant, id)}|${n}`);
       if (def) agents.set(k(tenant, id), { ...def });
       switching.delete(k(tenant, id));
