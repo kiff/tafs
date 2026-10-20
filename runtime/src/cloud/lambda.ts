@@ -3,7 +3,7 @@ import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSec
 import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
-import { forwardAlert } from "./forward.js";
+import { forwardAlert, type ReadyRun } from "./forward.js";
 import { type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
@@ -80,7 +80,7 @@ const accountStore: AccountStore = {
 const accounts: Accounts = { put: (account, tenant, secret) => keepAccount(accountStore, account, tenant, secret) };
 
 /** KIFF's alert, handed to kiff/agents' alerts function (forward.ts). */
-function forward(signature: string, raw: string): Promise<void> {
+function forward(signature: string, raw: string): Promise<ReadyRun | undefined> {
   return forwardAlert(fetch, need("AGENTS_ALERTS_URL"), signature, raw);
 }
 

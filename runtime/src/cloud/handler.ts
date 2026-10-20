@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
 import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, issued, KIFFError, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
+import type { ReadyRun } from "./forward.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
@@ -64,7 +65,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion">;
 
 export interface Deps {
@@ -93,7 +94,8 @@ export interface Deps {
   /** The chats each taf's owner archived (kiff/tafs#82). */
   archived: Archived;
   /** Hands a KIFF alert tafs cloud has checked to kiff/agents, as KIFF signed it, so a paused run goes on. */
-  forward: (signature: string, raw: string) => Promise<void>;
+  /** Hands KIFF's alert to kiff/agents; the run its answer left ready, if any (forward.ts). */
+  forward: (signature: string, raw: string) => Promise<ReadyRun | undefined | void>;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
@@ -404,16 +406,38 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 }
 
 /**
- * KIFF's alert: pushed to the account's phones, then handed to kiff/agents as
- * KIFF signed it, so the run it holds goes on once its call is answered.
- * Only an alert tafs cloud has checked is handed on, and kiff/agents checks it
- * again. If handing it on fails, the answer is 502 so KIFF delivers it again:
- * the phones are told once, however often it comes.
+ * KIFF's alert: handed to kiff/agents as KIFF signed it, then pushed to the
+ * account's phones. Only an alert tafs cloud has checked is handed on, and
+ * kiff/agents checks it again. The answer goes first, so the owner's wait
+ * holds no push to Apple (kiff/tafs#138): when kiff/agents says the answer
+ * left a run ready, tafs cloud continues it at once rather than leave it to
+ * the sweep. If handing it on fails, the phones are still told, and the answer
+ * is 502 so KIFF delivers it again: the phones are told once, however often
+ * it comes.
  */
 async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const signature = header(event, "kiff-signature");
   const raw = rawBody(event);
   const now = deps.now?.() ?? new Date();
+  let parsed: { tenant_id?: unknown; event_id?: unknown };
+  try { parsed = JSON.parse(raw) as typeof parsed; } catch { throw new HTTPError(400, "send KIFF's alert as JSON"); }
+  const tenant = str(parsed.tenant_id);
+  const { secrets } = tenant ? await deps.push.get(tenant) : { secrets: [] as string[] };
+  // kiff/agents checks the alert with the account's secret: the one that
+  // signed this alert, which an account registered before kiff/agents, or a
+  // phone with an older target, hasn't handed it yet.
+  const signer = signature ? secrets.find((secret) => signedByKIFF(signature, raw, [secret], now)) : undefined;
+  if (!signer) throw new HTTPError(401, "not signed by KIFF");
+
+  let handedOn = true;
+  try {
+    await deps.accounts.put(tenant, tenant, signer);
+    const ready = await deps.forward(signature, raw);
+    if (ready) await continueReady(deps, tenant, ready);
+  } catch (err) {
+    console.error(`alert: kiff/agents: ${(err as Error).message}`);
+    handedOn = false;
+  }
   const out = await receiveAlert(signature, raw, {
     push: deps.push,
     apns: deps.apns,
@@ -423,31 +447,33 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
     release: (key) => deps.slots.release(key),
     now,
   });
-  try {
-    // kiff/agents checks the alert with the account's secret: the one that
-    // signed this alert, which an account registered before kiff/agents, or
-    // a phone with an older target, hasn't handed it yet.
-    const tenant = str((JSON.parse(raw) as { tenant_id?: unknown }).tenant_id);
-    const { secrets } = await deps.push.get(tenant);
-    const signer = secrets.find((secret) => signedByKIFF(signature, raw, [secret], now));
-    if (signer) await deps.accounts.put(tenant, tenant, signer);
-    await deps.forward(signature, raw);
-  } catch (err) {
-    console.error(`alert: kiff/agents: ${(err as Error).message}`);
-    // Asked again, a few times. An alert kiff/agents keeps not taking (a
-    // refusal, a 5xx, no answer, or the secret not written) would otherwise
-    // be a 502 until KIFF switches the target off, and the phones' pushes
-    // with it: past FORWARD_TRIES, the alert is let go and its run goes on
-    // when the hold expires, as without an answer.
-    const eventID = str((JSON.parse(raw) as { event_id?: unknown }).event_id);
-    if (await forwardTried(deps, eventID, now)) {
-      // FORWARD_TRIES deliveries were answered 502; this is the one after them.
-      console.error(`alert: kiff/agents didn't take event ${eventID} in ${FORWARD_TRIES + 1} tries; its run goes on when the hold expires`);
-      return out;
-    }
-    throw new HTTPError(502, "the alert didn't reach the tafs' runtime; send it again");
+  if (handedOn) return out;
+  // Asked again, a few times. An alert kiff/agents keeps not taking (a
+  // refusal, a 5xx, no answer, or the secret not written) would otherwise be a
+  // 502 until KIFF switches the target off, and the phones' pushes with it:
+  // past FORWARD_TRIES, the alert is let go and its run goes on when the hold
+  // expires, as without an answer.
+  const eventID = str(parsed.event_id);
+  if (await forwardTried(deps, eventID, now)) {
+    // FORWARD_TRIES deliveries were answered 502; this is the one after them.
+    console.error(`alert: kiff/agents didn't take event ${eventID} in ${FORWARD_TRIES + 1} tries; its run goes on when the hold expires`);
+    return out;
   }
-  return out;
+  throw new HTTPError(502, "the alert didn't reach the tafs' runtime; send it again");
+}
+
+/**
+ * Continues the run an answer left ready, in the background. Best effort: a
+ * 409 is a run the sweep or another delivery already took, and any failure
+ * leaves it to the sweep, as before (kiff/tafs#138).
+ */
+async function continueReady(deps: Deps, tenant: string, ready: ReadyRun): Promise<void> {
+  try {
+    await deps.agents.continueRun(tenant, ready.agent, ready.id);
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 409) return;
+    console.error(`alert: continuing run ${ready.id}: ${(err as Error).message}`);
+  }
 }
 
 /** How often KIFF is asked to send an alert again that kiff/agents didn't take. */

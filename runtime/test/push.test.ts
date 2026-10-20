@@ -1,6 +1,8 @@
 import { createHmac, generateKeyPairSync, verify } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { AgentsError } from "../src/cloud/agents.js";
 import { providerToken } from "../src/cloud/apns.js";
+import type { ReadyRun } from "../src/cloud/forward.js";
 import { FORWARD_TRIES, handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
 import { type Device, type Notification, type PushStore, signedByKIFF } from "../src/cloud/push.js";
 
@@ -64,25 +66,45 @@ function kiffMe(byToken: Record<string, object>) {
 }
 
 /** kiff/agents' alerts function, as tafs cloud hands alerts to it: what it got, or a failure. */
-function fakeForward() {
+function fakeForward(order: string[] = []) {
   const f = {
     got: [] as Array<{ signature: string; raw: string }>,
     down: false,
     tries: 0,
+    /** The run kiff/agents names: one the answer left ready. */
+    ready: undefined as ReadyRun | undefined,
     forward: async (signature: string, raw: string) => {
       f.tries++;
+      order.push("forward");
       if (f.down) throw new Error("kiff/agents answered 503");
       f.got.push({ signature, raw });
+      return f.ready;
     },
   };
   return f;
 }
 
-function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<void>; accounts?: Map<string, { tenant: string; secret: string }> }) {
+/** kiff/agents as the alert path uses it: continuing a run, or refusing to (409). */
+function fakeContinue(order: string[] = [], status = 202) {
+  const c = {
+    got: [] as string[],
+    agents: {
+      continueRun: async (tenant: string, agent: string, run: string) => {
+        order.push("continue");
+        c.got.push(`${tenant} ${agent} ${run}`);
+        if (status !== 202) throw new AgentsError(status, "the run isn't paused: read it");
+        return {};
+      },
+    },
+  };
+  return c;
+}
+
+function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<ReadyRun | void>; accounts?: Map<string, { tenant: string; secret: string }>; agents?: object }) {
   const event: HTTPEvent = { rawPath: path, requestContext: { http: { method } }, headers: opts.headers ?? {}, body: opts.body };
   const accounts = opts.accounts ?? new Map();
   return handle(event, {
-    agents: new Proxy({}, { get: () => { throw new Error("alerts and phones never need kiff/agents"); } }),
+    agents: opts.agents ?? new Proxy({}, { get: () => { throw new Error("alerts and phones never need kiff/agents"); } }),
     forward: opts.forward ?? (async () => undefined),
     accounts: { put: async (account: string, tenant: string, secret: string) => { accounts.set(account, { tenant, secret }); } },
     names: { claim: async () => true, release: async () => undefined },
@@ -112,8 +134,8 @@ function account() {
   return push;
 }
 
-const alert = (body: string, push: ReturnType<typeof memoryPush>, extra: { apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; signature?: string; now?: Date; forward?: ReturnType<typeof fakeForward>; accounts?: Map<string, { tenant: string; secret: string }> } = {}) =>
-  call("POST", "/v1/kiff/alerts", { body, headers: { "KIFF-Signature": extra.signature ?? sig(body) }, push, apns: extra.apns, slots: extra.slots, now: extra.now, forward: extra.forward?.forward, accounts: extra.accounts });
+const alert = (body: string, push: ReturnType<typeof memoryPush>, extra: { apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; signature?: string; now?: Date; forward?: ReturnType<typeof fakeForward>; accounts?: Map<string, { tenant: string; secret: string }>; agents?: object } = {}) =>
+  call("POST", "/v1/kiff/alerts", { body, headers: { "KIFF-Signature": extra.signature ?? sig(body) }, push, apns: extra.apns, slots: extra.slots, now: extra.now, forward: extra.forward?.forward, accounts: extra.accounts, agents: extra.agents });
 
 describe("KIFF's signature", () => {
   const body = held();
@@ -150,6 +172,45 @@ describe("KIFF's alerts", () => {
     const answered = held({ outcome: "hold_answered", hold: { id: "hold_1", status: "approved" } });
     expect((await alert(answered, push, { forward })).status).toBe(200);
     expect(forward.got).toEqual([{ signature: sig(answered), raw: answered }]);
+  });
+
+  // The owner's wait holds no push to Apple, and no sweep (kiff/tafs#138, item 32): the
+  // answer goes to kiff/agents first, and the run it left ready is continued at once.
+  it("hands the answer on before it pushes, and continues the run it left ready", async () => {
+    const push = account();
+    const order: string[] = [];
+    const apns = fakeAPNs(() => { order.push("push"); return "sent"; });
+    const forward = fakeForward(order);
+    forward.ready = { id: "run_1", agent: "taf-1" };
+    const agents = fakeContinue(order);
+    const answered = held({ outcome: "hold_answered", hold: { id: "hold_1", status: "refused" } });
+    expect((await alert(answered, push, { apns, forward, agents: agents.agents })).status).toBe(200);
+    expect(agents.got).toEqual(["t_acme taf-1 run_1"]);
+    expect(order).toEqual(["forward", "continue", "push", "push"]);
+  });
+
+  it("leaves the run to the sweep when kiff/agents names none, or when continuing it is refused", async () => {
+    const push = account();
+    const answered = held({ outcome: "hold_answered", hold: { id: "hold_1", status: "approved" } });
+    const none = fakeContinue();
+    expect((await alert(answered, push, { forward: fakeForward(), agents: none.agents })).status).toBe(200);
+    expect(none.got).toEqual([]);
+    for (const status of [409, 429, 503]) {
+      const forward = fakeForward();
+      forward.ready = { id: "run_1", agent: "taf-1" };
+      const taken = fakeContinue([], status);
+      expect((await alert(answered, account(), { forward, agents: taken.agents })).status).toBe(200);
+      expect(taken.got).toHaveLength(1);
+    }
+  });
+
+  it("still tells the phones when kiff/agents is down, then asks KIFF to send again", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const forward = fakeForward();
+    forward.down = true;
+    expect((await alert(held(), push, { apns, forward })).status).toBe(502);
+    expect(apns.sent).toHaveLength(2);
   });
 
   it("gives kiff/agents the secret that signed the alert before handing it on, for accounts registered before kiff/agents", async () => {

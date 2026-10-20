@@ -325,6 +325,15 @@ export class Agents {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text });
   }
 
+  /**
+   * Continues a paused run whose held calls KIFF has resolved, in the background
+   * (202). One that isn't paused, or still waits for KIFF, is 409: the sweep or
+   * another continue has it.
+   */
+  continueRun(tenant: string, agent: string, run: string): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "continue"], { background: true });
+  }
+
   /** Cancels a run; a paused one has its held calls withdrawn in KIFF first. */
   cancelRun(tenant: string, agent: string, run: string): Promise<Run> {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "cancel"]);
