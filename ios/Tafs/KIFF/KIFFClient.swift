@@ -467,6 +467,12 @@ final class KIFFClient {
         /// and its terms as they are now, so the owner reads now → after.
         var revises: String?
         var current: Terms?
+        /// KIFF says a Card the draft revises keeps its full terms (kiff/tafs#138): its grants,
+        /// caps, scopes and states, totals, policy, expiry and holder. Only KIFF holds both, so
+        /// the app never works it out from the lines it shows: those leave terms out. Without
+        /// it, the Card reads now → after.
+        var unchanged: Bool?
+        var isUnchanged: Bool { unchanged == true && current != nil }
 
         /// A Card's terms alone: what `current` holds.
         struct Terms: Decodable, Equatable {
