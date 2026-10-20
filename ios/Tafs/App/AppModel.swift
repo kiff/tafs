@@ -261,7 +261,7 @@ final class AppModel: ObservableObject {
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; otherAgents = []; held = []; record = []
+        tafs = []; otherAgents = []; held = []; record = []; decided = [:]
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -301,7 +301,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        tafs = []; held = []; record = []
+        tafs = []; held = []; record = []; decided = [:]
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
         notifyHeld()
@@ -469,7 +469,7 @@ final class AppModel: ObservableObject {
             show(list, exceptions)
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
-            if let done { record = KIFFMapping.record(done, ids: holderIDs) }
+            if let done { record = withDecisions(KIFFMapping.record(done, ids: holderIDs)) }
             if !list.removing.isEmpty {
                 await finishRemovals(list.removing, gen: gen)
                 // Finishing waited: another account may be signed in now, with its own tafs.
@@ -984,16 +984,21 @@ final class AppModel: ObservableObject {
             Task { await refresh() }
         }
         guard let i = tafs.firstIndex(where: { $0.id == call.tafID }) else { return }
+        // The owner's decision stays in the conversation where the card was, at once and
+        // in its history (kiff/tafs#138): "Refused by you · 22:41 · Refund €150.00".
+        let when = clock().shortTime
         switch answer {
         case .approveOnce:
             if call.kiffID == nil { CardCheck.draw(call.proposed, on: &tafs[i]) }
-            log(call.tafID, .approved, call.proposed.summary, amountLine(call.proposed, "approved once by \(ownerName)"), signature: signature)
+            decide(call, .approved, "Approved once by you · \(when) · \(call.proposed.summary)",
+                   amountLine(call.proposed, "approved once by \(ownerName)"), signature: signature)
             tafs[i].now = call.proposed.summary
         case .nextStep(let step):
-            log(call.tafID, .refused, "\(step): \(call.proposed.summary)", "Refused, with a next step for the taf", signature: signature)
+            decide(call, .refused, "Refused by you · \(when), with a next step · \(call.proposed.summary)",
+                   "Refused, with a next step for the taf: \(step)", signature: signature)
             tafs[i].now = step
         case .refuse:
-            log(call.tafID, .refused, "Refused by you: \(call.proposed.summary)", call.reason, signature: signature)
+            decide(call, .refused, "Refused by you · \(when) · \(call.proposed.summary)", call.reason, signature: signature)
             tafs[i].now = "Refused · \(call.proposed.summary)"
         }
         if tafs[i].state == .waiting, !held.contains(where: { $0.tafID == call.tafID }) {
@@ -1947,6 +1952,39 @@ final class AppModel: ObservableObject {
 
     private func log(_ tafID: UUID, _ kind: RecordEntry.Kind, _ title: String, _ detail: String, signature: String? = nil) {
         record.insert(RecordEntry(tafID: tafID, kind: kind, title: title, detail: detail, at: clock(), signature: signature), at: 0)
+    }
+
+    /// The owner's answers to KIFF's held calls, by their record id, until KIFF records the
+    /// outcome (kiff/tafs#138): a refresh just after an answer still reads the call as held.
+    private var decided: [UUID: RecordEntry] = [:]
+
+    /// Records the owner's answer to a held call where the call was held, under the id KIFF's
+    /// record gives it, so it folds the card in place and a refresh doesn't lose it.
+    private func decide(_ call: HeldCall, _ kind: RecordEntry.Kind, _ title: String, _ detail: String, signature: String?) {
+        let id = call.kiffID.map(KIFFMapping.recordID) ?? UUID()
+        var entry = RecordEntry(id: id, tafID: call.tafID, kind: kind, title: title, detail: detail, at: call.heldAt, signature: signature)
+        if kind == .approved { entry.ownerApproved = true }
+        record.removeAll { $0.id == id }
+        record.insert(entry, at: 0)
+        if call.kiffID != nil { decided[id] = entry }
+    }
+
+    /// KIFF's record with the owner's answers it doesn't have yet: an answered call KIFF
+    /// still lists as held reads as answered, and one it has decided keeps the owner's words.
+    func withDecisions(_ kiff: [RecordEntry]) -> [RecordEntry] {
+        Self.merge(kiff, decided: decided)
+    }
+
+    static func merge(_ kiff: [RecordEntry], decided: [UUID: RecordEntry]) -> [RecordEntry] {
+        var out = kiff
+        for (id, mine) in decided {
+            if let i = out.firstIndex(where: { $0.id == id }) {
+                if out[i].kind == .held { out[i] = mine } else { out[i].title = mine.title }
+            } else {
+                out.append(mine)
+            }
+        }
+        return out.sorted { $0.at > $1.at }
     }
 
     // MARK: Connections (planque, #51)
