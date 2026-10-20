@@ -473,7 +473,11 @@ struct VersionCardSheet: View {
     @ViewBuilder
     private func cardView(_ card: KIFFClient.DraftCard) -> some View {
         Panel {
-            if let current = card.current {
+            if card.unchanged {
+                // Re-issued as it is (kiff/tafs#138): its terms once, not a now and after.
+                Eyebrow(text: "Unchanged")
+                ForEach(card.lines, id: \.self) { Text($0).font(.system(size: 14)).foregroundColor(Theme.soft) }
+            } else if let current = card.current {
                 Eyebrow(text: "Changes a Card")
                 Text("Now").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
                 ForEach(current.lines, id: \.self) { Text($0).font(.system(size: 14)).foregroundColor(Theme.soft) }
@@ -481,7 +485,9 @@ struct VersionCardSheet: View {
             } else {
                 Eyebrow(text: "A new Card")
             }
-            ForEach(card.lines, id: \.self) { Text($0).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink) }
+            if !card.unchanged {
+                ForEach(card.lines, id: \.self) { Text($0).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink) }
+            }
         }
     }
 }

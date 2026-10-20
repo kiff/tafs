@@ -467,6 +467,9 @@ final class KIFFClient {
         /// and its terms as they are now, so the owner reads now → after.
         var revises: String?
         var current: Terms?
+        /// A Card the draft revises whose terms read the same now and after (kiff/tafs#138):
+        /// re-issued with the version, nothing about it changes.
+        var unchanged: Bool { current.map { Set($0.lines) == Set(lines) } ?? false }
 
         /// A Card's terms alone: what `current` holds.
         struct Terms: Decodable, Equatable {
