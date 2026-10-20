@@ -257,7 +257,7 @@ struct SetupChatView: View {
                 // (kiff/tafs#138). Matched by its words, so a reply arriving first doesn't pin an
                 // older message. If its bubble was already pinned while the taf (or Setup) worked,
                 // the pin moves to it without animating, so the view doesn't move.
-                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && m.text == text } else { return false } })?.id {
+                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
                     let animate = pinNext
                     pinNext = false
                     pinText = nil
@@ -279,7 +279,7 @@ struct SetupChatView: View {
             .onChange(of: model.setupLive) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: model.setupQueued) { queued in
                 // Waiting behind Setup's answer: its bubble goes to the top at once.
-                if pinNext, let text = pinText, queued == text {
+                if pinNext, let text = pinText, let queued, SetupThread.matchesSent(queued, text) {
                     pinNext = false
                     pinned = "queued"
                     withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("queued", anchor: .top) }
@@ -487,7 +487,8 @@ struct SetupChatView: View {
         // A sent message goes to the top of the view and stays (kiff/tafs#138), even while
         // Setup works: the message waits there, and the answer fills the space below.
         pinNext = true
-        pinText = text
+        // As the model keeps it: trimmed (review on #154).
+        pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         following = false
         Haptics.tap()
         Task { if !(await model.submitSetup(text)), draft.isEmpty { draft = text } }

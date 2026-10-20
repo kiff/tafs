@@ -693,6 +693,15 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A sent message is found again by its words (kiff/tafs#138, review on #154): as stored,
+    /// and as the end of a queued message it was joined to; never a different message.
+    func testASentMessageIsFoundByItsWords() {
+        XCTAssertTrue(SetupThread.matchesSent("look up pi_1", "look up pi_1"))
+        XCTAssertTrue(SetupThread.matchesSent("first thing\n\nlook up pi_1", "look up pi_1"), "joined behind a queued one")
+        XCTAssertFalse(SetupThread.matchesSent("look up pi_12", "look up pi_1"))
+        XCTAssertFalse(SetupThread.matchesSent("look up pi_1 please", "look up pi_1"))
+    }
+
     /// One connection's error shows on its newest card only (kiff/tafs#138, item 19): an older
     /// approval naming the same grant is replaced, so a failure doesn't spread to every card.
     /// A card on another grant, and the newest one, aren't.

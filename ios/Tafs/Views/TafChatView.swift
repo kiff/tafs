@@ -165,7 +165,7 @@ struct TafChatView: View {
                 // (kiff/tafs#138). Matched by its words, so a reply arriving first doesn't pin an
                 // older message. If its bubble was already pinned while the taf (or Setup) worked,
                 // the pin moves to it without animating, so the view doesn't move.
-                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && m.text == text } else { return false } })?.id {
+                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
                     let animate = pinNext
                     pinNext = false
                     pinText = nil
@@ -208,9 +208,9 @@ struct TafChatView: View {
     private func pinBubble(_ proxy: ScrollViewProxy) {
         guard pinNext, let text = pinText else { return }
         let id: String?
-        if state.queued == text {
+        if let queued = state.queued, SetupThread.matchesSent(queued, text) {
             id = "queued"
-        } else if let untaken = state.steering?.untaken, let i = untaken.lastIndex(where: { $0.text == text }) {
+        } else if let untaken = state.steering?.untaken, let i = untaken.lastIndex(where: { SetupThread.matchesSent($0.text, text) }) {
             id = "steer|\(i)"
         } else {
             id = nil
@@ -318,7 +318,8 @@ struct TafChatView: View {
         // and a card with it, fill the space below without the view moving, even while the
         // taf is still at work.
         pinNext = true
-        pinText = text
+        // As the model keeps it: trimmed (review on #154).
+        pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         following = false
         Haptics.tap()
         // The keyboard stays for the next message (kiff/tafs#102): the composer changes
