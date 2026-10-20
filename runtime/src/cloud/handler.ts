@@ -1093,6 +1093,9 @@ async function liveCards(event: HTTPEvent, taf: Taf, deps: Deps): Promise<CardRe
  * as when KIFF couldn't say at the switch to it: read on each look at the
  * versions, and before switching away, so going back to it restores them
  * instead of leaving it under the Cards in force then. True when recorded.
+ * A version's cards are the terms it runs under, read when recorded: a Card
+ * changed in KIFF directly while it is live is recorded as it is then, not
+ * as the version was switched to.
  */
 async function recordLiveCards(event: HTTPEvent, me: KIFFIdentity, taf: Taf, state: VersionState, deps: Deps): Promise<boolean> {
   const live = state.versions.find((v) => v.live);
