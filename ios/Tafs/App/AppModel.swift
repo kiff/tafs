@@ -253,6 +253,7 @@ final class AppModel: ObservableObject {
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
         grants = []
+        grantsReadFor = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
@@ -283,6 +284,7 @@ final class AppModel: ObservableObject {
         startAttempt = nil
         unfinishedRemovals = []
         grants = []
+        grantsReadFor = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
@@ -1949,6 +1951,9 @@ final class AppModel: ObservableObject {
 
     /// The account's planque grants: connections, and connections waiting for the owner.
     @Published private(set) var grants: [PlanqueClient.Grant] = []
+    /// The approval cards whose grant was read since the app first saw them (kiff/tafs#138):
+    /// a grant read before a new approval of it says nothing about that approval.
+    private var grantsReadFor: Set<String> = []
     /// The grant being connected now, so a second tap starts nothing.
     @Published private(set) var connecting: String?
     /// The account this phone enrolled with planque, kept in the Keychain across launches.
@@ -1988,8 +1993,10 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return }
         let signer = self.signer
         planque.tenant = tenant
+        let cards = Set(setupThread.components.map(\.component).filter { $0.type == .approval }.map(\.id))
         guard let list = try? await planque.grants(signedBy: { try signer.signConfirmed($0) }), gen == accountGeneration else { return }
         grants = list
+        grantsReadFor.formUnion(cards)
     }
 
     /// Sets this phone up with planque, once per account, behind one Face ID: planque gets
@@ -2378,7 +2385,13 @@ final class AppModel: ObservableObject {
         }
         // What an approval needs to be shown: planque's grant and KIFF's draft.
         let approvals = setupThread.components.map(\.component).filter { $0.type == .approval || $0.type == .signIn }
-        if approvals.contains(where: { c in c.grant.map { g in !grants.contains { $0.id == g } } ?? false }) {
+        // A grant not read yet, or read before an approval of it appeared: Setup can ask to
+        // approve more on a grant the app already holds (a read tool after the sign-in), and
+        // the grant as read before doesn't answer that (kiff/tafs#138).
+        if approvals.contains(where: { c in
+            guard let g = c.grant else { return false }
+            return !grants.contains { $0.id == g } || (c.type == .approval && !grantsReadFor.contains(c.id) && setupThread.answer(to: c.id) == nil)
+        }) {
             await refreshConnections()
         }
         for c in approvals {
@@ -2747,9 +2760,16 @@ final class AppModel: ObservableObject {
         return .needsYou
     }
 
-    /// Connected with its Cards confirmed, or connected first and listed (contract 5).
+    /// Connected with its Cards confirmed, or connected first and listed (contract 5), as
+    /// planque says after this approval appeared; or the owner's answer to it says so.
     func approvalFinished(_ c: SetupComponent) -> Bool {
         let grant = grants.first { $0.id == c.grant }
+        let readSince = grantsReadFor.contains(c.id)
+        // planque failed the grant after the owner approved (at connect, or later): the
+        // card says so with planque's reason, whatever the answer said.
+        if readSince, let grant, grant.status == "failed" || grant.status == "disconnected" { return false }
+        if let a = setupThread.answer(to: c.id), !a.failed, a.text.hasPrefix("approved") { return true }
+        guard readSince else { return false }
         let draft = c.draft.flatMap { setupDrafts[$0] }
         let cardsWaiting = draft.map { !$0.confirmed } ?? (c.draft != nil)
         return (grant?.connected == true && !cardsWaiting) || (grant?.listed == true && c.draft == nil)

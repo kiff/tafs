@@ -651,6 +651,48 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A second approval on a grant the app already holds (kiff/tafs#138): Setup asks to
+    /// approve a read tool after the sign-in. The grant as read before is listed, which says
+    /// nothing about this approval: the grant is read again, and the card waits for the owner.
+    func testANewApprovalOnAKnownGrantWaitsForTheGrantReadAgain() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "listed", signedIn: true))]}"#)
+        let connect = #"{"at":"2026-10-17T10:00:02.000Z","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"connect","grant":"g_01"}}"#
+        let messages = #"""
+        [{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"Refunds, please","session":"s1"},
+         {"at":"2026-10-17T10:00:05.000Z","from":"owner","kind":"message","text":"[approval connect] approved, signed in","session":"s1"}]
+        """#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":\#(messages),"components":[\#(connect)]}"#)
+        await model.loadSetup()
+        XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01"}"#)), .done)
+
+        // The read tool, on the same grant: planque has it waiting for the owner now.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        let read = #"{"at":"2026-10-17T10:01:00.000Z","session":"s1","run":"r2","seq":4,"component":{"type":"approval","id":"read","grant":"g_01"}}"#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":\#(messages),"components":[\#(connect),\#(read)]}"#)
+        await model.loadSetupThread()
+        XCTAssertEqual(model.grants.first?.status, "pending", "the grant is read again for the new approval")
+        XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)), .needsYou)
+        XCTAssertEqual(model.setupWaiting?.id, "read", "its Approve button shows")
+
+        // Approved, then planque failed the grant at connect: the card says it didn't go
+        // through, with planque's reason, though the answer reads approved.
+        let answered = #"""
+        [{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"Refunds, please","session":"s1"},
+         {"at":"2026-10-17T10:00:05.000Z","from":"owner","kind":"message","text":"[approval connect] approved, signed in","session":"s1"},
+         {"at":"2026-10-17T10:02:00.000Z","from":"owner","kind":"message","text":"[approval read] approved, signed in","session":"s1"}]
+        """#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":\#(answered),"components":[\#(connect),\#(read)]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "failed", reason: "a read-only tool isn't read-only at the vendor"))]}"#)
+        await model.loadSetupThread()
+        await model.refreshConnections()
+        XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)),
+                       .failed("a read-only tool isn't read-only at the vendor"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A new conversation (#73): the thread is empty and nothing is read until the
     /// first message, which asks for a new chat; that chat is the one shown from then on.
     func testANewConversationStartsItsOwnChat() async throws {
