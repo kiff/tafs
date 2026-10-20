@@ -293,8 +293,7 @@ struct VersionsPanel: View {
             if let note = v.note, !note.isEmpty {
                 Text(note).font(.system(size: 14)).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             }
-            Text("\(v.by == "setup" ? "By Setup" : "By you") · \(v.created.formatted(date: .abbreviated, time: .shortened))\(v.draft == nil ? "" : " · brings a new Card")")
-                .font(.system(size: 12)).foregroundColor(Theme.dim)
+            Text(Self.byline(v)).font(.system(size: 12)).foregroundColor(Theme.dim)
             HStack(spacing: 8) {
                 Button("Try it") { Task { await model.tryVersion(v.n, of: tafID) } }
                     .buttonStyle(OutlineButtonStyle())
@@ -309,6 +308,19 @@ struct VersionsPanel: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    /// Who made it, when, and whether it brings a new Card. A version kiff/agents wrote
+    /// itself (the first, or an Upgrade's) names no one.
+    static func byline(_ v: TafsCloud.Version) -> String {
+        var by: String?
+        switch v.by {
+        case nil, "": by = nil
+        case "setup": by = "By Setup"
+        default: by = "By you"
+        }
+        return [by, v.created.formatted(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
+            .compactMap { $0 }.joined(separator: " · ")
     }
 }
 

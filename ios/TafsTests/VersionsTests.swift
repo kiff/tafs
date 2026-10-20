@@ -50,6 +50,15 @@ final class VersionsTests: XCTestCase {
         XCTAssertNil(model.versionErrors[id])
     }
 
+    func testAVersionKiffAgentsWroteNamesNoOne() {
+        let at = Date(timeIntervalSince1970: 0)
+        let upgrade = TafsCloud.Version(n: 3, note: "Its rules were updated", by: nil, created: at, live: true, draft: nil)
+        XCTAssertFalse(VersionsPanel.byline(upgrade).contains("By"))
+        let setup = TafsCloud.Version(n: 2, note: nil, by: "setup", created: at, live: false, draft: "d_02")
+        XCTAssertTrue(VersionsPanel.byline(setup).hasPrefix("By Setup · "))
+        XCTAssertTrue(VersionsPanel.byline(setup).hasSuffix(" · brings a new Card"))
+    }
+
     func testATrialIsFollowedUntilItStops() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
         StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/trial"] = (202, #"{"run":{"id":"run_t","status":"PENDING"}}"#)
