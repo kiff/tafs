@@ -91,7 +91,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("If the vendor said which mode the sign-in is in (describe), pin that and say so in plain words");
     expect(flat).toContain("Ask only when the vendor doesn't say, or reports more than one");
     // The money argument and read-only tools are part of looking, not of the mode rule.
-    expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only\.\s+- Test or live/);
+    expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only: reading in the owner's account is open, with no limits\.\s+- Test or live/);
     expect(flat).not.toContain("such as the account or test mode");
     expect(flat).toContain("Say a step is done (signed in, connected, set up) only after the grant's status says so, never before");
     expect(flat).toContain("A step the owner declined is skipped, not failed");
@@ -107,6 +107,15 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Never ask the owner for a server address, a URL or anything technical to connect");
     expect(flat).toContain("or from the owner, who can tell it in its chat");
     expect(flat).toContain("Never call a taf ready when it can only act");
+    // The whole job, from the vendor's catalog, with room to act (kiff/tafs#107).
+    expect(flat).toContain("the tools the whole job needs: to find the work (list or search), to check one item (read it), and to act (the write)");
+    expect(flat).toContain("don't narrow a tool's arguments to stand in for a limit");
+    expect(flat).toContain("reading in the owner's account is open, with no limits");
+    expect(flat).toContain("check that its tools cover the whole job: find the work, check an item, act on it, and say what it did");
+    expect(flat).not.toContain("the fewest tools");
+    // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
+    expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
+    expect(flat).toContain("A read tool's line has no amount limit, only a call count generous enough never to get in the way, and you don't ask the owner to set it");
     expect(flat).toContain("Show plan again with every step done or skipped");
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.
