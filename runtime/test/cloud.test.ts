@@ -624,6 +624,23 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.claims.held.size).toBe(0);
   });
 
+  it("starts a taf whose tools can't find its work with no running schedule and no first run (kiff/tafs#138)", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, unscheduled: true } });
+    expect(r.status).toBe(200);
+    expect(r.body.session).toBeNull();
+    expect(r.body.taf).toMatchObject({ id: NEW, status: "active", unscheduled: true, next_run: null });
+    expect(w.agents.calls).toEqual([`claimTafDraft drf_s1 kiff/${NEW}`, `putAgent ${NEW}`, `createSchedule ${NEW} */30 * * * * `]);
+    expect(w.agents.schedules.get(`t_acme|${NEW}`)?.enabled).toBe(false);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.unscheduled).toBe(true);
+    for (const action of ["pause", "resume", "run"]) {
+      const refused = await call(w, "POST", `/v1/tafs/${NEW}/${action}`, { token: "ana" });
+      expect(refused.status).toBe(409);
+      expect(refused.body.error).toContain("works from its chat");
+    }
+  });
+
   it("takes a draft_id and nothing that holds a key, and Setup's draft only", async () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_other", agent: "refunds-x" });

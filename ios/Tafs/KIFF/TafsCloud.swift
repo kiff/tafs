@@ -22,18 +22,24 @@ final class TafsCloud {
         let status: String
         let nextRun: Date?
         let lastRun: Date?
+        /// It works from its chat (kiff/tafs#138): its tools can't find its work, so no
+        /// schedule runs it, and there's nothing to run now or pause.
+        var unscheduled: Bool?
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status
+            case id, name, job, status, unscheduled
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
         }
+
+        var worksFromChat: Bool { unscheduled == true }
 
         var paused: Bool { status == "paused" }
     }
 
     struct Started: Decodable, Equatable {
         let taf: CloudTaf
-        let session: String
+        /// Its first run's chat; none for a taf that works from its chat (kiff/tafs#138).
+        let session: String?
     }
 
     struct Run: Decodable, Equatable {
@@ -489,14 +495,18 @@ final class TafsCloud {
     }
 
     /// Starts a taf Setup made (kiff/agents#91): kiff/agents claims its key from the draft
-    /// Setup submitted, so it never reaches the phone or tafs cloud. Runs it once now.
-    func startFromSetup(name: String, job: String, draftID: String, timezone: String = TimeZone.current.identifier) async throws -> Started {
+    /// Setup submitted, so it never reaches the phone or tafs cloud. Runs it once now, unless
+    /// Setup said its tools can't find its work (kiff/tafs#138): then it works from its chat.
+    func startFromSetup(name: String, job: String, draftID: String, unscheduled: Bool = false,
+                        timezone: String = TimeZone.current.identifier) async throws -> Started {
         struct Body: Encodable {
             let name: String, job: String, draftID: String, timezone: String
             let fromSetup = true
-            enum CodingKeys: String, CodingKey { case name, job, timezone, draftID = "draft_id", fromSetup = "from_setup" }
+            let unscheduled: Bool?
+            enum CodingKeys: String, CodingKey { case name, job, timezone, unscheduled, draftID = "draft_id", fromSetup = "from_setup" }
         }
-        return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, timezone: timezone))
+        return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, timezone: timezone,
+                                                              unscheduled: unscheduled ? true : nil))
     }
 
     /// Setup's thread: its messages and the components it showed. With `session`, that
