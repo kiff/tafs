@@ -998,9 +998,15 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   if (sub === "live") {
     // The draft the switch waits for: prepared by switch, or the version's own.
     const sw = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).switching;
-    const draft = sw && sw.n === n ? sw.draft : version.draft;
+    const pending = sw && sw.n === n;
+    const draft = pending ? sw.draft : version.draft;
     if (draft && !(await draftConfirmed(bearer(event), draft, deps.fetch, deps.kiffBase))) {
       throw new HTTPError(409, "confirm this version's Card first");
+    }
+    // Going back without a switch: a version that ran under other Card revisions
+    // goes live only once a switch has restored them, never under the Cards in force.
+    if (!pending && !version.draft && version.cards?.length && !sameCards(await liveCards(event, taf, deps), version.cards)) {
+      throw new HTTPError(409, "begin the switch: this version's Cards need restoring first");
     }
     await goLive(event, me, taf, n, deps);
     return { live: n };

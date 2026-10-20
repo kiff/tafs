@@ -1059,6 +1059,11 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(r.body.switching).toMatchObject({ n: 1, draft: "drf_restore1" });
     expect(w.account.restored).toEqual([{ agent_id: "rae", label: "Rae, version 1", revisions: [{ id: "card_rae", revision: 1 }] }]);
     await call(w, "DELETE", `/v1/tafs/${RAE}/switching`, { token: "ana" });
+    // Straight to live, with no switch: refused, the restore isn't skipped.
+    const direct = await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" });
+    expect(direct.status).toBe(409);
+    expect(String(direct.body.error)).toContain("need restoring first");
+    expect(w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.live)?.n).toBe(2);
     // The Cards are at the revisions it ran under already: a plain switch.
     w.account.revisions = { card_rae: 1 };
     const plain = await call(w, "POST", `/v1/tafs/${RAE}/versions/1/switch`, { token: "ana" });
