@@ -96,7 +96,7 @@ targets:
     deploymentTarget: "12.0"
     sources:
       - path: Mac
-        excludes: [Info.plist, TafsMac.entitlements]
+        excludes: [Info.plist, TafsMac.entitlements, make-icon.swift]
       - path: Tafs
         excludes:
           - App/TafsApp.swift
