@@ -223,7 +223,7 @@ final class AppModel: ObservableObject {
             return [.networkConnectionLost, .notConnectedToInternet, .timedOut, .cannotConnectToHost,
                     .cannotFindHost, .dnsLookupFailed, .internationalRoamingOff, .dataNotAllowed].contains(e.code)
         }
-        if case KIFFClient.KIFFError.server(let status, _) = error { return status >= 500 || status == 429 }
+        if case KIFFClient.KIFFError.server(let status, _, _) = error { return status >= 500 || status == 429 }
         return false
     }
 
@@ -414,7 +414,7 @@ final class AppModel: ObservableObject {
                 // Kept before anything else can fail: KIFF already signs with this secret.
                 handoff = AlertHandoff(tenant: tenant, target: target)
                 pendingHandoff = handoff
-            } catch KIFFClient.KIFFError.server(403, let message) {
+            } catch KIFFClient.KIFFError.server(403, let message, _) {
                 lastError = message.contains("phone_alert_url_forbidden") || message.contains("app backend")
                     ? "KIFF doesn't send alerts to tafs yet on this account."
                     : "Your role on this KIFF account can't turn on alerts."
@@ -696,7 +696,7 @@ final class AppModel: ObservableObject {
             let draft: KIFFClient.AgentDraft
             do { draft = try await kiff.submitDraft(agentID: a.agent, label: name, cards: cards) } catch {
                 // The agent's name is taken in KIFF: the next try starts over with a new one.
-                if case KIFFClient.KIFFError.server(409, _) = error { startAttempt = nil }
+                if case KIFFClient.KIFFError.server(409, _, _) = error { startAttempt = nil }
                 throw StartFailure(step: .cards, message: Self.startMessage(.cards, error))
             }
             guard accountGeneration == gen else { throw Self.signedOut(.cards) }
@@ -796,10 +796,10 @@ final class AppModel: ObservableObject {
     }
 
     private static func startMessage(_ step: StartStep, _ error: Error) -> String {
-        if case KIFFClient.KIFFError.server(403, _) = error {
+        if case KIFFClient.KIFFError.server(403, _, _) = error {
             return "Your role on this KIFF account can't start tafs. An admin or an editor can."
         }
-        if step == .cards, case KIFFClient.KIFFError.server(409, _) = error {
+        if step == .cards, case KIFFClient.KIFFError.server(409, _, _) = error {
             return "KIFF already has an agent with that name. Try again: the next one gets a new name."
         }
         let done: String
@@ -1374,8 +1374,9 @@ final class AppModel: ObservableObject {
                 _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
             } catch {
                 guard gen == accountGeneration else { return false }
-                if error.localizedDescription.contains("changed since this draft was made") {
-                    // A Card moved on since it was drafted: drafted again, it's read again.
+                if case KIFFClient.KIFFError.server(409, _, "card_revised") = error {
+                    // A Card moved on since it was drafted (KIFF's reason, kiff-cloud#1291):
+                    // drafted again, it's read again.
                     staleVersionCards[tafID] = version.n
                     versionErrors[tafID] = "Version \(version.n)'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve."
                 } else {
@@ -2033,7 +2034,7 @@ final class AppModel: ObservableObject {
             let key = try await kiff.mintConnectorKey()
             guard gen == accountGeneration else { return false }
             _ = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: key)
-        } catch KIFFClient.KIFFError.server(403, _) {
+        } catch KIFFClient.KIFFError.server(403, _, _) {
             lastError = "Only an admin of this KIFF account can connect tools."
             return false
         } catch PlanqueClient.PlanqueError.server(409, _) {

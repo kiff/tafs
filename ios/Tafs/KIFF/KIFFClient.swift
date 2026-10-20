@@ -14,7 +14,8 @@ final class KIFFClient {
         case slowDown
         case expired
         case unauthorized
-        case server(status: Int, message: String)
+        /// reason is KIFF's machine-readable why, when it gives one ("card_revised").
+        case server(status: Int, message: String, reason: String? = nil)
 
         var errorDescription: String? {
             switch self {
@@ -22,7 +23,7 @@ final class KIFFClient {
             case .slowDown: return "Asked KIFF too often; slowing down."
             case .expired: return "The sign-in code expired. Start again."
             case .unauthorized: return "Signed out of KIFF. Sign in again."
-            case .server(_, let message): return message
+            case .server(_, let message, _): return message
             }
         }
     }
@@ -119,7 +120,7 @@ final class KIFFClient {
     func pollDeviceToken(deviceCode: String) async throws -> DeviceToken {
         do {
             return try await send("POST", "/v1/auth/device/token", body: ["device_code": deviceCode], authorized: false)
-        } catch KIFFError.server(400, let message) {
+        } catch KIFFError.server(400, let message, _) {
             switch message {
             case "authorization_pending": throw KIFFError.authorizationPending
             case "slow_down": throw KIFFError.slowDown
@@ -604,8 +605,8 @@ final class KIFFClient {
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 401 { throw KIFFError.unauthorized }
         guard (200..<300).contains(status) else {
-            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "KIFF answered \(status)"
-            throw KIFFError.server(status: status, message: message)
+            let body = try? JSONDecoder().decode([String: String].self, from: data)
+            throw KIFFError.server(status: status, message: body?["error"] ?? "KIFF answered \(status)", reason: body?["reason"])
         }
         if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }
         return try Self.decoder.decode(T.self, from: data)
