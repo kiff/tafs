@@ -25,6 +25,7 @@ final class SignInTests: XCTestCase {
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/me/devices"] = (200, #"{"devices":[{"id":"dev_phone01","this_device":true}]}"#)
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":null}"#)
         model.signInSlice = 1_000_000
         model.signInMinimumInterval = 0
