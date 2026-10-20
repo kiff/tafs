@@ -1970,21 +1970,27 @@ final class AppModel: ObservableObject {
     }
 
     /// KIFF's record with the owner's answers it doesn't have yet: an answered call KIFF
-    /// still lists as held reads as answered, and one it has decided keeps the owner's words.
+    /// still lists as held, or not yet at all, reads as answered. Once KIFF has the outcome,
+    /// its record carries the call and the answer is let go (review on #160): a bridge until
+    /// KIFF catches up, not a second record.
     func withDecisions(_ kiff: [RecordEntry]) -> [RecordEntry] {
-        Self.merge(kiff, decided: decided)
+        let (out, settled) = Self.merge(kiff, decided: decided)
+        settled.forEach { decided[$0] = nil }
+        return out
     }
 
-    static func merge(_ kiff: [RecordEntry], decided: [UUID: RecordEntry]) -> [RecordEntry] {
+    /// The record to show, and the answers KIFF now has an outcome for.
+    static func merge(_ kiff: [RecordEntry], decided: [UUID: RecordEntry]) -> (record: [RecordEntry], settled: Set<UUID>) {
         var out = kiff
+        var settled: Set<UUID> = []
         for (id, mine) in decided {
             if let i = out.firstIndex(where: { $0.id == id }) {
-                if out[i].kind == .held { out[i] = mine } else { out[i].title = mine.title }
+                if out[i].kind == .held { out[i] = mine } else { settled.insert(id) }
             } else {
                 out.append(mine)
             }
         }
-        return out.sorted { $0.at > $1.at }
+        return (out.sorted { $0.at > $1.at }, settled)
     }
 
     // MARK: Connections (planque, #51)

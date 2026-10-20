@@ -186,19 +186,23 @@ final class KIFFAnswerTests: XCTestCase {
 
     /// The owner's answer stays in the conversation (kiff/tafs#138, item 31): a refresh just
     /// after it, while KIFF still lists the call as held, reads it as answered; once KIFF has
-    /// the outcome, its kind wins and the owner's words stay; one KIFF doesn't list yet shows.
+    /// the outcome, KIFF's record carries it and the answer is let go; one KIFF doesn't list
+    /// yet shows.
     func testAnAnswerOutlivesARefreshThatStillHoldsTheCall() {
         let taf = UUID(), id = KIFFMapping.recordID("p1"), at = now
         let mine = RecordEntry(id: id, tafID: taf, kind: .refused, title: "Refused by you · 10:45 · Refund €480.00", detail: "Over its limit", at: at)
         func kiff(_ kind: RecordEntry.Kind) -> RecordEntry {
             RecordEntry(id: id, tafID: taf, kind: kind, title: "Refund an order", detail: kind == .held ? "Waiting for you" : "Not sent", at: at)
         }
-        XCTAssertEqual(AppModel.merge([kiff(.held)], decided: [id: mine]), [mine], "still held at KIFF: the answer shows")
+        let held = AppModel.merge([kiff(.held)], decided: [id: mine])
+        XCTAssertEqual(held.record, [mine], "still held at KIFF: the answer shows")
+        XCTAssertTrue(held.settled.isEmpty)
         let settled = AppModel.merge([kiff(.refused)], decided: [id: mine])
-        XCTAssertEqual(settled.map(\.kind), [.refused])
-        XCTAssertEqual(settled.map(\.detail), ["Not sent"], "KIFF's outcome")
-        XCTAssertEqual(settled.map(\.title), [mine.title], "with the owner's words")
-        XCTAssertEqual(AppModel.merge([], decided: [id: mine]), [mine], "not listed yet: the answer shows")
+        XCTAssertEqual(settled.record, [kiff(.refused)], "KIFF's outcome carries it")
+        XCTAssertEqual(settled.settled, [id], "and the answer is let go")
+        let waiting = AppModel.merge([], decided: [id: mine])
+        XCTAssertEqual(waiting.record, [mine], "not listed yet: the answer shows")
+        XCTAssertTrue(waiting.settled.isEmpty)
     }
 
     func testARefreshDuringAnAnswerStillRemovesTheRightHold() async throws {
