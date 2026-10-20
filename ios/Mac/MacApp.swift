@@ -114,7 +114,7 @@ struct MacSignInView: View {
 }
 
 /// What the sidebar opens.
-enum MacSelection: Hashable { case needsYou, record, coach, taf(UUID) }
+enum MacSelection: Hashable { case needsYou, record, taf(UUID) }
 
 /// The sidebar and the iPhone's own screen for what's chosen in it, drawn as the iPad draws
 /// its sidebar (kiff/tafs#85): warm, each taf with its avatar, the calls that wait first.
@@ -137,6 +137,24 @@ struct MacTafsView: View {
         }
         // Under the hidden title bar too: tafs' colours to the window's top edge.
         .ignoresSafeArea(edges: .top)
+        // Coach mode (kiff/tafs#138), as on the iPad: ✦ at the bottom right of every screen,
+        // and a panel from the right over what's open.
+        .overlay(alignment: .bottomTrailing) {
+            if !model.coachOpen {
+                Button { model.openCoach() } label: {
+                    Label("Coach mode", systemImage: "sparkle")
+                        .font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
+                        .padding(.horizontal, 18).frame(height: 44)
+                        .background(Theme.coach).clipShape(Capsule())
+                        .shadow(color: Theme.coach.opacity(0.35), radius: 10, y: 4)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut("k", modifiers: .command)
+                .help("Coach mode (⌘K)")
+                .padding(24)
+            }
+        }
+        .overlay { MacCoachPanel() }
     }
 
     private var sidebar: some View {
@@ -166,10 +184,14 @@ struct MacTafsView: View {
                         Eyebrow(text: "Other agents with Cards").padding(.horizontal, 10).padding(.top, 14)
                         ForEach(model.otherAgents) { taf in item(.taf(taf.id)) { tafRow(taf) } }
                     }
-                    item(.coach) {
+                    Button { model.openCoach() } label: {
                         Label("Coach mode", systemImage: "sparkle")
                             .font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.coach)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10).padding(.vertical, 8)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                     .padding(.top, 14)
                 }
                 // Room for the window's buttons, which sit over the sidebar's top.
@@ -255,7 +277,6 @@ struct MacTafsView: View {
         // Below the window's title strip, which the colours run under.
         case .needsYou?: NeedsYouView().padding(.top, 28)
         case .record?: RecordView().padding(.top, 28)
-        case .coach?: SetupChatView().padding(.top, 28)
         case .taf(let id)?: TafDetailView(tafID: id).padding(.top, 28)
         case nil:
             VStack(spacing: 12) {
@@ -272,7 +293,8 @@ enum MacSettings {
     /// a raw id such as user_3KQ… (kiff/tafs#85).
     static func accountName(_ a: KIFFClient.Account?) -> String {
         guard let a else { return "Signed in with KIFF" }
-        if let n = a.displayName, !n.isEmpty, n != a.slug { return n }
+        // A display name that is really an id (KIFF's user_… for a personal account) isn't one.
+        if let n = a.displayName, !n.isEmpty, n != a.slug, !n.hasPrefix("user_") { return n }
         if let e = a.email, !e.isEmpty { return e }
         return a.slug
     }
@@ -335,5 +357,43 @@ struct MacSettingsView: View {
             Spacer()
             Text(value).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.ink).textSelection(.enabled)
         }
+    }
+}
+
+/// Coach mode on the Mac (kiff/tafs#138), as the iPad's panel: from the right, a third of the
+/// window at least, over what's open, which stays in view. Close or a click outside closes it;
+/// the conversation stays for ✦ to reopen.
+struct MacCoachPanel: View {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        GeometryReader { g in
+            ZStack(alignment: .trailing) {
+                if model.coachOpen {
+                    Color.black.opacity(0.12)
+                        .contentShape(Rectangle())
+                        .onTapGesture { model.coachOpen = false }
+                        .transition(.opacity)
+                    VStack(spacing: 0) {
+                        HStack {
+                            Label("Coach mode", systemImage: "sparkle")
+                                .font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.coach)
+                            Spacer()
+                            Button("Close") { model.coachOpen = false }
+                                .keyboardShortcut(.cancelAction)
+                        }
+                        .padding(.horizontal, 16).padding(.top, 34).padding(.bottom, 10)
+                        .background(Theme.coachWash)
+                        SetupChatView()
+                    }
+                    .frame(width: max(420, g.size.width / 3))
+                    .background(Theme.coachWash)
+                    .shadow(color: .black.opacity(0.18), radius: 24, x: -4)
+                    .transition(.move(edge: .trailing))
+                }
+            }
+            .animation(.easeOut(duration: 0.22), value: model.coachOpen)
+        }
+        .ignoresSafeArea()
     }
 }

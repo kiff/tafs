@@ -53,13 +53,15 @@ struct SetupChatView: View {
     /// A wide screen (kiff/tafs#85): the conversation, and beside it what it has made so far.
     /// A compact width, the iPhone's or an iPad's narrow split, keeps the chat alone.
     private var shaping: Bool {
-        sizeClass == .regular && width >= 780 && model.setupTaf != nil && model.planqueReady
+        sizeClass == .regular && width >= 780 && model.setupTaf != nil && (model.planqueReady || !model.canSign)
     }
 
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                if model.setupTaf == nil || !model.planqueReady {
+                // A device that can't sign (a Mac without a Secure Enclave) talks in the
+                // conversation once the iPhone started it; approving stays on the iPhone.
+                if model.setupTaf == nil || (!model.planqueReady && model.canSign) {
                     intro
                 } else {
                     coachBar
@@ -140,18 +142,27 @@ struct SetupChatView: View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
             Text("Coach mode").font(Theme.display(30)).foregroundColor(Theme.coach)
-            Text("Name a tool a taf should work with, like your Stripe. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
+            Text("Name a tool a taf should work with, like your Stripe. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(model.canSign ? Biometry.name : "your approval on your iPhone").")
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
-            if let error = model.setupError ?? model.lastError {
+            if model.canSign, let error = model.setupError ?? model.lastError {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
             }
             Spacer()
-            Button(model.startingSetup ? "Starting…" : "Start") { Task { _ = await model.startSetup() } }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(model.startingSetup || model.mode != .kiff)
-            Text("Starting asks for \(Biometry.name) once.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                .frame(maxWidth: .infinity)
+            if model.canSign {
+                Button(model.startingSetup ? "Starting…" : "Start") { Task { _ = await model.startSetup() } }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(model.startingSetup || model.mode != .kiff)
+                Text("Starting asks for \(Biometry.name) once.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .frame(maxWidth: .infinity)
+            } else {
+                // No key here to start it with (kiff/tafs#85): it starts once on the iPhone.
+                Panel {
+                    Text("Start Coach mode on your iPhone").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                    Text("Open tafs on your iPhone and tap Start in Coach mode once. Its conversations then show here, and you can write in them from this Mac. Approvals stay on your iPhone.")
+                        .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
         .padding(20)
     }
@@ -918,11 +929,16 @@ struct SetupComponentView: View {
                 }
                 Text(c.note ?? "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed.")
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                Button(state == .working ? "Opening the sign-in…" : state.isFailure ? "Try again" : c.yes ?? "Open \(c.service ?? "the sign-in")") {
-                    Task { await model.signInAgain(c) }
+                if model.canSign {
+                    Button(state == .working ? "Opening the sign-in…" : state.isFailure ? "Try again" : c.yes ?? "Open \(c.service ?? "the sign-in")") {
+                        Task { await model.signInAgain(c) }
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(busy || (answered && !state.isFailure))
+                } else {
+                    Label("Sign in from your iPhone: open tafs there, in Coach mode.", systemImage: "iphone")
+                        .scaledFont(14, weight: .semibold).foregroundColor(Theme.amber)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(busy || (answered && !state.isFailure))
                 // Where it goes is always the app's own words, whatever the button says.
                 Text("Opens \(c.destination)")
                     .scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.dim)
@@ -1138,6 +1154,10 @@ struct SetupApproval: View {
                 // Sent again unchanged, it would fail the same way (kiff/tafs#138).
                 Text("Coach mode has to change this request before you can approve it.")
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            } else if !replaced, !model.canSign, state == .needsYou || state == .working || state.isFailure {
+                // No key here (kiff/tafs#85): the iPhone approves, in the same conversation.
+                Label("Approve it on your iPhone: open tafs there, in Coach mode.", systemImage: "iphone")
+                    .scaledFont(14, weight: .semibold).foregroundColor(Theme.amber)
             } else if !replaced, state == .needsYou || state == .working || state.isFailure {
                 HStack(spacing: 10) {
                     Button("Decline") { Task { await model.answer(component, "declined") } }
