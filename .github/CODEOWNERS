@@ -1,0 +1,3 @@
+# Either listed maintainer can be requested to review a change.
+# CODEOWNERS requests review; branch protection/rulesets enforce approval.
+* @gabosarmiento @agentgabo
