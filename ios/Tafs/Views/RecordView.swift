@@ -68,8 +68,8 @@ extension RecordEntry.Kind {
     var color: Color {
         switch self {
         case .done, .approved, .started: return Theme.ok
-        case .held, .unknown: return Theme.amber
-        case .refused, .revoked: return Theme.no
+        case .held, .unknown, .sending: return Theme.amber
+        case .refused, .revoked, .notDone: return Theme.no
         }
     }
 
@@ -80,6 +80,8 @@ extension RecordEntry.Kind {
         case .refused: return "Refused"
         case .held: return "Held for you"
         case .unknown: return "Outcome unknown"
+        case .notDone: return "Not done"
+        case .sending: return "In progress"
         case .revoked: return "Card revoked"
         case .started: return "Taf started"
         }
@@ -133,6 +135,7 @@ struct ReceiptView: View {
     private var decidedBy: String {
         switch entry.kind {
         case .approved: return "You, approving once"
+        case _ where entry.ownerApproved == true: return "You, approving once"
         case .refused where entry.signature != nil: return "You"
         case .revoked: return "You, revoking the Card"
         case .started: return "You, issuing the Card"

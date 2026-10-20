@@ -65,7 +65,8 @@ struct TafChatView: View {
                                     .onAppear { heldInView.insert(call.id) }
                                     .onDisappear { heldInView.remove(call.id) }
                             case .outcome(let entry):
-                                OutcomeLine(text: entry.title, tone: entry.kind == .approved ? Theme.ok : Theme.dim,
+                                OutcomeLine(text: entry.kind == .notDone ? "\(entry.title): not done" : entry.title,
+                                            tone: entry.kind == .approved ? Theme.ok : entry.kind == .notDone ? Theme.no : Theme.dim,
                                             mark: entry.kind == .approved ? "checkmark.circle.fill" : "xmark.circle.fill")
                             }
                         }

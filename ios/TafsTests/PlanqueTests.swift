@@ -343,7 +343,7 @@ final class PlanqueTests: XCTestCase {
         vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
         StubProtocol.sent = []
 
-        let connected = await model.connect(grantID: "g_01", draftID: "d_01")
+        let connected = await model.connect(grantID: "g_01", shown: Self.digest, draftID: "d_01")
         XCTAssertEqual(connected?.status, "connected", model.lastError ?? "")
         XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(Self.digest)"], "one Face ID, naming the grant")
         XCTAssertEqual(vendor.opened, [URL(string: "https://access.stripe.com/authorize?x=1")!])
@@ -375,7 +375,7 @@ final class PlanqueTests: XCTestCase {
         vendor.meanwhile = { await model.refreshConnections() }
         StubProtocol.sent = []
 
-        let connected = await model.connect(grantID: "g_01")
+        let connected = await model.connect(grantID: "g_01", shown: Self.digest)
         XCTAssertEqual(connected?.status, "connected", model.lastError ?? "")
         XCTAssertEqual(signer.prompts.count, 1, "still one Face ID")
         XCTAssertFalse(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").isEmpty, "the sign-in is confirmed")
@@ -397,7 +397,7 @@ final class PlanqueTests: XCTestCase {
             if let callback { vendor.callback = URL(string: callback) } else { vendor.cancel = true }
             StubProtocol.sent = []
 
-            let connected = await model.connect(grantID: "g_01", draftID: "d_01")
+            let connected = await model.connect(grantID: "g_01", shown: Self.digest, draftID: "d_01")
             XCTAssertNil(connected, callback ?? "closed")
             XCTAssertNotNil(model.lastError)
             XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").isEmpty, callback ?? "closed")
@@ -418,7 +418,7 @@ final class PlanqueTests: XCTestCase {
         StubProtocol.responses["POST /v1/me/agent-drafts/d_01/confirm"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"confirmed","version":"v3","card_ids":["m1"]}"#)
         StubProtocol.sent = []
 
-        let done = await model.connect(grantID: "g_01", draftID: "d_01")
+        let done = await model.connect(grantID: "g_01", shown: Self.digest, draftID: "d_01", shownDraft: "v3")
         XCTAssertEqual(done?.status, "connected", model.lastError ?? "")
         XCTAssertEqual(signer.prompts, ["tafs.cards.v1|t_01|d_01|v3"])
         XCTAssertTrue(vendor.opened.isEmpty, "no second vendor sign-in")
@@ -432,7 +432,7 @@ final class PlanqueTests: XCTestCase {
         let again = await self.model(signer: signer, vendor: vendor)
         again.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(status: "connected"))]}"#)
-        _ = await again.connect(grantID: "g_01")
+        _ = await again.connect(grantID: "g_01", shown: Self.digest)
         XCTAssertEqual(signer.prompts.count, 1)
     }
 
@@ -443,7 +443,7 @@ final class PlanqueTests: XCTestCase {
         model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(digest: String(repeating: "0", count: 64)))]}"#)
         StubProtocol.sent = []
-        let connected = await model.connect(grantID: "g_01")
+        let connected = await model.connect(grantID: "g_01", shown: String(repeating: "0", count: 64))
         XCTAssertNil(connected)
         XCTAssertEqual(model.lastError, PlanqueClient.PlanqueError.digestMismatch.errorDescription)
         XCTAssertTrue(signer.prompts.isEmpty)
@@ -451,11 +451,62 @@ final class PlanqueTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// kiff/tafs#115: Face ID signs exactly what the owner was shown. A grant revised after
+    /// the card rendered it (shown A, latest B) isn't signed: B goes on screen, and the owner
+    /// approves again. Nothing shown, nothing signed.
+    func testOnlyTheGrantShownIsSigned() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON())]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/a","expires_at":"2026-10-17T10:15:00Z"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grantJSON(status: "connected"))
+        vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
+        StubProtocol.sent = []
+
+        let shownA = String(repeating: "a", count: 64)
+        let stale = await model.connect(grantID: "g_01", shown: shownA)
+        XCTAssertNil(stale)
+        XCTAssertTrue(model.shownTermsChanged)
+        XCTAssertNotNil(model.lastError)
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID over terms the owner wasn't shown")
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty, "nothing approved")
+        XCTAssertEqual(model.grants.first(where: { $0.id == "g_01" })?.digest, Self.digest, "the latest terms are on screen now")
+
+        let none = await model.connect(grantID: "g_01", shown: nil)
+        XCTAssertNil(none)
+        XCTAssertTrue(signer.prompts.isEmpty, "nothing shown, nothing signed")
+
+        let connected = await model.connect(grantID: "g_01", shown: Self.digest)
+        XCTAssertEqual(connected?.status, "connected", model.lastError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(Self.digest)"], "the terms now shown, approved again")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// The same for a taf's Cards: a draft that changed after it was shown isn't confirmed.
+    func testOnlyTheDraftShownIsConfirmed() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer, vendor: StubVendor())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grantJSON(status: "connected"))]}"#)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"draft","version":"v4"}"#)
+        StubProtocol.sent = []
+
+        let stale = await model.connect(grantID: "g_01", shown: Self.digest, draftID: "d_01", shownDraft: "v3")
+        XCTAssertNil(stale)
+        XCTAssertTrue(model.shownTermsChanged)
+        XCTAssertTrue(signer.prompts.isEmpty)
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts/d_01/confirm").isEmpty, "nothing confirmed")
+        XCTAssertEqual(model.setupDrafts["d_01"]?.version, "v4", "the latest Cards are on screen now")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     func testConnectingNeedsPlanqueSetUp() async {
         let signer = FaceIDSigner()
         let model = await model(signer: signer, vendor: StubVendor())
         StubProtocol.sent = []
-        let connected = await model.connect(grantID: "g_01")
+        let connected = await model.connect(grantID: "g_01", shown: Self.digest)
         XCTAssertNil(connected)
         XCTAssertTrue(signer.prompts.isEmpty)
         XCTAssertTrue(StubProtocol.sent.isEmpty)

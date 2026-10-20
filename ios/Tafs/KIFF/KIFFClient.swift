@@ -265,7 +265,12 @@ final class KIFFClient {
     /// One call of the account's, as KIFF's activity records it (kiff-cloud #1279): what a
     /// taf did, newest first, with the tool's title for people.
     struct ActivityCall: Decodable, Equatable {
-        struct ToolOutcome: Decodable, Equatable { let status: String }
+        /// How the call ended at the tool (kiff-cloud `tooloutcome`): done, refused_by_tool,
+        /// not_sent, sending, unknown or not_recorded, with the tool's or gateway's message.
+        struct ToolOutcome: Decodable, Equatable {
+            let status: String
+            var message: String?
+        }
         let proposalID: String
         let actionName: String
         var title: String?

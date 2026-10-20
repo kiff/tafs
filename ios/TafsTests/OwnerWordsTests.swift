@@ -99,4 +99,34 @@ final class AfterTheTestTests: XCTestCase {
         XCTAssertEqual(record.first?.tafID, taf)
         XCTAssertEqual(KIFFMapping.record(calls, ids: ["refunds-k5j6m5qx": taf]).map(\.id), record.map(\.id), "the same ids on every refresh")
     }
+
+    /// kiff/tafs#115: KIFF's decision isn't what the tool did. Only the tool's own "done" is
+    /// done; a refusal, a call never sent, one still sending, and no outcome at all are not,
+    /// for an ordinary call and one the owner approved alike.
+    func testTheRecordShowsWhatTheToolDidNotJustWhatKIFFAllowed() throws {
+        let statuses: [String?] = ["done", "refused_by_tool", "not_sent", "sending", "unknown", "not_recorded", nil]
+        let want: [String?: RecordEntry.Kind] = ["done": .done, "refused_by_tool": .notDone, "not_sent": .notDone,
+                                                "sending": .sending, "unknown": .unknown, "not_recorded": .unknown]
+        let taf = UUID()
+        for held in [false, true] {
+            for (i, status) in statuses.enumerated() {
+                let outcome = status.map { #","tool_outcome":{"status":"\#($0)","message":"card_declined"}"# } ?? ""
+                let json = #"{"proposal_id":"p\#(i)","action_name":"create_refund","actor_id":"rae","outcome":"allowed","held":\#(held),"created_at":"2026-10-20T09:00:00Z"\#(outcome)}"#
+                let call = try decoder.decode(KIFFClient.ActivityCall.self, from: Data(json.utf8))
+                let entry = try XCTUnwrap(KIFFMapping.record([call], ids: ["rae": taf]).first)
+                var kind = want[status] ?? .unknown
+                if kind == .done, held { kind = .approved }
+                XCTAssertEqual(entry.kind, kind, "status \(status ?? "none"), held \(held)")
+                if status != "done" {
+                    XCTAssertFalse([.done, .approved].contains(entry.kind), "\(status ?? "none") read as done")
+                    XCTAssertFalse(entry.detail.lowercased().contains("done"), entry.detail)
+                }
+                XCTAssertEqual(entry.ownerApproved, held ? true : nil, "the owner's approval is kept whatever the tool did")
+                if status == "refused_by_tool" {
+                    XCTAssertTrue(entry.detail.hasSuffix(": card_declined"), "the tool's own words: \(entry.detail)")
+                }
+            }
+        }
+    }
+
 }

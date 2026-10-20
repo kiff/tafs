@@ -316,7 +316,7 @@ final class SetupTests: XCTestCase {
         vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
         await model.refreshConnections()
         let connect = try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01"}"#)
-        await model.approve(connect)
+        await model.approve(connect, shown: model.grants.first?.digest, shownDraft: nil)
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
                        "[approval connect-stripe] approved, signed in")
 
@@ -325,7 +325,7 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["POST /v1/me/agent-drafts/d_01/confirm"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"confirmed","version":"v3"}"#)
         await model.refreshConnections()
         let cards = try SetupTests.component(#"{"type":"approval","id":"refunds-card","grant":"g_01","draft":"d_01"}"#)
-        await model.approve(cards)
+        await model.approve(cards, shown: model.grants.first?.digest, shownDraft: "v3")
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
                        "[approval refunds-card] approved")
         XCTAssertEqual(signer.prompts.count, 2, "one Face ID per approval")
@@ -356,7 +356,7 @@ final class SetupTests: XCTestCase {
             "GET /v1/accounts/t_01/grants": (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "listed", signedIn: true))]}"#)]
         vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
         await model.refreshConnections()
-        await model.approve(try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01"}"#))
+        await model.approve(try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01"}"#), shown: model.grants.first?.digest, shownDraft: nil)
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
                        "[approval connect-stripe] approved, signed in", "a listed grant is an answer too")
         XCTAssertTrue(model.grants.first?.listed ?? false)
@@ -370,7 +370,7 @@ final class SetupTests: XCTestCase {
         await model.refreshConnections()
         XCTAssertTrue(model.grants.first?.holdsSignIn ?? false, "a pending grant with a held sign-in is shown")
         StubProtocol.sent = []
-        await model.approve(try SetupTests.component(#"{"type":"approval","id":"stripe-tools","grant":"g_01"}"#))
+        await model.approve(try SetupTests.component(#"{"type":"approval","id":"stripe-tools","grant":"g_01"}"#), shown: model.grants.first?.digest, shownDraft: nil)
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
                        "[approval stripe-tools] approved", "no sign-in, so the answer doesn't claim one")
         XCTAssertEqual(vendor.opened.count, 1, "no second sign-in")

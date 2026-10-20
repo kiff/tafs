@@ -44,6 +44,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("and no tools");
     expect(SETUP_INSTRUCTIONS).toContain("only listed means you can read\nits catalog");
     expect(SETUP_INSTRUCTIONS).toContain("and make it required");
+    // A generic tool's operation is pinned, one connected tool per operation (kiff/tafs#115).
+    expect(SETUP_INSTRUCTIONS).toContain("and the operation that makes a tool the job's");
+    expect(SETUP_INSTRUCTIONS).toContain("Never leave the operation to the taf");
     expect(SETUP_INSTRUCTIONS).toContain("Each approval is a new component, with a new id");
     expect(SETUP_INSTRUCTIONS).toContain("don't assume one the owner didn't give");
     expect(SETUP_INSTRUCTIONS).toContain("ask for, accept or repeat a password, key, token or card number");

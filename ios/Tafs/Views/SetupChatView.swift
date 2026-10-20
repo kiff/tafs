@@ -1011,7 +1011,7 @@ struct SetupApproval: View {
                     Button("Decline") { Task { await model.answer(component, "declined") } }
                         .buttonStyle(OutlineButtonStyle())
                     Button(state == .working ? "Approving…" : state.isFailure ? "Try again" : "Approve") {
-                        Task { await model.approve(component) }
+                        Task { await model.approve(component, shown: grant?.digest, shownDraft: draft?.version) }
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil))

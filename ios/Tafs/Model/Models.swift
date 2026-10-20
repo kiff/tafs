@@ -214,7 +214,10 @@ enum Answer: Hashable, Codable {
 }
 
 struct RecordEntry: Identifiable, Hashable, Codable {
-    enum Kind: String, Codable { case done, approved, refused, held, unknown, revoked, started }
+    /// done and approved: the tool did it. notDone: allowed, but the tool refused it or it
+    /// was never sent. sending: sent, the tool hasn't answered. unknown: whether the tool did
+    /// it isn't known (kiff/tafs#115).
+    enum Kind: String, Codable { case done, approved, refused, held, unknown, revoked, started, notDone = "not_done", sending }
 
     var id = UUID()
     var tafID: UUID
@@ -224,4 +227,6 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var at: Date
     /// Present when the owner approved: the signature made on this iPhone.
     var signature: String?
+    /// The owner approved it (a held call), whatever the tool then did.
+    var ownerApproved: Bool?
 }
