@@ -21,6 +21,9 @@ struct TafChatView: View {
     /// the answer grows below it.
     @State private var pinNext = false
     @State private var pinned: String?
+    /// What the owner just sent, while it isn't in the thread yet (steering a run, or queued
+    /// behind one): its bubble is pinned, then the thread's copy, without the view moving.
+    @State private var pinText: String?
     @State private var viewport: CGFloat = 600
 
     var body: some View {
@@ -91,7 +94,7 @@ struct TafChatView: View {
                     }
                     // Written to the run while it goes, not read yet, as kiff/agents says (#64).
                     if let steering = state.steering, !steering.over {
-                        ForEach(Array(steering.untaken.enumerated()), id: \.offset) { _, m in
+                        ForEach(Array(steering.untaken.enumerated()), id: \.offset) { i, m in
                             VStack(alignment: .trailing, spacing: 4) {
                                 ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
                                     .opacity(0.8)
@@ -100,11 +103,13 @@ struct TafChatView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .trailing)
                             .accessibilityElement(children: .combine)
+                            .id("steer|\(i)")
                         }
                     }
                     if !thinking { ended(taf) }
                     if let queued = state.queued {
                         QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
+                            .id("queued")
                     }
                     if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
@@ -156,11 +161,21 @@ struct TafChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
-                if pinNext, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner } else { return false } })?.id {
+                // The message the owner just sent is in the thread: it goes to the top and stays
+                // (kiff/tafs#138). Matched by its words, so a reply arriving first doesn't pin an
+                // older message. If its bubble was already pinned while the taf (or Setup) worked,
+                // the pin moves to it without animating, so the view doesn't move.
+                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && m.text == text } else { return false } })?.id {
+                    let animate = pinNext
                     pinNext = false
+                    pinText = nil
                     pinned = sent
                     following = false
-                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(sent, anchor: .top) }
+                    if animate {
+                        withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(sent, anchor: .top) }
+                    } else {
+                        proxy.scrollTo(sent, anchor: .top)
+                    }
                     return
                 }
                 if !following && !ids.isEmpty && pinned == nil { unseen = true }
@@ -169,9 +184,13 @@ struct TafChatView: View {
             }
             .onChange(of: thinking) { _ in follow(proxy) }
             .onChange(of: state.live) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
+            .onChange(of: state.queued) { _ in pinBubble(proxy) }
+            .onChange(of: state.steering?.untaken.count) { _ in pinBubble(proxy) }
             .onChange(of: state.unsent) { unsent in
                 // Not sent: its bubble, with Retry, is the one at the top.
                 if pinNext, let last = unsent.last {
+                    pinNext = false
+                    pinText = nil
                     pinned = last.id.uuidString
                     withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(last.id, anchor: .top) }
                     return
@@ -183,6 +202,24 @@ struct TafChatView: View {
     }
 
     private static let bottom = "bottom"
+
+    /// The bubble of what the owner just sent, while the taf works: steering its run, or
+    /// queued behind it. It goes to the top at once (kiff/tafs#138).
+    private func pinBubble(_ proxy: ScrollViewProxy) {
+        guard pinNext, let text = pinText else { return }
+        let id: String?
+        if state.queued == text {
+            id = "queued"
+        } else if let untaken = state.steering?.untaken, let i = untaken.lastIndex(where: { $0.text == text }) {
+            id = "steer|\(i)"
+        } else {
+            id = nil
+        }
+        guard let id else { return }
+        pinNext = false
+        pinned = id
+        withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(id, anchor: .top) }
+    }
 
     private func follow(_ proxy: ScrollViewProxy) {
         guard following else { return }
@@ -281,6 +318,7 @@ struct TafChatView: View {
         // and a card with it, fill the space below without the view moving, even while the
         // taf is still at work.
         pinNext = true
+        pinText = text
         following = false
         Haptics.tap()
         // The keyboard stays for the next message (kiff/tafs#102): the composer changes
