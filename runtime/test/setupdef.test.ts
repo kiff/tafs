@@ -44,6 +44,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("and no tools");
     expect(SETUP_INSTRUCTIONS).toContain("only listed means you can read\nits catalog");
     expect(SETUP_INSTRUCTIONS).toContain("and make it required");
+    // A generic tool's operation is pinned, one connected tool per operation (kiff/tafs#115).
+    expect(SETUP_INSTRUCTIONS).toContain("and the operation that makes a tool the job's");
+    expect(SETUP_INSTRUCTIONS).toContain("Never leave the operation to the taf");
     expect(SETUP_INSTRUCTIONS).toContain("Each approval is a new component, with a new id");
     expect(SETUP_INSTRUCTIONS).toContain("don't assume one the owner didn't give");
     expect(SETUP_INSTRUCTIONS).toContain("ask for, accept or repeat a password, key, token or card number");
@@ -84,12 +87,12 @@ describe("Setup's definition on kiff/agents", () => {
     // before checking, and showed a declined step as failed.
     expect(flat).toContain("Test or live is the owner's choice, never yours");
     expect(flat).toContain('"Test mode (no real money), recommended to start" or "Live mode (real money)"');
-    expect(flat).toContain("Never carry a mode over from an earlier conversation, or from rules from last time: read it or ask again");
-    // The vendor knows what the owner signed in to (kiff/tafs#89, planque describe):
-    // pin what it reports, and ask only when it doesn't say.
-    expect(flat).toContain("call it with planque describe before you propose");
-    expect(flat).toContain("If the vendor said which mode the sign-in is in (describe), pin that and say so in plain words");
-    expect(flat).toContain("Ask only when the vendor doesn't say, or reports more than one");
+    expect(flat).toContain("Never carry a mode over from an earlier conversation, or from rules from last time: ask again");
+    // Nothing is read from the owner's account before they approve its tools
+    // (kiff/planque#23, describe removed): Setup asks the mode, always.
+    expect(flat).not.toContain("describe");
+    expect(flat).toContain("so don't try to read what the sign-in covers first: ask");
+    expect(flat).toContain("Before you propose tools that move money or change data, ask with confirm");
     // The money argument and read-only tools are part of looking, not of the mode rule.
     expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only: reading in the owner's account is open, with no limits\.\s+- Test or live/);
     expect(flat).not.toContain("such as the account or test mode");

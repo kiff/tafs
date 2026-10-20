@@ -85,6 +85,8 @@ enum KIFFMapping {
 
     /// What a taf did, as KIFF's activity records it (kiff/tafs#102): one entry a call of a
     /// holder the app shows, newest first, each with an id the same on every refresh.
+    /// KIFF's decision and what the tool then did are kept apart (kiff/tafs#115): a call is
+    /// done only when the tool said so, and no outcome is never read as done.
     static func record(_ calls: [KIFFClient.ActivityCall], ids: [String: UUID]) -> [RecordEntry] {
         calls.compactMap { c in
             guard let actor = c.actorID, let tafID = ids[actor] else { return nil }
@@ -92,18 +94,38 @@ enum KIFFMapping {
             let detail: String
             switch c.outcome {
             case "allowed":
-                switch (c.held, c.toolOutcome?.status) {
-                case (_, "unknown"?): kind = .unknown; detail = "Sent, and the tool's answer was lost: check the tool's own records"
-                case (true, _): kind = .approved; detail = "Approved by you, then sent"
-                default: kind = .done; detail = "Done, within its Card"
-                }
+                (kind, detail) = executed(c.toolOutcome, approved: c.held)
             case "owner_required", "approval_required":
                 kind = .held; detail = "Waiting for you"
             default:
                 kind = .refused; detail = "Not sent"
             }
-            return RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
-                               detail: detail, at: c.createdAt)
+            var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
+                                    detail: detail, at: c.createdAt)
+            if c.outcome == "allowed", c.held { entry.ownerApproved = true }
+            return entry
+        }
+    }
+
+    /// What the tool did with an allowed call: its kind and the words for it. approved: the
+    /// owner approved it, held first.
+    static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool) -> (RecordEntry.Kind, String) {
+        let why = o?.message.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
+        let allowed = approved ? "Approved by you" : "Allowed by its Card"
+        switch o?.status {
+        case "done"?:
+            return approved ? (.approved, "Approved by you, then done") : (.done, "Done, within its Card")
+        case "refused_by_tool"?:
+            return (.notDone, "\(allowed), but the tool refused it\(why)")
+        case "not_sent"?:
+            return (.notDone, "\(allowed), but it couldn't be sent: nothing reached the tool\(why)")
+        case "sending"?:
+            return (.sending, "\(allowed), and sent: waiting for the tool's answer")
+        case "unknown"?:
+            return (.unknown, "\(allowed), and sent, but the tool's answer was lost: check the tool's own records")
+        default:
+            // not_recorded, none, or one this app doesn't know yet.
+            return (.unknown, "\(allowed), but whether the tool did it wasn't recorded: check the tool's own records")
         }
     }
 

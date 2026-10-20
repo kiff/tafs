@@ -1687,7 +1687,10 @@ final class AppModel: ObservableObject {
         let messages = chats[tafID] ?? []
         var items = messages.map(ChatItem.message) + heldCalls(for: tafID).map(ChatItem.held)
         if let first = messages.first?.at {
-            items += entries(for: tafID).filter { ($0.kind == .approved || $0.kind == .refused) && $0.at >= first }.map(ChatItem.outcome)
+            // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
+            items += entries(for: tafID).filter {
+                ($0.kind == .approved || $0.kind == .refused || ($0.ownerApproved == true && [.notDone, .sending, .unknown].contains($0.kind))) && $0.at >= first
+            }.map(ChatItem.outcome)
         }
         return items.enumerated().sorted { a, b in
             a.element.at != b.element.at ? a.element.at < b.element.at : a.offset < b.offset
@@ -1938,7 +1941,11 @@ final class AppModel: ObservableObject {
     /// it brought back. For a connected grant, it confirms the taf's draft: KIFF takes a
     /// Card only for a tool that is connected, so a draft comes only after its grant.
     /// Returns the grant, or nil with `lastError`.
-    func connect(grantID: String, draftID: String? = nil) async -> PlanqueClient.Grant? {
+    /// `shown` is the grant's digest as the owner's screen showed it, and `shownDraft` the
+    /// draft's version: Face ID signs exactly that (kiff/tafs#115). Terms that changed since
+    /// are put on screen and not signed, and the owner approves again; nothing shown, nothing
+    /// signed.
+    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
             lastError = "Start from Connected tools on this iPhone first."
             return nil
@@ -1972,6 +1979,11 @@ final class AppModel: ObservableObject {
             // The second approval (kiff/agents#91): the vendor is connected, and the
             // taf's Cards over its tools wait as a draft. One Face ID confirms them.
             guard let draft, !draft.confirmed else { return grant }
+            guard draft.version == shownDraft else {
+                setupDrafts[draft.id] = draft
+                termsChanged()
+                return nil
+            }
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
                                           reason: "Give \(draft.agentID) its Card")
@@ -1992,6 +2004,11 @@ final class AppModel: ObservableObject {
         }
         guard grant.digestMatches else {
             lastError = PlanqueClient.PlanqueError.digestMismatch.errorDescription
+            return nil
+        }
+        guard grant.digest == shown else {
+            if let i = grants.firstIndex(where: { $0.id == grant.id }) { grants[i] = grant } else { grants.append(grant) }
+            termsChanged()
             return nil
         }
 
@@ -2651,11 +2668,16 @@ final class AppModel: ObservableObject {
 
     /// Approve on an approval (contract 4, one Face ID): the vendor's connection, then the
     /// taf's Cards when it names a draft. The answer says what happened, never more.
-    func approve(_ component: SetupComponent) async {
+    /// Approves what the card showed: the grant's digest and the draft's version as rendered.
+    func approve(_ component: SetupComponent, shown: String?, shownDraft: String?) async {
         guard let grant = component.grant else { return }
         lastError = nil
+        shownTermsChanged = false
         // Connected, or connected first and listed (contract 5): Setup reads what's next.
-        if let done = await connect(grantID: grant, draftID: component.draft), done.connected || done.listed {
+        let done = await connect(grantID: grant, shown: shown, draftID: component.draft, shownDraft: shownDraft)
+        // Changed terms aren't a failure to tell Setup: the owner reads them and approves again.
+        if shownTermsChanged { return }
+        if let done, done.connected || done.listed {
             if let e = lastError {
                 await answer(component, "failed: \(e)")
             } else {
@@ -2671,7 +2693,11 @@ final class AppModel: ObservableObject {
     func signInAgain(_ component: SetupComponent) async {
         guard let grant = component.grant else { return }
         lastError = nil
-        if let done = await connect(grantID: grant), done.connected || done.listed {
+        shownTermsChanged = false
+        // The sign-in card shows no terms: it approves the grant as the app last showed it.
+        let done = await connect(grantID: grant, shown: grants.first(where: { $0.id == grant })?.digest)
+        if shownTermsChanged { return }
+        if let done, done.connected || done.listed {
             await answer(component, "signed in")
         } else if let e = lastError {
             await answer(component, "failed: \(e)")
@@ -2683,6 +2709,16 @@ final class AppModel: ObservableObject {
 
     /// Whether the last connect opened the vendor's sign-in: the approval's answer says so.
     private var vendorSignedIn = false
+
+    /// Whether the last approval found terms other than those shown (kiff/tafs#115).
+    @Published private(set) var shownTermsChanged = false
+
+    /// The terms changed between the screen and the tap: the new ones are on screen now,
+    /// nothing was signed, and the owner approves again.
+    private func termsChanged() {
+        shownTermsChanged = true
+        lastError = "What you're asked to approve changed since it was shown. Read it again, then approve."
+    }
 
     /// Results whose taf is being started, or failed to start (with why).
     @Published private(set) var startingTafs: Set<String> = []
