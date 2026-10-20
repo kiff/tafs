@@ -207,6 +207,7 @@ struct TafChatView: View {
     /// queued behind it. It goes to the top at once (kiff/tafs#138).
     private func pinBubble(_ proxy: ScrollViewProxy) {
         guard pinNext, let text = pinText else { return }
+        let state = model.chatState(tafID)
         let id: String?
         if let queued = state.queued, SetupThread.matchesSent(queued, text) {
             id = "queued"
