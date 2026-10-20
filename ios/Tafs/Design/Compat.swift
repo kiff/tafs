@@ -92,3 +92,18 @@ enum Clipboard {
         #endif
     }
 }
+
+/// Buttons in rows that wrap (FlowRow, a Layout: iOS 16 and macOS 13); one under another
+/// on macOS 12.
+struct WrapRow<Content: View>: View {
+    var spacing: CGFloat = 8
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        if #available(iOS 16, macOS 13, *) {
+            FlowRow(spacing: spacing) { content() }
+        } else {
+            VStack(alignment: .leading, spacing: spacing) { content() }
+        }
+    }
+}

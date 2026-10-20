@@ -2921,3 +2921,18 @@ final class AppModel: ObservableObject {
 
 /// The app's tabs: the tafs, the calls waiting on the owner, and the record.
 enum Tab: Hashable { case tafs, needsYou, record }
+
+/// CI's screenshot run: `-screenshots YES -tab needs-you` opens the sample on a tab,
+/// without asking for notifications.
+enum Screenshots {
+    static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
+    /// `-screen taf` opens a taf's page; `-screen new` the new-taf flow.
+    static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
+    static var tab: Tab {
+        switch UserDefaults.standard.string(forKey: "tab") {
+        case "needs-you": return .needsYou
+        case "record": return .record
+        default: return .tafs
+        }
+    }
+}

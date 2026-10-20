@@ -809,7 +809,7 @@ struct SetupComponentView: View {
                 OutcomeLine(text: (c.text ?? "The question") + " · " + chosen, tone: Theme.ok)
             } else {
                 Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                FlowRow(spacing: 8) {
+                WrapRow(spacing: 8) {
                     ForEach(c.options ?? [], id: \.self) { option in
                         Button(option.label) {
                             Haptics.tap()
@@ -1087,6 +1087,7 @@ extension AppModel.CardState {
 }
 
 /// Buttons that wrap onto as many lines as they need.
+@available(iOS 16, macOS 13, *)
 struct FlowRow: Layout {
     var spacing: CGFloat = 8
 

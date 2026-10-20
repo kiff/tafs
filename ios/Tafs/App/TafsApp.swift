@@ -37,21 +37,6 @@ struct TafsApp: App {
     }
 }
 
-/// CI's screenshot run: `-screenshots YES -tab needs-you` opens the sample on a tab,
-/// without asking for notifications.
-enum Screenshots {
-    static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
-    /// `-screen taf` opens a taf's page; `-screen new` the new-taf flow.
-    static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
-    static var tab: Tab {
-        switch UserDefaults.standard.string(forKey: "tab") {
-        case "needs-you": return .needsYou
-        case "record": return .record
-        default: return .tafs
-        }
-    }
-}
-
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
