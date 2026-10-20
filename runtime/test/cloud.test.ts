@@ -16,7 +16,7 @@ const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id
 type Drafts = Record<string, { secret: string; key: string; agent: string; status?: number }>;
 
 /** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
-interface Account { mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[]; status?: number }
+interface Account { mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[]; drafts?: Record<string, string>; status?: number }
 
 /** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
 function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }) {
@@ -28,6 +28,12 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       const actor = new URL(url).searchParams.get("actor");
       const calls = (account.calls ?? []).filter((c) => actor === null || c.actor_id === actor);
       return new Response(JSON.stringify({ calls }), { status: 200 });
+    }
+    const draft = /\/v1\/me\/agent-drafts\/([^/?]+)$/.exec(url);
+    if (draft) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      const status = account.drafts?.[decodeURIComponent(draft[1]!)];
+      return status ? new Response(JSON.stringify({ id: draft[1], status }), { status: 200 }) : new Response("{}", { status: 404 });
     }
     if (url.includes("/v1/me/mandates") || url.includes("/v1/me/card-exceptions")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -791,5 +797,51 @@ describe("a taf's recent calls (kiff/tafs#107)", () => {
     }, [], "hi");
     expect(text).toContain("- Look up a charge, 200 calls a day, held for the owner beyond that");
     expect(text).not.toContain("no limit a call");
+  });
+});
+
+describe("a taf's versions (kiff/tafs#107)", () => {
+  const twoVersions = () => {
+    const w = world();
+    w.agents.versions.set(`t_acme|${RAE}`, [
+      { n: 1, note: "Started by Setup", by: "setup", created: "2026-10-18T09:00:00Z", digest: "d1", live: true },
+      { n: 2, note: "Reads a charge before refunding it", by: "setup", created: "2026-10-20T09:00:00Z", digest: "d2", live: false, revisions: ["rev_2"], draft: "drf_v2" },
+    ]);
+    return w;
+  };
+
+  it("lists them, oldest first, with the live one marked", async () => {
+    const w = twoVersions();
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect((r.body.versions as Array<{ n: number; live: boolean }>).map((v) => [v.n, v.live])).toEqual([[1, true], [2, false]]);
+  });
+
+  it("tries a version on the job's own work, and reads back what KIFF decided", async () => {
+    const w = twoVersions();
+    const started = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/trial`, { token: "ana", body: {} });
+    expect(started.status).toBe(200);
+    const run = started.body.run as { id: string; trigger: string; session: string };
+    expect(run.trigger).toBe("trial");
+    expect((w.agents.events.get(run.session)?.[0]?.body as { text: string }).text).toBe(jobById("refunds").kickoff);
+    w.agents.trialWrites.set(run.id, [{ tool: "create_refund_k3f9", title: "Create refund", arguments: { amount: 3000 }, decision: "allowed" }]);
+    const read = await call(w, "GET", `/v1/tafs/${RAE}/trials/${run.id}`, { token: "ana" });
+    expect(read.body.writes).toEqual([{ tool: "create_refund_k3f9", title: "Create refund", arguments: { amount: 3000 }, decision: "allowed" }]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/9/trial`, { token: "ana", body: {} })).status).toBe(404);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/trial`, { token: "viewer", body: {} })).status).toBe(403);
+  });
+
+  it("makes a version live only once KIFF says its Card revision is confirmed", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    const early = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
+    expect(early.status).toBe(409);
+    expect(w.agents.calls).not.toContain(`switchVersion ${RAE} 2`);
+    w.account.drafts = { drf_v2: "confirmed" };
+    const live = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
+    expect(live).toMatchObject({ status: 200, body: { live: 2 } });
+    // Back to version 1: its Cards are the agent's current ones, so no draft to wait for.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" })).body).toEqual({ live: 1 });
+    expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(1);
   });
 });

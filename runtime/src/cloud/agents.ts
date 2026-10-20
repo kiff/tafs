@@ -117,6 +117,31 @@ export interface Run {
   updated: string;
 }
 
+/** One version of an agent's definition (kiff/tafs#107): any one can be live. */
+export interface AgentVersion {
+  n: number;
+  /** What changed, in plain words. */
+  note: string;
+  /** Who made it: the owner's subject, or "setup". */
+  by: string;
+  created: string;
+  digest: string;
+  live: boolean;
+  /** The KIFF Card revisions this version needs live; empty: the agent's current Cards. */
+  revisions?: string[];
+  /** The KIFF draft whose confirmation brings those revisions, while it isn't confirmed. */
+  draft?: string;
+}
+
+/** A trial write: what KIFF would decide, nothing sent (kiff/tafs#107). */
+export interface TrialWrite {
+  tool: string;
+  title?: string;
+  arguments: unknown;
+  decision: "allowed" | "held" | "refused";
+  reason?: string;
+}
+
 export interface Session {
   id: string;
   agent: string;
@@ -173,6 +198,28 @@ export class Agents {
 
   putAgent(tenant: string, id: string, def: AgentDefinition): Promise<AgentDefinition> {
     return this.call("PUT", tenant, ["agents", id], def);
+  }
+
+  // Versions (kiff/tafs#107).
+
+  /** The agent's versions, oldest first. */
+  async versions(tenant: string, id: string): Promise<AgentVersion[]> {
+    return (await this.call<{ versions: AgentVersion[] }>("GET", tenant, ["agents", id, "versions"])).versions;
+  }
+
+  /** Makes version n live, forward or back. */
+  async switchVersion(tenant: string, id: string, n: number): Promise<void> {
+    await this.call("POST", tenant, ["agents", id, "versions", String(n), "live"], {});
+  }
+
+  /** Starts a trial of version n: a run whose writes KIFF decides without sending. */
+  async startTrial(tenant: string, id: string, n: number, input: string): Promise<Run> {
+    return (await this.call<{ run: Run }>("POST", tenant, ["agents", id, "versions", String(n), "trial"], { input })).run;
+  }
+
+  /** A trial so far: the run, and what KIFF decided for each write. */
+  async trial(tenant: string, id: string, run: string): Promise<{ run: Run; writes: TrialWrite[] }> {
+    return this.call("GET", tenant, ["agents", id, "trials", run]);
   }
 
   /** The agent's definition; undefined when the tenant has none of that id. */
