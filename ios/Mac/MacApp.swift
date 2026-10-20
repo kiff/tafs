@@ -20,6 +20,8 @@ struct TafsMacApp: App {
                 .frame(minWidth: 760, minHeight: 500)
                 .task { await model.restore() }
         }
+        // tafs' own window, as the iPad's screen: no title bar over the warm background.
+        .windowStyle(.hiddenTitleBar)
         // ⌘, and the sidebar's Settings: the account, sign out, and what tafs is.
         Settings {
             MacSettingsView()
@@ -112,108 +114,169 @@ struct MacSignInView: View {
 }
 
 /// What the sidebar opens.
-enum MacSelection: Hashable { case needsYou, record, setup, taf(UUID) }
+enum MacSelection: Hashable { case needsYou, record, coach, taf(UUID) }
 
-/// The sidebar, and the iPhone's own screen for what's chosen in it. The sidebar is a list
-/// with a selection, and the detail reads it: no link drives the window, so nothing a screen
-/// does can empty the sidebar (macOS 12, kiff/tafs#85). Answering a held call is on the
-/// iPhone: this Mac holds no key.
+/// The sidebar and the iPhone's own screen for what's chosen in it, drawn as the iPad draws
+/// its sidebar (kiff/tafs#85): warm, each taf with its avatar, the calls that wait first.
+/// The sidebar is the app's own, not macOS's: on macOS 12 a system sidebar can't take
+/// tafs' background, and a column of links loses itself when a screen changes the window.
+/// Answering a held call is on the iPhone: this Mac holds no key.
 struct MacTafsView: View {
     @EnvironmentObject private var model: AppModel
     @State private var selection: MacSelection? = .needsYou
 
     var body: some View {
+        // Two columns, so a screen's own links (a taf's Versions, Coach mode's sheets) push
+        // in the detail. The sidebar is driven by its buttons, never by a link.
         NavigationView {
-            sidebar
+            sidebar.frame(minWidth: 250, idealWidth: 270)
             detail
                 .id(selection)
                 .frame(minWidth: 480, maxWidth: .infinity, maxHeight: .infinity)
+                .background(Theme.background)
         }
-        .toolbar {
-            ToolbarItem {
-                Button { Task { await model.refresh() } } label: { Label("Refresh", systemImage: "arrow.clockwise") }
-            }
-        }
+        // Under the hidden title bar too: tafs' colours to the window's top edge.
+        .ignoresSafeArea(edges: .top)
     }
 
     private var sidebar: some View {
         VStack(spacing: 0) {
-            List(selection: $selection) {
-                Section {
-                    row("Needs you", count: model.held.count, symbol: "bell").tag(MacSelection.needsYou)
-                    row("Record", symbol: "list.bullet").tag(MacSelection.record)
-                    row("Connected tools", symbol: "puzzlepiece.extension").tag(MacSelection.setup)
-                }
-                Section {
-                    ForEach(model.tafs) { taf in
-                        HStack(spacing: 10) {
-                            Circle().fill(Theme.tafColors[taf.colorIndex % Theme.tafColors.count]).frame(width: 10, height: 10)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(taf.name).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.ink)
-                                Text(taf.now).font(.system(size: 11)).foregroundColor(Theme.soft).lineLimit(1)
-                            }
-                        }
-                        .padding(.vertical, 2)
-                        .tag(MacSelection.taf(taf.id))
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 10) {
+                        Mascot(size: 30)
+                        Text("tafs").font(Theme.display(24)).foregroundColor(Theme.ink)
                     }
-                } header: { Eyebrow(text: "Your tafs") }
+                    .padding(.horizontal, 10).padding(.bottom, 12)
+                    if !model.held.isEmpty {
+                        Eyebrow(text: "Needs you", color: Theme.amber).padding(.horizontal, 10).padding(.top, 4)
+                        ForEach(model.held) { call in
+                            if let taf = model.taf(call.tafID) { item(.taf(taf.id)) { heldRow(call, taf) } }
+                        }
+                    }
+                    item(.needsYou) { navRow("Needs you", "bell", count: model.held.count) }
+                    item(.record) { navRow("Record", "list.bullet") }
+                    Eyebrow(text: "Your tafs").padding(.horizontal, 10).padding(.top, 14)
+                    ForEach(model.tafs) { taf in item(.taf(taf.id)) { tafRow(taf) } }
+                    if model.listLoaded, !model.listUnread, model.tafs.isEmpty {
+                        Text("Start one in Coach mode.").font(.system(size: 13)).foregroundColor(Theme.dim).padding(.horizontal, 10)
+                    }
+                    if !model.otherAgents.isEmpty {
+                        // Agents made through KIFF's API, not run by tafs: their Cards, apart.
+                        Eyebrow(text: "Other agents with Cards").padding(.horizontal, 10).padding(.top, 14)
+                        ForEach(model.otherAgents) { taf in item(.taf(taf.id)) { tafRow(taf) } }
+                    }
+                    item(.coach) {
+                        Label("Coach mode", systemImage: "sparkle")
+                            .font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.coach)
+                    }
+                    .padding(.top, 14)
+                }
+                // Room for the window's buttons, which sit over the sidebar's top.
+                .padding(.horizontal, 10).padding(.top, 40).padding(.bottom, 12)
             }
-            .listStyle(.sidebar)
-            Divider()
             footer
         }
-        .frame(minWidth: 230, idealWidth: 250)
+        .background(Theme.raised)
     }
 
-    private func row(_ title: String, count: Int = 0, symbol: String) -> some View {
-        HStack {
-            Label(title, systemImage: symbol).font(.system(size: 13)).foregroundColor(Theme.ink)
-            Spacer()
+    /// A row the sidebar selects: a white card when chosen, as on the iPad.
+    private func item<Content: View>(_ sel: MacSelection, @ViewBuilder _ content: () -> Content) -> some View {
+        let chosen = selection == sel
+        return Button { selection = sel } label: {
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10).padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(chosen ? Theme.panel : Color.clear)
+                        .shadow(color: chosen ? Theme.ink.opacity(0.08) : .clear, radius: 4, y: 1)
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func navRow(_ title: String, _ symbol: String, count: Int = 0) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: symbol).font(.system(size: 14)).foregroundColor(Theme.soft).frame(width: 22)
+            Text(title).font(.system(size: 15)).foregroundColor(Theme.ink)
+            Spacer(minLength: 0)
             if count > 0 {
-                Text("\(count)").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                Text("\(count)").font(.system(size: 12, weight: .bold)).foregroundColor(.white)
                     .padding(.horizontal, 7).padding(.vertical, 2)
                     .background(Theme.amber).clipShape(Capsule())
             }
         }
     }
 
-    /// Which account this is, and Settings (the iPhone's Settings, kiff/tafs#73).
-    private var footer: some View {
-        HStack(spacing: 8) {
+    private func tafRow(_ taf: Taf) -> some View {
+        HStack(spacing: 12) {
+            TafAvatar(taf: taf, size: 34)
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.kiffAccount?.name ?? "Signed in with KIFF")
-                    .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.ink).lineLimit(1)
-                if let email = model.kiffAccount?.email, !email.isEmpty {
-                    Text(email).font(.system(size: 11)).foregroundColor(Theme.dim).lineLimit(1)
-                }
+                Text(taf.name).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink).lineLimit(1)
+                Text(taf.now).font(.system(size: 13)).foregroundColor(Theme.dim).lineLimit(1)
+            }
+        }
+    }
+
+    private func heldRow(_ call: HeldCall, _ taf: Taf) -> some View {
+        HStack(spacing: 10) {
+            Circle().fill(Theme.amber).frame(width: 8, height: 8)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(taf.name): \(call.proposed.summary)").font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink).lineLimit(1)
+                Text("\(call.reason) · answer by \(call.expiresAt.shortTime)").font(.system(size: 12)).foregroundColor(Theme.soft).lineLimit(1)
+            }
+        }
+    }
+
+    /// Which account, Settings and a refresh, at the foot as on the iPad.
+    private var footer: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(MacSettings.accountName(model.kiffAccount))
+                    .font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.ink).lineLimit(1)
+                Text("Approvals go to your iPhone").font(.system(size: 11)).foregroundColor(Theme.dim).lineLimit(1)
             }
             Spacer(minLength: 0)
+            Button { Task { await model.refresh() } } label: { Image(systemName: "arrow.clockwise") }
+                .buttonStyle(.borderless).help("Refresh").keyboardShortcut("r", modifiers: .command)
             Button { MacSettings.open() } label: { Image(systemName: "gearshape") }
-                .buttonStyle(.borderless)
-                .help("Settings")
-                .accessibilityLabel("Settings")
+                .buttonStyle(.borderless).help("Settings")
         }
-        .padding(.horizontal, 14).padding(.vertical, 10)
+        .foregroundColor(Theme.soft)
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .background(Theme.raised)
+        .overlay(alignment: .top) { Rectangle().fill(Theme.line).frame(height: 1) }
     }
 
     @ViewBuilder private var detail: some View {
         switch selection {
-        case .needsYou?: NeedsYouView()
-        case .record?: RecordView()
-        case .setup?: SetupChatView()
-        case .taf(let id)?: TafDetailView(tafID: id)
+        // Below the window's title strip, which the colours run under.
+        case .needsYou?: NeedsYouView().padding(.top, 28)
+        case .record?: RecordView().padding(.top, 28)
+        case .coach?: SetupChatView().padding(.top, 28)
+        case .taf(let id)?: TafDetailView(tafID: id).padding(.top, 28)
         case nil:
             VStack(spacing: 12) {
                 Mascot(size: 72)
                 Text("Choose a taf").font(.system(size: 16)).foregroundColor(Theme.dim)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Theme.background)
         }
     }
 }
 
 enum MacSettings {
+    /// The account as the owner knows it: its name when KIFF has one, else the email, never
+    /// a raw id such as user_3KQ… (kiff/tafs#85).
+    static func accountName(_ a: KIFFClient.Account?) -> String {
+        guard let a else { return "Signed in with KIFF" }
+        if let n = a.displayName, !n.isEmpty, n != a.slug { return n }
+        if let e = a.email, !e.isEmpty { return e }
+        return a.slug
+    }
+
     /// Opens the Settings window: macOS 12 names its action showPreferencesWindow:,
     /// macOS 13 showSettingsWindow:.
     static func open() {
@@ -234,7 +297,7 @@ struct MacSettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Eyebrow(text: "Account")
             if model.mode == .kiff, let account = model.kiffAccount {
-                line("KIFF account", account.name)
+                line("KIFF account", MacSettings.accountName(account))
                 if account.displayName.map({ !$0.isEmpty && $0 != account.slug }) ?? false { line("Account id", account.slug) }
                 if let email = account.email, !email.isEmpty { line("Email", email) }
                 line("Time zone", account.timeZone ?? "UTC")
