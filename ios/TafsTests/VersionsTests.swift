@@ -281,7 +281,7 @@ final class VersionsTests: XCTestCase {
         let (model, id) = await kiffModel(signer: StubSigner())
         StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
         StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7"}"#)
-        StubProtocol.responses["POST /v1/me/agent-drafts/d_02/confirm"] = (409, #"{"error":"the agent's Cards changed since this draft was made; draft it again"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d_02/confirm"] = (409, #"{"error":"the agent's Cards changed since this draft was made; draft it again","reason":"card_revised"}"#)
         let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
         let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertFalse(done)
@@ -294,6 +294,20 @@ final class VersionsTests: XCTestCase {
         let body = try XCTUnwrap(sent("POST", "/v1/tafs/depl_1/versions/2/switch").last?.httpBody)
         XCTAssertEqual(try JSONSerialization.jsonObject(with: body) as? [String: Bool], ["redraft": true])
         XCTAssertNil(model.staleVersionCards[id])
+    }
+
+    /// Another conflict at confirm isn't a stale Card: only KIFF's reason card_revised offers
+    /// to draft it again, not the words of its message.
+    func testAnotherConflictAtConfirmIsntAStaleCard() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d_02/confirm"] = (409, #"{"error":"the agent's Cards changed since this draft was made; draft it again"}"#)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
+        XCTAssertFalse(done)
+        XCTAssertNil(model.staleVersionCards[id])
+        XCTAssertTrue(model.versionErrors[id]?.contains("didn't finish") ?? false)
     }
 
     /// No Card to change, and the owner backs out at Face ID: the switch it began is dropped.
