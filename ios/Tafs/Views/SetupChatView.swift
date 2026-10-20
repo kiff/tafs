@@ -150,7 +150,7 @@ struct SetupChatView: View {
     }
 
     private var thread: some View {
-        let items = model.setupThread.items
+        let items = textBeforeCards(model.setupThread.items)
         let thinking = model.setupThinking
         let waiting = model.setupWaiting
         return ScrollViewReader { proxy in
@@ -170,8 +170,7 @@ struct SetupChatView: View {
                                                                           text: model.setupThread.ownerWords(m.text), session: m.session), taf: nil)
                             case .message(let m):
                                 // Streamed answers show as written; only without a stream are they revealed.
-                                RevealingBubble(message: m, reveal: !model.setupStreamWorks && m.from == .taf && m.at > openedAt && !revealed.contains(m.id),
-                                                revealed: $revealed, grown: $grown)
+                                RevealingBubble(message: m, reveal: revealing(m), revealed: $revealed, grown: $grown)
                             case .component(let c):
                                 SetupComponentView(shown: c)
                                     .onAppear { cardsInView.insert(c.id) }
@@ -292,6 +291,31 @@ struct SetupChatView: View {
     }
 
     /// The time to show above item `i`: the first, and any after an hour's quiet.
+    /// A message of Setup's still being revealed, letter by letter, when there's no stream.
+    private func revealing(_ m: TafsCloud.ChatMessage) -> Bool {
+        !model.setupStreamWorks && m.from == .taf && m.at > openedAt && !revealed.contains(m.id)
+    }
+
+    /// Text first, then its card (kiff/tafs#138): while Setup's reply is still being
+    /// written, or its message still revealed, the cards that come with it wait, so the
+    /// question or approval never shows above words still arriving.
+    private func textBeforeCards(_ items: [SetupThread.Item]) -> [SetupThread.Item] {
+        let streaming = !(model.setupLive?.text.isEmpty ?? true)
+        let lastOwner = items.last { if case .message(let m) = $0 { return m.from == .owner } else { return false } }?.at
+        var holding = false
+        return items.filter { item in
+            switch item {
+            case .message(let m):
+                if m.from == .owner { holding = false } else if revealing(m) { holding = true }
+                return true
+            case .component(let c):
+                if holding { return false }
+                if streaming, c.firstAt > (lastOwner ?? .distantPast) { return false }
+                return true
+            }
+        }
+    }
+
     private func gapTime(_ items: [SetupThread.Item], _ i: Int) -> String? {
         let at = items[i].at
         if i > 0, at.timeIntervalSince(items[i - 1].at) < 3600 { return nil }
