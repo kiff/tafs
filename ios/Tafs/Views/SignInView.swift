@@ -1,10 +1,5 @@
 import SwiftUI
 
-/// kiff.dev's Terms and Privacy policy, which cover tafs.
-enum Legal {
-    static let terms = URL(string: "https://kiff.dev/terms#tafs")!
-    static let privacy = URL(string: "https://kiff.dev/privacy#tafs")!
-}
 
 /// Sign in with KIFF: the phone shows a code, the person approves it in KIFF
 /// (on the web, signed in as themselves), and the phone receives a session.

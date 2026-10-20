@@ -96,7 +96,7 @@ targets:
     deploymentTarget: "12.0"
     sources:
       - path: Mac
-        excludes: [Info.plist, TafsMac.entitlements]
+        excludes: [Info.plist, TafsMac.entitlements, make-icon.swift]
       - path: Tafs
         excludes:
           - App/TafsApp.swift
@@ -134,7 +134,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
-        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        # The Mac's own icon sizes, and tafs' amber where macOS draws its accent (kiff/tafs#85).
+        ASSETCATALOG_COMPILER_APPICON_NAME: MacAppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
   TafsTests:
     type: bundle.unit-test
     platform: iOS
