@@ -118,7 +118,7 @@ struct TafChatView: View {
                 .frame(maxWidth: Self.readable)
                 .frame(maxWidth: .infinity)
             }
-            .scrollDismissesKeyboard(.interactively)
+            .dismissesKeyboardInteractively()
             .background(GeometryReader { g in
                 Color.clear.onAppear { viewport = g.size.height }.onChange(of: g.size.height) { viewport = $0 }
             })
@@ -223,8 +223,7 @@ struct TafChatView: View {
         let thinking = model.chatThinking(tafID) && model.mode == .kiff
         let name = model.taf(tafID)?.name ?? "your taf"
         return HStack(alignment: .bottom, spacing: 10) {
-            TextField(thinking ? "Write the next message" : "Message \(name)", text: $draft, axis: .vertical)
-                .lineLimit(1...6)
+            ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft)
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -261,7 +260,7 @@ struct TafChatView: View {
         .padding(.horizontal, 12).padding(.vertical, 10)
         .frame(maxWidth: Self.readable)
         .frame(maxWidth: .infinity)
-        .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
+        .barBackground()
     }
 
     /// The chat's widest column: about 75 characters of text.

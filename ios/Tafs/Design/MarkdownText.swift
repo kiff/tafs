@@ -103,15 +103,15 @@ struct MarkdownBlock: Equatable {
             }
             if code != nil { code?.append(raw); continue }
             if line.isEmpty { flush(); continue }
-            if let heading = line.firstMatch(of: /^#{1,6}\s+(.+)$/) {
+            if let heading = Self.groups(line, #"^#{1,6}\s+(.+)$"#) {
                 flush()
-                out.append(MarkdownBlock(kind: .heading, text: inline(String(heading.1))))
-            } else if let item = line.firstMatch(of: /^[-*•+]\s+(.+)$/) {
+                out.append(MarkdownBlock(kind: .heading, text: inline(heading[0])))
+            } else if let item = Self.groups(line, #"^[-*•+]\s+(.+)$"#) {
                 flush()
-                out.append(MarkdownBlock(kind: .bullet, text: inline(String(item.1))))
-            } else if let item = line.firstMatch(of: /^(\d{1,3})[.)]\s+(.+)$/) {
+                out.append(MarkdownBlock(kind: .bullet, text: inline(item[0])))
+            } else if let item = Self.groups(line, #"^(\d{1,3})[.)]\s+(.+)$"#) {
                 flush()
-                out.append(MarkdownBlock(kind: .numbered(Int(item.1) ?? 1), text: inline(String(item.2))))
+                out.append(MarkdownBlock(kind: .numbered(Int(item[0]) ?? 1), text: inline(item[1])))
             } else if line.allSatisfy({ $0 == "-" || $0 == "*" || $0 == "_" }) && line.count >= 3 {
                 flush() // a rule: nothing to draw
             } else {
@@ -124,6 +124,17 @@ struct MarkdownBlock: Equatable {
     }
 
     /// Bold, italic, links and inline code; the text as written if it isn't Markdown.
+    /// The capture groups of `pattern` over the whole line, or nil when it doesn't match.
+    /// NSRegularExpression, not Swift's regexes: those need macOS 13, and the Mac app runs
+    /// on 12 (kiff/tafs#85).
+    static func groups(_ line: String, _ pattern: String) -> [String]? {
+        guard let re = try? NSRegularExpression(pattern: pattern),
+              let m = re.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) else { return nil }
+        return (1..<m.numberOfRanges).map { i in
+            Range(m.range(at: i), in: line).map { String(line[$0]) } ?? ""
+        }
+    }
+
     static func inline(_ text: String) -> AttributedString {
         let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
         return (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)

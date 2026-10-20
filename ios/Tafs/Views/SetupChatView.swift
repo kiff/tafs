@@ -1,5 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 
 /// The setup chat (kiff/tafs#50): the owner tells Setup what to connect, and Setup shows
 /// its plan, asks, and hands over approvals the owner signs on this phone. A component
@@ -35,7 +37,11 @@ struct SetupChatView: View {
     @State private var viewport: CGFloat = 600
     /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
+    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
+    #else
+    private let sizeClass: UserInterfaceSizeClass? = .regular
+    #endif
     /// The screen's width, so the "Taking shape" panel shows only where it fits beside the chat.
     @State private var width: CGFloat = 0
 
@@ -72,16 +78,12 @@ struct SetupChatView: View {
         .screenBackground()
         // Named for what it does (kiff/tafs#82): it connects the owner's tools.
         .navigationTitle("Connected tools")
-        .navigationBarTitleDisplayMode(.inline)
-        // A focused task (#82): the app's tabs stay out of it.
-        .toolbar(.hidden, for: .tabBar)
-        // Its own bar on a wide screen (kiff/tafs#96): the chat doesn't run under the title,
-        // and the conversations button sits in the bar, not over the panel.
-        .toolbarBackground(sizeClass == .regular ? Visibility.visible : .automatic, for: .navigationBar)
-        .toolbarBackground(Theme.background, for: .navigationBar)
+        .inlineTitle()
+        .setupChrome(wide: sizeClass == .regular)
         .toolbar {
-            if model.setupTaf != nil && model.planqueReady {
-                ToolbarItem(placement: .navigationBarTrailing) { conversations }
+            // The condition inside the item: a toolbar's own `if` is macOS 13 (kiff/tafs#85).
+            ToolbarItem(placement: .trailingBar) {
+                if model.setupTaf != nil && model.planqueReady { conversations }
             }
         }
         .sheet(isPresented: $showingChats) {
@@ -206,7 +208,7 @@ struct SetupChatView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
             }
-            .scrollDismissesKeyboard(.interactively)
+            .dismissesKeyboardInteractively()
             .background(GeometryReader { g in
                 Color.clear.onAppear { viewport = g.size.height }.onChange(of: g.size.height) { viewport = $0 }
             })
@@ -374,8 +376,7 @@ struct SetupChatView: View {
         let empty = draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let thinking = model.setupThinking
         return HStack(alignment: .bottom, spacing: 10) {
-            TextField(thinking ? "Write the next message" : "What do you want to connect?", text: $draft, axis: .vertical)
-                .lineLimit(1...6)
+            ChatField(title: thinking ? "Write the next message" : "What do you want to connect?", text: $draft)
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -409,7 +410,7 @@ struct SetupChatView: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
-        .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
+        .barBackground()
         // Ready to type (#82): the keyboard shows when the chat opens. Just after the
         // push, since a field focused while the view still slides in isn't. Not over a
         // card that waits for the owner: that card is what they came back to answer.
@@ -448,7 +449,7 @@ struct SetupChatsList: View {
     @State private var confirming: TafsCloud.Chat?
 
     var body: some View {
-        NavigationStack {
+        NavStack {
             List {
                 if let notArchived {
                     Text(notArchived).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
@@ -487,10 +488,10 @@ struct SetupChatsList: View {
                     Text("No conversations yet.").scaledFont(14).foregroundColor(Theme.dim)
                 }
             }
-            .scrollContentBackground(.hidden)
+            .hiddenScrollBackground()
             .screenBackground()
             .navigationTitle("Recent conversations")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .task { await model.loadSetupChats() }
         }
@@ -541,10 +542,10 @@ struct ArchivedSetupChats: View {
                 Text("Nothing archived.").scaledFont(14).foregroundColor(Theme.dim)
             }
         }
-        .scrollContentBackground(.hidden)
+        .hiddenScrollBackground()
         .screenBackground()
         .navigationTitle("Archived")
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineTitle()
         .task { await model.loadArchivedSetupChats() }
     }
 
@@ -579,7 +580,7 @@ struct UnsentBubble: View {
                 Text("Not sent").foregroundColor(Theme.no)
                 Text("·").foregroundColor(Theme.dim)
                 Button("Retry") { Task { await retry() } }
-                    .foregroundColor(Theme.ink).fontWeight(.semibold)
+                    .foregroundColor(Theme.ink).semibold()
                     .disabled(busy)
             }
             .scaledFont(13, relativeTo: .footnote)
@@ -588,7 +589,7 @@ struct UnsentBubble: View {
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {
-            Button("Copy") { UIPasteboard.general.string = message.text }
+            Button("Copy") { Clipboard.copy(message.text) }
             Button("Delete", role: .destructive, action: discard)
         }
         .accessibilityElement(children: .combine)
@@ -725,10 +726,11 @@ struct SetupPlan: View {
                 ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
                     HStack(spacing: 10) {
                         StepMark(status: step.status)
+                        // Text's own strikethrough, before the font: a view's is macOS 13 (kiff/tafs#85).
                         Text(step.label)
+                            .strikethrough(step.status == "skipped")
                             .scaledFont(14, weight: step.status == "active" ? .semibold : .regular)
                             .foregroundColor(step.status == "pending" || step.status == "skipped" ? Theme.dim : Theme.ink)
-                            .strikethrough(step.status == "skipped")
                     }
                 }
             }
@@ -769,7 +771,11 @@ struct StepMark: View {
 /// One component in the thread.
 struct SetupComponentView: View {
     @EnvironmentObject private var model: AppModel
+    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
+    #else
+    private let sizeClass: UserInterfaceSizeClass? = .regular
+    #endif
     let shown: ShownComponent
 
     var body: some View {
@@ -805,7 +811,7 @@ struct SetupComponentView: View {
                 OutcomeLine(text: (c.text ?? "The question") + " · " + chosen, tone: Theme.ok)
             } else {
                 Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                FlowRow(spacing: 8) {
+                WrapRow(spacing: 8) {
                     ForEach(c.options ?? [], id: \.self) { option in
                         Button(option.label) {
                             Haptics.tap()
@@ -1083,6 +1089,7 @@ extension AppModel.CardState {
 }
 
 /// Buttons that wrap onto as many lines as they need.
+@available(iOS 16, macOS 13, *)
 struct FlowRow: Layout {
     var spacing: CGFloat = 8
 
@@ -1107,5 +1114,22 @@ struct FlowRow: Layout {
             x += size.width + spacing
             row = max(row, size.height)
         }
+    }
+}
+
+private extension View {
+    /// The iPhone's chrome around Setup's chat; a Mac window has no tab bar or navigation bar.
+    @ViewBuilder func setupChrome(wide: Bool) -> some View {
+        #if os(iOS)
+        self
+            // A focused task (#82): the app's tabs stay out of it.
+            .toolbar(.hidden, for: .tabBar)
+            // Its own bar on a wide screen (kiff/tafs#96): the chat doesn't run under the title,
+            // and the conversations button sits in the bar, not over the panel.
+            .toolbarBackground(wide ? Visibility.visible : .automatic, for: .navigationBar)
+            .toolbarBackground(Theme.background, for: .navigationBar)
+        #else
+        self
+        #endif
     }
 }

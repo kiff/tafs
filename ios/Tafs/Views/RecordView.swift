@@ -95,7 +95,7 @@ struct ReceiptView: View {
     let entry: RecordEntry
 
     var body: some View {
-        NavigationStack {
+        NavStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     HStack(spacing: 8) {

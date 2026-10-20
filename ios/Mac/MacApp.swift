@@ -93,26 +93,43 @@ struct MacSignInView: View {
     }
 }
 
-/// The owner's tafs, and what waits on them. Answering is on the iPhone.
+/// What the sidebar opens.
+enum MacSelection: Hashable { case needsYou, record, setup, taf(UUID) }
+
+/// The sidebar, and the iPhone's own screen for what's chosen in it. Answering a held
+/// call is on the iPhone: this Mac holds no key.
 struct MacTafsView: View {
     @EnvironmentObject private var model: AppModel
+    @State private var selection: MacSelection? = .needsYou
 
     var body: some View {
         NavigationView {
             List {
-                if !model.held.isEmpty {
-                    Section("Needs you") {
-                        Text(model.held.count == 1 ? "1 call waits for your OK." : "\(model.held.count) calls wait for your OK.")
-                        Text("Approve on your iPhone.").foregroundColor(Theme.soft)
-                    }
+                NavigationLink(tag: MacSelection.needsYou, selection: $selection) {
+                    NeedsYouView()
+                } label: {
+                    Label(model.held.isEmpty ? "Needs you" : "Needs you (\(model.held.count))", systemImage: "bell")
+                }
+                NavigationLink(tag: MacSelection.record, selection: $selection) {
+                    RecordView()
+                } label: {
+                    Label("Record", systemImage: "list.bullet")
+                }
+                NavigationLink(tag: MacSelection.setup, selection: $selection) {
+                    SetupChatView()
+                } label: {
+                    Label("Connected tools", systemImage: "puzzlepiece.extension")
                 }
                 Section("Tafs") {
                     ForEach(model.tafs) { taf in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(taf.name).font(.system(size: 14, weight: .semibold))
-                            Text(taf.now).font(.system(size: 12)).foregroundColor(Theme.soft)
+                        NavigationLink(tag: MacSelection.taf(taf.id), selection: $selection) {
+                            TafDetailView(tafID: taf.id)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(taf.name).font(.system(size: 13, weight: .semibold))
+                                Text(taf.now).font(.system(size: 11)).foregroundColor(Theme.soft)
+                            }
                         }
-                        .padding(.vertical, 2)
                     }
                 }
             }
