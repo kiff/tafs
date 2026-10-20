@@ -334,12 +334,11 @@ struct TafChatView: View {
         pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         following = false
         Haptics.tap()
-        // The keyboard stays for the next message (kiff/tafs#102): the composer changes
-        // around the field as the taf starts, which drops its focus.
-        typing = true
+        // The keyboard goes down once it's sent (kiff/tafs#138, the owner's call, which
+        // reverses #102): the reply and its card get the screen.
+        typing = false
         Task {
             if !(await model.submitChat(text, to: tafID)), draft.isEmpty { draft = text }
-            typing = true
         }
     }
 }

@@ -495,6 +495,8 @@ struct SetupChatView: View {
         // As the model keeps it: trimmed (review on #154).
         pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         following = false
+        // The keyboard goes down once it's sent (kiff/tafs#138): the answer gets the screen.
+        typing = false
         Haptics.tap()
         Task { if !(await model.submitSetup(text)), draft.isEmpty { draft = text } }
     }
