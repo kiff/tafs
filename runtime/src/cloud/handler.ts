@@ -1004,8 +1004,9 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
       throw new HTTPError(409, "confirm this version's Card first");
     }
     // Going back without a switch: a version that ran under other Card revisions
-    // goes live only once a switch has restored them, never under the Cards in force.
-    if (!pending && !version.draft && version.cards?.length && !sameCards(await liveCards(event, taf, deps), version.cards)) {
+    // goes live only once a switch has restored them, never under the Cards in
+    // force, whether or not it once went live through a draft of its own.
+    if (!pending && version.cards?.length && !sameCards(await liveCards(event, taf, deps), version.cards)) {
       throw new HTTPError(409, "begin the switch: this version's Cards need restoring first");
     }
     await goLive(event, me, taf, n, deps);
@@ -1099,7 +1100,8 @@ function sameCards(a: CardRevision[], b: CardRevision[]): boolean {
 
 /**
  * The KIFF draft a switch to `version` waits for (kiff/tafs#107):
- * - its own draft, while it waits for the owner (or once confirmed);
+ * - its own draft, while it waits for the owner (once confirmed, that draft
+ *   only says how it first went live, so going back goes by its Cards);
  * - its Cards drafted again, when that draft expired or failed, or the owner
  *   asks (`redraft`: KIFF refused it at confirm because a Card moved on);
  * - for a version with no draft of its own that ran under other Card revisions
@@ -1117,10 +1119,13 @@ async function draftFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, version: A
   };
   if (version.draft) {
     const d = await draftInfo(token, version.draft, deps.fetch, deps.kiffBase, now);
-    if (d && issued(d.status) && !again) return version.draft;
-    if (d && d.status === "draft" && !again) return version.draft;
     if (!d || d.status === "discarded") throw new HTTPError(409, "this version's Card draft is gone: improve the taf again");
-    return kiffCall(() => redraft(token, version.draft!, deps.fetch, deps.kiffBase));
+    if (!issued(d.status)) {
+      if (d.status === "draft" && !again) return version.draft;
+      return kiffCall(() => redraft(token, version.draft!, deps.fetch, deps.kiffBase));
+    }
+    // Issued: it says how the version first went live. Going back to it is
+    // then as for any version: by the Cards it recorded.
   }
   if (!version.cards?.length) return undefined;
   const now2 = await liveCards(event, taf, deps);
