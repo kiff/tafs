@@ -57,6 +57,7 @@ struct SetupChatView: View {
                 if model.setupTaf == nil || !model.planqueReady {
                     intro
                 } else {
+                    coachBar
                     // Beside the chat, the plan is in the panel.
                     if !shaping, let plan = model.setupThread.plan { SetupPlan(shown: plan).padding(.horizontal, 12).padding(.top, 8) }
                     thread
@@ -75,17 +76,11 @@ struct SetupChatView: View {
         .background(GeometryReader { g in
             Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { width = $0 }
         })
-        .screenBackground()
-        // Named for what it does (kiff/tafs#82): it connects the owner's tools.
+        // Coach mode's own wash (kiff/tafs#138): never a taf's chat.
+        .background(Theme.coachWash.ignoresSafeArea())
         .navigationTitle("Coach mode")
         .inlineTitle()
         .setupChrome(wide: sizeClass == .regular)
-        .toolbar {
-            // The condition inside the item: a toolbar's own `if` is macOS 13 (kiff/tafs#85).
-            ToolbarItem(placement: .trailingBar) {
-                if model.setupTaf != nil && model.planqueReady { conversations }
-            }
-        }
         .sheet(isPresented: $showingChats) {
             SetupChatsList { session in
                 showingChats = false
@@ -105,10 +100,10 @@ struct SetupChatView: View {
         }
     }
 
-    /// One button for conversations (#82), so nothing else sits above the thread: a new
-    /// one, or the recent ones to reopen or archive.
-    private var conversations: some View {
-        Menu {
+    /// Coach mode's top, always there (kiff/tafs#138): a new conversation, and the previous
+    /// ones. A new one takes the taf on screen as its context, else none.
+    private var coachBar: some View {
+        HStack(spacing: 10) {
             Button {
                 Haptics.tap()
                 landed = true
@@ -116,23 +111,30 @@ struct SetupChatView: View {
                 following = true
                 model.newCoachConversation()
                 typing = true
-            } label: { Label("New conversation", systemImage: "square.and.pencil") }
-            Divider()
-            Button { showingChats = true } label: { Label("Recent conversations", systemImage: "clock.arrow.circlepath") }
-        } label: {
-            Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 19, weight: .semibold))
-                .foregroundColor(Theme.ink)
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
+            } label: {
+                Label("New conversation", systemImage: "plus")
+                    .scaledFont(14, weight: .semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(Theme.coach)
+                    .clipShape(Capsule())
+            }
+            Button { showingChats = true } label: {
+                Text("Previous conversations")
+                    .scaledFont(14, weight: .semibold)
+                    .foregroundColor(Theme.coach)
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .overlay(Capsule().stroke(Theme.coach.opacity(0.4)))
+            }
+            Spacer(minLength: 0)
         }
-        .accessibilityLabel("Conversations")
+        .padding(.horizontal, 16).padding(.vertical, 8)
     }
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
-            Text("Connect your tools").font(Theme.display(30)).foregroundColor(Theme.ink)
+            Text("Coach mode").font(Theme.display(30)).foregroundColor(Theme.coach)
             Text("Name a tool a taf should work with, like your Stripe. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
@@ -333,11 +335,11 @@ struct SetupChatView: View {
                 Text("Say what should change, or ask how it's going. Coach mode starts from what \(taf.name) did and what its Card allows.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else {
-                Text("What do you want to connect?")
+                Text("Ask anything about your tafs")
                     .font(Theme.display(26)).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                Text("Connects your tools and sets up a taf to work with them. Each connection and each Card waits for your approval.")
+                Text("Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
             ForEach(model.setupImproving == nil ? Self.examples : Self.improveExamples, id: \.self) { example in
@@ -400,7 +402,7 @@ struct SetupChatView: View {
         let empty = draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let thinking = model.setupThinking
         return HStack(alignment: .bottom, spacing: 10) {
-            ChatField(title: thinking ? "Write the next message" : "What do you want to connect?", text: $draft)
+            ChatField(title: thinking ? "Write the next message" : "Ask anything about your tafs", text: $draft)
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -425,7 +427,7 @@ struct SetupChatView: View {
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                         .frame(width: 40, height: 40)
-                        .background(Theme.brand)
+                        .background(Theme.coach)
                         .clipShape(Circle())
                         .opacity(empty ? 0.4 : 1)
                 }
@@ -514,7 +516,7 @@ struct SetupChatsList: View {
             }
             .hiddenScrollBackground()
             .screenBackground()
-            .navigationTitle("Recent conversations")
+            .navigationTitle("Previous conversations")
             .inlineTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .task { await model.loadSetupChats() }
