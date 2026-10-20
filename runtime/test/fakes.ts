@@ -53,6 +53,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const trialWrites = new Map<string, TrialWrite[]>();
   /** A switch under way, by agent, as kiff/agents keeps it (kiff/agents#137). */
   const switching = new Map<string, Switching>();
+  /** Each version's definition, by agent and number. */
+  const versionDefs = new Map<string, AgentDefinition>();
   const api: AgentsAPI = {
     async versions(tenant, id) {
       calls.push(`versions ${id}`);
@@ -67,7 +69,30 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const sw = switching.get(k(tenant, id));
       if (sw && sw.n !== n) throw new AgentsError(409, "this agent is switching versions");
       for (const v of list) v.live = v.n === n;
+      const def = versionDefs.get(`${k(tenant, id)}|${n}`);
+      if (def) agents.set(k(tenant, id), { ...def });
       switching.delete(k(tenant, id));
+    },
+    async createVersion(tenant, id, v) {
+      calls.push(`createVersion ${id}`);
+      const live = agents.get(k(tenant, id));
+      if (!live) throw gone();
+      const list = versions.get(k(tenant, id)) ?? [];
+      if (list.length === 0) { // stored before versions: what's live is version 1
+        list.push({ n: 1, note: "As it was set up", by: "", created: now().toISOString(), digest: "d1", live: true });
+        versionDefs.set(`${k(tenant, id)}|1`, { ...live });
+      }
+      const n = list.length + 1;
+      list.push({ n, note: v.note, by: v.by, created: now().toISOString(), digest: `d${n}`, live: false, ...(v.draft ? { draft: v.draft } : {}) });
+      versions.set(k(tenant, id), list);
+      versionDefs.set(`${k(tenant, id)}|${n}`, { ...v.definition, tenant, id });
+      return n;
+    },
+    async getVersion(tenant, id, n) {
+      const version = (versions.get(k(tenant, id)) ?? []).find((v) => v.n === n);
+      const definition = versionDefs.get(`${k(tenant, id)}|${n}`);
+      if (!version || !definition) throw gone();
+      return { version: { ...version }, definition: { ...definition } };
     },
     async beginSwitch(tenant, id, n, draft) {
       calls.push(`beginSwitch ${id} ${n}`);
@@ -262,7 +287,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching };
+  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

@@ -236,6 +236,20 @@ export class Agents {
     return (await this.call<{ cancelled: boolean }>("DELETE", tenant, ["agents", id, "switching"])).cancelled;
   }
 
+  /**
+   * Stores the agent's next version (kiff/tafs#107): its definition, what
+   * changed, who made it, and the KIFF draft revising its Cards, if any.
+   * What's live doesn't change. Returns its number.
+   */
+  async createVersion(tenant: string, id: string, v: { definition: AgentDefinition; note: string; by: string; draft?: string }): Promise<number> {
+    return (await this.call<{ n: number }>("POST", tenant, ["agents", id, "versions"], v)).n;
+  }
+
+  /** One version, with its definition (kiff/agents#141). */
+  async getVersion(tenant: string, id: string, n: number): Promise<{ version: AgentVersion; definition: AgentDefinition }> {
+    return this.call("GET", tenant, ["agents", id, "versions", String(n)]);
+  }
+
   /** Makes version n live, forward or back. */
   async switchVersion(tenant: string, id: string, n: number): Promise<void> {
     await this.call("POST", tenant, ["agents", id, "versions", String(n), "live"], {});

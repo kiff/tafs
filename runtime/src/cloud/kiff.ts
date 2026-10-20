@@ -52,13 +52,18 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
  * and refuses to confirm it.
  */
 export async function draftStatus(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API, now: Date = new Date()): Promise<string | undefined> {
+  return (await draftInfo(token, draftID, doFetch, base, now))?.status;
+}
+
+/** A KIFF draft as tafs cloud checks it: its status (as draftStatus reads it) and its agent. */
+export async function draftInfo(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API, now: Date = new Date()): Promise<{ status: string; agent: string } | undefined> {
   const res = await doFetch(`${base}/v1/me/agent-drafts/${encodeURIComponent(draftID)}`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
   if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
   if (res.status === 404) return undefined;
   if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status} for the draft`);
-  const { status, expires_at: expires } = (await res.json()) as { status?: string; expires_at?: string };
-  if (status === "draft" && expires && new Date(expires).getTime() <= now.getTime()) return "expired";
-  return status ?? "";
+  const d = (await res.json()) as { status?: string; expires_at?: string; agent_id?: string };
+  const expired = d.status === "draft" && d.expires_at && new Date(d.expires_at).getTime() <= now.getTime();
+  return { status: expired ? "expired" : d.status ?? "", agent: d.agent_id ?? "" };
 }
 
 /** Whether a draft's Cards are issued: confirmed, or claimed, which is later still with the same Cards. */
