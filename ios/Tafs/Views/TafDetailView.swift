@@ -229,8 +229,9 @@ struct ConnectionsPanel: View {
                             .foregroundColor(Theme.no)
                     }
                 }
-                NavigationLink { SetupChatView() } label: {
-                    Label(connections.isEmpty ? "Connect a tool" : "Connect another tool", systemImage: "plus")
+                // Setup on this taf (kiff/tafs#107): from how it's doing, not from scratch.
+                NavigationLink { SetupChatView(improving: tafID) } label: {
+                    Label("Improve this taf", systemImage: "wand.and.stars")
                         .font(.system(size: 15, weight: .semibold))
                 }
             }

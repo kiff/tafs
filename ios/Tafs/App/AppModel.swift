@@ -1984,8 +1984,20 @@ final class AppModel: ObservableObject {
         setupFresh ? .new : setupChat.map { TafsCloud.ChatTarget(session: $0) } ?? .live
     }
 
+    /// The taf a new Setup conversation improves (kiff/tafs#107), by its id in tafs cloud:
+    /// its first message goes to tafs cloud's improve route, which puts the taf's context in
+    /// front. Nil for any other conversation.
+    @Published private(set) var setupImproving: TafsCloud.CloudTaf?
+
+    /// A new Setup conversation on one taf, to improve it (kiff/tafs#107).
+    func improveTaf(_ tafID: UUID) {
+        newSetupChat()
+        setupImproving = cloudTaf(for: tafID)
+    }
+
     /// A new Setup conversation: an empty chat, and the next message starts it.
     func newSetupChat() {
+        setupImproving = nil
         setupChat = nil
         setupFresh = true
         setupThread = SetupThread()
@@ -1998,6 +2010,7 @@ final class AppModel: ObservableObject {
 
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
     func openSetupChat(_ session: String) async {
+        setupImproving = nil
         setupChat = session
         setupFresh = false
         setupUnsent = []
@@ -2207,6 +2220,17 @@ final class AppModel: ObservableObject {
         setupSent.append(mine)
         setupThread.messages.append(mine)
         do {
+            // An improvement's first message goes through tafs cloud, which adds the taf's
+            // context (kiff/tafs#107); the conversation goes on as any other.
+            if let improving = setupImproving {
+                let sent = try await cloud.improve(improving.id, text: text)
+                guard gen == accountGeneration else { return .notTried }
+                setupImproving = nil
+                settleSetupChat(sent.session)
+                setupAwaiting = clock()
+                await loadSetupThread()
+                return .sent
+            }
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
             // when the stream can't open.
             if let events = try await openStream(s.id, text: text, to: setupTarget) {

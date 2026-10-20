@@ -113,6 +113,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("reading in the owner's account is open, with no limits");
     expect(flat).toContain("check that its tools cover the whole job: find the work, check an item, act on it, and say what it did");
     expect(flat).not.toContain("the fewest tools");
+    // Improving a taf: from its context, the change agreed, nothing new connected yet (kiff/tafs#107).
+    expect(flat).toContain('A conversation that starts with "[improve taf <id>]" improves that taf; it doesn\'t set up a new one');
+    expect(flat).toContain("A taf can't move to a new version yet, so don't connect, set tools or submit a draft for it");
     // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
     expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
     expect(flat).toContain("A read tool's line has no amount limit, only a call count generous enough never to get in the way, and you don't ask the owner to set it");

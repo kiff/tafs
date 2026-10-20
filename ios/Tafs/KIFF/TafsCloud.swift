@@ -330,6 +330,12 @@ final class TafsCloud {
         }
     }
 
+    /// Opens a new conversation with the account's Setup on this taf (kiff/tafs#107): tafs
+    /// cloud puts the taf's job, Card and latest calls in front of the owner's words.
+    func improve(_ id: String, text: String) async throws -> Sent {
+        try await send("POST", "/v1/tafs/\(escaped(id))/improve", body: ["text": text])
+    }
+
     /// Sends the owner's message: into the taf's current run, or a new one.
     func sendMessage(_ id: String, text: String, to target: ChatTarget = .live) async throws -> Sent {
         try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target))

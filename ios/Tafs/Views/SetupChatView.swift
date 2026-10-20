@@ -7,6 +7,10 @@ import UIKit
 /// signs there.
 struct SetupChatView: View {
     @EnvironmentObject private var model: AppModel
+    /// The taf to improve (kiff/tafs#107): the chat opens a new conversation on it.
+    var improving: UUID? = nil
+    /// Whether this screen has opened its improvement: once, not each time it appears.
+    @State private var openedImprovement = false
     @State private var draft = ""
     @FocusState private var typing: Bool
     /// When the chat opened: Setup's messages after it are revealed as they arrive.
@@ -89,7 +93,14 @@ struct SetupChatView: View {
             }
             .environmentObject(model)
         }
-        .task { await model.followSetup() }
+        .task {
+            // Opened on a taf to improve it: a new conversation on that taf, once.
+            if let improving, !openedImprovement {
+                openedImprovement = true
+                model.improveTaf(improving)
+            }
+            await model.followSetup()
+        }
     }
 
     /// One button for conversations (#82), so nothing else sits above the thread: a new
@@ -288,13 +299,22 @@ struct SetupChatView: View {
     /// The empty chat: the question it answers (#82), what Setup does, and ways to start (#58).
     private var starts: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("What do you want to connect?")
-                .font(Theme.display(26)).foregroundColor(Theme.ink)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-            Text("Connects your tools and sets up a taf to work with them. Each connection and each Card waits for your approval.")
-                .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            ForEach(Self.examples, id: \.self) { example in
+            if let taf = model.setupImproving {
+                Text("Improve \(taf.name)")
+                    .font(Theme.display(26)).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Say what should change, or ask how it's going. Setup starts from what \(taf.name) did and what its Card allows.")
+                    .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("What do you want to connect?")
+                    .font(Theme.display(26)).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Connects your tools and sets up a taf to work with them. Each connection and each Card waits for your approval.")
+                    .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            }
+            ForEach(model.setupImproving == nil ? Self.examples : Self.improveExamples, id: \.self) { example in
                 Button {
                     Haptics.tap()
                     pinNext = true
@@ -317,6 +337,13 @@ struct SetupChatView: View {
         "Make sure customers can get their refunds",
         "Answer customer questions about orders",
         "Connect my Stripe",
+    ]
+
+    /// Ways to start improving a taf (kiff/tafs#107).
+    static let improveExamples = [
+        "How is it going?",
+        "Why was something refused or held?",
+        "It can't find the work it should do",
     ]
 
     /// How the last run ended, when the owner should know (#58): they stopped it, or it
