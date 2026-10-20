@@ -1687,8 +1687,10 @@ final class AppModel: ObservableObject {
         let messages = chats[tafID] ?? []
         var items = messages.map(ChatItem.message) + heldCalls(for: tafID).map(ChatItem.held)
         if let first = messages.first?.at {
-            // An approved call the tool then refused, or that wasn't sent, shows too (kiff/tafs#115).
-            items += entries(for: tafID).filter { ($0.kind == .approved || $0.kind == .refused || ($0.kind == .notDone && $0.ownerApproved == true)) && $0.at >= first }.map(ChatItem.outcome)
+            // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
+            items += entries(for: tafID).filter {
+                ($0.kind == .approved || $0.kind == .refused || ($0.ownerApproved == true && [.notDone, .sending, .unknown].contains($0.kind))) && $0.at >= first
+            }.map(ChatItem.outcome)
         }
         return items.enumerated().sorted { a, b in
             a.element.at != b.element.at ? a.element.at < b.element.at : a.offset < b.offset

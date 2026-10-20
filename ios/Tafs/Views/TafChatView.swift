@@ -65,9 +65,7 @@ struct TafChatView: View {
                                     .onAppear { heldInView.insert(call.id) }
                                     .onDisappear { heldInView.remove(call.id) }
                             case .outcome(let entry):
-                                OutcomeLine(text: entry.kind == .notDone ? "\(entry.title): not done" : entry.title,
-                                            tone: entry.kind == .approved ? Theme.ok : entry.kind == .notDone ? Theme.no : Theme.dim,
-                                            mark: entry.kind == .approved ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                OutcomeLine(text: Self.outcomeText(entry), tone: Self.outcomeTone(entry.kind), mark: Self.outcomeMark(entry.kind))
                             }
                         }
                         .id(item.id)
@@ -372,5 +370,35 @@ struct TypingBubble: View {
             Spacer()
         }
         .accessibilityLabel("\(taf?.name ?? "The taf") is answering")
+    }
+}
+
+extension TafChatView {
+    /// A call the owner answered, in the chat: what became of it (kiff/tafs#115).
+    static func outcomeText(_ entry: RecordEntry) -> String {
+        switch entry.kind {
+        case .notDone: return "\(entry.title): not done"
+        case .sending: return "\(entry.title): sent, waiting for the tool"
+        case .unknown: return "\(entry.title): outcome unknown"
+        default: return entry.title
+        }
+    }
+
+    static func outcomeTone(_ kind: RecordEntry.Kind) -> Color {
+        switch kind {
+        case .approved: return Theme.ok
+        case .notDone: return Theme.no
+        case .sending, .unknown: return Theme.amber
+        default: return Theme.dim
+        }
+    }
+
+    static func outcomeMark(_ kind: RecordEntry.Kind) -> String {
+        switch kind {
+        case .approved: return "checkmark.circle.fill"
+        case .sending: return "clock.fill"
+        case .unknown: return "questionmark.circle.fill"
+        default: return "xmark.circle.fill"
+        }
     }
 }

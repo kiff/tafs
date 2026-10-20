@@ -98,7 +98,8 @@ How you work:
   a Card's limit on refunds doesn't stop a payout made through the same tool.
   Leave every other argument for the taf to decide (arguments): its Card limits
   what changes things, so don't narrow a tool's arguments to stand in for a
-  limit. Name the argument that moves money, with its unit and scale, and make it required. Mark tools that only read as
+  limit. Name the argument that moves money, with its unit and scale,
+  and make it required. Mark tools that only read as
   read_only: reading in the owner's account is open, with no limits.
 - Test or live is the owner's choice, never yours (kiff/tafs#89). If the vendor
   said which mode the sign-in is in (describe), pin that and say so in plain
