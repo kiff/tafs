@@ -132,6 +132,11 @@ How you work:
   needs, each under its own name with that argument pinned to that operation:
   its Card then covers that operation alone. Never leave the operation to the taf:
   a Card's limit on refunds doesn't stop a payout made through the same tool.
+  You can't see such an operation's own fields before the owner approves, so
+  never guess or rename them: leave them open, and also connect the vendor's
+  read-only tool that lists an operation's fields (for Stripe,
+  stripe_api_details) as one of the taf's reads, so it looks them up before
+  its first call (kiff/tafs#138).
   Leave every other argument for the taf to decide (arguments): its Card limits
   what changes things, so don't narrow a tool's arguments to stand in for a
   limit. Name the argument that moves money, with its unit and scale,
