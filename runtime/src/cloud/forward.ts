@@ -18,14 +18,29 @@
 /** kiff/agents' answers that ask for the alert again. */
 const AGAIN = new Set([401, 404]);
 
-export async function forwardAlert(doFetch: typeof fetch, url: string, signature: string, raw: string): Promise<void> {
+/** The run an answer left waiting for nothing more, as kiff/agents names it (kiffalert.Ready). */
+export interface ReadyRun {
+  id: string;
+  agent: string;
+}
+
+/**
+ * The 200 to the answer that leaves a run ready names it, so tafs cloud can
+ * continue it at once instead of leaving it to kiff/agents' sweep
+ * (kiff/tafs#138). Any other 200 names nothing.
+ */
+export async function forwardAlert(doFetch: typeof fetch, url: string, signature: string, raw: string): Promise<ReadyRun | undefined> {
   const res = await doFetch(url, {
     method: "POST",
     headers: { "content-type": "application/json", "kiff-signature": signature },
     body: raw,
     signal: AbortSignal.timeout(10_000),
   });
-  if (res.ok) return;
+  if (res.ok) {
+    const named = await res.json().catch(() => undefined) as { run?: { id?: unknown; agent?: unknown } } | undefined;
+    const run = named?.run;
+    return typeof run?.id === "string" && run.id && typeof run.agent === "string" && run.agent ? { id: run.id, agent: run.agent } : undefined;
+  }
   const text = (await res.text().catch(() => "")).slice(0, 200);
   if (res.status >= 400 && res.status < 500 && !AGAIN.has(res.status)) {
     console.error(`alert: kiff/agents answered ${res.status}: ${text}`);
