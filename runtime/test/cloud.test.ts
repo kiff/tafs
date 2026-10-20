@@ -16,7 +16,7 @@ const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id
 type Drafts = Record<string, { secret: string; key: string; agent: string; status?: number }>;
 
 /** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
-interface Account { mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[]; drafts?: Record<string, string>; status?: number }
+interface Account { mandates: Mandate[]; held: { subject: string }[]; calls?: ActivityCall[]; drafts?: Record<string, string | { status: string; expires_at: string }>; status?: number }
 
 /** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
 function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }) {
@@ -32,8 +32,8 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
     const draft = /\/v1\/me\/agent-drafts\/([^/?]+)$/.exec(url);
     if (draft) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
-      const status = account.drafts?.[decodeURIComponent(draft[1]!)];
-      return status ? new Response(JSON.stringify({ id: draft[1], status }), { status: 200 }) : new Response("{}", { status: 404 });
+      const d = account.drafts?.[decodeURIComponent(draft[1]!)];
+      return d ? new Response(JSON.stringify({ id: draft[1], ...(typeof d === "string" ? { status: d } : d) }), { status: 200 }) : new Response("{}", { status: 404 });
     }
     if (url.includes("/v1/me/mandates") || url.includes("/v1/me/card-exceptions")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -885,6 +885,17 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(r.body.switching).toBeUndefined();
     expect((r.body.versions as Array<{ n: number; live: boolean }>).find((v) => v.live)?.n).toBe(1);
     expect(w.agents.calls).toContain(`cancelSwitch ${RAE}`);
+  });
+
+  it("drops a switch whose draft expired unconfirmed: KIFF keeps it as a draft", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: { status: "draft", expires_at: "2100-01-01T00:00:00Z" } };
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" })).body.switching).toMatchObject({ n: 2 });
+    w.account.drafts = { drf_v2: { status: "draft", expires_at: "2020-01-01T00:00:00Z" } };
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
+    expect(r.body.switching).toBeUndefined();
+    expect((r.body.versions as Array<{ n: number; live: boolean }>).find((v) => v.live)?.n).toBe(1);
   });
 
   it("cancels a switch before its Card is confirmed, and ends one after", async () => {

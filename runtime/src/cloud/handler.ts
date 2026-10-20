@@ -991,14 +991,15 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
 /**
  * The taf's versions with a switch under way settled as far as KIFF allows:
  * ended once its draft is confirmed, dropped once its draft never will be,
- * and left waiting otherwise. KIFF unreachable leaves it waiting: nothing
+ * (discarded, failed, or past its expiry unconfirmed), and left waiting
+ * otherwise. KIFF unreachable leaves it waiting: nothing
  * runs meanwhile, which is the safe side.
  */
 async function settleSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<VersionState> {
   const state = await agentsCall(() => deps.agents.versions(me.tenantID, taf.id));
   const sw = state.switching;
   if (!sw?.draft) return state;
-  const status = await draftStatus(bearer(event), sw.draft, deps.fetch, deps.kiffBase).catch(() => "unknown");
+  const status = await draftStatus(bearer(event), sw.draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))()).catch(() => "unknown");
   if (issued(status)) {
     await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, sw.n));
   } else if (dropped(status)) {
