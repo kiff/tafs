@@ -271,15 +271,23 @@ struct VersionsScreen: View {
 }
 
 /// The taf's versions, like app builds (kiff/tafs#107): newest first, the live one marked.
-/// Try it runs a version with KIFF deciding each write and no write sent; Use this version
+/// Try it runs a version with KIFF deciding each call and none sent; Use this version
 /// makes it live, forward or back, with one Face ID.
 struct VersionsPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
+    /// The version whose Card the owner reads before Face ID.
+    @State private var reading: TafsCloud.Version?
+
+    /// Use this version: one that brings a Card is read first, now → after (kiff/tafs#107).
+    private func use(_ v: TafsCloud.Version) {
+        if v.draft == nil { Task { await model.useVersion(v, of: tafID) } } else { reading = v }
+    }
 
     var body: some View {
         Panel {
             Eyebrow(text: "Versions")
+            if let sw = model.switches[tafID] { switchUnderWay(sw) }
             if let list = model.versions[tafID] {
                 if list.isEmpty {
                     Text("One version so far. When you improve it, each change is kept here.")
@@ -295,6 +303,11 @@ struct VersionsPanel: View {
             }
         }
         .task(id: tafID) { await model.loadVersions(tafID) }
+        .sheet(item: $reading) { v in VersionCardSheet(version: v, tafID: tafID) }
+        // Terms that changed between the screen and the tap open again, to read anew.
+        .onChange(of: model.changedVersionCards[tafID]) { changed in
+            if changed != nil, reading == nil, let v = model.versions[tafID]?.first(where: { $0.draft == changed?.id }) { reading = v }
+        }
     }
 
     private func row(_ v: TafsCloud.Version) -> some View {
@@ -320,11 +333,34 @@ struct VersionsPanel: View {
                     .disabled(trying)
                 if !v.live {
                     Button(switching == v.n ? "Switching…" : "Use this version") {
-                        Task { await model.useVersion(v, of: tafID) }
+                        use(v)
                     }
                     .buttonStyle(OutlineButtonStyle())
-                    .disabled(switching != nil)
+                    // One switch at a time: another waits for the one under way.
+                    .disabled(switching != nil || model.switches[tafID].map { $0.n != v.n } ?? false)
                 }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    /// A switch that didn't finish: the taf doesn't run until it's finished or cancelled.
+    private func switchUnderWay(_ sw: TafsCloud.Switching) -> some View {
+        let version = model.versions[tafID]?.first { $0.n == sw.n }
+        let working = model.switchingVersion[tafID] != nil
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("Switching to version \(sw.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.amber)
+            Text("Your taf doesn't run until the switch finishes or you cancel it.")
+                .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                if let version {
+                    Button(working ? "Switching…" : "Finish") { use(version) }
+                        .buttonStyle(OutlineButtonStyle())
+                        .disabled(working)
+                }
+                Button("Cancel") { Task { await model.cancelSwitch(tafID) } }
+                    .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                    .disabled(working)
             }
         }
         .padding(.vertical, 4)
@@ -344,8 +380,78 @@ struct VersionsPanel: View {
     }
 }
 
-/// A trial as it goes: each write the version made, with what KIFF decided. No write was sent;
-/// its reads went through as usual, under the live Cards.
+/// The Card a version brings, read before Face ID (kiff/tafs#107): each Card it revises as
+/// it is now and as it will be, and each new one. Use this version signs exactly what this
+/// sheet shows (kiff/tafs#115).
+struct VersionCardSheet: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    let version: TafsCloud.Version
+    let tafID: UUID
+    @State private var draft: KIFFClient.AgentDraft?
+    @State private var loaded = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Version \(version.n)\(version.note.map { ": \($0)" } ?? "")")
+                        .font(.system(size: 17, weight: .semibold)).foregroundColor(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let cards = draft?.cards {
+                        ForEach(Array(cards.enumerated()), id: \.offset) { _, card in cardView(card) }
+                        Text("While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF, then this version goes live.")
+                            .font(.system(size: 12)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    } else if loaded {
+                        Text(model.versionErrors[tafID] ?? "This version's Card couldn't be read.")
+                            .font(.system(size: 13)).foregroundColor(Theme.no)
+                    } else {
+                        ProgressView().tint(Theme.amber)
+                    }
+                }
+                .padding(16)
+            }
+            .screenBackground()
+            .navigationTitle("Its Card")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Use this version") {
+                        let shown = draft?.version
+                        dismiss()
+                        Task { await model.useVersion(version, of: tafID, shownDraft: shown) }
+                    }
+                    .disabled(draft?.cards == nil)
+                }
+            }
+        }
+        .task {
+            // The terms that changed since last shown, when that's why this opened.
+            if let changed = model.changedVersionCards[tafID], changed.id == version.draft { draft = changed }
+            else { draft = await model.versionCard(version, of: tafID) }
+            loaded = true
+        }
+    }
+
+    @ViewBuilder
+    private func cardView(_ card: KIFFClient.DraftCard) -> some View {
+        Panel {
+            if let current = card.current {
+                Eyebrow(text: "Changes a Card")
+                Text("Now").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
+                ForEach(current.lines, id: \.self) { Text($0).font(.system(size: 14)).foregroundColor(Theme.soft) }
+                Text("After").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
+            } else {
+                Eyebrow(text: "A new Card")
+            }
+            ForEach(card.lines, id: \.self) { Text($0).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink) }
+        }
+    }
+}
+
+/// A trial as it goes: each call the version made, with what KIFF decided. No call was sent,
+/// reads included (kiff-cloud#1285): a read had no data, and the version went on without it.
 struct TrialView: View {
     let trial: AppModel.VersionTrial
 
@@ -381,7 +487,7 @@ struct TrialView: View {
             } else {
                 ProgressView().tint(Theme.amber)
             }
-            Text("No write was sent: KIFF decided each one and stopped there.")
+            Text("No call was sent, reads included: KIFF decided each one and stopped there.")
                 .font(.system(size: 12)).foregroundColor(Theme.soft)
         }
     }

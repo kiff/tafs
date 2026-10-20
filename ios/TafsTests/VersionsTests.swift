@@ -36,6 +36,8 @@ final class VersionsTests: XCTestCase {
         StubProtocol.sent.filter { $0.httpMethod == method && $0.url?.path == path }
     }
 
+    private static let begun = #"{"switching":{"n":2,"draft":"d_02","at":"2026-10-20T08:00:00Z"}}"#
+
     private static let twoVersions = #"{"versions":[{"n":1,"by":"setup","created":"2026-10-19T09:00:00Z","digest":"d1","live":true},{"n":2,"note":"Asks for the order number first","by":"setup","created":"2026-10-20T07:00:00.5Z","digest":"d2","live":false,"draft":"d_02"}]}"#
 
     func testLoadsATafsVersions() async throws {
@@ -48,6 +50,12 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(list[0].live)
         XCTAssertEqual(list[1].draft, "d_02")
         XCTAssertNil(model.versionErrors[id])
+        XCTAssertNil(model.switches[id])
+
+        // A switch that didn't finish shows, to finish or cancel.
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, #"{"versions":[],"switching":{"n":2,"draft":"d_02","at":"2026-10-20T08:00:00Z"}}"#)
+        await model.loadVersions(id)
+        XCTAssertEqual(model.switches[id]?.n, 2)
     }
 
     func testAVersionKiffAgentsWroteNamesNoOne() {
@@ -85,25 +93,29 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(model.versionErrors[id]?.contains("can't run trials") ?? false)
     }
 
-    /// A version that brings a Card revision: one Face ID confirms its draft in KIFF, the
-    /// version shown, and only then is it made live.
+    /// A version that brings a Card revision: the switch begins (nothing of the taf runs
+    /// from then), one Face ID confirms its draft in KIFF, the version shown, and only then
+    /// is it made live.
     func testUsingAVersionConfirmsItsCardThenSwitches() async throws {
         let signer = RecordingSigner()
         let (model, id) = await kiffModel(signer: signer)
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
         StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7"}"#)
         StubProtocol.responses["POST /v1/me/agent-drafts/d_02/confirm"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"confirmed","version":"v7"}"#)
         StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/live"] = (200, #"{"live":2}"#)
         await model.loadVersions(id)
         let v2 = try XCTUnwrap(model.versions[id]?.last)
 
-        let done = await model.useVersion(v2, of: id)
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertTrue(done, model.versionErrors[id] ?? "")
         XCTAssertEqual(signer.signed.first, "tafs.cards.v1|t_01|d_02|v7")
         let confirm = try XCTUnwrap(sent("POST", "/v1/me/agent-drafts/d_02/confirm").first)
         XCTAssertNotNil(confirm.value(forHTTPHeaderField: "KIFF-Device-Signature"))
         XCTAssertEqual(sent("POST", "/v1/tafs/depl_1/versions/2/live").count, 1)
         let order = StubProtocol.sent.compactMap(\.url?.path)
+        XCTAssertLessThan(try XCTUnwrap(order.firstIndex(of: "/v1/tafs/depl_1/versions/2/switch")),
+                          try XCTUnwrap(order.firstIndex(of: "/v1/me/agent-drafts/d_02/confirm")), "the switch begun before the Card changes")
         XCTAssertLessThan(try XCTUnwrap(order.firstIndex(of: "/v1/me/agent-drafts/d_02/confirm")),
                           try XCTUnwrap(order.firstIndex(of: "/v1/tafs/depl_1/versions/2/live")), "the Card first, then the switch")
         XCTAssertNil(model.kiff.setupSigner)
@@ -129,15 +141,109 @@ final class VersionsTests: XCTestCase {
     func testAClaimedDraftIsNotConfirmedAgain() async throws {
         let signer = RecordingSigner()
         let (model, id) = await kiffModel(signer: signer)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
         StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"claimed","version":"v7"}"#)
         StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/live"] = (200, #"{"live":2}"#)
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
         let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
 
-        let done = await model.useVersion(v2, of: id)
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
         XCTAssertTrue(done, model.versionErrors[id] ?? "")
         XCTAssertEqual(signer.signed, ["tafs.version.v1|t_01|depl_1|2"])
         XCTAssertTrue(sent("POST", "/v1/me/agent-drafts/d_02/confirm").isEmpty)
+    }
+
+    /// A version that brings a Card with nothing shown: nothing begins, nothing is signed.
+    func testNothingShownNothingSigned() async throws {
+        let signer = RecordingSigner()
+        let (model, id) = await kiffModel(signer: signer)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+        let done = await model.useVersion(v2, of: id)
+        XCTAssertFalse(done)
+        XCTAssertTrue(signer.signed.isEmpty)
+        XCTAssertTrue(sent("POST", "/v1/tafs/depl_1/versions/2/switch").isEmpty)
+    }
+
+    /// The Card changed between the screen and the tap (kiff/tafs#115): the new one goes on
+    /// screen, the switch is dropped, and nothing is signed or confirmed.
+    func testACardChangedSinceShownIsNotSigned() async throws {
+        let signer = RecordingSigner()
+        let (model, id) = await kiffModel(signer: signer)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v8"}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/switching"] = (200, #"{"cancelled":true}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
+        XCTAssertFalse(done)
+        XCTAssertTrue(signer.signed.isEmpty, "no Face ID over terms that weren't shown")
+        XCTAssertTrue(sent("POST", "/v1/me/agent-drafts/d_02/confirm").isEmpty)
+        XCTAssertEqual(sent("DELETE", "/v1/tafs/depl_1/switching").count, 1)
+        XCTAssertEqual(model.changedVersionCards[id]?.version, "v8")
+        XCTAssertTrue(model.versionErrors[id]?.contains("changed since it was shown") ?? false)
+    }
+
+    /// The Card a version brings reads now → after (kiff-cloud#1287).
+    func testAVersionsCardReadsNowAndAfter() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7","cards":[{"revises":"m_refund","current":{"grants":[{"action":"create_refund","per_action_max":[{"quantity":"sum(amount)","max":500,"unit":"EUR","scale":2}]}]},"grants":[{"action":"create_refund","per_action_max":[{"quantity":"sum(amount)","max":2000,"unit":"EUR","scale":2}]}]},{"grants":[{"action":"retrieve_charge"}]}]}"#)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+        let draft = await model.versionCard(v2, of: id)
+        let cards = try XCTUnwrap(draft?.cards)
+        XCTAssertEqual(cards.count, 2)
+        XCTAssertEqual(cards[0].revises, "m_refund")
+        XCTAssertEqual(cards[0].current?.lines.count, 1)
+        XCTAssertNotEqual(cards[0].current?.lines, cards[0].lines, "now and after differ")
+        XCTAssertNil(cards[1].current, "a new Card has no now")
+    }
+
+    /// The owner backs out at Face ID: the switch is dropped, so the taf runs again, and
+    /// nothing reaches KIFF.
+    func testBackingOutAtFaceIDDropsTheSwitch() async throws {
+        let (model, id) = await kiffModel(signer: BackingOutSigner())
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7"}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/switching"] = (200, #"{"cancelled":true}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
+        XCTAssertFalse(done)
+        XCTAssertEqual(sent("DELETE", "/v1/tafs/depl_1/switching").count, 1)
+        XCTAssertTrue(sent("POST", "/v1/me/agent-drafts/d_02/confirm").isEmpty)
+        XCTAssertTrue(sent("POST", "/v1/tafs/depl_1/versions/2/live").isEmpty)
+        XCTAssertNil(model.switches[id])
+    }
+
+    /// KIFF doesn't confirm the Card: the switch stays begun (the taf doesn't run), and the
+    /// page says it didn't finish, to finish or cancel.
+    func testASwitchThatStopsHalfWayStaysToFinish() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts/d_02/confirm"] = (502, #"{"error":"try again"}"#)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
+        XCTAssertFalse(done)
+        XCTAssertEqual(model.switches[id]?.n, 2)
+        XCTAssertTrue(model.versionErrors[id]?.contains("didn't finish") ?? false, model.versionErrors[id] ?? "")
+        XCTAssertTrue(sent("POST", "/v1/tafs/depl_1/versions/2/live").isEmpty)
+        XCTAssertTrue(sent("DELETE", "/v1/tafs/depl_1/switching").isEmpty, "a Card that may be confirmed is never dropped from here")
+    }
+
+    /// A run of the taf is going: the switch doesn't begin, and Face ID isn't asked.
+    func testNoSwitchWhileARunGoes() async throws {
+        let signer = RecordingSigner()
+        let (model, id) = await kiffModel(signer: signer)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (409, #"{"error":"a run of this agent is going or waiting on its owner: answer it, stop it or let it finish, then switch"}"#)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+
+        let done = await model.useVersion(v2, of: id, shownDraft: "v7")
+        XCTAssertFalse(done)
+        XCTAssertTrue(signer.signed.isEmpty)
+        XCTAssertTrue(model.versionErrors[id]?.contains("answer it, stop it or let it finish") ?? false)
     }
 
     /// tafs cloud refuses the switch while the Card isn't confirmed: the page says so.
@@ -158,4 +264,12 @@ final class VersionsTests: XCTestCase {
         XCTAssertFalse(done)
         XCTAssertTrue(signer.signed.isEmpty)
     }
+}
+
+/// The owner backs out at the Face ID prompt.
+struct BackingOutSigner: ApprovalSigning {
+    struct Cancelled: Error {}
+    var publicKeyDER: Data { Data([0x30, 0x59]) }
+    func sign(_ message: Data, reason: String) async throws -> String { throw Cancelled() }
+    func signConfirmed(_ message: Data) throws -> String { throw Cancelled() }
 }

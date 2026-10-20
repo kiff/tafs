@@ -565,11 +565,47 @@ final class TafsCloud {
         var id: Int { n }
     }
 
+    /// A switch to version n under way (kiff/tafs#107): nothing of the taf runs until it
+    /// ends, with that version live, or is dropped.
+    struct Switching: Decodable, Equatable {
+        let n: Int
+        /// The KIFF draft whose confirmation it waits for.
+        let draft: String?
+        let at: Date
+    }
+
+    /// The taf's versions, oldest first, the live one marked, and a switch under way.
+    struct VersionState: Decodable, Equatable {
+        let versions: [Version]
+        let switching: Switching?
+    }
+
+    /// The taf's versions and a switch under way, which tafs cloud settles first: ended
+    /// once KIFF has its Card, dropped once its draft never will be.
+    func versionState(_ id: String) async throws -> VersionState {
+        try await send("GET", "/v1/tafs/\(escaped(id))/versions")
+    }
+
     /// The taf's versions, oldest first, the live one marked.
     func versions(_ id: String) async throws -> [Version] {
-        struct Response: Decodable { let versions: [Version] }
-        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/versions")
-        return r.versions
+        try await versionState(id).versions
+    }
+
+    /// Begins the switch to version n: from then on nothing of the taf runs until it ends.
+    /// Refused (409) while a run of the taf is going or waiting on the owner.
+    func beginSwitch(_ id: String, version n: Int) async throws -> Switching {
+        struct Response: Decodable { let switching: Switching }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/switch")
+        return r.switching
+    }
+
+    /// Drops the switch under way while its Card isn't confirmed; once it is, tafs cloud
+    /// ends it instead. True when one was dropped.
+    @discardableResult
+    func cancelSwitch(_ id: String) async throws -> Bool {
+        struct Response: Decodable { let cancelled: Bool }
+        let r: Response = try await send("DELETE", "/v1/tafs/\(escaped(id))/switching")
+        return r.cancelled
     }
 
     /// A trial's run: what it says, and whether it has stopped.
@@ -581,7 +617,7 @@ final class TafsCloud {
         var finished: Bool { ["COMPLETED", "ERROR", "CANCELLED"].contains(status) }
     }
 
-    /// One write a trial made: what KIFF would decide. It was not sent.
+    /// One call a trial made, a read or a write: what KIFF would decide. It was not sent.
     struct TrialWrite: Decodable, Equatable {
         let tool: String
         let title: String?
