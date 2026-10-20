@@ -972,11 +972,30 @@ struct SetupApproval: View {
     /// that finds it approved elsewhere).
     @State private var approvingHere = false
 
+    /// A newer approval in the thread names the same connection (kiff/tafs#138).
+    private var replaced: Bool { model.setupThread.replaced(component.id) }
+
+    /// What a replaced card says, folded: what the owner did with it, if anything.
+    private var replacedLine: String {
+        let answer = model.setupThread.answer(to: component.id)
+        if let a = answer, !a.failed, a.text.hasPrefix("approved") { return "Approved · a newer request is below" }
+        if answer?.text == "declined" { return "Declined · a newer request is below" }
+        return "Replaced by a newer request below"
+    }
+
     var body: some View {
         let state = model.setupCardState(component)
         let grant = model.grants.first { $0.id == component.grant }
         Group {
-            if (state == .done || state == .declined) && !open {
+            if replaced && !open {
+                // A newer request for this connection is below (kiff/tafs#138): this one is
+                // history, and never shows that connection's live state or its error.
+                Button { withAnimation(.easeOut(duration: 0.2)) { open = true } } label: {
+                    OutcomeLine(text: replacedLine, tone: Theme.dim, mark: "arrow.down.circle.fill", more: true)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Shows the earlier request")
+            } else if (state == .done || state == .declined) && !open {
                 Button { withAnimation(.easeOut(duration: 0.2)) { open = true } } label: {
                     OutcomeLine(text: outcome(state, grant), tone: state == .done ? Theme.ok : Theme.dim,
                                 mark: state == .done ? "checkmark.circle.fill" : "minus.circle.fill", more: true)
@@ -1018,6 +1037,7 @@ struct SetupApproval: View {
         let busy = model.connecting != nil
         let answered = model.answered.contains(component.id)
         let (eyebrow, color): (String, Color) = {
+            if replaced { return ("Earlier request", Theme.dim) }
             switch state {
             case .done: return ("Approved", Theme.ok)
             case .declined: return ("Declined", Theme.dim)
@@ -1026,7 +1046,7 @@ struct SetupApproval: View {
             case .needsYou: return ("Needs you · approve", Theme.amber)
             }
         }()
-        return Panel(stroke: state == .done ? Theme.ok : state.isFailure ? Theme.no : Theme.amber) {
+        return Panel(stroke: replaced ? Theme.line : state == .done ? Theme.ok : state.isFailure ? Theme.no : Theme.amber) {
             HStack {
                 Eyebrow(text: eyebrow, color: color)
                 Spacer()
@@ -1065,11 +1085,16 @@ struct SetupApproval: View {
                 .background(Theme.raised)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-            if case .failed(let why) = state {
+            if replaced {
+                // Opened to read again: its words only. The newer request below is the one to act on.
+                Text("A newer request for this connection is below.")
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            } else if case .failed(let why) = state {
                 Text(why.map { "It didn't go through: \($0)" } ?? "It didn't go through. Nothing was connected.")
                     .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
-            if state.isFailure && model.requestRefused(component) {
+            if replaced {
+            } else if state.isFailure && model.requestRefused(component) {
                 // Sent again unchanged, it would fail the same way (kiff/tafs#138).
                 Text("Coach mode has to change this request before you can approve it.")
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)

@@ -693,6 +693,27 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// One connection's error shows on its newest card only (kiff/tafs#138, item 19): an older
+    /// approval naming the same grant is replaced, so a failure doesn't spread to every card.
+    /// A card on another grant, and the newest one, aren't.
+    func testOnlyTheNewestCardForAConnectionIsLive() throws {
+        let t0 = Date(timeIntervalSince1970: 1_792_500_000)
+        func shown(_ json: String, _ at: TimeInterval) throws -> ShownComponent {
+            ShownComponent(firstAt: t0.addingTimeInterval(at), session: "s1", run: "r1", component: try SetupTests.component(json))
+        }
+        var thread = SetupThread()
+        thread.components = [
+            try shown(#"{"type":"approval","id":"connect","grant":"g_01"}"#, 0),
+            try shown(#"{"type":"approval","id":"read","grant":"g_01"}"#, 60),
+            try shown(#"{"type":"approval","id":"other","grant":"g_02"}"#, 30),
+            try shown(#"{"type":"confirm","id":"mode"}"#, 90),
+        ]
+        XCTAssertTrue(thread.replaced("connect"), "a newer approval names the same connection")
+        XCTAssertFalse(thread.replaced("read"), "the newest card for it stays live")
+        XCTAssertFalse(thread.replaced("other"), "another connection's card")
+        XCTAssertFalse(thread.replaced("mode"), "a question names no connection")
+    }
+
     /// A request refused for itself (kiff/tafs#138: a tool name already connected) isn't
     /// offered again unchanged: a 4xx is the request's own, a lapsed sign-in or a timeout
     /// isn't, and a grant planque failed can't be approved again either.
