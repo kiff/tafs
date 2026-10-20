@@ -49,9 +49,11 @@ struct TafDetailView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                         }
+                        .coachClearance()
                     }
                     if sideColumn {
                         ScrollView { side(taf).padding(.horizontal, 16).padding(.vertical, 12) }
+                            .coachClearance()
                             .frame(width: 360)
                     }
                 }
@@ -273,6 +275,7 @@ struct VersionsScreen: View {
         ScrollView {
             VersionsPanel(tafID: tafID).padding(.horizontal, 16).padding(.vertical, 12)
         }
+        .coachClearance()
         .screenBackground()
         .navigationTitle("Versions")
         .inlineTitle()

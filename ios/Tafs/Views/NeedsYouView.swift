@@ -23,6 +23,7 @@ struct NeedsYouView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
+        .coachClearance()
         .refreshable { await model.refresh() }
         .screenBackground()
     }

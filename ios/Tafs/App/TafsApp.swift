@@ -40,6 +40,8 @@ struct TafsApp: App {
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// The keyboard is up: ✦ keeps off it (kiff/tafs#138).
+    @State private var keyboardUp = false
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
 
     /// Coach mode works with the owner's KIFF account, once signed in.
@@ -73,10 +75,14 @@ struct RootView: View {
         }
         // Coach mode (kiff/tafs#138): ✦ on every screen, above the tab bar and a chat's field.
         .overlay(alignment: .bottomTrailing) {
-            if coachAvailable && !model.coachOpen {
+            // Never on the keyboard's edge: hidden while it's up, and pinned to the screen.
+            if coachAvailable && !model.coachOpen && !keyboardUp {
                 CoachButton(wide: sizeClass == .regular).padding(.trailing, 16).padding(.bottom, 112)
+                    .ignoresSafeArea(.keyboard)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         // A wide screen: a panel beside what's open. A phone: a sheet, with Close, that a drag
         // down closes too; either way the conversation stays for ✦ to reopen.
         .overlay { if coachAvailable && sizeClass == .regular { CoachPanel() } }
