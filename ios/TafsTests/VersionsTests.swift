@@ -237,15 +237,17 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(model.improveErrors["v2"]?.contains("isn't this taf's") ?? false)
     }
 
-    /// A Card the version re-issues as it is reads as unchanged, not as a change (kiff/tafs#138);
-    /// one whose limit moves reads now → after.
-    func testAnUnchangedCardReadsAsUnchanged() throws {
-        let same = #"{"id":"card_rae","revises":"card_rae","grants":[{"action":"refund","per_action_max":[{"quantity":"sum(amount)","max":500}]}],"current":{"grants":[{"action":"refund","per_action_max":[{"quantity":"sum(amount)","max":500}]}]}}"#
-        let moved = #"{"id":"card_rae","revises":"card_rae","grants":[{"action":"refund","per_action_max":[{"quantity":"sum(amount)","max":500}]}],"current":{"grants":[{"action":"refund","per_action_max":[{"quantity":"sum(amount)","max":1000}]}]}}"#
-        let fresh = #"{"id":"card_read","grants":[{"action":"retrieve_charge"}]}"#
-        XCTAssertTrue(try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(same.utf8)).unchanged)
-        XCTAssertFalse(try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(moved.utf8)).unchanged)
-        XCTAssertFalse(try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(fresh.utf8)).unchanged, "a new Card isn't unchanged")
+    /// A Card reads as unchanged only when KIFF says its full terms are kept (kiff/tafs#138):
+    /// the same lines aren't enough, since they leave terms out (policy, expiry, scopes).
+    func testOnlyKIFFSaysACardIsUnchanged() throws {
+        let terms = #""grants":[{"action":"refund","per_action_max":[{"quantity":"sum(amount)","max":500}]}],"current":{"grants":[{"action":"refund","per_action_max":[{"quantity":"sum(amount)","max":500}]}]}"#
+        func card(_ extra: String) throws -> KIFFClient.DraftCard {
+            try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(#"{"id":"card_rae","revises":"card_rae",\#(extra)\#(terms)}"#.utf8))
+        }
+        XCTAssertTrue(try card(#""unchanged":true,"#).isUnchanged)
+        XCTAssertFalse(try card("").isUnchanged, "the same lines alone read now → after")
+        let fresh = try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(#"{"id":"card_read","unchanged":true,"grants":[{"action":"retrieve_charge"}]}"#.utf8))
+        XCTAssertFalse(fresh.isUnchanged, "a new Card isn't unchanged")
     }
 
     /// Going back to a version that didn't hold a Card (kiff/tafs#107): KIFF's restore draft
