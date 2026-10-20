@@ -1209,7 +1209,8 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Tries version n: a run whose writes KIFF decides and nothing is sent. It is followed
+    /// Tries version n: a run whose writes KIFF decides and none is sent (its reads go
+    /// through, under the live Cards). It is followed
     /// here until its run stops, so the page shows each decision as it comes.
     func tryVersion(_ n: Int, of tafID: UUID, input: String = "") async {
         guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
@@ -1238,10 +1239,12 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Makes a version live, forward or back. One Face ID does it: when the version brings
-    /// a Card revision, it confirms that draft in KIFF, as connecting does; otherwise it
-    /// approves the switch itself. tafs cloud switches only once KIFF has the revision, so
-    /// the version's tools and limits go live together.
+    /// Makes a version live, forward or back, with one Face ID. When the version brings a
+    /// Card revision, that Face ID signs the draft's confirmation, which KIFF verifies, as
+    /// connecting does; tafs cloud switches only once KIFF has the revision, so the
+    /// version's tools and limits go live together. Otherwise it only asks for Face ID:
+    /// nobody checks that signature, so it is the owner's presence, never a record. Such a
+    /// switch changes no authority; KIFF decides every call under the live Cards.
     @discardableResult
     func useVersion(_ version: TafsCloud.Version, of tafID: UUID) async -> Bool {
         guard mode == .kiff, let tenant = kiffTenant, let c = cloudTaf(for: tafID), let taf = taf(tafID) else { return false }

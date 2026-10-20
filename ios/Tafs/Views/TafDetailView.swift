@@ -171,8 +171,14 @@ struct TafDetailView: View {
             }
         }
         ConnectionsPanel(tafID: taf.id)
+        // Its versions are a job of their own: their own screen, not another section here.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
-            VersionsPanel(tafID: taf.id)
+            Panel {
+                NavigationLink { VersionsScreen(tafID: taf.id) } label: {
+                    Label("Versions", systemImage: "square.stack.3d.up")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+            }
         }
         if taf.state != .revoked {
             HStack(spacing: 8) {
@@ -250,8 +256,22 @@ struct ConnectionsPanel: View {
     }
 }
 
+/// A taf's versions, on their own screen.
+struct VersionsScreen: View {
+    let tafID: UUID
+
+    var body: some View {
+        ScrollView {
+            VersionsPanel(tafID: tafID).padding(.horizontal, 16).padding(.vertical, 12)
+        }
+        .screenBackground()
+        .navigationTitle("Versions")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 /// The taf's versions, like app builds (kiff/tafs#107): newest first, the live one marked.
-/// Try it runs a version with KIFF deciding each write and nothing sent; Use this version
+/// Try it runs a version with KIFF deciding each write and no write sent; Use this version
 /// makes it live, forward or back, with one Face ID.
 struct VersionsPanel: View {
     @EnvironmentObject private var model: AppModel
@@ -324,7 +344,8 @@ struct VersionsPanel: View {
     }
 }
 
-/// A trial as it goes: each write the version made, with what KIFF decided. Nothing was sent.
+/// A trial as it goes: each write the version made, with what KIFF decided. No write was sent;
+/// its reads went through as usual, under the live Cards.
 struct TrialView: View {
     let trial: AppModel.VersionTrial
 
@@ -360,7 +381,7 @@ struct TrialView: View {
             } else {
                 ProgressView().tint(Theme.amber)
             }
-            Text("Nothing was sent: KIFF decided each write and stopped there.")
+            Text("No write was sent: KIFF decided each one and stopped there.")
                 .font(.system(size: 12)).foregroundColor(Theme.soft)
         }
     }
