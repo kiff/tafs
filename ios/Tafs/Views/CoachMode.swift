@@ -8,12 +8,24 @@ struct CoachButton: View {
     @EnvironmentObject private var model: AppModel
     let wide: Bool
 
+    /// Where it sits: this far above the screen's safe-area foot, this tall. The scrolling
+    /// screens keep their last line clear of it from these (coachClearance, review on #153).
+    static let bottomOffset: CGFloat = 112
+    static let height: CGFloat = 44
+    /// Room at the foot of a scroll view, so its last line stops above the button with a gap.
+    /// A phone's tab bar is at the foot, inside the scroll view's own inset; an iPad's is at
+    /// the top.
+    static func clearance(wide: Bool) -> CGFloat {
+        bottomOffset + height + 12 - (wide ? 0 : 49)
+    }
+
     var body: some View {
         Button { model.openCoach() } label: {
             Label(wide ? "Coach mode" : "Coach", systemImage: "sparkle")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(.white)
-                .padding(.horizontal, 16).padding(.vertical, 11)
+                .padding(.horizontal, 16)
+                .frame(height: Self.height)
                 .background(Theme.coach)
                 .clipShape(Capsule())
                 .shadow(color: Theme.coach.opacity(0.35), radius: 10, y: 4)

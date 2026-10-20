@@ -77,7 +77,7 @@ struct RootView: View {
         .overlay(alignment: .bottomTrailing) {
             // Never on the keyboard's edge: hidden while it's up, and pinned to the screen.
             if coachAvailable && !model.coachOpen && !keyboardUp {
-                CoachButton(wide: sizeClass == .regular).padding(.trailing, 16).padding(.bottom, 112)
+                CoachButton(wide: sizeClass == .regular).padding(.trailing, 16).padding(.bottom, CoachButton.bottomOffset)
                     .ignoresSafeArea(.keyboard)
             }
         }

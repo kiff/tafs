@@ -65,11 +65,21 @@ extension View {
 extension View {
     /// Room at the foot of a scrolling screen for ✦ Coach mode, which floats over it
     /// (kiff/tafs#138): its last line scrolls clear of the button. The Mac has no ✦.
-    @ViewBuilder func coachClearance() -> some View {
+    func coachClearance() -> some View { modifier(CoachClearance()) }
+}
+
+private struct CoachClearance: ViewModifier {
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
+
+    func body(content: Content) -> some View {
         #if os(iOS)
-        safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: 84) }
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: CoachButton.clearance(wide: sizeClass == .regular))
+        }
         #else
-        self
+        content
         #endif
     }
 }
