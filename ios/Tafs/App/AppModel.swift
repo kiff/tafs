@@ -1981,9 +1981,9 @@ final class AppModel: ObservableObject {
         return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn) }
     }
 
-    /// A connection none of whose tools is on the taf's Card any more (kiff/tafs#138): left
-    /// over after a version moved its Card to a fixed tool. Nothing of the taf uses it; the
-    /// owner can disconnect it. Unknown while the Card isn't read, so never said then.
+    /// A connection none of whose tools is on the live version's Card (kiff/tafs#138): left
+    /// over after a version moved its Card to a fixed tool. The taf doesn't use it now, but an
+    /// older version may, so going back could need it. Unknown while the Card isn't read.
     func leftOver(_ grant: PlanqueClient.Grant, of tafID: UUID) -> Bool {
         guard grant.connected, let rules = taf(tafID)?.card.rules else { return false }
         return Self.leftOver(tools: grant.request.tools.map(\.action), onCard: rules.map(\.action))
