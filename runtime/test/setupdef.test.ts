@@ -128,6 +128,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).not.toContain("A taf can't move to a new version yet");
     // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
     expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
+    // One question at a time: a second choice beside a confirm went into prose (measure of #138).
+    expect(flat).toContain("while a confirm asks something, the message asks nothing else, and a choice among a few options");
     // An operation's fields come from the vendor, never Setup's guess (kiff/tafs#138, item 1).
     expect(flat).toContain("You can't see such an operation's own fields before the owner approves, so never guess or rename them");
     expect(flat).toContain("connect the vendor's read-only tool that lists an operation's fields (for Stripe, stripe_api_details)");
