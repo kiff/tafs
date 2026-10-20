@@ -42,6 +42,26 @@ extension View {
     }
 }
 
+extension View {
+    /// The bar under a chat: the screen's colour, with a soft shadow above it.
+    @ViewBuilder func barBackground() -> some View {
+        if #available(iOS 16, macOS 13, *) {
+            background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
+        } else {
+            background(Theme.background.shadow(color: Theme.ink.opacity(0.06), radius: 6, y: -2))
+        }
+    }
+
+    /// Semibold, keeping the font's size (iOS 16, macOS 13); as it is on macOS 12.
+    @ViewBuilder func semibold() -> some View {
+        if #available(iOS 16, macOS 13, *) {
+            fontWeight(.semibold)
+        } else {
+            self
+        }
+    }
+}
+
 extension ToolbarItemPlacement {
     /// The navigation bar's trailing end on iOS; the window toolbar's on the Mac.
     static var trailingBar: ToolbarItemPlacement {

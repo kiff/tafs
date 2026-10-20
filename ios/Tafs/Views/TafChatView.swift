@@ -260,7 +260,7 @@ struct TafChatView: View {
         .padding(.horizontal, 12).padding(.vertical, 10)
         .frame(maxWidth: Self.readable)
         .frame(maxWidth: .infinity)
-        .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
+        .barBackground()
     }
 
     /// The chat's widest column: about 75 characters of text.

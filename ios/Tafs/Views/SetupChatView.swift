@@ -81,8 +81,9 @@ struct SetupChatView: View {
         .inlineTitle()
         .setupChrome(wide: sizeClass == .regular)
         .toolbar {
-            if model.setupTaf != nil && model.planqueReady {
-                ToolbarItem(placement: .trailingBar) { conversations }
+            // The condition inside the item: a toolbar's own `if` is macOS 13 (kiff/tafs#85).
+            ToolbarItem(placement: .trailingBar) {
+                if model.setupTaf != nil && model.planqueReady { conversations }
             }
         }
         .sheet(isPresented: $showingChats) {
@@ -409,7 +410,7 @@ struct SetupChatView: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
-        .background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
+        .barBackground()
         // Ready to type (#82): the keyboard shows when the chat opens. Just after the
         // push, since a field focused while the view still slides in isn't. Not over a
         // card that waits for the owner: that card is what they came back to answer.
@@ -579,7 +580,7 @@ struct UnsentBubble: View {
                 Text("Not sent").foregroundColor(Theme.no)
                 Text("·").foregroundColor(Theme.dim)
                 Button("Retry") { Task { await retry() } }
-                    .foregroundColor(Theme.ink).fontWeight(.semibold)
+                    .foregroundColor(Theme.ink).semibold()
                     .disabled(busy)
             }
             .scaledFont(13, relativeTo: .footnote)
@@ -725,10 +726,11 @@ struct SetupPlan: View {
                 ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
                     HStack(spacing: 10) {
                         StepMark(status: step.status)
+                        // Text's own strikethrough, before the font: a view's is macOS 13 (kiff/tafs#85).
                         Text(step.label)
+                            .strikethrough(step.status == "skipped")
                             .scaledFont(14, weight: step.status == "active" ? .semibold : .regular)
                             .foregroundColor(step.status == "pending" || step.status == "skipped" ? Theme.dim : Theme.ink)
-                            .strikethrough(step.status == "skipped")
                     }
                 }
             }
