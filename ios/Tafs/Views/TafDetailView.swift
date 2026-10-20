@@ -441,6 +441,9 @@ struct VersionCardSheet: View {
                 }
             }
         }
+        // The switch is begun while this is open: Cancel or Use ends it, never a swipe
+        // that would leave the taf not running with nothing on screen to finish it.
+        .interactiveDismissDisabled()
         .task {
             // The terms that changed since last shown, when that's why this opened.
             if let changed = model.changedVersionCards[tafID], changed.id == model.switchDraft(version, of: tafID) { draft = changed }

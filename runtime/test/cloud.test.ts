@@ -1097,6 +1097,33 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.n === 1)).toMatchObject({ live: true, cards: [{ id: "card_rae", revision: 4 }] });
   });
 
+  it("records a live version's missing Cards on the next look, and before a switch away", async () => {
+    const rae = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] } as Mandate];
+    // Version 1 went live while KIFF couldn't say which Cards it ran under.
+    const w = twoVersions();
+    w.account.mandates = rae;
+    w.account.revisions = { card_rae: 4 };
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
+    expect((r.body.versions as Array<{ n: number; cards?: unknown }>).find((v) => v.n === 1)?.cards).toEqual([{ id: "card_rae", revision: 4 }]);
+    // Switching away records them first, so going back to it can restore them.
+    const w2 = twoVersions();
+    w2.account.mandates = rae;
+    w2.account.revisions = { card_rae: 4 };
+    w2.account.drafts = { drf_v2: { status: "draft", agent_id: "rae" } };
+    await call(w2, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect(w2.agents.versions.get(`t_acme|${RAE}`)!.find((v) => v.n === 1)).toMatchObject({ live: true, cards: [{ id: "card_rae", revision: 4 }] });
+  });
+
+  it("refuses an improvement whose result names another taf's agent", async () => {
+    const w = twoVersions();
+    const other = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first", agent: "bo" } });
+    expect(other.status).toBe(409);
+    expect(String(other.body.error)).toContain("another taf");
+    expect(w.agents.versions.get(`t_acme|${RAE}`)).toHaveLength(2);
+    const mine = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first", agent: "rae" } });
+    expect(mine.body).toEqual({ version: 3 });
+  });
+
   it("takes a claimed draft as confirmed: its Cards are issued all the same", async () => {
     const w = twoVersions();
     w.account.drafts = { drf_v2: "claimed" };

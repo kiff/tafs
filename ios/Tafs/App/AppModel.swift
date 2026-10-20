@@ -2875,7 +2875,7 @@ final class AppModel: ObservableObject {
         // another version.
         let what = taf.draft ?? SHA256.hash(data: Data((taf.note ?? "").utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
         do {
-            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: "\(component.id)|\(what)")
+            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: "\(component.id)|\(what)", agent: taf.agent)
             guard gen == accountGeneration else { return }
             improvedVersions[component.id] = n
             if let tafID = self.taf(forAgent: taf.agent) { await loadVersions(tafID) }
