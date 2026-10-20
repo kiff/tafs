@@ -128,6 +128,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).not.toContain("A taf can't move to a new version yet");
     // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
     expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
+    // An operation's fields come from the vendor, never Setup's guess (kiff/tafs#138, item 1).
+    expect(flat).toContain("You can't see such an operation's own fields before the owner approves, so never guess or rename them");
+    expect(flat).toContain("connect the vendor's read-only tool that lists an operation's fields (for Stripe, stripe_api_details)");
     expect(flat).toContain("A read tool's line has no amount limit, only a call count generous enough never to get in the way, and you don't ask the owner to set it");
     expect(flat).toContain("Show plan again with every step done or skipped");
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
