@@ -88,6 +88,7 @@ struct HomeView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
+        .coachClearance()
         .refreshable { await model.refresh() }
         .screenBackground()
         .navigationDestination(for: UUID.self) { TafDetailView(tafID: $0) }
