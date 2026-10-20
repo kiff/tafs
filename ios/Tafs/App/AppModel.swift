@@ -1267,7 +1267,8 @@ final class AppModel: ObservableObject {
             }
         }
         guard gen == accountGeneration else { return false }
-        if let draft, !draft.confirmed {
+        // A claimed draft is later than confirmed, its Cards issued all the same.
+        if let draft, !draft.confirmed, draft.status != "claimed" {
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
                                           reason: "Use version \(version.n) of \(taf.name), with its Card")

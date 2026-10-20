@@ -116,6 +116,21 @@ final class VersionsTests: XCTestCase {
         XCTAssertEqual(sent("POST", "/v1/tafs/depl_1/versions/1/live").count, 1)
     }
 
+    /// A draft already claimed has its Cards: the switch is approved, not the draft again.
+    func testAClaimedDraftIsNotConfirmedAgain() async throws {
+        let signer = RecordingSigner()
+        let (model, id) = await kiffModel(signer: signer)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"claimed","version":"v7"}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/live"] = (200, #"{"live":2}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+
+        let done = await model.useVersion(v2, of: id)
+        XCTAssertTrue(done, model.versionErrors[id] ?? "")
+        XCTAssertEqual(signer.signed, ["tafs.version.v1|t_01|depl_1|2"])
+        XCTAssertTrue(sent("POST", "/v1/me/agent-drafts/d_02/confirm").isEmpty)
+    }
+
     /// tafs cloud refuses the switch while the Card isn't confirmed: the page says so.
     func testARefusedSwitchSaysWhy() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
