@@ -37,8 +37,6 @@ struct TafsApp: App {
     }
 }
 
-enum Tab: Hashable { case tafs, needsYou, record }
-
 /// CI's screenshot run: `-screenshots YES -tab needs-you` opens the sample on a tab,
 /// without asking for notifications.
 enum Screenshots {

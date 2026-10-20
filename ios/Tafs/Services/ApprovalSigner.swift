@@ -54,7 +54,15 @@ final class ApprovalSigner: ApprovalSigning {
                 enclave = key
             }
         }
-        if enclave == nil {
+        #if os(macOS)
+        // A Mac without a Secure Enclave holds no key at all: it never signs with a
+        // software key, and approves on the owner's iPhone (kiff/tafs#85).
+        let softwareAllowed = false
+        #else
+        // The Simulator has no Secure Enclave.
+        let softwareAllowed = true
+        #endif
+        if enclave == nil, softwareAllowed {
             if let saved, let key = try? P256.Signing.PrivateKey(rawRepresentation: saved) {
                 software = key
             } else {
