@@ -182,6 +182,16 @@ struct SetupThread: Equatable {
         }
     }
 
+    /// Whether a newer approval in the thread asks about the same connection (kiff/tafs#138):
+    /// then this one is history. Only the newest card for a connection shows its live state,
+    /// so one failure doesn't show on every card that names the connection.
+    func replaced(_ id: String) -> Bool {
+        guard let shown = components.first(where: { $0.component.id == id }), let grant = shown.component.grant else { return false }
+        return components.contains { other in
+            other.component.id != id && other.component.type == .approval && other.component.grant == grant && other.firstAt > shown.firstAt
+        }
+    }
+
     /// The components that ask the owner to act, in the thread's order: an approval, a
     /// question or a sign-in.
     var asks: [ShownComponent] {
