@@ -138,9 +138,11 @@ final class TafsCloud {
         /// Its calls held for the owner.
         let waiting: Int
         let card: CardSummary
+        /// Its open trial (kiff/tafs#173), its own entry in the menu.
+        var trial: OpenTrial? = nil
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card, unscheduled
+            case id, name, job, status, color, state, waiting, card, unscheduled, trial
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
         }
 
@@ -288,6 +290,11 @@ final class TafsCloud {
     }
 
     func conversation(_ id: String) async throws -> Thread {
+        try await thread("/v1/tafs/\(escaped(id))/conversation")
+    }
+
+    /// A thread as tafs cloud reads it: the taf's, or a trial's (kiff/tafs#173).
+    private func thread(_ path: String) async throws -> Thread {
         struct Working: Decodable { let session: String; let run: String? }
         /// One the app can't read is left out, never the thread with it.
         struct Lenient: Decodable {
@@ -295,7 +302,7 @@ final class TafsCloud {
             init(from decoder: Decoder) throws { steering = try? Steering(from: decoder) }
         }
         struct Response: Decodable { let messages: [ChatMessage]; let working: Working?; let steering: Lenient? }
-        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/conversation")
+        let r: Response = try await send("GET", path)
         return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering)
     }
 
@@ -587,6 +594,8 @@ final class TafsCloud {
         /// The KIFF draft whose confirmation brings this version's Card revision, while it
         /// isn't confirmed; nil: the taf's current Cards.
         let draft: String?
+        /// Its trials that ended, oldest first (kiff/tafs#173).
+        var trials: [TrialSummary]? = nil
         var id: Int { n }
     }
 
@@ -647,46 +656,88 @@ final class TafsCloud {
         return r.cancelled
     }
 
-    /// A trial's run: what it says, and whether it has stopped.
-    struct TrialRun: Decodable, Equatable {
-        let id: String
-        let status: String
-        let output: String?
-        let error: String?
-        var finished: Bool { ["COMPLETED", "ERROR", "CANCELLED"].contains(status) }
-    }
-
-    /// One call a trial made, a read or a write: what KIFF would decide. It was not sent.
-    struct TrialWrite: Decodable, Equatable {
-        let tool: String
-        let title: String?
-        /// allowed, held or refused.
-        let decision: String
-        let reason: String?
-    }
-
-    struct Trial: Decodable, Equatable {
-        let run: TrialRun
-        let writes: [TrialWrite]
-    }
-
-    /// Starts a trial of version n on `input` (the job's own words when empty): a run whose
-    /// writes KIFF decides without sending. Returns at once; `trial` follows it.
-    func startTrial(_ id: String, version n: Int, input: String = "") async throws -> TrialRun {
-        struct Response: Decodable { let run: TrialRun }
-        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/trial", body: ["input": input])
-        return r.run
-    }
-
-    /// A trial so far: its run, and what KIFF decided for each write.
-    func trial(_ id: String, run: String) async throws -> Trial {
-        try await send("GET", "/v1/tafs/\(escaped(id))/trials/\(escaped(run))")
-    }
-
     /// Makes version n live. tafs cloud refuses (409) while its Card revision isn't confirmed.
     func makeLive(_ id: String, version n: Int) async throws {
         struct Response: Decodable { let live: Int }
         let _: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/live")
+    }
+
+    // MARK: Trying a version (kiff/tafs#173)
+
+    /// The taf's open trial: the owner chats with version n under its own trial Card,
+    /// while the live version keeps its schedule, Card and budget. One per taf.
+    struct OpenTrial: Decodable, Equatable {
+        let id: String
+        let n: Int
+        /// The KIFF draft trying as its Card.
+        let draft: String
+        /// Its chat; nil until its first message.
+        let session: String?
+        let started: Date
+        /// When the owner last wrote in it: unused for 7 days, it ends.
+        let used: Date
+    }
+
+    /// What a version keeps of a trial once it ended: when, how, and KIFF's counts.
+    struct TrialSummary: Decodable, Equatable {
+        let started: Date
+        let ended: Date
+        /// installed, back, idle or replaced.
+        let why: String
+        let calls: Int
+        let held: Int
+        let refused: Int
+    }
+
+    /// The KIFF draft to confirm as version n's trial Card, signed by the phone.
+    func trialDraft(_ id: String, version n: Int) async throws -> String {
+        struct Response: Decodable { let draft: String }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/try")
+        return r.draft
+    }
+
+    /// Opens the trial of version n, once KIFF has `draft` trying. 409 before that.
+    func openTrial(_ id: String, version n: Int, draft: String) async throws -> OpenTrial {
+        struct Body: Encodable { let n: Int; let draft: String }
+        struct Response: Decodable { let trial: OpenTrial }
+        let r: Response = try await send("PUT", "/v1/tafs/\(escaped(id))/trial", body: Body(n: n, draft: draft))
+        return r.trial
+    }
+
+    /// The taf's open trial; nil when it has none.
+    func openTrial(_ id: String) async throws -> OpenTrial? {
+        struct Response: Decodable { let trial: OpenTrial? }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/trial")
+        return r.trial
+    }
+
+    /// One message to the trial: a turn of the version being tried, in its own chat.
+    /// Returns its session and run.
+    func trialMessage(_ id: String, text: String) async throws -> (session: String, run: String) {
+        struct Response: Decodable { let session: String; let run: String }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/trial/messages", body: ["text": text])
+        return (r.session, r.run)
+    }
+
+    /// The trial's chat, read as a taf's thread is.
+    func trialConversation(_ id: String) async throws -> Thread {
+        try await thread("/v1/tafs/\(escaped(id))/trial/conversation")
+    }
+
+    /// Install: once the phone confirmed the trial's draft live in KIFF, that version goes
+    /// live and the trial ends. 409 while KIFF hasn't confirmed it.
+    func installTrial(_ id: String) async throws -> TrialSummary {
+        struct Response: Decodable { let live: Int; let ended: TrialSummary }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/trial/install")
+        return r.ended
+    }
+
+    /// Go back: KIFF ends the trial Cards, the trial's chat is deleted, and the live version
+    /// stays as it was.
+    func endTrial(_ id: String) async throws -> TrialSummary {
+        struct Response: Decodable { let ended: TrialSummary }
+        let r: Response = try await send("DELETE", "/v1/tafs/\(escaped(id))/trial")
+        return r.ended
     }
 
     // MARK: Alerts

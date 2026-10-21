@@ -1,4 +1,4 @@
-import { AgentsError, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type Switching, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
 /**
@@ -55,6 +55,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const switching = new Map<string, Switching>();
   /** Each version's definition, by agent and number. */
   const versionDefs = new Map<string, AgentDefinition>();
+  /** Each agent's open trial (kiff/tafs#173), as kiff/agents keeps it. */
+  const trials = new Map<string, Trial>();
   const api: AgentsAPI = {
     async versions(tenant, id) {
       calls.push(`versions ${id}`);
@@ -129,6 +131,46 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const run = newRun(tenant, id, s, "trial", input);
       trialWrites.set(run.id, []);
       return run;
+    },
+    async openTrial(tenant, id, version, draft) {
+      calls.push(`openTrial ${id} ${version} ${draft}`);
+      if (!(versions.get(k(tenant, id)) ?? []).some((v) => v.n === version)) throw gone();
+      const open = trials.get(k(tenant, id));
+      if (open && (open.n !== version || open.draft !== draft)) throw new AgentsError(409, `this agent is already trying version ${open.n}: end that trial first`);
+      if (open) return { ...open };
+      const at = now().toISOString();
+      const t: Trial = { id: `tr${++n}`, n: version, draft, started: at, used: at };
+      trials.set(k(tenant, id), t);
+      return { ...t };
+    },
+    async openedTrial(tenant, id) {
+      const t = trials.get(k(tenant, id));
+      return t && { ...t };
+    },
+    async trialMessage(tenant, id, input) {
+      calls.push(`trialMessage ${id}`);
+      const t = trials.get(k(tenant, id));
+      if (!t) throw new AgentsError(404, "this agent has no open trial");
+      const s = t.session ?? openSession(tenant, id, "trial").id;
+      const run = newRun(tenant, id, s, "trial", input);
+      t.session = s;
+      t.used = now().toISOString();
+      return { run: { ...run }, trial: { ...t } };
+    },
+    async endTrial(tenant, id, why, counts) {
+      calls.push(`endTrial ${id} ${why} ${counts.calls}/${counts.held}/${counts.refused}`);
+      const t = trials.get(k(tenant, id));
+      if (!t) throw new AgentsError(404, "this agent has no open trial");
+      const ended: TrialSummary = { started: t.started, ended: now().toISOString(), why, ...counts };
+      const v = (versions.get(k(tenant, id)) ?? []).find((x) => x.n === t.n);
+      if (v) v.trials = [...(v.trials ?? []), ended];
+      if (t.session) {
+        const i = sessions.findIndex((x) => x.id === t.session);
+        if (i >= 0) sessions.splice(i, 1);
+        events.delete(t.session);
+      }
+      trials.delete(k(tenant, id));
+      return ended;
     },
     async trial(tenant, id, run) {
       const r = runs.find((x) => x.tenant === tenant && x.agent === id && x.id === run && x.trigger === "trial");
@@ -296,7 +338,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs };
+  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, trials };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

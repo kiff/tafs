@@ -151,7 +151,10 @@ final class AppModel: ObservableObject {
     // MARK: Reading
 
     var signedIn: Bool { mode != .signedOut }
-    func taf(_ id: UUID) -> Taf? { tafs.first { $0.id == id } ?? otherAgents.first { $0.id == id } }
+    func taf(_ id: UUID) -> Taf? {
+        if let trying = trialTaf(id) { return trying }
+        return tafs.first { $0.id == id } ?? otherAgents.first { $0.id == id }
+    }
     func entries(for tafID: UUID) -> [RecordEntry] { record.filter { $0.tafID == tafID } }
     func heldCalls(for tafID: UUID) -> [HeldCall] { held.filter { $0.tafID == tafID } }
     var workingCount: Int { tafs.filter { $0.state == .working }.count }
@@ -251,7 +254,7 @@ final class AppModel: ObservableObject {
         sessionHasKey = tenant != nil
         kiff.token = token
         cloud.token = token
-        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -281,7 +284,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]
-        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         holderIDs = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
@@ -512,6 +515,8 @@ final class AppModel: ObservableObject {
         unfinishedRemovals = home.removing
         tafs = home.tafs.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
         otherAgents = home.others.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
+        // Each open trial is its own entry in the menu, under its taf (kiff/tafs#173).
+        for t in home.tafs where t.id != nil { setTrial(t.trial, of: holderID(t.kiffAgent)) }
         held = exceptions.map { KIFFMapping.held($0, tafID: holderID($0.subject)) }
         listLoaded = true
         listUnread = false
@@ -653,7 +658,9 @@ final class AppModel: ObservableObject {
 
     /// The tafs cloud taf behind a taf, when there is one.
     func cloudTaf(for tafID: UUID) -> TafsCloud.CloudTaf? {
-        holderIDs.first(where: { $0.value == tafID }).flatMap { cloudTafs[$0.key] }
+        // A trial's chat is its taf's, on tafs cloud (kiff/tafs#173).
+        let tafID = trialChats[tafID] ?? tafID
+        return holderIDs.first(where: { $0.value == tafID }).flatMap { cloudTafs[$0.key] }
     }
 
     // MARK: A taf acts (sample mode)
@@ -985,21 +992,11 @@ final class AppModel: ObservableObject {
     @Published private(set) var versions: [UUID: [TafsCloud.Version]] = [:]
     @Published var versionErrors: [UUID: String] = [:]
 
-    /// A trial the owner started on a taf's page: which version, and the trial so far.
-    struct VersionTrial: Equatable {
-        let version: Int
-        var trial: TafsCloud.Trial
-    }
-
-    /// The latest trial on each taf's page, followed until its run stops.
-    @Published private(set) var trials: [UUID: VersionTrial] = [:]
     /// The version being made live on a taf, while this phone works on it.
     @Published private(set) var switchingVersion: [UUID: Int] = [:]
     /// A switch under way on each taf, as tafs cloud keeps it: one that didn't finish shows
     /// here, to finish or cancel. Nothing of the taf runs meanwhile.
     @Published private(set) var switches: [UUID: TafsCloud.Switching] = [:]
-    /// How often a trial is read again while it runs.
-    var trialPollInterval: UInt64 = 2_000_000_000
 
     /// Reloads a taf's versions from tafs cloud.
     func loadVersions(_ tafID: UUID) async {
@@ -1014,35 +1011,6 @@ final class AppModel: ObservableObject {
             switches[tafID] = state.switching
             versionErrors[tafID] = nil
         case .failure(let error): versionErrors[tafID] = "Its versions couldn't be loaded: \(error.localizedDescription)"
-        }
-    }
-
-    /// Tries version n: a run whose calls KIFF decides and none is sent, reads included. It
-    /// is followed here until its run stops, so the page shows each decision as it comes.
-    func tryVersion(_ n: Int, of tafID: UUID, input: String = "") async {
-        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
-        // One trial at a time on a taf's page.
-        if let running = trials[tafID], !running.trial.run.finished { return }
-        let gen = accountGeneration
-        versionErrors[tafID] = nil
-        do {
-            let run = try await cloud.startTrial(c.id, version: n, input: input)
-            guard gen == accountGeneration else { return }
-            trials[tafID] = VersionTrial(version: n, trial: TafsCloud.Trial(run: run, writes: []))
-            // A trial is a run: minutes at most. Followed for up to ten.
-            var reads = 0
-            while reads < 300, trials[tafID]?.trial.run.finished == false {
-                reads += 1
-                try await Task.sleep(nanoseconds: trialPollInterval)
-                let now = try await cloud.trial(c.id, run: run.id)
-                guard gen == accountGeneration, trials[tafID]?.trial.run.id == run.id else { return }
-                trials[tafID]?.trial = now
-            }
-        } catch is CancellationError {
-            return
-        } catch {
-            guard gen == accountGeneration else { return }
-            versionErrors[tafID] = "The trial didn't run: \(error.localizedDescription)"
         }
     }
 
@@ -1219,6 +1187,194 @@ final class AppModel: ObservableObject {
         await loadVersions(tafID)
     }
 
+    // MARK: Trying a version (kiff/tafs#173)
+
+    /// Each taf's open trial: the owner chats with one version under a trial Card of its
+    /// own, while the live version keeps its schedule, Card and budget.
+    @Published private(set) var openTrials: [UUID: TafsCloud.OpenTrial] = [:]
+    /// Each open trial's chat, by its own id, to its taf. The trial is its own entry in
+    /// the main menu, and its chat is the taf's chat view on that id: one universal chat.
+    @Published private(set) var trialChats: [UUID: UUID] = [:]
+    @Published var trialErrors: [UUID: String] = [:]
+    /// The tafs whose trial is starting, installing or ending, so one tap does one thing.
+    @Published private(set) var trialBusy: Set<UUID> = []
+
+    /// The id of a taf's open trial's chat; nil when it has none.
+    func trialChat(of tafID: UUID) -> UUID? {
+        trialChats.first { $0.value == tafID }?.key
+    }
+
+    /// The taf a trial's chat belongs to, when `id` is one.
+    func tafOfTrialChat(_ id: UUID) -> UUID? { trialChats[id] }
+
+    /// A trial's chat drawn as its taf, named as the menu names it: "Refunds · Trying v2".
+    private func trialTaf(_ id: UUID) -> Taf? {
+        guard let tafID = trialChats[id], let trial = openTrials[tafID],
+              var taf = tafs.first(where: { $0.id == tafID }) else { return nil }
+        taf.id = id
+        taf.name = "\(taf.name) · Trying v\(trial.n)"
+        return taf
+    }
+
+    /// Reads a taf's open trial. A trial that ended elsewhere (Install, Go back, a week
+    /// unused) leaves the menu here too.
+    func loadTrial(_ tafID: UUID) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        do {
+            let open = try await cloud.openTrial(c.id)
+            guard gen == accountGeneration else { return }
+            setTrial(open, of: tafID)
+        } catch {
+            guard gen == accountGeneration else { return }
+            trialErrors[tafID] = "The trial couldn't be read: \(error.localizedDescription)"
+        }
+    }
+
+    private func setTrial(_ open: TafsCloud.OpenTrial?, of tafID: UUID) {
+        openTrials[tafID] = open
+        let chat = trialChat(of: tafID)
+        if open == nil, let chat {
+            trialChats[chat] = nil
+            chats[chat] = nil; chatStates[chat] = nil; chatErrors[chat] = nil; chatSent[chat] = nil
+        } else if open != nil, chat == nil {
+            trialChats[UUID()] = tafID
+        }
+    }
+
+    /// The Card a trial of version n runs under, as the owner reads it before Face ID: the
+    /// draft tafs cloud prepares for it. Nil with `trialErrors` when it can't be read.
+    func trialCard(_ version: TafsCloud.Version, of tafID: UUID) async -> KIFFClient.AgentDraft? {
+        guard mode == .kiff, let tenant = kiffTenant, let c = cloudTaf(for: tafID) else { return nil }
+        let gen = accountGeneration
+        kiff.tenant = tenant
+        do {
+            let id = try await cloud.trialDraft(c.id, version: version.n)
+            let draft = try await kiff.draft(id: id)
+            return gen == accountGeneration ? draft : nil
+        } catch {
+            guard gen == accountGeneration else { return nil }
+            trialErrors[tafID] = "Version \(version.n)'s trial Card couldn't be read: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    /// Starts trying version n (kiff/tafs#173): tafs cloud gives the draft of its trial
+    /// Card, the owner read it (`shownDraft`, its version), one Face ID confirms it in KIFF
+    /// as a trial, and the trial opens. Returns its chat's id.
+    func startTrying(_ version: TafsCloud.Version, of tafID: UUID, shownDraft: String) async -> UUID? {
+        guard mode == .kiff, let tenant = kiffTenant, let c = cloudTaf(for: tafID), let taf = taf(tafID) else { return nil }
+        guard !version.live, trialBusy.insert(tafID).inserted else { return nil }
+        defer { trialBusy.remove(tafID) }
+        trialErrors[tafID] = nil
+        guard sessionHasKey else {
+            trialErrors[tafID] = "Start from Connected tools on this iPhone first."
+            return nil
+        }
+        let gen = accountGeneration
+        let signer = self.signer
+        kiff.tenant = tenant
+        defer { kiff.setupSigner = nil }
+        let draft: KIFFClient.AgentDraft
+        do {
+            let id = try await cloud.trialDraft(c.id, version: version.n)
+            draft = try await kiff.draft(id: id)
+        } catch {
+            guard gen == accountGeneration else { return nil }
+            trialErrors[tafID] = "Version \(version.n) can't be tried now: \(error.localizedDescription)"
+            return nil
+        }
+        guard gen == accountGeneration else { return nil }
+        // What the owner read is what Face ID signs: changed since, it's read again.
+        guard draft.version == shownDraft else {
+            changedVersionCards[tafID] = draft
+            trialErrors[tafID] = "What you're asked to approve changed since it was shown. Read it again, then start."
+            return nil
+        }
+        do {
+            _ = try await signer.sign(Data("tafs.trial.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
+                                      reason: "Try version \(version.n) of \(taf.name), with its own Card")
+        } catch { return nil }
+        guard gen == accountGeneration else { return nil }
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        do {
+            let confirmed = try await kiff.confirmDraftAsTrial(id: draft.id, version: draft.version)
+            // Only a KIFF that runs trials answers "trying"; anything else is never taken
+            // for a trial.
+            guard confirmed.status == "trying" else {
+                guard gen == accountGeneration else { return nil }
+                trialErrors[tafID] = "KIFF didn't start a trial for this version (it answered \(confirmed.status)). Nothing runs under it."
+                await loadVersions(tafID)
+                return nil
+            }
+            let open = try await cloud.openTrial(c.id, version: version.n, draft: draft.id)
+            guard gen == accountGeneration else { return nil }
+            setTrial(open, of: tafID)
+            return trialChat(of: tafID)
+        } catch {
+            guard gen == accountGeneration else { return nil }
+            trialErrors[tafID] = "Trying version \(version.n) didn't start: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    /// Install (kiff/tafs#173): one Face ID confirms the trial's Card live in KIFF, then the
+    /// version goes live and the trial ends, its chat deleted.
+    @discardableResult
+    func installTrial(_ tafID: UUID) async -> Bool {
+        guard mode == .kiff, let tenant = kiffTenant, let c = cloudTaf(for: tafID), let taf = taf(tafID),
+              let open = openTrials[tafID] else { return false }
+        guard trialBusy.insert(tafID).inserted else { return false }
+        defer { trialBusy.remove(tafID) }
+        trialErrors[tafID] = nil
+        let gen = accountGeneration
+        let signer = self.signer
+        kiff.tenant = tenant
+        defer { kiff.setupSigner = nil }
+        do {
+            let draft = try await kiff.draft(id: open.draft)
+            guard gen == accountGeneration else { return false }
+            if !draft.confirmed {
+                do {
+                    _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
+                                              reason: "Install version \(open.n) of \(taf.name), with its Card")
+                } catch { return false }
+                guard gen == accountGeneration else { return false }
+                kiff.setupSigner = { try signer.signConfirmed($0) }
+                _ = try await kiff.confirmDraft(id: draft.id, version: draft.version)
+            }
+            _ = try await cloud.installTrial(c.id)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            trialErrors[tafID] = "Installing version \(open.n) didn't finish: \(error.localizedDescription)"
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        setTrial(nil, of: tafID)
+        await loadVersions(tafID)
+        return true
+    }
+
+    /// Go back (kiff/tafs#173): KIFF ends the trial's Cards, the trial's chat is deleted, and
+    /// the live version stays as it was. It takes authority away, so no Face ID.
+    @discardableResult
+    func goBackFromTrial(_ tafID: UUID) async -> Bool {
+        guard mode == .kiff, let c = cloudTaf(for: tafID), openTrials[tafID] != nil else { return false }
+        guard trialBusy.insert(tafID).inserted else { return false }
+        defer { trialBusy.remove(tafID) }
+        trialErrors[tafID] = nil
+        let gen = accountGeneration
+        do { _ = try await cloud.endTrial(c.id) } catch {
+            guard gen == accountGeneration else { return false }
+            trialErrors[tafID] = "The trial didn't end: \(error.localizedDescription)"
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        setTrial(nil, of: tafID)
+        await loadVersions(tafID)
+        return true
+    }
+
     // MARK: Chat
 
     /// Each taf's thread, oldest first: the owner's messages and the taf's replies.
@@ -1245,7 +1401,9 @@ final class AppModel: ObservableObject {
         guard let c = cloudTaf(for: tafID) else { return }
         let gen = accountGeneration
         let result: Result<TafsCloud.Thread, Error>
-        do { result = .success(try await cloud.conversation(c.id)) } catch { result = .failure(error) }
+        do {
+            result = .success(trialChats[tafID] != nil ? try await cloud.trialConversation(c.id) : try await cloud.conversation(c.id))
+        } catch { result = .failure(error) }
         // An answer for a session that has since ended (signed out, another account) is dropped.
         guard gen == accountGeneration, mode == .kiff else { return }
         switch result {
@@ -1308,7 +1466,8 @@ final class AppModel: ObservableObject {
         do {
             // Streamed, so the taf's words show as it writes them (#64); sent plainly
             // when the stream can't open.
-            if let events = try await openStream(c.id, text: text) {
+            // A trial's turn runs in the background, and its chat reloads as it goes.
+            if trialChats[tafID] == nil, let events = try await openStream(c.id, text: text) {
                 guard current() else { return .notTried }
                 chatStates[tafID, default: ChatState()].awaiting = clock()
                 chatStates[tafID]?.live = LiveAnswer()
@@ -1316,7 +1475,11 @@ final class AppModel: ObservableObject {
                 chatStreams[tafID] = Task { await self.followChatStream(events, tafID: tafID, text: text, gen: gen) }
                 return .sent
             }
-            _ = try await cloud.sendMessage(c.id, text: text)
+            if trialChats[tafID] != nil {
+                _ = try await cloud.trialMessage(c.id, text: text)
+            } else {
+                _ = try await cloud.sendMessage(c.id, text: text)
+            }
             guard current() else { return .notTried }
             chatStates[tafID, default: ChatState()].awaiting = clock()
             await loadChat(tafID)

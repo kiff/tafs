@@ -93,9 +93,34 @@ struct TafDetailView: View {
                 Text(taf.name).font(Theme.display(30)).foregroundColor(Theme.ink)
                 Text(taf.tools.isEmpty ? "No tools yet" : taf.tools.joined(separator: " · "))
                     .font(.system(size: 13)).foregroundColor(Theme.dim)
+                versionLine(taf)
             }
             Spacer()
             StateChip(state: taf.state)
+        }
+    }
+
+    /// The ways into its versions (kiff/tafs#173): the live one, which opens Versions, and an
+    /// open trial, to resume.
+    @ViewBuilder
+    private func versionLine(_ taf: Taf) -> some View {
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
+            HStack(spacing: 10) {
+                NavigationLink { VersionsScreen(tafID: taf.id) } label: {
+                    let live = model.versions[taf.id]?.first(where: \.live)?.n
+                    Text(live.map { "Version \($0) · live" } ?? "Versions")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                if let trial = model.openTrials[taf.id], let chat = model.trialChat(of: taf.id) {
+                    NavigationLink { TrialScreen(chatID: chat, tafID: taf.id) } label: {
+                        Text("Trying v\(trial.n) · Resume").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.amber)
+                    }
+                }
+            }
+            .task(id: taf.id) {
+                await model.loadVersions(taf.id)
+                await model.loadTrial(taf.id)
+            }
         }
     }
 
@@ -186,15 +211,6 @@ struct TafDetailView: View {
             }
         }
         ConnectionsPanel(tafID: taf.id)
-        // Its versions are a job of their own: their own screen, not another section here.
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
-            Panel {
-                NavigationLink { VersionsScreen(tafID: taf.id) } label: {
-                    Label("Versions", systemImage: "square.stack.3d.up")
-                        .font(.system(size: 15, weight: .semibold))
-                }
-            }
-        }
         if taf.state != .revoked {
             HStack(spacing: 8) {
                 if model.mode == .sample {
@@ -290,17 +306,15 @@ struct VersionsScreen: View {
 }
 
 /// The taf's versions, like app builds (kiff/tafs#107): newest first, the live one marked.
-/// Try it first runs a version on what the owner asks, with KIFF deciding each call and
-/// none sent; Install this version makes it live, forward or back, with one Face ID
-/// (kiff/tafs#138).
+/// Try it opens a trial of a version beside the live one, under a Card of its own
+/// (kiff/tafs#173); Install this version makes it live, forward or back, with one Face ID.
 struct VersionsPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     /// The version whose Card the owner reads before Face ID.
     @State private var reading: TafsCloud.Version?
-    /// The version the owner is about to try, and what it should try (kiff/tafs#138).
-    @State private var trying: Int?
-    @State private var trialInput = ""
+    /// The version whose trial the owner is about to start.
+    @State private var starting: TafsCloud.Version?
 
     /// Install this version: the switch begins, with the Card draft tafs cloud prepared (its own,
     /// drafted again, or a restore when going back), which is read first, now → after
@@ -315,7 +329,7 @@ struct VersionsPanel: View {
     var body: some View {
         Panel {
             Eyebrow(text: "Versions")
-            Text("Try a version first: it does the work you give it, and KIFF decides each call without sending any. Installing one makes it the live version.")
+            Text("Try a version first: you chat with it under a Card of its own, while the live version keeps working. Installing one makes it the live version.")
                 .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             if let sw = model.switches[tafID] { switchUnderWay(sw) }
             if let n = model.staleVersionCards[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
@@ -334,9 +348,16 @@ struct VersionsPanel: View {
             if let error = model.versionErrors[tafID] {
                 Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
             }
+            if let error = model.trialErrors[tafID] {
+                Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+            }
         }
-        .task(id: tafID) { await model.loadVersions(tafID) }
+        .task(id: tafID) {
+            await model.loadVersions(tafID)
+            await model.loadTrial(tafID)
+        }
         .sheet(item: $reading) { v in VersionCardSheet(version: v, tafID: tafID) }
+        .sheet(item: $starting) { v in TrialStartSheet(version: v, tafID: tafID) }
         // Terms that changed between the screen and the tap open again, to read anew.
         .onChange(of: model.changedVersionCards[tafID]) { changed in
             if changed != nil, reading == nil, let v = model.versions[tafID]?.first(where: { model.switchDraft($0, of: tafID) == changed?.id }) { reading = v }
@@ -344,8 +365,8 @@ struct VersionsPanel: View {
     }
 
     private func row(_ v: TafsCloud.Version) -> some View {
-        let running = model.trials[tafID].map { !$0.trial.run.finished } ?? false
         let switching = model.switchingVersion[tafID]
+        let trial = model.openTrials[tafID]
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Text("Version \(v.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
@@ -353,6 +374,10 @@ struct VersionsPanel: View {
                     Text("Live now").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(Theme.ok).clipShape(Capsule())
+                } else if trial?.n == v.n {
+                    Text("Trying").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Theme.amber).clipShape(Capsule())
                 }
                 Spacer(minLength: 0)
             }
@@ -360,48 +385,48 @@ struct VersionsPanel: View {
                 Text(note).font(.system(size: 14)).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             }
             Text(Self.byline(v)).font(.system(size: 12)).foregroundColor(Theme.dim)
-            if trying == v.n {
-                // What to try (kiff/tafs#138): a task in the owner's words. The version's note
-                // describes the change, so it's the hint, not the task.
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("What should it try?").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
-                    TextField(v.note.map { "For example, to check: \($0)" } ?? "For example: look up payment pi_…", text: $trialInput)
-                        .textFieldStyle(.roundedBorder)
-                    HStack(spacing: 8) {
-                        Button("Run the trial") {
-                            let input = trialInput.trimmingCharacters(in: .whitespacesAndNewlines)
-                            trying = nil
-                            Task { await model.tryVersion(v.n, of: tafID, input: input) }
-                        }
-                        .buttonStyle(OutlineButtonStyle())
-                        .disabled(trialInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        Button("Cancel") { trying = nil }
-                            .buttonStyle(OutlineButtonStyle(color: Theme.dim))
-                    }
-                }
+            // What each ended trial came to, the one line kept once its chat is gone.
+            ForEach(Array((v.trials ?? []).enumerated()), id: \.offset) { _, t in
+                Text(Self.tried(t)).font(.system(size: 12)).foregroundColor(Theme.soft)
             }
             HStack(spacing: 8) {
-                if trying != v.n {
-                    Button("Try it first") {
-                        trialInput = ""
-                        trying = v.n
-                    }
-                    .buttonStyle(OutlineButtonStyle())
-                    .disabled(running)
-                }
                 if !v.live {
+                    if trial?.n == v.n, let chat = model.trialChat(of: tafID) {
+                        NavigationLink { TrialScreen(chatID: chat, tafID: tafID) } label: {
+                            Text("Resume the trial")
+                        }
+                        .buttonStyle(OutlineButtonStyle())
+                    } else {
+                        // One trial per taf: another waits for the open one to end.
+                        Button("Try it") { starting = v }
+                            .buttonStyle(OutlineButtonStyle())
+                            .disabled(trial != nil || model.trialBusy.contains(tafID))
+                    }
                     Button(switching == v.n ? "Installing…" : "Install this version") {
                         use(v)
                     }
                     .buttonStyle(OutlineButtonStyle())
-                    // One switch at a time: another waits for the one under way.
-                    .disabled(switching != nil || model.switches[tafID].map { $0.n != v.n } ?? false)
+                    // One switch at a time, and none while a trial is open: Install ends the trial.
+                    .disabled(switching != nil || trial != nil || model.switches[tafID].map { $0.n != v.n } ?? false)
                 }
             }
-            // The trial's calls under the version tried, as they come.
-            if let trial = model.trials[tafID], trial.version == v.n { TrialView(trial: trial) }
         }
         .padding(.vertical, 4)
+    }
+
+    /// One ended trial, in a line: "Tried 21 Oct · 3 calls, 1 held · went back".
+    static func tried(_ t: TafsCloud.TrialSummary) -> String {
+        var counts = "\(t.calls) call\(t.calls == 1 ? "" : "s")"
+        if t.held > 0 { counts += ", \(t.held) held" }
+        if t.refused > 0 { counts += ", \(t.refused) refused" }
+        let how: String
+        switch t.why {
+        case "installed": how = "installed"
+        case "back": how = "went back"
+        case "idle": how = "ended unused"
+        default: how = "ended"
+        }
+        return ["Tried \(t.started.formatted(date: .abbreviated, time: .omitted))", counts, how].joined(separator: " · ")
     }
 
     /// A switch that didn't finish: the taf doesn't run until it's finished or cancelled.
@@ -458,10 +483,9 @@ struct VersionCardSheet: View {
                     Text("Version \(version.n)\(version.note.map { ": \($0)" } ?? "")")
                         .font(.system(size: 17, weight: .semibold)).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    if let cards = draft?.cards {
-                        ForEach(Array(cards.enumerated()), id: \.offset) { _, card in cardView(card) }
-                        ForEach(draft?.retires ?? [], id: \.id) { retiredView($0) }
-                        Text(draft?.retires?.isEmpty == false
+                    if let draft, draft.cards != nil {
+                        DraftCardsView(draft: draft)
+                        Text(draft.retires?.isEmpty == false
                              ? "While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
                              : "While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF, then this version goes live.")
                             .font(.system(size: 12)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -505,6 +529,19 @@ struct VersionCardSheet: View {
             loaded = true
         }
     }
+}
+
+/// The Cards a draft brings, as the owner reads them before Face ID: each Card it revises
+/// as it is now and as it will be, each new one, and each it removes.
+struct DraftCardsView: View {
+    let draft: KIFFClient.AgentDraft
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(Array((draft.cards ?? []).enumerated()), id: \.offset) { _, card in cardView(card) }
+            ForEach(draft.retires ?? [], id: \.id) { retiredView($0) }
+        }
+    }
 
     /// A Card this version doesn't have: confirming removes it, so what it allows stops.
     private func retiredView(_ card: KIFFClient.AgentDraft.Retired) -> some View {
@@ -535,73 +572,6 @@ struct VersionCardSheet: View {
             if !card.isUnchanged {
                 ForEach(card.lines, id: \.self) { Text($0).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink) }
             }
-        }
-    }
-}
-
-/// A trial as it goes: each call the version made, with what KIFF decided. No call was sent,
-/// reads included (kiff-cloud#1285): a read had no data, and the version went on without it.
-struct TrialView: View {
-    let trial: AppModel.VersionTrial
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Divider()
-            Text(trial.trial.run.finished ? "Trial of version \(trial.version)" : "Trying version \(trial.version)…")
-                .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
-            ForEach(Array(trial.trial.writes.enumerated()), id: \.offset) { _, write in
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: Self.symbol(write.decision)).foregroundColor(Self.color(write.decision))
-                        .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(write.title ?? write.tool).font(.system(size: 14)).foregroundColor(Theme.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(Self.words(write.decision) + (write.reason.map { ": \($0)" } ?? ""))
-                            .font(.system(size: 12)).foregroundColor(Theme.soft)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                .accessibilityElement(children: .combine)
-            }
-            if trial.trial.run.finished {
-                if trial.trial.writes.isEmpty {
-                    Text("It made no writes.").font(.system(size: 13)).foregroundColor(Theme.dim)
-                }
-                if let output = trial.trial.run.output, !output.isEmpty {
-                    MarkdownText(output, size: 14).foregroundColor(Theme.ink)
-                }
-                if let error = trial.trial.run.error, !error.isEmpty {
-                    Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
-                }
-            } else {
-                ProgressView().tint(Theme.amber)
-            }
-            Text("No call was sent, reads included: KIFF decided each one and stopped there.")
-                .font(.system(size: 12)).foregroundColor(Theme.soft)
-        }
-    }
-
-    static func words(_ decision: String) -> String {
-        switch decision {
-        case "allowed": return "KIFF would allow it"
-        case "held": return "KIFF would hold it for you"
-        default: return "KIFF would refuse it"
-        }
-    }
-
-    static func symbol(_ decision: String) -> String {
-        switch decision {
-        case "allowed": return "checkmark.circle.fill"
-        case "held": return "pause.circle.fill"
-        default: return "xmark.octagon.fill"
-        }
-    }
-
-    static func color(_ decision: String) -> Color {
-        switch decision {
-        case "allowed": return Theme.ok
-        case "held": return Theme.amber
-        default: return Theme.no
         }
     }
 }

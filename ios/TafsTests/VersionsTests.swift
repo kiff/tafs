@@ -23,7 +23,6 @@ final class VersionsTests: XCTestCase {
         let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, session: session)
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session)
         let model = AppModel(signer: signer, kiff: kiff, cloud: cloud)
-        model.trialPollInterval = 1_000_000
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
@@ -107,32 +106,6 @@ final class VersionsTests: XCTestCase {
         let setup = TafsCloud.Version(n: 2, note: nil, by: "setup", created: at, live: false, draft: "d_02")
         XCTAssertTrue(VersionsPanel.byline(setup).hasPrefix("By Coach mode · "))
         XCTAssertTrue(VersionsPanel.byline(setup).hasSuffix(" · brings a new Card"))
-    }
-
-    func testATrialIsFollowedUntilItStops() async throws {
-        let (model, id) = await kiffModel(signer: StubSigner())
-        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/trial"] = (202, #"{"run":{"id":"run_t","status":"PENDING"}}"#)
-        StubProtocol.responses["GET /v1/tafs/depl_1/trials/run_t"] = (200, #"{"run":{"id":"run_t","status":"RUNNING"},"writes":[{"tool":"refund","title":"Refund #4502","arguments":{"amount":4800},"decision":"allowed"}]}"#)
-        StubProtocol.thenRespond["GET /v1/tafs/depl_1/trials/run_t"] = [
-            "GET /v1/tafs/depl_1/trials/run_t": (200, #"{"run":{"id":"run_t","status":"COMPLETED","output":"Refunded one, held one."},"writes":[{"tool":"refund","title":"Refund #4502","arguments":{},"decision":"allowed"},{"tool":"refund","arguments":{},"decision":"held","reason":"over 200 EUR"}]}"#),
-        ]
-        await model.tryVersion(2, of: id)
-        let trial = try XCTUnwrap(model.trials[id])
-        XCTAssertEqual(trial.version, 2)
-        XCTAssertTrue(trial.trial.run.finished)
-        XCTAssertEqual(trial.trial.writes.map(\.decision), ["allowed", "held"])
-        XCTAssertEqual(trial.trial.writes[1].reason, "over 200 EUR")
-        XCTAssertEqual(trial.trial.run.output, "Refunded one, held one.")
-        let start = try XCTUnwrap(sent("POST", "/v1/tafs/depl_1/versions/2/trial").first)
-        XCTAssertEqual(try JSONSerialization.jsonObject(with: start.httpBody ?? Data()) as? [String: String], ["input": ""])
-    }
-
-    func testARefusedTrialSaysWhy() async throws {
-        let (model, id) = await kiffModel(signer: StubSigner())
-        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/trial"] = (502, #"{"error":"the gateway can't run trials"}"#)
-        await model.tryVersion(2, of: id)
-        XCTAssertNil(model.trials[id])
-        XCTAssertTrue(model.versionErrors[id]?.contains("can't run trials") ?? false)
     }
 
     /// A version that brings a Card revision: the switch begins (nothing of the taf runs
