@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
-import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, issued, KIFFError, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AgentsHalt, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
+import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
@@ -66,7 +66,8 @@ export interface HTTPResult {
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
-  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion">;
+  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
+  "halt" | "resume" | "halted">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -291,6 +292,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
+  if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
 
   const me = await person(event, deps);
@@ -339,6 +341,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   const taf = await owned(me, parts[2] ?? "", deps);
   const action = parts[3];
+  if (parts.length === 4 && action === "halt") return haltRoute(event, method, me, taf, deps);
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume" || action === "run") && taf.unscheduled) {
     throw new HTTPError(409, `${taf.name} works from its chat: it has no schedule to ${action === "run" ? "run" : action}. Tell it what to do there`);
   }
@@ -546,6 +549,61 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     return { removed: Boolean(mine) };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * A halt (kiff/kiff-cloud#1061) of one taf or, with none, of the whole account. POST halts it in
+ * KIFF and in kiff/agents together: one tap, no signature, since it only takes authority away.
+ * DELETE resumes kiff/agents only once KIFF says it runs again: the phone resumes it in KIFF
+ * itself, signed with Face ID, so nothing here resumes what the owner didn't. GET reads both.
+ */
+async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf: Taf | undefined, deps: Deps): Promise<unknown> {
+  const token = bearer(event);
+  if (taf && !taf.kiffAgent) throw new HTTPError(409, `${taf.name} has no KIFF agent yet, so there is nothing to halt`);
+  const agent = taf?.kiffAgent;
+  const inKIFF = (work: () => Promise<KIFFHalt>) => Promise.allSettled([work()]).then(([r]) => r!);
+  if (method === "GET") {
+    const [kiff, runtime] = await Promise.all([inKIFF(() => haltedInKIFF(token, agent, deps.fetch, deps.kiffBase)),
+      agentsCall(() => deps.agents.halted(me.tenantID, taf?.id))]);
+    return { halt: haltView(kiff, runtime) };
+  }
+  need(me, "cards.manage");
+  if (method === "POST") {
+    // Both at once. KIFF failing, or not answering yet, leaves it halting: nothing reads it as halted.
+    const [kiff, runtime] = await Promise.all([inKIFF(() => haltInKIFF(token, agent, deps.fetch, deps.kiffBase)),
+      agentsCall(() => deps.agents.halt(me.tenantID, taf?.id))]);
+    return { halt: haltView(kiff, runtime) };
+  }
+  if (method === "DELETE") {
+    let kiff: KIFFHalt;
+    try { kiff = await haltedInKIFF(token, agent, deps.fetch, deps.kiffBase); } catch (err) {
+      if (err instanceof KIFFError && err.status === 401) throw err;
+      throw new HTTPError(502, "KIFF didn't say whether it is resumed; try again");
+    }
+    if (kiff.state !== "running") throw new HTTPError(409, "resume it in KIFF first: the phone signs that with Face ID");
+    const runtime = await agentsCall(() => deps.agents.resume(me.tenantID, taf?.id));
+    return { halt: haltView({ status: "fulfilled", value: kiff }, runtime) };
+  }
+  throw new HTTPError(404, "not found");
+}
+
+/**
+ * A halt as the app shows it. `halted` only once kiff/agents, KIFF's gateway and planque all hold
+ * it; `halting` while any holds it and not all do; `running` when none does.
+ */
+function haltView(kiff: PromiseSettledResult<KIFFHalt>, runtime: AgentsHalt): Record<string, unknown> {
+  const k = kiff.status === "fulfilled" ? kiff.value : undefined;
+  const all = runtime.halted && k?.state === "halted" && k.kiff_ack && k.planque_ack;
+  const any = runtime.halted || (k !== undefined && k.state !== "running");
+  return {
+    state: all ? "halted" : any ? "halting" : "running",
+    halted_at: k?.halted_at ?? runtime.halted_at ?? null,
+    // Who holds it: kiff/agents (no run starts), KIFF's gateway, planque's dispatch.
+    runtime: runtime.halted, kiff: k?.kiff_ack ?? false, planque: k?.planque_ack ?? false,
+    // Halted because the whole account is, not on its own.
+    account: runtime.tenant,
+    stopped: runtime.stopped ?? 0,
+  };
 }
 
 function need(me: KIFFIdentity, capability: string): void {

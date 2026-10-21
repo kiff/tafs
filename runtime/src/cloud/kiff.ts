@@ -138,3 +138,39 @@ export async function restoreDraft(token: string, agent: string, revisions: Arra
 export async function redraft(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<string> {
   return (await ask<{ id: string }>(token, "POST", `/v1/me/agent-drafts/${encodeURIComponent(draftID)}/redraft`, {}, doFetch, base)).id;
 }
+
+/**
+ * A halt as KIFF reports it (kiff/kiff-cloud#1061): `halted` only once its gateway (`kiff_ack`)
+ * and planque (`planque_ack`) both hold it, `halting` until then. While halted, KIFF refuses the
+ * agent's calls, held ones and permits issued before the halt too.
+ */
+export interface KIFFHalt {
+  state: "running" | "halting" | "halted";
+  halted_at?: string;
+  kiff_ack: boolean;
+  planque_ack: boolean;
+}
+
+/** KIFF's halt route for one agent, or with none for the whole account. */
+function haltPath(agent?: string): string {
+  return agent ? `/v1/agents/${encodeURIComponent(agent)}/halt` : "/v1/halt";
+}
+
+/** Halts the agent in KIFF, or the whole account: the owner's session, no signature, since it only takes authority away. */
+export async function haltInKIFF(token: string, agent: string | undefined, doFetch: Fetch = fetch, base = KIFF_API): Promise<KIFFHalt> {
+  return halt(await ask<Partial<KIFFHalt>>(token, "POST", haltPath(agent), {}, doFetch, base));
+}
+
+/**
+ * The agent's halt in KIFF, or the account's. Resuming isn't here: KIFF takes it only signed by
+ * the phone, with Face ID, so the app sends it to KIFF itself.
+ */
+export async function haltedInKIFF(token: string, agent: string | undefined, doFetch: Fetch = fetch, base = KIFF_API): Promise<KIFFHalt> {
+  return halt(await ask<Partial<KIFFHalt>>(token, "GET", haltPath(agent), undefined, doFetch, base));
+}
+
+/** A halt as read, its acknowledgements false unless KIFF said true. */
+function halt(h: Partial<KIFFHalt>): KIFFHalt {
+  const state = h.state === "halted" || h.state === "halting" ? h.state : "running";
+  return { state, ...(h.halted_at ? { halted_at: h.halted_at } : {}), kiff_ack: h.kiff_ack === true, planque_ack: h.planque_ack === true };
+}

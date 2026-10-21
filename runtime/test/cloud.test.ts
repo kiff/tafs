@@ -23,6 +23,10 @@ interface Account {
   revisions?: Record<string, number>;
   /** The restores and redrafts asked of KIFF, in order, as their bodies or draft ids. */
   restored?: unknown[]; redrafted?: string[];
+  /** KIFF's halts (kiff/kiff-cloud#1061), by agent, "" for the account; `status` makes KIFF answer that instead. */
+  halts?: Record<string, { state: string; kiff_ack?: boolean; planque_ack?: boolean; halted_at?: string }>; haltStatus?: number;
+  /** Whether a halt KIFF takes is acknowledged by its gateway and planque at once. */
+  acksAtOnce?: boolean;
 }
 
 /** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
@@ -35,6 +39,19 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       const actor = new URL(url).searchParams.get("actor");
       const calls = (account.calls ?? []).filter((c) => actor === null || c.actor_id === actor);
       return new Response(JSON.stringify({ calls }), { status: 200 });
+    }
+    const halt = /\/v1\/(?:agents\/([^/]+)\/)?halt$/.exec(url);
+    if (halt) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.haltStatus) return new Response(JSON.stringify({ error: "not yet" }), { status: account.haltStatus });
+      const who = decodeURIComponent(halt[1] ?? "");
+      account.halts ??= {};
+      if (init?.method === "POST") {
+        account.halts[who] = account.acksAtOnce
+          ? { state: "halted", kiff_ack: true, planque_ack: true, halted_at: "2026-10-16T12:00:00Z" }
+          : { state: "halting", kiff_ack: true, planque_ack: false, halted_at: "2026-10-16T12:00:00Z" };
+      }
+      return new Response(JSON.stringify(account.halts[who] ?? { state: "running", kiff_ack: false, planque_ack: false }), { status: 200 });
     }
     if (url.endsWith("/v1/me/agent-drafts/restore")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -1154,5 +1171,79 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
     w.account.drafts = { drf_v2: "discarded" };
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).status).toBe(409);
+  });
+});
+
+// kiff/kiff-cloud#1061: a halt, of one taf or of the whole account.
+describe("halting", () => {
+  it("halts a taf in KIFF and kiff/agents in one tap, and reads halted only once all of them hold it", async () => {
+    const w = world();
+    const h = await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    expect(h.status).toBe(200);
+    // KIFF's gateway holds it, planque not yet: halting, never halted.
+    expect(h.body.halt).toMatchObject({ state: "halting", runtime: true, kiff: true, planque: false, account: false });
+    expect(w.agents.calls).toContain(`halt ${RAE}`);
+    expect(w.account.halts?.rae?.state).toBe("halting");
+
+    w.account.halts!.rae = { state: "halted", kiff_ack: true, planque_ack: true, halted_at: "2026-10-16T12:00:00Z" };
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/halt`, { token: "ana" })).body.halt).toMatchObject({ state: "halted", runtime: true, kiff: true, planque: true });
+    // A viewer reads it, and can't halt.
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/halt`, { token: "viewer" })).status).toBe(200);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "viewer" })).status).toBe(403);
+    // Another account's taf isn't there.
+    expect((await call(w, "POST", `/v1/tafs/${MAX}/halt`, { token: "ana" })).status).toBe(404);
+  });
+
+  it("cancels the taf's pending runs when it halts", async () => {
+    const w = world();
+    await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });
+    expect(w.agents.runs[0]!.status).toBe("PENDING");
+    const h = await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    expect(h.body.halt).toMatchObject({ stopped: 1 });
+    expect(w.agents.runs[0]!.status).toBe("CANCELLED");
+  });
+
+  it("stays halting when KIFF can't take the halt yet: kiff/agents still stops", async () => {
+    const w = world();
+    w.account.haltStatus = 404;
+    const h = await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    expect(h.status).toBe(200);
+    expect(h.body.halt).toMatchObject({ state: "halting", runtime: true, kiff: false, planque: false });
+  });
+
+  it("resumes kiff/agents only once KIFF says the taf runs again", async () => {
+    const w = world();
+    w.account.acksAtOnce = true;
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" })).body.halt).toMatchObject({ state: "halted" });
+    // Not resumed in KIFF (the phone signs that): refused, kiff/agents untouched.
+    const early = await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    expect(early.status).toBe(409);
+    expect(early.body.error).toContain("Face ID");
+    expect(w.agents.calls).not.toContain(`resume ${RAE}`);
+
+    w.account.halts!.rae = { state: "running", kiff_ack: false, planque_ack: false };
+    const resumed = await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    expect(resumed.status).toBe(200);
+    expect(resumed.body.halt).toMatchObject({ state: "running", runtime: false });
+    expect(w.agents.calls).toContain(`resume ${RAE}`);
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "viewer" })).status).toBe(403);
+  });
+
+  it("halts the whole account, and a taf under it reads halted through the account", async () => {
+    const w = world();
+    w.account.acksAtOnce = true;
+    const all = await call(w, "POST", "/v1/halt", { token: "ana" });
+    expect(all.status).toBe(200);
+    expect(all.body.halt).toMatchObject({ state: "halted", account: true });
+    expect(w.agents.calls).toContain("halt all");
+    expect(w.agents.halts.get("t_other|")).toBeUndefined();
+    // Rae reads halted through the account: kiff/agents holds it, and so does KIFF's own word for it.
+    w.account.halts!.rae = { state: "halted", kiff_ack: true, planque_ack: true };
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/halt`, { token: "ana" })).body.halt).toMatchObject({ state: "halted", account: true });
+
+    expect((await call(w, "DELETE", "/v1/halt", { token: "ana" })).status).toBe(409);
+    w.account.halts![""] = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", "/v1/halt", { token: "ana" })).body.halt).toMatchObject({ state: "running", account: false });
+    expect((await call(w, "POST", "/v1/halt", { token: "viewer" })).status).toBe(403);
   });
 });

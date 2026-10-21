@@ -55,6 +55,14 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const switching = new Map<string, Switching>();
   /** Each version's definition, by agent and number. */
   const versionDefs = new Map<string, AgentDefinition>();
+  /** Halts by agent, "" for the account itself. */
+  const halts = new Map<string, { on: boolean; at: string }>();
+  const halted = (tenant: string, agent?: string) => {
+    const own = agent ? halts.get(k(tenant, agent)) : undefined;
+    const all = halts.get(k(tenant, ""));
+    const at = [own?.at, all?.at].filter(Boolean).sort().at(-1);
+    return { ...(agent ? { agent } : {}), halted: Boolean(own?.on || all?.on), own: Boolean(own?.on), tenant: Boolean(all?.on), ...(at ? { halted_at: at } : {}) };
+  };
   const api: AgentsAPI = {
     async versions(tenant, id) {
       calls.push(`versions ${id}`);
@@ -223,6 +231,28 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     async getSchedule(tenant, id) {
       return schedules.get(k(tenant, id));
     },
+    // Halts (kiff/kiff-cloud#1061), as kiff/agents keeps them: by agent, "" for the account.
+    async halt(tenant, agent) {
+      calls.push(`halt ${agent ?? "all"}`);
+      failing("halt");
+      if (agent && !agents.has(k(tenant, agent))) throw gone();
+      const was = halts.get(k(tenant, agent ?? ""));
+      if (!was?.on) halts.set(k(tenant, agent ?? ""), { on: true, at: now().toISOString() });
+      const active = runs.filter((r) => r.tenant === tenant && (!agent || r.agent === agent) && ["PENDING", "RUNNING", "PAUSED"].includes(r.status));
+      for (const r of active) if (r.status === "PENDING") r.status = "CANCELLED";
+      return { ...halted(tenant, agent), stopped: active.length };
+    },
+    async resume(tenant, agent) {
+      calls.push(`resume ${agent ?? "all"}`);
+      if (agent && !agents.has(k(tenant, agent))) throw gone();
+      const h = halts.get(k(tenant, agent ?? ""));
+      if (h) h.on = false;
+      return halted(tenant, agent);
+    },
+    async halted(tenant, agent) {
+      if (agent && !agents.has(k(tenant, agent))) throw gone();
+      return halted(tenant, agent);
+    },
     async switchSchedule(tenant, id, on) {
       calls.push(`switchSchedule ${id} ${on ? "on" : "off"}`);
       const s = schedules.get(k(tenant, id));
@@ -296,7 +326,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs };
+  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, halts };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

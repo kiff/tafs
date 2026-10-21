@@ -251,7 +251,7 @@ final class AppModel: ObservableObject {
         sessionHasKey = tenant != nil
         kiff.token = token
         cloud.token = token
-        holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -280,7 +280,7 @@ final class AppModel: ObservableObject {
         Keychain.delete(Self.keyedAccount)
         kiff.token = nil
         cloud.token = nil
-        cloudTafs = [:]
+        cloudTafs = [:]; halts = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         holderIDs = [:]
         listLoaded = false; listUnread = false
@@ -907,6 +907,90 @@ final class AppModel: ObservableObject {
         tafs[i].state = tafs[i].state == .paused ? .working : .paused
         tafs[i].now = tafs[i].state == .paused ? "Paused by you" : "Back to work"
         save()
+    }
+
+    // MARK: Halt
+
+    /// Each halt as last read (kiff/kiff-cloud#1061), by the taf's tafs cloud id, "" for the
+    /// whole account.
+    @Published private(set) var halts: [String: TafsCloud.Halt] = [:]
+
+    /// The halt of a taf, or with none of the whole account, as last read: running until read.
+    func haltState(_ tafID: UUID?) -> TafsCloud.Halt {
+        haltKey(tafID).flatMap { halts[$0] } ?? .running
+    }
+
+    /// tafs cloud's id for a taf, "" for the account; nil for a taf tafs cloud doesn't run.
+    private func haltKey(_ tafID: UUID?) -> String? {
+        guard let tafID else { return "" }
+        return cloudTaf(for: tafID)?.id
+    }
+
+    /// Halts a taf, or with none every taf: one tap, no Face ID, since it only takes authority
+    /// away. tafs cloud halts it in kiff/agents and KIFF at once; it reads halted only once
+    /// kiff/agents, KIFF's gateway and planque all hold it, and halting until then.
+    func halt(_ tafID: UUID?) async {
+        guard mode == .kiff, let key = haltKey(tafID) else { return }
+        let gen = accountGeneration
+        do {
+            let h = try await cloud.halt(key.isEmpty ? nil : key)
+            guard gen == accountGeneration else { return }
+            halts[key] = h
+        } catch {
+            lastError = "tafs couldn't halt \(tafID == nil ? "your tafs" : "it"): \(error.localizedDescription). Try again."
+        }
+    }
+
+    func refreshHalt(_ tafID: UUID?) async {
+        guard mode == .kiff, let key = haltKey(tafID) else { return }
+        let gen = accountGeneration
+        guard let h = try? await cloud.halted(key.isEmpty ? nil : key), gen == accountGeneration else { return }
+        halts[key] = h
+    }
+
+    /// Resumes a halted taf, or with none every taf, behind Face ID: KIFF first, signed by
+    /// this phone, since it gives authority back; then tafs cloud, which lets kiff/agents run
+    /// it only once KIFF says it is resumed. What it was doing before the halt doesn't come back.
+    @discardableResult
+    func resumeHalt(_ tafID: UUID?) async -> Bool {
+        guard mode == .kiff, let key = haltKey(tafID) else { return false }
+        guard sessionHasKey, let tenant = kiffTenant else {
+            lastError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            return false
+        }
+        let agent: String?
+        if let tafID {
+            guard let a = cloudTaf(for: tafID)?.kiffAgent, !a.isEmpty else { return false }
+            agent = a
+        } else {
+            agent = nil
+        }
+        let name = tafID.flatMap { taf($0)?.name }
+        let gen = accountGeneration
+        do {
+            _ = try await signer.sign(Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
+                                      reason: name.map { "Resume \($0)" } ?? "Resume all your tafs")
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            try await kiff.resume(agent: agent)
+        } catch {
+            lastError = "KIFF didn't resume \(name ?? "your tafs"): \(error.localizedDescription)"
+            return false
+        }
+        do {
+            let h = try await cloud.releaseHalt(key.isEmpty ? nil : key)
+            guard gen == accountGeneration else { return false }
+            halts[key] = h
+            return true
+        } catch {
+            lastError = "KIFF resumed \(name ?? "your tafs"), but tafs cloud didn't yet: \(error.localizedDescription). Try again."
+            return false
+        }
     }
 
     // MARK: Memory

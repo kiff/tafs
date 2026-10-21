@@ -156,6 +156,21 @@ export interface Switching {
   at: string;
 }
 
+/**
+ * An agent's halt, or its account's, as kiff/agents keeps it (kiff/kiff-cloud#1061): while
+ * halted nothing of it runs, and nothing from before the halt ever does. `own` and `tenant` say
+ * which halt holds. A halt answers how many runs it cancelled.
+ */
+export interface AgentsHalt {
+  agent?: string;
+  halted: boolean;
+  own: boolean;
+  tenant: boolean;
+  halted_at?: string;
+  stopped?: number;
+  unstopped?: number;
+}
+
 /** An agent's versions, and the switch under way. */
 export interface VersionState {
   versions: AgentVersion[];
@@ -380,6 +395,23 @@ export class Agents {
   async forget(tenant: string, agent: string, name: string): Promise<void> {
     if (!name || name === "." || name === "..") throw new AgentsError(404, "no such note");
     await this.call("DELETE", tenant, ["agents", agent, "memories", { text: name }]).catch(notFound);
+  }
+
+  // Halts (kiff/kiff-cloud#1061). No agent is the account itself.
+
+  /** Halts the agent, or with none the whole account; its active runs are cancelled. */
+  halt(tenant: string, agent?: string): Promise<AgentsHalt> {
+    return this.call("POST", tenant, agent ? ["agents", agent, "halt"] : ["halt"]);
+  }
+
+  /** Ends the agent's halt, or the account's; what came before it still never runs. */
+  resume(tenant: string, agent?: string): Promise<AgentsHalt> {
+    return this.call("POST", tenant, agent ? ["agents", agent, "resume"] : ["resume"]);
+  }
+
+  /** The agent's halt over its account's, or the account's own. */
+  halted(tenant: string, agent?: string): Promise<AgentsHalt> {
+    return this.call("GET", tenant, agent ? ["agents", agent, "halt"] : ["halt"]);
   }
 
   // Schedules.
