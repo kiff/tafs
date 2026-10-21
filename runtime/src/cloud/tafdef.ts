@@ -21,8 +21,14 @@ export const MAX_TOKENS = 16_000;
  */
 export const EFFORT: Effort = "medium";
 export const KIFF_GATEWAY = "https://mcp.kiff.dev/mcp";
-/** Finished runs of a session the model gets before a new one: the thread it remembers. */
-export const HISTORY = 10;
+/**
+ * Finished runs of a session the model gets before a new one: the thread it
+ * remembers. The most kiff/agents gives (its runner's MaxHistory). Every
+ * message, answer and approval is a run, so a setup with a few retries passed
+ * 10 and Setup lost the owner's request (kiff/tafs#138). Only messages are
+ * kept: what tools return ends with its run, so this stays small.
+ */
+export const HISTORY = 50;
 /** Every run stops at this cost unless the taf sets another. */
 export const DEFAULT_BUDGET_CENTS = 200;
 /** Runs and chats are kept 30 days (docs/data.md); what tools return, only until the run ends. */
