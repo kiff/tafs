@@ -53,15 +53,46 @@ approved the Card on the phone.
 
 The test's public log shows only its steps, with every id masked.
 
-## On a real phone
+## On a real phone (2026-10-20 and 21)
 
-The issue asks for a real phone. Once the nightly is green, one run on the
-TestFlight build closes it: a held refund approved on the device, then one
-refused. Its receipts go here.
+The owner's own run, on an iPad with TestFlight builds 429 and the one after
+it, against Stripe in test mode. The taf was *Refunds assistant*. Its Card
+allowed a refund of up to €100 a call and €1,000 a day, and anything over the
+call limit was held for the owner. Three test payments: A €20, B €150 and
+C €150. Each answer was the owner's, given in the app with Touch ID, which
+signs KIFF's `kiff.answer.v1` with the device's key. Times are UTC.
 
-| When | What |
-|---|---|
-| | *(to come: the owner's run on the device)* |
+| When | Asked for | KIFF | The owner, on the device | Stripe |
+|---|---|---|---|---|
+| 20 Oct 20:25 | refund B in full, €150 | **held**: over the €100 call limit | **approved once** at 20:32, signed | one refund, €150 (`re_…tqw`) |
+| 20 Oct 20:38 | refund A in full, €20 | inside the Card: sent | none needed | one refund, €20 (`re_…WYZ`) |
+| 20 Oct 20:40 | refund C in full, €150 | **held**: over the call limit | **refused** at 20:42, signed | nothing |
+| 20 Oct 22:37 | refund C in full, €150, again | **held** | **refused**, signed | nothing |
+| 20 Oct 22:40 | refund C in full, €150, again | **held** | **approved once** at 22:41, signed | one refund, €150 (`re_…lm2`) |
+
+**What it shows:**
+- **Nothing over the Card reached Stripe without the owner's answer.** Each
+  of the four €150 calls was held. The two the owner approved each went out
+  once, and the two they refused sent nothing.
+- **The approved refunds count.** The Card's day went from €1,000 to €850
+  after B, €830 after A, and €680 after C.
+- **The answer is the device's.** The app answers only by signing on the
+  device; an answer without the signature is refused (kiff-cloud #1218), and
+  the nightly checks that refusal every night.
+
+**What the run found, and what changed** (kiff/tafs#138):
+- **The taf went on 27 s (B) and 100 s (C) after the answer.** tafs cloud
+  crashed while it pushed to the phones, before handing the answer to
+  kiff/agents (#158). Then the run waited for kiff/agents' minute sweep
+  (#161, kiff/agents#155). After those fixes, the reply came 8 to 9 s after
+  the answer (22:41).
+- **The taf gave a reason for the owner's refusal that the owner didn't
+  give** ("I asked for €150 without first checking"), and said the call
+  waited "in the tafs app". Since #155 it says the owner refused it and
+  nothing was sent, and that the call waits for their approval.
+
+The Stripe refund ids are cut to their last characters, as every id on this
+page.
 
 ## Before the phone: the first held call (2026-10-16)
 
