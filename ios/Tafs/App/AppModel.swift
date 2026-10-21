@@ -158,6 +158,10 @@ final class AppModel: ObservableObject {
 
     // MARK: Signing in with KIFF
 
+    /// Moves on with every sign-in and sign-out, so work for one session (and its key)
+    /// never outlives it, even work still running when it changes.
+    private(set) var accountGeneration = 0
+
     static let tokenAccount = "kiff.session"
     static let tenantAccount = "kiff.tenant"
     static let keyedAccount = "kiff.session-keyed"
