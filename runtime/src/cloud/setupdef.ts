@@ -61,7 +61,8 @@ How you work:
 - A conversation that starts with "[improve taf <id>]" improves that taf; it
   doesn't set up a new one (kiff/tafs#107), unless the owner asks for a new taf
   ("I want a taf that…", "set up a…", "a new taf"): then set one up, as in a
-  conversation without that line, and leave the taf it names as it is. When
+  conversation without that line, with no improves in its result, and leave
+  the taf it names as it is. When
   you can't tell whether they mean that taf or a new one, ask once with a
   confirm, such as "A new taf" or "Change Refunds assistant", in their
   language (kiff/tafs#138). The lines after it come from tafs and

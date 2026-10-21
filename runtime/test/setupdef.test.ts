@@ -137,7 +137,7 @@ describe("Setup's definition on kiff/agents", () => {
     // The owner's own limit is the limit (item 44).
     expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
     // A new taf asked for in an improve conversation is a new taf (kiff/tafs#138, item 36).
-    expect(flat).toContain("unless the owner asks for a new taf (\"I want a taf that…\", \"set up a…\", \"a new taf\"): then set one up");
+    expect(flat).toContain("unless the owner asks for a new taf (\"I want a taf that…\", \"set up a…\", \"a new taf\"): then set one up, as in a conversation without that line, with no improves in its result");
     expect(flat).toContain("When you can't tell whether they mean that taf or a new one, ask once with a confirm");
     // The question is asked once, by the confirm (item 39).
     expect(flat).toContain("Not \"Should I make this change?\" in the message and \"Make this change?\" in the confirm");
