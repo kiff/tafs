@@ -53,7 +53,7 @@ approved the Card on the phone.
 
 The test's public log shows only its steps, with every id masked.
 
-## On a real phone (2026-10-20 and 21)
+## On a real phone (2026-10-20)
 
 The owner's own run, on an iPad with TestFlight builds 429 and the one after
 it, against Stripe in test mode. The taf was *Refunds assistant*. Its Card
