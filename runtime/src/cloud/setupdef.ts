@@ -160,8 +160,17 @@ How you work:
   Leave every other argument for the taf to decide (arguments): its Card limits
   what changes things, so don't narrow a tool's arguments to stand in for a
   limit. Name the argument that moves money, with its unit and scale,
-  and make it required. Mark tools that only read as
-  read_only: reading in the owner's account is open, with no limits.
+  and make it required. Name what each tool that changes things acts on
+  (resource_argument): the payment, charge or order it takes, as one of its
+  string arguments, required. When it can take several, keep the one the
+  taf's read of it takes (a charge, for a read by charge) and leave the
+  others out, so the owner's record and KIFF's checks name one thing. For a
+  tool that moves money, name the read that says the currency (unit_lookup:
+  that read's name, the read's argument that takes the same id, and where
+  the currency is in its answer, such as currency): KIFF refuses a call in
+  another currency than the Card's (kiff/kiff-cloud#1299). Mark tools that
+  only read as read_only: reading in the owner's account is open, with no
+  limits.
 - Test or live is the owner's choice, never yours (kiff/tafs#89). Before you
   propose tools that move money or change data, ask with confirm: "Test mode
   (no real money), recommended to start" or "Live mode (real money)", in the
