@@ -554,8 +554,8 @@ function need(me: KIFFIdentity, capability: string): void {
 
 async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
   const body = parseBody(event);
-  const name = str(body.name).trim();
-  if (!name || name.length > 60) throw new HTTPError(400, "give the taf a name of 60 characters at most");
+  let name = str(body.name).trim();
+  if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
   let job;
   try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   const cron = body.cron === undefined ? job.cron : str(body.cron).trim();
@@ -601,6 +601,11 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
     return agent.agentID;
   };
   let agentID = agentKey ? await check(agentKey) : "";
+  // The name Setup chose, when another taf has it (kiff/tafs#138): the first
+  // free "<name> 2", "<name> 3"…, so the owner isn't left at a name no retry
+  // can get past. A start already under way keeps its name, and kiff/agents
+  // claims a draft into one taf only, so the same draft can't start two.
+  if (fromSetup) name = await setupName(me, name, draftID, deps);
 
   // Two taps, or a retry, must not start two tafs: the name is claimed first.
   const taken = new HTTPError(409, `you already have a taf named ${name}`);
@@ -666,6 +671,26 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
     throw new HTTPError(502, `${name} is started, but its first run didn't start (${(err as Error).message}). Run it now from the app`);
   }
   return { taf: await view(taf, me, deps), session: run.session };
+}
+
+/** The longest name a taf may have. */
+const MAX_NAME = 60;
+
+/**
+ * The name a Setup start takes: the one this draft's start began with, or
+ * name if no other taf has it, else the first "<name> n" none has.
+ */
+async function setupName(me: KIFFIdentity, name: string, draftID: string, deps: Deps): Promise<string> {
+  const held = await deps.claims.get(me.tenantID, draftID);
+  if (held) return held.name;
+  const used = new Set((await deps.tafs.list(me.tenantID)).filter((t) => t.job !== SETUP_JOB).map((t) => t.name));
+  if (!used.has(name)) return name;
+  for (let n = 2; n < 100; n++) {
+    const suffix = ` ${n}`;
+    const candidate = name.slice(0, MAX_NAME - suffix.length).trimEnd() + suffix;
+    if (!used.has(candidate)) return candidate;
+  }
+  return name; // refused below as taken
 }
 
 /**

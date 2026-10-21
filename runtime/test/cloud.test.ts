@@ -654,6 +654,37 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY })).status).toBe(404);
   });
 
+  it("takes the first free name when another taf has the one Setup chose, and starts the draft once (kiff/tafs#138)", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, name: "Rae" } });
+    expect(r.status).toBe(200);
+    expect(r.body.taf).toMatchObject({ id: NEW, name: "Rae 2", kiff_agent: "refunds-x" });
+    expect(w.names.held.has("t_acme#Rae 2")).toBe(true);
+    // The same draft again: kiff/agents claimed it into this taf's key only.
+    w.newIDs = [NEW2];
+    const again = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, name: "Rae" } });
+    expect(again.status).toBe(409);
+    expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+    expect(w.names.held.has("t_acme#Rae 3")).toBe(false);
+  });
+
+  it("keeps a name of at most 60 characters when it adds a number", async () => {
+    const w = world();
+    const long = "R".repeat(60);
+    w.tafs.held.set(`t_acme#taf_long`, { id: "taf_long", name: long, job: "refunds", kiffAgent: "long", nameClaim: "c", created: "2026-10-15T09:00:00Z" });
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, name: long } });
+    expect(r.status).toBe(200);
+    expect(r.body.taf.name).toBe("R".repeat(58) + " 2");
+  });
+
+  it("only renames Setup's starts: a name the owner typed that is taken is still refused", async () => {
+    const w = world();
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { name: "Rae", job: "refunds", draft_id: "drf_1", claim_secret: "dcs_1" } });
+    expect(r.status).toBe(409);
+  });
+
   it("resumes with the same taf id after a start that failed past the claim", async () => {
     const w = world();
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
