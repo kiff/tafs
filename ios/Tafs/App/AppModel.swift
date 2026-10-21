@@ -987,25 +987,26 @@ final class AppModel: ObservableObject {
             chatStates[call.tafID, default: ChatState()].awaiting = clock()
             Task { await refresh() }
         }
-        guard let i = tafs.firstIndex(where: { $0.id == call.tafID }) else { return }
         // The owner's decision stays in the conversation where the card was, at once and
-        // in its history (kiff/tafs#138): "Refused by you · 22:41 · Refund €150.00".
+        // in its history (kiff/tafs#138): "Refused by you · 22:41 · Refund €150.00". For any
+        // held call, a taf's or another agent's with a Card; only a taf's line changes too.
+        let i = tafs.firstIndex(where: { $0.id == call.tafID })
         let when = clock().shortTime
         switch answer {
         case .approveOnce:
-            if call.kiffID == nil { CardCheck.draw(call.proposed, on: &tafs[i]) }
+            if call.kiffID == nil, let i { CardCheck.draw(call.proposed, on: &tafs[i]) }
             decide(call, .approved, "Approved once by you · \(when) · \(call.proposed.summary)",
                    amountLine(call.proposed, "approved once by \(ownerName)"), signature: signature)
-            tafs[i].now = call.proposed.summary
+            if let i { tafs[i].now = call.proposed.summary }
         case .nextStep(let step):
             decide(call, .refused, "Refused by you · \(when), with a next step · \(call.proposed.summary)",
                    "Refused, with a next step for the taf: \(step)", signature: signature)
-            tafs[i].now = step
+            if let i { tafs[i].now = step }
         case .refuse:
             decide(call, .refused, "Refused by you · \(when) · \(call.proposed.summary)", call.reason, signature: signature)
-            tafs[i].now = "Refused · \(call.proposed.summary)"
+            if let i { tafs[i].now = "Refused · \(call.proposed.summary)" }
         }
-        if tafs[i].state == .waiting, !held.contains(where: { $0.tafID == call.tafID }) {
+        if let i, tafs[i].state == .waiting, !held.contains(where: { $0.tafID == call.tafID }) {
             tafs[i].state = .working
         }
         save()

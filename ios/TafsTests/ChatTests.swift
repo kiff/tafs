@@ -106,7 +106,14 @@ final class ChatTests: XCTestCase {
         let (model, id) = await kiffModel()
         XCTAssertTrue(model.canChat(id))
         StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
-        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"kickoff","text":"Work the refund queue","session":"sesn_9"},{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"Skip order 4410","session":"sesn_9"}]}"#)
+        // tafs cloud's copy is written about when it was sent: the sent message gives way to it
+        // (an older message with the same words wouldn't, kiff/tafs#138, item 48).
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let now = iso.string(from: Date())
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"kickoff","text":"Work the refund queue","session":"sesn_9"},{"at":"\(now)","from":"owner","kind":"message","text":"Skip order 4410","session":"sesn_9"}]}
+        """)
 
         let sent = await model.sendChat("Skip order 4410", to: id)
         XCTAssertTrue(sent)
