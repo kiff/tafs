@@ -444,6 +444,17 @@ final class KIFFClient {
             var current: DraftCard.Terms?
         }
         var confirmed: Bool { status == "confirmed" }
+        /// Each Card's lines, as the owner reads them together before one Face ID confirms them
+        /// all: two grants that read alike, on one Card or two, each add their action
+        /// (kiff/tafs#138). Every place that shows a draft's Cards reads them from here.
+        var cardLines: [[String]] {
+            let all = cards ?? []
+            let alike = DraftCard.alike(all.flatMap { $0.grants ?? [] })
+            return all.map { $0.lines(alike: alike) }
+        }
+        /// Every Card's lines in one list (`cardLines`).
+        var lines: [String] { cardLines.flatMap { $0 } }
+
         /// "Refunds assistant's Card": the name it was submitted with, never its agent id
         /// (kiff/tafs#94).
         var cardTitle: String {
@@ -484,20 +495,36 @@ final class KIFFClient {
             var lines: [String] { DraftCard(grants: grants, aggregates: aggregates).lines }
         }
 
-        /// The lines the owner approves, in their words (kiff/tafs#94): "Refund a payment ·
-        /// create_refund_k3f9: up to €100.00 each", "€1,000.00 in total a day", "20 calls a
-        /// day". The vendor's title stands beside KIFF's action, never instead of it; an
-        /// amount's unit is KIFF's, or the number stays bare: never a guessed name or
-        /// currency, never "sum(amount)".
-        var lines: [String] {
+        /// The lines the owner approves, in their words (kiff/tafs#94): "Refund a payment: up
+        /// to €100.00 each", "€1,000.00 in total a day", "20 calls a day". Each action by its
+        /// title, never its name (kiff/tafs#138). Where two read alike (a vendor's shared label,
+        /// "Write Stripe API data"), each adds its action in words, never a grant prefix. An
+        /// amount's unit is KIFF's, or the number stays bare: never a guessed name or currency,
+        /// never "sum(amount)".
+        var lines: [String] { lines(alike: Self.alike(grants ?? [])) }
+
+        /// The names, ignoring case, that more than one of these grants would read as.
+        static func alike(_ grants: [Grant]) -> Set<String> {
+            var seen: Set<String> = [], twice: Set<String> = []
+            for g in grants {
+                let name = KIFFMapping.name(g.action, title: g.title).lowercased()
+                if !seen.insert(name).inserted { twice.insert(name) }
+            }
+            return twice
+        }
+
+        /// The lines, where a grant whose name is in `alike` (from every Card the owner reads
+        /// together) adds its action in words.
+        func lines(alike: Set<String>) -> [String] {
             var out: [String] = []
             for g in grants ?? [] {
+                let name = KIFFMapping.name(g.action, title: g.title)
                 let caps = (g.perActionMax ?? []).map { cap in
                     KIFFMapping.isSum(cap.quantity)
                         ? "up to \(KIFFMapping.money(cap.max, unit: cap.unit, scale: cap.scale).formatted) each"
                         : "up to \(cap.max) each"
                 }
-                let action = KIFFMapping.approvalName(g.action, title: g.title)
+                let action = alike.contains(name.lowercased()) ? "\(name) · \(KIFFMapping.toolWords(g.action))" : name
                 out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", "))
             }
             for a in aggregates ?? [] {

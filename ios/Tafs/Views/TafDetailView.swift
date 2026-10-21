@@ -232,7 +232,7 @@ struct ConnectionsPanel: View {
                                 .font(.system(size: 12)).foregroundColor(Theme.dim)
                             if grant.connected {
                                 // What it may do, in words, not the tools' ids (kiff/tafs#138, item 52).
-                                Text(grant.request.tools.map { KIFFMapping.toolWords($0.action) }.joined(separator: " · "))
+                                Text(grant.request.tools.map(\.words).joined(separator: " · "))
                                     .font(.system(size: 12)).foregroundColor(Theme.soft)
                                 if model.leftOver(grant, of: tafID) {
                                     // Left over after a version moved its Card (kiff/tafs#138). An older version may still
@@ -458,10 +458,11 @@ struct VersionCardSheet: View {
                     Text("Version \(version.n)\(version.note.map { ": \($0)" } ?? "")")
                         .font(.system(size: 17, weight: .semibold)).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    if let cards = draft?.cards {
-                        ForEach(Array(cards.enumerated()), id: \.offset) { _, card in cardView(card) }
-                        ForEach(draft?.retires ?? [], id: \.id) { retiredView($0) }
-                        Text(draft?.retires?.isEmpty == false
+                    if let draft, let cards = draft.cards {
+                        let lines = draft.cardLines
+                        ForEach(Array(cards.enumerated()), id: \.offset) { i, card in cardView(card, lines: lines[i]) }
+                        ForEach(draft.retires ?? [], id: \.id) { retiredView($0) }
+                        Text(draft.retires?.isEmpty == false
                              ? "While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
                              : "While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF, then this version goes live.")
                             .font(.system(size: 12)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -518,12 +519,13 @@ struct VersionCardSheet: View {
     }
 
     @ViewBuilder
-    private func cardView(_ card: KIFFClient.DraftCard) -> some View {
+    /// One Card of the version, with its lines as the draft reads them (`cardLines`).
+    private func cardView(_ card: KIFFClient.DraftCard, lines: [String]) -> some View {
         Panel {
             if card.isUnchanged {
                 // Re-issued as it is (kiff/tafs#138): its terms once, not a now and after.
                 Eyebrow(text: "Unchanged")
-                ForEach(card.lines, id: \.self) { Text($0).font(.system(size: 14)).foregroundColor(Theme.soft) }
+                ForEach(lines, id: \.self) { Text($0).font(.system(size: 14)).foregroundColor(Theme.soft) }
             } else if let current = card.current {
                 Eyebrow(text: "Changes a Card")
                 Text("Now").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
@@ -533,7 +535,7 @@ struct VersionCardSheet: View {
                 Eyebrow(text: "A new Card")
             }
             if !card.isUnchanged {
-                ForEach(card.lines, id: \.self) { Text($0).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink) }
+                ForEach(lines, id: \.self) { Text($0).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink) }
             }
         }
     }

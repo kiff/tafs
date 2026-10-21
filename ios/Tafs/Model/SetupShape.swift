@@ -111,7 +111,7 @@ struct SetupShape: Equatable {
         // The latest draft an approval names that KIFF has shown the app.
         let named = shown.filter { $0.type == .approval }.compactMap { c in c.draft.flatMap { id in drafts[id] } }
         if let draft = named.last(where: { $0.noTools != true }) {
-            card = Card(agent: draft.agentID, title: draft.cardTitle, lines: (draft.cards ?? []).flatMap(\.lines), confirmed: draft.confirmed)
+            card = Card(agent: draft.agentID, title: draft.cardTitle, lines: draft.lines, confirmed: draft.confirmed)
         }
     }
 }

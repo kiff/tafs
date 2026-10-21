@@ -1168,6 +1168,19 @@ struct SetupApproval: View {
                 } else {
                     // planque's text says when the sign-in is already held (kiff/planque#7).
                     Text(grant.text).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    // The exact terms, for the owner who wants them (kiff/tafs#138, item 52).
+                    if let terms = grant.terms, !terms.isEmpty {
+                        DisclosureGroup {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(Array(terms.enumerated()), id: \.offset) { _, line in Text(line) }
+                            }
+                            .font(Theme.mono(11.5)).foregroundColor(Theme.dim).textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 6)
+                        } label: {
+                            Text("Details").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
+                        }
+                    }
                     if !grant.digestMatches {
                         Text("This request doesn't match what it shows, so it can't be approved.")
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
@@ -1176,10 +1189,10 @@ struct SetupApproval: View {
             } else {
                 Text("Reading the request…").scaledFont(14).foregroundColor(Theme.dim)
             }
-            if let draft, let cards = draft.cards {
+            if let draft, draft.cards != nil {
                 VStack(alignment: .leading, spacing: 6) {
                     Eyebrow(text: draft.cardTitle)
-                    ForEach(Array(cards.flatMap(\.lines).enumerated()), id: \.offset) { _, line in
+                    ForEach(Array(draft.lines.enumerated()), id: \.offset) { _, line in
                         Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.ink)
                     }
                 }

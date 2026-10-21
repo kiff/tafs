@@ -77,10 +77,14 @@ final class PlanqueClient {
             struct Tool: Decodable, Equatable {
                 let tool: String
                 let name: String?
+                /// What it does, in the owner's words, as Setup asked for it (kiff/planque#37).
+                var title: String?
                 let readOnly: Bool?
-                enum CodingKeys: String, CodingKey { case tool, name, readOnly = "read_only" }
+                enum CodingKeys: String, CodingKey { case tool, name, title, readOnly = "read_only" }
                 /// Its name in KIFF and at the relay: the Card's action.
                 var action: String { name ?? tool }
+                /// What the owner reads for it: its title, else its action in words.
+                var words: String { KIFFMapping.name(action, title: title) }
             }
             let server: String
             let agent: String
@@ -96,8 +100,12 @@ final class PlanqueClient {
         let id: String
         /// pending, approved, signed_in, listed, connected, failed or disconnected.
         let status: String
-        /// What the owner reads before approving.
+        /// What the owner reads before approving: each tool in words (kiff/planque#37).
         let text: String
+        /// Each tool's exact terms, one line each, as planque gives them: its name, the
+        /// vendor's tool and what's pinned. Shown under Details; the phone signs the request
+        /// they're built from. None from an older planque.
+        var terms: [String]?
         let digest: String
         let request: Request
         let account: String?
@@ -114,7 +122,7 @@ final class PlanqueClient {
         /// only then. Set by `grants()`, never read from planque.
         var digestMatches = false
 
-        enum CodingKeys: String, CodingKey { case id, status, text, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor" }
+        enum CodingKeys: String, CodingKey { case id, status, text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor" }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its

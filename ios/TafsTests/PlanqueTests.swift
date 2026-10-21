@@ -192,6 +192,17 @@ final class PlanqueTests: XCTestCase {
         XCTAssertFalse(plain.holdsSignIn)
     }
 
+    /// The approval names tools in words; their exact terms come apart, for Details
+    /// (kiff/planque#37, kiff/tafs#138 items 52, 53). An older planque sends neither.
+    func testAGrantsToolsReadByTitleAndItsTermsComeApart() throws {
+        let json = #"{"id":"g_01","status":"pending","text":"The taf may:\n• Refund a payment: moves money (amount)","terms":["bxkwf7vi_refund_payment (stripe_api_write with stripe_api_operation_id = \"PostRefunds\")"],"digest":"d","request":{"server":"https://mcp.stripe.com","agent":"refunds","tools":[{"tool":"stripe_api_write","name":"bxkwf7vi_refund_payment","title":"Refund a payment"},{"tool":"list_charges"}]},"events":[]}"#
+        let grant = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(json.utf8))
+        XCTAssertEqual(grant.terms, [#"bxkwf7vi_refund_payment (stripe_api_write with stripe_api_operation_id = "PostRefunds")"#])
+        XCTAssertEqual(grant.request.tools.map(\.words), ["Refund a payment", "list charges"], "the title, else the action in words")
+        let plain = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(PlanqueTests.grantJSONFor().utf8))
+        XCTAssertNil(plain.terms)
+    }
+
     func testEnrolConfirmAndDisconnectBodies() async throws {
         let (_, planque, _) = clients()
         planque.tenant = "t_01"
