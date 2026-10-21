@@ -10,7 +10,7 @@ final class OwnerWordsTests: XCTestCase {
 
     /// The owner's iPad test: "create_refund: at most 10000 sum(amount) each" while the chat
     /// said €100. With the units KIFF now gives (kiff-cloud #1274), the lines say €100.00, and
-    /// the vendor's title stands beside KIFF's action (an approval names what KIFF decides on).
+    /// each action reads by its title, never its name (kiff/tafs#138, items 52, 53).
     func testADraftsLinesSayTheAmountsInTheirUnit() throws {
         let d = try draft(#"""
         {"id":"drf_1","agent_id":"refunds-k5j6m5qx","label":"Refunds assistant","status":"draft","version":"v1",
@@ -20,7 +20,7 @@ final class OwnerWordsTests: XCTestCase {
         """#)
         let euros = { (minor: Int64) in Money(minor: minor, currency: "EUR", scale: 2).formatted }
         XCTAssertEqual(d.cards?.flatMap(\.lines), [
-            "Refund a payment · create_refund_k3f9: up to \(euros(10000)) each",
+            "Refund a payment: up to \(euros(10000)) each",
             "\(euros(100000)) in total a day",
             "20 calls a day",
         ])
@@ -28,7 +28,51 @@ final class OwnerWordsTests: XCTestCase {
         for line in d.cards?.flatMap(\.lines) ?? [] {
             XCTAssertFalse(line.contains("sum("), line)
             XCTAssertFalse(line.contains("10000"), line)
+            XCTAssertFalse(line.contains("create_refund_k3f9"), line)
         }
+    }
+
+    /// Two tools on one vendor tool share its label ("Write Stripe API data", a taf set up
+    /// before Setup gave titles): each line adds its action in words, never the grant prefix.
+    /// A title of its own stays alone (kiff/tafs#138).
+    func testTwoToolsThatReadAlikeAddTheirActionInWords() throws {
+        let d = try draft(#"""
+        {"id":"drf_1","agent_id":"refunds-x","label":"Refunds assistant","status":"draft","version":"v1",
+         "cards":[{"grants":[{"action":"bxkwf7vi_refund_payment","title":"Write Stripe API data"},
+                             {"action":"bxkwf7vi_cancel_payment","title":"Write Stripe API data"},
+                             {"action":"bxkwf7vi_get_charge","title":"Read a charge"}]}]}
+        """#)
+        XCTAssertEqual(d.cards?.flatMap(\.lines), [
+            "Write Stripe API data · refund payment",
+            "Write Stripe API data · cancel payment",
+            "Read a charge",
+        ])
+    }
+
+    /// The owner reads every Card of a draft together: one tool each on two Cards, under one
+    /// vendor label (or one title in another case), add their action (kiff/tafs#138).
+    func testToolsOnTwoCardsThatReadAlikeAddTheirAction() throws {
+        let d = try draft(#"""
+        {"id":"drf_1","agent_id":"refunds-x","status":"draft","version":"v1",
+         "cards":[{"grants":[{"action":"bxkwf7vi_refund_payment","title":"Write Stripe API data"},{"action":"a_get","title":"Read a charge"}]},
+                  {"grants":[{"action":"bxkwf7vi_cancel_payment","title":"write stripe API data"}]}]}
+        """#)
+        XCTAssertEqual(d.lines, ["Write Stripe API data · refund payment", "Read a charge", "write stripe API data · cancel payment"])
+        XCTAssertEqual(d.cardLines, [["Write Stripe API data · refund payment", "Read a charge"], ["write stripe API data · cancel payment"]],
+                       "each Card's own lines, as the version sheet shows them")
+        XCTAssertEqual(d.cards?.last?.lines, ["write stripe API data"], "one Card alone has nothing to tell apart")
+    }
+
+    /// A held call is approved alone: a vendor's shared label adds the action in words; a
+    /// title that says it stays alone (kiff/tafs#138).
+    func testAHeldCallSaysWhichToolEvenUnderAVendorsLabel() {
+        XCTAssertEqual(KIFFMapping.says("bxkwf7vi_refund_payment", title: "Write Stripe API data"), "Write Stripe API data · refund payment")
+        XCTAssertEqual(KIFFMapping.says("bxkwf7vi_refund_payment", title: "Refund a payment"), "Refund a payment")
+        XCTAssertEqual(KIFFMapping.says("create_refund", title: "Create refund"), "Create refund")
+        XCTAssertEqual(KIFFMapping.says("create_refund", title: "Refund a payment"), "Refund a payment")
+        XCTAssertEqual(KIFFMapping.says("bxkwf7vi_refund_payment", title: nil), "refund payment")
+        XCTAssertEqual(KIFFMapping.says("stripe_create_refund", title: "Write Stripe API data"), "Write Stripe API data · stripe create refund",
+                       "the vendor's own word in both isn't the action")
     }
 
     /// A draft with no name says whose Card it is without an id.
@@ -69,7 +113,7 @@ final class AfterTheTestTests: XCTestCase {
         struct List: Decodable { let exceptions: [KIFFClient.CardException] }
         let e = try decoder.decode(List.self, from: Data(json.utf8)).exceptions[0]
         let held = KIFFMapping.held(e, tafID: UUID())
-        XCTAssertEqual(held.proposed.summary, "Refund a payment · create_refund", "no tool-call id")
+        XCTAssertEqual(held.proposed.summary, "Refund a payment", "no tool-call id, and no tool name")
         XCTAssertEqual(held.details, ["payment_intent: pi_3USLXh"], "the amount shows above it, and KIFF's operation id isn't the owner's")
         XCTAssertEqual(held.reason, "150.00 EUR is above the 100.00 EUR limit for one call", "KIFF's words, in the unit")
     }

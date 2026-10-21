@@ -42,11 +42,29 @@ enum KIFFMapping {
         }
     }
 
-    /// What the owner reads for an action: its tool's title as KIFF gives it (from the
-    /// vendor, kiff-cloud#1277), else the action as KIFF sends it. Never a name made up here.
+    /// What the owner reads for an action, on a Card, an approval or a held call: its tool's
+    /// title as KIFF gives it, else the action in words. The title is Setup's, set on the
+    /// grant the owner signed, else the vendor's label (kiff/planque#37); the action's own
+    /// name, a grant prefix included, stays out (kiff/tafs#138, items 52, 53). Never a name
+    /// made up here. A vendor's label can be shared by several tools (kiff-cloud#1277's
+    /// review), so where it would read alike, a Card's lines and a held call add the action
+    /// in words (`DraftCard.lines`, `says`); planque refuses two titles alike (kiff/planque#38).
     static func name(_ action: String, title: String?) -> String {
         let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return t.isEmpty ? toolWords(action) : t
+    }
+
+    /// A held call's name, which the owner approves alone, without the Card's other lines:
+    /// its title, with its action in words unless the title names the action's last word, the
+    /// thing it acts on or does. A vendor's shared label ("Write Stripe API data · refund
+    /// payment") then still says which tool, even when it shares the vendor's own words
+    /// (stripe_create_refund); "Refund a payment", for create_refund, stays alone (kiff/tafs#138).
+    static func says(_ action: String, title: String?) -> String {
+        let name = KIFFMapping.name(action, title: title)
+        let words = toolWords(action)
+        let titleWords = Set(name.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber }))
+        guard let last = words.lowercased().split(separator: " ").last else { return name }
+        return titleWords.contains(last) ? name : "\(name) · \(words)"
     }
 
     /// A tool's name in words, for people (kiff/tafs#138, item 52): past a server's prefix
@@ -69,14 +87,6 @@ enum KIFFMapping {
         if let dot = v.firstIndex(of: ".") { v = String(v[..<dot]) }
         guard let first = v.first else { return vendor }
         return first.uppercased() + v.dropFirst().replacingOccurrences(of: "-", with: " ")
-    }
-
-    /// What an approval names (a held call, a draft's Card): the vendor's title beside
-    /// KIFF's own action, never instead of it. The words on an approval are part of what's
-    /// approved, and a vendor chooses its titles (kiff-cloud#1277 review).
-    static func approvalName(_ action: String, title: String?) -> String {
-        let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return t.isEmpty || t == action ? action : "\(t) · \(action)"
     }
 
     /// A taf as tafs cloud lists it (#91), for the screen: its state in the app's words, its
@@ -196,7 +206,7 @@ enum KIFFMapping {
         let reason = e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
         // A gateway call is filed under its tool call's id, which says nothing to the owner:
         // what it's on is in its arguments, as KIFF keeps them (kiff/tafs#102).
-        let name = approvalName(e.action, title: e.title)
+        let name = says(e.action, title: e.title)
         let summary = e.arguments == nil ? "\(name) \(e.entityID)" : name
         var call = HeldCall(
             id: heldID(e.id),
