@@ -155,6 +155,9 @@ struct MacTafsView: View {
             }
         }
         .overlay { MacCoachPanel() }
+        // The hidden title bar's strip still moves the window: tafs' views fill it, and on
+        // macOS 12 they would take the mouse-down. No control sits in its 28 pt.
+        .overlay(alignment: .top) { MacWindowDrag().frame(height: 28) }
     }
 
     private var sidebar: some View {
@@ -262,9 +265,10 @@ struct MacTafsView: View {
             }
             Spacer(minLength: 0)
             Button { Task { await model.refresh() } } label: { Image(systemName: "arrow.clockwise") }
-                .buttonStyle(.borderless).help("Refresh").keyboardShortcut("r", modifiers: .command)
+                .buttonStyle(.borderless).help("Refresh").accessibilityLabel("Refresh")
+                .keyboardShortcut("r", modifiers: .command)
             Button { MacSettings.open() } label: { Image(systemName: "gearshape") }
-                .buttonStyle(.borderless).help("Settings")
+                .buttonStyle(.borderless).help("Settings").accessibilityLabel("Settings")
         }
         .foregroundColor(Theme.soft)
         .padding(.horizontal, 16).padding(.vertical, 12)
@@ -396,4 +400,17 @@ struct MacCoachPanel: View {
         }
         .ignoresSafeArea()
     }
+}
+
+/// A strip that drags the window, as a title bar does: macOS 12 has no SwiftUI gesture for it.
+struct MacWindowDrag: NSViewRepresentable {
+    final class Strip: NSView {
+        override var mouseDownCanMoveWindow: Bool { true }
+        override func mouseDown(with event: NSEvent) {
+            if event.clickCount == 2 { window?.performZoom(nil) } else { window?.performDrag(with: event) }
+        }
+    }
+
+    func makeNSView(context: Context) -> NSView { Strip() }
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
