@@ -2363,6 +2363,13 @@ final class AppModel: ObservableObject {
         newSetupChat()
     }
 
+    /// Starting a new taf is a conversation (kiff/tafs#138, item 59): Coach mode opens in a
+    /// new one, on no taf. The old form, which turned on money tools with no limit, is gone.
+    func startNewTaf() {
+        newCoachConversation()
+        coachOpen = true
+    }
+
     /// A new Setup conversation on one taf, to improve it (kiff/tafs#107).
     func improveTaf(_ tafID: UUID) {
         newSetupChat()

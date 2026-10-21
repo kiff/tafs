@@ -101,7 +101,8 @@ struct HomeView: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if model.canStartTafs {
-                    Button { showingNew = true } label: {
+                    // A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59).
+                    Button { if model.mode == .kiff { model.startNewTaf() } else { showingNew = true } } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 17, weight: .bold))
                             .foregroundColor(Theme.amberInk)
@@ -113,9 +114,7 @@ struct HomeView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingNew) {
-            if model.mode == .kiff { StartTafFlow().environmentObject(model) } else { NewTafFlow().environmentObject(model) }
-        }
+        .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
         .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
         .navigationDestination(isPresented: $openingFirst) {
             if let id = model.tafs.first(where: { $0.name == "Refunds" })?.id ?? model.tafs.first?.id {
