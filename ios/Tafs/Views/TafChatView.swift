@@ -176,11 +176,8 @@ struct TafChatView: View {
                     pinText = nil
                     pinned = sent
                     following = false
-                    if animate {
-                        withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(sent, anchor: .top) }
-                    } else {
-                        proxy.scrollTo(sent, anchor: .top)
-                    }
+                    touched = false
+                    proxy.pinToTop(sent, animated: animate) { touched }
                     return
                 }
                 if !following && !ids.isEmpty && pinned == nil { unseen = true }
@@ -197,7 +194,8 @@ struct TafChatView: View {
                     pinNext = false
                     pinText = nil
                     pinned = last.id.uuidString
-                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(last.id, anchor: .top) }
+                    touched = false
+                    proxy.pinToTop(last.id, animated: true) { touched }
                     return
                 }
                 follow(proxy)
@@ -224,7 +222,8 @@ struct TafChatView: View {
         guard let id else { return }
         pinNext = false
         pinned = id
-        withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(id, anchor: .top) }
+        touched = false
+        proxy.pinToTop(id, animated: true) { touched }
     }
 
     private func follow(_ proxy: ScrollViewProxy) {
@@ -467,6 +466,28 @@ extension TafChatView {
         case .sending: return "clock.fill"
         case .unknown: return "questionmark.circle.fill"
         default: return "xmark.circle.fill"
+        }
+    }
+}
+
+extension ScrollViewProxy {
+    /// Puts a pinned message at the top of a chat (kiff/tafs#138). The space under a pinned
+    /// message is laid out only once `pinned` is set, so a scroll in that same pass clamped
+    /// to the old bottom and left the view in the empty space under it: the whole chat went
+    /// white (the owner's iPad, 21 Oct). It scrolls on the next pass, once that space is
+    /// there, and again as the lazy rows settle, unless the owner has scrolled meanwhile.
+    @MainActor func pinToTop<ID: Hashable>(_ id: ID, animated: Bool, touched: @escaping () -> Bool) {
+        DispatchQueue.main.async {
+            if animated {
+                withAnimation(.easeOut(duration: 0.25)) { self.scrollTo(id, anchor: .top) }
+            } else {
+                self.scrollTo(id, anchor: .top)
+            }
+            for delay in [0.1, 0.35] {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    if !touched() { self.scrollTo(id, anchor: .top) }
+                }
+            }
         }
     }
 }
