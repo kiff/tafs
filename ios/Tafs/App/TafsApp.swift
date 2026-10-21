@@ -40,9 +40,15 @@ struct TafsApp: App {
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.scenePhase) private var scenePhase
     /// The keyboard is up: ✦ keeps off it (kiff/tafs#138).
     @State private var keyboardUp = false
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
+    /// The window's size as the screens were last laid out, and a count that lays them out
+    /// again: an iPad turned while tafs was away can come back laid out for the old
+    /// orientation, with the sidebar's foot and ✦ placed for it (kiff/tafs#138, item 47).
+    @State private var laidOut: CGSize = .zero
+    @State private var layoutEpoch = 0
 
     /// Coach mode works with the owner's KIFF account, once signed in.
     private var coachAvailable: Bool { model.signedIn && model.mode == .kiff }
@@ -71,6 +77,23 @@ struct RootView: View {
                 }
             } else {
                 OnboardingView()
+            }
+        }
+        .background(GeometryReader { g in
+            Color.clear.onAppear { laidOut = g.size }.onChange(of: g.size) { laidOut = $0 }
+        }.ignoresSafeArea())
+        .onChange(of: scenePhase) { phase in
+            guard phase == .active else { return }
+            Task {
+                // Once the window has settled: if the screens are still laid out for another
+                // size, they're laid out again (the tab stays as it was).
+                try? await Task.sleep(nanoseconds: 600_000_000)
+                guard let window = UIApplication.shared.connectedScenes.compactMap({ ($0 as? UIWindowScene)?.keyWindow }).first else { return }
+                let size = window.bounds.size
+                if laidOut != .zero, abs(size.width - laidOut.width) > 1 || abs(size.height - laidOut.height) > 1 {
+                    layoutEpoch += 1
+                    laidOut = size
+                }
             }
         }
         // Coach mode (kiff/tafs#138): ✦ on every screen, above the tab bar and a chat's field.
@@ -103,5 +126,7 @@ struct RootView: View {
         } message: {
             Text(model.lastError ?? "")
         }
+        // The whole screen, ✦ and the panels with it, when it's laid out again.
+        .id(layoutEpoch)
     }
 }

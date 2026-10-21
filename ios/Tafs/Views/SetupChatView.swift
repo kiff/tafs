@@ -372,6 +372,7 @@ struct SetupChatView: View {
     /// The empty chat: the question it answers (#82), what Setup does, and ways to start (#58).
     private var starts: some View {
         VStack(alignment: .leading, spacing: 12) {
+            startSwitch
             if let taf = model.setupImproving {
                 Text("Improve \(taf.name)")
                     .font(Theme.display(26)).foregroundColor(Theme.ink)
@@ -379,7 +380,6 @@ struct SetupChatView: View {
                     .accessibilityAddTraits(.isHeader)
                 Text("Say what should change, or ask how it's going. Coach mode starts from what \(taf.name) did and what its Card allows.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                otherStart("Set up a new taf instead") { model.newSetupChat() }
             } else {
                 Text("Ask anything about your tafs")
                     .font(Theme.display(26)).foregroundColor(Theme.ink)
@@ -387,9 +387,6 @@ struct SetupChatView: View {
                     .accessibilityAddTraits(.isHeader)
                 Text("Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                if let id = model.tafOnScreen, let taf = model.cloudTaf(for: id) {
-                    otherStart("Improve \(taf.name) instead") { model.improveTaf(id) }
-                }
             }
             ForEach(model.setupImproving == nil ? Self.examples : Self.improveExamples, id: \.self) { example in
                 Button {
@@ -410,17 +407,43 @@ struct SetupChatView: View {
         .padding(.vertical, 16)
     }
 
-    /// The other way to start this conversation: on the taf on screen, or on none.
-    private func otherStart(_ title: String, _ action: @escaping () -> Void) -> some View {
+    /// What this conversation is about, as a choice at its top (kiff/tafs#138, item 56): a new
+    /// taf, or the taf on screen (or the one being improved). A link under the text read as one
+    /// of the suggestions below it. Shown only when there's a taf to choose.
+    @ViewBuilder private var startSwitch: some View {
+        let improving = model.setupImproving
+        let onScreen = model.tafOnScreen.flatMap { id in model.cloudTaf(for: id).map { (id, $0) } }
+        if let name = improving?.name ?? onScreen?.1.name {
+            HStack(spacing: 0) {
+                startChoice("New taf", selected: improving == nil) { model.newSetupChat() }
+                startChoice("Improve \(name)", selected: improving != nil) {
+                    if let id = onScreen?.0 { model.improveTaf(id) }
+                }
+            }
+            .padding(3)
+            .background(Theme.panel)
+            .overlay(Capsule().stroke(Theme.line))
+            .clipShape(Capsule())
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("What this conversation is about")
+        }
+    }
+
+    private func startChoice(_ title: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
         Button {
+            guard !selected else { return }
             Haptics.tap()
             action()
         } label: {
-            Label(title, systemImage: "arrow.triangle.branch")
-                .scaledFont(14, weight: .semibold).foregroundColor(Theme.coach)
+            Text(title).scaledFont(14, weight: .semibold).lineLimit(1)
+                .foregroundColor(selected ? .white : Theme.coach)
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(selected ? Theme.coach : Color.clear)
+                .clipShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(model.setupSending)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     static let examples = [
@@ -1057,9 +1080,10 @@ struct SetupApproval: View {
     /// What a replaced card says, folded: what the owner did with it, if anything.
     private var replacedLine: String {
         let answer = model.setupThread.answer(to: component.id)
-        if let a = answer, !a.failed, a.text.hasPrefix("approved") { return "Approved · a newer request is below" }
-        if answer?.text == "declined" { return "Declined · a newer request is below" }
-        return "Replaced by a newer request below"
+        // What happened, then where to look (kiff/tafs#138, item 54).
+        if let a = answer, !a.failed, a.text.hasPrefix("approved") { return "Approved · Setup asked for more below" }
+        if answer?.text == "declined" { return "Declined · Setup asked again below" }
+        return "Setup changed this request: see below"
     }
 
     var body: some View {
@@ -1098,14 +1122,14 @@ struct SetupApproval: View {
     }
 
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
-        let vendor = grant?.vendor ?? component.service ?? "the vendor"
+        let vendor = (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? "the vendor"
         // An approval with the taf's Card is the Card's (kiff/tafs#94), not the tool's again.
         if let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true {
             return state == .declined ? "Declined · \(draft.cardTitle)" : "Approved · \(draft.cardTitle)"
         }
         if state == .declined { return "Declined · \(vendor)" }
         if grant?.connected == true { return "Approved · \(vendor) is connected, keys kept sealed" }
-        return "Approved · signed in at \(vendor)"
+        return "Approved · signed in to \(vendor)"
     }
 
     private func card(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> some View {

@@ -108,6 +108,22 @@ function window(raw: string): Rule["window"] {
 const label = (action: string, title?: string | null) => title?.trim() || action;
 
 /**
+ * Lines that would read the same get what tells them apart (kiff/tafs#138, item 53): two
+ * tools a vendor titles alike ("Read Stripe API data", for listing charges and for getting
+ * one) read as the title and the tool's own words, its name without the grant's prefix.
+ */
+export function distinct(rules: Rule[]): Rule[] {
+  const seen = new Map<string, number>();
+  for (const r of rules) seen.set(r.label, (seen.get(r.label) ?? 0) + 1);
+  return rules.map((r) => ((seen.get(r.label) ?? 0) > 1 ? { ...r, label: `${r.label} · ${toolWords(r.action)}` } : r));
+}
+
+/** "bxkwf7vi_list_charges" → "list charges": the grant's prefix (letters and a digit) goes. */
+function toolWords(action: string): string {
+  return action.replace(/^(?=[a-z]*\d)[a-z0-9]{6,}_/, "").replace(/_/g, " ");
+}
+
+/**
  * The summed total a Card shows, and its use line: the same quantity and window,
  * so a meter never divides one window's use by another's.
  */
@@ -151,11 +167,9 @@ export function rules(m: Mandate): Rule[] {
 
 /** What a holder's live Cards allow and have used. */
 export function summary(cards: Mandate[]): CardSummary {
+  const lines = distinct(cards.flatMap(rules));
   const tools: string[] = [];
-  for (const g of cards.flatMap((c) => c.grants ?? [])) {
-    const t = label(g.action, g.title);
-    if (g.action && !tools.includes(t)) tools.push(t);
-  }
+  for (const r of lines) if (r.action && !tools.includes(r.label)) tools.push(r.label);
   const used: Record<string, Money> = {};
   const unknown = new Set<string>();
   for (const c of cards) {
@@ -172,7 +186,7 @@ export function summary(cards: Mandate[]): CardSummary {
     active: cards.some((c) => c.active),
     expires: ends[0] ?? null,
     tools,
-    rules: cards.flatMap(rules),
+    rules: lines,
     used,
     usage_unknown: [...unknown],
   };

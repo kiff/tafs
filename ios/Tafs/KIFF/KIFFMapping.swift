@@ -46,7 +46,29 @@ enum KIFFMapping {
     /// vendor, kiff-cloud#1277), else the action as KIFF sends it. Never a name made up here.
     static func name(_ action: String, title: String?) -> String {
         let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return t.isEmpty ? action : t
+        return t.isEmpty ? toolWords(action) : t
+    }
+
+    /// A tool's name in words, for people (kiff/tafs#138, item 52): past a server's prefix
+    /// ("stripe.create_refund", "kiff__refund_order") and the grant's own ("bxkwf7vi_list_charges"),
+    /// separators as spaces. "bxkwf7vi_list_charges" → "list charges".
+    static func toolWords(_ tool: String) -> String {
+        var name = tool.components(separatedBy: "__").last?.split(separator: ".").last.map(String.init) ?? tool
+        if let r = name.range(of: #"^(?=[a-z]*[0-9])[a-z0-9]{6,}_"#, options: .regularExpression), r.upperBound < name.endIndex {
+            name = String(name[r.upperBound...])
+        }
+        let words = name.split(whereSeparator: { $0 == "_" || $0 == "-" }).joined(separator: " ")
+        return words.isEmpty ? tool : words
+    }
+
+    /// A vendor as people say it: "stripe-mcp" or "mcp.stripe.com" → "Stripe" (item 52).
+    static func vendorWords(_ vendor: String) -> String {
+        var v = vendor.lowercased()
+        if v.hasPrefix("mcp.") { v.removeFirst(4) }
+        for suffix in ["-mcp", "_mcp", ".mcp"] where v.hasSuffix(suffix) { v.removeLast(suffix.count) }
+        if let dot = v.firstIndex(of: ".") { v = String(v[..<dot]) }
+        guard let first = v.first else { return vendor }
+        return first.uppercased() + v.dropFirst().replacingOccurrences(of: "-", with: " ")
     }
 
     /// What an approval names (a held call, a draft's Card): the vendor's title beside
@@ -73,6 +95,9 @@ enum KIFFMapping {
         switch h.state {
         case "waiting": taf.state = .waiting; taf.now = "Waiting on you"
         case "paused": taf.state = .paused; taf.now = "Paused"
+        // A taf with no schedule isn't at work until it's told something in its chat
+        // (kiff/tafs#138, item 55): it reads as ready, not running.
+        case "working" where h.unscheduled == true: taf.state = .idle; taf.now = "Works from its chat"
         case "working": taf.state = .working; taf.now = h.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
         case "idle": taf.state = .idle; taf.now = "Acting under KIFF"
         default: taf.state = .revoked; taf.now = "Card not active"
@@ -153,6 +178,8 @@ enum KIFFMapping {
             expiresAt: e.expiresAt ?? e.createdAt.addingTimeInterval(10 * 60)
         )
         call.kiffID = e.id
+        call.proposalID = e.proposalID
+        call.approvableOnce = e.canApproveOnce ?? true
         call.accountingVersion = e.accountingVersion
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)

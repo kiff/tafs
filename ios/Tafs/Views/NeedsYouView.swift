@@ -67,13 +67,29 @@ struct HeldCallCard: View {
                 .clipShape(Capsule())
 
             if model.canAnswer(call) {
-                Button {
-                    send(.approveOnce)
-                } label: {
-                    Label("Approve once with \(Biometry.name)", systemImage: Biometry.symbol)
+                if call.approvableOnce {
+                    Button {
+                        send(.approveOnce)
+                    } label: {
+                        Label("Approve once with \(Biometry.name)", systemImage: Biometry.symbol)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(sending)
+                } else {
+                    // Over a total the Card keeps across calls: approving once can't pass it, so
+                    // the card says so and offers what can (kiff/tafs#138, item 49).
+                    Text("Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Refuse it, or change the Card's limit.")
+                        .font(.system(size: 13)).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        model.improveTaf(call.tafID)
+                        model.coachOpen = true
+                    } label: {
+                        Label("Change the limit in Coach mode", systemImage: "sparkle")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(sending)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(sending)
 
                 HStack(spacing: 8) {
                     ForEach(call.nextSteps, id: \.self) { step in

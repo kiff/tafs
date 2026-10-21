@@ -124,6 +124,8 @@ final class TafsCloud {
         let id: String?
         let name: String
         let job: String?
+        /// It works from its chat, with no schedule (kiff/tafs#138, items 43 and 55).
+        var unscheduled: Bool? = nil
         let kiffAgent: String
         let status: String?
         let nextRun: Date?
@@ -136,7 +138,7 @@ final class TafsCloud {
         let card: CardSummary
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card
+            case id, name, job, status, color, state, waiting, card, unscheduled
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
         }
 
@@ -221,7 +223,15 @@ final class TafsCloud {
     struct ChatMessage: Decodable, Equatable, Identifiable {
         enum From: String, Decodable { case owner, taf }
         enum Kind: String, Decodable { case kickoff, message }
-        var id: String { "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)" }
+        /// A taf's (or Setup's) message is the same message while its text grows: tafs cloud
+        /// writes a turn's words as one message, so a reload can bring more of it. Keyed by its
+        /// words, it would show as a new message and be revealed again from nothing, its cards
+        /// held back meanwhile (kiff/tafs#138, item 48). An owner's message keeps its words in
+        /// its id: two sent at once stay two.
+        var id: String {
+            from == .taf ? "\(session)|\(at.timeIntervalSince1970)|taf|\(kind.rawValue)"
+                : "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)"
+        }
         let at: Date
         let from: From
         let kind: Kind

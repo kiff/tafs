@@ -106,7 +106,14 @@ final class ChatTests: XCTestCase {
         let (model, id) = await kiffModel()
         XCTAssertTrue(model.canChat(id))
         StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
-        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"kickoff","text":"Work the refund queue","session":"sesn_9"},{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"Skip order 4410","session":"sesn_9"}]}"#)
+        // tafs cloud's copy is written about when it was sent: the sent message gives way to it
+        // (an older message with the same words wouldn't, kiff/tafs#138, item 48).
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let now = iso.string(from: Date())
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:00:00Z","from":"owner","kind":"kickoff","text":"Work the refund queue","session":"sesn_9"},{"at":"\(now)","from":"owner","kind":"message","text":"Skip order 4410","session":"sesn_9"}]}
+        """)
 
         let sent = await model.sendChat("Skip order 4410", to: id)
         XCTAssertTrue(sent)
@@ -137,6 +144,42 @@ final class ChatTests: XCTestCase {
         await model.retryChat(unsent, to: id)
         XCTAssertTrue(model.chatState(id).unsent.isEmpty)
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
+    }
+
+    /// The owner's message stays on screen while the taf answers, though tafs cloud's thread
+    /// doesn't have it yet: a reload mid-answer took it away, so only the dots showed
+    /// (kiff/tafs#138, item 48). Once the thread has it, it shows once.
+    func testASentMessageStaysThroughReloadsUntilTheThreadHasIt() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages/stream"] = (200, """
+        event: session
+        data: {"session":"sesn_9","new_session":true}
+
+        event: activity
+        data: {"tool":"memory"}
+
+        event: end
+        data: {"status":"COMPLETED","stop":"answered"}
+
+
+        """)
+        let sent = await model.sendChat("What are the latest 3 payments", to: id)
+        XCTAssertTrue(sent)
+        await model.chatStreams[id]?.value
+        await model.loadChat(id)
+        let mine = { (model.chats[id] ?? []).filter { $0.from == .owner && $0.text == "What are the latest 3 payments" } }
+        XCTAssertEqual(mine().count, 1, "the reloads didn't take it away")
+
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let now = iso.string(from: Date())
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"\(now)","from":"owner","kind":"message","text":"What are the latest 3 payments","session":"sesn_9"}]}
+        """)
+        await model.loadChat(id)
+        XCTAssertEqual(mine().count, 1, "the thread's copy takes its place")
+        XCTAssertEqual(mine().first?.session, "sesn_9")
     }
 
     /// The taf's answer streams (#64): tafs cloud's stream route takes the message, the

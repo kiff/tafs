@@ -95,7 +95,7 @@ final class AfterTheTestTests: XCTestCase {
         let taf = UUID()
         let record = KIFFMapping.record(calls, ids: ["refunds-k5j6m5qx": taf])
         XCTAssertEqual(record.map(\.kind), [.approved, .done], "a call of an agent the app doesn't show is left out")
-        XCTAssertEqual(record.map(\.title), ["Refund a payment", "create_refund"])
+        XCTAssertEqual(record.map(\.title), ["Refund a payment", "create refund"], "no title: the action in words (kiff/tafs#138, item 52)")
         XCTAssertEqual(record.first?.tafID, taf)
         XCTAssertEqual(KIFFMapping.record(calls, ids: ["refunds-k5j6m5qx": taf]).map(\.id), record.map(\.id), "the same ids on every refresh")
     }
@@ -129,4 +129,75 @@ final class AfterTheTestTests: XCTestCase {
         }
     }
 
+}
+
+/// What the owner's retest of build 473 found in the words (kiff/tafs#138, items 54 and 55).
+@MainActor
+final class RetestWordsTests: XCTestCase {
+    func testANameEndingInSHasItsOwnPossessive() throws {
+        let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
+        {"id":"drf_2","agent_id":"refunds-bxkwf7vi","label":"Stripe refunds","status":"draft","version":"v1","cards":[]}
+        """#.utf8))
+        XCTAssertEqual(d.cardTitle, "Stripe refunds' Card")
+    }
+
+    /// A taf with no schedule isn't running: it works from its chat, and reads as ready.
+    func testATafWithNoScheduleReadsAsWorkingFromItsChat() throws {
+        let home = try KIFFClient.decoder.decode(TafsCloud.HomeTaf.self, from: Data(#"""
+        {"id":"taf-1","name":"Stripe refunds","job":"refunds","kiff_agent":"refunds-bxkwf7vi","status":"active","unscheduled":true,
+         "next_run":null,"last_run":null,"color":1,"state":"working","waiting":0,
+         "card":{"ids":["c1"],"active":true,"expires":null,"tools":[],"rules":[],"used":{},"usage_unknown":[]}}
+        """#.utf8))
+        let taf = KIFFMapping.taf(home, id: UUID(), owner: "You")
+        XCTAssertEqual(taf.now, "Works from its chat")
+        XCTAssertEqual(taf.state, .idle)
+        XCTAssertEqual(taf.state.label, "Ready")
+    }
+}
+
+/// "Approve once" is offered only where KIFF can pass the call (kiff/tafs#138, item 49): the
+/// owner tapped it on €300 over a 250 € a day Card and got KIFF's raw refusal.
+@MainActor
+final class ApproveOnceTests: XCTestCase {
+    /// The answer is KIFF's own `can_approve_once`, never a copy of its rule.
+    private func held(_ extra: String) throws -> HeldCall {
+        let json = """
+        {"id":"exc-1","proposal_id":"tc-1","subject":"claude","action":"refund","entity_id":"ord_1","status":"held",
+         "breaches":[{"mandate_id":"mdt-any","outcome":"aggregate_exceeded","limit":25000}],\(extra)
+         "created_at":"2026-10-09T08:00:00Z"}
+        """
+        let e = try KIFFClient.decoder.decode(KIFFClient.CardException.self, from: Data(json.utf8))
+        return KIFFMapping.held(e, tafID: UUID())
+    }
+
+    func testKIFFSaysWhetherApprovingOnceCanPass() throws {
+        XCTAssertFalse(try held(#""can_approve_once":false,"#).approvableOnce, "over the day's total")
+        XCTAssertTrue(try held(#""can_approve_once":true,"#).approvableOnce, "KIFF's word, whatever the breach")
+    }
+
+    func testAnOlderResponseStillOffersIt() throws {
+        XCTAssertTrue(try held("").approvableOnce)
+    }
+}
+
+/// Tool and vendor names in words, not ids (kiff/tafs#138, item 52).
+@MainActor
+final class ToolWordsTests: XCTestCase {
+    func testAToolsNameReadsInWords() {
+        XCTAssertEqual(KIFFMapping.toolWords("bxkwf7vi_list_accounts"), "list accounts", "past the grant's prefix")
+        XCTAssertEqual(KIFFMapping.toolWords("bxkwf7vi_refund_payment"), "refund payment")
+        XCTAssertEqual(KIFFMapping.toolWords("create_refund"), "create refund", "a word is not a prefix")
+        XCTAssertEqual(KIFFMapping.toolWords("stripe.create_refund"), "create refund")
+        XCTAssertEqual(KIFFMapping.toolWords("kiff__issue-credit"), "issue credit")
+        XCTAssertEqual(AppModel.tafActivityWords("bxkwf7vi_list_accounts"), "Asking KIFF to run list accounts…")
+        XCTAssertEqual(KIFFMapping.name("bxkwf7vi_get_charge", title: nil), "get charge")
+        XCTAssertEqual(KIFFMapping.name("bxkwf7vi_get_charge", title: "Read Stripe API data"), "Read Stripe API data")
+    }
+
+    func testAVendorReadsAsPeopleSayIt() {
+        XCTAssertEqual(KIFFMapping.vendorWords("stripe-mcp"), "Stripe")
+        XCTAssertEqual(KIFFMapping.vendorWords("mcp.stripe.com"), "Stripe")
+        XCTAssertEqual(KIFFMapping.vendorWords("Stripe"), "Stripe")
+        XCTAssertEqual(KIFFMapping.vendorWords("access.stripe.com"), "Access")
+    }
 }
