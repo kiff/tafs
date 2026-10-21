@@ -133,6 +133,7 @@ enum KIFFMapping {
             entry.readOnly = c.readOnly
             entry.answer = c.answer
             entry.receipt = c.receipt
+            entry.why = c.reasons
             return entry
         }
     }

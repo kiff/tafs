@@ -242,4 +242,5 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var readOnly: Bool?
     var answer: KIFFClient.ActivityCall.Answer?
     var receipt: KIFFClient.ActivityCall.Receipt?
+    var why: [String]?
 }

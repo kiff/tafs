@@ -314,8 +314,10 @@ final class KIFFClient {
             enum CodingKeys: String, CodingKey { case status; case traceID = "trace_id" }
         }
         var receipt: Receipt?
+        /// KIFF's reasons for its decision ("over the €100.00 limit for one refund").
+        var reasons: [String]?
         enum CodingKeys: String, CodingKey {
-            case title, outcome, held, amount, answer, receipt
+            case title, outcome, held, amount, answer, receipt, reasons
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
             case onHash = "on_hash", readOnly = "read_only"
