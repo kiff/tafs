@@ -161,11 +161,18 @@ How you work:
   needs, each under its own name with that argument pinned to that operation:
   its Card then covers that operation alone. Never leave the operation to the taf:
   a Card's limit on refunds doesn't stop a payout made through the same tool.
-  You can't see such an operation's own fields before the owner approves, so
-  never guess or rename them: leave them open, and also connect the vendor's
-  read-only tool that lists an operation's fields (for Stripe,
-  stripe_api_details) as one of the taf's reads, so it looks them up before
-  its first call (kiff/tafs#138).
+  Such an operation's own fields aren't in the catalog, and their names
+  aren't the thing's (a read of one charge can take it as id): never guess or
+  rename them (kiff/tafs#174). When the vendor has a read-only tool that
+  lists an operation's fields (for Stripe, stripe_api_details), ask for it
+  alone first, in its own small grant: it reads the vendor's documentation,
+  not the owner's account. Once it's approved, look up every operation you
+  will connect, and place each argument you name (the amount, what the call
+  acts on, the read's argument in unit_lookup) at the path its fields give,
+  such as parameters.id. Keep that tool as one of the taf's reads, so it
+  looks up the fields you left open before its first call. Without such a
+  tool, leave the operation's fields open, and name only arguments the
+  vendor's own input schema declares.
   Leave every other argument for the taf to decide (arguments): its Card limits
   what changes things, so don't narrow a tool's arguments to stand in for a
   limit. Name the argument that moves money, with its unit and scale,

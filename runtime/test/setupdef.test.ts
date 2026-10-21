@@ -158,8 +158,13 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).not.toContain("One question at a time");
     expect(flat).not.toContain("one or two questions at a time");
     // An operation's fields come from the vendor, never Setup's guess (kiff/tafs#138, item 1).
-    expect(flat).toContain("You can't see such an operation's own fields before the owner approves, so never guess or rename them");
-    expect(flat).toContain("connect the vendor's read-only tool that lists an operation's fields (for Stripe, stripe_api_details)");
+    // On the owner's iPad a read took the charge as `charge` and the vendor wants `id`, so
+    // the taf couldn't read it and KIFF couldn't check its currency (kiff/tafs#174).
+    expect(flat).toContain("their names aren't the thing's (a read of one charge can take it as id): never guess or rename them");
+    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields (for Stripe, stripe_api_details), ask for it alone first, in its own small grant");
+    expect(flat).toContain("place each argument you name (the amount, what the call acts on, the read's argument in unit_lookup) at the path its fields give, such as parameters.id");
+    expect(flat).toContain("Without such a tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares");
+    expect(flat).not.toContain("You can't see such an operation's own fields before the owner approves");
     expect(flat).toContain("A read tool's line has no amount limit, only a call count generous enough never to get in the way, and you don't ask the owner to set it");
     expect(flat).toContain("Show plan again with every step done or skipped");
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
