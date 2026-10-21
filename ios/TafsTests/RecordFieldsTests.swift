@@ -15,15 +15,17 @@ final class RecordFieldsTests: XCTestCase {
     {"proposal_id":"p_b","action_name":"stripe_create_refund","title":"Refund a payment","actor_id":"agt_r","outcome":"allowed","held":true,
      "tool_outcome":{"status":"done"},"created_at":"2026-10-21T00:40:12Z",
      "amount":{"value":"150.00","unit":"EUR"},
-     "answer":{"decision":"approved_once","by":"owner","signed":true,"device":"iPhone","at":"2026-10-21T00:41:03Z"},
+     "answer":{"decision":"approved_once","by":"admin","you":true,"signed":true,"device":"iPhone","at":"2026-10-21T00:41:03Z"},
      "receipt":{"trace_id":"t_b","status":"signed"}},
     {"proposal_id":"p_c","action_name":"stripe_create_refund","title":"Refund a payment","actor_id":"agt_r","outcome":"blocked","held":true,
      "created_at":"2026-10-20T22:40:45Z","amount":{"value":"150.00","unit":"EUR"},
-     "answer":{"decision":"refused","by":"owner","signed":true,"device":"iPhone","at":"2026-10-20T22:42:26Z"},
+     "answer":{"decision":"refused","by":"admin","you":false,"signed":true,"device":"iPhone","at":"2026-10-20T22:42:26Z"},
      "receipt":{"trace_id":"t_c","status":"signed"}},
     {"proposal_id":"p_d","action_name":"stripe_retrieve_payment_intent","title":"Look up a payment","actor_id":"agt_r","outcome":"allowed","held":false,
      "tool_outcome":{"status":"done"},"created_at":"2026-10-20T22:37:40Z","read_only":true,
      "receipt":{"trace_id":"t_d","status":"pending"}},
+    {"proposal_id":"p_gw","action_name":"bxkwf7vi_refund_order","actor_id":"agt_r","outcome":"allowed","held":false,
+     "tool_outcome":{"status":"done"},"created_at":"2026-10-20T22:36:00Z","amount":{"value":"150"}},
     {"proposal_id":"p_old","action_name":"stripe_create_refund","actor_id":"agt_r","outcome":"allowed","held":false,"created_at":"2026-10-19T10:00:00Z"}
     ]}
     """#
@@ -36,7 +38,7 @@ final class RecordFieldsTests: XCTestCase {
         let calls = try KIFFClient.decoder.decode(Response.self, from: Data(Self.calls.replacingOccurrences(of: "HASH_A", with: Self.hashA).utf8)).calls
         let taf = UUID()
         let record = KIFFMapping.record(calls, ids: ["agt_r": taf])
-        XCTAssertEqual(record.count, 5)
+        XCTAssertEqual(record.count, 6)
         let byID = Dictionary(uniqueKeysWithValues: zip(calls.map(\.proposalID), record))
 
         let a = try XCTUnwrap(byID["p_a"])
@@ -52,10 +54,19 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertEqual(b.answer?.signed, true)
         XCTAssertEqual(b.answer?.device, "iPhone")
         XCTAssertEqual(b.ownerApproved, true)
+        XCTAssertTrue(b.answeredByOwner, "KIFF says the reader answered it")
+        XCTAssertEqual(b.decidedLine, "approved by you")
 
         let c = try XCTUnwrap(byID["p_c"])
         XCTAssertEqual(c.kind, .refused)
         XCTAssertEqual(c.answer?.decision, "refused")
+        XCTAssertFalse(c.answeredByOwner, "a role can't say it was the reader")
+        XCTAssertEqual(c.decidedLine, "refused by an admin")
+
+        // A gateway call's integer amount has no unit: the row still reads, and so does the page.
+        let gw = try XCTUnwrap(byID["p_gw"])
+        XCTAssertEqual(gw.amount, .init(value: "150", unit: nil))
+        XCTAssertEqual(gw.amountText, "150")
 
         let d = try XCTUnwrap(byID["p_d"])
         XCTAssertEqual(d.readOnly, true)

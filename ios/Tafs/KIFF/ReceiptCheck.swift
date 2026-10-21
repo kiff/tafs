@@ -52,7 +52,8 @@ enum ReceiptCheck: Equatable {
         return .verified(signer: recovered)
     }
 
-    private static let context: OpaquePointer? = secp256k1_context_create(UInt32(SECP256K1_CONTEXT_NONE))
+    /// libsecp256k1's context is read-only once made, so one is shared across threads.
+    nonisolated(unsafe) private static let context: OpaquePointer? = secp256k1_context_create(UInt32(SECP256K1_CONTEXT_NONE))
 
     /// The Ethereum-style address that signed the digest: keccak256 of the uncompressed key,
     /// its last 20 bytes. Nil when the signature can't be parsed or recovers no key.

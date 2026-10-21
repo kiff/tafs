@@ -118,10 +118,11 @@ extension RecordEntry {
     /// a currency.
     var amountText: String? {
         guard let amount, let value = Decimal(string: amount.value, locale: Locale(identifier: "en_US_POSIX")) else { return nil }
-        if amount.unit.count == 3, amount.unit == amount.unit.uppercased(), Locale.isoCurrencyCodes.contains(amount.unit) {
-            return value.formatted(.currency(code: amount.unit))
+        guard let unit = amount.unit, !unit.isEmpty else { return amount.value }
+        if unit.count == 3, unit == unit.uppercased(), Locale.isoCurrencyCodes.contains(unit) {
+            return value.formatted(.currency(code: unit))
         }
-        return "\(amount.value) \(amount.unit)"
+        return "\(amount.value) \(unit)"
     }
 
     /// "Refund €150.00": the action's verb with its amount, as the mockup has it.
@@ -140,12 +141,20 @@ extension RecordEntry {
         return value.count > 6 ? "\(noun) …\(value.suffix(5))" : "\(noun) \(value)"
     }
 
-    var answeredByOwner: Bool { answer?.by == nil || answer?.by == "owner" }
+    /// The person reading answered it, as KIFF says (`answer.you`).
+    var answeredByOwner: Bool { answer?.you == true }
 
-    /// Who decided: its Card, the owner (approving or refusing), or KIFF's refusal.
+    /// Who answered, in words: "you", or by KIFF's role for them ("an admin").
+    var answerer: String {
+        if answeredByOwner { return "you" }
+        guard let role = answer?.by?.replacingOccurrences(of: "_", with: " "), let first = role.first else { return "someone else" }
+        return ("aeiou".contains(first) ? "an " : "a ") + role
+    }
+
+    /// Who decided: its Card, the owner or another person (approving or refusing), or KIFF's refusal.
     var decidedLine: String {
-        if let answer, answeredByOwner {
-            return answer.decision == "refused" ? "refused by you" : "approved by you"
+        if let answer {
+            return answer.decision == "refused" ? "refused by \(answerer)" : "approved by \(answerer)"
         }
         switch kind {
         case .refused: return "refused by its Card"
@@ -194,7 +203,8 @@ struct RecordRow: View {
                 }
                 Text(detail).font(.system(size: 13)).foregroundColor(Theme.soft)
                 if entry.receipt?.status == "signed" {
-                    Label("KIFF receipt", systemImage: "checkmark.seal")
+                    // KIFF says it's signed; the seal is for the sheet's own check.
+                    Label("KIFF receipt", systemImage: "doc.text")
                         .font(.system(size: 12)).foregroundColor(Theme.ok)
                 } else if entry.signature != nil {
                     Label("Signed on this iPhone", systemImage: "checkmark.seal")
@@ -329,11 +339,15 @@ struct ReceiptView: View {
         switch check {
         case .verified? where onMismatch:
             failedPanel("The payment on this line doesn't match KIFF's receipt.")
+        case .verified? where amountMismatch:
+            failedPanel("The amount on this line doesn't match KIFF's receipt.")
+        case .verified? where answerMismatch:
+            failedPanel("The answer on this line doesn't match KIFF's receipt.")
         case .verified(let signer)?:
             Panel(stroke: Theme.ok.opacity(0.4)) {
                 Label("KIFF's receipt · checked on this iPhone", systemImage: "checkmark.seal.fill")
                     .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
-                Text("KIFF signed this when it decided. The signature matches KIFF's address and nothing in the receipt has changed since.")
+                Text("KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since.")
                     .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 receiptFacts(signer: signer)
                 fullReceipt
@@ -385,6 +399,19 @@ struct ReceiptView: View {
     private var onMismatch: Bool {
         guard let value = entry.onValue, let signed = steps.compactMap(\.onHash).first else { return false }
         return !KIFFMapping.isOn(value, hash: signed)
+    }
+
+    /// The signed decision step names the amount, and the line's isn't it.
+    private var amountMismatch: Bool {
+        guard let line = entry.amount, let signed = steps.compactMap(\.amount).first else { return false }
+        return line.value != signed.value || (line.unit ?? "") != (signed.unit ?? "")
+    }
+
+    /// The signed chain has the answer (its hold_settled step), and the line's isn't it:
+    /// KIFF records a refusal as "reject".
+    private var answerMismatch: Bool {
+        guard let line = entry.answer, let signed = steps.first(where: { $0.kind == "hold_settled" })?.answer else { return false }
+        return (line.decision == "refused") != (signed == "reject")
     }
 
     private func receiptFacts(signer: String?) -> some View {
@@ -443,6 +470,10 @@ struct ReceiptView: View {
         let kind: String
         /// What the step says the call acted on, as KIFF hashed it.
         let onHash: String?
+        /// The amount the decision step signed, when it has one.
+        let amount: KIFFClient.ActivityCall.Amount?
+        /// A hold_settled step's answer, as KIFF records it ("reject" for a refusal).
+        let answer: String?
     }
 
     /// The receipt's steps, as KIFF signed them: what the sheet shows as happened.
@@ -454,9 +485,13 @@ struct ReceiptView: View {
             let message = (s["message"] as? String).flatMap { $0.isEmpty ? nil : $0 }
             let at = (s["occurred_at"] as? String).flatMap { ISO8601DateFormatter.precise.date(from: $0) ?? ISO8601DateFormatter().date(from: $0) }
             let hash = s["data_hash"] as? String ?? ""
+            let data = s["data"] as? [String: Any]
+            let amount = (data?["amount"] as? [String: Any]).flatMap { a in
+                (a["value"] as? String).map { KIFFClient.ActivityCall.Amount(value: $0, unit: a["unit"] as? String) }
+            }
             return Step(words: message ?? kind.replacingOccurrences(of: "_", with: " "), at: at,
                         hash: hash.count > 8 ? "\(hash.prefix(4))…\(hash.suffix(4))" : hash, kind: kind,
-                        onHash: (s["data"] as? [String: Any])?["on_hash"] as? String)
+                        onHash: data?["on_hash"] as? String, amount: amount, answer: data?["answer"] as? String)
         }
     }
 
@@ -494,7 +529,9 @@ struct ReceiptView: View {
     // MARK: The facts
 
     private var stateLabel: String {
-        if let answer = entry.answer, entry.answeredByOwner { return answer.decision == "refused" ? "Refused by you" : "Approved once by you" }
+        if let answer = entry.answer {
+            return answer.decision == "refused" ? "Refused by \(entry.answerer)" : "Approved once by \(entry.answerer)"
+        }
         return entry.kind.label
     }
 
@@ -502,22 +539,22 @@ struct ReceiptView: View {
         let money = entry.amountText.map { " \($0)" } ?? ""
         switch entry.kind {
         case .done, .approved: return entry.amount == nil ? "Done." : "Done.\(money) moved."
-        case .refused: return entry.answer?.decision == "refused" ? "Not sent. You refused it." : "Not sent. Its Card refused it."
+        case .refused: return entry.answer?.decision == "refused" ? "Not sent. Refused by \(entry.answerer)." : "Not sent. Its Card refused it."
         case .held: return "Waiting for your answer."
         default: return entry.detail
         }
     }
 
     private var decisionWords: String {
-        if let answer = entry.answer, entry.answeredByOwner {
-            return answer.decision == "refused" ? "held → refused by you" : "held → approved once by you"
+        if let answer = entry.answer {
+            return answer.decision == "refused" ? "held → refused by \(entry.answerer)" : "held → approved once by \(entry.answerer)"
         }
         return entry.kind == .refused ? "refused by the Card" : "allowed by the Card"
     }
 
     private var decidedBy: String {
-        if let answer = entry.answer, entry.answeredByOwner {
-            var how = "You"
+        if let answer = entry.answer {
+            var how = entry.answeredByOwner ? "You" : entry.answerer.prefix(1).uppercased() + entry.answerer.dropFirst()
             if answer.signed == true { how += ", signed on \(answer.device ?? "your device")" }
             return how
         }
@@ -543,7 +580,7 @@ struct ReceiptView: View {
 
 extension ISO8601DateFormatter {
     /// RFC 3339 with fractional seconds, as Go writes times.
-    static let precise: ISO8601DateFormatter = {
+    nonisolated(unsafe) static let precise: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f

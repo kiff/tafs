@@ -27,7 +27,8 @@ final class ReceiptCheckTests: XCTestCase {
         let chain = try XCTUnwrap(RawJSON.value(of: "causal_chain", in: Data(Self.signed.utf8)))
         let text = try XCTUnwrap(String(data: chain, encoding: .utf8))
         XCTAssertTrue(text.hasPrefix(#"[{"sequence":1,"kind":"decision""#))
-        XCTAssertTrue(text.contains(#"<€100> & more"#))
+        // As Go wrote it, escaped: a decoder and re-encoder would write "<€100> & more".
+        XCTAssertTrue(text.contains(#"\u003c€100\u003e \u0026 more"#))
         XCTAssertTrue(text.hasSuffix(#""big":1e+21,"tool":{"status":"done"}}}]"#))
         XCTAssertNil(RawJSON.value(of: "missing", in: Data(Self.signed.utf8)))
     }

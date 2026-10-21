@@ -164,7 +164,6 @@ enum KIFFMapping {
         }
     }
 
-    /// A record entry's id, from KIFF's call id: the same on every refresh.
     /// Whether a value is what KIFF's hash names (kiff/tafs#167): "sha256:<hex>" of its
     /// UTF-8 bytes, untrimmed, in its own case.
     static func isOn(_ value: String, hash: String) -> Bool {
@@ -181,6 +180,7 @@ enum KIFFMapping {
         }
     }
 
+    /// A record entry's id, from KIFF's call id: the same on every refresh.
     static func recordID(_ proposalID: String) -> UUID {
         var bytes = Array(SHA256.hash(data: Data("tafs.record|\(proposalID)".utf8)).prefix(16))
         bytes[6] = (bytes[6] & 0x0F) | 0x50

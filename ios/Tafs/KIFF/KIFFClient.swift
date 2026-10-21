@@ -288,10 +288,11 @@ final class KIFFClient {
         let held: Bool
         var toolOutcome: ToolOutcome?
         /// What the Record says of a call (kiff/tafs#167). Each is absent when it doesn't apply.
-        /// The money it moves, as a decimal string and its unit ("150.00", "EUR").
-        struct Amount: Decodable, Equatable, Hashable, Codable {
+        /// The money it moves, as a decimal string and its unit ("150.00", "EUR"). A gateway
+        /// call's integer amount has no unit (KIFF writes it with omitempty).
+        struct Amount: Equatable, Hashable, Codable {
             let value: String
-            let unit: String
+            var unit: String?
         }
         var amount: Amount?
         var readOnly: Bool?
@@ -302,16 +303,19 @@ final class KIFFClient {
         var onHash: String?
         var onArg: String?
         /// The owner's answer to a held call: approved once or refused, signed on which device.
-        struct Answer: Decodable, Equatable, Hashable, Codable {
+        struct Answer: Equatable, Hashable, Codable {
             let decision: String
+            /// The answerer's role ("admin"), not who they are.
             var by: String?
+            /// The person reading answered it themselves (KIFF knows; a role can't say).
+            var you: Bool?
             var signed: Bool?
             var device: String?
             var at: Date?
         }
         var answer: Answer?
         /// Its KIFF receipt: signed, or pending until KIFF's next sweep (about 30 s).
-        struct Receipt: Decodable, Equatable, Hashable, Codable {
+        struct Receipt: Equatable, Hashable, Codable {
             let traceID: String
             let status: String
             enum CodingKeys: String, CodingKey { case status; case traceID = "trace_id" }
@@ -322,6 +326,7 @@ final class KIFFClient {
         enum CodingKeys: String, CodingKey {
             case title, outcome, held, amount, answer, receipt, reasons
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
+            case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
             case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
         }

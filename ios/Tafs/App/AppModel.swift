@@ -1983,10 +1983,6 @@ final class AppModel: ObservableObject {
         if call.kiffID != nil { decided[id] = entry }
     }
 
-    /// KIFF's record with the owner's answers it doesn't have yet: an answered call KIFF
-    /// still lists as held, or not yet at all, reads as answered. Once KIFF has the outcome,
-    /// its record carries the call and the answer is let go (review on #160): a bridge until
-    /// KIFF catches up, not a second record.
     /// What each Record line acted on (kiff/tafs#167): the call_refs of each taf with a line
     /// KIFF hashed a resource for, read from tafs cloud. Best effort: a taf whose calls can't
     /// be read keeps its lines without the payment.
@@ -2003,6 +1999,10 @@ final class AppModel: ObservableObject {
         record = KIFFMapping.naming(record, refs: refs)
     }
 
+    /// KIFF's record with the owner's answers it doesn't have yet: an answered call KIFF
+    /// still lists as held, or not yet at all, reads as answered. Once KIFF has the outcome,
+    /// its record carries the call and the answer is let go (review on #160): a bridge until
+    /// KIFF catches up, not a second record.
     func withDecisions(_ kiff: [RecordEntry]) -> [RecordEntry] {
         let (out, settled) = Self.merge(kiff, decided: decided)
         settled.forEach { decided[$0] = nil }
