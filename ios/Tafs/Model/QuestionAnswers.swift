@@ -54,3 +54,39 @@ enum QuestionAnswers {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }
+
+/// What the owner has picked on a questions card so far. A question's answer is one of
+/// its choices (several, on a multi question) or the owner's own words, never both, as
+/// the contract has it: opening "Something else…" clears the picks, and picking a choice
+/// closes the own field (kiff/tafs#138, item 57).
+struct QuestionSelection: Equatable {
+    var picked: [String: Set<String>] = [:]
+    var own: [String: String] = [:]
+    var ownOpen: Set<String> = []
+
+    mutating func toggleOwn(_ q: SetupComponent.Question) {
+        if ownOpen.contains(q.id) { ownOpen.remove(q.id) } else { ownOpen.insert(q.id); picked[q.id] = [] }
+    }
+
+    mutating func pick(_ q: SetupComponent.Question, _ value: String) {
+        if q.multi == true {
+            var set = picked[q.id] ?? []
+            if set.contains(value) { set.remove(value) } else { set.insert(value) }
+            picked[q.id] = set
+        } else {
+            picked[q.id] = [value]
+        }
+        ownOpen.remove(q.id)
+    }
+
+    /// The question's answer, if it has one.
+    func answer(_ q: SetupComponent.Question) -> QuestionAnswers.Answer? {
+        if ownOpen.contains(q.id) {
+            let words = (own[q.id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return words.isEmpty ? nil : .own(words)
+        }
+        let chosen = q.options.map(\.value).filter { picked[q.id]?.contains($0) == true }
+        if chosen.isEmpty { return nil }
+        return q.multi == true ? .choices(chosen) : .choice(chosen[0])
+    }
+}

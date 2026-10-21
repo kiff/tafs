@@ -8,12 +8,9 @@ struct QuestionsCard: View {
     @EnvironmentObject private var model: AppModel
     let component: SetupComponent
 
-    @State private var picked: [String: Set<String>] = [:]
-    @State private var own: [String: String] = [:]
-    @State private var ownOpen: Set<String> = []
+    @State private var selection = QuestionSelection()
     @State private var chatting = false
 
-    private static let ownValue = "\u{0}own"
     private var questions: [SetupComponent.Question] { component.questions ?? [] }
 
     var body: some View {
@@ -63,12 +60,12 @@ struct QuestionsCard: View {
                 .fixedSize(horizontal: false, vertical: true)
             WrapRow(spacing: 8) {
                 ForEach(q.options, id: \.self) { o in
-                    choice(o.label, detail: o.description, on: picked[q.id]?.contains(o.value) == true) { pick(q, o.value) }
+                    choice(o.label, detail: o.description, on: selection.picked[q.id]?.contains(o.value) == true) { selection.pick(q, o.value) }
                 }
-                choice("Something else…", detail: nil, on: ownOpen.contains(q.id)) { pick(q, Self.ownValue) }
+                choice("Something else…", detail: nil, on: selection.ownOpen.contains(q.id)) { selection.toggleOwn(q) }
             }
-            if ownOpen.contains(q.id) {
-                TextField("Your own answer", text: Binding(get: { own[q.id] ?? "" }, set: { own[q.id] = $0 }))
+            if selection.ownOpen.contains(q.id) {
+                TextField("Your own answer", text: Binding(get: { selection.own[q.id] ?? "" }, set: { selection.own[q.id] = $0 }))
                     .scaledFont(15)
                     .padding(.horizontal, 14).padding(.vertical, 12)
                     .background(Theme.panel)
@@ -102,30 +99,7 @@ struct QuestionsCard: View {
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
-    private func pick(_ q: SetupComponent.Question, _ value: String) {
-        if value == Self.ownValue {
-            if ownOpen.contains(q.id) { ownOpen.remove(q.id) } else { ownOpen.insert(q.id) }
-            if q.multi != true { picked[q.id] = [] }
-            return
-        }
-        if q.multi == true {
-            var set = picked[q.id] ?? []
-            if set.contains(value) { set.remove(value) } else { set.insert(value) }
-            picked[q.id] = set
-        } else {
-            picked[q.id] = [value]
-            ownOpen.remove(q.id)
-        }
-    }
-
-    /// The question's answer, if it has one: the owner's own words first, when they wrote some.
-    private func answer(_ q: SetupComponent.Question) -> QuestionAnswers.Answer? {
-        let words = (own[q.id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        if ownOpen.contains(q.id), !words.isEmpty { return .own(words) }
-        let chosen = q.options.map(\.value).filter { picked[q.id]?.contains($0) == true }
-        if chosen.isEmpty { return nil }
-        return q.multi == true ? .choices(chosen) : .choice(chosen[0])
-    }
+    private func answer(_ q: SetupComponent.Question) -> QuestionAnswers.Answer? { selection.answer(q) }
 
     private var answeredCount: Int { questions.filter { answer($0) != nil }.count }
 

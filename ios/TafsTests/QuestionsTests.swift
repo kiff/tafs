@@ -37,6 +37,28 @@ final class QuestionsTests: XCTestCase {
         XCTAssertEqual(answer.id, "setup-basics")
         XCTAssertEqual(answer.text, text)
     }
+
+    /// A multi question's answer is its picks or the owner's words, never words that
+    /// silently drop the picks on screen.
+    func testAMultiQuestionIsItsPicksOrTheOwnersWords() throws {
+        let c = try JSONDecoder().decode(SetupComponent.self, from: Data(Self.card.utf8))
+        let tools = try XCTUnwrap(c.questions?.first { $0.multi == true })
+        let (first, second) = (tools.options[0].value, tools.options[1].value)
+        var s = QuestionSelection()
+        s.pick(tools, first)
+        s.pick(tools, second)
+        XCTAssertEqual(s.answer(tools), .choices([first, second]))
+
+        s.toggleOwn(tools)
+        XCTAssertEqual(s.picked[tools.id], [], "opening Something else… clears the picks")
+        XCTAssertNil(s.answer(tools), "no words yet: no answer")
+        s.own[tools.id] = "only refunds under 50 €"
+        XCTAssertEqual(s.answer(tools), .own("only refunds under 50 €"))
+
+        s.pick(tools, first)
+        XCTAssertFalse(s.ownOpen.contains(tools.id), "picking a choice closes the own field")
+        XCTAssertEqual(s.answer(tools), .choices([first]))
+    }
 }
 
 /// KIFF hears the phone's languages, so its own words reach the owner in theirs (kiff/tafs#75).
