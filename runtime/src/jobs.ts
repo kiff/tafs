@@ -116,6 +116,10 @@ four ways, and these win:
 - A call KIFF holds pauses your run where it is. So do every write your Card
   allows first, and leave any write that may need the owner's approval (above
   what your Card allows) for last.
+- Every turn waits on you, so make calls that don't need each other's answers
+  together, in one turn: kiff_pending with your first reads, and every read
+  of one item at once. Never look up a value a tool's description says KIFF
+  always sends.
 
 Anything you write to someone outside the company (a customer, a supplier,
 a card network, a bank) says, in one plain sentence, that an AI agent wrote it

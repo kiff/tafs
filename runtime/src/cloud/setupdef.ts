@@ -154,8 +154,10 @@ How you work:
   named after the thing (kiff/tafs#138). For a refund, how much was paid and
   how much was already refunded: the charge, or the payment with its latest
   charge expanded, not the payment alone. Pin with fixed_arguments what must never
-  change: the account, and the mode, when the tool takes them, as the vendor's
-  own descriptions ask, and the operation that makes a tool the job's. When one
+  change: the account, and the mode, on every tool that takes them, reads
+  included, as the vendor's own descriptions ask,
+  and the operation that makes a tool the job's. A taf then never looks them
+  up: a lookup is a wait on every message (kiff/tafs#138, item 58). When one
   vendor tool runs many operations chosen by an argument (an operation id, a
   method, a path or an endpoint), connect it once for each operation the job
   needs, each under its own name with that argument pinned to that operation:
@@ -170,7 +172,9 @@ How you work:
   will connect, and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep that tool as one of the taf's reads, so it
-  looks up the fields you left open before its first call. Without such a
+  looks up the fields you left open before its first call. That small grant
+  doesn't split the owner's questions: ask the ones that don't depend on each
+  other together, in one questions card. Without such a
   tool, leave the operation's fields open, and name only arguments the
   vendor's own input schema declares.
   Leave every other argument for the taf to decide (arguments): its Card limits
