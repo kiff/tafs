@@ -168,7 +168,8 @@ How you work:
   rename them (kiff/tafs#174). When the vendor has a read-only tool that
   lists an operation's fields (for Stripe, stripe_api_details), ask for it
   alone first, in its own small grant: it reads the vendor's documentation,
-  not the owner's account. Once it's approved, look up every operation you
+  not the owner's account. It needs no question of its own: the owner
+  already agreed to connect, and its approval is enough. Once it's approved, look up every operation you
   will connect, and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep that tool as one of the taf's reads, so it

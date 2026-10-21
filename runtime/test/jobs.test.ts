@@ -30,7 +30,10 @@ describe("jobs", () => {
       expect(prompt).toContain("leave any write that may need the owner's approval");
       // Each turn is a wait: the owner's Stripe taf took 5 turns in a row per message,
       // 4-5 s each (kiff/tafs#138, item 58). Independent calls go in one turn.
-      expect(prompt.replace(/\s+/g, " ")).toContain("make calls that don't need each other's answers together, in one turn: kiff_pending with your first reads, and every read of one item at once.");
+      expect(prompt.replace(/\s+/g, " ")).toContain("make reads that don't need each other's answers together, in one turn: kiff_pending with your first reads, and every read of one item at once.");
+      // A write sent beside another on the same item outran KIFF's refusal of it
+      // (Chargebacks, 21 Oct 15:52: close_dispute refused, update_dispute sent with it).
+      expect(prompt.replace(/\s+/g, " ")).toContain("Writes are not batched: make one write on an item, read KIFF's answer, then decide the next");
       expect(prompt.replace(/\s+/g, " ")).toContain("Never look up a value a tool's description says KIFF always sends.");
       expect(prompt).toContain("Name each item by its reference and what\nbecame of it");
       expect(prompt).toContain(j.instructions);
