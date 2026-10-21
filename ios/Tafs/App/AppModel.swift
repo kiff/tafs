@@ -2350,9 +2350,11 @@ final class AppModel: ObservableObject {
         coachOpen = true
     }
 
-    /// A new conversation in Coach mode: on the taf on screen, else on none.
+    /// A new conversation in Coach mode is on no taf (kiff/tafs#138, item 36): the owner
+    /// asked for a new taf in one opened on a taf's page, and got that taf's next version.
+    /// The taf on screen is offered in it, to improve with one tap.
     func newCoachConversation() {
-        if let taf = tafOnScreen { improveTaf(taf) } else { newSetupChat() }
+        newSetupChat()
     }
 
     /// A new Setup conversation on one taf, to improve it (kiff/tafs#107).
@@ -2595,11 +2597,19 @@ final class AppModel: ObservableObject {
             // An improvement's first message goes through tafs cloud, which adds the taf's
             // context (kiff/tafs#107); the conversation goes on as any other.
             if let improving = setupImproving {
-                let sent = try await cloud.improve(improving.id, text: text)
+                // tafs cloud answers once it has read the taf's context from KIFF: Setup is
+                // at work from the send, so the dots show under the message (kiff/tafs#138, 37).
+                setupAwaiting = clock()
+                let sent: TafsCloud.Sent
+                do {
+                    sent = try await cloud.improve(improving.id, text: text)
+                } catch {
+                    setupAwaiting = nil
+                    throw error
+                }
                 guard gen == accountGeneration else { return .notTried }
                 setupImproving = nil
                 settleSetupChat(sent.session)
-                setupAwaiting = clock()
                 await loadSetupThread()
                 return .sent
             }

@@ -42,8 +42,8 @@ final class VersionsTests: XCTestCase {
     private static let twoVersions = #"{"versions":[{"n":1,"by":"setup","created":"2026-10-19T09:00:00Z","digest":"d1","live":true},{"n":2,"note":"Asks for the order number first","by":"setup","created":"2026-10-20T07:00:00.5Z","digest":"d2","live":false,"draft":"d_02"}]}"#
 
     /// Coach mode (kiff/tafs#138): opened on a taf, a new conversation takes that taf as its
-    /// context; closed and opened again elsewhere, it's as it was; New conversation takes the
-    /// taf on screen, else none.
+    /// context; closed and opened again elsewhere, it's as it was; New conversation is on no
+    /// taf, even on that taf's page (item 36), and the taf is one tap away.
     func testCoachModeOpensOnTheTafOnScreenAndKeepsAConversation() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
         let cloudID = try XCTUnwrap(model.cloudTaf(for: id)?.id)
@@ -60,6 +60,14 @@ final class VersionsTests: XCTestCase {
 
         model.newCoachConversation()
         XCTAssertNil(model.setupImproving, "a new one anywhere else has no taf in mind")
+
+        // On the taf's page, New conversation is still on no taf: "I want a taf that…" there
+        // made the open taf's next version (kiff/tafs#138, item 36).
+        model.tafOnScreen = id
+        model.newCoachConversation()
+        XCTAssertNil(model.setupImproving, "New conversation on a taf's page is on no taf")
+        model.improveTaf(id)
+        XCTAssertEqual(model.setupImproving?.id, cloudID, "its offer improves the taf on screen")
     }
 
     func testLoadsATafsVersions() async throws {
