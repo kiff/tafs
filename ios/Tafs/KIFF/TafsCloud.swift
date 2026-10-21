@@ -126,6 +126,8 @@ final class TafsCloud {
         let job: String?
         /// It works from its chat, with no schedule (kiff/tafs#138, items 43 and 55).
         var unscheduled: Bool? = nil
+        /// Its job in words (kiff/tafs#167); absent for an agent tafs doesn't run.
+        var jobSummary: String? = nil
         let kiffAgent: String
         let status: String?
         let nextRun: Date?
@@ -139,7 +141,7 @@ final class TafsCloud {
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, color, state, waiting, card, unscheduled
-            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
+            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
         }
 
         /// tafs cloud's record of it, for its chat, runs and schedule; nil for another agent.

@@ -1736,7 +1736,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const v = views[i]!;
     const card = summary(cards.get(t.kiffAgent) ?? []);
     const held = waiting.get(t.kiffAgent) ?? 0;
-    return { ...v, color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
+    // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
+    const words = JOBS.find((j) => j.id === v.job)?.summary;
+    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.

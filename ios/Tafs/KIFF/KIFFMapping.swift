@@ -89,7 +89,9 @@ enum KIFFMapping {
                      outside: r.outside == "refuse" ? .refuse : .hold)
         }
         let count = h.card.ids.count
-        var taf = Taf(id: id, name: h.name, job: "Works under \(count) KIFF Card\(count == 1 ? "" : "s").",
+        // Its job in words, as tafs cloud says it (kiff/tafs#167); an agent tafs doesn't run
+        // has none, and is described by its Cards.
+        var taf = Taf(id: id, name: h.name, job: h.jobSummary ?? "Works under \(count) KIFF Card\(count == 1 ? "" : "s").",
                       tools: h.card.tools, colorIndex: h.color,
                       card: Card(rules: rules, issuedBy: owner, expires: h.card.expires, revoked: !h.card.active))
         switch h.state {
