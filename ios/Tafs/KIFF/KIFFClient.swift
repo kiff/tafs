@@ -226,9 +226,12 @@ final class KIFFClient {
         /// The proposal KIFF held: what its activity files the call under, so the owner's
         /// answer and KIFF's outcome are one line (kiff/tafs#138, item 51).
         var proposalID: String? = nil
+        /// KIFF's answer to whether approving once can pass this call (kiff/tafs#138, item 49).
+        /// Absent from an older response: then the app offers it, as before.
+        var canApproveOnce: Bool? = nil
 
         enum CodingKeys: String, CodingKey {
-            case proposalID = "proposal_id"
+            case proposalID = "proposal_id", canApproveOnce = "can_approve_once"
             case id, subject, action, title, arguments, status, breaches, parameters, reason
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"

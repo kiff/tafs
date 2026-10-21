@@ -159,12 +159,24 @@ final class RetestWordsTests: XCTestCase {
 /// owner tapped it on €300 over a 250 € a day Card and got KIFF's raw refusal.
 @MainActor
 final class ApproveOnceTests: XCTestCase {
-    func testOnlyACallsOwnBreachesCanBeApprovedOnce() {
-        XCTAssertTrue(KIFFMapping.canApproveOnce(["per_action_exceeded"]))
-        XCTAssertTrue(KIFFMapping.canApproveOnce(["per_action_exceeded", "resource_not_on_card"]))
-        XCTAssertFalse(KIFFMapping.canApproveOnce(["per_action_exceeded", "aggregate_exceeded"]), "over the day's total too")
-        XCTAssertFalse(KIFFMapping.canApproveOnce(["aggregate_exceeded"]))
-        XCTAssertFalse(KIFFMapping.canApproveOnce([]), "KIFF named no breach")
+    /// The answer is KIFF's own `can_approve_once`, never a copy of its rule.
+    private func held(_ extra: String) throws -> HeldCall {
+        let json = """
+        {"id":"exc-1","proposal_id":"tc-1","subject":"claude","action":"refund","entity_id":"ord_1","status":"held",
+         "breaches":[{"mandate_id":"mdt-any","outcome":"aggregate_exceeded","limit":25000}],\(extra)
+         "created_at":"2026-10-09T08:00:00Z"}
+        """
+        let e = try KIFFClient.decoder.decode(KIFFClient.CardException.self, from: Data(json.utf8))
+        return KIFFMapping.held(e, tafID: UUID())
+    }
+
+    func testKIFFSaysWhetherApprovingOnceCanPass() throws {
+        XCTAssertFalse(try held(#""can_approve_once":false,"#).approvableOnce, "over the day's total")
+        XCTAssertTrue(try held(#""can_approve_once":true,"#).approvableOnce, "KIFF's word, whatever the breach")
+    }
+
+    func testAnOlderResponseStillOffersIt() throws {
+        XCTAssertTrue(try held("").approvableOnce)
     }
 }
 
