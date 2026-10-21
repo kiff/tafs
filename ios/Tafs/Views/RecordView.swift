@@ -132,6 +132,14 @@ extension RecordEntry {
         return "\(title) · \(money)"
     }
 
+    /// "payment …QbstR": what it acted on, by the argument's name, when tafs has its value
+    /// and it matches KIFF's hash.
+    var onText: String? {
+        guard let value = onValue else { return nil }
+        let noun = (onArg ?? "it").replacingOccurrences(of: "_", with: " ")
+        return value.count > 6 ? "\(noun) …\(value.suffix(5))" : "\(noun) \(value)"
+    }
+
     var answeredByOwner: Bool { answer?.by == nil || answer?.by == "owner" }
 
     /// Who decided: its Card, the owner (approving or refusing), or KIFF's refusal.
@@ -206,6 +214,7 @@ struct RecordRow: View {
     private var detail: String {
         var parts: [String] = []
         if showTaf, let taf = model.taf(entry.tafID) { parts.append(taf.name) }
+        if let on = entry.onText { parts.append(on) }
         if entry.receipt != nil || entry.answer != nil {
             parts += [entry.decidedLine, entry.resultLine]
         } else {
@@ -264,6 +273,9 @@ struct ReceiptView: View {
                     Panel {
                         line("Taf", model.taf(entry.tafID)?.name ?? "–")
                         line("When", entry.at.formatted(date: .abbreviated, time: .standard))
+                        if let value = entry.onValue {
+                            line("On", "\((entry.onArg ?? "").replacingOccurrences(of: "_", with: " ")) \(value)")
+                        }
                         line("Outcome", outcome, bold: true)
                         if let why = entry.why, !why.isEmpty { line("Why", why.joined(separator: "; ")) }
                         line("Decided by", decidedBy)
@@ -315,6 +327,8 @@ struct ReceiptView: View {
 
     @ViewBuilder private var receiptPanel: some View {
         switch check {
+        case .verified? where onMismatch:
+            failedPanel("The payment on this line doesn't match KIFF's receipt.")
         case .verified(let signer)?:
             Panel(stroke: Theme.ok.opacity(0.4)) {
                 Label("KIFF's receipt · checked on this iPhone", systemImage: "checkmark.seal.fill")
@@ -339,15 +353,7 @@ struct ReceiptView: View {
                 }
             }
         case .failed?:
-            Panel(stroke: Theme.no.opacity(0.5)) {
-                Label("KIFF's receipt doesn't check out", systemImage: "xmark.seal.fill")
-                    .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.no)
-                Text("This receipt was changed after KIFF signed it, or it wasn't signed by KIFF. Don't rely on this line.")
-                    .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                receiptFacts(signer: nil)
-                fullReceipt
-                receiptButtons(share: false)
-            }
+            failedPanel("This receipt was changed after KIFF signed it, or it wasn't signed by KIFF. Don't rely on this line.")
         case nil:
             Panel {
                 if let loadProblem {
@@ -361,6 +367,24 @@ struct ReceiptView: View {
                 }
             }
         }
+    }
+
+    private func failedPanel(_ why: String) -> some View {
+        Panel(stroke: Theme.no.opacity(0.5)) {
+            Label("KIFF's receipt doesn't check out", systemImage: "xmark.seal.fill")
+                .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.no)
+            Text(why).font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            receiptFacts(signer: nil)
+            fullReceipt
+            receiptButtons(share: false)
+        }
+    }
+
+    /// The signed chain names what the call acted on (its decision step's on_hash), and
+    /// the line's value isn't it.
+    private var onMismatch: Bool {
+        guard let value = entry.onValue, let signed = steps.compactMap(\.onHash).first else { return false }
+        return !KIFFMapping.isOn(value, hash: signed)
     }
 
     private func receiptFacts(signer: String?) -> some View {
@@ -417,6 +441,8 @@ struct ReceiptView: View {
         let at: Date?
         let hash: String
         let kind: String
+        /// What the step says the call acted on, as KIFF hashed it.
+        let onHash: String?
     }
 
     /// The receipt's steps, as KIFF signed them: what the sheet shows as happened.
@@ -429,7 +455,8 @@ struct ReceiptView: View {
             let at = (s["occurred_at"] as? String).flatMap { ISO8601DateFormatter.precise.date(from: $0) ?? ISO8601DateFormatter().date(from: $0) }
             let hash = s["data_hash"] as? String ?? ""
             return Step(words: message ?? kind.replacingOccurrences(of: "_", with: " "), at: at,
-                        hash: hash.count > 8 ? "\(hash.prefix(4))…\(hash.suffix(4))" : hash, kind: kind)
+                        hash: hash.count > 8 ? "\(hash.prefix(4))…\(hash.suffix(4))" : hash, kind: kind,
+                        onHash: (s["data"] as? [String: Any])?["on_hash"] as? String)
         }
     }
 

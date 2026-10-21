@@ -556,6 +556,20 @@ final class TafsCloud {
         }
     }
 
+    /// What one of the taf's calls through KIFF acted on (kiff/tafs#167): KIFF's key for
+    /// the call and the value of the argument its Card scopes on, kept 30 days.
+    struct CallRef: Decodable, Equatable {
+        let invocation: String
+        let value: String
+    }
+
+    /// What the taf's calls through KIFF acted on, as its runs kept them.
+    func calls(_ id: String) async throws -> [CallRef] {
+        struct Response: Decodable { let calls: [CallRef] }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/calls")
+        return r.calls
+    }
+
     /// What the taf remembers, newest first.
     func memory(_ id: String) async throws -> [Note] {
         struct Response: Decodable { let notes: [Note] }

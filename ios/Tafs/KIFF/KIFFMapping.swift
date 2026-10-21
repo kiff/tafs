@@ -132,6 +132,9 @@ enum KIFFMapping {
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
             entry.amount = c.amount
             entry.readOnly = c.readOnly
+            entry.entityID = c.entityID
+            entry.onHash = c.onHash
+            entry.onArg = c.onArg
             entry.answer = c.answer
             entry.receipt = c.receipt
             entry.why = c.reasons
@@ -162,6 +165,22 @@ enum KIFFMapping {
     }
 
     /// A record entry's id, from KIFF's call id: the same on every refresh.
+    /// Whether a value is what KIFF's hash names (kiff/tafs#167): "sha256:<hex>" of its
+    /// UTF-8 bytes, untrimmed, in its own case.
+    static func isOn(_ value: String, hash: String) -> Bool {
+        hash == "sha256:" + SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// The Record's lines with what each acted on, from the tafs' call_refs by KIFF's key:
+    /// only a value whose hash is KIFF's, so a line never names a payment KIFF didn't.
+    static func naming(_ record: [RecordEntry], refs: [String: String]) -> [RecordEntry] {
+        record.map { e in
+            var e = e
+            if let key = e.entityID, let hash = e.onHash, let value = refs[key], isOn(value, hash: hash) { e.onValue = value }
+            return e
+        }
+    }
+
     static func recordID(_ proposalID: String) -> UUID {
         var bytes = Array(SHA256.hash(data: Data("tafs.record|\(proposalID)".utf8)).prefix(16))
         bytes[6] = (bytes[6] & 0x0F) | 0x50

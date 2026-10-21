@@ -406,6 +406,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "memory") {
     return { notes: await notes(me, taf, deps) };
   }
+  if (parts.length === 4 && method === "GET" && action === "calls") {
+    return { calls: await callRefs(me, taf, deps) };
+  }
   if (parts.length === 5 && method === "DELETE" && action === "memory") {
     need(me, "cards.manage");
     return forget(me, taf, parts[4] ?? "", deps);
@@ -877,6 +880,26 @@ export interface ThreadMessage {
   kind: "kickoff" | "message";
   text: string;
   session: string;
+}
+
+/**
+ * What the taf's calls through KIFF acted on (kiff/tafs#167): for each, KIFF's key
+ * (its activity's entity_id) and the value of the argument its Card scopes on, as
+ * the run kept them (`call_ref`, 30 days). The app names a Record line's payment
+ * from it, and checks it against KIFF's signed hash. Nothing else of a call is kept.
+ */
+async function callRefs(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{ invocation: string; value: string; at: string }>> {
+  const sessions = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
+  const read = await Promise.all(sessions.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
+  const out: Array<{ invocation: string; value: string; at: string }> = [];
+  for (const r of read) {
+    for (const e of r?.events ?? []) {
+      if (e.kind !== "call_ref") continue;
+      const b = e.body as { invocation?: unknown; value?: unknown };
+      if (typeof b?.invocation === "string" && typeof b.value === "string") out.push({ invocation: b.invocation, value: b.value, at: e.time });
+    }
+  }
+  return out;
 }
 
 /**

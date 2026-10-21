@@ -295,6 +295,12 @@ final class KIFFClient {
         }
         var amount: Amount?
         var readOnly: Bool?
+        /// KIFF's key for the call (the gateway's "tc-…"), what tafs' call_ref names it by.
+        var entityID: String?
+        /// What it acted on, as KIFF signs it: "sha256:<hex>" of the value, and the name of
+        /// the argument it came from ("payment"). KIFF keeps no argument but numbers.
+        var onHash: String?
+        var onArg: String?
         /// The owner's answer to a held call: approved once or refused, signed on which device.
         struct Answer: Decodable, Equatable, Hashable, Codable {
             let decision: String
@@ -317,7 +323,7 @@ final class KIFFClient {
             case title, outcome, held, amount, answer, receipt, reasons
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
-            case readOnly = "read_only"
+            case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
         }
     }
 
