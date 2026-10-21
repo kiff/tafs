@@ -257,7 +257,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         planque.deviceID = nil
         accountGeneration += 1
@@ -289,7 +289,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []
+        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
@@ -1470,7 +1470,10 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration, mode == .kiff else { return }
         switch result {
         case .success(let thread):
-            chats[tafID] = thread.messages
+            // What the owner sent stays on screen until the thread has it (kiff/tafs#138, 48).
+            let (messages, waiting) = SentMessages.merge(thread.messages, sent: chatSent[tafID] ?? [], now: clock())
+            chatSent[tafID] = waiting.isEmpty ? nil : waiting
+            chats[tafID] = messages
             chatErrors[tafID] = nil
             // A run seen at work here is over now: what it did reaches the Card and the record.
             if chatStates[tafID]?.working != nil, thread.working == nil { Task { await refresh() } }
@@ -1504,8 +1507,10 @@ final class AppModel: ObservableObject {
         /// After each wait: is this still the session the message was sent in?
         func current() -> Bool { gen == accountGeneration }
         chatErrors[tafID] = nil
-        let pending = sampleMessage(.owner, text, session: "pending")
+        let latest = chats[tafID]?.map(\.at).max()
+        let pending = TafsCloud.ChatMessage(at: SentMessages.stamp(after: latest, now: clock()), from: .owner, text: text, session: "pending")
         chats[tafID, default: []].append(pending)
+        if mode != .sample { chatSent[tafID, default: []].append(pending) }
 
         if mode == .sample {
             try? await Task.sleep(nanoseconds: sampleReplyDelay)
@@ -1515,6 +1520,7 @@ final class AppModel: ObservableObject {
         }
         guard let c = cloudTaf(for: tafID) else {
             chats[tafID]?.removeAll { $0 == pending }
+            chatSent[tafID]?.removeAll { $0 == pending }
             chatErrors[tafID] = "This taf isn't running on tafs cloud, so it can't be messaged."
             return .notTried
         }
@@ -1538,11 +1544,13 @@ final class AppModel: ObservableObject {
         } catch let e as TafsCloud.CloudError where e.status == 429 {
             guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0 == pending }
+            chatSent[tafID]?.removeAll { $0 == pending }
             keepUnsent(text, tafID, why: "That's a lot of messages in a few minutes. Give \(c.name) a moment, then try again.")
             return .kept
         } catch {
             guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0 == pending }
+            chatSent[tafID]?.removeAll { $0 == pending }
             keepUnsent(text, tafID, why: error.localizedDescription)
             return .kept
         }
@@ -1963,9 +1971,10 @@ final class AppModel: ObservableObject {
     private var decided: [UUID: RecordEntry] = [:]
 
     /// Records the owner's answer to a held call where the call was held, under the id KIFF's
-    /// record gives it, so it folds the card in place and a refresh doesn't lose it.
+    /// record gives it (its proposal's), so it folds the card in place, a refresh doesn't lose
+    /// it, and once KIFF records the outcome the two are one line (kiff/tafs#138, item 51).
     private func decide(_ call: HeldCall, _ kind: RecordEntry.Kind, _ title: String, _ detail: String, signature: String?) {
-        let id = call.kiffID.map(KIFFMapping.recordID) ?? UUID()
+        let id = (call.proposalID ?? call.kiffID).map(KIFFMapping.recordID) ?? UUID()
         var entry = RecordEntry(id: id, tafID: call.tafID, kind: kind, title: title, detail: detail, at: call.heldAt, signature: signature)
         if kind == .approved { entry.ownerApproved = true }
         record.removeAll { $0.id == id }
@@ -2320,9 +2329,8 @@ final class AppModel: ObservableObject {
     /// shows when it's tapped, and once. A reload while the send is on its way would
     /// otherwise drop it until tafs cloud has it.
     private var setupSent: [TafsCloud.ChatMessage] = []
-    /// How long a sent message waits for tafs cloud's copy, and how far apart the phone's
-    /// clock and tafs cloud's may be.
-    static let sentKept: TimeInterval = 120
+    /// The same for each taf's chat (kiff/tafs#138, item 48): one rule for both chats.
+    private var chatSent: [UUID: [TafsCloud.ChatMessage]] = [:]
 
     /// Where Setup's next message goes.
     private var setupTarget: TafsCloud.ChatTarget {
@@ -2548,26 +2556,13 @@ final class AppModel: ObservableObject {
         return true
     }
 
-    /// tafs cloud's thread, with what the owner sent that it doesn't have yet (kiff/tafs#82).
-    /// A sent message goes once tafs cloud has it (the same words, written about when it
-    /// was sent), or after `sentKept`, when it either has it or the send says why not.
+    /// tafs cloud's thread, with what the owner sent that it doesn't have yet, by the rule
+    /// both chats share (SentMessages).
     private func withSent(_ thread: SetupThread) -> SetupThread {
-        let now = clock()
-        // One copy takes the place of one sent message, oldest first: two "Sí" sent close
-        // together stay two until tafs cloud has both.
-        var taken = Set<Int>()
-        setupSent = setupSent.filter { sent in
-            if now.timeIntervalSince(sent.at) > Self.sentKept { return false }
-            let copy = thread.messages.indices.first { i in
-                let m = thread.messages[i]
-                return !taken.contains(i) && m.from == .owner && m.text == sent.text && m.at >= sent.at.addingTimeInterval(-Self.sentKept)
-            }
-            guard let copy else { return true }
-            taken.insert(copy)
-            return false
-        }
+        let (messages, waiting) = SentMessages.merge(thread.messages, sent: setupSent, now: clock())
+        setupSent = waiting
         var out = thread
-        out.messages += setupSent
+        out.messages = messages
         return out
     }
 
@@ -2589,8 +2584,8 @@ final class AppModel: ObservableObject {
         // Shown at once, the way it was sent (kiff/tafs#82), until tafs cloud's copy takes its place.
         // Stamped no earlier than the thread's latest item: Setup's messages carry tafs
         // cloud's time, so a phone clock a little behind would place it above them.
-        let latest = setupThread.items.map(\.at).max().map { $0.addingTimeInterval(0.001) } ?? .distantPast
-        let mine = TafsCloud.ChatMessage(at: max(clock(), latest), from: .owner, text: text, session: "pending")
+        let mine = TafsCloud.ChatMessage(at: SentMessages.stamp(after: setupThread.items.map(\.at).max(), now: clock()),
+                                         from: .owner, text: text, session: "pending")
         setupSent.append(mine)
         setupThread.messages.append(mine)
         do {

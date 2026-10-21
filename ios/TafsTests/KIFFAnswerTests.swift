@@ -175,6 +175,25 @@ final class KIFFAnswerTests: XCTestCase {
                        "kiff.answer.v1\nt1\nce_1\nreject\nreturn_first\n2b951386ddf8c195c3f5603c65de2156acb7f9f2a13638581448711e019dc654\n2\n2026-10-14T12:00:00Z")
     }
 
+    /// The owner's answer is filed under the proposal KIFF held, which KIFF's record files the
+    /// call under, not under the hold's own id: a refusal showed twice, once where the card
+    /// was and once as KIFF's outcome (kiff/tafs#138, item 51). Once KIFF has the outcome, one
+    /// line is left.
+    func testAnAnswerAndKIFFsOutcomeAreOneLine() async throws {
+        let model = try await makeModel(verifies: true, signer: RecordingSigner())
+        let call = try XCTUnwrap(model.held.first)
+        XCTAssertEqual(call.proposalID, "p1")
+        await model.answer(call, with: .refuse)
+        let mine = KIFFMapping.recordID("p1")
+        XCTAssertEqual(model.record.filter { $0.id == mine }.count, 1, "filed under KIFF's record id")
+        XCTAssertTrue(model.record.allSatisfy { $0.id != KIFFMapping.recordID("ce_1") })
+
+        let kiffs = RecordEntry(id: mine, tafID: call.tafID, kind: .refused, title: "Refund order", detail: "Not sent", at: now)
+        let merged = AppModel.merge([kiffs], decided: [mine: try XCTUnwrap(model.record.first { $0.id == mine })])
+        XCTAssertEqual(merged.record.filter { $0.id == mine }.count, 1)
+        XCTAssertEqual(merged.settled, [mine], "KIFF's outcome takes the answer's place")
+    }
+
     func testAHeldCallKeepsItsIdentityAcrossRefreshes() async throws {
         let model = try await makeModel(verifies: true, signer: RecordingSigner())
         let first = model.held.map(\.id)

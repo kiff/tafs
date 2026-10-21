@@ -153,6 +153,7 @@ enum KIFFMapping {
             expiresAt: e.expiresAt ?? e.createdAt.addingTimeInterval(10 * 60)
         )
         call.kiffID = e.id
+        call.proposalID = e.proposalID
         call.accountingVersion = e.accountingVersion
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)

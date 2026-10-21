@@ -139,6 +139,42 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
     }
 
+    /// The owner's message stays on screen while the taf answers, though tafs cloud's thread
+    /// doesn't have it yet: a reload mid-answer took it away, so only the dots showed
+    /// (kiff/tafs#138, item 48). Once the thread has it, it shows once.
+    func testASentMessageStaysThroughReloadsUntilTheThreadHasIt() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages/stream"] = (200, """
+        event: session
+        data: {"session":"sesn_9","new_session":true}
+
+        event: activity
+        data: {"tool":"memory"}
+
+        event: end
+        data: {"status":"COMPLETED","stop":"answered"}
+
+
+        """)
+        let sent = await model.sendChat("What are the latest 3 payments", to: id)
+        XCTAssertTrue(sent)
+        await model.chatStreams[id]?.value
+        await model.loadChat(id)
+        let mine = { (model.chats[id] ?? []).filter { $0.from == .owner && $0.text == "What are the latest 3 payments" } }
+        XCTAssertEqual(mine().count, 1, "the reloads didn't take it away")
+
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let now = iso.string(from: Date())
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"\(now)","from":"owner","kind":"message","text":"What are the latest 3 payments","session":"sesn_9"}]}
+        """)
+        await model.loadChat(id)
+        XCTAssertEqual(mine().count, 1, "the thread's copy takes its place")
+        XCTAssertEqual(mine().first?.session, "sesn_9")
+    }
+
     /// The taf's answer streams (#64): tafs cloud's stream route takes the message, the
     /// words arrive as written, and the end reloads the thread. Nothing goes through
     /// the plain route.

@@ -221,7 +221,15 @@ final class TafsCloud {
     struct ChatMessage: Decodable, Equatable, Identifiable {
         enum From: String, Decodable { case owner, taf }
         enum Kind: String, Decodable { case kickoff, message }
-        var id: String { "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)" }
+        /// A taf's (or Setup's) message is the same message while its text grows: tafs cloud
+        /// writes a turn's words as one message, so a reload can bring more of it. Keyed by its
+        /// words, it would show as a new message and be revealed again from nothing, its cards
+        /// held back meanwhile (kiff/tafs#138, item 48). An owner's message keeps its words in
+        /// its id: two sent at once stay two.
+        var id: String {
+            from == .taf ? "\(session)|\(at.timeIntervalSince1970)|taf|\(kind.rawValue)"
+                : "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)"
+        }
         let at: Date
         let from: From
         let kind: Kind

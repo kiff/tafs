@@ -223,8 +223,12 @@ final class KIFFClient {
         /// What a held gateway call asks, as KIFF keeps it (its arguments), each as text:
         /// what the call is on, which the tool-call id it's filed under doesn't say.
         var arguments: [String: ArgumentText]? = nil
+        /// The proposal KIFF held: what its activity files the call under, so the owner's
+        /// answer and KIFF's outcome are one line (kiff/tafs#138, item 51).
+        var proposalID: String? = nil
 
         enum CodingKeys: String, CodingKey {
+            case proposalID = "proposal_id"
             case id, subject, action, title, arguments, status, breaches, parameters, reason
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
