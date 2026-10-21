@@ -169,7 +169,8 @@ How you work:
   lists an operation's fields (for Stripe, stripe_api_details), ask for it
   alone first, in its own small grant, read_only with setup_reads: true, so
   you can read it yourself: it reads the vendor's documentation, not the
-  owner's account. It needs no question of its own: the owner already agreed
+  owner's account. setup_reads goes on that tool only, never on the taf's
+  own reads: those read the owner's account. It needs no question of its own: the owner already agreed
   to connect, and its approval is enough. Once it's connected, read every
   operation you will connect with planque read {grant, tool (as the grant
   lists it), arguments}, and place each argument you name (the amount, what the call

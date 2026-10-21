@@ -168,6 +168,7 @@ describe("Setup's definition on kiff/agents", () => {
     // Setup reads the fields itself, through planque, once the owner approved that read
     // (kiff/tafs#174): the taf alone held the tool, so Setup could only guess.
     expect(flat).toContain("read_only with setup_reads: true, so you can read it yourself");
+    expect(flat).toContain("setup_reads goes on that tool only, never on the taf's own reads: those read the owner's account");
     expect(flat).toContain("read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments}, and place each argument you name");
     expect(flat).toContain("It needs no question of its own: the owner already agreed to connect, and its approval is enough");
     expect(flat).toContain("That small grant doesn't split the owner's questions: ask the ones that don't depend on each other together, in one questions card");
