@@ -153,3 +153,15 @@ final class RetestWordsTests: XCTestCase {
         XCTAssertEqual(taf.state.label, "Ready")
     }
 }
+
+/// "Approve once" is offered only where KIFF can pass the call (kiff/tafs#138, item 49): the
+/// owner tapped it on €300 over a 250 € a day Card and got KIFF's raw refusal.
+final class ApproveOnceTests: XCTestCase {
+    func testOnlyACallsOwnBreachesCanBeApprovedOnce() {
+        XCTAssertTrue(KIFFMapping.canApproveOnce(["per_action_exceeded"]))
+        XCTAssertTrue(KIFFMapping.canApproveOnce(["per_action_exceeded", "resource_not_on_card"]))
+        XCTAssertFalse(KIFFMapping.canApproveOnce(["per_action_exceeded", "aggregate_exceeded"]), "over the day's total too")
+        XCTAssertFalse(KIFFMapping.canApproveOnce(["aggregate_exceeded"]))
+        XCTAssertFalse(KIFFMapping.canApproveOnce([]), "KIFF named no breach")
+    }
+}

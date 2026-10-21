@@ -190,6 +190,9 @@ struct HeldCall: Identifiable, Hashable, Codable {
     var kiffID: String?
     /// The proposal KIFF held, which its record files the call under.
     var proposalID: String?
+    /// Whether approving it once can pass it (kiff/tafs#138, item 49): not when it's over a
+    /// total the Card keeps across calls (a day's), which only a change to the Card can lift.
+    var approvableOnce = true
     /// KIFF's accounting version for the hold, signed with the answer.
     var accountingVersion: Int?
     /// Other answers the Card allows besides approve and refuse ("return first").

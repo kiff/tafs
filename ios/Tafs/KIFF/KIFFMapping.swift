@@ -133,6 +133,13 @@ enum KIFFMapping {
     }
 
     /// A record entry's id, from KIFF's call id: the same on every refresh.
+    /// KIFF's own rule (mandate.Exception.CanApproveOnce): approving once can pass a call only
+    /// when each breach is the call's own, over a limit per call or outside the Card's scope,
+    /// never a total the Card keeps across calls.
+    static func canApproveOnce(_ outcomes: [String]) -> Bool {
+        !outcomes.isEmpty && outcomes.allSatisfy { $0 == "per_action_exceeded" || $0 == "resource_not_on_card" }
+    }
+
     static func recordID(_ proposalID: String) -> UUID {
         var bytes = Array(SHA256.hash(data: Data("tafs.record|\(proposalID)".utf8)).prefix(16))
         bytes[6] = (bytes[6] & 0x0F) | 0x50
@@ -157,6 +164,7 @@ enum KIFFMapping {
         )
         call.kiffID = e.id
         call.proposalID = e.proposalID
+        call.approvableOnce = canApproveOnce(e.breaches.map(\.outcome))
         call.accountingVersion = e.accountingVersion
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)
