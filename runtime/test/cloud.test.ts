@@ -23,6 +23,8 @@ interface Account {
   revisions?: Record<string, number>;
   /** The restores and redrafts asked of KIFF, in order, as their bodies or draft ids. */
   restored?: unknown[]; redrafted?: string[];
+  /** Each draft's trial, as KIFF keeps it (kiff/tafs#173): trying, or ended with its counts. */
+  trials?: Record<string, { status: "trying" | "ended"; ended_by?: string; calls: number; held: number; refused: number }>;
 }
 
 /** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
@@ -50,6 +52,19 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       const id = `drf_again${account.redrafted.length}`;
       (account.drafts ??= {})[id] = { status: "draft", agent_id: "rae" };
       return new Response(JSON.stringify({ id, status: "draft" }), { status: 201 });
+    }
+    const trial = /\/v1\/me\/agent-drafts\/([^/?]+)\/trial$/.exec(url);
+    if (trial) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      const id = decodeURIComponent(trial[1]!);
+      const t = account.trials?.[id];
+      if (!t) return new Response(JSON.stringify({ error: "no trial" }), { status: 404 });
+      if (init?.method === "DELETE") {
+        if (t.status !== "trying") return new Response(JSON.stringify({ error: "not_trying" }), { status: 409 });
+        Object.assign(t, { status: "ended", ended_by: "back" });
+        (account.drafts ??= {})[id] = { status: "draft", agent_id: "rae" };
+      }
+      return new Response(JSON.stringify(t), { status: 200 });
     }
     const statement = /\/v1\/me\/mandates\/([^/?]+)\/statement$/.exec(url);
     if (statement) {
@@ -1154,5 +1169,97 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
     w.account.drafts = { drf_v2: "discarded" };
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).status).toBe(409);
+  });
+});
+
+describe("trying a version (kiff/tafs#173)", () => {
+  const trying = () => {
+    const w = world();
+    w.agents.versions.set(`t_acme|${RAE}`, [
+      { n: 1, note: "Started by Setup", by: "setup", created: "2026-10-18T09:00:00Z", digest: "d1", live: true },
+      { n: 2, note: "Reads a charge before refunding it", by: "setup", created: "2026-10-20T09:00:00Z", digest: "d2", live: false, revisions: ["rev_2"], draft: "drf_v2" },
+    ]);
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "rae" }, drf_max: { status: "trying", agent_id: "max" } };
+    return w;
+  };
+
+  it("gives the draft to try, opens the trial once KIFF has it trying, and chats with that version", async () => {
+    const w = trying();
+    const tried = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/try`, { token: "ana" });
+    expect(tried).toMatchObject({ status: 200, body: { draft: "drf_v2" } });
+    // Not trying in KIFF yet: nothing opens.
+    const early = await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_v2" } });
+    expect(early.status).toBe(409);
+    // The phone confirmed it as a trial, signed: the trial opens on version 2.
+    w.account.drafts!.drf_v2 = { status: "trying", agent_id: "rae" };
+    w.account.trials = { drf_v2: { status: "trying", calls: 0, held: 0, refused: 0 } };
+    const opened = await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_v2" } });
+    expect(opened).toMatchObject({ status: 200, body: { trial: { n: 2, draft: "drf_v2" } } });
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial`, { token: "ana" })).body.trial).toMatchObject({ n: 2 });
+    // Its messages go to the trial, in one chat of its own.
+    const first = await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "ana", body: { text: "Refund ch_1." } });
+    const second = await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "ana", body: { text: "And ch_2." } });
+    expect(first.status).toBe(200);
+    expect(second.body.session).toBe(first.body.session);
+    const chat = await call(w, "GET", `/v1/tafs/${RAE}/trial/conversation`, { token: "ana" });
+    expect((chat.body.messages as Array<{ text: string }>).map((m) => m.text)).toEqual(["Refund ch_1.", "And ch_2."]);
+    // The taf's own thread doesn't show the trial's chat.
+    const thread = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect((thread.body.messages as Array<{ text: string }>).map((m) => m.text)).not.toContain("Refund ch_1.");
+  });
+
+  it("goes back: KIFF ends the trial Cards first, then the chat goes and version 2 keeps a line", async () => {
+    const w = trying();
+    w.account.drafts!.drf_v2 = { status: "trying", agent_id: "rae" };
+    w.account.trials = { drf_v2: { status: "trying", calls: 3, held: 1, refused: 0 } };
+    await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_v2" } });
+    const sent = await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "ana", body: { text: "Refund ch_1." } });
+    const back = await call(w, "DELETE", `/v1/tafs/${RAE}/trial`, { token: "ana" });
+    expect(back).toMatchObject({ status: 200, body: { ended: { why: "back", calls: 3, held: 1, refused: 0 } } });
+    expect(w.account.trials.drf_v2?.status).toBe("ended");
+    expect(w.agents.sessions.some((s) => s.id === sent.body.session)).toBe(false);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial`, { token: "ana" })).body.trial).toBeNull();
+    expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.n === 2)?.trials).toMatchObject([{ why: "back", calls: 3 }]);
+    expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(1);
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/trial`, { token: "ana" })).status).toBe(404);
+  });
+
+  it("installs only once KIFF has its draft confirmed live, then ends the trial", async () => {
+    const w = trying();
+    w.account.drafts!.drf_v2 = { status: "trying", agent_id: "rae" };
+    w.account.trials = { drf_v2: { status: "trying", calls: 2, held: 0, refused: 0 } };
+    await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_v2" } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/trial/install`, { token: "ana" })).status).toBe(409);
+    expect(w.agents.calls).not.toContain(`switchVersion ${RAE} 2`);
+    // The phone confirmed it live, signed: KIFF ended the trial with it.
+    w.account.drafts!.drf_v2 = { status: "confirmed", agent_id: "rae" };
+    w.account.trials.drf_v2 = { status: "ended", ended_by: "install", calls: 2, held: 0, refused: 0 };
+    const installed = await call(w, "POST", `/v1/tafs/${RAE}/trial/install`, { token: "ana" });
+    expect(installed).toMatchObject({ status: 200, body: { live: 2, ended: { why: "installed", calls: 2 } } });
+    expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(2);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial`, { token: "ana" })).body.trial).toBeNull();
+  });
+
+  it("refuses another taf's draft, a viewer, and what isn't there", async () => {
+    const w = trying();
+    expect((await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_max" } })).status).toBe(404);
+    expect((await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 9, draft: "drf_v2" } })).status).toBe(404);
+    expect((await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 1, draft: "drf_v2" } })).status).toBe(409);
+    expect((await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2 } })).status).toBe(400);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/1/try`, { token: "ana" })).status).toBe(409);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/try`, { token: "viewer" })).status).toBe(403);
+    expect((await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "viewer", body: { n: 2, draft: "drf_v2" } })).status).toBe(403);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "ana", body: { text: "hi" } })).status).toBe(404);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial/conversation`, { token: "ana" })).status).toBe(404);
+    expect((await call(w, "DELETE", `/v1/tafs/${MAX}/trial`, { token: "ana" })).status).toBe(404);
+  });
+
+  it("drafts the live Cards as they stand for a version that changes none", async () => {
+    const w = trying();
+    w.agents.versions.get(`t_acme|${RAE}`)!.push({ n: 3, note: "Says it plainer", by: "setup", created: "2026-10-21T09:00:00Z", digest: "d3", live: false });
+    w.account.mandates = [{ id: "rae-refund", subjects: ["rae"], grants: [], aggregates: [], active: true } as never];
+    const tried = await call(w, "POST", `/v1/tafs/${RAE}/versions/3/try`, { token: "ana" });
+    expect(tried).toMatchObject({ status: 200, body: { draft: "drf_restore1" } });
+    expect(w.account.restored?.[0]).toMatchObject({ agent_id: "rae", revisions: [{ id: "rae-refund", revision: 1 }] });
   });
 });
