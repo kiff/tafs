@@ -136,6 +136,15 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A tool that moves money or changes data always has its amount limited, each call and over a day: a call count alone is only for a read tool");
     // The owner's own limit is the limit (item 44).
     expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
+    // The schedule is decided before the result, with the owner's case as the example (item 43).
+    expect(flat).toContain("Before you show it, decide unscheduled from the tools on its Card: if none of them lists the work (for refunds: the refund requests), set unscheduled: true. A refunds taf with Stripe's tools alone is one");
+    // A new taf asked for in an improve conversation is a new taf (kiff/tafs#138, item 36).
+    expect(flat).toContain("unless the owner asks for a new taf (\"I want a taf that…\", \"set up a…\", \"a new taf\"): then set one up, as in a conversation without that line, with no improves in its result");
+    expect(flat).toContain("When you can't tell whether they mean that taf or a new one, ask once with a confirm");
+    // The question is asked once, by the confirm (item 39).
+    expect(flat).toContain("Not \"Should I make this change?\" in the message and \"Make this change?\" in the confirm");
+    // Trying and installing is the owner's step, open in the plan (item 40).
+    expect(flat).toContain("The plan for an improvement ends with trying it and installing it, the owner's step: it stays to do in the plan you show with the result, never done");
     // A taf whose tools can't list its work has no schedule (kiff/tafs#138, item 26).
     expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
     // One question at a time: a second choice beside a confirm went into prose (measure of #138).
