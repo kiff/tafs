@@ -207,7 +207,7 @@ struct RecordRow: View {
                     Label("KIFF receipt", systemImage: "doc.text")
                         .font(.system(size: 12)).foregroundColor(Theme.ok)
                 } else if entry.signature != nil {
-                    Label("Signed on this \(ThisDevice.name)", systemImage: "checkmark.seal")
+                    Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal")
                         .font(.system(size: 12)).foregroundColor(Theme.ok)
                 }
             }
@@ -297,7 +297,7 @@ struct ReceiptView: View {
                     }
                     if let signature = entry.signature {
                         Panel(stroke: Theme.ok.opacity(0.4)) {
-                            Label("Signed on this \(ThisDevice.name)", systemImage: "checkmark.seal.fill")
+                            Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
                                 .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
                             Text("Your answer was signed with a key that never leaves this device, after \(Biometry.name).")
                                 .font(.system(size: 13)).foregroundColor(Theme.soft)
@@ -346,7 +346,7 @@ struct ReceiptView: View {
             failedPanel("The answer on this line doesn't match KIFF's receipt.")
         case .verified(let signer)?:
             Panel(stroke: Theme.ok.opacity(0.4)) {
-                Label("KIFF's receipt · checked on this \(ThisDevice.name)", systemImage: "checkmark.seal.fill")
+                Label("KIFF's receipt · checked on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
                     .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
                 Text("KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since.")
                     .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -377,7 +377,7 @@ struct ReceiptView: View {
                 } else {
                     HStack(spacing: 8) {
                         ProgressView().controlSize(.small)
-                        Text("Checking KIFF's receipt on this \(ThisDevice.name)…").font(.system(size: 13)).foregroundColor(Theme.soft)
+                        Text("Checking KIFF's receipt on this \(ThisDevice.kind)…").font(.system(size: 13)).foregroundColor(Theme.soft)
                     }
                 }
             }
@@ -587,16 +587,4 @@ extension ISO8601DateFormatter {
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f
     }()
-}
-
-/// The device the app runs on, as the owner calls it: a receipt is checked, and an answer
-/// signed, on this iPad or this iPhone (kiff/tafs#138: an iPad read "this iPhone").
-enum ThisDevice {
-    static var name: String {
-        #if os(iOS)
-        return UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
-        #else
-        return "Mac"
-        #endif
-    }
 }
