@@ -132,6 +132,7 @@ final class AfterTheTestTests: XCTestCase {
 }
 
 /// What the owner's retest of build 473 found in the words (kiff/tafs#138, items 54 and 55).
+@MainActor
 final class RetestWordsTests: XCTestCase {
     func testANameEndingInSHasItsOwnPossessive() throws {
         let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
@@ -156,6 +157,7 @@ final class RetestWordsTests: XCTestCase {
 
 /// "Approve once" is offered only where KIFF can pass the call (kiff/tafs#138, item 49): the
 /// owner tapped it on €300 over a 250 € a day Card and got KIFF's raw refusal.
+@MainActor
 final class ApproveOnceTests: XCTestCase {
     func testOnlyACallsOwnBreachesCanBeApprovedOnce() {
         XCTAssertTrue(KIFFMapping.canApproveOnce(["per_action_exceeded"]))
@@ -167,6 +169,7 @@ final class ApproveOnceTests: XCTestCase {
 }
 
 /// Tool and vendor names in words, not ids (kiff/tafs#138, item 52).
+@MainActor
 final class ToolWordsTests: XCTestCase {
     func testAToolsNameReadsInWords() {
         XCTAssertEqual(KIFFMapping.toolWords("bxkwf7vi_list_accounts"), "list accounts", "past the grant's prefix")

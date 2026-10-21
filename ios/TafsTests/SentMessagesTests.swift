@@ -2,6 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// The one rule both chats keep what the owner sent by (kiff/tafs#138, item 48).
+@MainActor
 final class SentMessagesTests: XCTestCase {
     private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
 
