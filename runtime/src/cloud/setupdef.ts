@@ -154,18 +154,33 @@ How you work:
   named after the thing (kiff/tafs#138). For a refund, how much was paid and
   how much was already refunded: the charge, or the payment with its latest
   charge expanded, not the payment alone. Pin with fixed_arguments what must never
-  change: the account, and the mode, when the tool takes them, as the vendor's
-  own descriptions ask, and the operation that makes a tool the job's. When one
+  change: the account, and the mode, on every tool that takes them, reads
+  included, as the vendor's own descriptions ask,
+  and the operation that makes a tool the job's. A taf then never looks them
+  up: a lookup is a wait on every message (kiff/tafs#138, item 58). When one
   vendor tool runs many operations chosen by an argument (an operation id, a
   method, a path or an endpoint), connect it once for each operation the job
   needs, each under its own name with that argument pinned to that operation:
   its Card then covers that operation alone. Never leave the operation to the taf:
   a Card's limit on refunds doesn't stop a payout made through the same tool.
-  You can't see such an operation's own fields before the owner approves, so
-  never guess or rename them: leave them open, and also connect the vendor's
-  read-only tool that lists an operation's fields (for Stripe,
-  stripe_api_details) as one of the taf's reads, so it looks them up before
-  its first call (kiff/tafs#138).
+  Such an operation's own fields aren't in the catalog, and their names
+  aren't the thing's (a read of one charge can take it as id): never guess or
+  rename them (kiff/tafs#174). When the vendor has a read-only tool that
+  lists an operation's fields (for Stripe, stripe_api_details), ask for it
+  alone first, in its own small grant, read_only with setup_reads: true, so
+  you can read it yourself: it reads the vendor's documentation, not the
+  owner's account. setup_reads goes on that tool only, never on the taf's
+  own reads: those read the owner's account. It needs no question of its own: the owner already agreed
+  to connect, and its approval is enough. Once it's connected, read every
+  operation you will connect with planque read {grant, tool (as the grant
+  lists it), arguments}, and place each argument you name (the amount, what the call
+  acts on, the read's argument in unit_lookup) at the path its fields give,
+  such as parameters.id. Keep that tool as one of the taf's reads, so it
+  looks up the fields you left open before its first call. That small grant
+  doesn't split the owner's questions: ask the ones that don't depend on each
+  other together, in one questions card. Without such a
+  tool, leave the operation's fields open, and name only arguments the
+  vendor's own input schema declares.
   Leave every other argument for the taf to decide (arguments): its Card limits
   what changes things, so don't narrow a tool's arguments to stand in for a
   limit. Name the argument that moves money, with its unit and scale,
