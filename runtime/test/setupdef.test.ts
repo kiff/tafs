@@ -92,7 +92,8 @@ describe("Setup's definition on kiff/agents", () => {
     // (kiff/planque#23, describe removed): Setup asks the mode, always.
     expect(flat).not.toContain("describe");
     expect(flat).toContain("so don't try to read what the sign-in covers first: ask");
-    expect(flat).toContain("Before you propose tools that move money or change data, ask with confirm");
+    expect(flat).toContain("Before you propose tools that move money or change data, ask: \"Test mode (no real money), recommended to start\"");
+    expect(flat).toContain("as one of the questions you ask together, or with confirm when it's the only one, and pin exactly what they chose");
     // The money argument and read-only tools are part of looking, not of the mode rule.
     expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only: reading in the owner's account is open, with no limits\.\s+- Test or live/);
     expect(flat).not.toContain("such as the account or test mode");
@@ -147,8 +148,15 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("The plan for an improvement ends with trying it and installing it, the owner's step: it stays to do in the plan you show with the result, never done");
     // A taf whose tools can't list its work has no schedule (kiff/tafs#138, item 26).
     expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
-    // One question at a time: a second choice beside a confirm went into prose (measure of #138).
-    expect(flat).toContain("while a confirm asks something, the message asks nothing else, and a choice among a few options");
+    // A second choice beside a confirm went into prose (measure of #138): it goes in the card.
+    expect(flat).toContain("While a card asks something, the message asks nothing else, and a choice among a few options (by email, a form or support) goes in the card, never written out beside it");
+    // Several questions at once (kiff/tafs#138, item 57): independent ones in one questions
+    // card; one that depends on an earlier answer, or agreeing to the rules, on its own.
+    expect(flat).toContain("When you have several questions and none depends on another's answer (such as test or live, which account, and a limit they didn't give), ask them together in one questions card (kiff/tafs#138): one to four questions");
+    expect(flat).toContain("A question whose options depend on an earlier answer waits for that answer, and so does agreeing to something you show first (the rules): ask it on its own, with confirm");
+    expect(flat).toContain("What they already told you, don't ask again. Ask what's left together, in one questions card when the answers are choices");
+    expect(flat).not.toContain("One question at a time");
+    expect(flat).not.toContain("one or two questions at a time");
     // An operation's fields come from the vendor, never Setup's guess (kiff/tafs#138, item 1).
     expect(flat).toContain("You can't see such an operation's own fields before the owner approves, so never guess or rename them");
     expect(flat).toContain("connect the vendor's read-only tool that lists an operation's fields (for Stripe, stripe_api_details)");
