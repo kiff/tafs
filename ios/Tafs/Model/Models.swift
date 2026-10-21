@@ -235,4 +235,16 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var signature: String?
     /// The owner approved it (a held call), whatever the tool then did.
     var ownerApproved: Bool?
+    /// What the Record says of it (kiff/tafs#167): how much, what it acted on, a read, the
+    /// owner's answer, and its receipt. What it acted on is KIFF's hash of it; its value is
+    /// tafs' own (the run's call_ref, 30 days), shown only when it matches KIFF's hash.
+    var amount: KIFFClient.ActivityCall.Amount?
+    var readOnly: Bool?
+    var entityID: String?
+    var onHash: String?
+    var onArg: String?
+    var onValue: String?
+    var answer: KIFFClient.ActivityCall.Answer?
+    var receipt: KIFFClient.ActivityCall.Receipt?
+    var why: [String]?
 }

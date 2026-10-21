@@ -126,6 +126,8 @@ final class TafsCloud {
         let job: String?
         /// It works from its chat, with no schedule (kiff/tafs#138, items 43 and 55).
         var unscheduled: Bool? = nil
+        /// Its job in words (kiff/tafs#167); absent for an agent tafs doesn't run.
+        var jobSummary: String? = nil
         let kiffAgent: String
         let status: String?
         let nextRun: Date?
@@ -139,7 +141,7 @@ final class TafsCloud {
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, color, state, waiting, card, unscheduled
-            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
+            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
         }
 
         /// tafs cloud's record of it, for its chat, runs and schedule; nil for another agent.
@@ -552,6 +554,20 @@ final class TafsCloud {
             path.split(separator: "/").map { $0.replacingOccurrences(of: ".md", with: "").replacingOccurrences(of: "-", with: " ") }
                 .joined(separator: " · ")
         }
+    }
+
+    /// What one of the taf's calls through KIFF acted on (kiff/tafs#167): KIFF's key for
+    /// the call and the value of the argument its Card scopes on, kept 30 days.
+    struct CallRef: Decodable, Equatable {
+        let invocation: String
+        let value: String
+    }
+
+    /// What the taf's calls through KIFF acted on, as its runs kept them.
+    func calls(_ id: String) async throws -> [CallRef] {
+        struct Response: Decodable { let calls: [CallRef] }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/calls")
+        return r.calls
     }
 
     /// What the taf remembers, newest first.

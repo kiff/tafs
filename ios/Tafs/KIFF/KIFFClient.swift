@@ -287,11 +287,55 @@ final class KIFFClient {
         let createdAt: Date
         let held: Bool
         var toolOutcome: ToolOutcome?
+        /// What the Record says of a call (kiff/tafs#167). Each is absent when it doesn't apply.
+        /// The money it moves, as a decimal string and its unit ("150.00", "EUR"). A gateway
+        /// call's integer amount has no unit (KIFF writes it with omitempty).
+        struct Amount: Equatable, Hashable, Codable {
+            let value: String
+            var unit: String?
+        }
+        var amount: Amount?
+        var readOnly: Bool?
+        /// KIFF's key for the call (the gateway's "tc-…"), what tafs' call_ref names it by.
+        var entityID: String?
+        /// What it acted on, as KIFF signs it: "sha256:<hex>" of the value, and the name of
+        /// the argument it came from ("payment"). KIFF keeps no argument but numbers.
+        var onHash: String?
+        var onArg: String?
+        /// The owner's answer to a held call: approved once or refused, signed on which device.
+        struct Answer: Equatable, Hashable, Codable {
+            let decision: String
+            /// The answerer's role ("admin"), not who they are.
+            var by: String?
+            /// The person reading answered it themselves (KIFF knows; a role can't say).
+            var you: Bool?
+            var signed: Bool?
+            var device: String?
+            var at: Date?
+        }
+        var answer: Answer?
+        /// Its KIFF receipt: signed, or pending until KIFF's next sweep (about 30 s).
+        struct Receipt: Equatable, Hashable, Codable {
+            let traceID: String
+            let status: String
+            enum CodingKeys: String, CodingKey { case status; case traceID = "trace_id" }
+        }
+        var receipt: Receipt?
+        /// KIFF's reasons for its decision ("over the €100.00 limit for one refund").
+        var reasons: [String]?
         enum CodingKeys: String, CodingKey {
-            case title, outcome, held
+            case title, outcome, held, amount, answer, receipt, reasons
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
+            case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
         }
+    }
+
+    /// A receipt as KIFF wrote it (kiff/tafs#167): its bytes, since its signed chain is
+    /// checked as written, never decoded and written again.
+    func receipt(traceID: String) async throws -> Data {
+        let raw: RawBody = try await send("GET", "/v1/receipts/\(escaped(traceID))")
+        return raw.data
     }
 
     /// The account's latest calls, for Activity and Record.
@@ -622,8 +666,16 @@ final class KIFFClient {
             let body = try? JSONDecoder().decode([String: String].self, from: data)
             throw KIFFError.server(status: status, message: body?["error"] ?? "KIFF answered \(status)", reason: body?["reason"])
         }
+        if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }
         if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }
         return try Self.decoder.decode(T.self, from: data)
+    }
+
+    /// A response's bytes, untouched.
+    struct RawBody: Decodable {
+        let data: Data
+        init(data: Data) { self.data = data }
+        init(from decoder: Decoder) throws { data = Data() }
     }
 
     static let decoder: JSONDecoder = {

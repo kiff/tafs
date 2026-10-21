@@ -417,6 +417,21 @@ describe("chats (kiff/tafs#73)", () => {
     expect(w.archived.held.size).toBe(0);
   });
 
+  it("lists what the taf's calls through KIFF acted on, from the runs' call_refs, only its own", async () => {
+    const w = world();
+    const job = await jobRun(w, new Date(NOW.getTime() - 3600_000), "Refunded pi_9.");
+    const list = w.agents.events.get(job.session)!;
+    list.push({ session: job.session, run: job.id, seq: list.length + 1, time: minutesAgo(59), kind: "call_ref", body: { invocation: "tc-88", value: "pi_9" } });
+    // Anything else in a run is not a call's reference.
+    list.push({ session: job.session, run: job.id, seq: list.length + 1, time: minutesAgo(59), kind: "agent_message", body: { invocation: "tc-x", value: "no" } });
+    const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
+    w.agents.events.set(theirs.session, [{ session: theirs.session, run: theirs.id, seq: 1, time: minutesAgo(1), kind: "call_ref", body: { invocation: "tc-99", value: "pi_other" } }]);
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/calls`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.calls).toEqual([{ invocation: "tc-88", value: "pi_9", at: minutesAgo(59) }]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/calls`, { token: "viewer" })).status).toBe(200);
+  });
+
   it("reads one chat on its own; another taf's chat or a job run is not found", async () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 3600_000));

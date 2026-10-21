@@ -89,7 +89,9 @@ enum KIFFMapping {
                      outside: r.outside == "refuse" ? .refuse : .hold)
         }
         let count = h.card.ids.count
-        var taf = Taf(id: id, name: h.name, job: "Works under \(count) KIFF Card\(count == 1 ? "" : "s").",
+        // Its job in words, as tafs cloud says it (kiff/tafs#167); an agent tafs doesn't run
+        // has none, and is described by its Cards.
+        var taf = Taf(id: id, name: h.name, job: h.jobSummary ?? "Works under \(count) KIFF Card\(count == 1 ? "" : "s").",
                       tools: h.card.tools, colorIndex: h.color,
                       card: Card(rules: rules, issuedBy: owner, expires: h.card.expires, revoked: !h.card.active))
         switch h.state {
@@ -128,6 +130,14 @@ enum KIFFMapping {
             var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
                                     detail: detail, at: c.createdAt)
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
+            entry.amount = c.amount
+            entry.readOnly = c.readOnly
+            entry.entityID = c.entityID
+            entry.onHash = c.onHash
+            entry.onArg = c.onArg
+            entry.answer = c.answer
+            entry.receipt = c.receipt
+            entry.why = c.reasons
             return entry
         }
     }
@@ -151,6 +161,22 @@ enum KIFFMapping {
         default:
             // not_recorded, none, or one this app doesn't know yet.
             return (.unknown, "\(allowed), but whether the tool did it wasn't recorded: check the tool's own records")
+        }
+    }
+
+    /// Whether a value is what KIFF's hash names (kiff/tafs#167): "sha256:<hex>" of its
+    /// UTF-8 bytes, untrimmed, in its own case.
+    static func isOn(_ value: String, hash: String) -> Bool {
+        hash == "sha256:" + SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// The Record's lines with what each acted on, from the tafs' call_refs by KIFF's key:
+    /// only a value whose hash is KIFF's, so a line never names a payment KIFF didn't.
+    static func naming(_ record: [RecordEntry], refs: [String: String]) -> [RecordEntry] {
+        record.map { e in
+            var e = e
+            if let key = e.entityID, let hash = e.onHash, let value = refs[key], isOn(value, hash: hash) { e.onValue = value }
+            return e
         }
     }
 

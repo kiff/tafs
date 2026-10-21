@@ -12,6 +12,13 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
+# A KIFF receipt is checked on the device (kiff/tafs#167): recovering its signer needs
+# secp256k1, which CryptoKit doesn't have. Pinned to an exact release; only its C library
+# is used, since P256K's recovery initializer stops the app on a bad signature.
+packages:
+  swift-secp256k1:
+    url: https://github.com/21-DOT-DEV/swift-secp256k1
+    exactVersion: 0.24.0
 targets:
   Tafs:
     type: application
@@ -19,6 +26,8 @@ targets:
     sources: [Tafs, Shared]
     dependencies:
       - target: TafsWidgets
+      - package: swift-secp256k1
+        product: libsecp256k1
     info:
       path: Tafs/Info.plist
       properties:
@@ -94,6 +103,10 @@ targets:
     type: application
     platform: macOS
     deploymentTarget: "12.0"
+    # The shared KIFF sources check receipts too.
+    dependencies:
+      - package: swift-secp256k1
+        product: libsecp256k1
     sources:
       - path: Mac
         excludes: [Info.plist, TafsMac.entitlements, make-icon.swift]

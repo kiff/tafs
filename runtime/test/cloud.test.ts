@@ -381,6 +381,8 @@ describe("the home list", () => {
     expect(r.status).toBe(200);
     expect(r.body.tafs).toEqual([{
       id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null,
+      // Its job in words, for its page (kiff/tafs#167).
+      job_summary: "Answers refund requests and issues refunds and credits within the Card.",
       color: 0, state: "working", waiting: 0,
       card: {
         ids: ["card_rae"], active: true, expires: "2026-12-31T00:00:00Z", tools: ["Create refund"],

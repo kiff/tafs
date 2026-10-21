@@ -469,7 +469,10 @@ final class AppModel: ObservableObject {
             show(list, exceptions)
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
-            if let done { record = withDecisions(KIFFMapping.record(done, ids: holderIDs)) }
+            if let done {
+                record = withDecisions(KIFFMapping.record(done, ids: holderIDs))
+                await nameRecordLines(gen: gen)
+            }
             if !list.removing.isEmpty {
                 await finishRemovals(list.removing, gen: gen)
                 // Finishing waited: another account may be signed in now, with its own tafs.
@@ -1978,6 +1981,22 @@ final class AppModel: ObservableObject {
         record.removeAll { $0.id == id }
         record.insert(entry, at: 0)
         if call.kiffID != nil { decided[id] = entry }
+    }
+
+    /// What each Record line acted on (kiff/tafs#167): the call_refs of each taf with a line
+    /// KIFF hashed a resource for, read from tafs cloud. Best effort: a taf whose calls can't
+    /// be read keeps its lines without the payment.
+    private func nameRecordLines(gen: Int) async {
+        let tafIDs = Set(record.filter { $0.onHash != nil && $0.onValue == nil }.map(\.tafID))
+        let cloudIDs = tafIDs.compactMap { cloudTaf(for: $0)?.id }
+        guard !cloudIDs.isEmpty else { return }
+        var refs: [String: String] = [:]
+        for id in cloudIDs {
+            guard let list = try? await cloud.calls(id), gen == accountGeneration else { continue }
+            for r in list { refs[r.invocation] = r.value }
+        }
+        guard gen == accountGeneration, !refs.isEmpty else { return }
+        record = KIFFMapping.naming(record, refs: refs)
     }
 
     /// KIFF's record with the owner's answers it doesn't have yet: an answered call KIFF

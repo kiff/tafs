@@ -178,8 +178,11 @@ export interface SessionEvent {
   run: string;
   seq: number;
   time: string;
-  /** A kind the keep rules name, or a `component` the agent showed (kiff/agents#91). */
-  kind: EventKind | "component";
+  /**
+   * A kind the keep rules name, a `component` the agent showed (kiff/agents#91), or
+   * a `call_ref`: what a call through KIFF acted on, kept like messages (kiff/tafs#167).
+   */
+  kind: EventKind | "component" | "call_ref";
   body: unknown;
 }
 

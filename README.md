@@ -93,8 +93,11 @@ tafs cloud calls it with its AWS role; the phone never does.
 - **A taf** is one agent definition (`runtime/src/cloud/tafdef.ts`):
   `claude-opus-5-5`, its job's instructions, how its notes work, what the
   owner said when starting it, two sections of KIFF's skill, a cost cap per run from its
-  budget, and keep rules (what tools return stays only until the run ends,
-  the rest 30 days). Its only tools are the company's, reached through KIFF's
+  budget, and keep rules (a tool's call and what it returns stay only until the
+  run ends, the rest 30 days). For each call through KIFF, the run also keeps
+  KIFF's reference for the call and the identifier of what it acted on (a
+  payment's id, never the customer's details) for 30 days, so the Record can say
+  which payment (kiff/tafs#167). Its only tools are the company's, reached through KIFF's
   gateway (`mcp.kiff.dev`), and its memory. Its KIFF agent key is in Secrets
   Manager, which tafs cloud writes and can't read back; the definition only
   names it.
