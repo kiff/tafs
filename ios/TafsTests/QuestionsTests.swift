@@ -38,3 +38,13 @@ final class QuestionsTests: XCTestCase {
         XCTAssertEqual(answer.text, text)
     }
 }
+
+/// KIFF hears the phone's languages, so its own words reach the owner in theirs (kiff/tafs#75).
+@MainActor
+final class AcceptLanguageTests: XCTestCase {
+    func testThePhonesLanguagesInOrderWithEnglishLast() {
+        XCTAssertEqual(KIFFClient.acceptLanguage(["es-CO", "fr-FR"]), "es-CO, fr-FR;q=0.9, en;q=0.8")
+        XCTAssertEqual(KIFFClient.acceptLanguage(["en-US"]), "en-US")
+        XCTAssertEqual(KIFFClient.acceptLanguage([]), "en")
+    }
+}

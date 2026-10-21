@@ -590,6 +590,17 @@ final class KIFFClient {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
 
+    /// The phone's languages, most preferred first, so KIFF writes what it says to the owner
+    /// (a held call's reason) in their language at its source, never translated by the app
+    /// (kiff/tafs#75). English is the last fallback.
+    static func acceptLanguage(_ preferred: [String]) -> String {
+        var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
+        if !tags.contains(where: { $0 == "en" || $0.hasPrefix("en-") }) { tags.append("en") }
+        return tags.enumerated().map { i, tag in
+            i == 0 ? tag : "\(tag);q=\(String(format: "%.1f", max(0.1, 1.0 - Double(i) * 0.1)))"
+        }.joined(separator: ", ")
+    }
+
     private func send<T: Decodable>(_ method: String, _ path: String, base: URL? = nil, authorized: Bool = true) async throws -> T {
         try await send(method, path, body: Optional<[String: String]>.none, base: base, authorized: authorized)
     }
@@ -600,6 +611,7 @@ final class KIFFClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("tafs-ios", forHTTPHeaderField: "User-Agent")
+        request.setValue(Self.acceptLanguage(Locale.preferredLanguages), forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
