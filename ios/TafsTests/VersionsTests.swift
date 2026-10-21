@@ -70,6 +70,18 @@ final class VersionsTests: XCTestCase {
         XCTAssertEqual(model.setupImproving?.id, cloudID, "its offer improves the taf on screen")
     }
 
+    /// Start a new taf opens Coach mode in a new conversation on no taf, even from a taf's
+    /// page (kiff/tafs#138, item 59): the old form is gone.
+    func testStartANewTafIsANewCoachConversation() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        model.improveTaf(id)
+        model.tafOnScreen = id
+        model.startNewTaf()
+        XCTAssertTrue(model.coachOpen)
+        XCTAssertNil(model.setupImproving, "a new taf, not the one on screen")
+        XCTAssertTrue(model.setupThread.messages.isEmpty)
+    }
+
     func testLoadsATafsVersions() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)

@@ -22,8 +22,8 @@ enum HomeSelection: Hashable {
     case held(UUID, taf: UUID)
 }
 
-/// The sidebar (Theme.raised): the calls waiting for the owner, the tafs with a line on
-/// each, Setup, and Start a new taf. The selected one opens beside it.
+/// The sidebar (Theme.raised): Coach mode, where tafs are made and changed, the calls
+/// waiting for the owner, and the tafs with a line on each. The selected one opens beside it.
 struct HomeSplitView: View {
     @EnvironmentObject private var model: AppModel
     @State private var selection: HomeSelection?
@@ -59,9 +59,7 @@ struct HomeSplitView: View {
             selection = .taf(id)
             model.requestedTaf = nil
         }
-        .sheet(isPresented: $showingNew) {
-            if model.mode == .kiff { StartTafFlow().environmentObject(model) } else { NewTafFlow().environmentObject(model) }
-        }
+        .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
         .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
         // Something open from the start: the taf a call waits on, else the first (CI's
         // screenshots open Refunds, as on the phone).
@@ -78,6 +76,15 @@ struct HomeSplitView: View {
 
     private var sidebar: some View {
         List(selection: $selection) {
+            if model.mode == .kiff {
+                Section {
+                    // Coach mode (kiff/tafs#138): where tafs are made, connected and changed,
+                    // first in the sidebar.
+                    Button { model.openCoach() } label: {
+                        Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
+                    }
+                }
+            }
             if !model.held.isEmpty {
                 Section {
                     ForEach(model.held) { call in
@@ -105,14 +112,6 @@ struct HomeSplitView: View {
                     }
                 } header: { Eyebrow(text: "Other agents with Cards") }
             }
-            if model.mode == .kiff {
-                Section {
-                    // Coach mode (kiff/tafs#138): sets up, connects and changes tafs.
-                    Button { model.openCoach() } label: {
-                        Label("Coach mode", systemImage: "sparkle").scaledFont(15).foregroundColor(Theme.coach)
-                    }
-                }
-            }
         }
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
@@ -120,6 +119,12 @@ struct HomeSplitView: View {
         .refreshable { await model.refresh() }
         .safeAreaInset(edge: .bottom) { footer }
         .navigationTitle("tafs")
+    }
+
+    /// A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59); the sample
+    /// keeps its own form, with nothing real behind it.
+    private func startNewTaf() {
+        if model.mode == .kiff { model.startNewTaf() } else { showingNew = true }
     }
 
     private func tafRow(_ taf: Taf) -> some View {
@@ -150,7 +155,7 @@ struct HomeSplitView: View {
     private var footer: some View {
         VStack(spacing: 8) {
             if model.canStartTafs {
-                Button { showingNew = true } label: { Label("Start a new taf", systemImage: "plus") }
+                Button { startNewTaf() } label: { Label("Start a new taf", systemImage: "plus") }
                     .buttonStyle(PrimaryButtonStyle())
             }
             Button { showingSettings = true } label: {

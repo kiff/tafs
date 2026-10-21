@@ -178,3 +178,30 @@ struct RuleEditor: View {
         }
     }
 }
+
+/// One of the jobs a taf can do, as a card to pick.
+struct JobRow: View {
+    let template: TafTemplate
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(selected ? AnyShapeStyle(Theme.brand) : AnyShapeStyle(Theme.dim))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(template.name).font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.ink)
+                    Text(template.job).font(.system(size: 13)).foregroundColor(Theme.soft).lineLimit(3)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(14)
+            .background(Theme.panel)
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? Theme.pink.opacity(0.6) : Theme.line))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}

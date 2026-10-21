@@ -158,6 +158,10 @@ final class AppModel: ObservableObject {
 
     // MARK: Signing in with KIFF
 
+    /// Moves on with every sign-in and sign-out, so work for one session (and its key)
+    /// never outlives it, even work still running when it changes.
+    private(set) var accountGeneration = 0
+
     static let tokenAccount = "kiff.session"
     static let tenantAccount = "kiff.tenant"
     static let keyedAccount = "kiff.session-keyed"
@@ -247,7 +251,6 @@ final class AppModel: ObservableObject {
         sessionHasKey = tenant != nil
         kiff.token = token
         cloud.token = token
-        startAttempt = nil
         holderIDs = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; trials = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
@@ -282,7 +285,6 @@ final class AppModel: ObservableObject {
         holderIDs = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
-        startAttempt = nil
         unfinishedRemovals = []
         grants = []
         grantsReadFor = []
@@ -569,7 +571,7 @@ final class AppModel: ObservableObject {
 
     // MARK: Starting a taf
 
-    /// Tafs start on the phone in both modes: on KIFF, through `startOnKIFF`.
+    /// Signed in, a new taf starts in Coach mode (`startNewTaf()`); the sample starts from its form.
     var canStartTafs: Bool { mode != .signedOut }
 
     func draft(job: String) -> TafDraft { TafTemplates.draft(from: job) }
@@ -597,232 +599,6 @@ final class AppModel: ObservableObject {
         log(taf.id, .started, "\(taf.name) started", "Card issued by \(ownerName)")
         save()
         return taf
-    }
-
-    // MARK: Starting a taf on KIFF
-
-    /// The steps of starting a taf on KIFF, in order, for the progress list.
-    enum StartStep: Int, CaseIterable, Comparable {
-        case confirm, cards, run
-        static func < (a: StartStep, b: StartStep) -> Bool { a.rawValue < b.rawValue }
-        var label: String {
-            switch self {
-            case .confirm: return "Confirm with \(Biometry.name)"
-            case .cards: return "Issue its Cards in KIFF"
-            case .run: return "Hand it to tafs cloud and start its first run"
-            }
-        }
-    }
-
-    struct StartFailure: Error, LocalizedError, Equatable {
-        let step: StartStep
-        let message: String
-        var errorDescription: String? { message }
-    }
-
-    /// The account's connected tools, to choose from.
-    func connectedTools() async throws -> [KIFFClient.Connection] {
-        try await kiff.connections()
-    }
-
-    /// A start in progress. Kept when a step fails, so trying again resumes it: the same
-    /// draft, without submitting it twice. Its claim secret lives here only in memory, and
-    /// only until tafs cloud has claimed the key with it.
-    struct StartAttempt: Equatable {
-        let name: String
-        let job: String
-        let agent: String
-        var cards: [KIFFClient.CardRequest] = []
-        /// The KIFF draft: the agent and its Cards, confirmed by submitting it.
-        var draft: KIFFClient.AgentDraft?
-        /// tafs cloud may have the taf: its answer was lost, or it holds the name.
-        var cloudUnknown = false
-        /// The signed-in session this attempt belongs to (`accountGeneration`).
-        var account = 0
-    }
-
-    /// Moves on with every sign-in and sign-out, so an attempt (and its key) never
-    /// outlives the session that made it, even one still running when it changes.
-    private(set) var accountGeneration = 0
-
-    struct StartResult: Equatable {
-        let taf: TafsCloud.CloudTaf
-        /// The first run's session; nil when the taf exists but its first run didn't start.
-        let session: String?
-    }
-
-    @Published private(set) var startAttempt: StartAttempt?
-
-    /// Starts a taf on KIFF: the owner confirms with Face ID, then the app submits one KIFF
-    /// draft, the new agent and one Card per tool, signed by the phone (kiff-cloud #1217).
-    /// Submitted by someone who may issue Cards and give keys, KIFF confirms it at once and
-    /// issues the Cards. tafs cloud then claims the agent's key with the draft's one-time
-    /// secret and runs the taf: the key never reaches the phone. Calling it again after a
-    /// failure resumes the same attempt.
-    func startOnKIFF(name: String, job: String, limits: [ToolLimit], agentID: String? = nil,
-                     progress: (StartStep) -> Void = { _ in }) async throws -> StartResult {
-        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        var a: StartAttempt
-        let gen = accountGeneration
-        if let previous = startAttempt, previous.name == name, previous.job == job, previous.account == gen {
-            a = previous
-        } else {
-            a = StartAttempt(name: name, job: job, agent: agentID ?? TafPlan.agentID(for: name), account: gen)
-        }
-        var cards: [KIFFClient.CardRequest]
-        do { cards = try TafPlan.cards(agentID: a.agent, limits: limits) } catch {
-            throw StartFailure(step: .confirm, message: error.localizedDescription)
-        }
-
-        progress(.confirm)
-        do {
-            _ = try await signer.sign(answer: .approveOnce, heldID: "start-\(a.agent)", reason: "Start \(name) with \(cards.count) Card\(cards.count == 1 ? "" : "s")")
-        } catch {
-            throw StartFailure(step: .confirm, message: a.draft == nil ? "Nothing was started: it wasn't confirmed." : "It wasn't confirmed; nothing more was done.")
-        }
-        guard accountGeneration == gen else { throw Self.signedOut(.confirm) }
-        // The owner just confirmed with Face ID: a phone session bound to its key signs the
-        // draft, as KIFF requires of a phone's setup calls (kiff-cloud #1225).
-        if sessionHasKey, let tenant = kiffTenant {
-            let signer = self.signer
-            kiff.tenant = tenant
-            kiff.setupSigner = { try signer.signConfirmed($0) }
-        }
-        defer { kiff.setupSigner = nil }
-        startAttempt = a
-        defer { if startAttempt != nil, accountGeneration == gen { startAttempt = a } }
-
-        // The plan changed since the last try: that draft is discarded, which revokes its
-        // Cards, and a new agent starts, since a draft's agent must hold no Cards yet.
-        if let old = a.draft, cards != a.cards {
-            progress(.cards)
-            try await attempt(.cards) { try await kiff.discardDraft(id: old.id) }
-            guard accountGeneration == gen else { throw Self.signedOut(.cards) }
-            a = StartAttempt(name: name, job: job, agent: TafPlan.agentID(for: name), account: gen)
-            do { cards = try TafPlan.cards(agentID: a.agent, limits: limits) } catch {
-                throw StartFailure(step: .confirm, message: error.localizedDescription)
-            }
-            startAttempt = a
-        }
-        a.cards = cards
-
-        if a.draft == nil {
-            progress(.cards)
-            let draft: KIFFClient.AgentDraft
-            do { draft = try await kiff.submitDraft(agentID: a.agent, label: name, cards: cards) } catch {
-                // The agent's name is taken in KIFF: the next try starts over with a new one.
-                if case KIFFClient.KIFFError.server(409, _, _) = error { startAttempt = nil }
-                throw StartFailure(step: .cards, message: Self.startMessage(.cards, error))
-            }
-            guard accountGeneration == gen else { throw Self.signedOut(.cards) }
-            a.draft = draft
-        }
-        guard let submitted = a.draft, let secret = submitted.claimSecret else {
-            startAttempt = nil
-            throw StartFailure(step: .cards, message: "KIFF didn't return the draft's claim secret. Nothing is running; start again.")
-        }
-        if !submitted.confirmed {
-            // An editor's draft waits for someone who may issue Cards and give keys.
-            let fresh = (try? await kiff.draft(id: submitted.id)) ?? submitted
-            guard accountGeneration == gen else { throw Self.signedOut(.cards) }
-            if ["failed", "discarded", "discarding", "rolling_back", "claimed"].contains(fresh.status) {
-                startAttempt = nil
-                throw StartFailure(step: .cards, message: "KIFF couldn't confirm this taf's Cards\(fresh.reason.map { ": \($0)" } ?? ""). Nothing is running; start again.")
-            }
-            guard fresh.status == "confirmed" else {
-                throw StartFailure(step: .cards, message: "Your role can't give an agent its key, so the Cards wait for an admin to confirm them in KIFF. Once they do, tap Start again.")
-            }
-            a.draft = KIFFClient.AgentDraft(id: fresh.id, agentID: fresh.agentID, status: fresh.status, version: fresh.version,
-                                            claimSecret: secret, cardIDs: fresh.cardIDs, reason: fresh.reason)
-        }
-
-        // From here on, the draft as KIFF last described it: for an editor's draft only the
-        // confirmed one names the Cards that cleanup must revoke.
-        let draft = a.draft ?? submitted
-
-        progress(.run)
-        guard accountGeneration == gen else { throw Self.signedOut(.run) }
-        if a.cloudUnknown, let existing = await cloudTaf(agent: a.agent) {
-            return finish(existing, session: nil, &a)
-        }
-        // The lookup above waited: the secret goes to tafs cloud only under the session that made it.
-        guard accountGeneration == gen else { throw Self.signedOut(.run) }
-        do {
-            let started = try await cloud.start(name: name, job: job, draftID: draft.id, claimSecret: secret)
-            return finish(started.taf, session: started.session, &a)
-        } catch let e as TafsCloud.CloudError where (400..<500).contains(e.status) && e.status != 408 && e.status != 409 && e.status != 429 {
-            // Refused outright: tafs cloud runs nothing. Its Cards go, so no agent is left
-            // holding authority that nothing runs.
-            let dropped = await dropDraft(draft)
-            startAttempt = nil
-            throw StartFailure(step: .run, message: dropped
-                ? "tafs cloud refused to run it, so its Cards were taken back: \(e.message)"
-                : "tafs cloud refused to run it, and its Cards couldn't all be taken back; revoke them in KIFF: \(e.message)")
-        } catch {
-            // Lost, busy, or the name is held: the taf may exist or still appear.
-            if let existing = await cloudTaf(agent: a.agent) { return finish(existing, session: nil, &a) }
-            a.cloudUnknown = true
-            throw StartFailure(step: .run, message: "Its Cards are in KIFF, and tafs cloud may have the taf already: it didn't confirm (\(error.localizedDescription)). Try again in a minute: the app checks for it before starting another.")
-        }
-    }
-
-    /// Takes a draft's Cards back: discarding it while nobody claimed it, else revoking them.
-    /// True only when KIFF confirmed they are gone.
-    private func dropDraft(_ draft: KIFFClient.AgentDraft) async -> Bool {
-        do { try await kiff.discardDraft(id: draft.id); return true } catch {
-            // Claimed, so it can't be discarded: revoke its Cards one by one. KIFF names them
-            // only once the draft is confirmed, so ask when this copy doesn't.
-            var ids = draft.cardIDs ?? []
-            if ids.isEmpty, let fresh = try? await kiff.draft(id: draft.id) { ids = fresh.cardIDs ?? [] }
-            guard !ids.isEmpty else { return false }
-            var all = true
-            for id in ids {
-                do { try await kiff.revoke(cardID: id) } catch { all = false }
-            }
-            return all
-        }
-    }
-
-    private func finish(_ taf: TafsCloud.CloudTaf, session: String?, _ a: inout StartAttempt) -> StartResult {
-        a.draft = nil
-        startAttempt = nil
-        if a.account == accountGeneration { cloudTafs[a.agent] = taf }
-        Task { await refresh() }
-        return StartResult(taf: taf, session: session)
-    }
-
-    /// The account's tafs cloud taf acting as `agent`, if tafs cloud lists one.
-    private func cloudTaf(agent: String) async -> TafsCloud.CloudTaf? {
-        (try? await cloud.tafs())?.first { $0.kiffAgent == agent }
-    }
-
-    private static func signedOut(_ step: StartStep) -> StartFailure {
-        StartFailure(step: step, message: "You signed out or changed accounts while it was starting; nothing more was done.")
-    }
-
-    /// Forgets a failed start, so the next one is a new agent.
-    func abandonStart() { startAttempt = nil }
-
-    /// Runs one step of starting a taf; a failure says what is already in KIFF.
-    private func attempt<T>(_ step: StartStep, _ work: () async throws -> T) async throws -> T {
-        do { return try await work() } catch let failure as StartFailure { throw failure } catch {
-            throw StartFailure(step: step, message: Self.startMessage(step, error))
-        }
-    }
-
-    private static func startMessage(_ step: StartStep, _ error: Error) -> String {
-        if case KIFFClient.KIFFError.server(403, _, _) = error {
-            return "Your role on this KIFF account can't start tafs. An admin or an editor can."
-        }
-        if step == .cards, case KIFFClient.KIFFError.server(409, _, _) = error {
-            return "KIFF already has an agent with that name. Try again: the next one gets a new name."
-        }
-        let done: String
-        switch step {
-        case .confirm, .cards: done = "Nothing was started."
-        case .run: done = "Its Cards are in KIFF."
-        }
-        return "\(done) \(error.localizedDescription)"
     }
 
     // MARK: Runs
@@ -2380,6 +2156,13 @@ final class AppModel: ObservableObject {
     /// The taf on screen is offered in it, to improve with one tap.
     func newCoachConversation() {
         newSetupChat()
+    }
+
+    /// Starting a new taf is a conversation (kiff/tafs#138, item 59): Coach mode opens in a
+    /// new one, on no taf. The old form, which turned on money tools with no limit, is gone.
+    func startNewTaf() {
+        newCoachConversation()
+        coachOpen = true
     }
 
     /// A new Setup conversation on one taf, to improve it (kiff/tafs#107).

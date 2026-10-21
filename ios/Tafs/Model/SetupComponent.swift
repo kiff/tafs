@@ -5,7 +5,7 @@ import Foundation
 /// nothing: an approval names planque's grant and KIFF's draft, which the app reads from
 /// those services and the phone signs there.
 struct SetupComponent: Decodable, Equatable {
-    enum Kind: String, Decodable { case steps, notice, confirm, approval, signIn = "sign_in", result }
+    enum Kind: String, Decodable { case steps, notice, confirm, questions, approval, signIn = "sign_in", result }
 
     struct Step: Decodable, Equatable, Hashable {
         /// pending, active, done, failed or skipped.
@@ -16,6 +16,22 @@ struct SetupComponent: Decodable, Equatable {
     struct Option: Decodable, Equatable, Hashable {
         let value: String
         let label: String
+    }
+
+    /// One of several questions an agent asks at once (kiff/tafs#138, item 57): every word is
+    /// the agent's. The app adds the owner's own answer and "Chat about this" to every card.
+    struct Question: Decodable, Equatable, Hashable {
+        struct Choice: Decodable, Equatable, Hashable {
+            let value: String
+            let label: String
+            var description: String?
+        }
+        let id: String
+        let text: String
+        let options: [Choice]
+        /// Several may be picked.
+        var multi: Bool?
+        var note: String?
     }
 
     struct Taf: Decodable, Equatable {
@@ -45,6 +61,8 @@ struct SetupComponent: Decodable, Equatable {
     let tone: String?
     let steps: [Step]?
     let options: [Option]?
+    /// A questions card's questions (item 57).
+    var questions: [Question]? = nil
     /// planque's grant id.
     let grant: String?
     /// KIFF's agent draft id: the taf's Cards.
@@ -125,8 +143,8 @@ struct SetupThread: Equatable {
         }.map(\.element.0)
     }
 
-    private static let asking: Set<SetupComponent.Kind> = [.confirm, .approval, .signIn, .result]
-    private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .approval, .signIn]
+    private static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result]
+    private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn]
 
     private func placedAt(_ c: ShownComponent) -> Date {
         guard Self.asking.contains(c.component.type) else { return c.firstAt }
@@ -179,6 +197,9 @@ struct SetupThread: Equatable {
         case .signIn?:
             if a.failed { return "Sign in · it didn't go through" }
             return a.text == "not now" ? "Not now" : "Signed in"
+        case .questions?:
+            let questions = components.first { $0.id == a.id }?.component.questions ?? []
+            return QuestionAnswers.words(a.text, questions: questions) ?? a.text
         default:
             return a.text
         }

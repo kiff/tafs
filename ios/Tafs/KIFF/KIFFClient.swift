@@ -401,62 +401,7 @@ final class KIFFClient {
         let _: Empty = try await send("POST", "/v1/me/mandates/\(escaped(cardID))/revoke", body: [String: String]())
     }
 
-    // MARK: Starting a taf
-
-    /// A tool the account connected to KIFF's gateway. A Card names it as its action.
-    struct Connection: Decodable, Equatable, Identifiable {
-        var id: String { name }
-        let name: String
-        let description: String?
-        /// The argument that carries the amount, when the tool moves one.
-        let amountArgument: String?
-        /// What the amount means ("USD") and its decimal places (2), when declared.
-        let amountUnit: String?
-        let amountScale: Int?
-        let readOnly: Bool
-
-        enum CodingKeys: String, CodingKey {
-            case name, description
-            case amountArgument = "amount_argument", amountUnit = "amount_unit", amountScale = "amount_scale"
-            case readOnly = "read_only"
-        }
-
-        var movesAmount: Bool { !(amountArgument ?? "").isEmpty }
-    }
-
-    /// The account's connected tools, from the gateway, with the person's own session.
-    func connections() async throws -> [Connection] {
-        struct Response: Decodable { let connections: [Connection] }
-        let response: Response = try await send("GET", "/v1/connections", base: gatewayURL)
-        return response.connections
-    }
-
-    /// A Card for one tool on the gateway domain, as the dashboard issues it.
-    struct CardRequest: Encodable, Equatable {
-        struct Grant: Encodable, Equatable {
-            struct PerAction: Encodable, Equatable { let quantity: String; let max: Int64 }
-            let action: String
-            var perActionMax: [PerAction]?
-            var nextSteps: [String]?
-            enum CodingKeys: String, CodingKey { case action, perActionMax = "per_action_max", nextSteps = "next_steps" }
-        }
-        struct Aggregate: Encodable, Equatable {
-            let quantity: String
-            let limit: Int64
-            let window: String
-        }
-        let id: String
-        let subject: String
-        var domain = "gateway"
-        let grants: [Grant]
-        let aggregates: [Aggregate]
-        var onExceed = "owner"
-        var holdExpiry = "10m"
-        enum CodingKeys: String, CodingKey {
-            case id, subject, domain, grants, aggregates
-            case onExceed = "on_exceed", holdExpiry = "hold_expiry"
-        }
-    }
+    // MARK: Drafts
 
     /// A new agent and its Cards, submitted as one draft (kiff-cloud #1217). Submitted
     /// by someone who may issue Cards and give keys, from their phone and signed, it is
@@ -571,16 +516,6 @@ final class KIFFClient {
         return try await send("POST", "/v1/me/agent-drafts", body: Body(agentID: agentID, label: label))
     }
 
-    func submitDraft(agentID: String, label: String, cards: [CardRequest]) async throws -> AgentDraft {
-        struct Body: Encodable {
-            let agentID: String
-            let label: String
-            let cards: [CardRequest]
-            enum CodingKeys: String, CodingKey { case label, cards, agentID = "agent_id" }
-        }
-        return try await send("POST", "/v1/me/agent-drafts", body: Body(agentID: agentID, label: label, cards: cards))
-    }
-
     /// A draft as it is now: has someone confirmed it since it was submitted?
     func draft(id: String) async throws -> AgentDraft {
         try await send("GET", "/v1/me/agent-drafts/\(escaped(id))")
@@ -590,11 +525,6 @@ final class KIFFClient {
     /// (kiff-cloud #1237): KIFF issues its Cards. A signed setup call.
     func confirmDraft(id: String, version: String) async throws -> AgentDraft {
         try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version])
-    }
-
-    /// Discards a draft nobody claimed, and revokes the Cards it issued.
-    func discardDraft(id: String) async throws {
-        let _: Empty = try await send("DELETE", "/v1/me/agent-drafts/\(escaped(id))")
     }
 
     // MARK: Alerts
@@ -634,6 +564,17 @@ final class KIFFClient {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
 
+    /// The phone's languages, most preferred first, so KIFF writes what it says to the owner
+    /// (a held call's reason) in their language at its source, never translated by the app
+    /// (kiff/tafs#75). English is the last fallback.
+    static func acceptLanguage(_ preferred: [String]) -> String {
+        var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
+        if !tags.contains(where: { $0 == "en" || $0.hasPrefix("en-") }) { tags.append("en") }
+        return tags.enumerated().map { i, tag in
+            i == 0 ? tag : "\(tag);q=\(String(format: "%.1f", max(0.1, 1.0 - Double(i) * 0.1)))"
+        }.joined(separator: ", ")
+    }
+
     private func send<T: Decodable>(_ method: String, _ path: String, base: URL? = nil, authorized: Bool = true) async throws -> T {
         try await send(method, path, body: Optional<[String: String]>.none, base: base, authorized: authorized)
     }
@@ -644,6 +585,7 @@ final class KIFFClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("tafs-ios", forHTTPHeaderField: "User-Agent")
+        request.setValue(Self.acceptLanguage(Locale.preferredLanguages), forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
