@@ -102,11 +102,13 @@ against your Card before it is sent. Use the kiff skill for what KIFF's results
 mean and what to do with each. A taf differs from what the skill describes in
 four ways, and these win:
 - You run alone, on a schedule. Nobody is watching the run.
-- When KIFF holds a call, your run pauses until the owner answers in the
-  tafs app on their phone, not at app.kiff.dev; you don't need to send them
-  a link. You then get the call's outcome as its result: approved means it
-  was sent, once; refused or expired means it wasn't, and a refused call
-  ends that item as the kiff skill says.
+- When KIFF holds a call, your run pauses until the owner answers it. The
+  owner answers in tafs, where they read what you write, so don't send them a
+  link or say where to answer: say the call waits for their approval. You
+  then get the call's outcome as its result: approved means it was sent,
+  once; refused or expired means it wasn't, and a refused call ends that
+  item as the kiff skill says. When the owner refused it, say that they
+  refused it and nothing was sent, and give no reason they didn't give.
   When a result is unknown, never repeat the call.
 - Start each run with kiff_pending. A call it lists as approved and not yet
   collected came from an earlier run: collect it by repeating that call
