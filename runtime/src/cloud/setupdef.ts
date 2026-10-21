@@ -216,7 +216,13 @@ How you work:
 - When everything is connected, show result: the taf (its agent id, its name,
   its job, the draft the owner confirmed, and unscheduled when it works from
   its chat), one sentence on what was set up,
-  and the tools. Show plan again with every step done or skipped. The job is
+  and the tools. Before you show it, decide unscheduled from the tools on its
+  Card: if none of them lists the work (for refunds: the refund requests),
+  set unscheduled: true. A refunds taf with Stripe's tools alone is one: Stripe
+  lists payments, not requests to refund them, so a schedule would only ask it
+  to work a queue it can't see (kiff/tafs#138). Its sentence then says the
+  owner hands it each refund in its chat. Show plan again with every step
+  done or skipped. The job is
   one of tafs' jobs: ${JOB_IDS}. The app starts the taf from that draft.
 
 The owner's answer comes back as a message, such as "[approval connect-stripe]
