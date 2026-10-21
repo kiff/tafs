@@ -4,6 +4,7 @@ import XCTest
 
 /// The Record's facts from KIFF's activity (kiff/tafs#167): how much, a read, the owner's
 /// answer and the receipt, from the shapes agreed there.
+@MainActor
 final class RecordFieldsTests: XCTestCase {
     static let calls = #"""
     {"calls":[
