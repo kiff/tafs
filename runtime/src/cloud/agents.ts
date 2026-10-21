@@ -44,16 +44,21 @@ export interface Price {
   CacheWrite: number;
 }
 
-/** How long one kind of event is kept: never (0), until its run ends (1), or kept (2) for Retention nanoseconds (0: as long as the session). */
+/**
+ * How long one kind of event is kept: never (0), until its run ends (1), kept (2) for Retention
+ * nanoseconds (0: as long as the session), or, for what a chat read (kept_read), until the chat has
+ * been idle for Retention and at most Max after the read (3, kiff/agents#172).
+ */
 export interface KeepRule {
-  Keep: 0 | 1 | 2;
+  Keep: 0 | 1 | 2 | 3;
   Retention: number;
+  Max?: number;
 }
 
 export const EVENT_KINDS = ["owner_message", "agent_message", "tool_call", "tool_result", "report", "memory_note", "usage", "error"] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
-export const KEEP = { never: 0, untilEnd: 1, kept: 2 } as const;
+export const KEEP = { never: 0, untilEnd: 1, kept: 2, untilIdle: 3 } as const;
 
 /** The effort levels kiff/agents takes, lowest first. */
 export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
@@ -71,10 +76,12 @@ export interface AgentDefinition {
   gateway: string;
   /** Names the agent's KIFF key in the tenant's secrets; never the key. */
   key_ref: string;
-  keep: Record<EventKind, KeepRule>;
+  keep: Record<EventKind, KeepRule> & { kept_read?: KeepRule };
   max_cost_micro_usd: number;
   max_turns?: number;
   history: number;
+  /** What those runs' messages may take, in tokens; in a chat, what no longer fits is summarised (kiff/agents#172). */
+  history_tokens?: number;
   /** The show tool: UI components in the owner's chat (kiff/agents#91). Off unless set. */
   show?: boolean;
   /** The planque the agent asks for vendor access through (kiff/agents#91). Off unless set. */

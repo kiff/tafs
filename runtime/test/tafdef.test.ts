@@ -29,7 +29,7 @@ describe("a taf's definition on kiff/agents", () => {
       expect(d.gateway, job.id).toBe("https://mcp.kiff.dev/mcp");
       expect(d.gateway).toBe(KIFF_GATEWAY);
       expect(Object.keys(d).sort(), job.id).toEqual(
-        ["effort", "gateway", "history", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price"].sort());
+        ["effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price"].sort());
     }
   });
 
@@ -55,6 +55,13 @@ describe("a taf's definition on kiff/agents", () => {
     for (const kind of ["owner_message", "agent_message", "report", "memory_note", "usage", "error"] as const) {
       expect(keep[kind], kind).toEqual({ Keep: 2, Retention: RETENTION_NS });
     }
+  });
+
+  it("keeps what a chat read for its next messages, an hour idle and four hours at most, and bounds history by size", () => {
+    const d = definition(ID, jobById("refunds"));
+    expect(d.keep.kept_read).toEqual({ Keep: 3, Retention: 3600 * 1e9, Max: 4 * 3600 * 1e9 });
+    expect(d.history).toBe(50);
+    expect(d.history_tokens).toBe(30_000);
   });
 
   it("carries the job, how notes work, the owner's first words and KIFF's skill", () => {

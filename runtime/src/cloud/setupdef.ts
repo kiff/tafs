@@ -1,6 +1,6 @@
 import { JOBS } from "../jobs.js";
 import { type AgentDefinition, type Effort } from "./agents.js";
-import { HISTORY, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE } from "./tafdef.js";
+import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE } from "./tafdef.js";
 
 /**
  * Setup, the agent that connects a company's tools for its tafs in the app's
@@ -303,6 +303,7 @@ export function setupDefinition(id: string): AgentDefinition {
     // A cent is 10,000 millionths of a dollar.
     max_cost_micro_usd: SETUP_BUDGET_CENTS * 10_000,
     history: HISTORY,
+    history_tokens: HISTORY_TOKENS,
     show: true,
     planque: PLANQUE,
     drafts: true,

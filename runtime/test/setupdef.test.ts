@@ -14,7 +14,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.gateway).toBe(KIFF_GATEWAY);
     expect(d.key_ref).toBe(`kiff/${ID}`);
     expect(Object.keys(d).sort()).toEqual(
-      ["drafts", "effort", "gateway", "history", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "price", "show"].sort());
+      ["drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "price", "show"].sort());
     expect(d.drafts).toBe(true);
   });
 
