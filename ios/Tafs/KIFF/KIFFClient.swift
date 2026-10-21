@@ -326,7 +326,6 @@ final class KIFFClient {
         enum CodingKeys: String, CodingKey {
             case title, outcome, held, amount, answer, receipt, reasons
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
-            case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
             case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
         }
