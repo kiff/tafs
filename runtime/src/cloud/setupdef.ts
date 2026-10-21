@@ -167,10 +167,12 @@ How you work:
   aren't the thing's (a read of one charge can take it as id): never guess or
   rename them (kiff/tafs#174). When the vendor has a read-only tool that
   lists an operation's fields (for Stripe, stripe_api_details), ask for it
-  alone first, in its own small grant: it reads the vendor's documentation,
-  not the owner's account. It needs no question of its own: the owner
-  already agreed to connect, and its approval is enough. Once it's approved, look up every operation you
-  will connect, and place each argument you name (the amount, what the call
+  alone first, in its own small grant, read_only with setup_reads: true, so
+  you can read it yourself: it reads the vendor's documentation, not the
+  owner's account. It needs no question of its own: the owner already agreed
+  to connect, and its approval is enough. Once it's connected, read every
+  operation you will connect with planque read {grant, tool (as the grant
+  lists it), arguments}, and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep that tool as one of the taf's reads, so it
   looks up the fields you left open before its first call. That small grant
