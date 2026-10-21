@@ -17,7 +17,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
  * and only on that account's tafs.
  *
  *   GET  /v1/jobs
- *   GET  /v1/home                       the app's list: each taf's state, colour and Card summary, and the account's other agents with Cards
+ *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary and open trial, and the account's other agents with Cards
  *   GET  /v1/tafs
  *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}
  *   POST /v1/tafs/{id}/pause | resume | run
@@ -1859,13 +1859,17 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
   const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
+  // Each taf's open trial, its own entry in the app's menu (kiff/tafs#173). One that can't
+  // be read leaves that entry out, never the list.
+  const trials = await Promise.all(tafs.map((t) => deps.agents.openedTrial(me.tenantID, t.id).catch(() => undefined)));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
+    const trial = trials[i];
     const card = summary(cards.get(t.kiffAgent) ?? []);
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
     const words = JOBS.find((j) => j.id === v.job)?.summary;
-    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.

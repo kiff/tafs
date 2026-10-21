@@ -1254,6 +1254,14 @@ describe("trying a version (kiff/tafs#173)", () => {
     expect((await call(w, "DELETE", `/v1/tafs/${MAX}/trial`, { token: "ana" })).status).toBe(404);
   });
 
+  it("lists an open trial with its taf in the home list", async () => {
+    const w = trying();
+    w.account.drafts!.drf_v2 = { status: "trying", agent_id: "rae" };
+    await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_v2" } });
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect((home.body.tafs as Array<{ id: string; trial?: { n: number } }>).find((t) => t.id === RAE)?.trial).toMatchObject({ n: 2, draft: "drf_v2" });
+  });
+
   it("drafts the live Cards as they stand for a version that changes none", async () => {
     const w = trying();
     w.agents.versions.get(`t_acme|${RAE}`)!.push({ n: 3, note: "Says it plainer", by: "setup", created: "2026-10-21T09:00:00Z", digest: "d3", live: false });

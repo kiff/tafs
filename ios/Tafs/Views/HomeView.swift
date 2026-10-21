@@ -22,6 +22,11 @@ struct HomeView: View {
                     ForEach(model.tafs) { taf in
                         NavigationLink(value: taf.id) { TafRow(taf: taf) }
                             .buttonStyle(.plain)
+                        // Its open trial, its own entry under it (kiff/tafs#173).
+                        if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
+                            NavigationLink(value: chat) { TafRow(taf: trying) }
+                                .buttonStyle(.plain)
+                        }
                     }
                 }
 
@@ -91,7 +96,9 @@ struct HomeView: View {
         .coachClearance()
         .refreshable { await model.refresh() }
         .screenBackground()
-        .navigationDestination(for: UUID.self) { TafDetailView(tafID: $0) }
+        .navigationDestination(for: UUID.self) { id in
+            if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button { showingSettings = true } label: {
