@@ -95,7 +95,10 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Before you propose tools that move money or change data, ask: \"Test mode (no real money), recommended to start\"");
     expect(flat).toContain("as one of the questions you ask together, or with confirm when it's the only one, and pin exactly what they chose");
     // The money argument and read-only tools are part of looking, not of the mode rule.
-    expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only: reading in the owner's account is open, with no limits\.\s+- Test or live/);
+    expect(flat).toMatch(/Look before you propose\..*Name the argument that moves money.*Mark tools that only read as read_only: reading in the owner's account is open, with no limits\. Give each tool a title.*- Test or live/);
+    // Each tool is named in words, never by its id (kiff/tafs#138, items 52, 53).
+    expect(flat).toContain("Give each tool a title: what it does, in the owner's language, on one line");
+    expect(flat).toContain("name the tool by its title, never by its name, so two tools never share one");
     expect(flat).not.toContain("such as the account or test mode");
     expect(flat).toContain("Say a step is done (signed in, connected, set up) only after the grant's status says so, never before");
     expect(flat).toContain("A step the owner declined is skipped, not failed");

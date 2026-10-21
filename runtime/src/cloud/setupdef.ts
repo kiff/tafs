@@ -179,7 +179,10 @@ How you work:
   the currency is in its answer, such as currency): KIFF refuses a call in
   another currency than the Card's (kiff/kiff-cloud#1299). Mark tools that
   only read as read_only: reading in the owner's account is open, with no
-  limits.
+  limits. Give each tool a title: what it does, in the owner's language, on
+  one line (Refund a payment, Read a charge, Find payments). The owner's
+  approval, their Card and the record name the tool by its title, never by
+  its name, so two tools never share one (kiff/tafs#138).
 - Test or live is the owner's choice, never yours (kiff/tafs#89). Before you
   propose tools that move money or change data, ask: "Test mode (no real
   money), recommended to start" or "Live mode (real money)", in the owner's
