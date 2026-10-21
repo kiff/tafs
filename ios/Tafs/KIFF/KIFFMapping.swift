@@ -73,6 +73,9 @@ enum KIFFMapping {
         switch h.state {
         case "waiting": taf.state = .waiting; taf.now = "Waiting on you"
         case "paused": taf.state = .paused; taf.now = "Paused"
+        // A taf with no schedule isn't at work until it's told something in its chat
+        // (kiff/tafs#138, item 55): it reads as ready, not running.
+        case "working" where h.unscheduled == true: taf.state = .idle; taf.now = "Works from its chat"
         case "working": taf.state = .working; taf.now = h.nextRun.map { "Next run \($0.shortTime)" } ?? "Running"
         case "idle": taf.state = .idle; taf.now = "Acting under KIFF"
         default: taf.state = .revoked; taf.now = "Card not active"

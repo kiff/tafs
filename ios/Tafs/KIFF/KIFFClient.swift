@@ -450,7 +450,8 @@ final class KIFFClient {
         /// (kiff/tafs#94).
         var cardTitle: String {
             let name = (label ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            return name.isEmpty ? "The taf's Card" : "\(name)'s Card"
+            // "Stripe refunds' Card", not "Stripe refunds's" (kiff/tafs#138, item 54).
+            return name.isEmpty ? "The taf's Card" : name.hasSuffix("s") ? "\(name)' Card" : "\(name)'s Card"
         }
     }
 

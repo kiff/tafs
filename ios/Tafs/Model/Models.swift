@@ -142,7 +142,7 @@ enum TafState: String, Codable {
         switch self {
         case .working: return "Working"
         case .waiting: return "Waiting"
-        case .idle: return "Idle"
+        case .idle: return "Ready"
         case .paused: return "Paused"
         case .revoked: return "Stopped"
         }

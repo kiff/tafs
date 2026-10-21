@@ -1057,9 +1057,10 @@ struct SetupApproval: View {
     /// What a replaced card says, folded: what the owner did with it, if anything.
     private var replacedLine: String {
         let answer = model.setupThread.answer(to: component.id)
-        if let a = answer, !a.failed, a.text.hasPrefix("approved") { return "Approved · a newer request is below" }
-        if answer?.text == "declined" { return "Declined · a newer request is below" }
-        return "Replaced by a newer request below"
+        // What happened, then where to look (kiff/tafs#138, item 54).
+        if let a = answer, !a.failed, a.text.hasPrefix("approved") { return "Approved · Setup asked for more below" }
+        if answer?.text == "declined" { return "Declined · Setup asked again below" }
+        return "Setup changed this request: see below"
     }
 
     var body: some View {

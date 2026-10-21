@@ -124,6 +124,8 @@ final class TafsCloud {
         let id: String?
         let name: String
         let job: String?
+        /// It works from its chat, with no schedule (kiff/tafs#138, items 43 and 55).
+        var unscheduled: Bool? = nil
         let kiffAgent: String
         let status: String?
         let nextRun: Date?
@@ -136,7 +138,7 @@ final class TafsCloud {
         let card: CardSummary
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card
+            case id, name, job, status, color, state, waiting, card, unscheduled
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
         }
 

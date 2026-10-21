@@ -130,3 +130,26 @@ final class AfterTheTestTests: XCTestCase {
     }
 
 }
+
+/// What the owner's retest of build 473 found in the words (kiff/tafs#138, items 54 and 55).
+final class RetestWordsTests: XCTestCase {
+    func testANameEndingInSHasItsOwnPossessive() throws {
+        let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
+        {"id":"drf_2","agent_id":"refunds-bxkwf7vi","label":"Stripe refunds","status":"draft","version":"v1","cards":[]}
+        """#.utf8))
+        XCTAssertEqual(d.cardTitle, "Stripe refunds' Card")
+    }
+
+    /// A taf with no schedule isn't running: it works from its chat, and reads as ready.
+    func testATafWithNoScheduleReadsAsWorkingFromItsChat() throws {
+        let home = try KIFFClient.decoder.decode(TafsCloud.HomeTaf.self, from: Data(#"""
+        {"id":"taf-1","name":"Stripe refunds","job":"refunds","kiff_agent":"refunds-bxkwf7vi","status":"active","unscheduled":true,
+         "next_run":null,"last_run":null,"color":1,"state":"working","waiting":0,
+         "card":{"ids":["c1"],"active":true,"expires":null,"tools":[],"rules":[],"used":{},"usage_unknown":[]}}
+        """#.utf8))
+        let taf = KIFFMapping.taf(home, id: UUID(), owner: "You")
+        XCTAssertEqual(taf.now, "Works from its chat")
+        XCTAssertEqual(taf.state, .idle)
+        XCTAssertEqual(taf.state.label, "Ready")
+    }
+}
