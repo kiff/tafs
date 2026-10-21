@@ -29,10 +29,23 @@ export const KIFF_GATEWAY = "https://mcp.kiff.dev/mcp";
  * kept: what tools return ends with its run, so this stays small.
  */
 export const HISTORY = 50;
+/**
+ * What those runs' messages may take, in tokens. In a chat, the runs that no longer fit are
+ * summarised by the model, once, and the summary comes first, with the owner's first message as
+ * they wrote it: a long setup is summarised, never forgotten (kiff/tafs#138).
+ */
+export const HISTORY_TOKENS = 30_000;
 /** Every run stops at this cost unless the taf sets another. */
 export const DEFAULT_BUDGET_CENTS = 200;
 /** Runs and chats are kept 30 days (docs/data.md); what tools return, only until the run ends. */
 export const RETENTION_NS = 30 * 24 * 3600 * 1_000_000_000;
+/**
+ * What a chat read (a payment, an order) is kept for its next messages, sealed, while the owner
+ * keeps writing: until the chat has been idle an hour, and never more than four hours after the read
+ * (kiff/agents#172, docs/data.md). Only in chats, only reads; scheduled runs keep nothing.
+ */
+export const READS_IDLE_NS = 3600 * 1_000_000_000;
+export const READS_MAX_NS = 4 * 3600 * 1_000_000_000;
 
 /** The taf's KIFF agent key, as its definition names it: never the key itself. */
 export function keyRef(tafID: string): string {
@@ -142,12 +155,16 @@ function sorted(v: unknown): unknown {
   return v;
 }
 
-/** The keep rules: every kind kept 30 days, except tool calls and results, kept until their run ends. */
-export function keepRules(): Record<EventKind, KeepRule> {
-  const keep = {} as Record<EventKind, KeepRule>;
+/**
+ * The keep rules: every kind kept 30 days, except tool calls and results, kept until their run ends,
+ * and what a chat read, kept for its next messages while it goes on (READS_IDLE_NS, READS_MAX_NS).
+ */
+export function keepRules(): AgentDefinition["keep"] {
+  const keep = {} as AgentDefinition["keep"];
   for (const kind of EVENT_KINDS) keep[kind] = { Keep: KEEP.kept, Retention: RETENTION_NS };
   keep.tool_call = { Keep: KEEP.untilEnd, Retention: 0 };
   keep.tool_result = { Keep: KEEP.untilEnd, Retention: 0 };
+  keep.kept_read = { Keep: KEEP.untilIdle, Retention: READS_IDLE_NS, Max: READS_MAX_NS };
   return keep;
 }
 
@@ -166,5 +183,6 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     // A cent is 10,000 millionths of a dollar.
     max_cost_micro_usd: budget * 10_000,
     history: HISTORY,
+    history_tokens: HISTORY_TOKENS,
   };
 }
