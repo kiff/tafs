@@ -39,6 +39,9 @@ struct SetupChatView: View {
     /// What the owner just sent, while it waits behind Setup's answer: its bubble is pinned,
     /// then the thread's copy, without the view moving (kiff/tafs#138).
     @State private var pinText: String?
+    /// The thread's ids when the owner sent it: the pin goes only to a message that wasn't
+    /// there, so the same words sent again never pin the older copy (kiff/tafs#138, item 34).
+    @State private var sentBefore: Set<String> = []
     @State private var viewport: CGFloat = 600
     /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
@@ -106,7 +109,7 @@ struct SetupChatView: View {
     }
 
     /// Coach mode's top, always there (kiff/tafs#138): a new conversation, and the previous
-    /// ones. A new one takes the taf on screen as its context, else none.
+    /// ones. A new one is on no taf, and offers the taf on screen (item 36).
     private var coachBar: some View {
         HStack(spacing: 10) {
             Button {
@@ -256,10 +259,10 @@ struct SetupChatView: View {
             }
             .onChange(of: items.map(\.id)) { ids in
                 // The message the owner just sent is in the thread: it goes to the top and stays
-                // (kiff/tafs#138). Matched by its words, so a reply arriving first doesn't pin an
-                // older message. If its bubble was already pinned while the taf (or Setup) worked,
+                // (kiff/tafs#138). Matched by its words among the messages that are new since the send, so
+                // neither a reply arriving first nor an older copy of the same words is pinned. If its bubble was already pinned while the taf (or Setup) worked,
                 // the pin moves to it without animating, so the view doesn't move.
-                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
+                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && !sentBefore.contains($0.id) && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
                     let animate = pinNext
                     pinNext = false
                     pinText = nil
@@ -344,6 +347,13 @@ struct SetupChatView: View {
             switch item {
             case .message(let m):
                 if m.from == .owner { holding = false } else if revealing(m) { holding = true }
+                // An answer to a card the thread shows reads once: the card folds to what was
+                // asked and the answer, so no bubble repeats it (kiff/tafs#138, item 38). One
+                // that didn't go through keeps its bubble, which says so.
+                if m.from == .owner, let a = SetupThread.Answer(m.text), !a.failed,
+                   model.setupThread.components.contains(where: { $0.id == a.id }) {
+                    return false
+                }
                 return true
             case .component(let c):
                 if holding { return false }
@@ -369,6 +379,7 @@ struct SetupChatView: View {
                     .accessibilityAddTraits(.isHeader)
                 Text("Say what should change, or ask how it's going. Coach mode starts from what \(taf.name) did and what its Card allows.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                otherStart("Set up a new taf instead") { model.newSetupChat() }
             } else {
                 Text("Ask anything about your tafs")
                     .font(Theme.display(26)).foregroundColor(Theme.ink)
@@ -376,6 +387,9 @@ struct SetupChatView: View {
                     .accessibilityAddTraits(.isHeader)
                 Text("Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                if let id = model.tafOnScreen, let taf = model.cloudTaf(for: id) {
+                    otherStart("Improve \(taf.name) instead") { model.improveTaf(id) }
+                }
             }
             ForEach(model.setupImproving == nil ? Self.examples : Self.improveExamples, id: \.self) { example in
                 Button {
@@ -394,6 +408,19 @@ struct SetupChatView: View {
             }
         }
         .padding(.vertical, 16)
+    }
+
+    /// The other way to start this conversation: on the taf on screen, or on none.
+    private func otherStart(_ title: String, _ action: @escaping () -> Void) -> some View {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
+            Label(title, systemImage: "arrow.triangle.branch")
+                .scaledFont(14, weight: .semibold).foregroundColor(Theme.coach)
+        }
+        .buttonStyle(.plain)
+        .disabled(model.setupSending)
     }
 
     static let examples = [
@@ -494,6 +521,7 @@ struct SetupChatView: View {
         pinNext = true
         // As the model keeps it: trimmed (review on #154).
         pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        sentBefore = Set(model.setupThread.items.map(\.id))
         following = false
         // The keyboard goes down once it's sent (kiff/tafs#138): the answer gets the screen.
         typing = false
@@ -943,7 +971,9 @@ struct SetupComponentView: View {
     }
 
     /// An improvement's result (kiff/tafs#107): the taf's next version, made once, to try
-    /// and switch to from its Versions.
+    /// and switch to from its Versions. The card is whole from the start: its button is there
+    /// while the version is made, and says what it opens, the version, never the taf
+    /// (kiff/tafs#138, item 46).
     private func improvement(_ c: SetupComponent) -> some View {
         Panel(stroke: Theme.ok) {
             Eyebrow(text: "New version · \(c.taf?.name ?? "")", color: Theme.ok)
@@ -955,7 +985,7 @@ struct SetupComponentView: View {
                 NavigationLink {
                     VersionsScreen(tafID: tafID)
                 } label: {
-                    Text(c.yes ?? "Try version \(n)").frame(maxWidth: .infinity)
+                    Text("See version \(n)").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PrimaryButtonStyle())
             } else if let error = model.improveErrors[c.id] {
@@ -963,7 +993,15 @@ struct SetupComponentView: View {
                 Button("Try again") { Task { await model.makeImprovedVersion(c) } }
                     .buttonStyle(OutlineButtonStyle())
             } else {
-                Text("Preparing the new version…").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                Button {} label: {
+                    HStack(spacing: 8) {
+                        ProgressView().tint(.white)
+                        Text("Preparing the new version…")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(true)
             }
         }
     }

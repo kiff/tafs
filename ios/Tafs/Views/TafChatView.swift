@@ -26,6 +26,9 @@ struct TafChatView: View {
     /// What the owner just sent, while it isn't in the thread yet (steering a run, or queued
     /// behind one): its bubble is pinned, then the thread's copy, without the view moving.
     @State private var pinText: String?
+    /// The thread's ids when the owner sent it: the pin goes only to a message that wasn't
+    /// there, so the same words sent again never pin the older copy (kiff/tafs#138, item 34).
+    @State private var sentBefore: Set<String> = []
     @State private var viewport: CGFloat = 600
 
     var body: some View {
@@ -164,10 +167,10 @@ struct TafChatView: View {
             }
             .onChange(of: items.map(\.id)) { ids in
                 // The message the owner just sent is in the thread: it goes to the top and stays
-                // (kiff/tafs#138). Matched by its words, so a reply arriving first doesn't pin an
-                // older message. If its bubble was already pinned while the taf (or Setup) worked,
+                // (kiff/tafs#138). Matched by its words among the messages that are new since the send, so
+                // neither a reply arriving first nor an older copy of the same words is pinned. If its bubble was already pinned while the taf (or Setup) worked,
                 // the pin moves to it without animating, so the view doesn't move.
-                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
+                if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && !sentBefore.contains($0.id) && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
                     let animate = pinNext
                     pinNext = false
                     pinText = nil
@@ -332,6 +335,7 @@ struct TafChatView: View {
         pinNext = true
         // As the model keeps it: trimmed (review on #154).
         pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        sentBefore = Set(model.chatItems(tafID).map(\.id))
         following = false
         Haptics.tap()
         // The keyboard goes down once it's sent (kiff/tafs#138, the owner's call, which
