@@ -80,8 +80,6 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertNil(old.readOnly)
     }
 
-    /// A line names what it acted on from tafs' own call_ref, by KIFF's key, and only when
-    /// the value is the one KIFF hashed (kiff/tafs#167).
     /// The owner's iPad, 21 Oct (kiff/tafs#138): a refusal read only "Not sent", and an
     /// approved card jumped below the taf's message once answered. KIFF now says why, in the
     /// app's words, and when the call was made, which keeps the card's place.
@@ -109,6 +107,8 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertEqual(AppModel.ChatItem.outcome(record[2]).at, record[2].at, "without made_at, its own time")
     }
 
+    /// A line names what it acted on from tafs' own call_ref, by KIFF's key, and only when
+    /// the value is the one KIFF hashed (kiff/tafs#167).
     func testALineNamesItsPaymentOnlyWhenKIFFsHashMatches() {
         XCTAssertTrue(KIFFMapping.isOn(Self.paymentA, hash: Self.hashA))
         XCTAssertFalse(KIFFMapping.isOn(Self.paymentA.lowercased(), hash: Self.hashA))
