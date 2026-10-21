@@ -901,6 +901,7 @@ struct SetupComponentView: View {
         switch c.type {
         case .notice: notice(c)
         case .confirm: confirm(c)
+        case .questions: QuestionsCard(component: c)
         case .approval: SetupApproval(component: c)
         case .signIn: signIn(c)
         case .result: result(c)
