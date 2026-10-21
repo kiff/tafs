@@ -669,6 +669,16 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     expect(w.names.held.has("t_acme#Rae 3")).toBe(false);
   });
 
+  it("moves on past a name still claimed with no taf behind it", async () => {
+    const w = world();
+    w.names.held.set("t_acme#Rae 2", "an-unknown-start");
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, name: "Rae" } });
+    expect(r.status).toBe(200);
+    expect(r.body.taf.name).toBe("Rae 3");
+    expect(w.names.held.get("t_acme#Rae 2")).toBe("an-unknown-start");
+  });
+
   it("keeps a name of at most 60 characters when it adds a number", async () => {
     const w = world();
     const long = "R".repeat(60);
