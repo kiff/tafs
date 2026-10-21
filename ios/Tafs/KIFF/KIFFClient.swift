@@ -294,9 +294,6 @@ final class KIFFClient {
             let unit: String
         }
         var amount: Amount?
-        /// "sha256:<hex>" of what it acts on (the tool's resource argument): KIFF keeps no
-        /// argument but numbers, so the value itself is tafs' own record of the call.
-        var onHash: String?
         var readOnly: Bool?
         /// The owner's answer to a held call: approved once or refused, signed on which device.
         struct Answer: Decodable, Equatable, Hashable, Codable {
@@ -320,7 +317,7 @@ final class KIFFClient {
             case title, outcome, held, amount, answer, receipt, reasons
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
-            case onHash = "on_hash", readOnly = "read_only"
+            case readOnly = "read_only"
         }
     }
 
