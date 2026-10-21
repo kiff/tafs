@@ -95,7 +95,7 @@ final class AfterTheTestTests: XCTestCase {
         let taf = UUID()
         let record = KIFFMapping.record(calls, ids: ["refunds-k5j6m5qx": taf])
         XCTAssertEqual(record.map(\.kind), [.approved, .done], "a call of an agent the app doesn't show is left out")
-        XCTAssertEqual(record.map(\.title), ["Refund a payment", "create_refund"])
+        XCTAssertEqual(record.map(\.title), ["Refund a payment", "create refund"], "no title: the action in words (kiff/tafs#138, item 52)")
         XCTAssertEqual(record.first?.tafID, taf)
         XCTAssertEqual(KIFFMapping.record(calls, ids: ["refunds-k5j6m5qx": taf]).map(\.id), record.map(\.id), "the same ids on every refresh")
     }
@@ -163,5 +163,26 @@ final class ApproveOnceTests: XCTestCase {
         XCTAssertFalse(KIFFMapping.canApproveOnce(["per_action_exceeded", "aggregate_exceeded"]), "over the day's total too")
         XCTAssertFalse(KIFFMapping.canApproveOnce(["aggregate_exceeded"]))
         XCTAssertFalse(KIFFMapping.canApproveOnce([]), "KIFF named no breach")
+    }
+}
+
+/// Tool and vendor names in words, not ids (kiff/tafs#138, item 52).
+final class ToolWordsTests: XCTestCase {
+    func testAToolsNameReadsInWords() {
+        XCTAssertEqual(KIFFMapping.toolWords("bxkwf7vi_list_accounts"), "list accounts", "past the grant's prefix")
+        XCTAssertEqual(KIFFMapping.toolWords("bxkwf7vi_refund_payment"), "refund payment")
+        XCTAssertEqual(KIFFMapping.toolWords("create_refund"), "create refund", "a word is not a prefix")
+        XCTAssertEqual(KIFFMapping.toolWords("stripe.create_refund"), "create refund")
+        XCTAssertEqual(KIFFMapping.toolWords("kiff__issue-credit"), "issue credit")
+        XCTAssertEqual(AppModel.tafActivityWords("bxkwf7vi_list_accounts"), "Asking KIFF to run list accounts…")
+        XCTAssertEqual(KIFFMapping.name("bxkwf7vi_get_charge", title: nil), "get charge")
+        XCTAssertEqual(KIFFMapping.name("bxkwf7vi_get_charge", title: "Read Stripe API data"), "Read Stripe API data")
+    }
+
+    func testAVendorReadsAsPeopleSayIt() {
+        XCTAssertEqual(KIFFMapping.vendorWords("stripe-mcp"), "Stripe")
+        XCTAssertEqual(KIFFMapping.vendorWords("mcp.stripe.com"), "Stripe")
+        XCTAssertEqual(KIFFMapping.vendorWords("Stripe"), "Stripe")
+        XCTAssertEqual(KIFFMapping.vendorWords("access.stripe.com"), "Access")
     }
 }

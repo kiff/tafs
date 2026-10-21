@@ -227,12 +227,13 @@ struct ConnectionsPanel: View {
                 ForEach(connections) { grant in
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(grant.vendor).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                            Text(KIFFMapping.vendorWords(grant.vendor)).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
                             Text("Keys kept sealed\(grant.account.map { " · \($0)" } ?? "")")
                                 .font(.system(size: 12)).foregroundColor(Theme.dim)
                             if grant.connected {
-                                Text(grant.request.tools.map(\.action).joined(separator: ", "))
-                                    .font(Theme.mono(12)).foregroundColor(Theme.soft)
+                                // What it may do, in words, not the tools' ids (kiff/tafs#138, item 52).
+                                Text(grant.request.tools.map { KIFFMapping.toolWords($0.action) }.joined(separator: " · "))
+                                    .font(.system(size: 12)).foregroundColor(Theme.soft)
                                 if model.leftOver(grant, of: tafID) {
                                     // Left over after a version moved its Card (kiff/tafs#138). An older version may still
                                     // run on it, so the words don't say to remove it.

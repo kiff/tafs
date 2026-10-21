@@ -1122,14 +1122,14 @@ struct SetupApproval: View {
     }
 
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
-        let vendor = grant?.vendor ?? component.service ?? "the vendor"
+        let vendor = (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? "the vendor"
         // An approval with the taf's Card is the Card's (kiff/tafs#94), not the tool's again.
         if let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true {
             return state == .declined ? "Declined · \(draft.cardTitle)" : "Approved · \(draft.cardTitle)"
         }
         if state == .declined { return "Declined · \(vendor)" }
         if grant?.connected == true { return "Approved · \(vendor) is connected, keys kept sealed" }
-        return "Approved · signed in at \(vendor)"
+        return "Approved · signed in to \(vendor)"
     }
 
     private func card(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> some View {

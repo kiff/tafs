@@ -1665,11 +1665,8 @@ final class AppModel: ObservableObject {
         case "memory": return "Reading its notes…"
         case "kiff_pending": return "Checking what waits for you…"
         default:
-            // The tool's own name, past any server prefix ("stripe.create_refund",
-            // "kiff__refund_order"), in words.
-            let name = tool.components(separatedBy: "__").last?.split(separator: ".").last.map(String.init) ?? tool
-            let words = name.split(whereSeparator: { $0 == "_" || $0 == "-" }).joined(separator: " ")
-            return "Asking KIFF to run \(words.isEmpty ? tool : words)…"
+            // The tool's own name in words, past any prefix (kiff/tafs#138, item 52).
+            return "Asking KIFF to run \(KIFFMapping.toolWords(tool))…"
         }
     }
 
