@@ -287,11 +287,46 @@ final class KIFFClient {
         let createdAt: Date
         let held: Bool
         var toolOutcome: ToolOutcome?
+        /// What the Record says of a call (kiff/tafs#167). Each is absent when it doesn't apply.
+        /// The money it moves, as a decimal string and its unit ("150.00", "EUR").
+        struct Amount: Decodable, Equatable, Hashable, Codable {
+            let value: String
+            let unit: String
+        }
+        var amount: Amount?
+        /// "sha256:<hex>" of what it acts on (the tool's resource argument): KIFF keeps no
+        /// argument but numbers, so the value itself is tafs' own record of the call.
+        var onHash: String?
+        var readOnly: Bool?
+        /// The owner's answer to a held call: approved once or refused, signed on which device.
+        struct Answer: Decodable, Equatable, Hashable, Codable {
+            let decision: String
+            var by: String?
+            var signed: Bool?
+            var device: String?
+            var at: Date?
+        }
+        var answer: Answer?
+        /// Its KIFF receipt: signed, or pending until KIFF's next sweep (about 30 s).
+        struct Receipt: Decodable, Equatable, Hashable, Codable {
+            let traceID: String
+            let status: String
+            enum CodingKeys: String, CodingKey { case status; case traceID = "trace_id" }
+        }
+        var receipt: Receipt?
         enum CodingKeys: String, CodingKey {
-            case title, outcome, held
+            case title, outcome, held, amount, answer, receipt
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
+            case onHash = "on_hash", readOnly = "read_only"
         }
+    }
+
+    /// A receipt as KIFF wrote it (kiff/tafs#167): its bytes, since its signed chain is
+    /// checked as written, never decoded and written again.
+    func receipt(traceID: String) async throws -> Data {
+        let raw: RawBody = try await send("GET", "/v1/receipts/\(escaped(traceID))")
+        return raw.data
     }
 
     /// The account's latest calls, for Activity and Record.
@@ -622,8 +657,16 @@ final class KIFFClient {
             let body = try? JSONDecoder().decode([String: String].self, from: data)
             throw KIFFError.server(status: status, message: body?["error"] ?? "KIFF answered \(status)", reason: body?["reason"])
         }
+        if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }
         if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }
         return try Self.decoder.decode(T.self, from: data)
+    }
+
+    /// A response's bytes, untouched.
+    struct RawBody: Decodable {
+        let data: Data
+        init(data: Data) { self.data = data }
+        init(from decoder: Decoder) throws { data = Data() }
     }
 
     static let decoder: JSONDecoder = {
