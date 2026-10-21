@@ -80,6 +80,33 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertNil(old.readOnly)
     }
 
+    /// The owner's iPad, 21 Oct (kiff/tafs#138): a refusal read only "Not sent", and an
+    /// approved card jumped below the taf's message once answered. KIFF now says why, in the
+    /// app's words, and when the call was made, which keeps the card's place.
+    func testALineSaysWhyAndKeepsWhereItWasMade() throws {
+        let json = #"""
+        {"calls":[
+        {"proposal_id":"p_u","action_name":"refund","actor_id":"agt_r","outcome":"blocked","held":false,
+         "created_at":"2026-10-21T14:36:13Z","made_at":"2026-10-21T14:36:13Z","reasons":["amount_unit_unverified"],
+         "reason":"KIFF couldn't check its currency."},
+        {"proposal_id":"p_h","action_name":"refund","actor_id":"agt_r","outcome":"allowed","held":true,
+         "tool_outcome":{"status":"done"},"created_at":"2026-10-21T17:12:20Z","made_at":"2026-10-21T17:11:30Z"},
+        {"proposal_id":"p_x","action_name":"refund","actor_id":"agt_r","outcome":"blocked","held":false,
+         "created_at":"2026-10-21T14:00:00Z","reasons":["something_kiff_has_no_words_for"]}
+        ]}
+        """#
+        struct Response: Decodable { let calls: [KIFFClient.ActivityCall] }
+        let calls = try KIFFClient.decoder.decode(Response.self, from: Data(json.utf8)).calls
+        let record = KIFFMapping.record(calls, ids: ["agt_r": UUID()])
+        XCTAssertEqual(record[0].detail, "Not sent · KIFF couldn't check its currency.")
+        XCTAssertEqual(record[0].reason, "KIFF couldn't check its currency.")
+        XCTAssertEqual(record[2].detail, "Not sent", "no words, no code: just that it wasn't sent")
+        XCTAssertNil(record[2].reason)
+        let made = try XCTUnwrap(calls[1].madeAt)
+        XCTAssertEqual(AppModel.ChatItem.outcome(record[1]).at, made, "an answered call stays where it was held")
+        XCTAssertEqual(AppModel.ChatItem.outcome(record[2]).at, record[2].at, "without made_at, its own time")
+    }
+
     /// A line names what it acted on from tafs' own call_ref, by KIFF's key, and only when
     /// the value is the one KIFF hashed (kiff/tafs#167).
     func testALineNamesItsPaymentOnlyWhenKIFFsHashMatches() {

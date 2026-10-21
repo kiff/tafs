@@ -247,4 +247,7 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     var answer: KIFFClient.ActivityCall.Answer?
     var receipt: KIFFClient.ActivityCall.Receipt?
     var why: [String]?
+    /// When the call was made (KIFF's first decision), and why it wasn't sent, in KIFF's words.
+    var madeAt: Date?
+    var reason: String?
 }

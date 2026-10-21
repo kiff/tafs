@@ -1591,7 +1591,9 @@ final class AppModel: ObservableObject {
             switch self {
             case .message(let m): return m.at
             case .held(let h): return h.heldAt
-            case .outcome(let e): return e.at
+            // Where its held card was: when the call was made, not when it was answered, so an
+            // answered card stays above the taf's message (kiff/tafs#138, 21 Oct).
+            case .outcome(let e): return e.madeAt ?? e.at
             }
         }
     }

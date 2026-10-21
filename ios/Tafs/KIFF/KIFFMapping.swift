@@ -125,7 +125,8 @@ enum KIFFMapping {
             case "owner_required", "approval_required":
                 kind = .held; detail = "Waiting for you"
             default:
-                kind = .refused; detail = "Not sent"
+                // KIFF's own words for why, when it has them (kiff/tafs#138).
+                kind = .refused; detail = c.reason.map { "Not sent · \($0)" } ?? "Not sent"
             }
             var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
                                     detail: detail, at: c.createdAt)
@@ -138,6 +139,8 @@ enum KIFFMapping {
             entry.answer = c.answer
             entry.receipt = c.receipt
             entry.why = c.reasons
+            entry.madeAt = c.madeAt
+            entry.reason = c.reason
             return entry
         }
     }

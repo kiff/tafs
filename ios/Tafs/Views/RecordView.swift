@@ -207,7 +207,7 @@ struct RecordRow: View {
                     Label("KIFF receipt", systemImage: "doc.text")
                         .font(.system(size: 12)).foregroundColor(Theme.ok)
                 } else if entry.signature != nil {
-                    Label("Signed on this iPhone", systemImage: "checkmark.seal")
+                    Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal")
                         .font(.system(size: 12)).foregroundColor(Theme.ok)
                 }
             }
@@ -287,7 +287,8 @@ struct ReceiptView: View {
                             line("On", "\((entry.onArg ?? "").replacingOccurrences(of: "_", with: " ")) \(value)")
                         }
                         line("Outcome", outcome, bold: true)
-                        if let why = entry.why, !why.isEmpty { line("Why", why.joined(separator: "; ")) }
+                        // KIFF's words, never its codes (kiff/tafs#138).
+                        if let reason = entry.reason { line("Why", reason) }
                         line("Decided by", decidedBy)
                     }
                     if !steps.isEmpty {
@@ -296,7 +297,7 @@ struct ReceiptView: View {
                     }
                     if let signature = entry.signature {
                         Panel(stroke: Theme.ok.opacity(0.4)) {
-                            Label("Signed on this iPhone", systemImage: "checkmark.seal.fill")
+                            Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
                                 .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
                             Text("Your answer was signed with a key that never leaves this device, after \(Biometry.name).")
                                 .font(.system(size: 13)).foregroundColor(Theme.soft)
@@ -345,12 +346,12 @@ struct ReceiptView: View {
             failedPanel("The answer on this line doesn't match KIFF's receipt.")
         case .verified(let signer)?:
             Panel(stroke: Theme.ok.opacity(0.4)) {
-                Label("KIFF's receipt · checked on this iPhone", systemImage: "checkmark.seal.fill")
+                Label("KIFF's receipt · checked on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
                     .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
                 Text("KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since.")
                     .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 receiptFacts(signer: signer)
-                fullReceipt
+                fullReceipt(signer: signer)
                 receiptButtons(share: true)
             }
         case .notSignedYet?:
@@ -376,7 +377,7 @@ struct ReceiptView: View {
                 } else {
                     HStack(spacing: 8) {
                         ProgressView().controlSize(.small)
-                        Text("Checking KIFF's receipt on this iPhone…").font(.system(size: 13)).foregroundColor(Theme.soft)
+                        Text("Checking KIFF's receipt on this \(ThisDevice.kind)…").font(.system(size: 13)).foregroundColor(Theme.soft)
                     }
                 }
             }
@@ -389,7 +390,7 @@ struct ReceiptView: View {
                 .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.no)
             Text(why).font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             receiptFacts(signer: nil)
-            fullReceipt
+            fullReceipt(signer: nil)
             receiptButtons(share: false)
         }
     }
@@ -416,19 +417,20 @@ struct ReceiptView: View {
 
     private func receiptFacts(signer: String?) -> some View {
         let issued = receiptField("issued_at").flatMap { ISO8601DateFormatter.precise.date(from: $0) ?? ISO8601DateFormatter().date(from: $0) }
-        var lines = ["\(entry.receipt?.traceID ?? "") · \(decisionWords)"]
-        var second: [String] = []
-        if let issued { second.append("issued \(issued.formatted(date: .abbreviated, time: .standard))") }
-        if let signer { second.append("signer \(signer.prefix(6))…\(signer.suffix(4))") }
-        if !second.isEmpty { lines.append(second.joined(separator: " · ")) }
-        return Text(lines.joined(separator: "\n")).font(Theme.mono(11.5)).foregroundColor(Theme.dim).textSelection(.enabled)
+        // The decision and when; the receipt's id and signer are under "Show the full
+        // receipt" (kiff/tafs#138): ids aren't for reading at a glance.
+        var lines = [decisionWords]
+        if let issued { lines.append("issued \(issued.formatted(date: .abbreviated, time: .standard))") }
+        return Text(lines.joined(separator: " · ")).font(Theme.mono(11.5)).foregroundColor(Theme.dim).textSelection(.enabled)
     }
 
     /// Every step KIFF signed, with its hash, in the sheet.
-    @ViewBuilder private var fullReceipt: some View {
+    @ViewBuilder private func fullReceipt(signer: String?) -> some View {
         if !steps.isEmpty {
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: 6) {
+                    Text(["receipt \(entry.receipt?.traceID ?? "")", signer.map { "signer \($0.prefix(6))…\($0.suffix(4))" }]
+                        .compactMap { $0 }.joined(separator: " · "))
                     ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
                         HStack(alignment: .top, spacing: 6) {
                             Text("\(i + 1)").frame(width: 18, alignment: .leading)

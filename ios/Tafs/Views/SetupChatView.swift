@@ -268,11 +268,8 @@ struct SetupChatView: View {
                     pinText = nil
                     pinned = sent
                     following = false
-                    if animate {
-                        withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(sent, anchor: .top) }
-                    } else {
-                        proxy.scrollTo(sent, anchor: .top)
-                    }
+                    touched = false
+                    proxy.pinToTop(sent, animated: animate) { touched }
                     return
                 }
                 if !following && !ids.isEmpty && pinned == nil { unseen = true }
@@ -287,7 +284,8 @@ struct SetupChatView: View {
                 if pinNext, let text = pinText, let queued, SetupThread.matchesSent(queued, text) {
                     pinNext = false
                     pinned = "queued"
-                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("queued", anchor: .top) }
+                    touched = false
+                    proxy.pinToTop("queued", animated: true) { touched }
                 }
             }
             .onChange(of: model.setupUnsent) { unsent in
@@ -296,7 +294,8 @@ struct SetupChatView: View {
                     pinNext = false
                     pinText = nil
                     pinned = last.id.uuidString
-                    withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(last.id, anchor: .top) }
+                    touched = false
+                    proxy.pinToTop(last.id, animated: true) { touched }
                     return
                 }
                 follow(proxy)

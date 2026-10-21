@@ -323,11 +323,17 @@ final class KIFFClient {
         var receipt: Receipt?
         /// KIFF's reasons for its decision ("over the €100.00 limit for one refund").
         var reasons: [String]?
+        /// When the call was made: its first decision. createdAt is its latest, so a held call
+        /// answered later keeps its place by this (kiff/tafs#138).
+        var madeAt: Date?
+        /// Why it wasn't sent, in KIFF's words, in the app's language.
+        var reason: String?
         enum CodingKeys: String, CodingKey {
             case title, outcome, held, amount, answer, receipt, reasons
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
             case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"
+            case madeAt = "made_at", reason
         }
     }
 
@@ -564,9 +570,9 @@ final class KIFFClient {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
 
-    /// The phone's languages, most preferred first, so KIFF writes what it says to the owner
-    /// (a held call's reason) in their language at its source, never translated by the app
-    /// (kiff/tafs#75). English is the last fallback.
+    /// The languages to ask KIFF for, most preferred first, so KIFF writes what it says to the
+    /// owner (a held call's reason, a Record line's) in the app's language at its source, never
+    /// translated by the app (kiff/tafs#75). English is the last fallback.
     static func acceptLanguage(_ preferred: [String]) -> String {
         var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
         if !tags.contains(where: { $0 == "en" || $0.hasPrefix("en-") }) { tags.append("en") }
@@ -585,7 +591,10 @@ final class KIFFClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("tafs-ios", forHTTPHeaderField: "User-Agent")
-        request.setValue(Self.acceptLanguage(Locale.preferredLanguages), forHTTPHeaderField: "Accept-Language")
+        // The language the app shows, not the device's list: an English app on a Spanish iPad
+        // read KIFF's reasons in Spanish (kiff/tafs#138, 21 Oct). When the app is translated,
+        // KIFF follows it.
+        request.setValue(Self.acceptLanguage(Bundle.main.preferredLocalizations), forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
