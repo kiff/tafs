@@ -167,17 +167,6 @@ final class TafsCloud {
         return (r.tafs, r.removing ?? [])
     }
 
-    /// Starts a taf from a confirmed KIFF draft, and runs it once now. tafs cloud claims
-    /// the agent's key with the draft's claim secret and keeps it in Secrets Manager: the
-    /// key itself never reaches the phone. The secret works once.
-    func start(name: String, job: String, draftID: String, claimSecret: String, timezone: String = TimeZone.current.identifier) async throws -> Started {
-        struct Body: Encodable {
-            let name: String, job: String, draftID: String, claimSecret: String, timezone: String
-            enum CodingKeys: String, CodingKey { case name, job, timezone, draftID = "draft_id", claimSecret = "claim_secret" }
-        }
-        return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, claimSecret: claimSecret, timezone: timezone))
-    }
-
     /// What removing a taf did: each step, "schedule", "history", "memory", "key" and "name",
     /// is in `removed` or `failed`. A second remove finishes what the first left.
     struct Removal: Decodable, Equatable {
