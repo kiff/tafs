@@ -300,6 +300,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
+        usage = nil; countedTasks = []; usageError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
         accountGeneration += 1
