@@ -67,7 +67,7 @@ export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
-  "halt" | "resume" | "halted">;
+  "halt" | "resume" | "halted" | "eraseTenant">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -94,6 +94,13 @@ export interface Deps {
   removals: Removals;
   /** The chats each taf's owner archived (kiff/tafs#82). */
   archived: Archived;
+  /**
+   * What tafs cloud keeps for an account beyond its tafs (its phones, alert
+   * secrets, claimed drafts, chat flood slots), erased when the owner
+   * deletes the account (kiff/tafs#185). Missing: accounts can't be deleted
+   * here.
+   */
+  accountData?: AccountData;
   /** Hands a KIFF alert tafs cloud has checked to kiff/agents, as KIFF signed it, so a paused run goes on. */
   /** Hands KIFF's alert to kiff/agents; the run its answer left ready, if any (forward.ts). */
   forward: (signature: string, raw: string) => Promise<ReadyRun | undefined | void>;
@@ -102,6 +109,11 @@ export interface Deps {
   now?: () => Date;
   /** A new taf's id. */
   newID?: () => string;
+}
+
+export interface AccountData {
+  /** Deletes everything kept for the account, beyond its tafs. Safe to repeat. */
+  erase(tenant: string): Promise<void>;
 }
 
 export interface Keys {
@@ -293,6 +305,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
+  if (parts[1] === "account" && parts.length === 3 && parts[2] === "delete" && method === "POST") return deleteAccount(await person(event, deps), deps);
   if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
 
   const me = await person(event, deps);
@@ -943,6 +956,40 @@ async function remove(taf: Taf, me: KIFFIdentity, deps: Deps) {
     await deps.removals.done(me.tenantID, taf.id);
   }
   return { taf: taf.id, name: taf.name, kiff_agent: taf.kiffAgent || null, done: failed.length === 0, removed, failed };
+}
+
+/**
+ * The owner deletes the account in the app (kiff/tafs#185, App Store Review
+ * Guideline 5.1.1(v)). tafs cloud erases what it and kiff/agents keep for it:
+ * every taf (Setup included) as removing it does, then kiff/agents' account
+ * erase, then its own records for the account. The app then erases the
+ * account in planque and in KIFF itself, each signed by the phone, KIFF last.
+ *
+ * A step that fails stops the rest, and the answer says which; asking again
+ * goes on from there, since every step is safe to repeat.
+ */
+async function deleteAccount(me: KIFFIdentity, deps: Deps) {
+  if (!me.capabilities.includes("account.delete")) throw new HTTPError(403, "your role on this KIFF account cannot delete it");
+  if (!deps.accountData) throw new HTTPError(503, "accounts can't be deleted here");
+  const tafs = await deps.tafs.list(me.tenantID);
+  for (const taf of tafs) {
+    const r = await remove(taf, me, deps);
+    if (!r.done) return { done: false, failed: "tafs", taf: taf.id, steps: r.failed };
+  }
+  for (const r of await deps.removals.list(me.tenantID)) await deps.removals.done(me.tenantID, r.id);
+  try {
+    await deps.agents.eraseTenant(me.tenantID);
+  } catch (err) {
+    console.error(`delete account: kiff/agents: ${(err as Error).message}`);
+    return { done: false, failed: "agents" };
+  }
+  try {
+    await deps.accountData.erase(me.tenantID);
+  } catch (err) {
+    console.error(`delete account: tafs cloud: ${(err as Error).message}`);
+    return { done: false, failed: "tafs cloud" };
+  }
+  return { done: true, removed: tafs.length };
 }
 
 /** The taf's job runs, newest first: what its schedule started, by the clock or by hand. */

@@ -318,6 +318,16 @@ export class Agents {
     await this.call("DELETE", tenant, ["agents", id]).catch(notFound);
   }
 
+  /**
+   * Erases everything kiff/agents keeps for the account, when its owner
+   * deletes it (kiff/tafs#185): every agent as deleteAgent removes it, the
+   * account's own halt and skills, its sealing key and its drafts' records.
+   * Safe to repeat.
+   */
+  async eraseTenant(tenant: string): Promise<void> {
+    await this.call("DELETE", tenant, ["tenant"]);
+  }
+
   // Runs.
 
   /** Starts a run of the agent in the background: in `session` when given, else in a new one. */

@@ -993,6 +993,65 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // MARK: Deleting the account
+
+    /// Why deleting the account stopped, for its sheet; nil when nothing went wrong.
+    @Published var deleteAccountError: String?
+
+    /// Deletes the account everywhere, behind Face ID (kiff/tafs#185, App Store Review
+    /// Guideline 5.1.1(v)): tafs cloud erases every taf and what it and kiff/agents keep; then
+    /// planque forgets the account's connections; then KIFF, last, since it ends this phone's
+    /// session. Then the app signs out. Every step can be asked again, so when one fails the
+    /// owner tries again and it goes on from there. True once the account is deleted.
+    @discardableResult
+    func deleteAccount() async -> Bool {
+        deleteAccountError = nil
+        guard mode == .kiff else { return false }
+        guard sessionHasKey, let tenant = kiffTenant else {
+            deleteAccountError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            return false
+        }
+        let gen = accountGeneration
+        do {
+            _ = try await signer.sign(Data("tafs.delete-account.v1|\(tenant)".utf8), reason: "Delete your account")
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        do {
+            let r = try await cloud.deleteAccount()
+            guard r.done else {
+                deleteAccountError = "tafs couldn't erase everything yet. Your KIFF account isn't deleted. Try again."
+                return false
+            }
+        } catch let error as TafsCloud.CloudError where error.status == 403 {
+            deleteAccountError = "Only the account's owner can delete it."
+            return false
+        } catch {
+            deleteAccountError = "tafs couldn't erase your tafs: \(error.localizedDescription). Your KIFF account isn't deleted. Try again."
+            return false
+        }
+        let signer = self.signer
+        await loadDeviceID()
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil; planque.signer = nil }
+        do {
+            try await planque.eraseAccount()
+        } catch {
+            deleteAccountError = "Your tafs are erased, but your connections aren't yet: \(error.localizedDescription). Try again."
+            return false
+        }
+        do {
+            try await kiff.deleteAccount()
+        } catch {
+            deleteAccountError = "Your tafs and connections are erased, but KIFF didn't delete the account: \(error.localizedDescription). Try again."
+            return false
+        }
+        await signOut()
+        return true
+    }
+
     // MARK: Memory
 
     /// What each taf remembers between its runs and chats, newest first.
