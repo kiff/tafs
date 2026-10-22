@@ -31,6 +31,20 @@ struct UsageView: View {
                         }
                         .buttonStyle(.plain)
                     }
+                    if let ai = model.aiUse, let used = ai.usedPct {
+                        NavigationLink(destination: AIUseView().environmentObject(model)) {
+                            Panel {
+                                HStack {
+                                    Text("AI use").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                    Spacer()
+                                    Text(ai.paused ? "Asking you" : "\(used)%").font(.system(size: 15))
+                                        .foregroundColor(ai.paused ? Theme.amber : Theme.soft)
+                                    Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
                     if let by = u.tasks.byAgent, !by.isEmpty {
                         Panel {
                             Eyebrow(text: "By taf")
@@ -176,5 +190,60 @@ struct CeilingView: View {
         .screenBackground()
         .navigationTitle("Ceiling")
         .inlineTitle()
+    }
+}
+
+/// AI use from chats and Setup this period (kiff/tafs#193): its own screen. It's included, and
+/// never billed: past the plan's fair use the tafs ask before going on, and Go on asks for Face
+/// ID. Said neutrally, with no price and nothing to buy (App Store Review Guideline 3.1.3(f)).
+struct AIUseView: View {
+    @EnvironmentObject private var model: AppModel
+    @State private var going = false
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if let ai = model.aiUse, let used = ai.usedPct {
+                    Panel {
+                        Eyebrow(text: "AI use this month")
+                        Text("\(used)%").font(Theme.display(26)).foregroundColor(Theme.ink)
+                        Meter(fraction: Double(used) / Double(max(ai.asksAtPct ?? 100, 1)), color: ai.paused ? Theme.amber : Theme.ok)
+                        Text(Self.explain(ai)).font(.system(size: 13)).foregroundColor(Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if ai.paused {
+                        Panel {
+                            Text(Self.asking).font(.system(size: 15)).foregroundColor(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        if let why = model.usageError {
+                            Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
+                        }
+                        if model.mode == .kiff {
+                            Button(going ? "Going on…" : "Go on with Face ID") {
+                                going = true
+                                Task { _ = await model.goOnAI(); going = false }
+                            }
+                            .buttonStyle(OutlineButtonStyle())
+                            .disabled(going)
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .screenBackground()
+        .navigationTitle("AI use")
+        .inlineTitle()
+    }
+
+    static let asking = "This month's AI use is high: your tafs ask before going on."
+
+    /// What the share means, and where the tafs ask next.
+    static func explain(_ ai: TafsCloud.AIUse) -> String {
+        let at = ai.asksAtPct ?? 100
+        let next = at <= 100 ? "At 100%, your tafs ask you before going on." : "You said go on; your tafs ask you again at \(at)%."
+        return "Chats with your tafs and Setup are included. 100% is this month's fair use. \(next) It's never billed."
     }
 }

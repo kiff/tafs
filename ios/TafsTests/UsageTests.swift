@@ -117,4 +117,71 @@ final class UsageTests: XCTestCase {
         XCTAssertNil(model.usage)
         XCTAssertTrue(model.countedTasks.isEmpty)
     }
+
+    // MARK: AI fair use (kiff/tafs#193)
+
+    func testAIUseDecodesAndSaysWhereTheTafsAskWithoutSelling() throws {
+        let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.replacingOccurrences(
+            of: #""plan":"trial","#, with: #""plan":"team","seats":3,"ai":{"go_ons":1},"#).utf8))
+        XCTAssertEqual(u.seats, 3)
+        XCTAssertEqual(u.ai?.goOns, 1)
+        XCTAssertNil(try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8)).ai, "a read before AI fair use")
+
+        let first = try KIFFClient.decoder.decode(TafsCloud.AIUse.self, from: Data(#"{"used_pct":42,"asks_at_pct":100,"paused":false}"#.utf8))
+        XCTAssertEqual(first, .init(usedPct: 42, asksAtPct: 100, paused: false))
+        let none = try KIFFClient.decoder.decode(TafsCloud.AIUse.self, from: Data(#"{"used_pct":null,"asks_at_pct":null,"paused":false}"#.utf8))
+        XCTAssertNil(none.usedPct, "no bound on this account")
+        XCTAssertTrue(AIUseView.explain(first).contains("At 100%"))
+        XCTAssertTrue(AIUseView.explain(.init(usedPct: 130, asksAtPct: 200, paused: false)).contains("again at 200%"))
+        for text in [AIUseView.asking, AIUseView.explain(first), AIUseView.explain(.init(usedPct: 200, asksAtPct: 200, paused: true))] {
+            for word in ["€", "$", "Upgrade", "upgrade", "buy", "Buy", "price", "subscribe"] {
+                XCTAssertFalse(text.contains(word), "\(text) says \(word)")
+            }
+        }
+    }
+
+    func testGoOnIsSignedBehindFaceIDAndReadsTheUseAgain() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let signer = RecordingSigner()
+        let model = AppModel(signer: signer,
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme"}"#)
+        await model.useSession("kiff_dev_x", tenant: "t1")
+
+        StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read.replacingOccurrences(of: #""plan":"trial""#, with: #""plan":"solo""#))
+        StubProtocol.responses["GET /v1/me/usage/tasks"] = (200, #"{"items":[],"next":null}"#)
+        StubProtocol.responses["GET /v1/usage/ai"] = (200, #"{"used_pct":100,"asks_at_pct":100,"paused":true}"#)
+        await model.refreshUsage()
+        XCTAssertEqual(model.aiUse, .init(usedPct: 100, asksAtPct: 100, paused: true))
+
+        XCTAssertTrue(KIFFClient.signsSetup("/v1/me/usage/ai"), "going on lets the tafs use more")
+        StubProtocol.responses["PUT /v1/me/usage/ai"] = (200, #"{"go_ons":1}"#)
+        StubProtocol.responses["GET /v1/usage/ai"] = (200, #"{"used_pct":100,"asks_at_pct":200,"paused":false}"#)
+        let unlocksBefore = signer.signed.count
+        let done = await model.goOnAI()
+        XCTAssertTrue(done)
+        let put = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PUT" })
+        XCTAssertEqual(try JSONDecoder().decode([String: Bool].self, from: try XCTUnwrap(put.httpBody)), ["go_on": true])
+        XCTAssertNotNil(put.value(forHTTPHeaderField: "KIFF-Device-Signature"), "a signed setup call")
+        let during = Array(signer.signed.dropFirst(unlocksBefore))
+        XCTAssertTrue(during.first?.hasPrefix("tafs.ai-go-on.v1|t1|100") ?? false, "Face ID first: \(during)")
+        XCTAssertEqual(model.aiUse, .init(usedPct: 100, asksAtPct: 200, paused: false))
+        XCTAssertEqual(model.usage?.ai?.goOns, 1)
+
+        StubProtocol.responses["PUT /v1/me/usage/ai"] = (409, #"{"error":"this signature was used"}"#)
+        let refused = await model.goOnAI()
+        XCTAssertFalse(refused)
+        XCTAssertNotNil(model.usageError)
+
+        await model.signOut()
+        XCTAssertNil(model.aiUse)
+    }
 }

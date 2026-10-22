@@ -43,6 +43,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var countedTasks: [KIFFClient.CountedTask] = []
     /// Why usage couldn't be read, or the ceiling didn't change.
     @Published private(set) var usageError: String?
+    /// The period's AI use from chats and Setup (kiff/tafs#193), from tafs cloud; nil until read.
+    @Published private(set) var aiUse: TafsCloud.AIUse?
 
     /// Sets the account's time zone to this device's, so a Card's day ends at the owner's
     /// midnight (kiff/tafs#96): a signed setup call (kiff-cloud #1278), which KIFF takes from
@@ -268,7 +270,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
-        usage = nil; countedTasks = []; usageError = nil
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil
         planque.deviceID = nil
         accountGeneration += 1
         tafs = []; otherAgents = []; held = []; record = []; decided = [:]
@@ -300,7 +302,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
-        usage = nil; countedTasks = []; usageError = nil
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
         accountGeneration += 1
@@ -955,16 +957,19 @@ final class AppModel: ObservableObject {
     func refreshUsage() async {
         switch mode {
         case .signedOut:
-            usage = nil; countedTasks = []
+            usage = nil; countedTasks = []; aiUse = nil
         case .sample:
             usage = Self.sampleUsage(now: clock()); countedTasks = []; usageError = nil
+            aiUse = .init(usedPct: 30, asksAtPct: 100, paused: false)
         case .kiff:
             let gen = accountGeneration
             do {
                 let read = try await kiff.usage()
                 let page = try? await kiff.countedTasks()
+                // AI use is tafs cloud's; the rest of the screen doesn't wait on it.
+                let ai = try? await cloud.aiUse()
                 guard gen == accountGeneration else { return }
-                usage = read; countedTasks = page?.tasks ?? []; usageError = nil
+                usage = read; countedTasks = page?.tasks ?? []; usageError = nil; aiUse = ai
             } catch {
                 guard gen == accountGeneration else { return }
                 usageError = "Usage couldn't be read: \(error.localizedDescription)"
@@ -992,6 +997,33 @@ final class AppModel: ObservableObject {
         } catch {
             guard gen == accountGeneration else { return false }
             usageError = "The ceiling didn't change: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    /// Lets the tafs go on past this period's AI fair use (kiff/tafs#193), behind Face ID:
+    /// KIFF takes it only signed by this phone. They ask again at the next full bound.
+    func goOnAI() async -> Bool {
+        guard mode == .kiff, let tenant = kiffTenant else { return false }
+        let gen = accountGeneration
+        usageError = nil
+        let at = aiUse?.asksAtPct ?? 100
+        do { _ = try await signer.sign(Data("tafs.ai-go-on.v1|\(tenant)|\(at)".utf8), reason: "Let your tafs go on this month") } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            let goOns = try await kiff.goOnAI()
+            let ai = try? await cloud.aiUse()
+            guard gen == accountGeneration else { return false }
+            usage?.ai = .init(goOns: goOns)
+            aiUse = ai ?? aiUse.map { .init(usedPct: $0.usedPct, asksAtPct: 100 * (goOns + 1), paused: false) }
+            return true
+        } catch {
+            guard gen == accountGeneration else { return false }
+            usageError = "Your tafs couldn't go on: \(error.localizedDescription)"
             return false
         }
     }

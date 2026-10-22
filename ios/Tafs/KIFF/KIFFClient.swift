@@ -310,11 +310,20 @@ final class KIFFClient {
             let actionsLeft: Int
             enum CodingKeys: String, CodingKey { case endsAt = "ends_at", daysLeft = "days_left", tasksLeft = "tasks_left", actionsLeft = "actions_left" }
         }
+        /// AI fair use's part of the read (kiff/tafs#193): how many times the owner said go on
+        /// this period. The use itself is tafs cloud's.
+        struct AI: Decodable, Equatable {
+            var goOns = 0
+            enum CodingKeys: String, CodingKey { case goOns = "go_ons" }
+        }
         let plan: String
         let period: Period
         var tasks: Meter
         let actions: Meter
         var trial: Trial?
+        /// The people the plan pays for (admins and editors); 0 where there's no limit.
+        var seats: Int? = nil
+        var ai: AI? = nil
     }
 
     /// One counted task: the Record behind it, which taf, which tool, and when.
@@ -341,6 +350,15 @@ final class KIFFClient {
     /// more to be billed. KIFF answers with the tasks meter.
     func setTaskCeiling(_ tasks: Int) async throws -> Usage.Meter {
         try await send("PUT", "/v1/me/usage/ceiling", body: ["tasks": tasks])
+    }
+
+    /// The owner says go on past this period's AI fair use (kiff/tafs#193): a signed setup
+    /// call, one more each time, so the tafs ask again at the next full bound. KIFF answers
+    /// how many go ons the period has now.
+    func goOnAI() async throws -> Int {
+        struct Answer: Decodable { let goOns: Int; enum CodingKeys: String, CodingKey { case goOns = "go_ons" } }
+        let a: Answer = try await send("PUT", "/v1/me/usage/ai", body: ["go_on": true])
+        return a.goOns
     }
 
     /// Sets the account's time zone (an IANA name): a signed setup call from a phone
