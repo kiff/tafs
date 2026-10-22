@@ -58,7 +58,8 @@ describe("Setup's definition on kiff/agents", () => {
     // From the owner's phone test (kiff/tafs#73): their language, briefly, choices
     // as taps, and never an id asked of them.
     expect(SETUP_INSTRUCTIONS).toContain("In the owner's language: every message, and every component's title");
-    expect(SETUP_INSTRUCTIONS).toContain("one or two short sentences a message (at most about 40 words)");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Concisely: say what you did and what the owner does next, first, then stop.");
+    expect(SETUP_INSTRUCTIONS).not.toMatch(/\d+ words/);
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
     expect(SETUP_INSTRUCTIONS).toContain("as a notice (tone info");
     expect(SETUP_INSTRUCTIONS).toContain("Don't ask for a choice in a paragraph");
