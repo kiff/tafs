@@ -45,7 +45,8 @@ struct UsageView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    if let by = u.tasks.byAgent, !by.isEmpty {
+                    // Every taf is listed by KIFF, most at 0 on a busy account: only those that counted.
+                    if let by = u.tasks.byAgent?.filter({ $0.counted > 0 }), !by.isEmpty {
                         Panel {
                             Eyebrow(text: "By taf")
                             ForEach(by, id: \.agent) { a in
@@ -68,13 +69,7 @@ struct UsageView: View {
                     if !model.countedTasks.isEmpty {
                         Panel {
                             Eyebrow(text: "Counted tasks")
-                            ForEach(model.countedTasks) { t in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(model.tafName(forAgent: t.agent)).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
-                                    Text("\(t.tool) · \(t.at.formatted(.relative(presentation: .named)))")
-                                        .font(.system(size: 13)).foregroundColor(Theme.dim)
-                                }
-                            }
+                            ForEach(model.countedTasks) { CountedTaskRow(task: $0) }
                         }
                     }
                 } else if let why = model.usageError {
@@ -101,10 +96,31 @@ struct UsageView: View {
                 Meter(fraction: Double(u.tasks.counted) / Double(u.tasks.included),
                       color: u.tasks.ceilingReached == true ? Theme.no : Theme.ok)
             }
-            Text("A task is an action a taf took that KIFF allowed and sent. Reads, refusals and anything that failed aren't counted. This period ends \(u.period.end.formatted(date: .abbreviated, time: .omitted)).")
+            Text("\(Self.taskMeaning) This period ends \(u.period.end.formatted(date: .abbreviated, time: .omitted)).")
                 .font(.system(size: 13)).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// A taf's counted tasks this period, for its page's Usage row.
+    static func tafCount(_ n: Int) -> String {
+        n == 1 ? "1 task this period" : "\(n) tasks this period"
+    }
+
+    /// What a task is: counted means done (kiff-cloud#1316), as /pricing says it.
+    static let taskMeaning = "A task is an action a taf took that KIFF allowed, sent, and that worked. Reads, refusals, failures and lost answers aren't counted."
+
+    /// A counted task's tool as the Record names it: KIFF's title (kiff-cloud#1334), else its
+    /// name in words.
+    static func toolName(_ t: KIFFClient.CountedTask) -> String {
+        if let title = t.toolTitle, !title.isEmpty { return title }
+        return toolWords(t.tool)
+    }
+
+    /// A tool's name in words, when KIFF gives no title: "refund_order" reads "Refund order".
+    static func toolWords(_ tool: String) -> String {
+        let words = tool.replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: "-", with: " ")
+        return words.prefix(1).uppercased() + words.dropFirst()
     }
 
     /// "14 of 25 tasks", or "472 tasks" where nothing is included because there's no limit
@@ -138,6 +154,80 @@ struct UsageView: View {
         let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
         let tasks = trial.tasksLeft == 1 ? "1 task" : "\(trial.tasksLeft) tasks"
         return "Your trial: \(days) and \(tasks) left."
+    }
+}
+
+/// One counted task: the Record's own line for that call when the app holds it, opening its
+/// receipt; otherwise the taf and the tool as the Record names it (kiff/tafs#184).
+struct CountedTaskRow: View {
+    @EnvironmentObject private var model: AppModel
+    let task: KIFFClient.CountedTask
+
+    var body: some View {
+        if let entry = model.recordEntry(forCall: task.record) {
+            RecordRow(entry: entry, showTaf: true)
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.tafName(forAgent: task.agent)).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                Text("\(UsageView.toolName(task)) · \(task.at.formatted(.relative(presentation: .named)))")
+                    .font(.system(size: 13)).foregroundColor(Theme.dim)
+            }
+        }
+    }
+}
+
+/// One taf's usage this period (kiff/tafs#184): its own screen, from a row on its page. What it
+/// counted, what it didn't and why, and its counted tasks; the account's Usage is one tap away.
+struct TafUsageView: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if let mine = model.tafUsage(for: tafID) {
+                    Panel {
+                        Eyebrow(text: model.taf(tafID)?.name ?? "This taf")
+                        Text(UsageView.tafCount(mine.counted)).font(Theme.display(26)).foregroundColor(Theme.ink)
+                        Text(UsageView.taskMeaning).font(.system(size: 13)).foregroundColor(Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let free = mine.free, !free.lines.isEmpty {
+                        Panel {
+                            Eyebrow(text: "Not counted")
+                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, count: line.1) }
+                        }
+                    }
+                    if let tasks = model.tafTasks[tafID], !tasks.isEmpty {
+                        Panel {
+                            Eyebrow(text: "Counted tasks")
+                            ForEach(tasks) { CountedTaskRow(task: $0) }
+                        }
+                    }
+                    NavigationLink(destination: UsageView().environmentObject(model)) {
+                        Panel {
+                            HStack {
+                                Text("The account's usage").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                } else if let why = model.usageError {
+                    Panel { Text(why).font(.system(size: 14)).foregroundColor(Theme.no) }
+                } else {
+                    ProgressView()
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .screenBackground()
+        .navigationTitle("Usage")
+        .inlineTitle()
+        .task { await model.refreshTafUsage(tafID) }
+        .refreshable { await model.refreshUsage(); await model.refreshTafUsage(tafID) }
     }
 }
 

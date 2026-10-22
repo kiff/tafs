@@ -142,6 +142,77 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(UsageView.notice(u), "Your trial hasn't started.")
     }
 
+    // MARK: The follow-up on #184
+
+    func testATaskCountsWhenItWorkedAndToolsReadAsWords() {
+        XCTAssertTrue(UsageView.taskMeaning.contains("allowed, sent, and that worked"))
+        XCTAssertTrue(UsageView.taskMeaning.contains("lost answers"))
+        XCTAssertEqual(UsageView.toolWords("refund_order"), "Refund order")
+        XCTAssertEqual(UsageView.tafCount(1), "1 task this period")
+        XCTAssertEqual(UsageView.tafCount(9), "9 tasks this period")
+    }
+
+    /// A taf's page counts its own tasks, from KIFF's by_agent under the agent it acts as.
+    func testATafsPageCountsItsOwnTasks() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: RecordingSigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme"}"#)
+        await model.useSession("kiff_dev_x", tenant: "t1")
+        let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" })
+        XCTAssertNil(model.countedTasks(for: rae.id), "nothing until usage is read")
+
+        // kiff-cloud#1334's contract: by_agent carries its own free, tasks filter by agent, and
+        // each task names its tool as the Record does.
+        StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read.replacingOccurrences(
+            of: #"{"agent":"taf-refunds-x7k3","counted":9}"#,
+            with: #"{"agent":"rae-k3f9","counted":9,"free":{"refused":1,"held_refused":0,"halted":0,"failed":1,"invalid":0,"retry":1,"read":80,"trial":0,"setup_read":6}}"#))
+        StubProtocol.responses["GET /v1/me/usage/tasks"] = (200, #"{"items":[],"next":null}"#)
+        StubProtocol.responses["GET /v1/me/usage/tasks?agent=rae-k3f9"] = (200,
+            #"{"items":[{"record":"tc-1","agent":"rae-k3f9","tool":"refund_order","tool_title":"Refund an order","at":"2026-10-22T08:41:10Z"}],"next":null}"#)
+        await model.refreshTafUsage(rae.id)
+        XCTAssertEqual(model.kiffAgent(for: rae.id), "rae-k3f9")
+        XCTAssertEqual(model.countedTasks(for: rae.id), 9)
+        XCTAssertEqual(model.tafUsage(for: rae.id)?.free?.lines.map(\.0), ["Refused by KIFF", "Failed at the tool", "Retries", "Reads", "Setup's reads"])
+        let task = try XCTUnwrap(model.tafTasks[rae.id]?.first)
+        XCTAssertEqual(UsageView.toolName(task), "Refund an order", "named as the Record names it")
+        XCTAssertNil(model.recordEntry(forCall: "tc-not-in-the-record"))
+        // Without a title, the tool in words.
+        XCTAssertEqual(UsageView.toolName(.init(record: "tc-2", agent: "rae-k3f9", tool: "refund_order", at: Date())), "Refund order")
+    }
+
+    /// The live read, as KIFF answered the eval account on 22 Oct (kiff-cloud#1337 deployed at
+    /// ebc04927), trimmed to three tafs and one task: it decodes whole, including KIFF's
+    /// microsecond times and an empty tool_title.
+    func testTheLiveReadDecodes() throws {
+        let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(#"""
+        {"plan":"internal","seats":0,"period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"},"tasks":{"counted":448,"included":0,"ceiling":0,"ceiling_reached":false,"by_agent":[{"agent":"e2e-setup","counted":51,"free":{"failed":9,"halted":0,"held_refused":0,"invalid":0,"read":6,"refused":0,"retry":0,"setup_read":0,"trial":0}},{"agent":"reembolsos-vseezv4h","counted":11,"free":{"failed":0,"halted":0,"held_refused":2,"invalid":0,"read":0,"refused":0,"retry":0,"setup_read":0,"trial":2}},{"agent":"reembolsos","counted":0,"free":{"failed":0,"halted":0,"held_refused":0,"invalid":0,"read":0,"refused":0,"retry":0,"setup_read":0,"trial":0}}],"free":{"failed":19,"halted":0,"held_refused":90,"invalid":0,"read":11,"refused":7,"retry":0,"setup_read":0,"trial":4}},"actions":{"counted":927,"included":0,"free":{"failed":152,"halted":0,"held_refused":0,"invalid":0,"read":1348,"refused":157,"retry":0,"setup_read":0,"trial":0}},"trial":null,"ai":{"go_ons":0}}
+        """#.utf8))
+        XCTAssertEqual(u.plan, "internal")
+        XCTAssertEqual(u.tasks.counted, 448)
+        XCTAssertEqual(u.tasks.byAgent?.count, 3)
+        XCTAssertEqual(u.tasks.byAgent?.first?.free?.failed, 9)
+        XCTAssertEqual(u.tasks.byAgent?.filter { $0.counted > 0 }.count, 2, "a taf at 0 isn't shown under By taf")
+        XCTAssertEqual(UsageView.count(u.tasks.counted, of: u.tasks.included, "tasks"), "448 tasks")
+
+        struct Page: Decodable { let items: [KIFFClient.CountedTask]; var next: String? }
+        let page = try KIFFClient.decoder.decode(Page.self, from: Data(#"""
+        {"items":[{"record":"tc-10aa90622c8e13a88b572bb80ff82083bdd0f2c6","agent":"e2e-setup","tool":"api_details_kc8m","at":"2026-10-22T18:44:37.973785Z","tool_title":""}],"next":"MjAyNi0xMC0yMlQxMDoyNTo1MS43ODcyNzlafHRjLWMyODQxMTQyODZjNzcyNGRlYjcyY2M3ZTlhYjg0YzMzNTU2ZmUzMDA"}
+        """#.utf8))
+        let task = try XCTUnwrap(page.items.first)
+        XCTAssertEqual(task.toolTitle, "")
+        XCTAssertEqual(UsageView.toolName(task), "Api details kc8m", "an empty title falls back to the tool in words")
+        XCTAssertNotNil(page.next)
+    }
+
     // MARK: AI fair use (kiff/tafs#193)
 
     func testAIUseDecodesAndSaysWhereTheTafsAskWithoutSelling() throws {
