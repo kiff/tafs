@@ -9,7 +9,7 @@ struct DeleteAccountView: View {
     @State private var deleting = false
 
     var body: some View {
-        NavigationStack {
+        NavStack {
             List {
                 Section {
                     Text("This deletes your KIFF account and everything tafs keeps for it. It can't be undone.")
@@ -49,7 +49,7 @@ struct DeleteAccountView: View {
                     Text("You confirm with Face ID. Signed in elsewhere, you're signed out there too.")
                 }
             }
-            .scrollContentBackground(.hidden)
+            .hiddenScrollBackground()
             .screenBackground()
             .navigationTitle("Delete account")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(deleting) } }
