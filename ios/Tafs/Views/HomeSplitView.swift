@@ -20,6 +20,8 @@ enum HomeSelection: Hashable {
     case taf(UUID)
     /// A held call, shown on its taf's page.
     case held(UUID, taf: UUID)
+    /// Every taf's halt (kiff/kiff-cloud#1061), as the phone's home has it.
+    case haltAll
 }
 
 /// The sidebar (Theme.raised): Coach mode, where tafs are made and changed, the calls
@@ -38,6 +40,8 @@ struct HomeSplitView: View {
                 switch selection {
                 case .taf(let id)?, .held(_, let id)?:
                     TafDetailView(tafID: id)
+                case .haltAll?:
+                    HaltScreen(tafID: nil)
                 case nil:
                     VStack(spacing: 12) {
                         Mascot(size: 72)
@@ -67,11 +71,27 @@ struct HomeSplitView: View {
             if let selected = selection {
                 switch selected {
                 case .taf(let id), .held(_, let id): if model.taf(id) != nil { return }
+                case .haltAll: return
                 }
             }
             let screenshot = Screenshots.enabled ? model.tafs.first(where: { $0.name == "Refunds" })?.id : nil
             if let id = screenshot ?? model.held.first?.tafID ?? model.tafs.first?.id { selection = .taf(id) } else { selection = nil }
         }
+    }
+
+    private var haltAllRow: some View {
+        let h = model.haltState(nil)
+        return Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Halt all").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                if h.state != .running {
+                    Text(HaltScreen.headline(h)).scaledFont(13).foregroundColor(Theme.no)
+                }
+            }
+        } icon: {
+            Image(systemName: h.state == .running ? "hand.raised" : "hand.raised.fill").foregroundColor(Theme.no)
+        }
+        .task { await model.refreshHalt(nil) }
     }
 
     private var sidebar: some View {
@@ -82,6 +102,11 @@ struct HomeSplitView: View {
                     // first in the sidebar.
                     Button { model.openCoach() } label: {
                         Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
+                    }
+                    // Every taf at once, from its own screen, as on the phone's home
+                    // (kiff/kiff-cloud#1061). The owner looked for it here (kiff/tafs#138).
+                    if !model.cloudTafs.isEmpty {
+                        NavigationLink(value: HomeSelection.haltAll) { haltAllRow }
                     }
                 }
             }
