@@ -109,14 +109,17 @@ describe("chats under AI fair use", () => {
     expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([`startRun ${RAE} ${first.body.session}`]);
   });
 
-  it("refuses a streamed chat past the bound with 409", async () => {
+  it("refuses a streamed chat past the bound with 409, and doesn't retry it in a new chat", async () => {
     const w = world(usage("trial", 1));
+    const first = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "Hello" });
     w.agents.spent.set(`t_acme ${PERIOD}`, HALF);
-    const r = await handleStream(event("POST", `/v1/tafs/${RAE}/messages/stream`, { text: "Hello" }), w.deps);
+    w.agents.calls.length = 0;
+    const r = await handleStream(event("POST", `/v1/tafs/${RAE}/messages/stream`, { text: "And now?" }), w.deps);
     expect(r.statusCode).toBe(409);
     let body = "";
     for await (const s of r.body) body += s;
     expect(JSON.parse(body).error).toMatch(/^ai_fair_use/);
+    expect(w.agents.calls.filter((c) => c.startsWith("streamRun"))).toEqual([`streamRun ${RAE} ${first.body.session}`]);
   });
 
   it("lets the owner go on after a go on, up to the next bound", async () => {

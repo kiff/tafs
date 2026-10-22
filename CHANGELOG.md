@@ -14,6 +14,10 @@ version headings refer to releases, not merely to merged pull requests.
   and planque all confirm, and Halting… until then. Nothing from before a halt
   runs again after a resume. tafs cloud gains `POST`, `GET` and `DELETE` on
   `/v1/tafs/{id}/halt` and `/v1/halt`.
+- AI fair use (#193): chats with your tafs and Setup are included up to half
+  your plan's monthly price in AI use each period. Past it, your tafs ask before
+  going on, and again at each further full bound; AI use is never billed. tafs
+  cloud sends the bound with each chat and gains `GET /v1/usage/ai`.
 
 Earlier history is available in [merged pull requests](https://github.com/kiff/tafs/pulls?q=is%3Apr+is%3Amerged)
 and [releases](https://github.com/kiff/tafs/releases). This file does not
