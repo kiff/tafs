@@ -42,6 +42,8 @@ export interface Price {
   Output: number;
   CacheRead: number;
   CacheWrite: number;
+  /** An hour's cache write: set, kiff/agents keeps the shared prefix an hour (kiff/agents#171). */
+  CacheWrite1h?: number;
 }
 
 /**

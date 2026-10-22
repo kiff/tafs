@@ -43,6 +43,8 @@ describe("a taf's definition on kiff/agents", () => {
     expect(d.effort).toBe("medium");
     expect(EFFORT).toBe("medium");
     expect(d.price).toEqual(PRICE);
+    // An hour's cache write at 2× input, so kiff/agents keeps the shared prefix an hour (kiff/agents#171).
+    expect(d.price.CacheWrite1h).toBe(2 * PRICE.Input);
     expect(d.max_cost_micro_usd).toBe(DEFAULT_BUDGET_CENTS * 10_000);
     expect(definition(ID, jobById("refunds"), { budgetCents: 300 }).max_cost_micro_usd).toBe(3_000_000);
     expect(() => definition(ID, jobById("refunds"), { budgetCents: 0 })).toThrow();
