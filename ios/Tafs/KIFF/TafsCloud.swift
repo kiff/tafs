@@ -234,6 +234,19 @@ final class TafsCloud {
         return r.halt
     }
 
+    /// What deleting the account in tafs cloud did (kiff/tafs#185): done, or the step that
+    /// failed, which asking again goes on from.
+    struct AccountDeletion: Decodable {
+        let done: Bool
+        let failed: String?
+    }
+
+    /// Erases every taf, and what tafs cloud and kiff/agents keep for the account
+    /// (kiff/tafs#185). Only someone who may delete the account can.
+    func deleteAccount() async throws -> AccountDeletion {
+        try await send("POST", "/v1/account/delete", body: [String: String]())
+    }
+
     func halted(_ id: String?) async throws -> Halt {
         let r: HaltResponse = try await send("GET", haltPath(id))
         return r.halt

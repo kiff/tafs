@@ -87,6 +87,7 @@ struct SettingsView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var signingIn = false
+    @State private var deletingAccount = false
 
     var body: some View {
         NavigationStack {
@@ -120,6 +121,10 @@ struct SettingsView: View {
                     Button(model.mode == .kiff ? "Sign out of KIFF" : "Clear the sample", role: .destructive) {
                         Task { await model.signOut(); dismiss() }
                     }
+                    // Deleting the account is its own sheet (kiff/tafs#185).
+                    if model.mode == .kiff {
+                        Button("Delete account…", role: .destructive) { deletingAccount = true }
+                    }
                 }
                 Section("How it works") {
                     Text("Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this iPhone.")
@@ -137,6 +142,9 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .screenBackground()
             .navigationTitle("Settings")
+            .sheet(isPresented: $deletingAccount, onDismiss: { if model.mode != .kiff { dismiss() } }) {
+                DeleteAccountView().environmentObject(model)
+            }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
         }

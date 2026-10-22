@@ -154,6 +154,18 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const d = agents.get(k(tenant, id));
       return d ? { ...d } : undefined;
     },
+    async eraseTenant(tenant) {
+      calls.push("eraseTenant");
+      failing("eraseTenant");
+      for (const id of [...agents.keys()].filter((key) => key.startsWith(`${tenant}|`))) {
+        agents.delete(id);
+        schedules.delete(id);
+        notes.delete(id);
+      }
+      for (const list of [runs, sessions] as Array<Array<{ tenant: string }>>) {
+        for (let i = list.length - 1; i >= 0; i--) if (list[i]!.tenant === tenant) list.splice(i, 1);
+      }
+    },
     async deleteAgent(tenant, id) {
       calls.push(`deleteAgent ${id}`);
       failing("deleteAgent");

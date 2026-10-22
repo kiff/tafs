@@ -42,6 +42,8 @@ export interface Price {
   Output: number;
   CacheRead: number;
   CacheWrite: number;
+  /** An hour's cache write: set, kiff/agents keeps the shared prefix an hour (kiff/agents#171). */
+  CacheWrite1h?: number;
 }
 
 /**
@@ -316,6 +318,16 @@ export class Agents {
   /** Removes the agent and everything kept for it, its held calls withdrawn first. Already gone counts as done. */
   async deleteAgent(tenant: string, id: string): Promise<void> {
     await this.call("DELETE", tenant, ["agents", id]).catch(notFound);
+  }
+
+  /**
+   * Erases everything kiff/agents keeps for the account, when its owner
+   * deletes it (kiff/tafs#185): every agent as deleteAgent removes it, the
+   * account's own halt and skills, its sealing key and its drafts' records.
+   * Safe to repeat.
+   */
+  async eraseTenant(tenant: string): Promise<void> {
+    await this.call("DELETE", tenant, ["tenant"]);
   }
 
   // Runs.

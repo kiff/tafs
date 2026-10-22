@@ -11,8 +11,13 @@ import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, t
  */
 
 export const MODEL = "claude-opus-5-5";
-/** What MODEL costs, in millionths of a US dollar per million tokens (cache writes: 5 minutes). */
-export const PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000 } as const;
+/**
+ * What MODEL costs, in millionths of a US dollar per million tokens. Cache writes: 5 minutes at
+ * 1.25× input, an hour at 2×. With CacheWrite1h set, kiff/agents keeps a taf's shared prefix (its
+ * tools and instructions) an hour (kiff/agents#171), so an owner who writes again after a pause
+ * doesn't wait while it is read again (kiff/tafs#138, item 58).
+ */
+export const PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 } as const;
 export const MAX_TOKENS = 16_000;
 /**
  * How hard the model works on each turn. Medium, Opus 5.5's own default: a taf's
