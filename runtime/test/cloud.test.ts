@@ -10,6 +10,7 @@ import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, m
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
+const OWNER = { ...ME, subject: "u_owner", capabilities: ["read", "cards.manage", "account.delete"] };
 const AGENT_KEY = { tenant_id: "t_acme", subject: "k_1", api_key: true, agent_id: "rae", capabilities: ["actions.propose"] };
 
 /** Drafts KIFF would let be claimed: draft id → its claim secret and agent key. Each claims once. */
@@ -118,6 +119,8 @@ function world() {
     agents, tafs,
     names: memoryNames(), claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(), keys: memoryKeys(), accounts: memoryAccounts(),
     claimed: [] as string[], drafts: DRAFTS, newIDs: [NEW, NEW2],
+    /** The accounts whose own records tafs cloud erased; `eraseFails` makes the next erase throw. */
+    erased: [] as string[], eraseFails: false,
     account: { mandates: [], held: [] } as Account,
   };
   for (const [tenant, id, name] of [["t_acme", RAE, "Rae"], ["t_other", MAX, "Max"]] as const) {
@@ -151,8 +154,14 @@ function depsOf(w: World): Deps {
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account),
+    fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
+    accountData: {
+      erase: async (tenant) => {
+        if (w.eraseFails) { w.eraseFails = false; throw new Error("timeout"); }
+        w.erased.push(tenant);
+      },
+    },
   };
 }
 
@@ -1286,5 +1295,56 @@ describe("halting", () => {
     w.account.halts![""] = { state: "running", kiff_ack: false, planque_ack: false };
     expect((await call(w, "DELETE", "/v1/halt", { token: "ana" })).body.halt).toMatchObject({ state: "running", account: false });
     expect((await call(w, "POST", "/v1/halt", { token: "viewer" })).status).toBe(403);
+  });
+});
+
+describe("deleting the account (kiff/tafs#185)", () => {
+  it("takes the right to delete the account, and erases nothing without it", async () => {
+    const w = world();
+    for (const token of ["ana", "viewer"]) {
+      expect((await call(w, "POST", "/v1/account/delete", { token })).status).toBe(403);
+    }
+    expect((await call(w, "POST", "/v1/account/delete", { token: "key_rae" })).status).toBe(403);
+    expect(w.agents.calls).toEqual([]);
+    expect(w.erased).toEqual([]);
+  });
+
+  it("removes every taf, then kiff/agents' account, then tafs cloud's own records, and nothing of another account", async () => {
+    const w = world();
+    const r = await call(w, "POST", "/v1/account/delete", { token: "owner" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ done: true, removed: 1 });
+    expect(w.agents.calls).toEqual([`deleteAgent ${RAE}`, "eraseTenant"]);
+    expect(w.keys.held.has(`t_acme#${RAE}`)).toBe(false);
+    expect(w.names.held.has("t_acme#Rae")).toBe(false);
+    expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
+    expect(w.erased).toEqual(["t_acme"]);
+    // Max, on another account, keeps everything.
+    expect(w.tafs.held.has(`t_other#${MAX}`)).toBe(true);
+    expect(w.keys.held.get(`t_other#${MAX}`)).toBe("key_Max");
+    expect(w.agents.agents.has(`t_other|${MAX}`)).toBe(true);
+  });
+
+  it("stops at the step that fails, says which, and a second ask finishes it", async () => {
+    const w = world();
+    w.agents.fail.set("eraseTenant", new Error("timeout"));
+    const first = await call(w, "POST", "/v1/account/delete", { token: "owner" });
+    expect(first.body).toEqual({ done: false, failed: "agents" });
+    expect(w.erased).toEqual([]);
+    w.eraseFails = true;
+    const second = await call(w, "POST", "/v1/account/delete", { token: "owner" });
+    expect(second.body).toEqual({ done: false, failed: "tafs cloud" });
+    const third = await call(w, "POST", "/v1/account/delete", { token: "owner" });
+    expect(third.body).toEqual({ done: true, removed: 0 });
+    expect(w.erased).toEqual(["t_acme"]);
+  });
+
+  it("stops at a taf whose removal didn't finish, before touching the account", async () => {
+    const w = world();
+    w.agents.fail.set("deleteAgent", new Error("timeout"));
+    const r = await call(w, "POST", "/v1/account/delete", { token: "owner" });
+    expect(r.body).toEqual({ done: false, failed: "tafs", taf: RAE, steps: ["schedule", "history", "memory"] });
+    expect(w.agents.calls).not.toContain("eraseTenant");
+    expect(w.erased).toEqual([]);
   });
 });

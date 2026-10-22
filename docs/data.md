@@ -66,6 +66,16 @@ KIFF ──(signed alert)───────────────▶ tafs c
 - **What the company's tools return** reaches the taf's run in kiff/agents, kept only until that run ends. What a chat only read is kept for that chat's next messages, sealed, while the owner keeps writing: up to an hour idle, and never more than 4 hours after it was read. Nothing shows it: not the app, a report or an export. It reaches tafs cloud only when the phone reads a report or a chat, and tafs cloud keeps none of it.
 - **The agent's key** goes from KIFF to tafs cloud to Secrets Manager in one request. The phone never holds it, and tafs cloud can't read it back.
 
+## Deleting the account (#185)
+
+Settings → *Delete account*, behind Face ID, deletes everything above that is the account's. A step that fails stops the rest, and asking again goes on from there:
+1. **tafs cloud** (`POST /v1/account/delete`, someone who may delete the account): removes every taf, Setup included, as removing one does (its kiff/agents agent and everything kept for it, after withdrawing its held calls; its KIFF agent key; its name). Then it asks kiff/agents to erase the account (`DELETE /tenant`): the account's own halt and skills, its sealing key and its drafts' claim records, at once, with no recovery window. Then it deletes its own items whose id names the account (`runtime/src/cloud/account.ts`: the tafs, phones and alert secrets, removals, archives, claimed drafts, flood slots, delivered alerts, names) and the account's alert secret.
+2. **planque**, signed by the phone: every connection disconnected, and the enrolment forgotten.
+3. **KIFF**, signed by the phone, last, since it ends the phone's session: the account's keys stop at once, and KIFF erases its records after its 30-day grace window ([kiff.dev/privacy](https://kiff.dev/privacy)).
+4. **The phone** signs out, which clears what it kept (above).
+
+What Anthropic, Apple and CloudWatch keep follows their own expiry, as above.
+
 ## Open
 
 - **Managed Agents, being retired (#42).** tafs ran on Claude Managed Agents

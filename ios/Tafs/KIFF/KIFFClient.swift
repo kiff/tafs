@@ -47,8 +47,8 @@ final class KIFFClient {
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
     /// starts a taf (kiff-cloud #1217, #1225), the alert target that tells tafs cloud when a
     /// call is held (#1234), the connector key planque keeps (#1251), and the account's
-    /// time zone (#1278).
-    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone"]
+    /// time zone (#1278), deleting the account (kiff/tafs#185).
+    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete"]
 
     /// Whether KIFF takes `path` from a phone only with its signature: the paths above,
     /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`), and
@@ -596,6 +596,13 @@ final class KIFFClient {
     /// KIFF takes it only signed by this phone, after Face ID: set `setupSigner` first.
     func resume(agent: String?) async throws {
         let _: Empty = try await send("POST", agent.map { "/v1/agents/\(escaped($0))/resume" } ?? "/v1/resume", body: [String: String]())
+    }
+
+    /// Deletes the account in KIFF (kiff/tafs#185): its keys stop at once, and KIFF erases its
+    /// data after its grace window. KIFF takes it only signed by this phone, after Face ID: set
+    /// `setupSigner` first. It ends this phone's session too, so it comes last.
+    func deleteAccount() async throws {
+        let _: Empty = try await send("POST", "/v1/me/delete", body: [String: String]())
     }
 
     // MARK: Transport

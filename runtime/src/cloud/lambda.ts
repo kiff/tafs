@@ -1,10 +1,11 @@
 import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
 import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
-import { type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 
 /**
@@ -370,8 +371,37 @@ const archived: Archived = {
   },
 };
 
+/**
+ * What tafs cloud keeps for an account beyond its tafs, erased when its owner
+ * deletes it (kiff/tafs#185): every table item whose id names the account
+ * (account.ts), found by a scan, and the account's alert secret for
+ * kiff/agents. The tafs' keys go with each taf's removal, before this.
+ */
+const accountData: AccountData = {
+  async erase(tenant) {
+    const ids = new Set(accountItems(tenant));
+    const prefixes = accountPrefixes(tenant);
+    let start: Record<string, AttributeValue> | undefined;
+    do {
+      const page = await dynamo.send(new ScanCommand({
+        TableName: TABLE, ProjectionExpression: "id", ExclusiveStartKey: start,
+        FilterExpression: prefixes.map((_, i) => `begins_with(id, :p${i})`).join(" OR "),
+        ExpressionAttributeValues: Object.fromEntries(prefixes.map((p, i) => [`:p${i}`, { S: p }])),
+      }));
+      for (const item of page.Items ?? []) if (item.id?.S && isAccountItem(item.id.S, tenant)) ids.add(item.id.S);
+      start = page.LastEvaluatedKey;
+    } while (start);
+    for (const id of ids) await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: id } } }));
+    try {
+      await secrets.send(new DeleteSecretCommand({ SecretId: `${ACCOUNTS_PREFIX}${tenant}`, ForceDeleteWithoutRecovery: true }));
+    } catch (err) {
+      if (!(err instanceof ResourceNotFoundException)) throw err;
+    }
+  },
+};
+
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData };
 }
 
 /**

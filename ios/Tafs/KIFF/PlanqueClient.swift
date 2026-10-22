@@ -188,6 +188,13 @@ final class PlanqueClient {
         try await send("DELETE", "grants/\(escaped(grantID))", body: Optional<[String: String]>.none)
     }
 
+    /// Erases the account in planque (kiff/tafs#185): every connection disconnected, its vendor
+    /// sign-ins revoked, and the enrolment forgotten. Asked again once nothing is kept, planque
+    /// answers 204 (kiff/planque#45), which is done too.
+    func eraseAccount() async throws {
+        _ = try await raw("DELETE", "", body: nil)
+    }
+
     /// What a finished vendor sign-in hands back: `tafs://planque/signed-in?tenant&grant&confirm`.
     struct SignedIn: Equatable {
         let tenant: String
@@ -217,7 +224,9 @@ final class PlanqueClient {
     private func raw(_ method: String, _ path: String, body: Data?,
                      signer override: (@MainActor (Data) throws -> String)? = nil) async throws -> Data {
         guard let tenant, let signer = override ?? signer else { throw PlanqueError.notSigning }
-        guard let url = URL(string: "v1/accounts/\(escaped(tenant))/\(path)", relativeTo: baseURL) else {
+        // The account itself when path is empty (erasing it), else one of its routes.
+        let account = "v1/accounts/\(escaped(tenant))"
+        guard let url = URL(string: path.isEmpty ? account : "\(account)/\(path)", relativeTo: baseURL) else {
             throw PlanqueError.server(status: 0, message: "Bad path")
         }
         var request = URLRequest(url: url)
