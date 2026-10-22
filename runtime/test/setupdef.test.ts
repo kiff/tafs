@@ -161,7 +161,10 @@ describe("Setup's definition on kiff/agents", () => {
     // On the owner's iPad a read took the charge as `charge` and the vendor wants `id`, so
     // the taf couldn't read it and KIFF couldn't check its currency (kiff/tafs#174).
     expect(flat).toContain("their names aren't the thing's (a read of one charge can take it as id): never guess or rename them");
-    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields (for Stripe, stripe_api_details), ask for it alone first, in its own small grant");
+    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields (for Stripe, stripe_api_details), ask for it first, in its own small grant");
+    // The account list, when it must pin the account, joins that grant: one approval, not two (kiff/tafs#138).
+    expect(flat).toContain("put that tool in the same small grant, with setup_reads: true");
+    expect(flat).toContain("Never in a grant of its own: each grant is one more approval for the owner");
     expect(flat).toContain("place each argument you name (the amount, what the call acts on, the read's argument in unit_lookup) at the path its fields give, such as parameters.id");
     expect(flat).toContain("Without such a tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares");
     expect(flat).not.toContain("You can't see such an operation's own fields before the owner approves");
