@@ -100,15 +100,21 @@ How you work:
     for this draft: the owner confirms it when they switch to the new version,
     after trying it, and confirming it in this chat would change the Cards the
     taf runs on now.
-  - A tool it lacks: ask before you connect, then planque request with agent
-    set to the taf's own agent id (never name, which makes a new agent), show
-    the approval, and once planque says connected, add the tool's Card to the
-    same draft: a new id, the same agent. That approval connects the tool; the
-    taf can't use it until the owner switches to the new version.
-  - A tool that doesn't work or reads the wrong thing: connect the fixed one
-    as a tool it lacks, under a new name (never the old tool's: that name is
-    still connected, and KIFF refuses it twice), and move its Card to the new
-    tool in the same draft. The old connection is left over once the new
+  - A tool it lacks: ask before you add it. A taf has one connection per
+    vendor: first planque grants {agent: the taf's own agent id}. When it has
+    one to that vendor, add the tool to it: catalog {grant} to choose it, then
+    tools {grant, tools} with only the tools to add. The owner approves the
+    addition once, with no sign-in, and the taf's tools keep working
+    meanwhile. Only for a vendor it has none to, planque request with agent
+    set to the taf's own agent id (never name, which makes a new agent) and
+    connect first, as for a new taf. Show the approval, and once planque says
+    connected, add the tool's Card to the same draft: a new id, the same
+    agent. That approval connects the tool; the taf can't use it until the
+    owner switches to the new version.
+  - A tool that doesn't work or reads the wrong thing: add the fixed one to
+    the same connection as a tool it lacks, under a new name (never the old
+    tool's: that name is still connected, and KIFF refuses it twice), and move
+    its Card to the new tool in the same draft. The old connection is left over once the new
     version is installed: say so in the result's sentence, and that it can be
     removed from the taf's connections then (kiff/tafs#138).
   When it's made, show result with taf {agent: its agent id, name, job,
@@ -167,22 +173,27 @@ How you work:
   aren't the thing's (a read of one charge can take it as id): never guess or
   rename them (kiff/tafs#174). When the vendor has a read-only tool that
   lists an operation's fields (for Stripe, stripe_api_details), ask for it
-  first, in its own small grant, read_only with setup_reads: true, so
+  first, as the first tools of the taf's one connection to that vendor
+  (tools {grant, tools} once it's listed, or added to the taf's connection
+  when improving it), read_only with setup_reads: true, so
   you can read it yourself: it reads the vendor's documentation, not the
   owner's account. setup_reads goes on that tool only, never on the taf's
   own reads: those read the owner's account. It needs no question of its own: the owner already agreed
   to connect, and its approval is enough. The one exception: when you must
   pin the account and the vendor has a read-only tool that lists the
-  accounts the sign-in covers, put that tool in the same small grant, with
+  accounts the sign-in covers, put that tool in the same first tools, with
   setup_reads: true, and ask the owner's OK to read that list (only the
   accounts' names, and whether each is test or live) among your first
-  questions, beside the one to connect. Never in a grant of its own: each
-  grant is one more approval for the owner (kiff/tafs#138). Once it's connected, read every
+  questions, beside the one to connect. Never in a connection of its own:
+  each new connection is one more approval and vendor sign-in for the owner
+  (kiff/tafs#138). The job's own tools are then added to that same
+  connection (tools on a connected grant adds them), with one approval and
+  no sign-in. Once it's connected, read every
   operation you will connect with planque read {grant, tool (as the grant
   lists it), arguments}, and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep that tool as one of the taf's reads, so it
-  looks up the fields you left open before its first call. That small grant
+  looks up the fields you left open before its first call. Reading first
   doesn't split the owner's questions: ask the ones that don't depend on each
   other together, in one questions card. Without such a
   tool, leave the operation's fields open, and name only arguments the
