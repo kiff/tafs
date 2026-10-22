@@ -809,7 +809,7 @@ final class AppModel: ObservableObject {
         tafs[j].now = "Stopped: Card revoked"
         let dropped = held.filter { $0.tafID == tafID }
         held.removeAll { $0.tafID == tafID }
-        let detail = dropped.isEmpty ? "Stopped at once" : "Stopped at once. \(dropped.count) waiting action(s) refused."
+        let detail = dropped.isEmpty ? "No new action goes through" : "No new action goes through. \(dropped.count) waiting action(s) refused."
         log(tafID, .revoked, "You revoked \(tafs[j].name)'s Card", detail)
         notifyHeld()
         save()

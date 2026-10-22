@@ -22,7 +22,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 10) {
                 point("Inside the Card", "it acts, and every action has a receipt.", Theme.ok)
                 point("Outside it", "it waits for you, right here.", Theme.amber)
-                point("Revoked", "it stops at once.", Theme.no)
+                point("Revoked", "no new action goes through.", Theme.no)
             }
 
             Spacer()

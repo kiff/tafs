@@ -69,7 +69,7 @@ struct TafDetailView: View {
             .confirmationDialog("Revoke \(taf.name)'s Card?", isPresented: $confirmRevoke, titleVisibility: .visible) {
                 Button("Revoke and stop", role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
-                Text("It stops at once. Anything already done stays done.")
+                Text("No new action goes through. Anything already done stays done.")
             }
             .confirmationDialog("Remove \(taf.name) for good?", isPresented: $confirmRemove, titleVisibility: .visible) {
                 Button("Remove", role: .destructive) { Task { removal = await model.removeTaf(tafID) } }

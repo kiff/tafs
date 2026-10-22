@@ -100,7 +100,7 @@ struct HaltScreen: View {
         let who = all ? "your tafs" : "it"
         switch h.state {
         case .running:
-            return "Halting stops \(who) at once: no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
+            return "Halting stops \(who): no run starts, and nothing reaches your tools until you resume. A call already on its way may still arrive; nothing is undone."
         case .halting:
             return "Nothing new starts. Halted shows once KIFF and planque both confirm."
         case .halted:
@@ -139,7 +139,7 @@ struct HaltRow: View {
                     .font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.no)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(tafID == nil ? "Halt all" : "Halt").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
-                    Text(h.state == .running ? "Stop it at once, until you resume" : HaltScreen.headline(h))
+                    Text(h.state == .running ? "Stop it until you resume" : HaltScreen.headline(h))
                         .font(.system(size: 13)).foregroundColor(h.state == .running ? Theme.dim : Theme.no)
                 }
                 Spacer()

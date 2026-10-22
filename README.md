@@ -7,7 +7,7 @@
 tafs is an iPhone app where a business hands jobs to AI agents, called tafs, and
 gives each one a Card: the limits it works inside. Inside the Card a taf acts and
 leaves a receipt. Outside it, the taf waits for the owner's answer on their phone.
-Revoked, it stops at once.
+Revoked, no new action goes through.
 
 Cards are enforced by [KIFF](https://kiff.dev): every action a taf takes passes
 through KIFF's gateway, which checks the Card before any call reaches a tool.
