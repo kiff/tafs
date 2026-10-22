@@ -1,4 +1,4 @@
-import { AgentsError, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type Switching, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AIBound, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type Switching, type TrialWrite } from "../src/cloud/agents.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
 /**
@@ -11,6 +11,15 @@ import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal
  */
 export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00Z")) {
   const calls: string[] = [];
+  /** AI fair use (kiff/tafs#193): each period's spend by `tenant period`, and the bound each chat came with. */
+  const spent = new Map<string, number>();
+  const aiSent: Array<AIBound | undefined> = [];
+  const fairUse = (tenant: string, ai: AIBound | undefined) => {
+    aiSent.push(ai);
+    if (ai && ai.bound_micro_usd > 0 && (spent.get(`${tenant} ${ai.period}`) ?? 0) >= ai.bound_micro_usd) {
+      throw new AgentsError(409, "ai_fair_use: this period's AI use is past its bound; the owner says go on in KIFF to continue");
+    }
+  };
   const agents = new Map<string, AgentDefinition>();
   const schedules = new Map<string, Schedule>();
   const runs: Array<Run & { tenant: string }> = [];
@@ -154,6 +163,11 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const d = agents.get(k(tenant, id));
       return d ? { ...d } : undefined;
     },
+    async aiSpent(tenant, period) {
+      calls.push(`aiSpent ${period}`);
+      failing("aiSpent");
+      return spent.get(`${tenant} ${period}`) ?? 0;
+    },
     async eraseTenant(tenant) {
       calls.push("eraseTenant");
       failing("eraseTenant");
@@ -176,10 +190,11 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       }
       notes.delete(k(tenant, id));
     },
-    async startRun(tenant, agent, input, session) {
+    async startRun(tenant, agent, input, session, ai) {
       calls.push(`startRun ${agent} ${session ?? "new"}`);
       failing("startRun");
       if (!agents.has(k(tenant, agent))) throw gone();
+      fairUse(tenant, ai);
       let s = session;
       if (s) {
         const found = sessions.find((x) => x.tenant === tenant && x.id === s);
@@ -193,10 +208,11 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
      * A foreground run's stream: the run, then `streamed` (what the test says the
      * agent does), then its end. `failing("streamRun")` refuses before it begins.
      */
-    async *streamRun(tenant, agent, input, session) {
+    async *streamRun(tenant, agent, input, session, ai) {
       calls.push(`streamRun ${agent} ${session ?? "new"}`);
       failing("streamRun");
       if (!agents.has(k(tenant, agent))) throw gone();
+      fairUse(tenant, ai);
       let s = session;
       if (s) {
         const found = sessions.find((x) => x.tenant === tenant && x.id === s);
@@ -338,7 +354,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, halts };
+  return { api, calls, spent, aiSent, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, halts };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
