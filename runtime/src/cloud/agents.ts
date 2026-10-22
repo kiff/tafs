@@ -92,6 +92,12 @@ export interface AgentDefinition {
   drafts?: boolean;
 }
 
+/** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */
+export interface AIBound {
+  period: string;
+  bound_micro_usd: number;
+}
+
 export type RunStatus = "PENDING" | "RUNNING" | "PAUSED" | "COMPLETED" | "ERROR" | "CANCELLED";
 
 /** One call KIFF holds for the owner: what a paused run waits for. */
@@ -332,9 +338,12 @@ export class Agents {
 
   // Runs.
 
-  /** Starts a run of the agent in the background: in `session` when given, else in a new one. */
-  startRun(tenant: string, agent: string, input: string, session?: string): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}), background: true });
+  /**
+   * Starts a run of the agent in the background: in `session` when given, else in a new one.
+   * With `ai`, a chat counted toward the period's AI fair use, refused (409) past its bound.
+   */
+  startRun(tenant: string, agent: string, input: string, session?: string, ai?: AIBound): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}), ...(ai ? { ai } : {}), background: true });
   }
 
   /**
@@ -343,11 +352,17 @@ export class Agents {
    * A refusal before the stream begins throws, as `startRun` does. The run is
    * kiff/agents' invocation's, not this reader's: stopping reading stops none of it.
    */
-  async *streamRun(tenant: string, agent: string, input: string, session?: string): AsyncGenerator<RunStreamEvent> {
-    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}) }, undefined, "text/event-stream");
+  async *streamRun(tenant: string, agent: string, input: string, session?: string, ai?: AIBound): AsyncGenerator<RunStreamEvent> {
+    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}), ...(ai ? { ai } : {}) }, undefined, "text/event-stream");
     if (!res.ok) throw await failure(res);
     if (!res.body) throw new AgentsError(502, "kiff/agents answered with no stream");
     yield* readEvents(res.body);
+  }
+
+  /** What the account's counted chats cost the model in the period, in micro US dollars (kiff/tafs#193). */
+  async aiSpent(tenant: string, period: string): Promise<number> {
+    const p = await this.call<{ spent_micro_usd?: number }>("GET", tenant, ["usage", "ai"], undefined, { period });
+    return p.spent_micro_usd ?? 0;
   }
 
   getRun(tenant: string, agent: string, run: string): Promise<Run> {

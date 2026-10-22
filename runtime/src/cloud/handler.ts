@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AgentsHalt, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
+import { aiFor, type AIView, base, periodName, planOf, refusedForAI, view as aiView } from "./aiuse.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AIBound, type AgentsHalt, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
 import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
@@ -67,7 +68,7 @@ export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
-  "halt" | "resume" | "halted" | "eraseTenant">;
+  "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -306,6 +307,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   if (parts[1] === "account" && parts.length === 3 && parts[2] === "delete" && method === "POST") return deleteAccount(await person(event, deps), deps);
+  if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
 
   const me = await person(event, deps);
@@ -1135,17 +1137,19 @@ interface Steering {
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   const text = chatText(event);
   await claimChatSlot(me, taf, deps);
-  const live = await chatFor(event, me, taf, deps);
+  const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
   if (live) {
     try {
-      const run = await deps.agents.startRun(me.tenantID, taf.id, text, live);
+      const run = await deps.agents.startRun(me.tenantID, taf.id, text, live, ai);
       return { session: run.session, new_session: false };
     } catch (err) {
+      // Past AI fair use, a new chat is refused too: the owner says go on first.
+      if (refusedForAI(err)) throw new HTTPError(409, (err as Error).message);
       // Refused, for example a chat that is gone or busy: a new one takes the message.
       if (!(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw err;
     }
   }
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text));
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text, undefined, ai));
   return { session: run.session, new_session: true };
 }
 
@@ -1439,7 +1443,8 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
     heldCards(kiff.mandates, taf.kiffAgent));
   await claimChatSlot(me, setup, deps);
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input));
+  const ai = await aiBound(event, deps);
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, undefined, ai));
   return { setup: setup.id, session: run.session, new_session: true };
 }
 
@@ -1627,22 +1632,22 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     need(me, "cards.manage");
     const text = chatText(event);
     await claimChatSlot(me, taf, deps);
-    const live = await chatFor(event, me, taf, deps);
+    const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
     if (live) {
       try {
-        run = deps.agents.streamRun(me.tenantID, taf.id, text, live);
+        run = deps.agents.streamRun(me.tenantID, taf.id, text, live, ai);
         first = await run.next();
       } catch (err) {
-        if (!(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw agentsFailure(err);
+        if (refusedForAI(err) || !(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw agentsFailure(err);
         run = undefined;
       }
     }
     const newSession = !run;
     if (!run) {
       try {
-        run = deps.agents.streamRun(me.tenantID, taf.id, text);
+        run = deps.agents.streamRun(me.tenantID, taf.id, text, undefined, ai);
         first = await run.next();
       } catch (err) {
         throw agentsFailure(err);
@@ -1917,6 +1922,23 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     return { id: null, name: agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card };
   });
   return { tafs: listed, others, removing };
+}
+
+/** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */
+async function aiBound(event: HTTPEvent, deps: Deps): Promise<AIBound | undefined> {
+  return aiFor(await planOf(bearer(event), deps.fetch, deps.kiffBase));
+}
+
+/**
+ * GET /v1/usage/ai (kiff/tafs#193): the period's AI use as a share of half the
+ * plan's price, where the tafs ask next (100%, then 200% after one go on…), and
+ * whether they're asking now. The owner's go on is KIFF's signed route, as
+ * raising the ceiling is. No bound (the internal plan, or no plan from KIFF): nulls.
+ */
+async function aiUsage(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<AIView> {
+  const plan = await planOf(bearer(event), deps.fetch, deps.kiffBase);
+  if (!plan || base(plan) <= 0) return aiView(plan, 0);
+  return aiView(plan, await agentsCall(() => deps.agents.aiSpent(me.tenantID, periodName(plan.start))));
 }
 
 /** A kiff/agents call a route depends on: its 404 is the taf's, anything else says the runtime didn't answer. */
