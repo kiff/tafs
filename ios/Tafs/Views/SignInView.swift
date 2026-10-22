@@ -115,6 +115,10 @@ struct SettingsView: View {
                             Text(why).font(.system(size: 13)).foregroundColor(Theme.no)
                         }
                     }
+                    // What the tafs used this period, the plan's tasks and the trial (kiff/tafs#184).
+                    if model.mode != .signedOut {
+                        NavigationLink("Usage", destination: UsageView().environmentObject(model))
+                    }
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }
                     }

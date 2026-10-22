@@ -46,9 +46,10 @@ final class KIFFClient {
     var setupSigner: (@MainActor (Data) throws -> String)?
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
     /// starts a taf (kiff-cloud #1217, #1225), the alert target that tells tafs cloud when a
-    /// call is held (#1234), the connector key planque keeps (#1251), and the account's
-    /// time zone (#1278), deleting the account (kiff/tafs#185).
-    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete"]
+    /// call is held (#1234), the connector key planque keeps (#1251), the account's time
+    /// zone (#1278), deleting the account (kiff/tafs#185), the month's ceiling of tafs
+    /// tasks (#1316), and the owner's go on past AI fair use (kiff/tafs#193).
+    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", "/v1/me/usage/ceiling", "/v1/me/usage/ai"]
 
     /// Whether KIFF takes `path` from a phone only with its signature: the paths above,
     /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`), and
@@ -263,6 +264,102 @@ final class KIFFClient {
 
     func me() async throws -> Account {
         try await send("GET", "/v1/me")
+    }
+
+    /// The account's usage this billing period (kiff-cloud#1316): the tafs meter and the KIFF
+    /// meter, what the plan includes, what wasn't counted and why, the owner's ceiling, and the
+    /// trial. Counts only: the app shows no price (App Store Review Guideline 3.1.3(f)).
+    struct Usage: Decodable, Equatable {
+        struct Period: Decodable, Equatable { let start: Date; let end: Date }
+        /// What wasn't counted, by why (kiff-cloud#1316's "never counted").
+        struct Free: Decodable, Equatable {
+            var refused = 0, heldRefused = 0, halted = 0, failed = 0, invalid = 0, retry = 0, read = 0, trial = 0, setupRead = 0
+            enum CodingKeys: String, CodingKey {
+                case refused, heldRefused = "held_refused", halted, failed, invalid, retry, read, trial, setupRead = "setup_read"
+            }
+            init() {}
+            /// A reason KIFF doesn't name counted nothing.
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                func n(_ k: CodingKeys) throws -> Int { try c.decodeIfPresent(Int.self, forKey: k) ?? 0 }
+                refused = try n(.refused); heldRefused = try n(.heldRefused); halted = try n(.halted); failed = try n(.failed)
+                invalid = try n(.invalid); retry = try n(.retry); read = try n(.read); trial = try n(.trial); setupRead = try n(.setupRead)
+            }
+            /// Each reason with a count, as the owner reads it, in the order they matter.
+            var lines: [(String, Int)] {
+                [("Refused by KIFF", refused), ("Held, then refused", heldRefused), ("Halted", halted), ("Failed at the tool", failed),
+                 ("Not valid", invalid), ("Retries", retry), ("Reads", read), ("Trials of a new version", trial), ("Setup's reads", setupRead)]
+                    .filter { $0.1 > 0 }
+            }
+        }
+        struct AgentCount: Decodable, Equatable { let agent: String; let counted: Int }
+        struct Meter: Decodable, Equatable {
+            let counted: Int
+            let included: Int
+            /// The tafs meter only: the most tasks a month before the tafs pause and ask.
+            var ceiling: Int?
+            var ceilingReached: Bool?
+            var byAgent: [AgentCount]?
+            var free: Free?
+            enum CodingKeys: String, CodingKey { case counted, included, ceiling, ceilingReached = "ceiling_reached", byAgent = "by_agent", free }
+        }
+        struct Trial: Decodable, Equatable {
+            /// Nil until the trial starts: it starts at checkout on the web.
+            let endsAt: Date?
+            let daysLeft: Int
+            let tasksLeft: Int
+            let actionsLeft: Int
+            enum CodingKeys: String, CodingKey { case endsAt = "ends_at", daysLeft = "days_left", tasksLeft = "tasks_left", actionsLeft = "actions_left" }
+        }
+        /// AI fair use's part of the read (kiff/tafs#193): how many times the owner said go on
+        /// this period. The use itself is tafs cloud's.
+        struct AI: Decodable, Equatable {
+            var goOns = 0
+            enum CodingKeys: String, CodingKey { case goOns = "go_ons" }
+        }
+        let plan: String
+        let period: Period
+        var tasks: Meter
+        let actions: Meter
+        var trial: Trial?
+        /// The people the plan pays for (admins and editors); 0 where there's no limit.
+        var seats: Int? = nil
+        var ai: AI? = nil
+    }
+
+    /// One counted task: the Record behind it, which taf, which tool, and when.
+    struct CountedTask: Decodable, Equatable, Identifiable {
+        let record: String
+        let agent: String
+        let tool: String
+        let at: Date
+        var id: String { record }
+    }
+
+    func usage() async throws -> Usage {
+        try await send("GET", "/v1/me/usage")
+    }
+
+    /// The period's counted tasks, newest first, a page at a time.
+    func countedTasks(cursor: String? = nil) async throws -> (tasks: [CountedTask], next: String?) {
+        struct Page: Decodable { let items: [CountedTask]; var next: String? }
+        let page: Page = try await send("GET", "/v1/me/usage/tasks" + (cursor.map { "?cursor=\(escaped($0))" } ?? ""))
+        return (page.items, page.next)
+    }
+
+    /// Sets the month's ceiling of tafs tasks: a signed setup call, since raising it allows
+    /// more to be billed. KIFF answers with the tasks meter.
+    func setTaskCeiling(_ tasks: Int) async throws -> Usage.Meter {
+        try await send("PUT", "/v1/me/usage/ceiling", body: ["tasks": tasks])
+    }
+
+    /// The owner says go on past this period's AI fair use (kiff/tafs#193): a signed setup
+    /// call, one more each time, so the tafs ask again at the next full bound. KIFF answers
+    /// how many go ons the period has now.
+    func goOnAI() async throws -> Int {
+        struct Answer: Decodable { let goOns: Int; enum CodingKeys: String, CodingKey { case goOns = "go_ons" } }
+        let a: Answer = try await send("PUT", "/v1/me/usage/ai", body: ["go_on": true])
+        return a.goOns
     }
 
     /// Sets the account's time zone (an IANA name): a signed setup call from a phone

@@ -162,6 +162,20 @@ final class TafsCloud {
         try await send("GET", "/v1/home")
     }
 
+    /// The period's AI use, from chats and Setup (kiff/tafs#193): a share of the plan's fair
+    /// use, where the tafs ask next (100%, then 200% after a go on…), and whether they're
+    /// asking now. Nil shares: no bound on this account.
+    struct AIUse: Decodable, Equatable {
+        let usedPct: Int?
+        let asksAtPct: Int?
+        let paused: Bool
+        enum CodingKeys: String, CodingKey { case usedPct = "used_pct", asksAtPct = "asks_at_pct", paused }
+    }
+
+    func aiUse() async throws -> AIUse {
+        try await send("GET", "/v1/usage/ai")
+    }
+
     /// The account's tafs, and the removals still to finish.
     func listing() async throws -> (tafs: [CloudTaf], removing: [PendingRemoval]) {
         struct Response: Decodable { let tafs: [CloudTaf]; let removing: [PendingRemoval]? }

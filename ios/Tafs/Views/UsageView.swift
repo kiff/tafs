@@ -1,0 +1,259 @@
+import SwiftUI
+
+/// The account's usage this period (kiff/tafs#184): its own screen, opened from Settings. What
+/// the tafs did that counted, what the plan includes, what wasn't counted and why, the month's
+/// ceiling, and the trial. It sells nothing (App Store Review Guideline 3.1.3(f)): no price, no
+/// purchase, no link to buy; a trial's end or a reached ceiling is said plainly.
+struct UsageView: View {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if let u = model.usage {
+                    tasksPanel(u)
+                    if let notice = Self.notice(u) {
+                        Panel {
+                            Text(notice).font(.system(size: 15)).foregroundColor(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    if model.mode == .kiff, u.plan != "trial", let ceiling = u.tasks.ceiling, ceiling > 0 {
+                        NavigationLink(destination: CeilingView(current: ceiling, least: max(u.tasks.included, u.tasks.counted)).environmentObject(model)) {
+                            Panel {
+                                HStack {
+                                    Text("Monthly ceiling").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                    Spacer()
+                                    Text("\(ceiling) tasks").font(.system(size: 15)).foregroundColor(Theme.soft)
+                                    Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    if let ai = model.aiUse, let used = ai.usedPct {
+                        NavigationLink(destination: AIUseView().environmentObject(model)) {
+                            Panel {
+                                HStack {
+                                    Text("AI use").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                    Spacer()
+                                    Text(ai.paused ? "Asking you" : "\(used)%").font(.system(size: 15))
+                                        .foregroundColor(ai.paused ? Theme.amber : Theme.soft)
+                                    Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    if let by = u.tasks.byAgent, !by.isEmpty {
+                        Panel {
+                            Eyebrow(text: "By taf")
+                            ForEach(by, id: \.agent) { a in
+                                CountRow(label: model.tafName(forAgent: a.agent), count: a.counted)
+                            }
+                        }
+                    }
+                    if let free = u.tasks.free, !free.lines.isEmpty {
+                        Panel {
+                            Eyebrow(text: "Not counted")
+                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, count: line.1) }
+                        }
+                    }
+                    Panel {
+                        Eyebrow(text: "Your own agents in KIFF")
+                        Text(Self.count(u.actions.counted, of: u.actions.included, "actions")).font(.system(size: 15)).foregroundColor(Theme.ink)
+                        Text("Actions your own agents take through KIFF, apart from the tafs.")
+                            .font(.system(size: 13)).foregroundColor(Theme.dim)
+                    }
+                    if !model.countedTasks.isEmpty {
+                        Panel {
+                            Eyebrow(text: "Counted tasks")
+                            ForEach(model.countedTasks) { t in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(model.tafName(forAgent: t.agent)).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                                    Text("\(t.tool) · \(t.at.formatted(.relative(presentation: .named)))")
+                                        .font(.system(size: 13)).foregroundColor(Theme.dim)
+                                }
+                            }
+                        }
+                    }
+                } else if let why = model.usageError {
+                    Panel { Text(why).font(.system(size: 14)).foregroundColor(Theme.no) }
+                } else {
+                    ProgressView()
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .screenBackground()
+        .navigationTitle("Usage")
+        .inlineTitle()
+        .task { await model.refreshUsage() }
+        .refreshable { await model.refreshUsage() }
+    }
+
+    private func tasksPanel(_ u: KIFFClient.Usage) -> some View {
+        Panel {
+            Eyebrow(text: Self.planName(u.plan))
+            Text(Self.count(u.tasks.counted, of: u.tasks.included, "tasks")).font(Theme.display(26)).foregroundColor(Theme.ink)
+            if u.tasks.included > 0 {
+                Meter(fraction: Double(u.tasks.counted) / Double(u.tasks.included),
+                      color: u.tasks.ceilingReached == true ? Theme.no : Theme.ok)
+            }
+            Text("A task is an action a taf took that KIFF allowed and sent. Reads, refusals and anything that failed aren't counted. This period ends \(u.period.end.formatted(date: .abbreviated, time: .omitted)).")
+                .font(.system(size: 13)).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// "14 of 25 tasks", or "472 tasks" where nothing is included because there's no limit
+    /// (KIFF's `included: 0`, on our own accounts and Company).
+    static func count(_ counted: Int, of included: Int, _ unit: String) -> String {
+        included > 0 ? "\(counted) of \(included) \(unit)" : "\(counted) \(unit)"
+    }
+
+    static func planName(_ plan: String) -> String {
+        switch plan {
+        case "trial": return "Trial"
+        case "solo": return "Solo"
+        case "team": return "Team"
+        case "company": return "Company"
+        default: return plan.capitalized
+        }
+    }
+
+    /// What the owner should know now, said neutrally: a reached ceiling, an ended trial, or
+    /// what's left of it. Nil when there's nothing to say.
+    static func notice(_ u: KIFFClient.Usage) -> String? {
+        if u.tasks.ceilingReached == true {
+            return u.plan == "trial"
+                ? "Your trial's tasks are used. Your tafs are paused."
+                : "This month's ceiling is reached. Your tafs are paused until the month ends or the ceiling is raised."
+        }
+        guard let trial = u.trial else { return nil }
+        // It starts at checkout on the web; the app says so and links nowhere (3.1.3(f)).
+        guard trial.endsAt != nil else { return "Your trial hasn't started." }
+        if trial.daysLeft <= 0 { return "Your trial has ended." }
+        let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
+        let tasks = trial.tasksLeft == 1 ? "1 task" : "\(trial.tasksLeft) tasks"
+        return "Your trial: \(days) and \(tasks) left."
+    }
+}
+
+private struct CountRow: View {
+    let label: String
+    let count: Int
+
+    var body: some View {
+        HStack {
+            Text(label).font(.system(size: 14)).foregroundColor(Theme.ink)
+            Spacer()
+            Text("\(count)").font(.system(size: 14)).foregroundColor(Theme.soft)
+        }
+    }
+}
+
+/// The month's ceiling of tafs tasks: its own screen. At the ceiling the tafs pause and ask;
+/// nothing is billed past it. Saving asks for Face ID.
+struct CeilingView: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var tasks: Int
+    @State private var saving = false
+    let least: Int
+
+    init(current: Int, least: Int) {
+        _tasks = State(initialValue: max(current, least))
+        self.least = least
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Panel {
+                    Eyebrow(text: "Monthly ceiling")
+                    Stepper(value: $tasks, in: least...max(least * 20, 1000), step: 5) {
+                        Text("\(tasks) tasks").font(Theme.display(26)).foregroundColor(Theme.ink)
+                    }
+                    Text("When your tafs reach it, they pause and ask you. Nothing past it is counted.")
+                        .font(.system(size: 13)).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if let why = model.usageError {
+                    Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
+                }
+                Button(saving ? "Saving…" : "Save with Face ID") {
+                    saving = true
+                    Task {
+                        let done = await model.setTaskCeiling(tasks)
+                        saving = false
+                        if done { dismiss() }
+                    }
+                }
+                .buttonStyle(OutlineButtonStyle())
+                .disabled(saving || tasks == model.usage?.tasks.ceiling)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .screenBackground()
+        .navigationTitle("Ceiling")
+        .inlineTitle()
+    }
+}
+
+/// AI use from chats and Setup this period (kiff/tafs#193): its own screen. It's included, and
+/// never billed: past the plan's fair use the tafs ask before going on, and Go on asks for Face
+/// ID. Said neutrally, with no price and nothing to buy (App Store Review Guideline 3.1.3(f)).
+struct AIUseView: View {
+    @EnvironmentObject private var model: AppModel
+    @State private var going = false
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if let ai = model.aiUse, let used = ai.usedPct {
+                    Panel {
+                        Eyebrow(text: "AI use this month")
+                        Text("\(used)%").font(Theme.display(26)).foregroundColor(Theme.ink)
+                        Meter(fraction: Double(used) / Double(max(ai.asksAtPct ?? 100, 1)), color: ai.paused ? Theme.amber : Theme.ok)
+                        Text(Self.explain(ai)).font(.system(size: 13)).foregroundColor(Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if ai.paused {
+                        Panel {
+                            Text(Self.asking).font(.system(size: 15)).foregroundColor(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        if let why = model.usageError {
+                            Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
+                        }
+                        if model.mode == .kiff {
+                            Button(going ? "Going on…" : "Go on with Face ID") {
+                                going = true
+                                Task { _ = await model.goOnAI(); going = false }
+                            }
+                            .buttonStyle(OutlineButtonStyle())
+                            .disabled(going)
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .screenBackground()
+        .navigationTitle("AI use")
+        .inlineTitle()
+    }
+
+    static let asking = "This month's AI use is high: your tafs ask before going on."
+
+    /// What the share means, and where the tafs ask next.
+    static func explain(_ ai: TafsCloud.AIUse) -> String {
+        let at = ai.asksAtPct ?? 100
+        let next = at <= 100 ? "At 100%, your tafs ask you before going on." : "You said go on; your tafs ask you again at \(at)%."
+        return "Chats with your tafs and Setup are included. 100% is this month's fair use. \(next) It's never billed."
+    }
+}
