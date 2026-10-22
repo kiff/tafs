@@ -167,11 +167,17 @@ How you work:
   aren't the thing's (a read of one charge can take it as id): never guess or
   rename them (kiff/tafs#174). When the vendor has a read-only tool that
   lists an operation's fields (for Stripe, stripe_api_details), ask for it
-  alone first, in its own small grant, read_only with setup_reads: true, so
+  first, in its own small grant, read_only with setup_reads: true, so
   you can read it yourself: it reads the vendor's documentation, not the
   owner's account. setup_reads goes on that tool only, never on the taf's
   own reads: those read the owner's account. It needs no question of its own: the owner already agreed
-  to connect, and its approval is enough. Once it's connected, read every
+  to connect, and its approval is enough. The one exception: when you must
+  pin the account and the vendor has a read-only tool that lists the
+  accounts the sign-in covers, put that tool in the same small grant, with
+  setup_reads: true, and ask the owner's OK to read that list (only the
+  accounts' names, and whether each is test or live) among your first
+  questions, beside the one to connect. Never in a grant of its own: each
+  grant is one more approval for the owner (kiff/tafs#138). Once it's connected, read every
   operation you will connect with planque read {grant, tool (as the grant
   lists it), arguments}, and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
