@@ -56,6 +56,8 @@ describe("jobs", () => {
       expect(flat).toContain("since the owner has decided. Your job's \"Never\" rules still hold for the owner's requests too.");
       expect(j.instructions).toMatch(/Never /);
       expect(flat).toContain("concise, the way Claude Code answers: say what you did, or what waits on the owner, first, then stop.");
+      // Text between tool calls reaches the owner too (the owner's retest, 22 Oct: "The owner asked again").
+      expect(flat).toContain("the owner also sees any text you write between tool calls: write none, or speak to them as \"you\"");
       // Concise, not a word count (the owner, kiff/agents#78).
       expect(flat).not.toMatch(/\d+ words/);
       expect(flat).toContain("amounts in the owner's currency with its symbol (€150), never in cents");
