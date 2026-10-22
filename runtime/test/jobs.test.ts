@@ -55,7 +55,9 @@ describe("jobs", () => {
       // The owner's request skips the job's checks, never its "Never" rules (review on #103).
       expect(flat).toContain("since the owner has decided. Your job's \"Never\" rules still hold for the owner's requests too.");
       expect(j.instructions).toMatch(/Never /);
-      expect(flat).toContain("one or two short sentences (at most about 40 words)");
+      expect(flat).toContain("concise, the way Claude Code answers: say what you did, or what waits on the owner, first, then stop.");
+      // Concise, not a word count (the owner, kiff/agents#78).
+      expect(flat).not.toMatch(/\d+ words/);
       expect(flat).toContain("amounts in the owner's currency with its symbol (€150), never in cents");
       expect(flat).toContain("no ids (payments, refunds, operations, cards) unless the owner asks for one");
       expect(flat).toContain("nothing about your notes, earlier runs, or what you checked and didn't change");
