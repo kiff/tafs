@@ -43,6 +43,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var countedTasks: [KIFFClient.CountedTask] = []
     /// Why usage couldn't be read, or the ceiling didn't change.
     @Published private(set) var usageError: String?
+    /// Each taf's counted tasks this period, newest first: the first page (kiff-cloud#1334).
+    @Published private(set) var tafTasks: [UUID: [KIFFClient.CountedTask]] = [:]
     /// The period's AI use from chats and Setup (kiff/tafs#193), from tafs cloud; nil until read.
     @Published private(set) var aiUse: TafsCloud.AIUse?
 
@@ -270,7 +272,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]
         planque.deviceID = nil
         accountGeneration += 1
         tafs = []; otherAgents = []; held = []; record = []; decided = [:]
@@ -302,7 +304,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
         accountGeneration += 1
@@ -1033,11 +1035,26 @@ final class AppModel: ObservableObject {
         holderIDs.first(where: { $0.value == tafID })?.key
     }
 
+    /// The taf's part of the period, from KIFF's `by_agent` (kiff-cloud#1334); nil until usage
+    /// is read. A taf KIFF doesn't list counted nothing.
+    func tafUsage(for tafID: UUID) -> KIFFClient.Usage.AgentCount? {
+        guard let u = usage else { return nil }
+        guard let agent = kiffAgent(for: tafID) else { return .init(agent: "", counted: 0) }
+        return u.tasks.byAgent?.first { $0.agent == agent } ?? .init(agent: agent, counted: 0)
+    }
+
     /// The taf's counted tasks this period, from KIFF's `by_agent`; nil until usage is read.
     func countedTasks(for tafID: UUID) -> Int? {
-        guard let u = usage else { return nil }
-        guard let agent = kiffAgent(for: tafID) else { return 0 }
-        return u.tasks.byAgent?.first { $0.agent == agent }?.counted ?? 0
+        tafUsage(for: tafID)?.counted
+    }
+
+    /// Reads the period's usage if it isn't yet, and the taf's own counted tasks.
+    func refreshTafUsage(_ tafID: UUID) async {
+        if usage == nil { await refreshUsage() }
+        guard mode == .kiff, let agent = kiffAgent(for: tafID) else { return }
+        let gen = accountGeneration
+        guard let page = try? await kiff.countedTasks(agent: agent), gen == accountGeneration else { return }
+        tafTasks[tafID] = page.tasks
     }
 
     /// The Record entry of a counted task, by KIFF's call key (the usage read's `record`).

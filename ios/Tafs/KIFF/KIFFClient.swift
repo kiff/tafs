@@ -292,7 +292,12 @@ final class KIFFClient {
                     .filter { $0.1 > 0 }
             }
         }
-        struct AgentCount: Decodable, Equatable { let agent: String; let counted: Int }
+        /// One taf's part of the period (kiff-cloud#1334): what it counted, and what it didn't and why.
+        struct AgentCount: Decodable, Equatable {
+            let agent: String
+            let counted: Int
+            var free: Free? = nil
+        }
         struct Meter: Decodable, Equatable {
             let counted: Int
             let included: Int
@@ -332,8 +337,11 @@ final class KIFFClient {
         let record: String
         let agent: String
         let tool: String
+        /// The tool as the Record names it (kiff-cloud#1334): "Refund an order".
+        var toolTitle: String? = nil
         let at: Date
         var id: String { record }
+        enum CodingKeys: String, CodingKey { case record, agent, tool, toolTitle = "tool_title", at }
     }
 
     func usage() async throws -> Usage {
@@ -341,9 +349,12 @@ final class KIFFClient {
     }
 
     /// The period's counted tasks, newest first, a page at a time.
-    func countedTasks(cursor: String? = nil) async throws -> (tasks: [CountedTask], next: String?) {
+    /// The period's counted tasks, newest first, a page at a time; with `agent`, that taf's only
+    /// (kiff-cloud#1334).
+    func countedTasks(cursor: String? = nil, agent: String? = nil) async throws -> (tasks: [CountedTask], next: String?) {
         struct Page: Decodable { let items: [CountedTask]; var next: String? }
-        let page: Page = try await send("GET", "/v1/me/usage/tasks" + (cursor.map { "?cursor=\(escaped($0))" } ?? ""))
+        let query = [agent.map { "agent=\(escaped($0))" }, cursor.map { "cursor=\(escaped($0))" }].compactMap { $0 }
+        let page: Page = try await send("GET", "/v1/me/usage/tasks" + (query.isEmpty ? "" : "?" + query.joined(separator: "&")))
         return (page.items, page.next)
     }
 

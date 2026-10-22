@@ -170,13 +170,23 @@ final class UsageTests: XCTestCase {
         let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" })
         XCTAssertNil(model.countedTasks(for: rae.id), "nothing until usage is read")
 
+        // kiff-cloud#1334's contract: by_agent carries its own free, tasks filter by agent, and
+        // each task names its tool as the Record does.
         StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read.replacingOccurrences(
-            of: #"{"agent":"taf-refunds-x7k3","counted":9}"#, with: #"{"agent":"rae-k3f9","counted":9}"#))
+            of: #"{"agent":"taf-refunds-x7k3","counted":9}"#,
+            with: #"{"agent":"rae-k3f9","counted":9,"free":{"refused":1,"held_refused":0,"halted":0,"failed":1,"invalid":0,"retry":1,"read":80,"trial":0,"setup_read":6}}"#))
         StubProtocol.responses["GET /v1/me/usage/tasks"] = (200, #"{"items":[],"next":null}"#)
-        await model.refreshUsage()
+        StubProtocol.responses["GET /v1/me/usage/tasks?agent=rae-k3f9"] = (200,
+            #"{"items":[{"record":"tc-1","agent":"rae-k3f9","tool":"refund_order","tool_title":"Refund an order","at":"2026-10-22T08:41:10Z"}],"next":null}"#)
+        await model.refreshTafUsage(rae.id)
         XCTAssertEqual(model.kiffAgent(for: rae.id), "rae-k3f9")
         XCTAssertEqual(model.countedTasks(for: rae.id), 9)
+        XCTAssertEqual(model.tafUsage(for: rae.id)?.free?.lines.map(\.0), ["Refused by KIFF", "Failed at the tool", "Retries", "Reads", "Setup's reads"])
+        let task = try XCTUnwrap(model.tafTasks[rae.id]?.first)
+        XCTAssertEqual(UsageView.toolName(task), "Refund an order", "named as the Record names it")
         XCTAssertNil(model.recordEntry(forCall: "tc-not-in-the-record"))
+        // Without a title, the tool in words.
+        XCTAssertEqual(UsageView.toolName(.init(record: "tc-2", agent: "rae-k3f9", tool: "refund_order", at: Date())), "Refund order")
     }
 
     // MARK: AI fair use (kiff/tafs#193)

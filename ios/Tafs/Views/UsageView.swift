@@ -68,18 +68,7 @@ struct UsageView: View {
                     if !model.countedTasks.isEmpty {
                         Panel {
                             Eyebrow(text: "Counted tasks")
-                            ForEach(model.countedTasks) { t in
-                                // Each opens its Record line and receipt, named as the Record names it.
-                                if let entry = model.recordEntry(forCall: t.record) {
-                                    RecordRow(entry: entry, showTaf: true)
-                                } else {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(model.tafName(forAgent: t.agent)).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
-                                        Text("\(Self.toolWords(t.tool)) · \(t.at.formatted(.relative(presentation: .named)))")
-                                            .font(.system(size: 13)).foregroundColor(Theme.dim)
-                                    }
-                                }
-                            }
+                            ForEach(model.countedTasks) { CountedTaskRow(task: $0) }
                         }
                     }
                 } else if let why = model.usageError {
@@ -120,8 +109,14 @@ struct UsageView: View {
     /// What a task is: counted means done (kiff-cloud#1316), as /pricing says it.
     static let taskMeaning = "A task is an action a taf took that KIFF allowed, sent, and that worked. Reads, refusals, failures and lost answers aren't counted."
 
-    /// A tool's name in words, for a counted task the app's Record doesn't hold (older than
-    /// what it read): "refund_order" reads "Refund order".
+    /// A counted task's tool as the Record names it: KIFF's title (kiff-cloud#1334), else its
+    /// name in words.
+    static func toolName(_ t: KIFFClient.CountedTask) -> String {
+        if let title = t.toolTitle, !title.isEmpty { return title }
+        return toolWords(t.tool)
+    }
+
+    /// A tool's name in words, when KIFF gives no title: "refund_order" reads "Refund order".
     static func toolWords(_ tool: String) -> String {
         let words = tool.replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: "-", with: " ")
         return words.prefix(1).uppercased() + words.dropFirst()
@@ -158,6 +153,80 @@ struct UsageView: View {
         let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
         let tasks = trial.tasksLeft == 1 ? "1 task" : "\(trial.tasksLeft) tasks"
         return "Your trial: \(days) and \(tasks) left."
+    }
+}
+
+/// One counted task: the Record's own line for that call when the app holds it, opening its
+/// receipt; otherwise the taf and the tool as the Record names it (kiff/tafs#184).
+struct CountedTaskRow: View {
+    @EnvironmentObject private var model: AppModel
+    let task: KIFFClient.CountedTask
+
+    var body: some View {
+        if let entry = model.recordEntry(forCall: task.record) {
+            RecordRow(entry: entry, showTaf: true)
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.tafName(forAgent: task.agent)).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                Text("\(UsageView.toolName(task)) · \(task.at.formatted(.relative(presentation: .named)))")
+                    .font(.system(size: 13)).foregroundColor(Theme.dim)
+            }
+        }
+    }
+}
+
+/// One taf's usage this period (kiff/tafs#184): its own screen, from a row on its page. What it
+/// counted, what it didn't and why, and its counted tasks; the account's Usage is one tap away.
+struct TafUsageView: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if let mine = model.tafUsage(for: tafID) {
+                    Panel {
+                        Eyebrow(text: model.taf(tafID)?.name ?? "This taf")
+                        Text(UsageView.tafCount(mine.counted)).font(Theme.display(26)).foregroundColor(Theme.ink)
+                        Text(UsageView.taskMeaning).font(.system(size: 13)).foregroundColor(Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let free = mine.free, !free.lines.isEmpty {
+                        Panel {
+                            Eyebrow(text: "Not counted")
+                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, count: line.1) }
+                        }
+                    }
+                    if let tasks = model.tafTasks[tafID], !tasks.isEmpty {
+                        Panel {
+                            Eyebrow(text: "Counted tasks")
+                            ForEach(tasks) { CountedTaskRow(task: $0) }
+                        }
+                    }
+                    NavigationLink(destination: UsageView().environmentObject(model)) {
+                        Panel {
+                            HStack {
+                                Text("The account's usage").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                } else if let why = model.usageError {
+                    Panel { Text(why).font(.system(size: 14)).foregroundColor(Theme.no) }
+                } else {
+                    ProgressView()
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .screenBackground()
+        .navigationTitle("Usage")
+        .inlineTitle()
+        .task { await model.refreshTafUsage(tafID) }
+        .refreshable { await model.refreshUsage(); await model.refreshTafUsage(tafID) }
     }
 }
 

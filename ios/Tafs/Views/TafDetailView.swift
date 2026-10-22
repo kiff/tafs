@@ -193,7 +193,7 @@ struct TafDetailView: View {
         // Its usage is the account's Usage, opened from a row with this taf's count (kiff/tafs#184).
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
             Panel {
-                NavigationLink { UsageView().environmentObject(model) } label: {
+                NavigationLink { TafUsageView(tafID: taf.id).environmentObject(model) } label: {
                     HStack {
                         Label("Usage", systemImage: "chart.bar").font(.system(size: 15, weight: .semibold))
                         Spacer()
