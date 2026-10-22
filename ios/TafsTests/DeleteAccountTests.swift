@@ -88,8 +88,8 @@ final class DeleteAccountTests: XCTestCase {
         XCTAssertFalse(writes().contains { $0.hasSuffix("/v1/me/delete") }, "KIFF comes last, only once the rest is done")
         XCTAssertEqual(model.mode, .kiff)
 
-        // planque doesn't know the account any more: that counts as done.
-        StubProtocol.responses["DELETE /v1/accounts/t_01"] = (404, #"{"error":"no such account"}"#)
+        // planque keeps nothing for the account any more: it answers 204, and that's done.
+        StubProtocol.responses["DELETE /v1/accounts/t_01"] = (204, "")
         StubProtocol.responses["POST /v1/me/delete"] = (202, #"{"status":"deleted_pending"}"#)
         let second = await model.deleteAccount()
         XCTAssertTrue(second, model.deleteAccountError ?? "")

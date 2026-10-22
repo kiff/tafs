@@ -189,13 +189,10 @@ final class PlanqueClient {
     }
 
     /// Erases the account in planque (kiff/tafs#185): every connection disconnected, its vendor
-    /// sign-ins revoked, and the enrolment forgotten. An account planque doesn't know is done.
+    /// sign-ins revoked, and the enrolment forgotten. Asked again once nothing is kept, planque
+    /// answers 204 (kiff/planque#45), which is done too.
     func eraseAccount() async throws {
-        do {
-            _ = try await raw("DELETE", "", body: nil)
-        } catch PlanqueError.server(let status, _) where status == 404 {
-            return
-        }
+        _ = try await raw("DELETE", "", body: nil)
     }
 
     /// What a finished vendor sign-in hands back: `tafs://planque/signed-in?tenant&grant&confirm`.
