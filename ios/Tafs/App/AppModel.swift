@@ -1028,6 +1028,23 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// The KIFF agent a taf acts as: what KIFF's usage counts it by.
+    func kiffAgent(for tafID: UUID) -> String? {
+        holderIDs.first(where: { $0.value == tafID })?.key
+    }
+
+    /// The taf's counted tasks this period, from KIFF's `by_agent`; nil until usage is read.
+    func countedTasks(for tafID: UUID) -> Int? {
+        guard let u = usage else { return nil }
+        guard let agent = kiffAgent(for: tafID) else { return 0 }
+        return u.tasks.byAgent?.first { $0.agent == agent }?.counted ?? 0
+    }
+
+    /// The Record entry of a counted task, by KIFF's call key (the usage read's `record`).
+    func recordEntry(forCall key: String) -> RecordEntry? {
+        record.first { $0.entityID == key }
+    }
+
     /// The taf acting as a KIFF agent, by its name; the agent's id when tafs doesn't know it.
     func tafName(forAgent agent: String) -> String {
         cloudTafs[agent]?.name ?? holderIDs[agent].flatMap { taf($0)?.name } ?? agent

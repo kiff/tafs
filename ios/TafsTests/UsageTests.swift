@@ -142,6 +142,43 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(UsageView.notice(u), "Your trial hasn't started.")
     }
 
+    // MARK: The follow-up on #184
+
+    func testATaskCountsWhenItWorkedAndToolsReadAsWords() {
+        XCTAssertTrue(UsageView.taskMeaning.contains("allowed, sent, and that worked"))
+        XCTAssertTrue(UsageView.taskMeaning.contains("lost answers"))
+        XCTAssertEqual(UsageView.toolWords("refund_order"), "Refund order")
+        XCTAssertEqual(UsageView.tafCount(1), "1 task this period")
+        XCTAssertEqual(UsageView.tafCount(9), "9 tasks this period")
+    }
+
+    /// A taf's page counts its own tasks, from KIFF's by_agent under the agent it acts as.
+    func testATafsPageCountsItsOwnTasks() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: RecordingSigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme"}"#)
+        await model.useSession("kiff_dev_x", tenant: "t1")
+        let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" })
+        XCTAssertNil(model.countedTasks(for: rae.id), "nothing until usage is read")
+
+        StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read.replacingOccurrences(
+            of: #"{"agent":"taf-refunds-x7k3","counted":9}"#, with: #"{"agent":"rae-k3f9","counted":9}"#))
+        StubProtocol.responses["GET /v1/me/usage/tasks"] = (200, #"{"items":[],"next":null}"#)
+        await model.refreshUsage()
+        XCTAssertEqual(model.kiffAgent(for: rae.id), "rae-k3f9")
+        XCTAssertEqual(model.countedTasks(for: rae.id), 9)
+        XCTAssertNil(model.recordEntry(forCall: "tc-not-in-the-record"))
+    }
+
     // MARK: AI fair use (kiff/tafs#193)
 
     func testAIUseDecodesAndSaysWhereTheTafsAskWithoutSelling() throws {

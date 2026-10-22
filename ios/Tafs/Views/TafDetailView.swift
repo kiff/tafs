@@ -190,6 +190,21 @@ struct TafDetailView: View {
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked {
             Panel { HaltRow(tafID: taf.id) }
         }
+        // Its usage is the account's Usage, opened from a row with this taf's count (kiff/tafs#184).
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
+            Panel {
+                NavigationLink { UsageView().environmentObject(model) } label: {
+                    HStack {
+                        Label("Usage", systemImage: "chart.bar").font(.system(size: 15, weight: .semibold))
+                        Spacer()
+                        if let n = model.countedTasks(for: taf.id) {
+                            Text(UsageView.tafCount(n)).font(.system(size: 14)).foregroundColor(Theme.soft)
+                        }
+                    }
+                }
+            }
+            .task { if model.usage == nil { await model.refreshUsage() } }
+        }
         // Its versions are a job of their own: their own screen, not another section here.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
             Panel {

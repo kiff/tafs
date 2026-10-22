@@ -69,10 +69,15 @@ struct UsageView: View {
                         Panel {
                             Eyebrow(text: "Counted tasks")
                             ForEach(model.countedTasks) { t in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(model.tafName(forAgent: t.agent)).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
-                                    Text("\(t.tool) · \(t.at.formatted(.relative(presentation: .named)))")
-                                        .font(.system(size: 13)).foregroundColor(Theme.dim)
+                                // Each opens its Record line and receipt, named as the Record names it.
+                                if let entry = model.recordEntry(forCall: t.record) {
+                                    RecordRow(entry: entry, showTaf: true)
+                                } else {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(model.tafName(forAgent: t.agent)).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                                        Text("\(Self.toolWords(t.tool)) · \(t.at.formatted(.relative(presentation: .named)))")
+                                            .font(.system(size: 13)).foregroundColor(Theme.dim)
+                                    }
                                 }
                             }
                         }
@@ -101,10 +106,25 @@ struct UsageView: View {
                 Meter(fraction: Double(u.tasks.counted) / Double(u.tasks.included),
                       color: u.tasks.ceilingReached == true ? Theme.no : Theme.ok)
             }
-            Text("A task is an action a taf took that KIFF allowed and sent. Reads, refusals and anything that failed aren't counted. This period ends \(u.period.end.formatted(date: .abbreviated, time: .omitted)).")
+            Text("\(Self.taskMeaning) This period ends \(u.period.end.formatted(date: .abbreviated, time: .omitted)).")
                 .font(.system(size: 13)).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// A taf's counted tasks this period, for its page's Usage row.
+    static func tafCount(_ n: Int) -> String {
+        n == 1 ? "1 task this period" : "\(n) tasks this period"
+    }
+
+    /// What a task is: counted means done (kiff-cloud#1316), as /pricing says it.
+    static let taskMeaning = "A task is an action a taf took that KIFF allowed, sent, and that worked. Reads, refusals, failures and lost answers aren't counted."
+
+    /// A tool's name in words, for a counted task the app's Record doesn't hold (older than
+    /// what it read): "refund_order" reads "Refund order".
+    static func toolWords(_ tool: String) -> String {
+        let words = tool.replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: "-", with: " ")
+        return words.prefix(1).uppercased() + words.dropFirst()
     }
 
     /// "14 of 25 tasks", or "472 tasks" where nothing is included because there's no limit
