@@ -189,6 +189,30 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(UsageView.toolName(.init(record: "tc-2", agent: "rae-k3f9", tool: "refund_order", at: Date())), "Refund order")
     }
 
+    /// The live read, as KIFF answered the eval account on 22 Oct (kiff-cloud#1337 deployed at
+    /// ebc04927), trimmed to three tafs and one task: it decodes whole, including KIFF's
+    /// microsecond times and an empty tool_title.
+    func testTheLiveReadDecodes() throws {
+        let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(#"""
+        {"plan":"internal","seats":0,"period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"},"tasks":{"counted":448,"included":0,"ceiling":0,"ceiling_reached":false,"by_agent":[{"agent":"e2e-setup","counted":51,"free":{"failed":9,"halted":0,"held_refused":0,"invalid":0,"read":6,"refused":0,"retry":0,"setup_read":0,"trial":0}},{"agent":"reembolsos-vseezv4h","counted":11,"free":{"failed":0,"halted":0,"held_refused":2,"invalid":0,"read":0,"refused":0,"retry":0,"setup_read":0,"trial":2}},{"agent":"reembolsos","counted":0,"free":{"failed":0,"halted":0,"held_refused":0,"invalid":0,"read":0,"refused":0,"retry":0,"setup_read":0,"trial":0}}],"free":{"failed":19,"halted":0,"held_refused":90,"invalid":0,"read":11,"refused":7,"retry":0,"setup_read":0,"trial":4}},"actions":{"counted":927,"included":0,"free":{"failed":152,"halted":0,"held_refused":0,"invalid":0,"read":1348,"refused":157,"retry":0,"setup_read":0,"trial":0}},"trial":null,"ai":{"go_ons":0}}
+        """#.utf8))
+        XCTAssertEqual(u.plan, "internal")
+        XCTAssertEqual(u.tasks.counted, 448)
+        XCTAssertEqual(u.tasks.byAgent?.count, 3)
+        XCTAssertEqual(u.tasks.byAgent?.first?.free?.failed, 9)
+        XCTAssertEqual(u.tasks.byAgent?.filter { $0.counted > 0 }.count, 2, "a taf at 0 isn't shown under By taf")
+        XCTAssertEqual(UsageView.count(u.tasks.counted, of: u.tasks.included, "tasks"), "448 tasks")
+
+        struct Page: Decodable { let items: [KIFFClient.CountedTask]; var next: String? }
+        let page = try KIFFClient.decoder.decode(Page.self, from: Data(#"""
+        {"items":[{"record":"tc-10aa90622c8e13a88b572bb80ff82083bdd0f2c6","agent":"e2e-setup","tool":"api_details_kc8m","at":"2026-10-22T18:44:37.973785Z","tool_title":""}],"next":"MjAyNi0xMC0yMlQxMDoyNTo1MS43ODcyNzlafHRjLWMyODQxMTQyODZjNzcyNGRlYjcyY2M3ZTlhYjg0YzMzNTU2ZmUzMDA"}
+        """#.utf8))
+        let task = try XCTUnwrap(page.items.first)
+        XCTAssertEqual(task.toolTitle, "")
+        XCTAssertEqual(UsageView.toolName(task), "Api details kc8m", "an empty title falls back to the tool in words")
+        XCTAssertNotNil(page.next)
+    }
+
     // MARK: AI fair use (kiff/tafs#193)
 
     func testAIUseDecodesAndSaysWhereTheTafsAskWithoutSelling() throws {

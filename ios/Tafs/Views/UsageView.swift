@@ -45,7 +45,8 @@ struct UsageView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    if let by = u.tasks.byAgent, !by.isEmpty {
+                    // Every taf is listed by KIFF, most at 0 on a busy account: only those that counted.
+                    if let by = u.tasks.byAgent?.filter({ $0.counted > 0 }), !by.isEmpty {
                         Panel {
                             Eyebrow(text: "By taf")
                             ForEach(by, id: \.agent) { a in
