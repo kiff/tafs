@@ -162,10 +162,16 @@ describe("Setup's definition on kiff/agents", () => {
     // On the owner's iPad a read took the charge as `charge` and the vendor wants `id`, so
     // the taf couldn't read it and KIFF couldn't check its currency (kiff/tafs#174).
     expect(flat).toContain("their names aren't the thing's (a read of one charge can take it as id): never guess or rename them");
-    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields (for Stripe, stripe_api_details), ask for it first, in its own small grant");
+    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields (for Stripe, stripe_api_details), ask for it first, as the first tools of the taf's one connection to that vendor");
     // The account list, when it must pin the account, joins that grant: one approval, not two (kiff/tafs#138).
-    expect(flat).toContain("put that tool in the same small grant, with setup_reads: true");
-    expect(flat).toContain("Never in a grant of its own: each grant is one more approval for the owner");
+    expect(flat).toContain("put that tool in the same first tools, with setup_reads: true");
+    // One connection per vendor per taf (kiff/tafs#138, the owner's retest: five Face IDs and Stripe sign-ins).
+    expect(flat).toContain("Never in a connection of its own: each new connection is one more approval and vendor sign-in for the owner");
+    expect(flat).toContain("A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has one to that vendor, add the tool to it");
+    expect(flat).not.toMatch(/small grant/);
+    // A fixed tool joins the same connection: no old connection is left over, only the old tool.
+    expect(flat).toContain("The old tool stays on the connection, unused once the new version is installed: say so in the result's sentence");
+    expect(flat).not.toContain("The old connection is left over");
     expect(flat).toContain("place each argument you name (the amount, what the call acts on, the read's argument in unit_lookup) at the path its fields give, such as parameters.id");
     expect(flat).toContain("Without such a tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares");
     expect(flat).not.toContain("You can't see such an operation's own fields before the owner approves");
@@ -175,7 +181,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("setup_reads goes on that tool only, never on the taf's own reads: those read the owner's account");
     expect(flat).toContain("read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments}, and place each argument you name");
     expect(flat).toContain("It needs no question of its own: the owner already agreed to connect, and its approval is enough");
-    expect(flat).toContain("That small grant doesn't split the owner's questions: ask the ones that don't depend on each other together, in one questions card");
+    expect(flat).toContain("Reading first doesn't split the owner's questions: ask the ones that don't depend on each other together, in one questions card");
     // The account and the mode, pinned on reads too: the owner's taf looked the account
     // up on every message, one more wait each time (kiff/tafs#138, item 58).
     expect(flat).toContain("the account, and the mode, on every tool that takes them, reads included");
