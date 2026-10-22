@@ -104,7 +104,7 @@ struct NewTafFlow: View {
             VStack(alignment: .leading, spacing: 10) {
                 rule("Inside the Card,", "it acts and you get a receipt.", Theme.ok)
                 rule("Outside it,", "it waits for you, here and on your lock screen.", Theme.amber)
-                rule("Revoked,", "it stops at once.", Theme.no)
+                rule("Revoked,", "no new action goes through.", Theme.no)
             }
             Button {
                 issuing = true

@@ -18,7 +18,7 @@ struct DeleteAccountView: View {
                 Section("What goes") {
                     Label("Every taf, with its chats, runs, schedules and memory", systemImage: "person.2")
                     Label("Your tools' sign-ins, disconnected", systemImage: "link")
-                    Label("Your Cards and keys: they stop working at once", systemImage: "creditcard")
+                    Label("Your Cards and keys: they stop working", systemImage: "creditcard")
                     Label("KIFF's records of your account, erased after 30 days", systemImage: "doc.text")
                 }
                 .font(.system(size: 14))
