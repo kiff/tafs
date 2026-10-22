@@ -57,6 +57,11 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                 }
 
+                if model.mode == .kiff, !model.cloudTafs.isEmpty {
+                    // Every taf at once, from its own screen (kiff/kiff-cloud#1061).
+                    Panel { HaltRow(tafID: nil) }
+                }
+
                 ForEach(model.unfinishedRemovals) { r in
                     Panel {
                         Text("\(r.name) isn't fully removed yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)

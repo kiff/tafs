@@ -196,6 +196,56 @@ final class TafsCloud {
         return r.taf
     }
 
+    // MARK: Halt
+
+    /// A halt (kiff/kiff-cloud#1061) of one taf or of the whole account, as tafs cloud reads
+    /// it from kiff/agents and KIFF: halted only once all three hold it.
+    struct Halt: Decodable, Equatable {
+        enum State: String, Decodable { case running, halting, halted }
+        let state: State
+        let haltedAt: Date?
+        /// Who holds it: kiff/agents (no run starts), KIFF's gateway (it refuses the calls),
+        /// planque (it sends nothing to the vendor).
+        let runtime: Bool
+        let kiff: Bool
+        let planque: Bool
+        /// Halted because the whole account is, not on its own.
+        let account: Bool
+        /// How many runs this halt stopped.
+        let stopped: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case state, runtime, kiff, planque, account, stopped
+            case haltedAt = "halted_at"
+        }
+
+        static let running = Halt(state: .running, haltedAt: nil, runtime: false, kiff: false, planque: false, account: false, stopped: nil)
+    }
+
+    private struct HaltResponse: Decodable { let halt: Halt }
+
+    private func haltPath(_ id: String?) -> String {
+        id.map { "/v1/tafs/\(escaped($0))/halt" } ?? "/v1/halt"
+    }
+
+    /// Halts the taf, or with none every taf of the account, in kiff/agents and KIFF at once.
+    func halt(_ id: String?) async throws -> Halt {
+        let r: HaltResponse = try await send("POST", haltPath(id), body: [String: String]())
+        return r.halt
+    }
+
+    func halted(_ id: String?) async throws -> Halt {
+        let r: HaltResponse = try await send("GET", haltPath(id))
+        return r.halt
+    }
+
+    /// Lets kiff/agents run it again, once KIFF has resumed it: the phone resumes it in KIFF
+    /// first, signed with Face ID (`KIFFClient.resume`), and tafs cloud checks that.
+    func releaseHalt(_ id: String?) async throws -> Halt {
+        let r: HaltResponse = try await send("DELETE", haltPath(id))
+        return r.halt
+    }
+
     func runs(_ id: String) async throws -> [Run] {
         struct Response: Decodable { let runs: [Run] }
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/runs")

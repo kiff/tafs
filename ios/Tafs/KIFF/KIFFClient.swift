@@ -50,11 +50,14 @@ final class KIFFClient {
     /// time zone (#1278).
     static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone"]
 
-    /// Whether KIFF takes `path` from a phone only with its signature: the paths above, and
-    /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`).
+    /// Whether KIFF takes `path` from a phone only with its signature: the paths above,
+    /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`), and
+    /// resuming a halt (`/v1/agents/{id}/resume`, `/v1/resume`).
     static func signsSetup(_ path: String) -> Bool {
         if signedSetupPaths.contains(path) { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        // Resuming a halted agent, or the whole account (kiff/kiff-cloud#1061): it gives authority back.
+        if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
     }
 
@@ -587,6 +590,12 @@ final class KIFFClient {
         struct Body: Encodable { let label: String; let roles: [String] }
         let minted: Minted = try await send("POST", "/v1/keys", body: Body(label: "planque", roles: ["connector"]))
         return minted.plaintext
+    }
+
+    /// Resumes a halted agent in KIFF, or with none the whole account (kiff/kiff-cloud#1061).
+    /// KIFF takes it only signed by this phone, after Face ID: set `setupSigner` first.
+    func resume(agent: String?) async throws {
+        let _: Empty = try await send("POST", agent.map { "/v1/agents/\(escaped($0))/resume" } ?? "/v1/resume", body: [String: String]())
     }
 
     // MARK: Transport

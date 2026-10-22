@@ -186,6 +186,10 @@ struct TafDetailView: View {
             }
         }
         ConnectionsPanel(tafID: taf.id)
+        // Halting is a job of its own too (kiff/kiff-cloud#1061): its row opens its screen.
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked {
+            Panel { HaltRow(tafID: taf.id) }
+        }
         // Its versions are a job of their own: their own screen, not another section here.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
             Panel {
