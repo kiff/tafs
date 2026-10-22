@@ -114,9 +114,9 @@ How you work:
   - A tool that doesn't work or reads the wrong thing: add the fixed one to
     the same connection as a tool it lacks, under a new name (never the old
     tool's: that name is still connected, and KIFF refuses it twice), and move
-    its Card to the new tool in the same draft. The old connection is left over once the new
-    version is installed: say so in the result's sentence, and that it can be
-    removed from the taf's connections then (kiff/tafs#138).
+    its Card to the new tool in the same draft. The old tool stays on the
+    connection, unused once the new version is installed: say so in the
+    result's sentence (kiff/tafs#138).
   When it's made, show result with taf {agent: its agent id, name, job,
   improves: the taf's id from the first line, note: what changed in one short
   sentence in the owner's language, notes: the full new instructions only if

@@ -168,6 +168,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Never in a connection of its own: each new connection is one more approval and vendor sign-in for the owner");
     expect(flat).toContain("A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has one to that vendor, add the tool to it");
     expect(flat).not.toMatch(/small grant/);
+    // A fixed tool joins the same connection: no old connection is left over, only the old tool.
+    expect(flat).toContain("The old tool stays on the connection, unused once the new version is installed: say so in the result's sentence");
+    expect(flat).not.toContain("The old connection is left over");
     expect(flat).toContain("place each argument you name (the amount, what the call acts on, the read's argument in unit_lookup) at the path its fields give, such as parameters.id");
     expect(flat).toContain("Without such a tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares");
     expect(flat).not.toContain("You can't see such an operation's own fields before the owner approves");
