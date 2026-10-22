@@ -554,8 +554,8 @@ function need(me: KIFFIdentity, capability: string): void {
 
 async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
   const body = parseBody(event);
-  const name = str(body.name).trim();
-  if (!name || name.length > 60) throw new HTTPError(400, "give the taf a name of 60 characters at most");
+  let name = str(body.name).trim();
+  if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
   let job;
   try { job = jobById(str(body.job)); } catch (err) { throw new HTTPError(400, (err as Error).message); }
   const cron = body.cron === undefined ? job.cron : str(body.cron).trim();
@@ -601,13 +601,25 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
     return agent.agentID;
   };
   let agentID = agentKey ? await check(agentKey) : "";
+  // The name Setup chose, when another taf has it or holds its claim
+  // (kiff/tafs#138): the first free "<name> 2", "<name> 3"…, so the owner
+  // isn't left at a name no retry can get past. A start already under way
+  // keeps its name, and kiff/agents claims a draft into one taf only, so the
+  // same draft can't start two.
+  const names = fromSetup ? await setupNames(me, name, draftID, deps) : [name];
 
   // Two taps, or a retry, must not start two tafs: the name is claimed first.
+  name = names[0] ?? name;
   const taken = new HTTPError(409, `you already have a taf named ${name}`);
   if ((await deps.tafs.list(me.tenantID)).some((t) => t.name === name && t.job !== SETUP_JOB)) throw taken;
   // This start's claim on the name; the taf carries it, so only its removal frees it.
   const nameClaim = randomUUID();
-  if (!(await deps.names.claim(me.tenantID, name, nameClaim))) {
+  let claimed = false;
+  for (const candidate of names) {
+    name = candidate;
+    if ((claimed = await deps.names.claim(me.tenantID, name, nameClaim))) break;
+  }
+  if (!claimed) {
     // Held by an attempt that is still running, or whose outcome was never
     // learned. Nothing proves such an attempt can't still make the taf, so
     // the name stays taken; another name always works.
@@ -666,6 +678,31 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
     throw new HTTPError(502, `${name} is started, but its first run didn't start (${(err as Error).message}). Run it now from the app`);
   }
   return { taf: await view(taf, me, deps), session: run.session };
+}
+
+/** The longest name a taf may have. */
+const MAX_NAME = 60;
+
+/** How many names a Setup start tries before it says the name is taken. */
+const SETUP_NAMES = 10;
+
+/**
+ * The names a Setup start tries, in order: the one this draft's start began
+ * with alone, or name and "<name> 2", "<name> 3"… that no other taf has. The
+ * start claims the first it can; a name claimed with no taf behind it (an
+ * earlier start whose outcome isn't known) moves it on to the next.
+ */
+async function setupNames(me: KIFFIdentity, name: string, draftID: string, deps: Deps): Promise<string[]> {
+  const held = await deps.claims.get(me.tenantID, draftID);
+  if (held) return [held.name];
+  const used = new Set((await deps.tafs.list(me.tenantID)).filter((t) => t.job !== SETUP_JOB).map((t) => t.name));
+  const out: string[] = [];
+  for (let n = 1; n < 100 && out.length < SETUP_NAMES; n++) {
+    const suffix = n === 1 ? "" : ` ${n}`;
+    const candidate = name.slice(0, MAX_NAME - suffix.length).trimEnd() + suffix;
+    if (!used.has(candidate)) out.push(candidate);
+  }
+  return out.length ? out : [name]; // refused below as taken
 }
 
 /**
