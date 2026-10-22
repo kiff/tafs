@@ -18,7 +18,7 @@ struct UsageView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    if model.mode == .kiff, u.plan != "trial", let ceiling = u.tasks.ceiling {
+                    if model.mode == .kiff, u.plan != "trial", let ceiling = u.tasks.ceiling, ceiling > 0 {
                         NavigationLink(destination: CeilingView(current: ceiling, least: max(u.tasks.included, u.tasks.counted)).environmentObject(model)) {
                             Panel {
                                 HStack {
@@ -61,7 +61,7 @@ struct UsageView: View {
                     }
                     Panel {
                         Eyebrow(text: "Your own agents in KIFF")
-                        Text("\(u.actions.counted) of \(u.actions.included) actions").font(.system(size: 15)).foregroundColor(Theme.ink)
+                        Text(Self.count(u.actions.counted, of: u.actions.included, "actions")).font(.system(size: 15)).foregroundColor(Theme.ink)
                         Text("Actions your own agents take through KIFF, apart from the tafs.")
                             .font(.system(size: 13)).foregroundColor(Theme.dim)
                     }
@@ -96,13 +96,21 @@ struct UsageView: View {
     private func tasksPanel(_ u: KIFFClient.Usage) -> some View {
         Panel {
             Eyebrow(text: Self.planName(u.plan))
-            Text("\(u.tasks.counted) of \(u.tasks.included) tasks").font(Theme.display(26)).foregroundColor(Theme.ink)
-            Meter(fraction: Double(u.tasks.counted) / Double(max(u.tasks.included, 1)),
-                  color: u.tasks.ceilingReached == true ? Theme.no : Theme.ok)
+            Text(Self.count(u.tasks.counted, of: u.tasks.included, "tasks")).font(Theme.display(26)).foregroundColor(Theme.ink)
+            if u.tasks.included > 0 {
+                Meter(fraction: Double(u.tasks.counted) / Double(u.tasks.included),
+                      color: u.tasks.ceilingReached == true ? Theme.no : Theme.ok)
+            }
             Text("A task is an action a taf took that KIFF allowed and sent. Reads, refusals and anything that failed aren't counted. This period ends \(u.period.end.formatted(date: .abbreviated, time: .omitted)).")
                 .font(.system(size: 13)).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// "14 of 25 tasks", or "472 tasks" where nothing is included because there's no limit
+    /// (KIFF's `included: 0`, on our own accounts and Company).
+    static func count(_ counted: Int, of included: Int, _ unit: String) -> String {
+        included > 0 ? "\(counted) of \(included) \(unit)" : "\(counted) \(unit)"
     }
 
     static func planName(_ plan: String) -> String {
@@ -124,6 +132,8 @@ struct UsageView: View {
                 : "This month's ceiling is reached. Your tafs are paused until the month ends or the ceiling is raised."
         }
         guard let trial = u.trial else { return nil }
+        // It starts at checkout on the web; the app says so and links nowhere (3.1.3(f)).
+        guard trial.endsAt != nil else { return "Your trial hasn't started." }
         if trial.daysLeft <= 0 { return "Your trial has ended." }
         let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
         let tasks = trial.tasksLeft == 1 ? "1 task" : "\(trial.tasksLeft) tasks"

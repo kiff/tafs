@@ -118,6 +118,30 @@ final class UsageTests: XCTestCase {
         XCTAssertTrue(model.countedTasks.isEmpty)
     }
 
+    /// Our own accounts (internal) and Company have no limit: KIFF sends included 0 and
+    /// ceiling 0, which reads as the count alone, and there's no ceiling to set.
+    func testNoLimitReadsAsTheCountAlone() throws {
+        let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(#"""
+        {"plan":"internal","seats":0,"period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"},
+         "tasks":{"counted":472,"included":0,"ceiling":0,"ceiling_reached":false,"by_agent":[],"free":{}},
+         "actions":{"counted":909,"included":0,"free":{}},"trial":null,"ai":{"go_ons":0}}
+        """#.utf8))
+        XCTAssertEqual(UsageView.count(u.tasks.counted, of: u.tasks.included, "tasks"), "472 tasks")
+        XCTAssertEqual(UsageView.count(u.actions.counted, of: u.actions.included, "actions"), "909 actions")
+        XCTAssertEqual(UsageView.count(14, of: 25, "tasks"), "14 of 25 tasks")
+        XCTAssertEqual(u.tasks.ceiling, 0, "no ceiling row: there's nothing to set")
+        XCTAssertNil(UsageView.notice(u))
+    }
+
+    /// A trial that hasn't started (no checkout yet) decodes, and says so without selling.
+    func testATrialNotStartedDecodesAndSaysSo() throws {
+        let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.replacingOccurrences(
+            of: #""trial":{"ends_at":"2026-10-27T09:12:00Z","days_left":5,"tasks_left":11,"actions_left":460}"#,
+            with: #""trial":{"ends_at":null,"days_left":0,"tasks_left":25,"actions_left":500}"#).utf8))
+        XCTAssertNil(u.trial?.endsAt)
+        XCTAssertEqual(UsageView.notice(u), "Your trial hasn't started.")
+    }
+
     // MARK: AI fair use (kiff/tafs#193)
 
     func testAIUseDecodesAndSaysWhereTheTafsAskWithoutSelling() throws {

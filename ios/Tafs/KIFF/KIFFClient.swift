@@ -304,7 +304,8 @@ final class KIFFClient {
             enum CodingKeys: String, CodingKey { case counted, included, ceiling, ceilingReached = "ceiling_reached", byAgent = "by_agent", free }
         }
         struct Trial: Decodable, Equatable {
-            let endsAt: Date
+            /// Nil until the trial starts: it starts at checkout on the web.
+            let endsAt: Date?
             let daysLeft: Int
             let tasksLeft: Int
             let actionsLeft: Int
