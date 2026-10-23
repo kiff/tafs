@@ -45,18 +45,19 @@ final class KIFFClient {
     /// while a start the owner confirmed with Face ID runs, nil otherwise.
     var setupSigner: (@MainActor (Data) throws -> String)?
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
-    /// starts a taf (kiff-cloud #1217, #1225), the alert target that tells tafs cloud when a
-    /// call is held (#1234), the connector key planque keeps (#1251), the account's time
-    /// zone (#1278), deleting the account (kiff/tafs#185), the month's ceiling of tafs
-    /// tasks (#1316), and the owner's go on past AI fair use (kiff/tafs#193).
+    /// starts a taf, the alert target that tells tafs cloud when a call is held, the connector
+    /// key planque keeps, the account's time zone, deleting the account (kiff/tafs#185), and
+    /// the owner's go on past AI fair use (kiff/tafs#193).
     static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete"]
 
     /// Whether KIFF takes `path` from a phone only with its signature: the paths above,
-    /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`), and
-    /// resuming a halt (`/v1/agents/{id}/resume`, `/v1/resume`).
+    /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`),
+    /// resuming a halt (`/v1/agents/{id}/resume`, `/v1/resume`), and declining a request for
+    /// more tasks (`/v1/me/pack-requests/{id}/decline`).
     static func signsSetup(_ path: String) -> Bool {
         if signedSetupPaths.contains(path) { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        if parts.count == 6 && path.hasPrefix("/v1/me/pack-requests/") && parts[5] == "decline" && !parts[4].isEmpty { return true }
         // Resuming a halted agent, or the whole account (kiff/kiff-cloud#1061): it gives authority back.
         if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
@@ -266,10 +267,10 @@ final class KIFFClient {
         try await send("GET", "/v1/me")
     }
 
-    /// The account's usage this billing period (kiff-cloud#1316): the tafs meter and the KIFF
-    /// meter, what the plan includes, what wasn't counted and why, the owner's ceiling, and the
-    /// trial. Counts only: the app shows no price, no purchase and no call to action (App Store
-    /// Review Guideline 3.1.1).
+    /// The account's usage this billing period: the tafs meter and the KIFF meter, the tasks
+    /// the period has (what the plan includes and the account's packs), what wasn't counted
+    /// and why, who bills the plan, the packs on sale, members' requests for more tasks, and
+    /// the trial.
     struct Usage: Decodable, Equatable {
         struct Period: Decodable, Equatable { let start: Date; let end: Date }
         /// What wasn't counted, by why (kiff-cloud#1316's "never counted").
@@ -305,12 +306,18 @@ final class KIFFClient {
         struct Meter: Decodable, Equatable {
             let counted: Int
             let included: Int
-            /// The tafs meter only: the most tasks a month before the tafs pause and ask.
-            var ceiling: Int?
-            var ceilingReached: Bool?
-            var byAgent: [AgentCount]?
-            var free: Free?
-            enum CodingKeys: String, CodingKey { case counted, included, ceiling, ceilingReached = "ceiling_reached", byAgent = "by_agent", free }
+            /// The tafs meter only: the pack tasks the period has (used in it, and left on
+            /// packs still valid), and the tasks left. `left` is nil where there's no limit.
+            var packs: Int? = nil
+            var left: Int? = nil
+            var byAgent: [AgentCount]? = nil
+            var free: Free? = nil
+            enum CodingKeys: String, CodingKey { case counted, included, packs, left, byAgent = "by_agent", free }
+
+            /// The tasks the period has: what the plan includes and the pack tasks.
+            var total: Int { included + (packs ?? 0) }
+            /// No tasks left: the tafs stop until a pack adds some.
+            var usedUp: Bool { left == 0 }
         }
         struct Trial: Decodable, Equatable {
             /// Nil until the trial starts: it starts at checkout on the web.
@@ -326,6 +333,41 @@ final class KIFFClient {
             var goOns = 0
             enum CodingKeys: String, CodingKey { case goOns = "go_ons" }
         }
+        /// Who bills the plan: "apple", "stripe" (KIFF), "contract", or "" when none does; and
+        /// where it's managed, for a plan Apple bills.
+        struct Billing: Decodable, Equatable {
+            var source: String = ""
+            var manageURL: URL? = nil
+            enum CodingKeys: String, CodingKey { case source, manageURL = "manage_url" }
+        }
+        /// One of the account's packs with tasks left.
+        struct HeldPack: Decodable, Equatable, Identifiable {
+            let id: String
+            let name: String
+            let tasks: Int
+            let tasksLeft: Int
+            let expiresAt: Date
+            enum CodingKeys: String, CodingKey { case id, name, tasks, tasksLeft = "tasks_left", expiresAt = "expires_at" }
+        }
+        /// What the app sells: the account's token for purchases, Solo, and the packs. The
+        /// prices are the App Store's.
+        struct Store: Decodable, Equatable {
+            struct Pack: Decodable, Equatable, Identifiable {
+                let id: String
+                let name: String
+                /// "Rayo · 70 tasks".
+                let line: String
+                let tasks: Int
+                /// How long its tasks last.
+                let months: Int
+                let appleProduct: String
+                enum CodingKeys: String, CodingKey { case id, name, line, tasks, months, appleProduct = "apple_product" }
+            }
+            var appAccountToken: UUID? = nil
+            let soloProduct: String
+            let packs: [Pack]
+            enum CodingKeys: String, CodingKey { case appAccountToken = "app_account_token", soloProduct = "solo_product", packs }
+        }
         let plan: String
         let period: Period
         var tasks: Meter
@@ -334,6 +376,73 @@ final class KIFFClient {
         /// The people the plan pays for (admins and editors); 0 where there's no limit.
         var seats: Int? = nil
         var ai: AI? = nil
+        var billing: Billing? = nil
+        var packList: [HeldPack]? = nil
+        /// Whether this person may add tasks: someone who can't asks an admin.
+        var canAddTasks: Bool? = nil
+        var store: Store? = nil
+        /// Members' requests for more tasks: every open one for someone who may add tasks,
+        /// this person's own otherwise.
+        var requests: [PackRequest]? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case plan, period, tasks, actions, trial, seats, ai, billing, packList = "pack_list", canAddTasks = "can_add_tasks", store, requests
+        }
+    }
+
+    /// A member's request that an admin add a pack.
+    struct PackRequest: Decodable, Equatable, Identifiable {
+        let id: String
+        let askedBy: String
+        let pack: String
+        var reason: String = ""
+        /// open, approved, declined, withdrawn or expired.
+        let status: String
+        let createdAt: Date
+        let expiresAt: Date
+        var note: String? = nil
+        enum CodingKeys: String, CodingKey { case id, askedBy = "asked_by", pack, reason, status, createdAt = "created_at", expiresAt = "expires_at", note }
+
+        init(id: String, askedBy: String, pack: String, reason: String = "", status: String, createdAt: Date, expiresAt: Date, note: String? = nil) {
+            self.id = id; self.askedBy = askedBy; self.pack = pack; self.reason = reason; self.status = status
+            self.createdAt = createdAt; self.expiresAt = expiresAt; self.note = note
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            askedBy = try c.decode(String.self, forKey: .askedBy)
+            pack = try c.decode(String.self, forKey: .pack)
+            reason = try c.decodeIfPresent(String.self, forKey: .reason) ?? ""
+            status = try c.decode(String.self, forKey: .status)
+            createdAt = try c.decode(Date.self, forKey: .createdAt)
+            expiresAt = try c.decode(Date.self, forKey: .expiresAt)
+            note = try c.decodeIfPresent(String.self, forKey: .note)
+        }
+    }
+
+    /// Sends a purchase the App Store reported, as Apple signed it, to KIFF: a plan or a pack
+    /// for this account, with the member's request it answers. The app finishes the purchase
+    /// only once this returns.
+    func recordPurchase(signedTransaction: String, requestID: String? = nil) async throws {
+        var body = ["signed_transaction": signedTransaction]
+        if let requestID { body["request_id"] = requestID }
+        let _: Empty = try await send("POST", "/v1/me/billing/apple/transactions", body: body)
+    }
+
+    /// Asks the account's admins for a pack, with a reason.
+    func askForPack(_ pack: String, reason: String) async throws -> PackRequest {
+        try await send("POST", "/v1/me/pack-requests", body: ["pack": pack, "reason": reason])
+    }
+
+    /// Takes back this person's request.
+    func withdrawRequest(_ id: String) async throws -> PackRequest {
+        try await send("POST", "/v1/me/pack-requests/\(escaped(id))/withdraw", body: [String: String]())
+    }
+
+    /// Declines a member's request, with a note: a signed call from a phone.
+    func declineRequest(_ id: String, note: String) async throws -> PackRequest {
+        try await send("POST", "/v1/me/pack-requests/\(escaped(id))/decline", body: ["note": note])
     }
 
     /// One counted task: the Record behind it, which taf, which tool, and when.

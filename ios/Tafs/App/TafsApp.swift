@@ -27,6 +27,8 @@ struct TafsApp: App {
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
                     push.onOpen = { [weak model] destination in model?.open(destination) }
+                    // From launch: renewals, refunds and purchases made elsewhere reach KIFF.
+                    model.purchases.start()
                     await model.restore()
                     PushDelegate.registerIfAllowed()
                 }

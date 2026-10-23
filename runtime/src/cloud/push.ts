@@ -29,6 +29,8 @@ export interface Device {
   subject: string;
   /** Whether that person may answer held calls (holds.answer): only their phones are alerted. */
   answers: boolean;
+  /** Whether that person may add tasks (billing.manage): only their phones hear of a member's request. */
+  addsTasks?: boolean;
   at: string;
 }
 
@@ -83,6 +85,8 @@ export const MAX_DEVICES = 50;
 /** KIFF's alert outcomes a phone acts on: a call held for its owner, and that call answered. */
 const HELD = "owner_required";
 const ANSWERED = "hold_answered";
+/** A member asked the account's admins for more tasks. */
+export const PACK_REQUESTED = "pack_requested";
 
 /**
  * Checks `KIFF-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, "<t>.<body>")>`
@@ -110,6 +114,7 @@ interface AlertBody {
   event_id?: unknown;
   outcome?: unknown;
   action?: unknown;
+  entity_id?: unknown;
   hold?: { id?: unknown; expires_at?: unknown } | null;
 }
 
@@ -144,17 +149,27 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   if (!signedByKIFF(signature, raw, secrets, deps.now)) throw new PushError(401, "not signed by KIFF");
 
   const outcome = typeof body.outcome === "string" ? body.outcome : "";
-  if (outcome !== HELD && outcome !== ANSWERED) return { ignored: outcome };
+  if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED) return { ignored: outcome };
   const eventID = typeof body.event_id === "string" ? body.event_id : "";
-  const holdID = typeof body.hold?.id === "string" ? body.hold.id : "";
-  if (!eventID || !holdID) throw new PushError(400, "an alert names its event and its held call");
-
-  const n = outcome === HELD ? heldNotification(body, holdID, deps.now) : answeredNotification(holdID);
+  let n: Notification;
+  let to: (d: Device) => boolean;
+  if (outcome === PACK_REQUESTED) {
+    const requestID = typeof body.entity_id === "string" ? body.entity_id : "";
+    if (!eventID || !requestID) throw new PushError(400, "an alert names its event and its request");
+    n = requestNotification(requestID);
+    // Only phones of people who may add tasks: they answer it.
+    to = (d) => d.addsTasks === true;
+  } else {
+    const holdID = typeof body.hold?.id === "string" ? body.hold.id : "";
+    if (!eventID || !holdID) throw new PushError(400, "an alert names its event and its held call");
+    n = outcome === HELD ? heldNotification(body, holdID, deps.now) : answeredNotification(holdID);
+    // Only phones of people who may answer: "a taf needs you" is for them.
+    to = (d) => d.answers;
+  }
   const inFlight = new Date(deps.now.getTime() + IN_FLIGHT_SECONDS * 1000);
   const done = new Date(deps.now.getTime() + DEDUPE_HOURS * 3600_000);
   let sent = 0, failed = 0, sending = 0, already = 0;
-  // Only phones of people who may answer: "a taf needs you" is for them.
-  for (const device of devices.filter((d) => d.answers)) {
+  for (const device of devices.filter(to)) {
     const delivered = `alert#${tenant}#${eventID}#${device.token}`;
     const key = `sending#${tenant}#${eventID}#${device.token}`;
     if (await deps.held(delivered)) { already++; continue; }
@@ -196,6 +211,22 @@ function heldNotification(body: AlertBody, holdID: string, now: Date): Notificat
     },
     collapseID: holdID.slice(0, 64),
     expiresAt: expires && !Number.isNaN(expires.getTime()) && expires > now ? expires : undefined,
+  };
+}
+
+function requestNotification(requestID: string): Notification {
+  return {
+    kind: "alert",
+    payload: {
+      aps: {
+        alert: { title: "More tasks asked for", body: "Someone on your account asks you to add tasks. Open Usage to answer." },
+        sound: "default",
+        "thread-id": "tasks",
+      },
+      open: "usage",
+      request_id: requestID,
+    },
+    collapseID: requestID.slice(0, 64),
   };
 }
 
