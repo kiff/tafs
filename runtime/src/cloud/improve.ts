@@ -146,7 +146,7 @@ export function improveContext(taf: ImprovedTaf, card: CardSummary, calls: Activ
  * read, not the owner's words. Any other message is shown as it is.
  */
 export function ownerWords(text: string): string {
-  if (!text.startsWith("[improve taf ")) return text;
+  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]")) return text;
   const at = text.lastIndexOf("\nThe owner says: ");
   return at < 0 ? text : text.slice(at + "\nThe owner says: ".length).trim();
 }

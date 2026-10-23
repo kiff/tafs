@@ -98,12 +98,21 @@ export interface AgentDefinition {
   planque?: string;
   /** The draft tool: Setup submits a taf's KIFF draft, its claim secret kept from the model (kiff/agents#94). */
   drafts?: boolean;
+  /** Tool name prefixes kept out of the prompt until the model searches for them (kiff/tafs#206). */
+  deferred_tools?: string[];
 }
 
 /** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */
 export interface AIBound {
   period: string;
   bound_micro_usd: number;
+}
+
+/** Where kiff/agents announces a run when it pauses and when it ends (kiff/tafs#206). */
+export interface Notify {
+  url: string;
+  /** tafs cloud's own value for the task: a note with a ref it doesn't hold is dropped. */
+  ref: string;
 }
 
 export type RunStatus = "PENDING" | "RUNNING" | "PAUSED" | "COMPLETED" | "ERROR" | "CANCELLED";
@@ -315,8 +324,8 @@ export class Agents {
   }
 
   /** Starts a trial of version n: a run whose writes KIFF decides without sending. */
-  async startTrial(tenant: string, id: string, n: number, input: string): Promise<Run> {
-    return (await this.call<{ run: Run }>("POST", tenant, ["agents", id, "versions", String(n), "trial"], { input })).run;
+  async startTrial(tenant: string, id: string, n: number, input: string, notify?: Notify): Promise<Run> {
+    return (await this.call<{ run: Run }>("POST", tenant, ["agents", id, "versions", String(n), "trial"], { input, ...(notify ? { notify } : {}) })).run;
   }
 
   /** A trial so far: the run, and what KIFF decided for each write. */
@@ -350,8 +359,19 @@ export class Agents {
    * Starts a run of the agent in the background: in `session` when given, else in a new one.
    * With `ai`, a chat counted toward the period's AI fair use, refused (409) past its bound.
    */
-  startRun(tenant: string, agent: string, input: string, session?: string, ai?: AIBound): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}), ...(ai ? { ai } : {}), background: true });
+  startRun(tenant: string, agent: string, input: string, session?: string, ai?: AIBound, notify?: Notify): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs"], {
+      input, ...(session ? { session_id: session } : {}), ...(ai ? { ai } : {}), ...(notify ? { notify } : {}), background: true,
+    });
+  }
+
+  /**
+   * The agent's runs, newest first, without their paused turn; `active`, only
+   * the ones not ended: what it is doing and waiting on (kiff/tafs#206).
+   */
+  async runs(tenant: string, agent: string, active = false, limit = 20): Promise<Run[]> {
+    const out = await this.call<{ runs: Run[] }>("GET", tenant, ["agents", agent, "runs"], undefined, { limit: String(limit), ...(active ? { active: "true" } : {}) });
+    return out.runs;
   }
 
   /**

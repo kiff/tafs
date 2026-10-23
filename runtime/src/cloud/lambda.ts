@@ -7,6 +7,7 @@ import { apnsSender } from "./apns.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
 import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
+import type { CoachStore } from "./coach.js";
 
 /**
  * kiff/agents, where every taf runs: its API (AWS_IAM function URL, signed
@@ -400,8 +401,64 @@ const accountData: AccountData = {
   },
 };
 
+/**
+ * What Coach's tools keep (kiff/tafs#206), in the same table, each item under
+ * its account's prefix and with a ttl: used permits, operations' answers,
+ * tasks handed over, and the lines Coach hasn't read.
+ */
+const coach: CoachStore = {
+  async once(key, expiresAt) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: TABLE,
+        Item: { id: { S: key }, ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } },
+        ConditionExpression: "attribute_not_exists(id) OR #ttl < :now",
+        ExpressionAttributeNames: { "#ttl": "ttl" },
+        ExpressionAttributeValues: { ":now": { N: String(Math.floor(Date.now() / 1000)) } },
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+  async get(key) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: key } }, ConsistentRead: true }));
+    if (!out.Item || Number(out.Item.ttl?.N ?? 0) * 1000 <= Date.now()) return undefined;
+    if (out.Item.doc?.S !== undefined) return JSON.parse(out.Item.doc.S);
+    if (out.Item.list?.L) return out.Item.list.L.map((v) => JSON.parse(v.S ?? "null"));
+    return undefined;
+  },
+  async put(key, value, expiresAt) {
+    await dynamo.send(new PutItemCommand({
+      TableName: TABLE,
+      Item: { id: { S: key }, doc: { S: JSON.stringify(value) }, ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } },
+    }));
+  },
+  async append(key, item, expiresAt) {
+    await dynamo.send(new UpdateItemCommand({
+      TableName: TABLE,
+      Key: { id: { S: key } },
+      UpdateExpression: "SET #l = list_append(if_not_exists(#l, :empty), :item), #ttl = :ttl",
+      ExpressionAttributeNames: { "#l": "list", "#ttl": "ttl" },
+      ExpressionAttributeValues: {
+        ":empty": { L: [] }, ":item": { L: [{ S: JSON.stringify(item) }] },
+        ":ttl": { N: String(Math.floor(expiresAt.getTime() / 1000)) },
+      },
+    }));
+  },
+  async take(key) {
+    const out = await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: key } }, ReturnValues: "ALL_OLD" }));
+    if (!out.Attributes || Number(out.Attributes.ttl?.N ?? 0) * 1000 <= Date.now()) return [];
+    return (out.Attributes.list?.L ?? []).map((v) => JSON.parse(v.S ?? "null"));
+  },
+  async remove(key) {
+    await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: key } } }));
+  },
+};
+
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach };
 }
 
 /**

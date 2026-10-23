@@ -473,6 +473,9 @@ struct VersionCardSheet: View {
     @Environment(\.dismiss) private var dismiss
     let version: TafsCloud.Version
     let tafID: UUID
+    /// Coach's held install this answers (kiff/tafs#206): approved with the same Face ID,
+    /// once the version is live.
+    var approving: HeldCall? = nil
     @State private var draft: KIFFClient.AgentDraft?
     @State private var loaded = false
 
@@ -515,7 +518,7 @@ struct VersionCardSheet: View {
                     Button("Install this version") {
                         let shown = draft?.version
                         dismiss()
-                        Task { await model.useVersion(version, of: tafID, shownDraft: shown) }
+                        Task { await model.useVersion(version, of: tafID, shownDraft: shown, approving: approving) }
                     }
                     .disabled(draft?.cards == nil)
                 }

@@ -1,4 +1,5 @@
-import { AgentsError, type AIBound, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type Switching, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AIBound, type Notify, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type Switching, type TrialWrite } from "../src/cloud/agents.js";
+import type { CoachStore } from "../src/cloud/coach.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
 /**
@@ -14,6 +15,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   /** AI fair use (kiff/tafs#193): each period's spend by `tenant period`, and the bound each chat came with. */
   const spent = new Map<string, number>();
   const aiSent: Array<AIBound | undefined> = [];
+  /** Where each run asked to be announced (kiff/tafs#206), by run. */
+  const notified = new Map<string, Notify>();
   const fairUse = (tenant: string, ai: AIBound | undefined) => {
     aiSent.push(ai);
     if (ai && ai.bound_micro_usd > 0 && (spent.get(`${tenant} ${ai.period}`) ?? 0) >= ai.bound_micro_usd) {
@@ -141,13 +144,20 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       calls.push(`cancelSwitch ${id}`);
       return switching.delete(k(tenant, id));
     },
-    async startTrial(tenant, id, n, input) {
+    async startTrial(tenant, id, n, input, notify) {
       calls.push(`startTrial ${id} ${n}`);
       if (!(versions.get(k(tenant, id)) ?? []).some((v) => v.n === n)) throw gone();
       const s = openSession(tenant, id, "trial" as Session["kind"]).id;
       const run = newRun(tenant, id, s, "trial", input);
       trialWrites.set(run.id, []);
+      if (notify) notified.set(run.id, notify);
       return run;
+    },
+    async runs(tenant, agent, active = false, limit = 20) {
+      failing("runs");
+      if (!agents.has(k(tenant, agent))) throw gone();
+      const ended = (st: string) => st === "COMPLETED" || st === "ERROR" || st === "CANCELLED";
+      return runs.filter((r) => r.tenant === tenant && r.agent === agent && !(active && ended(r.status))).slice(0, limit).map((r) => ({ ...r }));
     },
     async trial(tenant, id, run) {
       const r = runs.find((x) => x.tenant === tenant && x.agent === id && x.id === run && x.trigger === "trial");
@@ -192,7 +202,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       }
       notes.delete(k(tenant, id));
     },
-    async startRun(tenant, agent, input, session, ai) {
+    async startRun(tenant, agent, input, session, ai, notify) {
       calls.push(`startRun ${agent} ${session ?? "new"}`);
       failing("startRun");
       if (!agents.has(k(tenant, agent))) throw gone();
@@ -204,7 +214,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       } else {
         s = openSession(tenant, agent, "chat").id;
       }
-      return newRun(tenant, agent, s, "owner", input);
+      const run = newRun(tenant, agent, s, "owner", input);
+      if (notify) notified.set(run.id, notify);
+      return run;
     },
     /**
      * A foreground run's stream: the run, then `streamed` (what the test says the
@@ -364,7 +376,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, spent, aiSent, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, halts };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, halts };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */
@@ -466,5 +478,34 @@ export function memoryArchived(): Archived & { held: Map<string, Set<string>> } 
     async add(t, taf, session) { held.set(`${t}#${taf}`, new Set([...(held.get(`${t}#${taf}`) ?? []), session])); },
     async unarchive(t, taf, session) { held.get(`${t}#${taf}`)?.delete(session); },
     async remove(t, taf) { held.delete(`${t}#${taf}`); },
+  };
+}
+
+/** Coach's store in memory (kiff/tafs#206), ttls by the given clock. */
+export function memoryCoach(now: () => Date = () => new Date("2026-10-16T12:00:00Z")): CoachStore & { held: Map<string, { value: unknown; until: number }> } {
+  const held = new Map<string, { value: unknown; until: number }>();
+  const live = (key: string) => {
+    const it = held.get(key);
+    return it && it.until > now().getTime() ? it : undefined;
+  };
+  return {
+    held,
+    async once(key, expiresAt) {
+      if (live(key)) return false;
+      held.set(key, { value: true, until: expiresAt.getTime() });
+      return true;
+    },
+    async get(key) { return structuredClone(live(key)?.value); },
+    async put(key, value, expiresAt) { held.set(key, { value: structuredClone(value), until: expiresAt.getTime() }); },
+    async append(key, item, expiresAt) {
+      const list = (live(key)?.value as unknown[] | undefined) ?? [];
+      held.set(key, { value: [...list, structuredClone(item)], until: expiresAt.getTime() });
+    },
+    async take(key) {
+      const list = (live(key)?.value as unknown[] | undefined) ?? [];
+      held.delete(key);
+      return list;
+    },
+    async remove(key) { held.delete(key); },
   };
 }

@@ -625,11 +625,28 @@ final class TafsCloud {
     /// one chat only (kiff/tafs#73).
     func setupThread(_ id: String, session: String? = nil) async throws -> SetupThread {
         struct Working: Decodable { let session: String }
-        struct Response: Decodable { let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working? }
+        /// One the app can't read is left out, never the thread with it.
+        struct LenientLine: Decodable {
+            let line: CoachLine?
+            init(from decoder: Decoder) throws { line = try? CoachLine(from: decoder) }
+        }
+        struct Response: Decodable {
+            let messages: [ChatMessage]; let components: [LenientShown]?; let working: Working?; let coachLines: [LenientLine]?
+            enum CodingKeys: String, CodingKey { case messages, components, working, coachLines = "coach_lines" }
+        }
         let path = "/v1/tafs/\(escaped(id))/conversation" + (session.map { "/\(escaped($0))" } ?? "")
         let r: Response = try await send("GET", path)
         return SetupThread(messages: r.messages, components: SetupThread.fold((r.components ?? []).compactMap(\.shown)),
-                           working: r.working?.session)
+                           working: r.working?.session, coachLines: (r.coachLines ?? []).compactMap(\.line))
+    }
+
+    /// How a task Coach handed a taf went (kiff/tafs#206), shown in Coach's chat until
+    /// Coach reads it on its next turn.
+    struct CoachLine: Decodable, Equatable, Identifiable {
+        let at: Date
+        let taf: String
+        let said: String
+        var id: String { "\(at.timeIntervalSince1970)|\(taf)|\(said)" }
     }
 
     /// Stops what the agent is doing in `session`: its latest run is cancelled.
@@ -808,6 +825,10 @@ final class TafsCloud {
 
     /// Where KIFF posts the account's held calls, for tafs cloud to push to its phones.
     var alertsURL: URL { URL(string: "/v1/kiff/alerts", relativeTo: baseURL)!.absoluteURL }
+
+    /// Coach's tools (kiff/tafs#206): the MCP server KIFF's gateway calls, and the audience
+    /// its permits name.
+    var mcpURL: URL { URL(string: "/v1/mcp", relativeTo: baseURL)!.absoluteURL }
 
     /// What tafs cloud says after a phone registers: whether this person's phones are alerted
     /// (they may answer held calls), and whether tafs cloud holds a KIFF secret for the account.
