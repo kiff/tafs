@@ -50,6 +50,18 @@ final class LaunchListTests: XCTestCase {
         }
     }
 
+    /// Signing in takes the sign-in screen away, which cancels its task: the first list
+    /// still loads, with no pull to refresh (605 retest).
+    func testSigningInLoadsTheListThoughTheSignInScreenGoesAway() async throws {
+        serve()
+        let model = model()
+        let signIn = Task { await model.useSession("kiff_dev_x", tenant: "tenant-a") }
+        signIn.cancel()
+        await signIn.value
+        XCTAssertTrue(model.listLoaded)
+        XCTAssertEqual(model.tafs.map(\.name), ["Rae"])
+    }
+
     /// The owner's launch: no "working" first and "paused" a moment later. A refresh
     /// shows tafs cloud's list once, as it is, with other agents listed apart.
     func testARefreshShowsTheListOnceWithTafsCloudsStates() async throws {

@@ -300,8 +300,13 @@ final class AppModel: ObservableObject {
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
-        await refresh()
-        await syncPush()
+        // Its own task: switching to .kiff takes the sign-in screen away, which cancels the
+        // task that signed in, and a cancelled refresh would leave the list loaded and empty
+        // ("No tafs yet") until the owner pulled to refresh.
+        await Task { [self] in
+            await refresh()
+            await syncPush()
+        }.value
     }
 
     func signOut() async {
