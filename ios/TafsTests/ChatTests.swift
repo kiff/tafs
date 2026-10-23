@@ -474,7 +474,9 @@ final class ChatTests: XCTestCase {
         await model.chatStreams[id]?.value
         let held = try XCTUnwrap(model.heldCalls(for: id).first)
         let messages = try XCTUnwrap(model.chats[id])
-        let order = model.chatItems(id).map(\.id)
+        // The stub's messages are older than the send, so the copy shown on sending stays too:
+        // the order of what tafs cloud recorded is what's checked.
+        let order = model.chatItems(id).map(\.id).filter { !$0.hasPrefix("m|pending|") }
         XCTAssertEqual(order, ["m|" + messages[0].id, "m|" + messages[1].id, "k|" + AppModel.heldKey(held), "m|" + messages[2].id])
     }
 
