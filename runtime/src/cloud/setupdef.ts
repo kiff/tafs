@@ -19,7 +19,7 @@ export const PLANQUE = "https://planque.kiff.dev";
  * owner waits on every turn, and a setup has many (kiff/tafs#214, item 2); measured
  * against high through kiff/agents' gate.
  */
-export const SETUP_EFFORT: Effort = "medium";
+export const SETUP_EFFORT: Effort = "high";
 
 /** What one setup run may cost at most, in cents. */
 export const SETUP_BUDGET_CENTS = 300;
