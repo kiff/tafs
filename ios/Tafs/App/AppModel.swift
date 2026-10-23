@@ -510,10 +510,13 @@ final class AppModel: ObservableObject {
         guard mode == .kiff else { playNextDemoActions(); return }
         refreshing = true
         let gen = accountGeneration
+        // Dropped before its answer: the list wasn't read, so it isn't shown as loaded (and
+        // empty). The next refresh reads it.
+        var cancelled = false
         defer {
             refreshing = false
             // Read or not, this account's list is no longer loading (KIFF's error shows).
-            if mode == .kiff, gen == accountGeneration { listLoaded = true }
+            if mode == .kiff, gen == accountGeneration, !cancelled { listLoaded = true }
         }
         do {
             // One list per refresh (#91), made by tafs cloud from its tafs and KIFF's Cards
@@ -553,7 +556,9 @@ final class AppModel: ObservableObject {
         } catch is CancellationError {
             // A refresh the app itself dropped (a newer one, a view that went away): not an
             // error to show (the Mac's "Couldn't reach KIFF: cancelled", kiff/tafs#85).
+            cancelled = true
         } catch let error as URLError where error.code == .cancelled {
+            cancelled = true
         } catch let error as TafsCloud.CloudError {
             lastError = "Couldn't load your tafs: \(error.localizedDescription)"
             if !listLoaded { listUnread = true }
