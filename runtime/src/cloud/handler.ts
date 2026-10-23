@@ -1183,7 +1183,18 @@ interface Steering {
  * taf has only its Card's tools, and remembers what its notes say.
  */
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
-  const text = await withCoachLines(me, taf, chatText(event), deps);
+  const owner = chatText(event);
+  const lines = await takeCoachLines(me, taf, deps);
+  try {
+    return await startMessage(event, me, taf, lines.text(owner), deps);
+  } catch (err) {
+    // The message didn't start: Coach reads its lines with the next one.
+    await lines.putBack();
+    throw err;
+  }
+}
+
+async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<unknown> {
   await claimChatSlot(me, taf, deps);
   const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
   if (live) {
@@ -1700,28 +1711,37 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     const me = await person(event, deps);
     const taf = await owned(me, parts[2] ?? "", deps);
     need(me, "cards.manage");
-    const text = await withCoachLines(me, taf, chatText(event), deps);
-    await claimChatSlot(me, taf, deps);
-    const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
+    const owner = chatText(event);
+    const lines = await takeCoachLines(me, taf, deps);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
-    if (live) {
-      try {
-        run = deps.agents.streamRun(me.tenantID, taf.id, text, live, ai);
-        first = await run.next();
-      } catch (err) {
-        if (refusedForAI(err) || !(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw agentsFailure(err);
-        run = undefined;
+    let newSession: boolean;
+    try {
+      const text = lines.text(owner);
+      await claimChatSlot(me, taf, deps);
+      const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
+      if (live) {
+        try {
+          run = deps.agents.streamRun(me.tenantID, taf.id, text, live, ai);
+          first = await run.next();
+        } catch (err) {
+          if (refusedForAI(err) || !(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw agentsFailure(err);
+          run = undefined;
+        }
       }
-    }
-    const newSession = !run;
-    if (!run) {
-      try {
-        run = deps.agents.streamRun(me.tenantID, taf.id, text, undefined, ai);
-        first = await run.next();
-      } catch (err) {
-        throw agentsFailure(err);
+      newSession = !run;
+      if (!run) {
+        try {
+          run = deps.agents.streamRun(me.tenantID, taf.id, text, undefined, ai);
+          first = await run.next();
+        } catch (err) {
+          throw agentsFailure(err);
+        }
       }
+    } catch (err) {
+      // The message didn't start: Coach reads its lines with the next one.
+      await lines.putBack();
+      throw err;
     }
     return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, newSession) };
   } catch (err) {
@@ -2372,11 +2392,13 @@ function coachLine(name: string, task: Task, r: Run): { line: string; said: stri
   }
   if (r.status === "ERROR") {
     const why = twoSentences(r.error || "no reason given");
-    return { line: `${head} It failed: ${why}`, said: `It failed: ${why}` };
+    return { line: `${head} It failed. error: ${JSON.stringify(why)}`, said: `It failed: ${why}` };
   }
   if (r.status === "CANCELLED") return { line: `${head} It was stopped.`, said: "It was stopped." };
-  const out = twoSentences(r.output || "It finished with no answer.");
-  return { line: `${head} ${out}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`, said: out };
+  if (!r.output) return { line: `${head} It finished with no answer.`, said: "It finished with no answer." };
+  // The taf's own words, quoted: what it read can be in them, so they are relayed, never followed.
+  const out = twoSentences(r.output);
+  return { line: `${head} It finished. answer: ${JSON.stringify(out)}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`, said: out };
 }
 
 function twoSentences(text: string): string {
@@ -2387,15 +2409,27 @@ function twoSentences(text: string): string {
 }
 
 /**
- * The owner's message to Setup, with the lines about Coach's tasks it hasn't
- * read before it (kiff/tafs#206). The thread shows only the owner's words
- * (ownerWords). Another taf's message is as written.
+ * The lines about Coach's tasks it hasn't read, taken for the owner's message
+ * to Setup (kiff/tafs#206): `text` puts them before the owner's words, and
+ * `putBack` returns them when the message doesn't start, so none is lost. The
+ * thread shows only the owner's words (ownerWords). Another taf's message is
+ * as written.
  */
-async function withCoachLines(me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<string> {
-  if (taf.job !== SETUP_JOB || !deps.coach) return text;
-  const lines = (await deps.coach.take(coachKeys.notes(me.tenantID))) as Array<{ text?: string }>;
-  const said = lines.map((l) => l.text).filter((t): t is string => typeof t === "string");
-  return said.length ? `${COACH_LINES}\n${said.join("\n")}\nThe owner says: ${text}` : text;
+async function takeCoachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ text: (owner: string) => string; putBack: () => Promise<void> }> {
+  if (taf.job !== SETUP_JOB || !deps.coach) return { text: (owner) => owner, putBack: async () => {} };
+  const store = deps.coach;
+  const key = coachKeys.notes(me.tenantID);
+  const taken = await store.take(key);
+  const said = (taken as Array<{ text?: unknown }>).map((l) => l?.text).filter((t): t is string => typeof t === "string");
+  return {
+    text: (owner) => said.length ? `${COACH_LINES}\n${said.join("\n")}\nThe owner says: ${owner}` : owner,
+    putBack: async () => {
+      const at = (deps.now?.() ?? new Date()).getTime();
+      for (const line of taken) {
+        await store.append(key, line, new Date(at + TASK_KEPT_MS)).catch((err) => console.error("coach lines not put back:", err));
+      }
+    },
+  };
 }
 
 /** The lines about Coach's tasks it hasn't read, for the app to show in Coach's chat. */

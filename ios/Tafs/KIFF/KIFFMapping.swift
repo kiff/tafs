@@ -227,7 +227,9 @@ enum KIFFMapping {
                            bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
     }
 
-    static func held(_ e: KIFFClient.CardException, tafID: UUID) -> HeldCall {
+    /// `coach`: the account's Setup agent, once the app has connected Coach's tools itself; a
+    /// held version_install is Coach's only from it (kiff/tafs#206).
+    static func held(_ e: KIFFClient.CardException, tafID: UUID, coach: String? = nil) -> HeldCall {
         let reason = moneyReason(e) ?? e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
         // A gateway call is filed under its tool call's id, which says nothing to the owner:
         // what it's on is in its arguments, as KIFF keeps them (kiff/tafs#102).
@@ -247,13 +249,16 @@ enum KIFFMapping {
         call.accountingVersion = e.accountingVersion
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)
-        call.install = install(of: e)
+        call.install = install(of: e, coach: coach)
         return call
     }
 
-    /// The version a held version_install of Coach's names (kiff/tafs#206), or nil.
-    static func install(of e: KIFFClient.CardException) -> VersionInstall? {
-        guard e.action == "version_install" || e.action.hasSuffix(".version_install") || e.action.hasSuffix(":version_install"),
+    /// The version a held version_install of Coach's names (kiff/tafs#206), or nil. Coach's only:
+    /// held from `coach`, the account's Setup agent, on the connection the app made, which KIFF
+    /// names the action after (a name is one connection per account). Anything else is an
+    /// ordinary held call.
+    static func install(of e: KIFFClient.CardException, coach: String?) -> VersionInstall? {
+        guard let coach, !coach.isEmpty, e.subject == coach, e.action == "version_install",
               let taf = e.arguments?["taf"]?.text, !taf.isEmpty,
               let n = e.arguments?["n"].flatMap({ Int($0.text) }), n > 0 else { return nil }
         return VersionInstall(taf: taf, n: n)

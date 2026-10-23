@@ -409,17 +409,23 @@ final class AppModel: ObservableObject {
 
     /// Gives Coach its tools (kiff/tafs#206), inside a step the owner just confirmed with Face
     /// ID, so no new prompt: each of the seven tools on tafs cloud's server connected in KIFF
-    /// as the account's control server, one at a time, the ones there already skipped; then
-    /// Coach's Cards, which name them. Each request is signed just before it's sent. Once
-    /// done for the account on this phone, it isn't asked again; sending the Cards again would
-    /// only revise them.
+    /// as the account's control server, one at a time; then Coach's Cards, which name them.
+    /// A connection there already counts only when it's this server's control connection: a
+    /// name another server holds stops it before any Card, since the Cards grant by name. Each
+    /// request is signed just before it's sent. Done once per Coach (its Setup agent) and
+    /// server on this phone: a new Coach gets its Cards at the next confirmed step.
     private func keepCoachTools(tenant: String, gen: Int) async {
-        let doneKey = "coachTools.\(tenant)"
-        guard !UserDefaults.standard.bool(forKey: doneKey), kiff.setupSigner != nil,
-              let agent = setupTaf?.kiffAgent, !agent.isEmpty else { return }
+        guard kiff.setupSigner != nil, let agent = setupTaf?.kiffAgent, !agent.isEmpty else { return }
+        let doneKey = coachToolsKey(tenant: tenant, agent: agent)
+        guard !UserDefaults.standard.bool(forKey: doneKey) else { return }
         do {
-            let there = try await kiff.connectionNames()
-            for tool in KIFFClient.coachTools where !there.contains(tool.name) {
+            let plan = KIFFClient.coachToolsPlan(try await kiff.connections(), mcp: cloud.mcpURL)
+            guard gen == accountGeneration else { return }
+            if let taken = plan.taken {
+                lastError = "Coach can't have its tools yet: another tool in KIFF is named \(taken). Rename or remove it in KIFF."
+                return
+            }
+            for tool in plan.missing {
                 guard gen == accountGeneration else { return }
                 try await kiff.connectCoachTool(tool.name, readOnly: tool.readOnly, mcp: cloud.mcpURL)
             }
@@ -429,6 +435,23 @@ final class AppModel: ObservableObject {
         } catch {
             // Not now: Coach does without its tools until the next confirmed step.
         }
+    }
+
+    /// Where this phone remembers Coach's tools are given: per account, Coach and server.
+    private func coachToolsKey(tenant: String, agent: String) -> String {
+        Self.coachToolsKey(tenant: tenant, agent: agent, mcp: cloud.mcpURL)
+    }
+
+    static func coachToolsKey(tenant: String, agent: String, mcp: URL) -> String {
+        "coachTools.\(tenant).\(agent).\(mcp.absoluteString)"
+    }
+
+    /// The account's Coach, once this phone gave it its tools; nil before. Only its held
+    /// version_install is an install (kiff/tafs#206).
+    private var coachWithTools: String? {
+        guard let tenant = kiffTenant, let agent = setupTaf?.kiffAgent, !agent.isEmpty,
+              UserDefaults.standard.bool(forKey: coachToolsKey(tenant: tenant, agent: agent)) else { return nil }
+        return agent
     }
 
     /// iOS gave this phone a push token (at launch, and whenever it changes).
@@ -592,7 +615,8 @@ final class AppModel: ObservableObject {
         unfinishedRemovals = home.removing
         tafs = home.tafs.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
         otherAgents = home.others.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
-        held = exceptions.map { KIFFMapping.held($0, tafID: holderID($0.subject)) }
+        let coach = coachWithTools
+        held = exceptions.map { KIFFMapping.held($0, tafID: holderID($0.subject), coach: coach) }
         listLoaded = true
         listUnread = false
         rememberList()

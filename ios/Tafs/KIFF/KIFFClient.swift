@@ -669,13 +669,33 @@ final class KIFFClient {
         ("taf_pause", false), ("version_try", false), ("version_install", false),
     ]
 
-    /// The names of the account's tool connections in KIFF's gateway.
-    func connectionNames() async throws -> Set<String> {
-        struct One: Decodable { let name: String? }
-        struct Wrapped: Decodable { let connections: [One] }
+    /// One of the account's tool connections in KIFF's gateway: its name (a held call's action),
+    /// the server it reaches, and whether it's the account's control server.
+    struct Connection: Decodable, Equatable {
+        let name: String
+        let url: String?
+        let control: Bool?
+    }
+
+    /// The account's tool connections in KIFF's gateway.
+    func connections() async throws -> [Connection] {
+        struct Wrapped: Decodable { let connections: [Connection] }
         let raw: RawBody = try await send("GET", "/v1/connections", base: gatewayURL)
-        let list = (try? JSONDecoder().decode(Wrapped.self, from: raw.data).connections) ?? (try? JSONDecoder().decode([One].self, from: raw.data)) ?? []
-        return Set(list.compactMap(\.name))
+        return (try? JSONDecoder().decode(Wrapped.self, from: raw.data).connections) ?? (try? JSONDecoder().decode([Connection].self, from: raw.data)) ?? []
+    }
+
+    /// What giving Coach its tools needs, from the account's connections: the tools still to
+    /// connect, or the first name another connection holds. One there counts as Coach's only
+    /// when it's tafs cloud's server (`mcp`) as the control server: Coach's Cards grant by name,
+    /// so any other would put a vendor's tool on them.
+    static func coachToolsPlan(_ there: [Connection], mcp: URL) -> (missing: [(name: String, readOnly: Bool)], taken: String?) {
+        let byName = Dictionary(there.map { ($0.name, $0) }, uniquingKeysWith: { a, _ in a })
+        var missing: [(name: String, readOnly: Bool)] = []
+        for tool in coachTools {
+            guard let c = byName[tool.name] else { missing.append(tool); continue }
+            if c.url != mcp.absoluteString || c.control != true { return ([], tool.name) }
+        }
+        return (missing, nil)
     }
 
     /// Connects one of Coach's tools on tafs cloud's server (`mcp`) as the account's own control

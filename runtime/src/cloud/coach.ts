@@ -255,7 +255,11 @@ async function call(name: unknown, rawArgs: unknown, token: string | undefined, 
   } catch (err) {
     if (!(err instanceof ToolRefusal)) {
       cfg.log?.(`coach tool ${tool.name} failed`, err);
-      return text("tafs couldn't do that just now. Nothing was changed by this call; try again in a moment.", true);
+      // Free the operation, so a retry isn't "already under way" for an hour.
+      await cfg.store.remove(`${opKey}#claim`).catch((e) => cfg.log?.("coach claim not freed", e));
+      return text(tool.read
+        ? "tafs couldn't read that just now: try again in a moment."
+        : "tafs couldn't finish that just now, and it may have started before it failed. Check with tafs_state before trying again.", true);
     }
     answer = text(err.message, true);
   }

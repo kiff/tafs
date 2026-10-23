@@ -1,7 +1,7 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { OP_ARG, TOOLS } from "../src/cloud/coach.js";
-import { type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -184,7 +184,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect((await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref: "bm8.unknown" })).body).toEqual({ taken: false });
     expect((await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref })).body).toEqual({ taken: true });
     const steered = w.agents.runs.find((r) => r.id === coachRun.id)!.steering!;
-    expect(steered.at(-1)!.text).toBe(`[taf Refunds run ${task.json.run} ended: Refund order 42] Refunded order 42. It was 30 EUR.`);
+    expect(steered.at(-1)!.text).toBe(`[taf Refunds run ${task.json.run} ended: Refund order 42] It finished. answer: "Refunded order 42. It was 30 EUR."`);
     // Once ended, the ref is spent.
     expect((await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref })).body).toEqual({ taken: false });
   });
@@ -199,10 +199,39 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(before.body.coach_lines).toEqual([{ at: "2026-10-16T12:00:00.000Z", taf: "Refunds", said: "It failed: Stripe said no." }]);
     await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana");
     const sent = w.agents.events.get(w.agents.runs[0]!.session)!.at(-1)!.body as { text: string };
-    expect(sent.text).toBe(`[tafs coach lines]\n[taf Refunds run ${task.json.run} ended: Refund order 42] It failed: Stripe said no.\nThe owner says: How did it go?`);
+    expect(sent.text).toBe(`[tafs coach lines]\n[taf Refunds run ${task.json.run} ended: Refund order 42] It failed. error: "Stripe said no."\nThe owner says: How did it go?`);
     const after = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana");
     expect(after.body.coach_lines).toBeUndefined();
     expect(after.body.messages.at(-1)).toMatchObject({ from: "owner", text: "How did it go?" });
+  });
+
+  it("a message that doesn't start leaves Coach's lines for the next one", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
+    await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "ERROR", ref });
+    // Every slot in this window taken: the owner's message is refused.
+    const bucket = Math.floor(Date.parse("2026-10-16T12:00:00Z") / (CHAT.floodMinutes * 60_000));
+    for (let n = 0; n < CHAT.floodMessages; n++) (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`rate#${T}#${SETUP}#${bucket}#${n}`);
+    expect((await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana")).status).toBe(429);
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
+    // kiff/agents failing keeps them too.
+    (w.deps.slots as ReturnType<typeof memorySlots>).taken.clear();
+    w.agents.fail.set("startRun", new Error("kiff/agents is down"));
+    expect((await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana")).status).toBe(502);
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
+  });
+
+  it("a tool that fails frees its operation, and doesn't say nothing changed", async () => {
+    const w = world();
+    w.agents.fail.set("startRun", new Error("kiff/agents is down"));
+    const failed = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { op: "op_retry" });
+    expect(failed).toMatchObject({ isError: true, text: expect.stringContaining("may have started") });
+    expect(failed.text).not.toContain("Nothing was changed");
+    const again = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { op: "op_retry" });
+    expect(again.isError).toBe(false);
+    expect(again.json).toMatchObject({ taf: "Refunds" });
   });
 
   it("a paused task tells Coach it waits for the owner, and keeps its ref for the end", async () => {

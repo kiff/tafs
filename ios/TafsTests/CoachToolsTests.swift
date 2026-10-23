@@ -5,9 +5,9 @@ import XCTest
 /// control server, Coach's Cards over it, its held installs, and how its tasks went.
 @MainActor
 final class CoachToolsTests: XCTestCase {
-    private func held(action: String, arguments: String) throws -> KIFFClient.CardException {
+    private func held(action: String, arguments: String, subject: String = "setup-acme") throws -> KIFFClient.CardException {
         let json = """
-        {"id":"ce_9","proposal_id":"p9","subject":"setup-acme","action":"\(action)","entity_id":"call_9","title":"Install a version",
+        {"id":"ce_9","proposal_id":"p9","subject":"\(subject)","action":"\(action)","entity_id":"call_9","title":"Install a version",
           "status":"held","breaches":[{"mandate_id":"coach-version-install","outcome":"limit_reached","quantity":"count","limit":0}],
           "arguments":\(arguments),"created_at":"2026-10-23T18:00:00Z","expires_at":"2099-10-23T18:10:00Z","accounting_version":1}
         """
@@ -15,11 +15,41 @@ final class CoachToolsTests: XCTestCase {
     }
 
     func testAHeldInstallOfCoachsNamesItsTafAndVersion() throws {
-        let call = KIFFMapping.held(try held(action: "version_install", arguments: #"{"taf":"taf-aaaa","n":2,"tafs_op":"op_1"}"#), tafID: UUID())
+        let call = KIFFMapping.held(try held(action: "version_install", arguments: #"{"taf":"taf-aaaa","n":2,"tafs_op":"op_1"}"#), tafID: UUID(), coach: "setup-acme")
         XCTAssertEqual(call.install, VersionInstall(taf: "taf-aaaa", n: 2))
-        XCTAssertNil(KIFFMapping.held(try held(action: "taf_task", arguments: #"{"taf":"taf-aaaa","text":"go"}"#), tafID: UUID()).install)
-        XCTAssertNil(KIFFMapping.held(try held(action: "version_install", arguments: #"{"taf":"taf-aaaa","n":"two"}"#), tafID: UUID()).install,
+        XCTAssertNil(KIFFMapping.held(try held(action: "taf_task", arguments: #"{"taf":"taf-aaaa","text":"go"}"#), tafID: UUID(), coach: "setup-acme").install)
+        XCTAssertNil(KIFFMapping.held(try held(action: "version_install", arguments: #"{"taf":"taf-aaaa","n":"two"}"#), tafID: UUID(), coach: "setup-acme").install,
                      "no version to install: an ordinary held call")
+    }
+
+    func testAnotherAgentsVersionInstallIsAnOrdinaryHeldCall() throws {
+        let args = #"{"taf":"taf-aaaa","n":2,"tafs_op":"op_1"}"#
+        XCTAssertNil(KIFFMapping.held(try held(action: "version_install", arguments: args, subject: "refunds-acme"), tafID: UUID(), coach: "setup-acme").install,
+                     "only Coach's own call installs")
+        XCTAssertNil(KIFFMapping.held(try held(action: "version_install", arguments: args), tafID: UUID(), coach: nil).install,
+                     "before the app gave Coach its tools, the name isn't known to be its connection")
+        XCTAssertNil(KIFFMapping.held(try held(action: "vendor.version_install", arguments: args), tafID: UUID(), coach: "setup-acme").install)
+    }
+
+    func testCoachsToolsAreOnlyTafsCloudsControlConnections() {
+        let mcp = URL(string: "https://cloud.test/v1/mcp")!
+        let ours = KIFFClient.Connection(name: "tafs_state", url: mcp.absoluteString, control: true)
+        let fresh = KIFFClient.coachToolsPlan([ours], mcp: mcp)
+        XCTAssertNil(fresh.taken)
+        XCTAssertEqual(fresh.missing.map(\.name), ["taf_run", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"])
+        let vendor = KIFFClient.Connection(name: "run_stop", url: "https://vendor.test/mcp", control: false)
+        let blocked = KIFFClient.coachToolsPlan([ours, vendor], mcp: mcp)
+        XCTAssertEqual(blocked.taken, "run_stop", "a vendor's tool of the same name stops it before any Card")
+        XCTAssertTrue(blocked.missing.isEmpty)
+        let notControl = KIFFClient.Connection(name: "taf_task", url: mcp.absoluteString, control: false)
+        XCTAssertEqual(KIFFClient.coachToolsPlan([notControl], mcp: mcp).taken, "taf_task")
+    }
+
+    func testCoachsToolsAreRememberedPerCoachAndServer() {
+        let mcp = URL(string: "https://cloud.test/v1/mcp")!
+        let first = AppModel.coachToolsKey(tenant: "t1", agent: "setup-1", mcp: mcp)
+        XCTAssertNotEqual(first, AppModel.coachToolsKey(tenant: "t1", agent: "setup-2", mcp: mcp), "a new Coach gets its Cards")
+        XCTAssertNotEqual(first, AppModel.coachToolsKey(tenant: "t1", agent: "setup-1", mcp: URL(string: "https://other.test/v1/mcp")!))
     }
 
     func testCoachsToolsAreConnectedSignedOnTheGatewayAndItsCardsDrafted() async throws {
