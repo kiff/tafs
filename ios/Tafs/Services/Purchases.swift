@@ -2,6 +2,8 @@ import Foundation
 import StoreKit
 #if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
 #endif
 
 /// A product as the app shows it: its name and the price the App Store gives, and, for Solo,
@@ -160,6 +162,8 @@ final class Purchases: ObservableObject {
             return
         }
         if let url = URL(string: "https://apps.apple.com/account/subscriptions") { _ = await UIApplication.shared.open(url) }
+        #elseif os(macOS)
+        if let url = URL(string: "https://apps.apple.com/account/subscriptions") { NSWorkspace.shared.open(url) }
         #endif
     }
 }
