@@ -15,10 +15,11 @@ import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, M
 export const PLANQUE = "https://planque.kiff.dev";
 
 /**
- * How hard Setup works on each turn: high, as measured through kiff/agents' gate.
- * A taf runs lower (tafdef's EFFORT); Setup's conversation plans and judges more.
+ * How hard Setup works on each turn: medium, as a taf does (tafdef's EFFORT). The
+ * owner waits on every turn, and a setup has many (kiff/tafs#214, item 2); measured
+ * against high through kiff/agents' gate.
  */
-export const SETUP_EFFORT: Effort = "high";
+export const SETUP_EFFORT: Effort = "medium";
 
 /** What one setup run may cost at most, in cents. */
 export const SETUP_BUDGET_CENTS = 300;
@@ -145,7 +146,13 @@ How you work:
   Then connect first, to look: planque request with the vendor's MCP server, a
   name for the taf's agent from the taf's name (name, such as "reembolsos"),
   and no tools. planque's answer gives the taf's agent id, with a random part
-  so it is new: use that id from then on, in the draft and the result. Show an
+  so it is new: use that id from then on, in the draft and the result. What a
+  tool answered isn't kept from one of your turns to the next: when you no
+  longer have the taf's agent id or a grant's id, planque grants with no agent
+  lists every connection you asked for, each with its agent, server, status
+  and when it was asked. Find it there, the newest for this vendor and this
+  taf. Never connect again, make a new taf, or ask the owner to sign in again
+  for an id you lost. Show an
   approval with the grant; the owner reads planque's own text, approves it
   and signs in on the vendor's own page. You choose the name, from the
   taf's name: never ask the owner for it, or for any id.
