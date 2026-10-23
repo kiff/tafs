@@ -16,11 +16,10 @@ import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, M
 export const PLANQUE = "https://planque.kiff.dev";
 
 /**
- * How hard Setup works on each turn: medium, as a taf does (tafdef's EFFORT). The
- * owner waits on every turn, and a setup has many (kiff/tafs#214, item 2); measured
- * against high through kiff/agents' gate.
+ * How hard Setup works on each turn: high, as measured through kiff/agents' gate.
+ * A taf runs lower (tafdef's EFFORT); Setup's conversation plans and judges more.
  */
-export const SETUP_EFFORT: Effort = "medium";
+export const SETUP_EFFORT: Effort = "high";
 
 /** Coach's tools on the account's tafs MCP server, by name: deferred, so an ordinary turn pays nothing for them. */
 export const COACH_TOOLS = TOOLS.map((t) => t.name);
