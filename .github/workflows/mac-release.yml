@@ -98,7 +98,7 @@ jobs:
           spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"
 
       - name: Keep the DMG
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: tafs-mac
           path: ${{ env.DMG }}
