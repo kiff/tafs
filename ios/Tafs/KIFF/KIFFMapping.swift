@@ -133,7 +133,7 @@ enum KIFFMapping {
             let detail: String
             switch c.outcome {
             case "allowed":
-                (kind, detail) = executed(c.toolOutcome, approved: c.held, vendor: vendors[c.actionName], moves: c.amount != nil && c.readOnly != true)
+                (kind, detail) = executed(c.toolOutcome, approved: c.held, vendor: vendors[c.actionName], counts: counted(c))
             case "owner_required", "approval_required":
                 kind = .held; detail = "Waiting for you"
             default:
@@ -157,11 +157,26 @@ enum KIFFMapping {
         }
     }
 
+    /// What a write's amount counts on the Card's totals: money when its unit is a currency,
+    /// some other unit (a count of anything) when it isn't, or nothing.
+    enum Counted { case money, amount, nothing }
+
+    static func counted(_ c: KIFFClient.ActivityCall) -> Counted {
+        guard let amount = c.amount, c.readOnly != true else { return .nothing }
+        return isCurrency(amount.unit) ? .money : .amount
+    }
+
+    /// An ISO 4217 code: a gateway's unit can name anything, so only a currency is money.
+    static func isCurrency(_ unit: String?) -> Bool {
+        guard let unit, unit.count == 3 else { return false }
+        return Locale.commonISOCurrencyCodes.contains(unit.uppercased())
+    }
+
     /// What the tool did with an allowed call: its kind and the words for it. approved: the
     /// owner approved it, held first.
     /// A call the vendor refused still counts against the Card's totals (kiff-cloud#1344): it
     /// says so plainly, naming the vendor as connected.
-    static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, moves: Bool = false) -> (RecordEntry.Kind, String) {
+    static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, counts: Counted = .nothing) -> (RecordEntry.Kind, String) {
         let why = o?.message.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
         let allowed = approved ? "Approved by you" : "Allowed by its Card"
         switch o?.status {
@@ -169,9 +184,11 @@ enum KIFFMapping {
             return approved ? (.approved, "Approved by you, then done") : (.done, "Done, within its Card")
         case "refused_by_tool"?:
             let who = vendor ?? "The tool"
-            return (.notDone, moves
-                ? "\(who) refused it. No money moved, but it still counts against today's total."
-                : "\(who) refused it, and it still counts toward today's limits\(why)")
+            switch counts {
+            case .money: return (.notDone, "\(who) refused it. No money moved, but it still counts against today's total.")
+            case .amount: return (.notDone, "\(who) refused it. Nothing was done, but it still counts against today's total.")
+            case .nothing: return (.notDone, "\(who) refused it, and it still counts toward today's limits\(why)")
+            }
         case "not_sent"?:
             return (.notDone, "\(allowed), but it couldn't be sent: nothing reached the tool\(why)")
         case "sending"?:

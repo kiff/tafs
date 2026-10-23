@@ -129,10 +129,31 @@ final class RecordFieldsTests: XCTestCase {
     /// so, naming the vendor as connected.
     func testAVendorsRefusalSaysItStillCounts() {
         let refused = KIFFClient.ActivityCall.ToolOutcome(status: "refused_by_tool", message: "charge_already_refunded")
-        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Stripe", moves: true).1,
+        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Stripe", counts: .money).1,
                        "Stripe refused it. No money moved, but it still counts against today's total.")
-        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: nil, moves: false).1,
+        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Stripe", counts: .amount).1,
+                       "Stripe refused it. Nothing was done, but it still counts against today's total.")
+        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: nil, counts: .nothing).1,
                        "The tool refused it, and it still counts toward today's limits: charge_already_refunded")
+    }
+
+    /// Only an amount in a currency is money (kiff/tafs#207): a gateway's unit can be a count
+    /// of anything, and a read moves nothing.
+    func testOnlyACurrencyAmountIsMoney() {
+        var call = KIFFClient.ActivityCall(proposalID: "p1", actionName: "refund", outcome: "allowed", createdAt: Date(), held: false)
+        call.amount = .init(value: "3000", unit: "EUR")
+        XCTAssertEqual(KIFFMapping.counted(call), .money)
+        call.amount = .init(value: "3000", unit: "usd")
+        XCTAssertEqual(KIFFMapping.counted(call), .money)
+        call.amount = .init(value: "3", unit: "seats")
+        XCTAssertEqual(KIFFMapping.counted(call), .amount)
+        call.amount = .init(value: "3", unit: nil)
+        XCTAssertEqual(KIFFMapping.counted(call), .amount)
+        call.readOnly = true
+        XCTAssertEqual(KIFFMapping.counted(call), .nothing)
+        call.readOnly = nil
+        call.amount = nil
+        XCTAssertEqual(KIFFMapping.counted(call), .nothing)
     }
 
 }

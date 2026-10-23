@@ -268,14 +268,15 @@ final class KIFFClient {
 
     /// The account's usage this billing period (kiff-cloud#1316): the tafs meter and the KIFF
     /// meter, what the plan includes, what wasn't counted and why, the owner's ceiling, and the
-    /// trial. Counts only: the app shows no price (App Store Review Guideline 3.1.3(f)).
+    /// trial. Counts only: the app shows no price, no purchase and no call to action (App Store
+    /// Review Guideline 3.1.1).
     struct Usage: Decodable, Equatable {
         struct Period: Decodable, Equatable { let start: Date; let end: Date }
         /// What wasn't counted, by why (kiff-cloud#1316's "never counted").
         struct Free: Decodable, Equatable {
             var refused = 0, heldRefused = 0, halted = 0, failed = 0, invalid = 0, retry = 0, read = 0, trial = 0, setupRead = 0
             enum CodingKeys: String, CodingKey {
-                case refused, heldRefused = "held_refused", halted, failed, invalid, retry, read, trial, setupRead = "setup_read"
+                case refused, heldRefused = "held_refused", halted, failed, invalid, retry, read, trial, setupRead = "setup_read", setup
             }
             init() {}
             /// A reason KIFF doesn't name counted nothing.
@@ -283,12 +284,15 @@ final class KIFFClient {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 func n(_ k: CodingKeys) throws -> Int { try c.decodeIfPresent(Int.self, forKey: k) ?? 0 }
                 refused = try n(.refused); heldRefused = try n(.heldRefused); halted = try n(.halted); failed = try n(.failed)
-                invalid = try n(.invalid); retry = try n(.retry); read = try n(.read); trial = try n(.trial); setupRead = try n(.setupRead)
+                invalid = try n(.invalid); retry = try n(.retry); read = try n(.read); trial = try n(.trial)
+                // Coach's and Setup's calls: KIFF names them `setup` once it frees every call made
+                // with a setup_reader key (#206 Part 2), and `setup_read` before that.
+                setupRead = try n(.setupRead) + n(.setup)
             }
             /// Each reason with a count, as the owner reads it, in the order they matter.
             var lines: [(String, Int)] {
                 [("Refused by KIFF", refused), ("Held, then refused", heldRefused), ("Halted", halted), ("Failed at the tool", failed),
-                 ("Not valid", invalid), ("Retries", retry), ("Reads", read), ("Trials of a new version", trial), ("Setup's reads", setupRead)]
+                 ("Not valid", invalid), ("Retries", retry), ("Reads", read), ("Trials of a new version", trial), ("Coach and Setup", setupRead)]
                     .filter { $0.1 > 0 }
             }
         }

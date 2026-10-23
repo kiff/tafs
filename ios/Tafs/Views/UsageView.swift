@@ -2,8 +2,8 @@ import SwiftUI
 
 /// The account's usage this period (kiff/tafs#184): its own screen, opened from Settings. What
 /// the tafs did that counted, what the plan includes, what wasn't counted and why, the month's
-/// ceiling, and the trial. It sells nothing (App Store Review Guideline 3.1.3(f)): no price, no
-/// purchase, no link to buy; a trial's end or a reached ceiling is said plainly.
+/// ceiling, and the trial. It sells nothing: no price, no purchase and no call to action (App
+/// Store Review Guideline 3.1.1), no link to buy; a trial's end or a reached ceiling is said plainly.
 struct UsageView: View {
     @EnvironmentObject private var model: AppModel
     /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
@@ -147,7 +147,7 @@ struct UsageView: View {
                 : "This month's ceiling is reached. Your tafs are paused until the month ends or the ceiling is raised."
         }
         guard let trial = u.trial else { return nil }
-        // It starts at checkout on the web; the app says so and links nowhere (3.1.3(f)).
+        // It starts at checkout on the web; the app says so and links nowhere (3.1.1).
         guard trial.endsAt != nil else { return "Your trial hasn't started." }
         if trial.daysLeft <= 0 { return "Your trial has ended." }
         let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"

@@ -3,7 +3,7 @@ import XCTest
 
 /// Usage in the app (kiff/tafs#184), against KIFF's usage read as proposed on
 /// kiff/kiff-cloud#1316: both meters, what wasn't counted, the ceiling and the trial. Counts
-/// only, and nothing that sells (App Store Review Guideline 3.1.3(f)).
+/// only, with no purchase and no call to action (App Store Review Guideline 3.1.1).
 @MainActor
 final class UsageTests: XCTestCase {
     static let read = #"""
@@ -33,7 +33,7 @@ final class UsageTests: XCTestCase {
         XCTAssertNil(u.actions.ceiling, "paid KIFF actions never stop")
         // Only the reasons with a count, in the order they matter.
         XCTAssertEqual(u.tasks.free?.lines.map(\.0), ["Refused by KIFF", "Held, then refused", "Failed at the tool", "Retries", "Reads",
-                                                      "Trials of a new version", "Setup's reads"])
+                                                      "Trials of a new version", "Coach and Setup"])
         // A reason KIFF leaves out counted nothing, and a paid plan has no trial.
         let paid = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(#"""
         {"plan":"solo","period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"},
@@ -58,12 +58,22 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(UsageView.notice(paid), "This month's ceiling is reached. Your tafs are paused until the month ends or the ceiling is raised.")
         XCTAssertNil(UsageView.notice(KIFFClient.Usage(plan: "solo", period: u.period, tasks: .init(counted: 3, included: 20, ceiling: 20),
                                                        actions: u.actions, trial: nil)))
-        // Guideline 3.1.3(f): no price, no "Upgrade", nothing to buy.
+        // No purchase and no call to action (3.1.1): no price, no "Upgrade", nothing to buy.
         for text in [UsageView.notice(u), UsageView.notice(paid), UsageView.planName("solo")].compactMap({ $0 }) {
             for word in ["€", "$", "Upgrade", "upgrade", "buy", "Buy", "price", "subscribe"] {
                 XCTAssertFalse(text.contains(word), "\(text) says \(word)")
             }
         }
+    }
+
+    /// Coach's and Setup's calls read under either name KIFF gives them, `setup_read` now and
+    /// `setup` once every call with a setup_reader key is free (#206 Part 2), as one line.
+    func testCoachAndSetupReadUnderEitherName() throws {
+        let free = try KIFFClient.decoder.decode(KIFFClient.Usage.Free.self, from: Data(#"{"setup_read":2,"setup":4}"#.utf8))
+        XCTAssertEqual(free.setupRead, 6)
+        XCTAssertEqual(free.lines.map(\.0), ["Coach and Setup"])
+        let renamed = try KIFFClient.decoder.decode(KIFFClient.Usage.Free.self, from: Data(#"{"setup":3}"#.utf8))
+        XCTAssertEqual(renamed.lines.first?.1, 3)
     }
 
     func testTheSampleHasAMonth() {
@@ -164,7 +174,7 @@ final class UsageTests: XCTestCase {
         await model.refreshTafUsage(rae.id)
         XCTAssertEqual(model.kiffAgent(for: rae.id), "rae-k3f9")
         XCTAssertEqual(model.countedTasks(for: rae.id), 9)
-        XCTAssertEqual(model.tafUsage(for: rae.id)?.free?.lines.map(\.0), ["Refused by KIFF", "Failed at the tool", "Retries", "Reads", "Setup's reads"])
+        XCTAssertEqual(model.tafUsage(for: rae.id)?.free?.lines.map(\.0), ["Refused by KIFF", "Failed at the tool", "Retries", "Reads", "Coach and Setup"])
         let task = try XCTUnwrap(model.tafTasks[rae.id]?.first)
         XCTAssertEqual(UsageView.toolName(task), "Refund an order", "named as the Record names it")
         XCTAssertNil(model.recordEntry(forCall: "tc-not-in-the-record"))

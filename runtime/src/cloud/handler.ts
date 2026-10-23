@@ -420,6 +420,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return steer(event, me, taf, deps);
   }
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "continue") {
+    if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     return goOn(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
