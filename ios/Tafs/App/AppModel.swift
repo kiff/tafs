@@ -366,6 +366,26 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// KIFF's alert target for the account (kiff/tafs#206), set up on a step the owner has
+    /// just confirmed with Face ID, with no prompt of its own: a paused run then hears the
+    /// owner's answer whether or not a phone turned alerts on. Called with `kiff.setupSigner`
+    /// set. Best effort: what doesn't finish is done at the next signed step, and the app asks
+    /// a run to go on after each answer anyway.
+    private func keepKIFFAlerts(tenant: String, gen: Int) async {
+        guard canAnswerHolds != false else { return }
+        if pendingHandoff == nil {
+            if (try? await cloud.alertsKept()) != false { return } // kept already, or unknown: not now
+            guard gen == accountGeneration,
+                  let target = try? await kiff.registerAlertTarget(url: cloud.alertsURL),
+                  gen == accountGeneration else { return }
+            // Kept before anything else can fail: KIFF already signs with this secret.
+            pendingHandoff = AlertHandoff(tenant: tenant, target: target)
+        }
+        guard let handoff = pendingHandoff, (try? await cloud.keepAlerts(handoff.target)) != nil,
+              gen == accountGeneration else { return }
+        pendingHandoff = nil
+    }
+
     /// iOS gave this phone a push token (at launch, and whenever it changes).
     func pushTokenArrived(_ token: Data) async {
         pushToken = token.map { String(format: "%02x", $0) }.joined()
@@ -772,11 +792,17 @@ final class AppModel: ObservableObject {
         }
 
         resolve(call)
-        if call.kiffID != nil {
+        if let kiffID = call.kiffID {
             // The paused run goes on with the answer (kiff/tafs#102): the chat shows it working
             // and then its reply, as after a message, and KIFF is read again for the Card's use.
             chatStates[call.tafID, default: ChatState()].awaiting = clock()
-            Task { await refresh() }
+            // Asked to go on now, not when KIFF's alert reaches it (kiff/tafs#206). Best
+            // effort: the alert and the hold's expiry still continue it.
+            let taf = cloudTaf(for: call.tafID)
+            Task {
+                if let taf { _ = try? await cloud.continueHeld(taf.id, exception: kiffID) }
+                await refresh()
+            }
         }
         // The owner's decision stays in the conversation where the card was, at once and
         // in its history (kiff/tafs#138): "Refused by you · 22:41 · Refund €150.00". For any
@@ -1366,21 +1392,47 @@ final class AppModel: ObservableObject {
     /// Begins the switch to a version (kiff/tafs#122): tafs cloud prepares the Card draft it
     /// waits for, which the owner then reads, and from here nothing of the taf runs. With
     /// `redraft`, its Cards are drafted again. Nil with `versionErrors` when it can't begin.
-    func prepareSwitch(_ version: TafsCloud.Version, of tafID: UUID, redraft: Bool = false) async -> TafsCloud.Switching? {
+    func prepareSwitch(_ version: TafsCloud.Version, of tafID: UUID, redraft: Bool = false, stopBlocking: Bool = false) async -> TafsCloud.Switching? {
         guard mode == .kiff, let c = cloudTaf(for: tafID), !version.live else { return nil }
         let gen = accountGeneration
         versionErrors[tafID] = nil
+        blockedInstalls[tafID] = nil
         do {
-            let sw = try await cloud.beginSwitch(c.id, version: version.n, redraft: redraft)
+            let sw = try await cloud.beginSwitch(c.id, version: version.n, redraft: redraft, stopBlocking: stopBlocking)
             guard gen == accountGeneration else { return nil }
             switches[tafID] = sw
             staleVersionCards[tafID] = nil
             return sw
+        } catch let error as TafsCloud.CloudError where error.status == 409 && !error.blocking.isEmpty {
+            guard gen == accountGeneration else { return nil }
+            // Named, with the one step that clears it (kiff/tafs#206).
+            blockedInstalls[tafID] = version.n
+            versionErrors[tafID] = Self.blockedWords(version.n, error.blocking, stopping: stopBlocking)
+            return nil
         } catch {
             guard gen == accountGeneration else { return nil }
             versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
             return nil
         }
+    }
+
+    /// The version whose install a run is in the way of, by taf: the panel offers "Stop it
+    /// and install" (kiff/tafs#206).
+    @Published private(set) var blockedInstalls: [UUID: Int] = [:]
+
+    /// Which run is in the way of installing version n, in the owner's words.
+    static func blockedWords(_ n: Int, _ runs: [TafsCloud.BlockingRun], stopping: Bool) -> String {
+        let waiting = runs.contains { $0.status == "PAUSED" }
+        let what: String
+        switch (runs.count, waiting) {
+        case (1, true): what = "a task waits on your answer"
+        case (1, false): what = runs[0].trigger == "schedule" ? "its scheduled run is at work" : "a task is at work"
+        case (_, true): what = "\(runs.count) tasks are going, one waiting on your answer"
+        default: what = "\(runs.count) tasks are at work"
+        }
+        return stopping
+            ? "Version \(n) isn't installed yet: \(what) and hasn't stopped. Try again in a moment."
+            : "Version \(n) can't go live while \(what). Stop it and install, or wait until it's done."
     }
 
     /// A version's Card that changed between the screen and the tap (kiff/tafs#115): put
@@ -1462,6 +1514,7 @@ final class AppModel: ObservableObject {
                 }
                 return false
             }
+            await keepKIFFAlerts(tenant: tenant, gen: gen)
         } else {
             do {
                 _ = try await signer.sign(Data("tafs.version.v1|\(tenant)|\(c.id)|\(version.n)".utf8),
@@ -2412,6 +2465,7 @@ final class AppModel: ObservableObject {
                 lastError = "KIFF didn't issue the taf's Cards: \(error.localizedDescription)"
                 return nil
             }
+            await keepKIFFAlerts(tenant: tenant, gen: gen)
             return grant
         }
         guard ["pending", "approved", "signed_in"].contains(grant.status) else {
@@ -2747,6 +2801,7 @@ final class AppModel: ObservableObject {
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil; planque.signer = nil }
+        await keepKIFFAlerts(tenant: tenant, gen: gen)
         if !planqueReady {
             guard await enrolPlanque(tenant: tenant, gen: gen) else {
                 setupError = lastError

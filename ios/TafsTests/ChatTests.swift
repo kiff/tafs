@@ -244,6 +244,31 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1, "what waited is sent once the taf is idle")
     }
 
+    /// Answering a held call of a taf has its paused run go on at once, by the held call,
+    /// without waiting for KIFF's alert (kiff/tafs#206).
+    func testAnsweringAHoldAsksTheRunToGoOn() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, """
+        {"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"rae-k3f9","action":"refund","entity_id":"pi_1",
+          "status":"held","breaches":[{"mandate_id":"m1","outcome":"per_action_exceeded","quantity":"sum(amount)","limit":5000}],
+          "parameters":{"amount":8000},"created_at":"2026-10-14T10:41:00Z","expires_at":"2099-10-14T10:51:00Z","accounting_version":2}]}
+        """)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/holds/ce_1/continue"] = (200, #"{"run":"r1","status":"PAUSED"}"#)
+        await model.refresh()
+        model.kiffTenant = "t1"
+        model.sessionHasKey = true
+        let call = try XCTUnwrap(model.held.first)
+        XCTAssertEqual(call.tafID, id)
+        StubProtocol.sent = []
+        await model.answer(call, with: .approveOnce)
+        for _ in 0..<50 where count("POST", "/v1/tafs/depl_1/holds/ce_1/continue") == 0 {
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        XCTAssertEqual(count("POST", "/v1/me/card-exceptions/ce_1/approve-once"), 1)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/holds/ce_1/continue"), 1, "the run is asked to go on")
+    }
+
     /// While the taf works, a message goes to its run, which reads it at its next step
     /// (kiff/agents#102). It shows as kiff/agents says: until the run has read it. A
     /// run that has ended (409) leaves it queued, sent once the taf is done.

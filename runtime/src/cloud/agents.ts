@@ -31,9 +31,17 @@ export interface AgentsConfig {
 }
 
 export class AgentsError extends Error {
-  constructor(readonly status: number, message: string) {
+  constructor(readonly status: number, message: string, readonly blocking?: BlockingRun[]) {
     super(message);
   }
+}
+
+/** A run that keeps a switch from beginning, as kiff/agents names it in the 409 (kiff/tafs#206). */
+export interface BlockingRun {
+  id: string;
+  session: string;
+  status: RunStatus;
+  trigger: string;
 }
 
 /** A model's price, in millionths of a US dollar per million tokens of each kind. */
@@ -386,6 +394,17 @@ export class Agents {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "continue"], { background: true });
   }
 
+  /**
+   * Continues, in the background, the run that paused on the held call KIFF
+   * names `exception`, once KIFF has answered it (kiff/tafs#206): kiff/agents
+   * asks KIFF itself, so this only has the run go on sooner. 409 while KIFF
+   * still holds a call of the run, or once it went on; 404 when no run of the
+   * agent paused on that call.
+   */
+  continueHeld(tenant: string, agent: string, exception: string): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "holds", exception, "continue"], { background: true });
+  }
+
   /** Cancels a run; a paused one has its held calls withdrawn in KIFF first. */
   cancelRun(tenant: string, agent: string, run: string): Promise<Run> {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "cancel"]);
@@ -522,8 +541,13 @@ export class Agents {
 async function failure(res: Response): Promise<AgentsError> {
   const text = await res.text().catch(() => "");
   let msg: unknown;
-  try { msg = (JSON.parse(text) as { error?: unknown }).error; } catch { msg = undefined; }
-  return new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`);
+  let blocking: unknown;
+  try { ({ error: msg, blocking } = JSON.parse(text) as { error?: unknown; blocking?: unknown }); } catch { msg = undefined; }
+  const runs = Array.isArray(blocking)
+    ? blocking.filter((b): b is BlockingRun => typeof b?.id === "string" && typeof b?.session === "string")
+      .map(({ id, session, status, trigger }) => ({ id, session, status, trigger }))
+    : undefined;
+  return new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`, runs);
 }
 
 /**

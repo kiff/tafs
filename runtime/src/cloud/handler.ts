@@ -1,10 +1,10 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, view as aiView } from "./aiuse.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AIBound, type AgentsHalt, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
 import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
-import { MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
@@ -32,9 +32,10 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
+ *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
  *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
  *   POST /v1/tafs/{id}/versions         {note, notes?, draft?, from?, agent?}: its next version, as Setup drafted it, once per result (kiff/tafs#107); nothing goes live
- *   POST /v1/tafs/{id}/versions/{n}/switch  {redraft?}: begin the switch to version n, with the Card draft it waits for: nothing of the taf runs until it ends
+ *   POST /v1/tafs/{id}/versions/{n}/switch  {redraft?, stop_blocking?}: begin the switch to version n, with the Card draft it waits for: nothing of the taf runs until it ends. A run in the way is a 409 naming it (blocking); stop_blocking stops it first (kiff/tafs#206)
  *   DELETE /v1/tafs/{id}/switching      drop a switch whose Card isn't confirmed yet
  *   POST /v1/tafs/{id}/versions/{n}/trial  {input?}: a trial of version n, its writes decided by KIFF, nothing sent
  *   GET  /v1/tafs/{id}/trials/{run}     a trial so far: its run and what KIFF decided for each write
@@ -45,6 +46,8 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
  *   POST /v1/push                       {device_token, environment, alert_target?}: this phone gets the account's alerts
  *   DELETE /v1/push/{token}             it stops
+ *   POST /v1/alerts                     {alert_target}: KIFF's alert target for the account, with no phone's alerts (kiff/tafs#206)
+ *   GET  /v1/alerts                     whether tafs cloud holds KIFF's alert secret for the account
  *   POST /v1/kiff/alerts                KIFF's signed held-call alerts (no sign-in: the signature is the check)
  */
 
@@ -66,7 +69,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent">;
 
@@ -108,6 +111,8 @@ export interface Deps {
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
+  /** Waits, between a switch's tries while what blocks it stops (tests pass one that doesn't). */
+  sleep?: (ms: number) => Promise<void>;
   /** A new taf's id. */
   newID?: () => string;
 }
@@ -277,7 +282,7 @@ export const CHAT = {
 export const MEMORY = { maxNotes: 2000, shown: 100 } as const;
 
 class HTTPError extends Error {
-  constructor(readonly status: number, message: string) {
+  constructor(readonly status: number, message: string, readonly extra?: Record<string, unknown>) {
     super(message);
   }
 }
@@ -286,7 +291,8 @@ export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> 
   try {
     return json(200, await route(event, deps));
   } catch (err) {
-    if (err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError) return json(err.status, { error: err.message });
+    if (err instanceof HTTPError) return json(err.status, { error: err.message, ...err.extra });
+    if (err instanceof KIFFError || err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
     return json(500, { error: "something went wrong on tafs cloud" });
   }
@@ -304,6 +310,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return alert(event, deps);
   }
   if (parts[1] === "push") return push(event, method, parts, deps);
+  if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   if (parts[1] === "account" && parts.length === 3 && parts[2] === "delete" && method === "POST") return deleteAccount(await person(event, deps), deps);
@@ -411,6 +418,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "POST" && action === "steer") {
     need(me, "cards.manage");
     return steer(event, me, taf, deps);
+  }
+  if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "continue") {
+    return goOn(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
     need(me, "cards.manage");
@@ -564,6 +574,27 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     return { removed: Boolean(mine) };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * KIFF's alert target for the account, kept without a phone's alerts
+ * (kiff/tafs#206): the phone sets it up on a step the owner already confirms
+ * with Face ID, so a paused run hears the owner's answer whether or not a
+ * phone turned on alerts. As for a phone's, only someone who may answer held
+ * calls hands over the signing secret, and kiff/agents gets it too.
+ */
+async function alerts(event: HTTPEvent, method: string, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  if (method === "GET") {
+    const { secrets } = await deps.push.get(me.tenantID);
+    return { alerts: secrets.length > 0 };
+  }
+  if (method !== "POST") throw new HTTPError(404, "not found");
+  if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
+  const target = alertTarget(parseBody(event).alert_target);
+  const at = (deps.now?.() ?? new Date()).toISOString();
+  await deps.push.addSecret(me.tenantID, target.id, target.secret, at);
+  await deps.accounts.put(me.tenantID, me.tenantID, target.secret);
+  return { alerts: true };
 }
 
 /**
@@ -1207,7 +1238,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     // its mark kept, so no run starts in between.
     if (sw && sw.n === n && draft) return { switching: await agentsCall(() => deps.agents.replaceSwitchDraft(me.tenantID, taf.id, n, draft)) };
     if (sw && sw.n === n) await agentsCall(() => deps.agents.cancelSwitch(me.tenantID, taf.id));
-    return { switching: await agentsCall(() => deps.agents.beginSwitch(me.tenantID, taf.id, n, draft)) };
+    return { switching: await beginSwitch(me, taf, n, draft, parseBody(event).stop_blocking === true, deps) };
   }
   if (sub === "live") {
     // The draft the switch waits for: prepared by switch, or the version's own.
@@ -1469,6 +1500,26 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
   }
 }
 
+/**
+ * The app has just answered a held call of the taf's in KIFF: the run that
+ * paused on it goes on now, without waiting for KIFF's alert, which an
+ * account with no alert target never gets (kiff/tafs#206). kiff/agents asks
+ * KIFF for the answer itself, so this vouches for nothing: it only asks
+ * sooner. `waiting` when KIFF still holds a call of the run, or the run
+ * already went on.
+ */
+async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): Promise<unknown> {
+  if (!exception) throw new HTTPError(404, "not found");
+  try {
+    const out = await deps.agents.continueHeld(me.tenantID, taf.id, exception);
+    return { run: out.id, status: out.status };
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 409) return { status: "waiting" };
+    if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no run of this taf waits on that held call");
+    throw agentsFailure(err);
+  }
+}
+
 /** The owner's message, 1 to CHAT.maxText characters. */
 function chatText(event: HTTPEvent): string {
   const text = str(parseBody(event).text).trim();
@@ -1674,6 +1725,43 @@ async function* once(s: string): AsyncGenerator<string> {
 
 function sse(name: string, data: unknown): string {
   return `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+/** How long a switch asked to stop what blocks it waits for a running run's checkpoint, and how often it looks. */
+export const STOP_WAIT = { tries: 8, everyMs: 1500 };
+
+/**
+ * Begins the switch to version n. A run in the way is named in the 409
+ * (`blocking`: run, session, status), so the app says which and offers "Stop
+ * it and install" (kiff/tafs#206). With stopBlocking, those runs are stopped
+ * first (a paused one's held calls withdrawn in KIFF, a running one at its
+ * next checkpoint) and the switch is tried again until they have ended.
+ */
+async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string | undefined, stopBlocking: boolean, deps: Deps): Promise<unknown> {
+  const wait = deps.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
+  const stopped = new Set<string>();
+  for (let tries = 0; ; tries++) {
+    let blocking: BlockingRun[];
+    try {
+      return await deps.agents.beginSwitch(me.tenantID, taf.id, n, draft);
+    } catch (err) {
+      if (!(err instanceof AgentsError) || err.status !== 409 || !err.blocking?.length) return agentsCall(() => Promise.reject(err));
+      blocking = err.blocking;
+      if (!stopBlocking || tries >= STOP_WAIT.tries) {
+        throw new HTTPError(409, err.message, { blocking: blocking.map((b) => ({ run: b.id, session: b.session, status: b.status, trigger: b.trigger })) });
+      }
+    }
+    for (const b of blocking) {
+      if (stopped.has(b.id)) continue;
+      try {
+        await deps.agents.cancelRun(me.tenantID, taf.id, b.id);
+      } catch (err) {
+        if (!(err instanceof AgentsError) || err.status !== 409) throw agentsFailure(err); // 409: it ended meanwhile
+      }
+      stopped.add(b.id);
+    }
+    await wait(STOP_WAIT.everyMs);
+  }
 }
 
 /** kiff/agents' run stream, trimmed to what the phone shows. */

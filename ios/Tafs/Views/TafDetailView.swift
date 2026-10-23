@@ -324,9 +324,9 @@ struct VersionsPanel: View {
     /// Install this version: the switch begins, with the Card draft tafs cloud prepared (its own,
     /// drafted again, or a restore when going back), which is read first, now → after
     /// (kiff/tafs#107, #122). With no Card to change, one Face ID makes it live.
-    private func use(_ v: TafsCloud.Version, redraft: Bool = false) {
+    private func use(_ v: TafsCloud.Version, redraft: Bool = false, stopBlocking: Bool = false) {
         Task {
-            guard let sw = await model.prepareSwitch(v, of: tafID, redraft: redraft) else { return }
+            guard let sw = await model.prepareSwitch(v, of: tafID, redraft: redraft, stopBlocking: stopBlocking) else { return }
             if sw.draft == nil { await model.useVersion(v, of: tafID) } else { reading = v }
         }
     }
@@ -352,6 +352,12 @@ struct VersionsPanel: View {
             }
             if let error = model.versionErrors[tafID] {
                 Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+            }
+            if let n = model.blockedInstalls[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
+                // One step: what's in the way stops (a held call withdrawn, nothing sent), then
+                // the install begins (kiff/tafs#206).
+                Button("Stop it and install") { use(v, stopBlocking: true) }
+                    .buttonStyle(OutlineButtonStyle())
             }
         }
         .task(id: tafID) { await model.loadVersions(tafID) }

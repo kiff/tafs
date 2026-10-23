@@ -331,6 +331,34 @@ describe("steer", () => {
   });
 });
 
+describe("a held call answered (kiff/tafs#206)", () => {
+  it("has the run that paused on it go on, by the held call, without waiting for KIFF's alert", async () => {
+    const w = world();
+    const run = await w.agents.api.startRun("t_acme", RAE, "Refund pi_1");
+    Object.assign(w.agents.runs.find((x) => x.id === run.id)!, {
+      status: "PAUSED",
+      requirements: [{ call_id: "c1", tool: "refund", input: {}, operation: "op1", exception: "exc_1" }],
+    });
+    w.agents.calls.length = 0;
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/continue`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ run: run.id, status: "PAUSED" });
+    expect(w.agents.calls).toEqual([`continueHeld ${RAE} exc_1`]);
+  });
+
+  it("says waiting when the run went on already, and 404 for a call no run of this taf waits on", async () => {
+    const w = world();
+    const run = await w.agents.api.startRun("t_acme", RAE, "Refund pi_1");
+    Object.assign(w.agents.runs.find((x) => x.id === run.id)!, {
+      status: "RUNNING",
+      requirements: [{ call_id: "c1", tool: "refund", input: {}, operation: "op1", exception: "exc_1" }],
+    });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/continue`, { token: "ana" })).body).toEqual({ status: "waiting" });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_none/continue`, { token: "ana" })).status).toBe(404);
+    expect((await call(w, "POST", `/v1/tafs/${MAX}/holds/exc_1/continue`, { token: "ana" })).status).toBe(404);
+  });
+});
+
 describe("chats (kiff/tafs#73)", () => {
   it("lists the taf's chats, newest first, each by its first words; job runs and other tafs' chats left out", async () => {
     const w = world();

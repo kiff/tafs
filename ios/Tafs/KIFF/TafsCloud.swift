@@ -9,7 +9,17 @@ final class TafsCloud {
     struct CloudError: Error, Equatable, LocalizedError {
         let status: Int
         let message: String
+        /// The runs that keep a switch from beginning, when tafs cloud names them (kiff/tafs#206).
+        var blocking: [BlockingRun] = []
         var errorDescription: String? { message }
+    }
+
+    /// A run in the way of an install (kiff/tafs#206): one at work, or one waiting on the owner.
+    struct BlockingRun: Decodable, Equatable {
+        let run: String
+        let session: String
+        let status: String
+        let trigger: String?
     }
 
     /// A taf as tafs cloud runs it.
@@ -385,6 +395,17 @@ final class TafsCloud {
         return r.status
     }
 
+    /// The owner just answered one of the taf's held calls in KIFF (kiff/tafs#206): the
+    /// run that paused on it goes on now, not when KIFF's alert reaches it. tafs cloud
+    /// asks KIFF for the answer itself, so this only asks sooner. Returns the run's
+    /// status, or "waiting" while KIFF still holds one of its calls.
+    @discardableResult
+    func continueHeld(_ id: String, exception: String) async throws -> String {
+        struct Response: Decodable { let status: String }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/holds/\(escaped(exception))/continue")
+        return r.status
+    }
+
     struct Sent: Decodable, Equatable {
         let session: String
         let newSession: Bool
@@ -503,8 +524,9 @@ final class TafsCloud {
         guard status == 200 else {
             var data = Data()
             for try await b in bytes { data.append(b) }
-            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "tafs cloud answered \(status)"
-            throw CloudError(status: status, message: message)
+            struct Refusal: Decodable { let error: String?; let blocking: [BlockingRun]? }
+            let refusal = try? JSONDecoder().decode(Refusal.self, from: data)
+            throw CloudError(status: status, message: refusal?.error ?? "tafs cloud answered \(status)", blocking: refusal?.blocking ?? [])
         }
         return AsyncThrowingStream { continuation in
             let reading = Task {
@@ -712,10 +734,14 @@ final class TafsCloud {
     /// tafs cloud prepares the Card draft it waits for (kiff/tafs#122): the version's own,
     /// drafted again (`redraft`, or once it expired), a restore of the Cards it ran under
     /// when going back, or none.
-    func beginSwitch(_ id: String, version n: Int, redraft: Bool = false) async throws -> Switching {
-        struct Body: Encodable { let redraft: Bool }
+    func beginSwitch(_ id: String, version n: Int, redraft: Bool = false, stopBlocking: Bool = false) async throws -> Switching {
+        struct Body: Encodable {
+            let redraft: Bool
+            let stopBlocking: Bool
+            enum CodingKeys: String, CodingKey { case redraft, stopBlocking = "stop_blocking" }
+        }
         struct Response: Decodable { let switching: Switching }
-        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/switch", body: Body(redraft: redraft))
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions/\(n)/switch", body: Body(redraft: redraft, stopBlocking: stopBlocking))
         return r.switching
     }
 
@@ -796,6 +822,28 @@ final class TafsCloud {
         return try await send("POST", "/v1/push", body: Body(
             deviceToken: deviceToken, environment: environment,
             alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }))
+    }
+
+    /// Whether tafs cloud holds KIFF's alert secret for the account (kiff/tafs#206).
+    func alertsKept() async throws -> Bool {
+        struct Response: Decodable { let alerts: Bool }
+        let r: Response = try await send("GET", "/v1/alerts")
+        return r.alerts
+    }
+
+    /// Hands over KIFF's alert target for the account, with no phone's alerts (kiff/tafs#206):
+    /// a paused run then hears the owner's answer whether or not a phone turned alerts on.
+    func keepAlerts(_ target: KIFFClient.AlertTarget) async throws {
+        struct Target: Encodable {
+            let id: String, signingSecret: String
+            enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }
+        }
+        struct Body: Encodable {
+            let alertTarget: Target
+            enum CodingKeys: String, CodingKey { case alertTarget = "alert_target" }
+        }
+        struct Response: Decodable { let alerts: Bool }
+        let _: Response = try await send("POST", "/v1/alerts", body: Body(alertTarget: Target(id: target.id, signingSecret: target.signingSecret)))
     }
 
     /// This phone stops getting the account's alerts.

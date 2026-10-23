@@ -342,6 +342,26 @@ final class VersionsTests: XCTestCase {
         XCTAssertEqual(sent("POST", "/v1/me/agent-drafts/drf_restore1/confirm").count, 1)
     }
 
+    /// A run in the way of an install is named, with one step that stops it and installs
+    /// (kiff/tafs#206).
+    func testARunInTheWayIsNamedAndStoppedInOneStep() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (409, #"{"error":"a run of this agent is going or waiting on its owner","blocking":[{"run":"r1","session":"s1","status":"PAUSED","trigger":"owner"}]}"#)
+        let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
+        let blocked = await model.prepareSwitch(v2, of: id)
+        XCTAssertNil(blocked)
+        XCTAssertEqual(model.blockedInstalls[id], 2)
+        XCTAssertEqual(model.versionErrors[id], "Version 2 can't go live while a task waits on your answer. Stop it and install, or wait until it's done.")
+
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (200, Self.begun)
+        let sw = await model.prepareSwitch(v2, of: id, stopBlocking: true)
+        XCTAssertNotNil(sw)
+        let body = try XCTUnwrap(sent("POST", "/v1/tafs/depl_1/versions/2/switch").last?.httpBody)
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: body) as? [String: Bool], ["redraft": false, "stop_blocking": true])
+        XCTAssertNil(model.blockedInstalls[id])
+        XCTAssertNil(model.versionErrors[id])
+    }
+
     /// KIFF refuses a Card that went stale at confirm: the owner is asked to draft it again.
     func testAStaleCardIsDraftedAgain() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
@@ -358,7 +378,7 @@ final class VersionsTests: XCTestCase {
         let again = await model.prepareSwitch(v2, of: id, redraft: true)
         XCTAssertEqual(again?.draft, "drf_again1")
         let body = try XCTUnwrap(sent("POST", "/v1/tafs/depl_1/versions/2/switch").last?.httpBody)
-        XCTAssertEqual(try JSONSerialization.jsonObject(with: body) as? [String: Bool], ["redraft": true])
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: body) as? [String: Bool], ["redraft": true, "stop_blocking": false])
         XCTAssertNil(model.staleVersionCards[id])
     }
 

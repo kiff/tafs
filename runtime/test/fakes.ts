@@ -120,8 +120,10 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
         if (was.n !== n) throw new AgentsError(409, "this agent is switching versions");
         return { ...was };
       }
-      if (runs.some((r) => r.tenant === tenant && r.agent === id && r.trigger !== "trial" && !["COMPLETED", "ERROR", "CANCELLED"].includes(r.status))) {
-        throw new AgentsError(409, "a run of this agent is going or waiting on its owner: answer it, stop it or let it finish, then switch");
+      const blocking = runs.filter((r) => r.tenant === tenant && r.agent === id && r.trigger !== "trial" && !["COMPLETED", "ERROR", "CANCELLED"].includes(r.status));
+      if (blocking.length) {
+        throw new AgentsError(409, "a run of this agent is going or waiting on its owner: answer it, stop it or let it finish, then switch",
+          blocking.map((r) => ({ id: r.id, session: r.session, status: r.status, trigger: r.trigger })));
       }
       const sw: Switching = { n, ...(draft ? { draft } : {}), at: now().toISOString() };
       switching.set(k(tenant, id), sw);
@@ -319,6 +321,14 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!r) throw gone();
       if (r.status !== "PENDING" && r.status !== "RUNNING" && r.status !== "PAUSED") throw new AgentsError(409, "the run has ended, or was asked to stop");
       r.steering = [...(r.steering ?? []), { text, at: now().toISOString() }];
+      return r;
+    },
+    async continueHeld(tenant, agent, exception) {
+      calls.push(`continueHeld ${agent} ${exception}`);
+      failing("continueHeld");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && (x.requirements ?? []).some((q) => q.exception === exception));
+      if (!r) throw gone();
+      if (r.status !== "PAUSED") throw new AgentsError(409, "the run isn't paused: read it");
       return r;
     },
     async cancelRun(tenant, agent, id) {
