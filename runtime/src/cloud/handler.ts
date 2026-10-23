@@ -1,14 +1,16 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, view as aiView } from "./aiuse.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
-import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
+import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
+import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -71,7 +73,7 @@ export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
-  "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent">;
+  "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -108,6 +110,14 @@ export interface Deps {
   /** Hands a KIFF alert tafs cloud has checked to kiff/agents, as KIFF signed it, so a paused run goes on. */
   /** Hands KIFF's alert to kiff/agents; the run its answer left ready, if any (forward.ts). */
   forward: (signature: string, raw: string) => Promise<ReadyRun | undefined | void>;
+  /**
+   * What Coach's tools keep (kiff/tafs#206): used permits, each operation's
+   * answer, the tasks Coach handed over, and the lines it hasn't read yet.
+   * Missing: the tools aren't served here.
+   */
+  coach?: CoachStore;
+  /** KIFF's permit keys, by kid; missing, the ones KIFF publishes. */
+  permitKeys?: PermitKeys;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
@@ -289,6 +299,7 @@ class HTTPError extends Error {
 
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   try {
+    if (event.rawPath === "/v1/mcp") return await mcpRoute(event, deps);
     return json(200, await route(event, deps));
   } catch (err) {
     if (err instanceof HTTPError) return json(err.status, { error: err.message, ...err.extra });
@@ -308,6 +319,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (method === "POST" && parts.length === 3 && parts[1] === "kiff" && parts[2] === "alerts") {
     return alert(event, deps);
+  }
+  if (method === "POST" && parts.length === 3 && parts[1] === "runs" && parts[2] === "ended") {
+    return runEnded(event, deps);
   }
   if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
@@ -389,7 +403,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "conversation") {
     const { messages, components, sessions } = await conversation(me, taf, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering };
+    return { messages, components, working: latest.working, steering: latest.steering, ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const only = await ownChat(me, taf, parts[4] ?? "", deps);
@@ -1167,7 +1181,7 @@ interface Steering {
  * taf has only its Card's tools, and remembers what its notes say.
  */
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
-  const text = chatText(event);
+  const text = await withCoachLines(me, taf, chatText(event), deps);
   await claimChatSlot(me, taf, deps);
   const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
   if (live) {
@@ -1684,7 +1698,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     const me = await person(event, deps);
     const taf = await owned(me, parts[2] ?? "", deps);
     need(me, "cards.manage");
-    const text = chatText(event);
+    const text = await withCoachLines(me, taf, chatText(event), deps);
     await claimChatSlot(me, taf, deps);
     const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
@@ -2117,4 +2131,266 @@ function str(v: unknown): string {
 
 function json(status: number, body: unknown): HTTPResult {
   return { statusCode: status, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: JSON.stringify(body) };
+}
+
+// Coach's tools (kiff/tafs#206): coach.ts serves the MCP protocol and checks
+// KIFF's permit; these do each tool's job for the permit's account, through
+// kiff/agents only. tafs cloud holds no KIFF credential for Coach, so nothing
+// here reads or drafts in KIFF: installing a version is the app's, with the
+// owner's own session, in the step where they approve the held call.
+
+/** The account as Coach acts on it: its agent, with cards.manage, never a person. */
+function coachIdentity(call: CoachCall): KIFFIdentity {
+  return { tenantID: call.tenant, subject: call.coach, apiKey: true, agentID: call.coach, capabilities: ["cards.manage"] };
+}
+
+/** The account's Coach: its Setup's KIFF agent, or none. */
+async function coachOf(tenant: string, deps: Deps): Promise<string | undefined> {
+  const setup = (await deps.tafs.list(tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
+  return setup?.kiffAgent || undefined;
+}
+
+/** A taf of the account by id, or by its name, ignoring case; never Setup. */
+async function coachTaf(tenant: string, ref: unknown, deps: Deps): Promise<Taf> {
+  const want = str(ref).trim();
+  const tafs = (await deps.tafs.list(tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB);
+  const taf = tafs.find((t) => t.id === want) ?? tafs.find((t) => t.name.toLowerCase() === want.toLowerCase());
+  if (!taf) throw new ToolRefusal(`there is no taf "${want}" on this account: tafs_state lists them`);
+  return taf;
+}
+
+/** What a run waits on, as Coach reads it: each held call, its arguments and deadline. */
+function waitsOn(r: Run) {
+  return (r.requirements ?? []).filter((q) => !q.answered).map((q) => ({
+    tool: q.tool, arguments: q.input, deadline: iso(q.expires), ...(q.exception ? { held_call: q.exception } : {}),
+  }));
+}
+
+function runSummary(r: Run) {
+  return {
+    run: r.id, status: r.status, trigger: r.trigger, started: iso(r.created), updated: iso(r.updated),
+    ...(r.output ? { answer: r.output } : {}), ...(r.error ? { error: r.error } : {}),
+    ...(r.status === "PAUSED" ? { waits_on: waitsOn(r) } : {}),
+  };
+}
+
+/** Keeps the task under its ref, so its run's end finds Coach (`runEnded`). */
+async function keepTask(call: CoachCall, notify: Notify, task: Task, deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  const at = (deps.now?.() ?? new Date()).getTime();
+  await deps.coach.put(coachKeys.task(call.tenant, notify.ref), task, new Date(at + TASK_KEPT_MS));
+}
+
+/** Coach's run at work now, if any: the one making this call. */
+async function coachRun(call: CoachCall, deps: Deps): Promise<string | undefined> {
+  const setup = (await deps.tafs.list(call.tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!setup) return undefined;
+  const runs = await deps.agents.runs(call.tenant, setup.id, true, 5).catch(() => []);
+  return runs.find((r) => r.status === "RUNNING")?.id;
+}
+
+export async function coachTool(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
+  try {
+    return await coachToolOf(name, args, call, deps);
+  } catch (err) {
+    if (err instanceof HTTPError && err.status < 500) throw new ToolRefusal(err.message);
+    throw err;
+  }
+}
+
+async function coachToolOf(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
+  const me = coachIdentity(call);
+  if (name === "tafs_state") {
+    const tafs = (await deps.tafs.list(call.tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB);
+    return {
+      tafs: await Promise.all(tafs.map(async (t) => {
+        const [state, schedule, runs] = await Promise.all([
+          agentsCall(() => deps.agents.versions(call.tenant, t.id)),
+          t.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(call.tenant, t.id).catch(() => undefined),
+          agentsCall(() => deps.agents.runs(call.tenant, t.id, true)),
+        ]);
+        const live = state.versions.find((v) => v.live);
+        return {
+          id: t.id, name: t.name, job: t.job,
+          ...(t.unscheduled ? { works_from_chat: true } : schedule
+            ? { schedule: { cron: schedule.cron, time_zone: schedule.time_zone || "UTC", on: schedule.enabled, ...(schedule.next ? { next: iso(schedule.next) } : {}) } }
+            : {}),
+          live_version: live?.n ?? null,
+          versions: state.versions.map((v) => ({ n: v.n, note: v.note, live: v.live, created: iso(v.created) })),
+          ...(state.switching ? { switching: { to: state.switching.n, waiting_for: state.switching.draft ? "the owner to confirm its Card in tafs" : "its runs to stop" } } : {}),
+          open_runs: runs.map(runSummary),
+        };
+      })),
+      cards: "What's left on each taf's Cards isn't read here: the owner sees it on the taf in tafs.",
+    };
+  }
+  const taf = await coachTaf(call.tenant, args.taf, deps);
+  const n = Number(args.n);
+  if (name === "taf_run") {
+    const runID = str(args.run).trim();
+    const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, runID));
+    if (r.trigger === "trial") {
+      const t = await agentsCall(() => deps.agents.trial(call.tenant, taf.id, runID));
+      return { taf: taf.name, ...runSummary(t.run), writes: t.writes };
+    }
+    return { taf: taf.name, ...runSummary(r) };
+  }
+  if (name === "taf_task") {
+    const text = str(args.text).trim();
+    if (!text || text.length > CHAT.maxText) throw new ToolRefusal(`write the task in 1 to ${CHAT.maxText} characters`);
+    await claimChatSlot(me, taf, deps);
+    const running = str(args.run).trim();
+    if (running) {
+      try {
+        const out = await deps.agents.steerRun(call.tenant, taf.id, running, text);
+        return { taf: taf.name, run: out.id, status: out.status, sent: "to the run at work, read at its next step" };
+      } catch (err) {
+        if (err instanceof AgentsError && err.status === 409) throw new ToolRefusal("that run has ended: hand the task over again without run");
+        throw agentsFailure(err);
+      }
+    }
+    const session = args.chat === "new" ? undefined : await liveChat(me, taf, deps);
+    const notify = call.notify();
+    const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, session, undefined, notify));
+    await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120) }, deps);
+    return { taf: taf.name, run: run.id, chat: run.session, status: run.status, result: "comes back to you when the run ends: don't poll" };
+  }
+  if (name === "run_stop") {
+    try {
+      const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim());
+      return { taf: taf.name, run: out.id, status: out.status, withdrawn: "its held calls, in KIFF; nothing more is sent" };
+    } catch (err) {
+      if (err instanceof AgentsError && err.status === 409) return { taf: taf.name, stopped: false, why: "the run had already ended" };
+      throw agentsFailure(err);
+    }
+  }
+  if (name === "taf_pause") {
+    const on = args.action === "resume";
+    if (!on && args.action !== "pause") throw new ToolRefusal("action is pause or resume");
+    if (taf.unscheduled) throw new ToolRefusal(`${taf.name} works from its chat: it has no schedule to ${on ? "resume" : "pause"}`);
+    const s = await agentsCall(() => deps.agents.switchSchedule(call.tenant, taf.id, on));
+    return { taf: taf.name, schedule: on ? "on" : "paused", ...(s.next ? { next: iso(s.next) } : {}) };
+  }
+  if (!Number.isInteger(n) || n < 1) throw new ToolRefusal("n is a version number, from tafs_state");
+  const state = await agentsCall(() => deps.agents.versions(call.tenant, taf.id));
+  const version = state.versions.find((v) => v.n === n);
+  if (!version) throw new ToolRefusal(`${taf.name} has no version ${n}`);
+  if (name === "version_try") {
+    const asked = str(args.input).trim();
+    const input = asked || JOBS.find((j) => j.id === taf.job)?.kickoff || "";
+    if (!input || input.length > CHAT.maxText) throw new ToolRefusal(`give the trial 1 to ${CHAT.maxText} characters to work on`);
+    const notify = call.notify();
+    const run = await agentsCall(() => deps.agents.startTrial(call.tenant, taf.id, n, input, notify));
+    await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: `a trial of version ${n}`, trial: true }, deps);
+    return { taf: taf.name, trial: run.id, status: run.status, result: "comes back to you when the trial ends: don't poll" };
+  }
+  if (name === "version_install") {
+    // The owner approved it in tafs: the app began the switch and confirmed the
+    // Card first, with their own session. This only says where it stands.
+    if (version.live) return { taf: taf.name, version: n, installed: true };
+    if (state.switching?.n === n) {
+      return { taf: taf.name, version: n, installed: false, waiting_for: state.switching.draft ? "the owner to confirm its Card in tafs" : "its runs to stop" };
+    }
+    return { taf: taf.name, version: n, installed: false, say: `Open ${taf.name} in tafs to finish installing version ${n}.` };
+  }
+  throw new ToolRefusal(`there is no tool ${name}`);
+}
+
+/** KIFF's published permit keys, fetched once per container. */
+let kiffPermitKeys: PermitKeys | undefined;
+
+/**
+ * POST /v1/mcp: Coach's tools, reached only through KIFF's gateway, each call
+ * with KIFF's permit (coach.ts). The audience is this server as the
+ * connection names it: its own host, which a function URL can't be called
+ * under any other.
+ */
+async function mcpRoute(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
+  const host = event.headers?.host ?? event.headers?.Host;
+  if (!deps.coach || !host || event.requestContext.http.method.toUpperCase() !== "POST") throw new HTTPError(404, "not found");
+  const issuer = deps.kiffBase ?? KIFF_API;
+  kiffPermitKeys ??= publishedKeys(`${issuer}/.well-known/kiff-permit-keys.json`, deps.fetch);
+  const headers: Record<string, string | undefined> = {};
+  for (const [k, v] of Object.entries(event.headers ?? {})) headers[k.toLowerCase()] = v;
+  const r = await serveMCP(rawBody(event), headers, {
+    audience: `https://${host}/v1/mcp`, issuer, keys: deps.permitKeys ?? kiffPermitKeys, store: deps.coach,
+    coachOf: (tenant) => coachOf(tenant, deps), notifyURL: `https://${host}/v1/runs/ended`,
+    run: (name, args, call) => coachTool(name, args, call, deps),
+    now: deps.now ?? (() => new Date()), log: (msg, err) => console.error(`${msg}:`, err),
+  });
+  return r.body === undefined ? { statusCode: r.status, headers: { "cache-control": "no-store" }, body: "" } : json(r.status, r.body);
+}
+
+/**
+ * POST /v1/runs/ended: kiff/agents' note that a run Coach handed a taf paused
+ * or ended (kiff/tafs#206). The note is unsigned: one whose ref tafs cloud
+ * doesn't hold is dropped, and what Coach is told is read back from
+ * kiff/agents, never taken from the note. Coach hears it in its run at work,
+ * if the one that handed the task over still is; otherwise it waits for
+ * Coach's next turn, and the app shows it in Coach's chat at once.
+ */
+async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
+  const note = parseNote(rawBody(event));
+  const tenant = note && refTenant(note.ref);
+  if (!note || !tenant || !deps.coach) return { taken: false };
+  const key = coachKeys.task(tenant, note.ref);
+  const task = (await deps.coach.get(key)) as Task | undefined;
+  if (!task || task.run !== note.run || task.taf !== note.agent) return { taken: false };
+  const r = await agentsCall(() => deps.agents.getRun(tenant, task.taf, task.run));
+  const ended = r.status === "COMPLETED" || r.status === "ERROR" || r.status === "CANCELLED";
+  if (!ended && r.status !== "PAUSED") return { taken: false };
+  const taf = await deps.tafs.get(tenant, task.taf);
+  const line = coachLine(taf?.name ?? task.taf, task, r);
+  const tafs = await deps.tafs.list(tenant);
+  const setup = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
+  let told = false;
+  if (setup && task.coachRun) {
+    told = await deps.agents.steerRun(tenant, setup.id, task.coachRun, line).then(() => true, () => false);
+  }
+  if (!told) {
+    const at = deps.now?.() ?? new Date();
+    await deps.coach.append(coachKeys.notes(tenant), { at: at.toISOString(), text: line }, new Date(at.getTime() + TASK_KEPT_MS));
+  }
+  if (ended) await deps.coach.remove(key);
+  return { taken: true };
+}
+
+/** What Coach reads of a task's run: what it was, how it went, in two sentences at most. */
+function coachLine(name: string, task: Task, r: Run): string {
+  const what = task.trial ? "trial" : "run";
+  const head = `[taf ${name} ${what} ${r.id} ${r.status === "PAUSED" ? "paused" : "ended"}: ${task.what}]`;
+  if (r.status === "PAUSED") {
+    const waits = waitsOn(r).map((w) => w.tool).join(", ");
+    return `${head} It waits for the owner to answer a held call${waits ? ` (${waits})` : ""}. Never answer it yourself.`;
+  }
+  if (r.status === "ERROR") return `${head} It failed: ${twoSentences(r.error || "no reason given")}`;
+  if (r.status === "CANCELLED") return `${head} It was stopped.`;
+  return `${head} ${twoSentences(r.output || "It finished with no answer.")}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`;
+}
+
+function twoSentences(text: string): string {
+  const flat = text.replace(/\s+/g, " ").trim();
+  const m = flat.match(/^(.+?[.!?])\s+(.+?[.!?])(\s|$)/);
+  const two = m ? `${m[1]} ${m[2]}` : flat;
+  return two.length > 400 ? `${two.slice(0, 399)}…` : two;
+}
+
+/**
+ * The owner's message to Setup, with the lines about Coach's tasks it hasn't
+ * read before it (kiff/tafs#206). The thread shows only the owner's words
+ * (ownerWords). Another taf's message is as written.
+ */
+async function withCoachLines(me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<string> {
+  if (taf.job !== SETUP_JOB || !deps.coach) return text;
+  const lines = (await deps.coach.take(coachKeys.notes(me.tenantID))) as Array<{ text?: string }>;
+  const said = lines.map((l) => l.text).filter((t): t is string => typeof t === "string");
+  return said.length ? `${COACH_LINES}\n${said.join("\n")}\nThe owner says: ${text}` : text;
+}
+
+/** The lines about Coach's tasks it hasn't read, for the app to show in Coach's chat. */
+async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coach_lines?: Array<{ at: string; text: string }> }> {
+  if (taf.job !== SETUP_JOB || !deps.coach) return {};
+  const kept = (await deps.coach.get(coachKeys.notes(me.tenantID))) as Array<{ at?: string; text?: string }> | undefined;
+  const lines = (kept ?? []).filter((l): l is { at: string; text: string } => typeof l.at === "string" && typeof l.text === "string");
+  return lines.length ? { coach_lines: lines } : {};
 }
