@@ -247,7 +247,16 @@ enum KIFFMapping {
         call.accountingVersion = e.accountingVersion
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)
+        call.install = install(of: e)
         return call
+    }
+
+    /// The version a held version_install of Coach's names (kiff/tafs#206), or nil.
+    static func install(of e: KIFFClient.CardException) -> VersionInstall? {
+        guard e.action == "version_install" || e.action.hasSuffix(".version_install") || e.action.hasSuffix(":version_install"),
+              let taf = e.arguments?["taf"]?.text, !taf.isEmpty,
+              let n = e.arguments?["n"].flatMap({ Int($0.text) }), n > 0 else { return nil }
+        return VersionInstall(taf: taf, n: n)
     }
 
     /// Why a call is held, with its amounts written as the app writes money everywhere else

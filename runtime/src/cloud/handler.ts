@@ -51,6 +51,8 @@ import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
  *   POST /v1/alerts                     {alert_target}: KIFF's alert target for the account, with no phone's alerts (kiff/tafs#206)
  *   GET  /v1/alerts                     whether tafs cloud holds KIFF's alert secret for the account
  *   POST /v1/kiff/alerts                KIFF's signed held-call alerts (no sign-in: the signature is the check)
+ *   POST /v1/mcp                        Coach's tools, through KIFF's gateway only (no sign-in: each call's KIFF permit is the check; kiff/tafs#206)
+ *   POST /v1/runs/ended                 kiff/agents' note that a task Coach handed a taf paused or ended (no sign-in: an unknown ref is dropped, and the run is read back)
  */
 
 /** The Lambda function URL event, as much of it as we read. */
@@ -409,7 +411,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const only = await ownChat(me, taf, parts[4] ?? "", deps);
     const { messages, components, sessions } = await conversation(me, taf, deps, only);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering };
+    return { messages, components, working: latest.working, steering: latest.steering, ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -2340,7 +2342,8 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const ended = r.status === "COMPLETED" || r.status === "ERROR" || r.status === "CANCELLED";
   if (!ended && r.status !== "PAUSED") return { taken: false };
   const taf = await deps.tafs.get(tenant, task.taf);
-  const line = coachLine(taf?.name ?? task.taf, task, r);
+  const name = taf?.name ?? task.taf;
+  const { line, said } = coachLine(name, task, r);
   const tafs = await deps.tafs.list(tenant);
   const setup = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
   let told = false;
@@ -2349,23 +2352,31 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (!told) {
     const at = deps.now?.() ?? new Date();
-    await deps.coach.append(coachKeys.notes(tenant), { at: at.toISOString(), text: line }, new Date(at.getTime() + TASK_KEPT_MS));
+    // The owner reads the taf and how it went; Coach reads the whole line.
+    await deps.coach.append(coachKeys.notes(tenant), { at: at.toISOString(), text: line, taf: name, said }, new Date(at.getTime() + TASK_KEPT_MS));
   }
   if (ended) await deps.coach.remove(key);
   return { taken: true };
 }
 
-/** What Coach reads of a task's run: what it was, how it went, in two sentences at most. */
-function coachLine(name: string, task: Task, r: Run): string {
+/**
+ * How a task's run went: the line Coach reads (what it was, how it went, in two
+ * sentences at most), and what the owner sees of it in Coach's chat meanwhile.
+ */
+function coachLine(name: string, task: Task, r: Run): { line: string; said: string } {
   const what = task.trial ? "trial" : "run";
   const head = `[taf ${name} ${what} ${r.id} ${r.status === "PAUSED" ? "paused" : "ended"}: ${task.what}]`;
   if (r.status === "PAUSED") {
     const waits = waitsOn(r).map((w) => w.tool).join(", ");
-    return `${head} It waits for the owner to answer a held call${waits ? ` (${waits})` : ""}. Never answer it yourself.`;
+    return { line: `${head} It waits for the owner to answer a held call${waits ? ` (${waits})` : ""}. Never answer it yourself.`, said: "Waits for your answer." };
   }
-  if (r.status === "ERROR") return `${head} It failed: ${twoSentences(r.error || "no reason given")}`;
-  if (r.status === "CANCELLED") return `${head} It was stopped.`;
-  return `${head} ${twoSentences(r.output || "It finished with no answer.")}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`;
+  if (r.status === "ERROR") {
+    const why = twoSentences(r.error || "no reason given");
+    return { line: `${head} It failed: ${why}`, said: `It failed: ${why}` };
+  }
+  if (r.status === "CANCELLED") return { line: `${head} It was stopped.`, said: "It was stopped." };
+  const out = twoSentences(r.output || "It finished with no answer.");
+  return { line: `${head} ${out}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`, said: out };
 }
 
 function twoSentences(text: string): string {
@@ -2388,9 +2399,10 @@ async function withCoachLines(me: KIFFIdentity, taf: Taf, text: string, deps: De
 }
 
 /** The lines about Coach's tasks it hasn't read, for the app to show in Coach's chat. */
-async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coach_lines?: Array<{ at: string; text: string }> }> {
+async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coach_lines?: Array<{ at: string; taf: string; said: string }> }> {
   if (taf.job !== SETUP_JOB || !deps.coach) return {};
-  const kept = (await deps.coach.get(coachKeys.notes(me.tenantID))) as Array<{ at?: string; text?: string }> | undefined;
-  const lines = (kept ?? []).filter((l): l is { at: string; text: string } => typeof l.at === "string" && typeof l.text === "string");
+  const kept = (await deps.coach.get(coachKeys.notes(me.tenantID))) as Array<{ at?: string; taf?: string; said?: string }> | undefined;
+  const lines = (kept ?? []).filter((l): l is { at: string; taf: string; said: string } =>
+    typeof l.at === "string" && typeof l.taf === "string" && typeof l.said === "string").map(({ at, taf, said }) => ({ at, taf, said }));
   return lines.length ? { coach_lines: lines } : {};
 }

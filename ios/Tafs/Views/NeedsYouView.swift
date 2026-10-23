@@ -33,6 +33,8 @@ struct HeldCallCard: View {
     @EnvironmentObject private var model: AppModel
     let call: HeldCall
     @State private var sending = false
+    /// Coach's install, its switch begun, while its Card is read (kiff/tafs#206).
+    @State private var installing: AppModel.CoachInstall?
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -69,9 +71,9 @@ struct HeldCallCard: View {
             if model.canAnswer(call) {
                 if call.approvableOnce {
                     Button {
-                        send(.approveOnce)
+                        if call.install != nil { install() } else { send(.approveOnce) }
                     } label: {
-                        Label("Approve once with \(Biometry.name)", systemImage: Biometry.symbol)
+                        Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(sending)
@@ -112,6 +114,22 @@ struct HeldCallCard: View {
                     .buttonStyle(PrimaryButtonStyle())
                 }
             }
+        }
+        .sheet(item: $installing) { ready in
+            VersionCardSheet(version: ready.version, tafID: ready.tafID, approving: ready.call)
+        }
+    }
+
+    /// Approving Coach's install is installing it (kiff/tafs#206): the switch begins, what's in
+    /// the way stopped; a Card to change is read first; then one Face ID confirms it, makes the
+    /// version live, and approves the held call, in that order.
+    private func install() {
+        sending = true
+        Task {
+            if let ready = await model.beginCoachInstall(call) {
+                if ready.hasCard { installing = ready } else { await model.useVersion(ready.version, of: ready.tafID, approving: call) }
+            }
+            sending = false
         }
     }
 

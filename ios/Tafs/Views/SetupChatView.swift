@@ -192,6 +192,16 @@ struct SetupChatView: View {
                         }
                         .id(item.id)
                     }
+                    // How the tasks Coach handed tafs went, until Coach reads them (kiff/tafs#206).
+                    ForEach(model.setupThread.coachLines) { line in
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Image(systemName: "arrow.turn.down.right").scaledFont(11, relativeTo: .caption).foregroundColor(Theme.dim)
+                            Text("\(line.taf): \(line.said)").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .id("line|" + line.id)
+                    }
                     ForEach(model.setupUnsent) { unsent in
                         UnsentBubble(message: unsent, words: model.setupThread.ownerWords(unsent.text), busy: model.setupSending,
                                      retry: { await model.retrySetup(unsent) }, discard: { model.discardUnsent(unsent) })

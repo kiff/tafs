@@ -196,7 +196,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
     await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "ERROR", ref });
     const before = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana");
-    expect(before.body.coach_lines).toEqual([{ at: "2026-10-16T12:00:00.000Z", text: `[taf Refunds run ${task.json.run} ended: Refund order 42] It failed: Stripe said no.` }]);
+    expect(before.body.coach_lines).toEqual([{ at: "2026-10-16T12:00:00.000Z", taf: "Refunds", said: "It failed: Stripe said no." }]);
     await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana");
     const sent = w.agents.events.get(w.agents.runs[0]!.session)!.at(-1)!.body as { text: string };
     expect(sent.text).toBe(`[tafs coach lines]\n[taf Refunds run ${task.json.run} ended: Refund order 42] It failed: Stripe said no.\nThe owner says: How did it go?`);
@@ -214,7 +214,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     });
     expect((await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "PAUSED", ref })).body).toEqual({ taken: true });
     const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
-    expect(lines[0].text).toContain("waits for the owner to answer a held call (stripe_refund). Never answer it yourself.");
+    expect(lines[0]).toMatchObject({ taf: "Refunds", said: "Waits for your answer." });
     expect([...w.coach.held.keys()].some((k) => k.startsWith(`${T}#coach-task#`))).toBe(true);
   });
 });

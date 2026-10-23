@@ -200,6 +200,16 @@ struct HeldCall: Identifiable, Hashable, Codable {
     /// What the call is on, one line each, as KIFF keeps its arguments. Optional, so a
     /// saved sample from before it still loads.
     var details: [String]?
+    /// Coach asks to install a version (kiff/tafs#206): approving it is installing it,
+    /// switch and Card first, then this answer, in one Face ID. Nil for any other call.
+    var install: VersionInstall?
+}
+
+/// The taf and version a held version_install names, as Coach sent them: the taf's id in
+/// tafs cloud, or its name.
+struct VersionInstall: Hashable, Codable {
+    var taf: String
+    var n: Int
 }
 
 /// The owner's answer to a held call: approve it once, refuse it, or refuse it with

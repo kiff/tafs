@@ -407,6 +407,30 @@ final class AppModel: ObservableObject {
         pendingHandoff = nil
     }
 
+    /// Gives Coach its tools (kiff/tafs#206), inside a step the owner just confirmed with Face
+    /// ID, so no new prompt: each of the seven tools on tafs cloud's server connected in KIFF
+    /// as the account's control server, one at a time, the ones there already skipped; then
+    /// Coach's Cards, which name them. Each request is signed just before it's sent. Once
+    /// done for the account on this phone, it isn't asked again; sending the Cards again would
+    /// only revise them.
+    private func keepCoachTools(tenant: String, gen: Int) async {
+        let doneKey = "coachTools.\(tenant)"
+        guard !UserDefaults.standard.bool(forKey: doneKey), kiff.setupSigner != nil,
+              let agent = setupTaf?.kiffAgent, !agent.isEmpty else { return }
+        do {
+            let there = try await kiff.connectionNames()
+            for tool in KIFFClient.coachTools where !there.contains(tool.name) {
+                guard gen == accountGeneration else { return }
+                try await kiff.connectCoachTool(tool.name, readOnly: tool.readOnly, mcp: cloud.mcpURL)
+            }
+            guard gen == accountGeneration else { return }
+            try await kiff.submitCoachCards(agentID: agent)
+            UserDefaults.standard.set(true, forKey: doneKey)
+        } catch {
+            // Not now: Coach does without its tools until the next confirmed step.
+        }
+    }
+
     /// iOS gave this phone a push token (at launch, and whenever it changes).
     func pushTokenArrived(_ token: Data) async {
         pushToken = token.map { String(format: "%02x", $0) }.joined()
@@ -766,8 +790,17 @@ final class AppModel: ObservableObject {
         call.kiffID.map(kiff.answerPage(for:))
     }
 
-    func answer(_ call: HeldCall, with answer: Answer) async {
+    /// `confirmed`: the owner just confirmed this step with Face ID (installing the version
+    /// Coach asked for), so the answer is signed without asking again. `installed`: the
+    /// version Coach's held call names is live already.
+    func answer(_ call: HeldCall, with answer: Answer, confirmed: Bool = false, installed: Bool = false) async {
         guard held.contains(where: { same($0, call) }) else { return }
+        // Approving Coach's install is installing it (kiff/tafs#206): the switch and its
+        // Card come first, then this answer, so tafs never hears of a half-done install.
+        if call.install != nil, answer == .approveOnce, !confirmed, !installed {
+            lastError = "Install it from its card: the version goes live, then Coach hears."
+            return
+        }
         guard canAnswer(call) else {
             lastError = kiff.serverVerifiesSignatures && !sessionHasKey
                 ? "Sign out and in again to answer from this phone, so KIFF knows its key. Or answer this one in KIFF."
@@ -792,7 +825,7 @@ final class AppModel: ObservableObject {
                 let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: kiffID,
                                                        answer: answer == .approveOnce ? "approve-once" : "reject",
                                                        nextStep: nextStep, accountingVersion: version, signedAt: signedAt)
-                signature = try await signer.sign(message, reason: reason)
+                signature = confirmed ? try signer.signConfirmed(message) : try await signer.sign(message, reason: reason)
                 signed = KIFFClient.AnswerSignature(signedAt: signedAt, value: signature)
             } else {
                 signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)
@@ -1414,8 +1447,44 @@ final class AppModel: ObservableObject {
 
     /// `shownDraft` is the version of the draft the owner's screen showed: Face ID signs
     /// exactly that, and a version that brings a Card with nothing shown signs nothing.
+    /// The taf and version Coach's held install names (kiff/tafs#206), with its switch begun
+    /// (what's in the way stopped first) and the Card draft it waits for: the owner reads that
+    /// Card before the one Face ID. Nil, with `versionErrors` or `lastError`, when it can't begin.
+    func beginCoachInstall(_ call: HeldCall) async -> CoachInstall? {
+        guard let ask = call.install else { return nil }
+        let match = cloudTafs.first { $0.value.id == ask.taf } ?? cloudTafs.first { $0.value.name.caseInsensitiveCompare(ask.taf) == .orderedSame }
+        guard let agent = match?.key, let tafID = holderIDs[agent] else {
+            lastError = "Coach asked to install a version of a taf that isn't here."
+            return nil
+        }
+        await loadVersions(tafID)
+        guard let version = versions[tafID]?.first(where: { $0.n == ask.n }) else {
+            lastError = "\(match?.value.name ?? "That taf") has no version \(ask.n)."
+            return nil
+        }
+        if version.live {
+            // Live already: approving only tells Coach so.
+            await answer(call, with: .approveOnce, installed: true)
+            return nil
+        }
+        guard let sw = await prepareSwitch(version, of: tafID, stopBlocking: true) else { return nil }
+        return CoachInstall(call: call, tafID: tafID, version: version, hasCard: sw.draft != nil)
+    }
+
+    /// Coach's held install, ready for the owner (kiff/tafs#206).
+    struct CoachInstall: Identifiable {
+        let call: HeldCall
+        let tafID: UUID
+        let version: TafsCloud.Version
+        /// The version brings a Card change, read before the Face ID.
+        let hasCard: Bool
+        var id: UUID { call.id }
+    }
+
+    /// `approving`: the held version_install of Coach's this install answers (kiff/tafs#206):
+    /// approved once the version is live, signed with the same Face ID.
     @discardableResult
-    func useVersion(_ version: TafsCloud.Version, of tafID: UUID, shownDraft: String? = nil) async -> Bool {
+    func useVersion(_ version: TafsCloud.Version, of tafID: UUID, shownDraft: String? = nil, approving: HeldCall? = nil) async -> Bool {
         guard mode == .kiff, let tenant = kiffTenant, let c = cloudTaf(for: tafID), let taf = taf(tafID) else { return false }
         guard !version.live, switchingVersion[tafID] == nil else { return false }
         switchingVersion[tafID] = version.n
@@ -1431,7 +1500,7 @@ final class AppModel: ObservableObject {
         // Begun before any Card changes, with the draft tafs cloud prepared: from here
         // nothing of the taf runs. Again for a switch under way is the same switch.
         let sw: TafsCloud.Switching
-        do { sw = try await cloud.beginSwitch(c.id, version: version.n) } catch {
+        do { sw = try await cloud.beginSwitch(c.id, version: version.n, stopBlocking: approving != nil) } catch {
             guard gen == accountGeneration else { return false }
             versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
             return false
@@ -1488,6 +1557,7 @@ final class AppModel: ObservableObject {
                 return false
             }
             await keepKIFFAlerts(tenant: tenant, gen: gen)
+            await keepCoachTools(tenant: tenant, gen: gen)
         } else {
             do {
                 _ = try await signer.sign(Data("tafs.version.v1|\(tenant)|\(c.id)|\(version.n)".utf8),
@@ -1510,6 +1580,9 @@ final class AppModel: ObservableObject {
             return false
         }
         await loadVersions(tafID)
+        guard gen == accountGeneration else { return false }
+        // Live: now Coach's held call is approved, with the Face ID just given.
+        if let approving { await answer(approving, with: .approveOnce, confirmed: true) }
         return gen == accountGeneration
     }
 
@@ -2449,6 +2522,7 @@ final class AppModel: ObservableObject {
                 return nil
             }
             await keepKIFFAlerts(tenant: tenant, gen: gen)
+            await keepCoachTools(tenant: tenant, gen: gen)
             return grant
         }
         guard ["pending", "approved", "signed_in"].contains(grant.status) else {
@@ -2785,6 +2859,7 @@ final class AppModel: ObservableObject {
         planque.signer = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil; planque.signer = nil }
         await keepKIFFAlerts(tenant: tenant, gen: gen)
+        await keepCoachTools(tenant: tenant, gen: gen)
         if !planqueReady {
             guard await enrolPlanque(tenant: tenant, gen: gen) else {
                 setupError = lastError

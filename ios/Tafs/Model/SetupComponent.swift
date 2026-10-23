@@ -100,6 +100,8 @@ struct SetupThread: Equatable {
     var components: [ShownComponent] = []
     /// The session Setup is at work in now, as tafs cloud says (kiff/tafs#58); nil when idle.
     var working: String?
+    /// How the tasks Coach handed tafs went, waiting for Coach's next turn (kiff/tafs#206).
+    var coachLines: [TafsCloud.CoachLine] = []
 
     /// The plan, shown pinned above the thread rather than in it.
     var plan: ShownComponent? { components.last { $0.component.type == .steps } }
