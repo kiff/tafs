@@ -14,6 +14,13 @@ final class TafsCloud {
         var errorDescription: String? { message }
     }
 
+    /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).
+    static func refusal(_ status: Int, _ data: Data) -> CloudError {
+        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]? }
+        let body = try? JSONDecoder().decode(Body.self, from: data)
+        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [])
+    }
+
     /// A run in the way of an install (kiff/tafs#206): one at work, or one waiting on the owner.
     struct BlockingRun: Decodable, Equatable {
         let run: String
@@ -524,9 +531,7 @@ final class TafsCloud {
         guard status == 200 else {
             var data = Data()
             for try await b in bytes { data.append(b) }
-            struct Refusal: Decodable { let error: String?; let blocking: [BlockingRun]? }
-            let refusal = try? JSONDecoder().decode(Refusal.self, from: data)
-            throw CloudError(status: status, message: refusal?.error ?? "tafs cloud answered \(status)", blocking: refusal?.blocking ?? [])
+            throw Self.refusal(status, data)
         }
         return AsyncThrowingStream { continuation in
             let reading = Task {
@@ -878,8 +883,7 @@ final class TafsCloud {
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? "tafs cloud answered \(status)"
-            throw CloudError(status: status, message: message)
+            throw Self.refusal(status, data)
         }
         return try KIFFClient.decoder.decode(T.self, from: data)
     }

@@ -132,7 +132,7 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Stripe", moves: true).1,
                        "Stripe refused it. No money moved, but it still counts against today's total.")
         XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: nil, moves: false).1,
-                       "The tool refused it: charge_already_refunded. Nothing was done, but it still counts toward today's limits.")
+                       "The tool refused it, and it still counts toward today's limits: charge_already_refunded")
     }
 
 }

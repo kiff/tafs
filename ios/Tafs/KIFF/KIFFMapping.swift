@@ -171,7 +171,7 @@ enum KIFFMapping {
             let who = vendor ?? "The tool"
             return (.notDone, moves
                 ? "\(who) refused it. No money moved, but it still counts against today's total."
-                : "\(who) refused it\(why). Nothing was done, but it still counts toward today's limits.")
+                : "\(who) refused it, and it still counts toward today's limits\(why)")
         case "not_sent"?:
             return (.notDone, "\(allowed), but it couldn't be sent: nothing reached the tool\(why)")
         case "sending"?:
