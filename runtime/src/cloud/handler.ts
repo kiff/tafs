@@ -1612,6 +1612,8 @@ export interface StreamResult {
  *   event: taken      {}: the run read a message the owner wrote while it went (steer)
  *   event: text       {text}: more of the answer
  *   event: activity   {tool}: a tool's name as the agent calls it, never its input
+ *   event: held       {exception, invocation}: KIFF holds the call just made for the
+ *                     owner, at this point of the answer (kiff/tafs#206)
  *   event: component  {component}: a component the agent showed
  *   event: end        {status, stop}: where the run stopped
  *   event: error      {error}: the stream broke; the conversation has the rest
@@ -1686,6 +1688,17 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "tool_call" && typeof d.tool === "string") return sse("activity", { tool: d.tool });
         if (d.kind === "component" && d.component !== undefined) return sse("component", { component: d.component });
         if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
+        if (d.kind === "tool_result") {
+          // Where KIFF held a call: the app shows the owner's card here in the answer. Only
+          // KIFF's keys for it, never what the tool answered.
+          const r = (d.result ?? {}) as { state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
+          if (r.state === "held") {
+            return sse("held", {
+              exception: typeof r.hold?.exception === "string" ? r.hold.exception : "",
+              invocation: typeof r.invocation === "string" ? r.invocation : "",
+            });
+          }
+        }
         return undefined; // tool results stay on the server
       case "end":
         return sse("end", { status: d.status ?? "", stop: d.stop ?? "" });

@@ -477,6 +477,9 @@ final class TafsCloud {
         case broken
         /// The run read a message the owner wrote to it while it went (kiff/tafs#64).
         case taken
+        /// KIFF holds the call just made for the owner, at this point of the answer
+        /// (kiff/tafs#206): KIFF's id for the owner's decision, and for the call.
+        case held(exception: String, invocation: String)
     }
 
     /// Sends the owner's message with its run streamed: returns once tafs cloud took it,
@@ -534,6 +537,7 @@ final class TafsCloud {
         case "component": return .component
         case "end": return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "")
         case "error": return .broken
+        case "held": return .held(exception: o["exception"] as? String ?? "", invocation: o["invocation"] as? String ?? "")
         default: return nil
         }
     }

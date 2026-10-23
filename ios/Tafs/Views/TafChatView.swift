@@ -74,6 +74,8 @@ struct TafChatView: View {
                                     .onDisappear { heldInView.remove(call.id) }
                             case .outcome(let entry):
                                 OutcomeLine(text: Self.outcomeText(entry), tone: Self.outcomeTone(entry.kind), mark: Self.outcomeMark(entry.kind))
+                            case .streaming(_, let m):
+                                ChatBubble(message: m, taf: taf, fullWidth: true)
                             }
                         }
                         .id(item.id)
@@ -84,10 +86,9 @@ struct TafChatView: View {
                                      discard: { model.discardUnsentChat(unsent, from: tafID) })
                             .id(unsent.id)
                     }
-                    if let live = state.live, !live.text.isEmpty {
-                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: live.text, session: "live"), taf: taf, fullWidth: true)
-                            .id("live")
-                    } else if thinking {
+                    // The answer streaming now is in the items, in the order it came (kiff/tafs#206):
+                    // the dots show only while nothing is being written.
+                    if thinking, state.live?.text.isEmpty ?? true {
                         TypingBubble(taf: taf, fullWidth: true).id("thinking")
                     }
                     if let activity = state.live?.activity {
@@ -139,7 +140,7 @@ struct TafChatView: View {
                     if let waiting, !heldInView.contains(waiting.id) {
                         NeedsYouPill(text: "Needs you · " + waiting.proposed.summary) {
                             following = false
-                            withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("h|" + waiting.id.uuidString, anchor: .center) }
+                            withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("k|" + AppModel.heldKey(waiting), anchor: .center) }
                         }
                     }
                     if !atBottom && !following {
@@ -237,7 +238,7 @@ struct TafChatView: View {
         guard !landed, !items.isEmpty else { return }
         landed = true
         if waiting != nil { following = false }
-        let (target, anchor): (String, UnitPoint) = waiting.map { ("h|" + $0.id.uuidString, .center) } ?? (Self.bottom, .bottom)
+        let (target, anchor): (String, UnitPoint) = waiting.map { ("k|" + AppModel.heldKey($0), .center) } ?? (Self.bottom, .bottom)
         landAgain(proxy, target, anchor)
     }
 
