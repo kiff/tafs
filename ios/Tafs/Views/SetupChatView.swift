@@ -146,7 +146,7 @@ struct SetupChatView: View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
             Text("Coach mode").font(Theme.display(30)).foregroundColor(Theme.coach)
-            Text("Name a tool a taf should work with, like your Stripe. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
+            Text("Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
             if let error = model.setupError ?? model.lastError {
@@ -462,7 +462,7 @@ struct SetupChatView: View {
     static let examples = [
         "Make sure customers can get their refunds",
         "Answer customer questions about orders",
-        "Connect my Stripe",
+        "Connect my payment provider",
     ]
 
     /// Ways to start improving a taf (kiff/tafs#107).

@@ -73,7 +73,7 @@ final class UsageTests: XCTestCase {
         XCTAssertNotNil(UsageView.notice(u))
     }
 
-    func testItReadsKIFFAndSetsTheCeilingSigned() async throws {
+    func testItReadsKIFFsUsage() async throws {
         StubProtocol.responses = [:]
         StubProtocol.sent = []
         let config = URLSessionConfiguration.ephemeral
@@ -95,23 +95,6 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(model.usage?.tasks.counted, 14)
         XCTAssertEqual(model.countedTasks.map(\.record), ["rec_1"])
         XCTAssertNil(model.usageError)
-
-        XCTAssertTrue(KIFFClient.signsSetup("/v1/me/usage/ceiling"), "raising the ceiling allows more to be billed")
-        StubProtocol.responses["PUT /v1/me/usage/ceiling"] = (200, #"{"counted":14,"included":25,"ceiling":40,"ceiling_reached":false}"#)
-        let unlocksBefore = signer.signed.count
-        let done = await model.setTaskCeiling(40)
-        XCTAssertTrue(done)
-        let put = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PUT" })
-        XCTAssertEqual(try JSONDecoder().decode([String: Int].self, from: try XCTUnwrap(put.httpBody)), ["tasks": 40])
-        XCTAssertNotNil(put.value(forHTTPHeaderField: "KIFF-Device-Signature"), "a signed setup call")
-        let during = Array(signer.signed.dropFirst(unlocksBefore))
-        XCTAssertTrue(during.first?.hasPrefix("tafs.usage-ceiling.v1|t1|40") ?? false, "Face ID first: \(during)")
-        XCTAssertEqual(model.usage?.tasks.ceiling, 40)
-
-        StubProtocol.responses["PUT /v1/me/usage/ceiling"] = (400, #"{"error":"the ceiling can't be below what is included"}"#)
-        let refused = await model.setTaskCeiling(10)
-        XCTAssertFalse(refused)
-        XCTAssertNotNil(model.usageError)
 
         await model.signOut()
         XCTAssertNil(model.usage)
@@ -235,48 +218,4 @@ final class UsageTests: XCTestCase {
         }
     }
 
-    func testGoOnIsSignedBehindFaceIDAndReadsTheUseAgain() async throws {
-        StubProtocol.responses = [:]
-        StubProtocol.sent = []
-        let config = URLSessionConfiguration.ephemeral
-        config.protocolClasses = [StubProtocol.self]
-        let session = URLSession(configuration: config)
-        let signer = RecordingSigner()
-        let model = AppModel(signer: signer,
-                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
-                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
-        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
-        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
-        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
-        StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme"}"#)
-        await model.useSession("kiff_dev_x", tenant: "t1")
-
-        StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read.replacingOccurrences(of: #""plan":"trial""#, with: #""plan":"solo""#))
-        StubProtocol.responses["GET /v1/me/usage/tasks"] = (200, #"{"items":[],"next":null}"#)
-        StubProtocol.responses["GET /v1/usage/ai"] = (200, #"{"used_pct":100,"asks_at_pct":100,"paused":true}"#)
-        await model.refreshUsage()
-        XCTAssertEqual(model.aiUse, .init(usedPct: 100, asksAtPct: 100, paused: true))
-
-        XCTAssertTrue(KIFFClient.signsSetup("/v1/me/usage/ai"), "going on lets the tafs use more")
-        StubProtocol.responses["PUT /v1/me/usage/ai"] = (200, #"{"go_ons":1}"#)
-        StubProtocol.responses["GET /v1/usage/ai"] = (200, #"{"used_pct":100,"asks_at_pct":200,"paused":false}"#)
-        let unlocksBefore = signer.signed.count
-        let done = await model.goOnAI()
-        XCTAssertTrue(done)
-        let put = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PUT" })
-        XCTAssertEqual(try JSONDecoder().decode([String: Bool].self, from: try XCTUnwrap(put.httpBody)), ["go_on": true])
-        XCTAssertNotNil(put.value(forHTTPHeaderField: "KIFF-Device-Signature"), "a signed setup call")
-        let during = Array(signer.signed.dropFirst(unlocksBefore))
-        XCTAssertTrue(during.first?.hasPrefix("tafs.ai-go-on.v1|t1|100") ?? false, "Face ID first: \(during)")
-        XCTAssertEqual(model.aiUse, .init(usedPct: 100, asksAtPct: 200, paused: false))
-        XCTAssertEqual(model.usage?.ai?.goOns, 1)
-
-        StubProtocol.responses["PUT /v1/me/usage/ai"] = (409, #"{"error":"this signature was used"}"#)
-        let refused = await model.goOnAI()
-        XCTAssertFalse(refused)
-        XCTAssertNotNil(model.usageError)
-
-        await model.signOut()
-        XCTAssertNil(model.aiUse)
-    }
 }

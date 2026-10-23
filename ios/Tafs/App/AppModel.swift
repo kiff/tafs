@@ -1029,57 +1029,6 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Sets the month's ceiling of tafs tasks, behind Face ID: raising it allows more to be
-    /// billed, so KIFF takes it only signed by this phone.
-    func setTaskCeiling(_ tasks: Int) async -> Bool {
-        guard mode == .kiff, let tenant = kiffTenant else { return false }
-        let gen = accountGeneration
-        usageError = nil
-        do { _ = try await signer.sign(Data("tafs.usage-ceiling.v1|\(tenant)|\(tasks)".utf8), reason: "Set this month's ceiling to \(tasks) tasks") } catch { return false }
-        guard gen == accountGeneration else { return false }
-        let signer = self.signer
-        kiff.tenant = tenant
-        kiff.setupSigner = { try signer.signConfirmed($0) }
-        defer { kiff.setupSigner = nil }
-        do {
-            let meter = try await kiff.setTaskCeiling(tasks)
-            guard gen == accountGeneration else { return false }
-            usage?.tasks = meter
-            return true
-        } catch {
-            guard gen == accountGeneration else { return false }
-            usageError = "The ceiling didn't change: \(error.localizedDescription)"
-            return false
-        }
-    }
-
-    /// Lets the tafs go on past this period's AI fair use (kiff/tafs#193), behind Face ID:
-    /// KIFF takes it only signed by this phone. They ask again at the next full bound.
-    func goOnAI() async -> Bool {
-        guard mode == .kiff, let tenant = kiffTenant else { return false }
-        let gen = accountGeneration
-        usageError = nil
-        let at = aiUse?.asksAtPct ?? 100
-        do { _ = try await signer.sign(Data("tafs.ai-go-on.v1|\(tenant)|\(at)".utf8), reason: "Let your tafs go on this month") } catch { return false }
-        guard gen == accountGeneration else { return false }
-        let signer = self.signer
-        kiff.tenant = tenant
-        kiff.setupSigner = { try signer.signConfirmed($0) }
-        defer { kiff.setupSigner = nil }
-        do {
-            let goOns = try await kiff.goOnAI()
-            let ai = try? await cloud.aiUse()
-            guard gen == accountGeneration else { return false }
-            usage?.ai = .init(goOns: goOns)
-            aiUse = ai ?? aiUse.map { .init(usedPct: $0.usedPct, asksAtPct: 100 * (goOns + 1), paused: false) }
-            return true
-        } catch {
-            guard gen == accountGeneration else { return false }
-            usageError = "Your tafs couldn't go on: \(error.localizedDescription)"
-            return false
-        }
-    }
-
     /// The KIFF agent a taf acts as: what KIFF's usage counts it by.
     func kiffAgent(for tafID: UUID) -> String? {
         holderIDs.first(where: { $0.value == tafID })?.key

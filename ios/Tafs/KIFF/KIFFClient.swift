@@ -49,7 +49,7 @@ final class KIFFClient {
     /// call is held (#1234), the connector key planque keeps (#1251), the account's time
     /// zone (#1278), deleting the account (kiff/tafs#185), the month's ceiling of tafs
     /// tasks (#1316), and the owner's go on past AI fair use (kiff/tafs#193).
-    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", "/v1/me/usage/ceiling", "/v1/me/usage/ai"]
+    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete"]
 
     /// Whether KIFF takes `path` from a phone only with its signature: the paths above,
     /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`), and
@@ -356,21 +356,6 @@ final class KIFFClient {
         let query = [agent.map { "agent=\(escaped($0))" }, cursor.map { "cursor=\(escaped($0))" }].compactMap { $0 }
         let page: Page = try await send("GET", "/v1/me/usage/tasks" + (query.isEmpty ? "" : "?" + query.joined(separator: "&")))
         return (page.items, page.next)
-    }
-
-    /// Sets the month's ceiling of tafs tasks: a signed setup call, since raising it allows
-    /// more to be billed. KIFF answers with the tasks meter.
-    func setTaskCeiling(_ tasks: Int) async throws -> Usage.Meter {
-        try await send("PUT", "/v1/me/usage/ceiling", body: ["tasks": tasks])
-    }
-
-    /// The owner says go on past this period's AI fair use (kiff/tafs#193): a signed setup
-    /// call, one more each time, so the tafs ask again at the next full bound. KIFF answers
-    /// how many go ons the period has now.
-    func goOnAI() async throws -> Int {
-        struct Answer: Decodable { let goOns: Int; enum CodingKeys: String, CodingKey { case goOns = "go_ons" } }
-        let a: Answer = try await send("PUT", "/v1/me/usage/ai", body: ["go_on": true])
-        return a.goOns
     }
 
     /// Sets the account's time zone (an IANA name): a signed setup call from a phone

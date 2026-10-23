@@ -20,18 +20,15 @@ struct UsageView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
+                    // Read only: the ceiling is never changed in the app (kiff/tafs#185).
                     if model.mode == .kiff, u.plan != "trial", let ceiling = u.tasks.ceiling, ceiling > 0 {
-                        NavigationLink(destination: CeilingView(current: ceiling, least: max(u.tasks.included, u.tasks.counted)).environmentObject(model)) {
-                            Panel {
-                                HStack {
-                                    Text("Monthly ceiling").font(.system(size: 15)).foregroundColor(Theme.ink)
-                                    Spacer()
-                                    Text("\(ceiling) tasks").font(.system(size: 15)).foregroundColor(Theme.soft)
-                                    Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
-                                }
+                        Panel {
+                            HStack {
+                                Text("Monthly ceiling").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                Spacer()
+                                Text("\(ceiling) tasks").font(.system(size: 15)).foregroundColor(Theme.soft)
                             }
                         }
-                        .buttonStyle(.plain)
                     }
                     if let ai = model.aiUse, let used = ai.usedPct {
                         NavigationLink(destination: AIUseView().environmentObject(model)) {
@@ -248,61 +245,12 @@ private struct CountRow: View {
     }
 }
 
-/// The month's ceiling of tafs tasks: its own screen. At the ceiling the tafs pause and ask;
-/// nothing is billed past it. Saving asks for Face ID.
-struct CeilingView: View {
-    @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @State private var tasks: Int
-    @State private var saving = false
-    let least: Int
-
-    init(current: Int, least: Int) {
-        _tasks = State(initialValue: max(current, least))
-        self.least = least
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Panel {
-                    Eyebrow(text: "Monthly ceiling")
-                    Stepper(value: $tasks, in: least...max(least * 20, 1000), step: 5) {
-                        Text("\(tasks) tasks").font(Theme.display(26)).foregroundColor(Theme.ink)
-                    }
-                    Text("When your tafs reach it, they pause and ask you. Nothing past it is counted.")
-                        .font(.system(size: 13)).foregroundColor(Theme.soft)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                if let why = model.usageError {
-                    Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
-                }
-                Button(saving ? "Saving…" : "Save with \(Biometry.name)") {
-                    saving = true
-                    Task {
-                        let done = await model.setTaskCeiling(tasks)
-                        saving = false
-                        if done { dismiss() }
-                    }
-                }
-                .buttonStyle(OutlineButtonStyle())
-                .disabled(saving || tasks == model.usage?.tasks.ceiling)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-        }
-        .screenBackground()
-        .navigationTitle("Ceiling")
-        .inlineTitle()
-    }
-}
-
-/// AI use from chats and Setup this period (kiff/tafs#193): its own screen. It's included, and
-/// never billed: past the plan's fair use the tafs ask before going on, and Go on asks for Face
-/// ID. Said neutrally, with no price and nothing to buy (App Store Review Guideline 3.1.3(f)).
+/// AI use from chats and Setup this period (kiff/tafs#193): its own screen, read only. It's
+/// included, and never billed: past the plan's fair use the tafs ask before going on, and
+/// going on is changed for the account outside the app, never in it (kiff/tafs#185). Said
+/// neutrally, with no price, nothing to buy and no link.
 struct AIUseView: View {
     @EnvironmentObject private var model: AppModel
-    @State private var going = false
 
     var body: some View {
         ScrollView {
@@ -319,17 +267,6 @@ struct AIUseView: View {
                         Panel {
                             Text(Self.asking).font(.system(size: 15)).foregroundColor(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
-                        }
-                        if let why = model.usageError {
-                            Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
-                        }
-                        if model.mode == .kiff {
-                            Button(going ? "Going on…" : "Go on with \(Biometry.name)") {
-                                going = true
-                                Task { _ = await model.goOnAI(); going = false }
-                            }
-                            .buttonStyle(OutlineButtonStyle())
-                            .disabled(going)
                         }
                     }
                 }
