@@ -50,6 +50,35 @@ final class LaunchListTests: XCTestCase {
         }
     }
 
+    /// Signing in takes the sign-in screen away, which cancels its task: the first list
+    /// still loads, with no pull to refresh (605 retest).
+    func testSigningInLoadsTheListThoughTheSignInScreenGoesAway() async throws {
+        serve()
+        let model = model()
+        let signIn = Task { await model.useSession("kiff_dev_x", tenant: "tenant-a") }
+        signIn.cancel()
+        await signIn.value
+        XCTAssertTrue(model.listLoaded)
+        XCTAssertEqual(model.tafs.map(\.name), ["Rae"])
+    }
+
+    /// A first refresh dropped before its answer (a view that went away, a newer refresh)
+    /// read nothing: the list isn't shown as loaded and empty.
+    func testACancelledFirstRefreshDoesntShowAnEmptyList() async throws {
+        serve()
+        let model = model()
+        // A launch with nothing remembered, its task gone before KIFF answers.
+        let launch = Task { await model.resumeSession("kiff_dev_x", tenant: "tenant-a", keyed: true) }
+        launch.cancel()
+        await launch.value
+        XCTAssertEqual(model.mode, .kiff)
+        XCTAssertFalse(model.listLoaded, "nothing was read, so the list isn't shown as empty")
+        // The next refresh reads it.
+        await model.refresh()
+        XCTAssertTrue(model.listLoaded)
+        XCTAssertEqual(model.tafs.map(\.name), ["Rae"])
+    }
+
     /// The owner's launch: no "working" first and "paused" a moment later. A refresh
     /// shows tafs cloud's list once, as it is, with other agents listed apart.
     func testARefreshShowsTheListOnceWithTafsCloudsStates() async throws {
