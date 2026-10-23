@@ -366,6 +366,26 @@ describe("KIFF's alerts", () => {
   });
 });
 
+describe("KIFF's alert target without a phone (kiff/tafs#206)", () => {
+  const signedIn = (who: string) => ({ Authorization: `Bearer ${who}` });
+
+  it("keeps the secret for tafs cloud and kiff/agents, with no device, and says alerts are set up", async () => {
+    const push = memoryPush();
+    const accounts = new Map<string, { tenant: string; secret: string }>();
+    const target = { id: "at_1", signing_secret: SECRET };
+    expect((await call("GET", "/v1/alerts", { headers: signedIn("ana"), push, accounts })).body).toEqual({ alerts: false });
+    expect((await call("POST", "/v1/alerts", { body: JSON.stringify({ alert_target: target }), headers: signedIn("viewer"), push, accounts })).status).toBe(403);
+    expect(accounts.size).toBe(0);
+    expect((await call("POST", "/v1/alerts", { body: JSON.stringify({ alert_target: { id: "at_1", signing_secret: "nope" } }), headers: signedIn("ana"), push, accounts })).status).toBe(400);
+    expect((await call("POST", "/v1/alerts", { body: JSON.stringify({ alert_target: target }), headers: signedIn("ana"), push, accounts })).body).toEqual({ alerts: true });
+    expect(push.secrets.get("t_acme")).toEqual([SECRET]);
+    expect(push.devices.get("t_acme") ?? []).toEqual([]);
+    expect(accounts.get("t_acme")).toEqual({ tenant: "t_acme", secret: SECRET });
+    expect((await call("GET", "/v1/alerts", { headers: signedIn("viewer"), push, accounts })).body).toEqual({ alerts: true });
+    expect((await call("GET", "/v1/alerts", { push, accounts })).status).toBe(401);
+  });
+});
+
 describe("a phone signing up for alerts", () => {
   const signedIn = (who: string) => ({ Authorization: `Bearer ${who}` });
   const accounts = new Map<string, { tenant: string; secret: string }>();

@@ -115,7 +115,8 @@ final class AfterTheTestTests: XCTestCase {
         let held = KIFFMapping.held(e, tafID: UUID())
         XCTAssertEqual(held.proposed.summary, "Refund a payment", "no tool-call id, and no tool name")
         XCTAssertEqual(held.details, ["payment_intent: pi_3USLXh"], "the amount shows above it, and KIFF's operation id isn't the owner's")
-        XCTAssertEqual(held.reason, "150.00 EUR is above the 100.00 EUR limit for one call", "KIFF's words, in the unit")
+        // Its amounts as the app writes money everywhere else (kiff/tafs#206 6.8).
+        XCTAssertEqual(held.reason, "\(Money(minor: 15000, currency: "EUR", scale: 2).formatted) is over the \(Money(minor: 10000, currency: "EUR", scale: 2).formatted) limit for one call")
     }
 
     func testTheCardSaysWhatsLeft() {

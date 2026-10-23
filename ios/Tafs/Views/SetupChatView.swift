@@ -34,6 +34,9 @@ struct SetupChatView: View {
     /// back up to its start. `pinNext` marks the next message the owner sends.
     @State private var pinNext = false
     @State private var pinned: String?
+    /// The words of the pinned message: when tafs cloud's copy takes the place of the one
+    /// shown on sending, the pin moves to it, and the view doesn't move (kiff/tafs#206).
+    @State private var pinnedWords: String?
     /// The owner has scrolled since the chat opened: a late landing leaves them where they are.
     @State private var touched = false
     /// What the owner just sent, while it waits behind Setup's answer: its bubble is pinned,
@@ -143,7 +146,7 @@ struct SetupChatView: View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
             Text("Coach mode").font(Theme.display(30)).foregroundColor(Theme.coach)
-            Text("Name a tool a taf should work with, like your Stripe. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
+            Text("Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
             if let error = model.setupError ?? model.lastError {
@@ -211,7 +214,13 @@ struct SetupChatView: View {
                     // Room under a pinned message, so it can sit at the top while the answer is short.
                     if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
-                        .onAppear { atBottom = true; following = true; unseen = false }
+                        .onAppear {
+                            // A pinned message stays at the top: seeing the bottom under it doesn't make
+                            // the thread follow what arrives (kiff/tafs#206).
+                            atBottom = true
+                            if pinned == nil { following = true }
+                            unseen = false
+                        }
                         .onDisappear { atBottom = false }
                 }
                 .padding(.horizontal, 16)
@@ -258,6 +267,10 @@ struct SetupChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
+                if let p = pinned, p.hasPrefix("m|"), !ids.contains(p), let words = pinnedWords,
+                   let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
+                    pinned = copy
+                }
                 // The message the owner just sent is in the thread: it goes to the top and stays
                 // (kiff/tafs#138). Matched by its words among the messages that are new since the send, so
                 // neither a reply arriving first nor an older copy of the same words is pinned. If its bubble was already pinned while the taf (or Setup) worked,
@@ -265,6 +278,7 @@ struct SetupChatView: View {
                 if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && !sentBefore.contains($0.id) && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
                     let animate = pinNext
                     pinNext = false
+                    pinnedWords = text
                     pinText = nil
                     pinned = sent
                     following = false
@@ -277,8 +291,8 @@ struct SetupChatView: View {
                 follow(proxy)
             }
             .onChange(of: thinking) { _ in follow(proxy) }
-            .onChange(of: grown) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
-            .onChange(of: model.setupLive) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
+            .onChange(of: grown) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
+            .onChange(of: model.setupLive) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: model.setupQueued) { queued in
                 // Waiting behind Setup's answer: its bubble goes to the top at once.
                 if pinNext, let text = pinText, let queued, SetupThread.matchesSent(queued, text) {
@@ -307,7 +321,7 @@ struct SetupChatView: View {
     private static let bottom = "bottom"
 
     private func follow(_ proxy: ScrollViewProxy) {
-        guard following else { return }
+        guard following, pinned == nil else { return }
         withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
     }
 
@@ -448,7 +462,7 @@ struct SetupChatView: View {
     static let examples = [
         "Make sure customers can get their refunds",
         "Answer customer questions about orders",
-        "Connect my Stripe",
+        "Connect my payment provider",
     ]
 
     /// Ways to start improving a taf (kiff/tafs#107).

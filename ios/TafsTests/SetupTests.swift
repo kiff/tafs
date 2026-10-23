@@ -73,6 +73,41 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Coach mode's Start also points KIFF's alerts at tafs cloud, with the same one Face ID
+    /// (kiff/tafs#206): a paused run hears the owner's answer with no phone's alerts on.
+    /// Kept already, nothing is registered again.
+    func testStartSetupKeepsKIFFsAlertsWithTheSameFaceID() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","no_tools":true,"cards":[]}"#)
+        StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/alerts"] = (200, #"{"alerts":false}"#)
+        StubProtocol.responses["POST /v1/me/alert-targets"] = (201, #"{"id":"at_1","signing_secret":"whsec_abcdefghijklmnopqrstuv"}"#)
+        StubProtocol.responses["POST /v1/alerts"] = (200, #"{"alerts":true}"#)
+
+        let started = await model.startSetup()
+        XCTAssertTrue(started, model.setupError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.setup.v1|t_01"], "no Face ID of its own")
+        let target = try XCTUnwrap(sent("POST", "api.test", "/v1/me/alert-targets").first)
+        XCTAssertEqual(body(target)["url"] as? String, "https://cloud.test/v1/kiff/alerts")
+        XCTAssertNotNil(target.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        let kept = try XCTUnwrap(sent("POST", "cloud.test", "/v1/alerts").first)
+        XCTAssertEqual(body(kept)["alert_target"] as? [String: String], ["id": "at_1", "signing_secret": "whsec_abcdefghijklmnopqrstuv"])
+
+        // An account whose alerts are kept already registers nothing.
+        let other = await self.model(signer: FaceIDSigner())
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","no_tools":true,"cards":[]}"#)
+        StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/alerts"] = (200, #"{"alerts":true}"#)
+        _ = await other.startSetup()
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/alert-targets").isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// The thread: each component at its first place, at its latest version; the plan is
     /// pinned, not in the thread; a component the app doesn't know is skipped.
     func testThreadFoldsComponents() async throws {

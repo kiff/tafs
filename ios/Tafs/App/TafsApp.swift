@@ -109,8 +109,9 @@ struct RootView: View {
         // A wide screen: a panel beside what's open. A phone: a sheet, with Close, that a drag
         // down closes too; either way the conversation stays for ✦ to reopen.
         .overlay { if coachAvailable && sizeClass == .regular { CoachPanel() } }
-        .sheet(isPresented: Binding(get: { coachAvailable && sizeClass != .regular && model.coachOpen },
-                                    set: { model.coachOpen = $0 })) {
+        // The whole screen on an iPhone, nothing of the screen behind showing (kiff/tafs#206 6.10).
+        .fullCover(isPresented: Binding(get: { coachAvailable && sizeClass != .regular && model.coachOpen },
+                                        set: { model.coachOpen = $0 })) {
             CoachView().environmentObject(model)
         }
         .onOpenURL { url in
@@ -118,6 +119,16 @@ struct RootView: View {
         }
         .onChange(of: model.requestedTab) { requested in showRequestedTab(requested) }
         .onAppear { showRequestedTab(model.requestedTab) }
+        // The device's time zone, asked once (kiff/tafs#206 6.11).
+        .alert("Use \(model.timeZoneOffer ?? "") for times in tafs?", isPresented: Binding(
+            get: { model.timeZoneOffer != nil && model.lastError == nil },
+            set: { _ in }
+        )) {
+            Button("Use \(model.timeZoneOffer ?? "")") { Task { await model.answerTimeZoneOffer(use: true) } }
+            Button("Not now", role: .cancel) { Task { await model.answerTimeZoneOffer(use: false) } }
+        } message: {
+            Text("Holds' deadlines, Activity, the Record and what your tafs write would use this \(ThisDevice.kind)'s time zone. Your account uses \(model.kiffAccount?.timeZone ?? "UTC") now.")
+        }
         .alert("Not done", isPresented: Binding(
             get: { model.lastError != nil },
             set: { if !$0 { model.lastError = nil } }

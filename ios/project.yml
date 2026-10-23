@@ -125,6 +125,8 @@ targets:
           - Services/LockScreen.swift
           - Services/PushDelegate.swift
           - Info.plist
+          # The Mac's own manifest is Mac/PrivacyInfo.xcprivacy.
+          - PrivacyInfo.xcprivacy
       - path: Shared
         excludes: [HeldActivity.swift]
     info:

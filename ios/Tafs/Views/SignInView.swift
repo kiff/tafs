@@ -87,32 +87,17 @@ struct SettingsView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var signingIn = false
-    @State private var deletingAccount = false
 
     var body: some View {
         NavigationStack {
             List {
                 Section("Account") {
                     LabeledContent("Mode", value: modeText)
-                    // Which KIFF account, so the owner can tell (kiff/tafs#73).
+                    // The account's details, and deleting it at their bottom, on a screen of their
+                    // own (kiff/tafs#206 6.9): never one tap below Sign out.
                     if model.mode == .kiff, let account = model.kiffAccount {
-                        LabeledContent("KIFF account", value: account.name)
-                        if account.displayName.map({ !$0.isEmpty && $0 != account.slug }) ?? false {
-                            LabeledContent("Account id", value: account.slug)
-                        }
-                        if let email = account.email, !email.isEmpty {
-                            LabeledContent("Email", value: email)
-                        }
-                        // A Card's day ends at midnight here (kiff/tafs#96); set from the phone as a
-                        // signed setup call (kiff-cloud #1278).
-                        LabeledContent("Time zone", value: account.timeZone ?? "UTC")
-                        if (account.timeZone ?? "UTC") != TimeZone.current.identifier {
-                            Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") {
-                                Task { await model.useThisDevicesTimeZone() }
-                            }
-                        }
-                        if let why = model.timeZoneError {
-                            Text(why).font(.system(size: 13)).foregroundColor(Theme.no)
+                        NavigationLink(destination: AccountView(account: account, done: { dismiss() }).environmentObject(model)) {
+                            LabeledContent("KIFF account", value: account.name)
                         }
                     }
                     // What the tafs used this period, the plan's tasks and the trial (kiff/tafs#184).
@@ -125,13 +110,9 @@ struct SettingsView: View {
                     Button(model.mode == .kiff ? "Sign out of KIFF" : "Clear the sample", role: .destructive) {
                         Task { await model.signOut(); dismiss() }
                     }
-                    // Deleting the account is its own sheet (kiff/tafs#185).
-                    if model.mode == .kiff {
-                        Button("Delete account…", role: .destructive) { deletingAccount = true }
-                    }
                 }
                 Section("How it works") {
-                    Text("Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this iPhone.")
+                    Text("Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this \(ThisDevice.kind).")
                         .font(.system(size: 14)).foregroundColor(Theme.soft)
                 }
                 Section("Legal") {
@@ -146,9 +127,6 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .screenBackground()
             .navigationTitle("Settings")
-            .sheet(isPresented: $deletingAccount, onDismiss: { if model.mode != .kiff { dismiss() } }) {
-                DeleteAccountView().environmentObject(model)
-            }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
         }
@@ -161,4 +139,58 @@ struct SettingsView: View {
         case .signedOut: return "Signed out"
         }
     }
+}
+
+/// The KIFF account's details (kiff/tafs#206 6.9): its name, id, email and time zone, and at
+/// the bottom, set apart, deleting it. Deleting stays in the app (App Store Review Guideline
+/// 5.1.1(v)); it is never next to an everyday action.
+struct AccountView: View {
+    @EnvironmentObject private var model: AppModel
+    let account: KIFFClient.Account
+    /// Closes Settings, once the account is gone.
+    let done: () -> Void
+    @State private var deletingAccount = false
+
+    var body: some View {
+        List {
+            Section {
+                LabeledContent("KIFF account", value: account.name)
+                if account.displayName.map({ !$0.isEmpty && $0 != account.slug }) ?? false {
+                    LabeledContent("Account id", value: account.slug)
+                }
+                if let email = account.email, !email.isEmpty {
+                    LabeledContent("Email", value: email)
+                }
+            }
+            Section {
+                // A Card's day ends at midnight here, and every time the owner reads is in it
+                // (kiff/tafs#96, #206 6.11); set from the device as a signed setup call (kiff-cloud #1278).
+                LabeledContent("Time zone", value: zone)
+                if zone != TimeZone.current.identifier {
+                    Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") {
+                        Task { await model.useThisDevicesTimeZone() }
+                    }
+                }
+                if let why = model.timeZoneError {
+                    Text(why).font(.system(size: 13)).foregroundColor(Theme.no)
+                }
+            } footer: {
+                Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.")
+            }
+            Section {
+                Button("Delete account…", role: .destructive) { deletingAccount = true }
+            } footer: {
+                Text("Deletes every taf, its runs, chats and notes, your Cards and your connections. It can't be undone.")
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .screenBackground()
+        .navigationTitle("Account")
+        .sheet(isPresented: $deletingAccount, onDismiss: { if model.mode != .kiff { done() } }) {
+            DeleteAccountView().environmentObject(model)
+        }
+    }
+
+    /// The account's time zone as KIFF holds it now.
+    private var zone: String { model.kiffAccount?.timeZone ?? account.timeZone ?? "UTC" }
 }

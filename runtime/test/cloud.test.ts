@@ -154,6 +154,7 @@ function depsOf(w: World): Deps {
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
+    sleep: async () => undefined,
     fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
     accountData: {
@@ -782,7 +783,7 @@ describe("upgrading running tafs (kiff/tafs#69)", () => {
     const w = world();
     const notes = "Only EU customers.\n\nNever after 6pm.";
     const old = definition(RAE, jobById("refunds"), { budgetCents: 150, ownerNotes: notes });
-    await w.agents.api.putAgent("t_acme", RAE, { ...old, instructions: old.instructions.replace("four ways", "three ways") });
+    await w.agents.api.putAgent("t_acme", RAE, { ...old, instructions: old.instructions.replace("five ways", "four ways") });
     // Max (t_other) is held as it is built: only its digest is new.
     await w.agents.api.putAgent("t_other", MAX, definition(MAX, jobById("refunds")));
     w.agents.calls.length = 0;
@@ -1020,6 +1021,39 @@ describe("a taf's versions (kiff/tafs#107)", () => {
       expect(String(r.body.error)).toContain("answer it, stop it or let it finish");
       w.agents.runs.shift();
     }
+    expect(w.agents.switching.size).toBe(0);
+  });
+
+  it("names the run in the way, and with stop_blocking stops it and begins the switch (kiff/tafs#206)", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_p", agent: RAE, session: "sess_p", trigger: "owner", status: "PAUSED", cost_micro_usd: 0, turns: 1, created: "2026-10-20T09:00:00Z", updated: "2026-10-20T09:00:00Z" });
+    const named = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect(named.status).toBe(409);
+    expect(named.body.blocking).toEqual([{ run: "run_p", session: "sess_p", status: "PAUSED", trigger: "owner" }]);
+    expect(w.agents.calls).not.toContain(`cancelRun ${RAE} run_p`);
+
+    const stopped = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true } });
+    expect(stopped).toMatchObject({ status: 200, body: { switching: { n: 2, draft: "drf_v2" } } });
+    expect(w.agents.calls).toContain(`cancelRun ${RAE} run_p`);
+    expect(w.agents.runs.find((r) => r.id === "run_p")?.status).toBe("CANCELLED");
+  });
+
+  it("with stop_blocking, still names a run that doesn't stop in time", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "draft" };
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_r", agent: RAE, session: "sess_r", trigger: "schedule", status: "RUNNING", cost_micro_usd: 0, turns: 1, created: "2026-10-20T09:00:00Z", updated: "2026-10-20T09:00:00Z" });
+    // A running run stops at its next checkpoint: here, never.
+    const cancel = w.agents.api.cancelRun.bind(w.agents.api);
+    w.agents.api.cancelRun = async (tenant, agent, id) => {
+      const r = await cancel(tenant, agent, id);
+      r.status = "RUNNING";
+      return r;
+    };
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true } });
+    expect(r.status).toBe(409);
+    expect(r.body.blocking).toEqual([{ run: "run_r", session: "sess_r", status: "RUNNING", trigger: "schedule" }]);
+    expect(w.agents.calls.filter((c) => c === `cancelRun ${RAE} run_r`)).toHaveLength(1);
     expect(w.agents.switching.size).toBe(0);
   });
 

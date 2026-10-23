@@ -219,11 +219,16 @@ export function registration(body: Record<string, unknown>): {
   if (environment !== "sandbox" && environment !== "production") throw new PushError(400, "environment is sandbox or production");
   const t = body.alert_target;
   if (t === undefined) return { token, environment };
+  return { token, environment, target: alertTarget(t) };
+}
+
+/** Validates KIFF's alert target as the phone hands it over: `{id, signing_secret}`. */
+export function alertTarget(t: unknown): { id: string; secret: string } {
   const target = t as { id?: unknown; signing_secret?: unknown } | null;
   const id = typeof target?.id === "string" ? target.id.trim() : "";
   const secret = typeof target?.signing_secret === "string" ? target.signing_secret.trim() : "";
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(id) || !/^whsec_[A-Za-z0-9_-]{20,200}$/.test(secret)) {
     throw new PushError(400, "alert_target is KIFF's {id, signing_secret}");
   }
-  return { token, environment, target: { id, secret } };
+  return { id, secret };
 }

@@ -45,7 +45,7 @@ enum TafTemplates {
         key: "refunds", name: "Refunds",
         keywords: ["refund", "credit", "return", "goodwill"],
         job: "Settle refund and credit requests from the support queue. Never refund more than the original charge, never twice, never on a disputed charge.",
-        tools: ["Stripe", "Shopify", "Email"],
+        tools: ["Payments", "Store", "Email"],
         rules: [
             CardRule(action: "refund", label: "Refunds", perAction: .usd(150), perWindow: .usd(2_000), window: .day, nextSteps: ["Return first"]),
             CardRule(action: "credit", label: "Credits", perAction: .usd(100), perWindow: .usd(1_000), window: .day),
@@ -64,7 +64,7 @@ enum TafTemplates {
         key: "billpay", name: "Bill pay",
         keywords: ["bill", "vendor", "payable", "pay invoice", "supplier"],
         job: "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
-        tools: ["Xero", "Email"],
+        tools: ["Accounting", "Email"],
         rules: [
             CardRule(action: "pay_bill", label: "Bills", perAction: .usd(5_000), perWindow: .usd(25_000), window: .week, nextSteps: ["Pay half now"]),
             CardRule(action: "wire", label: "Wires", alwaysAsk: true),
@@ -83,7 +83,7 @@ enum TafTemplates {
         key: "access", name: "Access",
         keywords: ["access", "onboard", "offboard", "leaver", "joiner", "provision", "okta"],
         job: "Give new joiners their apps and remove leavers the day they go. Roles from the approved list only. Deactivate, never delete.",
-        tools: ["Okta", "GitHub"],
+        tools: ["Sign-in", "Code"],
         rules: [
             CardRule(action: "grant_role", label: "Approved roles", countPerWindow: 40, window: .day),
             CardRule(action: "deactivate", label: "Deactivations", countPerWindow: 20, window: .day),
@@ -95,7 +95,7 @@ enum TafTemplates {
             ProposedAction(action: "grant_role", summary: "Give Ana the Sales role", context: "Starts Monday, per HR"),
             ProposedAction(action: "deactivate", summary: "Deactivate Tom's accounts", context: "Left Friday, per HR"),
             ProposedAction(action: "elevate", summary: "Production database access for Lee, 8 hours", context: "On call, incident open"),
-            ProposedAction(action: "grant_admin", summary: "Make Lee a GitHub org admin", context: "Asked in Slack"),
+            ProposedAction(action: "grant_admin", summary: "Make Lee an admin of the code", context: "Asked in the team chat"),
         ]
     )
 
@@ -104,7 +104,7 @@ enum TafTemplates {
         key: "deploys", name: "Deploys",
         keywords: ["deploy", "production", "release", "migration", "rollback"],
         job: "Ship merged fixes to production when CI is green, and roll back when errors spike. Never drop or delete production data.",
-        tools: ["GitHub", "AWS", "Cloudflare"],
+        tools: ["Code", "Hosting", "Network"],
         rules: [
             CardRule(action: "deploy", label: "Production deploys", countPerWindow: 10, window: .day),
             CardRule(action: "rollback", label: "Rollbacks", countPerWindow: 20, window: .day),
@@ -123,7 +123,7 @@ enum TafTemplates {
         key: "chargebacks", name: "Chargebacks",
         keywords: ["chargeback", "dispute"],
         job: "Answer card disputes with the order's evidence before the deadline. Accept small ones that can't be won. Share nothing beyond the template.",
-        tools: ["Stripe"],
+        tools: ["Payments"],
         rules: [
             CardRule(action: "submit_evidence", label: "Evidence", perAction: .usd(500), countPerWindow: 50, window: .day),
             CardRule(action: "accept_dispute", label: "Accepting a loss", perAction: .usd(100), perWindow: .usd(500), window: .week),

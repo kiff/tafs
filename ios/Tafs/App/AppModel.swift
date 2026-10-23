@@ -51,6 +51,27 @@ final class AppModel: ObservableObject {
     /// Sets the account's time zone to this device's, so a Card's day ends at the owner's
     /// midnight (kiff/tafs#96): a signed setup call (kiff-cloud #1278), which KIFF takes from
     /// the account's owner or an admin. The account is read again after.
+    /// The device's time zone, offered once when the account's differs (kiff/tafs#206 6.11):
+    /// "Use Europe/Paris for times in tafs?". Never changed without the owner: "Not now" is
+    /// remembered for that zone and account, and a new zone asks again.
+    @Published private(set) var timeZoneOffer: String?
+
+    private func offerTimeZone(_ account: KIFFClient.Account) {
+        let device = TimeZone.current.identifier
+        guard (account.timeZone ?? "UTC") != device else { timeZoneOffer = nil; return }
+        guard remembered?.string(forKey: declinedZoneKey) != device else { return }
+        timeZoneOffer = device
+    }
+
+    /// The owner's answer to the time zone offer: yes sets it (one Face ID), no is remembered.
+    func answerTimeZoneOffer(use: Bool) async {
+        guard let zone = timeZoneOffer else { return }
+        timeZoneOffer = nil
+        if use { await useThisDevicesTimeZone() } else { remembered?.set(zone, forKey: declinedZoneKey) }
+    }
+
+    private var declinedZoneKey: String { "tafs.timeZone.declined|\(kiffTenant ?? "")" }
+
     func useThisDevicesTimeZone() async {
         guard mode == .kiff, let tenant = kiffTenant else { return }
         let gen = accountGeneration
@@ -366,6 +387,26 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// KIFF's alert target for the account (kiff/tafs#206), set up on a step the owner has
+    /// just confirmed with Face ID, with no prompt of its own: a paused run then hears the
+    /// owner's answer whether or not a phone turned alerts on. Called with `kiff.setupSigner`
+    /// set. Best effort: what doesn't finish is done at the next signed step, and the app asks
+    /// a run to go on after each answer anyway.
+    private func keepKIFFAlerts(tenant: String, gen: Int) async {
+        guard canAnswerHolds != false else { return }
+        if pendingHandoff == nil {
+            if (try? await cloud.alertsKept()) != false { return } // kept already, or unknown: not now
+            guard gen == accountGeneration,
+                  let target = try? await kiff.registerAlertTarget(url: cloud.alertsURL),
+                  gen == accountGeneration else { return }
+            // Kept before anything else can fail: KIFF already signs with this secret.
+            pendingHandoff = AlertHandoff(tenant: tenant, target: target)
+        }
+        guard let handoff = pendingHandoff, (try? await cloud.keepAlerts(handoff.target)) != nil,
+              gen == accountGeneration else { return }
+        pendingHandoff = nil
+    }
+
     /// iOS gave this phone a push token (at launch, and whenever it changes).
     func pushTokenArrived(_ token: Data) async {
         pushToken = token.map { String(format: "%02x", $0) }.joined()
@@ -416,7 +457,7 @@ final class AppModel: ObservableObject {
         if pushToken == nil { requestPushToken?() }
         for _ in 0..<40 where pushToken == nil { try? await Task.sleep(nanoseconds: 250_000_000) }
         guard let token = pushToken else {
-            lastError = "The iPhone didn't give tafs a push token. Try again in a moment."
+            lastError = "This \(ThisDevice.kind) didn't give tafs a push token. Try again in a moment."
             return false
         }
 
@@ -484,7 +525,7 @@ final class AppModel: ObservableObject {
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
             if let done {
-                record = withDecisions(KIFFMapping.record(done, ids: holderIDs))
+                record = withDecisions(KIFFMapping.record(done, ids: holderIDs, vendors: toolVendors))
                 await nameRecordLines(gen: gen)
             }
             if !list.removing.isEmpty {
@@ -496,7 +537,10 @@ final class AppModel: ObservableObject {
             // Which account this is, once a sign-in: it doesn't change under it.
             if kiffAccount == nil {
                 let gen = accountGeneration
-                if let account = try? await kiff.me(), gen == accountGeneration { kiffAccount = account }
+                if let account = try? await kiff.me(), gen == accountGeneration {
+                    kiffAccount = account
+                    offerTimeZone(account)
+                }
             }
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
@@ -772,11 +816,17 @@ final class AppModel: ObservableObject {
         }
 
         resolve(call)
-        if call.kiffID != nil {
+        if let kiffID = call.kiffID {
             // The paused run goes on with the answer (kiff/tafs#102): the chat shows it working
             // and then its reply, as after a message, and KIFF is read again for the Card's use.
             chatStates[call.tafID, default: ChatState()].awaiting = clock()
-            Task { await refresh() }
+            // Asked to go on now, not when KIFF's alert reaches it (kiff/tafs#206). Best
+            // effort: the alert and the hold's expiry still continue it.
+            let taf = cloudTaf(for: call.tafID)
+            Task {
+                if let taf { _ = try? await cloud.continueHeld(taf.id, exception: kiffID) }
+                await refresh()
+            }
         }
         // The owner's decision stays in the conversation where the card was, at once and
         // in its history (kiff/tafs#138): "Refused by you · 22:41 · Refund €150.00". For any
@@ -976,57 +1026,6 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return }
                 usageError = "Usage couldn't be read: \(error.localizedDescription)"
             }
-        }
-    }
-
-    /// Sets the month's ceiling of tafs tasks, behind Face ID: raising it allows more to be
-    /// billed, so KIFF takes it only signed by this phone.
-    func setTaskCeiling(_ tasks: Int) async -> Bool {
-        guard mode == .kiff, let tenant = kiffTenant else { return false }
-        let gen = accountGeneration
-        usageError = nil
-        do { _ = try await signer.sign(Data("tafs.usage-ceiling.v1|\(tenant)|\(tasks)".utf8), reason: "Set this month's ceiling to \(tasks) tasks") } catch { return false }
-        guard gen == accountGeneration else { return false }
-        let signer = self.signer
-        kiff.tenant = tenant
-        kiff.setupSigner = { try signer.signConfirmed($0) }
-        defer { kiff.setupSigner = nil }
-        do {
-            let meter = try await kiff.setTaskCeiling(tasks)
-            guard gen == accountGeneration else { return false }
-            usage?.tasks = meter
-            return true
-        } catch {
-            guard gen == accountGeneration else { return false }
-            usageError = "The ceiling didn't change: \(error.localizedDescription)"
-            return false
-        }
-    }
-
-    /// Lets the tafs go on past this period's AI fair use (kiff/tafs#193), behind Face ID:
-    /// KIFF takes it only signed by this phone. They ask again at the next full bound.
-    func goOnAI() async -> Bool {
-        guard mode == .kiff, let tenant = kiffTenant else { return false }
-        let gen = accountGeneration
-        usageError = nil
-        let at = aiUse?.asksAtPct ?? 100
-        do { _ = try await signer.sign(Data("tafs.ai-go-on.v1|\(tenant)|\(at)".utf8), reason: "Let your tafs go on this month") } catch { return false }
-        guard gen == accountGeneration else { return false }
-        let signer = self.signer
-        kiff.tenant = tenant
-        kiff.setupSigner = { try signer.signConfirmed($0) }
-        defer { kiff.setupSigner = nil }
-        do {
-            let goOns = try await kiff.goOnAI()
-            let ai = try? await cloud.aiUse()
-            guard gen == accountGeneration else { return false }
-            usage?.ai = .init(goOns: goOns)
-            aiUse = ai ?? aiUse.map { .init(usedPct: $0.usedPct, asksAtPct: 100 * (goOns + 1), paused: false) }
-            return true
-        } catch {
-            guard gen == accountGeneration else { return false }
-            usageError = "Your tafs couldn't go on: \(error.localizedDescription)"
-            return false
         }
     }
 
@@ -1366,21 +1365,47 @@ final class AppModel: ObservableObject {
     /// Begins the switch to a version (kiff/tafs#122): tafs cloud prepares the Card draft it
     /// waits for, which the owner then reads, and from here nothing of the taf runs. With
     /// `redraft`, its Cards are drafted again. Nil with `versionErrors` when it can't begin.
-    func prepareSwitch(_ version: TafsCloud.Version, of tafID: UUID, redraft: Bool = false) async -> TafsCloud.Switching? {
+    func prepareSwitch(_ version: TafsCloud.Version, of tafID: UUID, redraft: Bool = false, stopBlocking: Bool = false) async -> TafsCloud.Switching? {
         guard mode == .kiff, let c = cloudTaf(for: tafID), !version.live else { return nil }
         let gen = accountGeneration
         versionErrors[tafID] = nil
+        blockedInstalls[tafID] = nil
         do {
-            let sw = try await cloud.beginSwitch(c.id, version: version.n, redraft: redraft)
+            let sw = try await cloud.beginSwitch(c.id, version: version.n, redraft: redraft, stopBlocking: stopBlocking)
             guard gen == accountGeneration else { return nil }
             switches[tafID] = sw
             staleVersionCards[tafID] = nil
             return sw
+        } catch let error as TafsCloud.CloudError where error.status == 409 && !error.blocking.isEmpty {
+            guard gen == accountGeneration else { return nil }
+            // Named, with the one step that clears it (kiff/tafs#206).
+            blockedInstalls[tafID] = version.n
+            versionErrors[tafID] = Self.blockedWords(version.n, error.blocking, stopping: stopBlocking)
+            return nil
         } catch {
             guard gen == accountGeneration else { return nil }
             versionErrors[tafID] = "Version \(version.n) can't go live now: \(error.localizedDescription)"
             return nil
         }
+    }
+
+    /// The version whose install a run is in the way of, by taf: the panel offers "Stop it
+    /// and install" (kiff/tafs#206).
+    @Published private(set) var blockedInstalls: [UUID: Int] = [:]
+
+    /// Which run is in the way of installing version n, in the owner's words.
+    static func blockedWords(_ n: Int, _ runs: [TafsCloud.BlockingRun], stopping: Bool) -> String {
+        let waiting = runs.contains { $0.status == "PAUSED" }
+        let what: String
+        switch (runs.count, waiting) {
+        case (1, true): what = "a task waits on your answer"
+        case (1, false): what = runs[0].trigger == "schedule" ? "its scheduled run is at work" : "a task is at work"
+        case (_, true): what = "\(runs.count) tasks are going, one waiting on your answer"
+        default: what = "\(runs.count) tasks are at work"
+        }
+        return stopping
+            ? "Version \(n) isn't installed yet: \(what) and hasn't stopped. Try again in a moment."
+            : "Version \(n) can't go live while \(what). Stop it and install, or wait until it's done."
     }
 
     /// A version's Card that changed between the screen and the tap (kiff/tafs#115): put
@@ -1417,7 +1442,7 @@ final class AppModel: ObservableObject {
             // Nothing shown, nothing signed.
             guard shownDraft != nil else { return false }
             guard sessionHasKey else {
-                versionErrors[tafID] = "Start from Connected tools on this iPhone first."
+                versionErrors[tafID] = "Start from Connected tools on this \(ThisDevice.kind) first."
                 return false
             }
             do { draft = try await kiff.draft(id: id) } catch {
@@ -1462,6 +1487,7 @@ final class AppModel: ObservableObject {
                 }
                 return false
             }
+            await keepKIFFAlerts(tenant: tenant, gen: gen)
         } else {
             do {
                 _ = try await signer.sign(Data("tafs.version.v1|\(tenant)|\(c.id)|\(version.n)".utf8),
@@ -1592,7 +1618,7 @@ final class AppModel: ObservableObject {
             if let events = try await openStream(c.id, text: text) {
                 guard current() else { return .notTried }
                 chatStates[tafID, default: ChatState()].awaiting = clock()
-                chatStates[tafID]?.live = LiveAnswer()
+                chatStates[tafID]?.live = LiveAnswer(started: clock())
                 chatStreamWorks = true
                 chatStreams[tafID] = Task { await self.followChatStream(events, tafID: tafID, text: text, gen: gen) }
                 return .sent
@@ -1641,6 +1667,12 @@ final class AppModel: ObservableObject {
         var settled: Set<String> = []
         /// The run whose stream ended answered or failed: what it didn't read goes next.
         var sendNext: String?
+        /// Where each held call was made in the chat (kiff/tafs#206): the item it came after,
+        /// by its held call's key (`heldKey`). Its card, and what became of it, stay there.
+        var anchors: [String: String] = [:]
+        /// Each held call's key (`heldKey`) by KIFF's decision id, once KIFF was read: the call
+        /// stays placed after the owner answers it and it's no longer held.
+        var heldKeys: [String: String] = [:]
     }
     @Published private(set) var chatStates: [UUID: ChatState] = [:]
     /// Whether a taf's chat has streamed here: its answers then show as written.
@@ -1688,18 +1720,35 @@ final class AppModel: ObservableObject {
                     await loadChat(tafID)
                 case .text(let t):
                     chatStates[tafID]?.live?.text += t
+                    // Writing again: the tool call it waited on is over (kiff/tafs#206 6.6).
+                    chatStates[tafID]?.live?.activity = nil
                 case .activity(let tool):
-                    await loadChat(tafID)
-                    chatStates[tafID]?.live?.text = ""
+                    // The words so far are done; the answer goes on below them. Nothing is reloaded.
+                    if let t = chatStates[tafID]?.live?.text, !t.isEmpty {
+                        chatStates[tafID]?.live?.parts.append(.text(t))
+                        chatStates[tafID]?.live?.text = ""
+                    }
                     chatStates[tafID]?.live?.activity = Self.tafActivityWords(tool)
+                case .held(let exception, let invocation):
+                    chatStates[tafID]?.live?.parts.append(.held(exception: exception, invocation: invocation))
+                    // KIFF is read for the card, where the call was made.
+                    Task {
+                        await self.refresh()
+                        if let call = self.heldCalls(for: tafID).first(where: { $0.kiffID == exception }) {
+                            self.chatStates[tafID]?.heldKeys[exception] = Self.heldKey(call)
+                        }
+                    }
                 case .end(let status, _):
                     ended = status
+                    chatStates[tafID]?.live?.activity = nil
                 case .component, .broken:
                     break
                 }
             }
         } catch {}
         guard gen == accountGeneration else { return }
+        // Nothing is at work once the stream is over, whatever comes next (kiff/tafs#206 6.6).
+        chatStates[tafID]?.live?.activity = nil
         // The run is over or paused on a held call (kiff/tafs#102): KIFF is read at once, so the
         // held call shows under the answer that names it, not at the next refresh, and the
         // Card's use and the record follow what it did.
@@ -1712,9 +1761,11 @@ final class AppModel: ObservableObject {
         // A run that answered or failed never reads what it didn't take: it goes next.
         // One the owner stopped keeps it, not sent, for them to decide.
         if let run = chatStates[tafID]?.live?.run, ended == "COMPLETED" || ended == "ERROR" { chatStates[tafID]?.sendNext = run }
-        // The recorded answer first, then the live one goes: no gap between them.
+        // The recorded answer first, then the live one goes: no gap between them. Each held
+        // call keeps its place: after what the taf wrote before it (kiff/tafs#206).
         await loadChat(tafID)
         guard gen == accountGeneration else { return }
+        if let live = chatStates[tafID]?.live { anchorHeld(live, tafID: tafID) }
         chatStates[tafID]?.live = nil
         await sendQueuedChatIfIdle(tafID)
     }
@@ -1856,16 +1907,22 @@ final class AppModel: ObservableObject {
     }
 
     /// One thing in a taf's chat, in the order it happened (#64): a message, a call KIFF
-    /// holds for the owner, or a held call's outcome from the record.
+    /// holds for the owner, a held call's outcome from the record, or the taf's words as
+    /// they stream.
     enum ChatItem: Identifiable, Equatable {
         case message(TafsCloud.ChatMessage)
         case held(HeldCall)
         case outcome(RecordEntry)
+        /// Words of the answer streaming now (kiff/tafs#206), by their place in it.
+        case streaming(id: String, TafsCloud.ChatMessage)
         var id: String {
             switch self {
             case .message(let m): return "m|" + m.id
-            case .held(let h): return "h|" + h.id.uuidString
-            case .outcome(let e): return "o|" + e.id.uuidString
+            // A held call and what became of it are one row, which changes in place
+            // (kiff/tafs#206): the card, then "Refused by you · …".
+            case .held(let h): return "k|" + AppModel.heldKey(h)
+            case .outcome(let e): return "k|" + e.id.uuidString
+            case .streaming(let id, _): return id
             }
         }
         var at: Date {
@@ -1875,25 +1932,127 @@ final class AppModel: ObservableObject {
             // Where its held card was: when the call was made, not when it was answered, so an
             // answered card stays above the taf's message (kiff/tafs#138, 21 Oct).
             case .outcome(let e): return e.madeAt ?? e.at
+            case .streaming(_, let m): return m.at
             }
         }
     }
 
+    /// A held call's key in the chat: the id KIFF's record gives the call (its proposal's),
+    /// which the owner's answer and KIFF's outcome are filed under too.
+    nonisolated static func heldKey(_ h: HeldCall) -> String {
+        ((h.proposalID ?? h.kiffID).map(KIFFMapping.recordID) ?? h.id).uuidString
+    }
+
     /// A taf's chat as one timeline: its messages, the calls KIFF holds for the owner
     /// where they were held, and what became of earlier held calls (approved, refused)
-    /// since the thread's first message, each as one line.
+    /// since the thread's first message, each as one line. A held call stays where the
+    /// taf made it (kiff/tafs#206): after the words it wrote before it, never by clock
+    /// alone. The answer streaming now comes last, in the order it came.
     func chatItems(_ tafID: UUID) -> [ChatItem] {
         let messages = chats[tafID] ?? []
-        var items = messages.map(ChatItem.message) + heldCalls(for: tafID).map(ChatItem.held)
+        let held = heldCalls(for: tafID)
+        var items = messages.map(ChatItem.message) + held.map(ChatItem.held)
         if let first = messages.first?.at {
             // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
             items += entries(for: tafID).filter {
                 ($0.kind == .approved || $0.kind == .refused || ($0.ownerApproved == true && [.notDone, .sending, .unknown].contains($0.kind))) && $0.at >= first
             }.map(ChatItem.outcome)
         }
-        return items.enumerated().sorted { a, b in
+        let state = chatState(tafID)
+        let live = state.live
+        // The held calls of the answer streaming now are placed in it, not here.
+        let streamingKeys = Set((live?.parts ?? []).compactMap { part -> String? in
+            guard case .held(let exception, _) = part else { return nil }
+            return held.first { $0.kiffID == exception }.map(Self.heldKey) ?? state.heldKeys[exception]
+        })
+        if !streamingKeys.isEmpty {
+            items.removeAll { if case .held(let h) = $0 { return streamingKeys.contains(Self.heldKey(h)) }; if case .outcome(let e) = $0 { return streamingKeys.contains(e.id.uuidString) }; return false }
+        }
+        var timeline = Self.placed(items.enumerated().sorted { a, b in
             a.element.at != b.element.at ? a.element.at < b.element.at : a.offset < b.offset
-        }.map(\.element)
+        }.map(\.element), anchors: state.anchors)
+        if let live { timeline += streamingItems(live, held: held, tafID: tafID) }
+        return timeline
+    }
+
+    /// Moves each held call, and what became of it, to just after the item it was made
+    /// after, when that item is in the chat; the rest keep their place by time.
+    nonisolated static func placed(_ items: [ChatItem], anchors: [String: String]) -> [ChatItem] {
+        guard !anchors.isEmpty else { return items }
+        func key(_ item: ChatItem) -> String? {
+            switch item {
+            case .held(let h): return heldKey(h)
+            case .outcome(let e): return e.id.uuidString
+            default: return nil
+            }
+        }
+        let present = Set(items.map(\.id))
+        let moving = items.filter { key($0).flatMap { anchors[$0] }.map(present.contains) ?? false }
+        guard !moving.isEmpty else { return items }
+        let movingIDs = Set(moving.map(\.id))
+        var out: [ChatItem] = []
+        for item in items where !movingIDs.contains(item.id) {
+            out.append(item)
+            // Each held call made after this item, in the order they were made.
+            var after = item.id
+            for m in moving where key(m).flatMap({ anchors[$0] }) == after {
+                out.append(m)
+                after = m.id
+            }
+        }
+        return out
+    }
+
+    /// The answer streaming now as chat items, in the order it came: its words up to each
+    /// tool call, each held call's card where it was made, and the words being written.
+    private func streamingItems(_ live: LiveAnswer, held: [HeldCall], tafID: UUID) -> [ChatItem] {
+        let run = live.run ?? "live"
+        var out: [ChatItem] = []
+        var n = 0
+        func words(_ t: String) {
+            out.append(.streaming(id: "s|\(run)|\(n)", TafsCloud.ChatMessage(at: live.started, from: .taf, text: t, session: live.session ?? "live")))
+            n += 1
+        }
+        for part in live.parts {
+            switch part {
+            case .text(let t): words(t)
+            case .held(let exception, _):
+                let call = held.first { $0.kiffID == exception }
+                guard let key = call.map(Self.heldKey) ?? chatState(tafID).heldKeys[exception] else { continue }
+                if let answered = entries(for: tafID).first(where: { $0.id.uuidString == key && $0.kind != .held }) {
+                    out.append(.outcome(answered))
+                } else if let call {
+                    out.append(.held(call))
+                }
+            }
+        }
+        if !live.text.isEmpty { words(live.text) }
+        return out
+    }
+
+    /// Once a streamed answer is recorded: notes where each of its held calls was made,
+    /// after the recorded words that came before it, or after the owner's message when
+    /// it came first (kiff/tafs#206). The answer's words are the session's taf messages
+    /// after the owner's last, in order.
+    private func anchorHeld(_ live: LiveAnswer, tafID: UUID) {
+        guard live.parts.contains(where: { if case .held = $0 { return true }; return false }) else { return }
+        let messages = (chats[tafID] ?? []).filter { $0.session == live.session }
+        let lastOwner = messages.lastIndex { $0.from == .owner }
+        let answer = messages[(lastOwner.map { $0 + 1 } ?? 0)...].filter { $0.from == .taf }
+        var before: String? = lastOwner.map { "m|" + messages[$0].id }
+        var said = 0
+        let held = heldCalls(for: tafID)
+        for part in live.parts {
+            switch part {
+            case .text:
+                if said < answer.count { before = "m|" + answer[answer.startIndex + said].id }
+                said += 1
+            case .held(let exception, _):
+                let key = held.first { $0.kiffID == exception }.map(Self.heldKey) ?? chatState(tafID).heldKeys[exception]
+                guard let key, let before else { continue }
+                chatStates[tafID]?.anchors[key] = before
+            }
+        }
     }
 
     /// The held call waiting for the owner in a taf's chat: the latest.
@@ -2074,7 +2233,16 @@ final class AppModel: ObservableObject {
         var settled: Set<UUID> = []
         for (id, mine) in decided {
             if let i = out.firstIndex(where: { $0.id == id }) {
-                if out[i].kind == .held { out[i] = mine } else { settled.insert(id) }
+                if out[i].kind == .held {
+                    out[i] = mine
+                } else if out[i].kind == mine.kind {
+                    // KIFF's outcome says what the owner decided: the line keeps the owner's
+                    // words for it ("Refused by you · 08:56 · …"), so it doesn't change on
+                    // screen (kiff/tafs#206).
+                    out[i].title = mine.title
+                } else {
+                    settled.insert(id)
+                }
             } else {
                 out.append(mine)
             }
@@ -2086,6 +2254,11 @@ final class AppModel: ObservableObject {
 
     /// The account's planque grants: connections, and connections waiting for the owner.
     @Published private(set) var grants: [PlanqueClient.Grant] = []
+
+    /// The vendor of each connected tool, by its name in KIFF: what a refusal names.
+    private var toolVendors: [String: String] {
+        Dictionary(grants.filter(\.connected).flatMap { g in (g.tools ?? []).map { ($0, g.vendor) } }, uniquingKeysWith: { first, _ in first })
+    }
     /// Approvals refused for the request itself (kiff/tafs#138): "<card id>|<grant digest>".
     /// Sent again unchanged, they'd fail the same way: Setup has to change the request.
     @Published private(set) var refusedRequests: Set<String> = []
@@ -2126,7 +2299,7 @@ final class AppModel: ObservableObject {
     /// older version may, so going back could need it. Unknown while the Card isn't read.
     func leftOver(_ grant: PlanqueClient.Grant, of tafID: UUID) -> Bool {
         guard grant.connected, let rules = taf(tafID)?.card.rules else { return false }
-        return Self.leftOver(tools: grant.request.tools.map(\.action), onCard: rules.map(\.action))
+        return Self.leftOver(tools: grant.request.tools.filter(\.tafs).map(\.action), onCard: rules.map(\.action))
     }
 
     /// Whether none of a connection's tools is among the Card's actions; never with no Card read.
@@ -2226,7 +2399,7 @@ final class AppModel: ObservableObject {
     /// signed.
     func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Start from Connected tools on this iPhone first."
+            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
             return nil
         }
         guard connecting == nil else { return nil }
@@ -2275,6 +2448,7 @@ final class AppModel: ObservableObject {
                 lastError = "KIFF didn't issue the taf's Cards: \(error.localizedDescription)"
                 return nil
             }
+            await keepKIFFAlerts(tenant: tenant, gen: gen)
             return grant
         }
         guard ["pending", "approved", "signed_in"].contains(grant.status) else {
@@ -2610,6 +2784,7 @@ final class AppModel: ObservableObject {
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil; planque.signer = nil }
+        await keepKIFFAlerts(tenant: tenant, gen: gen)
         if !planqueReady {
             guard await enrolPlanque(tenant: tenant, gen: gen) else {
                 setupError = lastError
@@ -2791,6 +2966,19 @@ final class AppModel: ObservableObject {
         var session: String?
         /// The run answering it, as the stream says: what a message written meanwhile goes to.
         var run: String?
+        /// A taf's answer so far, in the order it came (kiff/tafs#206): its words up to each
+        /// tool call, and where KIFF held a call. `text` is the part being written now. The
+        /// answer only grows: nothing shown is redrawn while it streams.
+        var parts: [ReplyPart] = []
+        /// When it started: the time its words are shown under.
+        var started = Date()
+    }
+
+    /// A finished piece of a taf's streamed answer.
+    enum ReplyPart: Equatable {
+        case text(String)
+        /// KIFF held the call made here: its decision's id and the call's.
+        case held(exception: String, invocation: String)
     }
     @Published private(set) var setupLive: LiveAnswer?
     /// Whether a stream has opened here: answers then show as written, not revealed.
@@ -2838,7 +3026,7 @@ final class AppModel: ObservableObject {
                     setupLive?.text = ""
                 case .end(let status, _):
                     ended = status
-                case .broken, .taken:
+                case .broken, .taken, .held:
                     break
                 }
             }

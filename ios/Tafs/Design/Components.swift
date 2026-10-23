@@ -76,13 +76,27 @@ struct PrimaryButtonStyle: ButtonStyle {
         @Environment(\.isEnabled) private var isEnabled
 
         var body: some View {
+            // Not available yet, it stays readable on any ground: a neutral fill with the
+            // ink's own soft colour, not the amber faded (kiff/tafs#206 6.1).
             configuration.label
                 .scaledFont(16, weight: .semibold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, 18)
                 .frame(maxWidth: .infinity, minHeight: 54)
-                .foregroundColor(Theme.amberInk)
-                .background(Theme.brand.opacity(configuration.isPressed ? 0.8 : 1))
+                .foregroundColor(ink)
+                .background(fill)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .opacity(isEnabled ? 1 : 0.4)
+        }
+
+        private var ink: Color { isEnabled ? Theme.amberInk : Theme.soft }
+
+        @ViewBuilder private var fill: some View {
+            if isEnabled {
+                Theme.brand.opacity(configuration.isPressed ? 0.8 : 1)
+            } else {
+                Theme.dim.opacity(0.22)
+            }
         }
     }
 }

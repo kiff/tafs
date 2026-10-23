@@ -191,7 +191,9 @@ final class KIFFAnswerTests: XCTestCase {
         let kiffs = RecordEntry(id: mine, tafID: call.tafID, kind: .refused, title: "Refund order", detail: "Not sent", at: now)
         let merged = AppModel.merge([kiffs], decided: [mine: try XCTUnwrap(model.record.first { $0.id == mine })])
         XCTAssertEqual(merged.record.filter { $0.id == mine }.count, 1)
-        XCTAssertEqual(merged.settled, [mine], "KIFF's outcome takes the answer's place")
+        // KIFF's outcome takes the answer's place, in the owner's words (kiff/tafs#206).
+        XCTAssertEqual(merged.record.first { $0.id == mine }?.detail, "Not sent")
+        XCTAssertTrue(merged.record.first { $0.id == mine }?.title.hasPrefix("Refused by you") ?? false)
     }
 
     func testAHeldCallKeepsItsIdentityAcrossRefreshes() async throws {
@@ -205,8 +207,8 @@ final class KIFFAnswerTests: XCTestCase {
 
     /// The owner's answer stays in the conversation (kiff/tafs#138, item 31): a refresh just
     /// after it, while KIFF still lists the call as held, reads it as answered; once KIFF has
-    /// the outcome, KIFF's record carries it and the answer is let go; one KIFF doesn't list
-    /// yet shows.
+    /// the same outcome, KIFF's record carries it in the owner's words (kiff/tafs#206); a
+    /// different outcome lets the answer go; one KIFF doesn't list yet shows.
     func testAnAnswerOutlivesARefreshThatStillHoldsTheCall() {
         let taf = UUID(), id = KIFFMapping.recordID("p1"), at = now
         let mine = RecordEntry(id: id, tafID: taf, kind: .refused, title: "Refused by you · 10:45 · Refund €480.00", detail: "Over its limit", at: at)
@@ -216,9 +218,14 @@ final class KIFFAnswerTests: XCTestCase {
         let held = AppModel.merge([kiff(.held)], decided: [id: mine])
         XCTAssertEqual(held.record, [mine], "still held at KIFF: the answer shows")
         XCTAssertTrue(held.settled.isEmpty)
-        let settled = AppModel.merge([kiff(.refused)], decided: [id: mine])
-        XCTAssertEqual(settled.record, [kiff(.refused)], "KIFF's outcome carries it")
-        XCTAssertEqual(settled.settled, [id], "and the answer is let go")
+        let same = AppModel.merge([kiff(.refused)], decided: [id: mine])
+        var worded = kiff(.refused)
+        worded.title = mine.title
+        XCTAssertEqual(same.record, [worded], "KIFF's outcome carries it, in the owner's words")
+        XCTAssertTrue(same.settled.isEmpty)
+        let other = AppModel.merge([kiff(.notDone)], decided: [id: mine])
+        XCTAssertEqual(other.record, [kiff(.notDone)], "a different outcome is KIFF's to say")
+        XCTAssertEqual(other.settled, [id], "and the answer is let go")
         let waiting = AppModel.merge([], decided: [id: mine])
         XCTAssertEqual(waiting.record, [mine], "not listed yet: the answer shows")
         XCTAssertTrue(waiting.settled.isEmpty)

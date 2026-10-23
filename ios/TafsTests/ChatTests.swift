@@ -183,8 +183,8 @@ final class ChatTests: XCTestCase {
     }
 
     /// The taf's answer streams (#64): tafs cloud's stream route takes the message, the
-    /// words arrive as written, and the end reloads the thread. Nothing goes through
-    /// the plain route.
+    /// words arrive as written, and only the end reloads the thread (kiff/tafs#206): a tool
+    /// call doesn't. Nothing goes through the plain route.
     func testATafsAnswerStreams() async throws {
         let (model, id) = await kiffModel()
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
@@ -211,7 +211,7 @@ final class ChatTests: XCTestCase {
         XCTAssertNil(model.chatState(id).live, "the stream ended")
         XCTAssertFalse(model.chatThinking(id))
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 0, "not sent twice")
-        XCTAssertGreaterThanOrEqual(count("GET", "/v1/tafs/depl_1/conversation"), 2, "at the tool call and at the end")
+        XCTAssertEqual(count("GET", "/v1/tafs/depl_1/conversation"), 1, "at the end only, not at the tool call")
         XCTAssertEqual(AppModel.tafActivityWords("memory"), "Reading its notes…")
         XCTAssertEqual(AppModel.tafActivityWords("refund_order"), "Asking KIFF to run refund order…")
         XCTAssertEqual(AppModel.tafActivityWords("stripe.create_refund"), "Asking KIFF to run create refund…", "past the server's prefix")
@@ -242,6 +242,31 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(model.chatState(id).ended, nil, "the queued message went out, so the stop mark went with it")
         XCTAssertNil(model.chatState(id).queued)
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1, "what waited is sent once the taf is idle")
+    }
+
+    /// Answering a held call of a taf has its paused run go on at once, by the held call,
+    /// without waiting for KIFF's alert (kiff/tafs#206).
+    func testAnsweringAHoldAsksTheRunToGoOn() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, """
+        {"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"rae-k3f9","action":"refund","entity_id":"pi_1",
+          "status":"held","breaches":[{"mandate_id":"m1","outcome":"per_action_exceeded","quantity":"sum(amount)","limit":5000}],
+          "parameters":{"amount":8000},"created_at":"2026-10-14T10:41:00Z","expires_at":"2099-10-14T10:51:00Z","accounting_version":2}]}
+        """)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/holds/ce_1/continue"] = (200, #"{"run":"r1","status":"PAUSED"}"#)
+        await model.refresh()
+        model.kiffTenant = "t1"
+        model.sessionHasKey = true
+        let call = try XCTUnwrap(model.held.first)
+        XCTAssertEqual(call.tafID, id)
+        StubProtocol.sent = []
+        await model.answer(call, with: .approveOnce)
+        for _ in 0..<50 where count("POST", "/v1/tafs/depl_1/holds/ce_1/continue") == 0 {
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        XCTAssertEqual(count("POST", "/v1/me/card-exceptions/ce_1/approve-once"), 1)
+        XCTAssertEqual(count("POST", "/v1/tafs/depl_1/holds/ce_1/continue"), 1, "the run is asked to go on")
     }
 
     /// While the taf works, a message goes to its run, which reads it at its next step
@@ -422,10 +447,75 @@ final class ChatTests: XCTestCase {
         let messages = try XCTUnwrap(model.chats[id])
         let order = model.chatItems(id).map(\.id)
         let asked = try XCTUnwrap(order.firstIndex(of: "m|" + messages[0].id))
-        let card = try XCTUnwrap(order.firstIndex(of: "h|" + held.id.uuidString))
+        let card = try XCTUnwrap(order.firstIndex(of: "k|" + AppModel.heldKey(held)))
         let answer = try XCTUnwrap(order.firstIndex(of: "m|" + messages[1].id))
         XCTAssertTrue(asked < card && card < answer, "between the owner's message and the taf's: \(order)")
         XCTAssertEqual(model.chatWaiting(id)?.id, held.id)
+    }
+
+    /// A streamed answer only grows (kiff/tafs#206): its words up to a tool call stay as
+    /// they were written, the held call's card comes where the call was made, after them
+    /// and after the owner's message, and the words after it come below the card. Once
+    /// recorded, the card stays after the words it followed, whatever KIFF's clock says.
+    func testAStreamedAnswerOnlyGrowsAndItsHeldCallStaysWhereItWasMade() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, """
+        {"exceptions":[{"id":"ce_7","proposal_id":"p7","subject":"rae-k3f9","action":"stripe_refund","entity_id":"ch_1",
+          "status":"held","breaches":[{"mandate_id":"m1","outcome":"cumulative_exceeded","quantity":"sum(amount_cents)","limit":2800}],
+          "parameters":{"amount_cents":2000},"created_at":"2026-10-14T08:00:00Z","expires_at":"2099-10-14T10:51:00Z",
+          "accounting_version":2}]}
+        """)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        await model.loadChat(id)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages/stream"] = (200, """
+        event: session
+        data: {"session":"sesn_9","new_session":false,"run":"r1"}
+
+        event: text
+        data: {"text":"Refunding $20."}
+
+        event: activity
+        data: {"tool":"create_refund"}
+
+        event: held
+        data: {"exception":"ce_7","invocation":"tc-7"}
+
+        event: text
+        data: {"text":"It waits for you."}
+
+        event: end
+        data: {"status":"PAUSED","stop":"paused"}
+
+
+        """)
+        // Recorded with KIFF's hold before the owner's message by the clock: the card still
+        // comes after the words it followed.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"Refund $20 of T-3002","session":"sesn_9"},
+                     {"at":"2026-10-14T09:01:05Z","from":"taf","kind":"message","text":"Refunding $20.","session":"sesn_9"},
+                     {"at":"2026-10-14T09:01:09Z","from":"taf","kind":"message","text":"It waits for you.","session":"sesn_9"}]}
+        """)
+        _ = await model.sendChat("Refund $20 of T-3002", to: id)
+        await model.chatStreams[id]?.value
+        let held = try XCTUnwrap(model.heldCalls(for: id).first)
+        let messages = try XCTUnwrap(model.chats[id])
+        // The stub's messages are older than the send, so the copy shown on sending stays too:
+        // the order of what tafs cloud recorded is what's checked.
+        let order = model.chatItems(id).map(\.id).filter { !$0.hasPrefix("m|pending|") }
+        XCTAssertEqual(order, ["m|" + messages[0].id, "m|" + messages[1].id, "k|" + AppModel.heldKey(held), "m|" + messages[2].id])
+    }
+
+    /// The owner's answer to a held call and KIFF's outcome for it are one line that
+    /// keeps the owner's words (kiff/tafs#206): no "refused, not sent" in its place.
+    func testKIFFsOutcomeKeepsTheOwnersWords() {
+        let id = KIFFMapping.recordID("p7")
+        let tafID = UUID()
+        let mine = RecordEntry(id: id, tafID: tafID, kind: .refused, title: "Refused by you · 08:56 · Refund a charge", detail: "", at: Date())
+        let kiffs = RecordEntry(id: id, tafID: tafID, kind: .refused, title: "Refund a charge", detail: "", at: Date())
+        let (out, settled) = AppModel.merge([kiffs], decided: [id: mine])
+        XCTAssertEqual(out.first?.title, "Refused by you · 08:56 · Refund a charge")
+        XCTAssertTrue(settled.isEmpty, "kept, so the next refresh keeps it too")
+        XCTAssertEqual(TafChatView.outcomeText(out[0]), "Refused by you · 08:56 · Refund a charge")
     }
 
     func testOneMessageAtATimePerTaf() async throws {

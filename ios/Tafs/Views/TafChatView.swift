@@ -21,6 +21,9 @@ struct TafChatView: View {
     /// the answer grows below it.
     @State private var pinNext = false
     @State private var pinned: String?
+    /// The words of the pinned message: when tafs cloud's copy takes the place of the one
+    /// shown on sending, the pin moves to it, and the view doesn't move (kiff/tafs#206).
+    @State private var pinnedWords: String?
     /// The owner has scrolled since the chat opened: a late landing leaves them where they are.
     @State private var touched = false
     /// What the owner just sent, while it isn't in the thread yet (steering a run, or queued
@@ -74,6 +77,8 @@ struct TafChatView: View {
                                     .onDisappear { heldInView.remove(call.id) }
                             case .outcome(let entry):
                                 OutcomeLine(text: Self.outcomeText(entry), tone: Self.outcomeTone(entry.kind), mark: Self.outcomeMark(entry.kind))
+                            case .streaming(_, let m):
+                                ChatBubble(message: m, taf: taf, fullWidth: true)
                             }
                         }
                         .id(item.id)
@@ -84,10 +89,9 @@ struct TafChatView: View {
                                      discard: { model.discardUnsentChat(unsent, from: tafID) })
                             .id(unsent.id)
                     }
-                    if let live = state.live, !live.text.isEmpty {
-                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: live.text, session: "live"), taf: taf, fullWidth: true)
-                            .id("live")
-                    } else if thinking {
+                    // The answer streaming now is in the items, in the order it came (kiff/tafs#206):
+                    // the dots show only while nothing is being written.
+                    if thinking, state.live?.text.isEmpty ?? true {
                         TypingBubble(taf: taf, fullWidth: true).id("thinking")
                     }
                     if let activity = state.live?.activity {
@@ -118,7 +122,13 @@ struct TafChatView: View {
                     }
                     if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
-                        .onAppear { atBottom = true; following = true; unseen = false }
+                        .onAppear {
+                            // A pinned message stays at the top: seeing the bottom under it doesn't make
+                            // the thread follow what arrives (kiff/tafs#206).
+                            atBottom = true
+                            if pinned == nil { following = true }
+                            unseen = false
+                        }
                         .onDisappear { atBottom = false }
                 }
                 .padding(.horizontal, 16)
@@ -139,7 +149,7 @@ struct TafChatView: View {
                     if let waiting, !heldInView.contains(waiting.id) {
                         NeedsYouPill(text: "Needs you · " + waiting.proposed.summary) {
                             following = false
-                            withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("h|" + waiting.id.uuidString, anchor: .center) }
+                            withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("k|" + AppModel.heldKey(waiting), anchor: .center) }
                         }
                     }
                     if !atBottom && !following {
@@ -166,6 +176,10 @@ struct TafChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
+                if let p = pinned, p.hasPrefix("m|"), !ids.contains(p), let words = pinnedWords,
+                   let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
+                    pinned = copy
+                }
                 // The message the owner just sent is in the thread: it goes to the top and stays
                 // (kiff/tafs#138). Matched by its words among the messages that are new since the send, so
                 // neither a reply arriving first nor an older copy of the same words is pinned. If its bubble was already pinned while the taf (or Setup) worked,
@@ -173,6 +187,7 @@ struct TafChatView: View {
                 if let text = pinText, let sent = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && !sentBefore.contains($0.id) && SetupThread.matchesSent(m.text, text) } else { return false } })?.id {
                     let animate = pinNext
                     pinNext = false
+                    pinnedWords = text
                     pinText = nil
                     pinned = sent
                     following = false
@@ -185,7 +200,7 @@ struct TafChatView: View {
                 follow(proxy)
             }
             .onChange(of: thinking) { _ in follow(proxy) }
-            .onChange(of: state.live) { _ in if following { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
+            .onChange(of: state.live) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: state.queued) { _ in pinBubble(proxy) }
             .onChange(of: state.steering?.untaken.count) { _ in pinBubble(proxy) }
             .onChange(of: state.unsent) { unsent in
@@ -227,7 +242,7 @@ struct TafChatView: View {
     }
 
     private func follow(_ proxy: ScrollViewProxy) {
-        guard following else { return }
+        guard following, pinned == nil else { return }
         withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
     }
 
@@ -237,7 +252,7 @@ struct TafChatView: View {
         guard !landed, !items.isEmpty else { return }
         landed = true
         if waiting != nil { following = false }
-        let (target, anchor): (String, UnitPoint) = waiting.map { ("h|" + $0.id.uuidString, .center) } ?? (Self.bottom, .bottom)
+        let (target, anchor): (String, UnitPoint) = waiting.map { ("k|" + AppModel.heldKey($0), .center) } ?? (Self.bottom, .bottom)
         landAgain(proxy, target, anchor)
     }
 
@@ -441,7 +456,8 @@ extension TafChatView {
     /// A call the owner answered, in the chat: what became of it (kiff/tafs#115).
     static func outcomeText(_ entry: RecordEntry) -> String {
         switch entry.kind {
-        case .notDone: return "\(entry.title): not done"
+        // Why, as the Record says it: a vendor's refusal still counts (kiff/tafs#206 6.13).
+        case .notDone: return "\(entry.title): \(entry.detail)"
         case .sending: return "\(entry.title): sent, waiting for the tool"
         case .unknown: return "\(entry.title): outcome unknown"
         // KIFF's own record of a held call, after a restart: what the owner decided (kiff/tafs#138).

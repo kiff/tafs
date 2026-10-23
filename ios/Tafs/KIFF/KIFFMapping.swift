@@ -124,14 +124,16 @@ enum KIFFMapping {
     /// holder the app shows, newest first, each with an id the same on every refresh.
     /// KIFF's decision and what the tool then did are kept apart (kiff/tafs#115): a call is
     /// done only when the tool said so, and no outcome is never read as done.
-    static func record(_ calls: [KIFFClient.ActivityCall], ids: [String: UUID]) -> [RecordEntry] {
+    /// `vendors` names the vendor each connected tool is from, by its name in KIFF, for a
+    /// call the vendor refused (kiff/tafs#206 6.13).
+    static func record(_ calls: [KIFFClient.ActivityCall], ids: [String: UUID], vendors: [String: String] = [:]) -> [RecordEntry] {
         calls.compactMap { c in
             guard let actor = c.actorID, let tafID = ids[actor] else { return nil }
             let kind: RecordEntry.Kind
             let detail: String
             switch c.outcome {
             case "allowed":
-                (kind, detail) = executed(c.toolOutcome, approved: c.held)
+                (kind, detail) = executed(c.toolOutcome, approved: c.held, vendor: vendors[c.actionName], counts: counted(c))
             case "owner_required", "approval_required":
                 kind = .held; detail = "Waiting for you"
             default:
@@ -155,16 +157,39 @@ enum KIFFMapping {
         }
     }
 
+    /// What a write's amount counts on the Card's totals: money when its unit is a currency,
+    /// some other unit (a count of anything) when it isn't, or nothing.
+    enum Counted { case money, amount, nothing }
+
+    static func counted(_ c: KIFFClient.ActivityCall) -> Counted {
+        guard let amount = c.amount, c.readOnly != true else { return .nothing }
+        return isCurrency(amount.unit) ? .money : .amount
+    }
+
+    /// An ISO 4217 code: a gateway's unit can name anything, so only a currency is money.
+    /// NSLocale's list, since the Mac app runs on macOS 12.
+    static func isCurrency(_ unit: String?) -> Bool {
+        guard let unit, unit.count == 3 else { return false }
+        return NSLocale.commonISOCurrencyCodes.contains(unit.uppercased())
+    }
+
     /// What the tool did with an allowed call: its kind and the words for it. approved: the
     /// owner approved it, held first.
-    static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool) -> (RecordEntry.Kind, String) {
+    /// A call the vendor refused still counts against the Card's totals (kiff-cloud#1344): it
+    /// says so plainly, naming the vendor as connected.
+    static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, counts: Counted = .nothing) -> (RecordEntry.Kind, String) {
         let why = o?.message.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
         let allowed = approved ? "Approved by you" : "Allowed by its Card"
         switch o?.status {
         case "done"?:
             return approved ? (.approved, "Approved by you, then done") : (.done, "Done, within its Card")
         case "refused_by_tool"?:
-            return (.notDone, "\(allowed), but the tool refused it\(why)")
+            let who = vendor ?? "The tool"
+            switch counts {
+            case .money: return (.notDone, "\(who) refused it. No money moved, but it still counts against today's total.")
+            case .amount: return (.notDone, "\(who) refused it. Nothing was done, but it still counts against today's total.")
+            case .nothing: return (.notDone, "\(who) refused it, and it still counts toward today's limits\(why)")
+            }
         case "not_sent"?:
             return (.notDone, "\(allowed), but it couldn't be sent: nothing reached the tool\(why)")
         case "sending"?:
@@ -203,7 +228,7 @@ enum KIFFMapping {
     }
 
     static func held(_ e: KIFFClient.CardException, tafID: UUID) -> HeldCall {
-        let reason = e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
+        let reason = moneyReason(e) ?? e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
         // A gateway call is filed under its tool call's id, which says nothing to the owner:
         // what it's on is in its arguments, as KIFF keeps them (kiff/tafs#102).
         let name = says(e.action, title: e.title)
@@ -223,6 +248,20 @@ enum KIFFMapping {
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)
         return call
+    }
+
+    /// Why a call is held, with its amounts written as the app writes money everywhere else
+    /// (kiff/tafs#206 6.8), when KIFF declares the limit's unit and it is the amount's: "€150
+    /// is over the €100 limit for one call". Otherwise nil, and KIFF's own words show.
+    static func moneyReason(_ e: KIFFClient.CardException) -> String? {
+        guard let b = e.breaches.first, let limit = b.limit, let unit = b.unit, b.unitAmbiguous != true,
+              let amount = amount(of: e), amount.currency == unit else { return nil }
+        let cap = Money(minor: limit, currency: unit, scale: b.scale ?? amount.scale).formatted
+        switch b.outcome {
+        case "per_action_exceeded": return "\(amount.formatted) is over the \(cap) limit for one call"
+        case "limit_reached": return "\(amount.formatted) would go over the \(cap) total"
+        default: return nil
+        }
     }
 
     /// What a held gateway call is on, one line an argument, as KIFF keeps them ("payment_intent:

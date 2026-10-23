@@ -82,6 +82,22 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(w.agents.calls).toEqual(["streamRun " + RAE + " new"]);
   });
 
+  it("says where KIFF held a call, by KIFF's keys only (kiff/tafs#206)", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "text", text: "Refunding $20." } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "create_refund", input: { charge: "ch_secret" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "held: ch_secret over the day's total", state: "held", hold: { operation: "op_1", exception: "exc_1", expires: "2026-10-17T13:00:00Z" }, invocation: "tc-1" } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "get_charge" } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "ch_secret paid" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Refund $20 of T-3002" } });
+    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "activity", "held", "activity", "end"]);
+    expect(r.events[3]!.data).toEqual({ exception: "exc_1", invocation: "tc-1" });
+    expect(r.raw).not.toContain("ch_secret");
+    expect(r.raw).not.toContain("op_1");
+  });
+
   it("goes on in a live chat, or takes a new one when kiff/agents refuses it", async () => {
     const w = world();
     const first = await stream(w, PATH, { token: "ana", body: { text: "hi" } });

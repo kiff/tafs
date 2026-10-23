@@ -2,15 +2,17 @@ import SwiftUI
 
 /// The account's usage this period (kiff/tafs#184): its own screen, opened from Settings. What
 /// the tafs did that counted, what the plan includes, what wasn't counted and why, the month's
-/// ceiling, and the trial. It sells nothing (App Store Review Guideline 3.1.3(f)): no price, no
-/// purchase, no link to buy; a trial's end or a reached ceiling is said plainly.
+/// ceiling, and the trial. It sells nothing: no price, no purchase and no call to action (App
+/// Store Review Guideline 3.1.1), no link to buy; a trial's end or a reached ceiling is said plainly.
 struct UsageView: View {
     @EnvironmentObject private var model: AppModel
+    /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
+    @State private var read = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                if let u = model.usage {
+                if read, let u = model.usage {
                     tasksPanel(u)
                     if let notice = Self.notice(u) {
                         Panel {
@@ -18,18 +20,15 @@ struct UsageView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
+                    // Read only: the ceiling is never changed in the app (kiff/tafs#185).
                     if model.mode == .kiff, u.plan != "trial", let ceiling = u.tasks.ceiling, ceiling > 0 {
-                        NavigationLink(destination: CeilingView(current: ceiling, least: max(u.tasks.included, u.tasks.counted)).environmentObject(model)) {
-                            Panel {
-                                HStack {
-                                    Text("Monthly ceiling").font(.system(size: 15)).foregroundColor(Theme.ink)
-                                    Spacer()
-                                    Text("\(ceiling) tasks").font(.system(size: 15)).foregroundColor(Theme.soft)
-                                    Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
-                                }
+                        Panel {
+                            HStack {
+                                Text("Monthly ceiling").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                Spacer()
+                                Text("\(ceiling) tasks").font(.system(size: 15)).foregroundColor(Theme.soft)
                             }
                         }
-                        .buttonStyle(.plain)
                     }
                     if let ai = model.aiUse, let used = ai.usedPct {
                         NavigationLink(destination: AIUseView().environmentObject(model)) {
@@ -84,7 +83,7 @@ struct UsageView: View {
         .screenBackground()
         .navigationTitle("Usage")
         .inlineTitle()
-        .task { await model.refreshUsage() }
+        .task { await model.refreshUsage(); read = true }
         .refreshable { await model.refreshUsage() }
     }
 
@@ -148,7 +147,7 @@ struct UsageView: View {
                 : "This month's ceiling is reached. Your tafs are paused until the month ends or the ceiling is raised."
         }
         guard let trial = u.trial else { return nil }
-        // It starts at checkout on the web; the app says so and links nowhere (3.1.3(f)).
+        // It starts at checkout on the web; the app says so and links nowhere (3.1.1).
         guard trial.endsAt != nil else { return "Your trial hasn't started." }
         if trial.daysLeft <= 0 { return "Your trial has ended." }
         let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
@@ -181,11 +180,13 @@ struct CountedTaskRow: View {
 struct TafUsageView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
+    /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
+    @State private var read = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                if let mine = model.tafUsage(for: tafID) {
+                if read, let mine = model.tafUsage(for: tafID) {
                     Panel {
                         Eyebrow(text: model.taf(tafID)?.name ?? "This taf")
                         Text(UsageView.tafCount(mine.counted)).font(Theme.display(26)).foregroundColor(Theme.ink)
@@ -226,7 +227,7 @@ struct TafUsageView: View {
         .screenBackground()
         .navigationTitle("Usage")
         .inlineTitle()
-        .task { await model.refreshTafUsage(tafID) }
+        .task { await model.refreshUsage(); await model.refreshTafUsage(tafID); read = true }
         .refreshable { await model.refreshUsage(); await model.refreshTafUsage(tafID) }
     }
 }
@@ -244,61 +245,12 @@ private struct CountRow: View {
     }
 }
 
-/// The month's ceiling of tafs tasks: its own screen. At the ceiling the tafs pause and ask;
-/// nothing is billed past it. Saving asks for Face ID.
-struct CeilingView: View {
-    @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @State private var tasks: Int
-    @State private var saving = false
-    let least: Int
-
-    init(current: Int, least: Int) {
-        _tasks = State(initialValue: max(current, least))
-        self.least = least
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Panel {
-                    Eyebrow(text: "Monthly ceiling")
-                    Stepper(value: $tasks, in: least...max(least * 20, 1000), step: 5) {
-                        Text("\(tasks) tasks").font(Theme.display(26)).foregroundColor(Theme.ink)
-                    }
-                    Text("When your tafs reach it, they pause and ask you. Nothing past it is counted.")
-                        .font(.system(size: 13)).foregroundColor(Theme.soft)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                if let why = model.usageError {
-                    Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
-                }
-                Button(saving ? "Saving…" : "Save with Face ID") {
-                    saving = true
-                    Task {
-                        let done = await model.setTaskCeiling(tasks)
-                        saving = false
-                        if done { dismiss() }
-                    }
-                }
-                .buttonStyle(OutlineButtonStyle())
-                .disabled(saving || tasks == model.usage?.tasks.ceiling)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-        }
-        .screenBackground()
-        .navigationTitle("Ceiling")
-        .inlineTitle()
-    }
-}
-
-/// AI use from chats and Setup this period (kiff/tafs#193): its own screen. It's included, and
-/// never billed: past the plan's fair use the tafs ask before going on, and Go on asks for Face
-/// ID. Said neutrally, with no price and nothing to buy (App Store Review Guideline 3.1.3(f)).
+/// AI use from chats and Setup this period (kiff/tafs#193): its own screen, read only. It's
+/// included, and never billed: past the plan's fair use the tafs ask before going on, and
+/// going on is changed for the account outside the app, never in it (kiff/tafs#185). Said
+/// neutrally, with no price, nothing to buy and no link.
 struct AIUseView: View {
     @EnvironmentObject private var model: AppModel
-    @State private var going = false
 
     var body: some View {
         ScrollView {
@@ -315,17 +267,6 @@ struct AIUseView: View {
                         Panel {
                             Text(Self.asking).font(.system(size: 15)).foregroundColor(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
-                        }
-                        if let why = model.usageError {
-                            Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
-                        }
-                        if model.mode == .kiff {
-                            Button(going ? "Going on…" : "Go on with Face ID") {
-                                going = true
-                                Task { _ = await model.goOnAI(); going = false }
-                            }
-                            .buttonStyle(OutlineButtonStyle())
-                            .disabled(going)
                         }
                     }
                 }

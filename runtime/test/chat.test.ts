@@ -5,6 +5,7 @@ import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, m
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
+const APPROVER = { ...ME, subject: "u_bo", capabilities: ["read", "holds.answer"] };
 const NOW = new Date("2026-10-16T12:00:00Z");
 const minutesAgo = (m: number) => new Date(NOW.getTime() - m * 60_000).toISOString();
 const RAE = "taf-aaaa0000000000000000";
@@ -47,7 +48,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER }),
+    fetch: kiff({ ana: ME, viewer: VIEWER, approver: APPROVER }),
     now: () => NOW,
   });
   return { status: r.statusCode, body: JSON.parse(r.body) };
@@ -328,6 +329,48 @@ describe("steer", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: mine.id, text: " " } })).status).toBe(400);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: theirs.id, text: "x" } })).status).toBe(404);
     expect(w.agents.runs.find((x) => x.id === theirs.id)?.steering).toBeUndefined();
+  });
+});
+
+describe("a held call answered (kiff/tafs#206)", () => {
+  it("has the run that paused on it go on, by the held call, without waiting for KIFF's alert", async () => {
+    const w = world();
+    const run = await w.agents.api.startRun("t_acme", RAE, "Refund pi_1");
+    Object.assign(w.agents.runs.find((x) => x.id === run.id)!, {
+      status: "PAUSED",
+      requirements: [{ call_id: "c1", tool: "refund", input: {}, operation: "op1", exception: "exc_1" }],
+    });
+    w.agents.calls.length = 0;
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/continue`, { token: "approver" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ run: run.id, status: "PAUSED" });
+    expect(w.agents.calls).toEqual([`continueHeld ${RAE} exc_1`]);
+  });
+
+  it("says waiting when the run went on already, and 404 for a call no run of this taf waits on", async () => {
+    const w = world();
+    const run = await w.agents.api.startRun("t_acme", RAE, "Refund pi_1");
+    Object.assign(w.agents.runs.find((x) => x.id === run.id)!, {
+      status: "RUNNING",
+      requirements: [{ call_id: "c1", tool: "refund", input: {}, operation: "op1", exception: "exc_1" }],
+    });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/continue`, { token: "approver" })).body).toEqual({ status: "waiting" });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_none/continue`, { token: "approver" })).status).toBe(404);
+    expect((await call(w, "POST", `/v1/tafs/${MAX}/holds/exc_1/continue`, { token: "approver" })).status).toBe(404);
+  });
+
+  it("is only for a role that may answer held calls", async () => {
+    const w = world();
+    const run = await w.agents.api.startRun("t_acme", RAE, "Refund pi_1");
+    Object.assign(w.agents.runs.find((x) => x.id === run.id)!, {
+      status: "PAUSED",
+      requirements: [{ call_id: "c1", tool: "refund", input: {}, operation: "op1", exception: "exc_1" }],
+    });
+    w.agents.calls.length = 0;
+    for (const token of ["ana", "viewer"]) {
+      expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/continue`, { token })).status).toBe(403);
+    }
+    expect(w.agents.calls).toEqual([]);
   });
 });
 
