@@ -84,9 +84,19 @@ struct PrimaryButtonStyle: ButtonStyle {
                 .minimumScaleFactor(0.8)
                 .padding(.horizontal, 18)
                 .frame(maxWidth: .infinity, minHeight: 54)
-                .foregroundColor(isEnabled ? Theme.amberInk : Theme.soft)
-                .background(isEnabled ? Theme.brand.opacity(configuration.isPressed ? 0.8 : 1) : Theme.dim.opacity(0.22))
+                .foregroundColor(ink)
+                .background(fill)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+
+        private var ink: Color { isEnabled ? Theme.amberInk : Theme.soft }
+
+        @ViewBuilder private var fill: some View {
+            if isEnabled {
+                Theme.brand.opacity(configuration.isPressed ? 0.8 : 1)
+            } else {
+                Theme.dim.opacity(0.22)
+            }
         }
     }
 }
