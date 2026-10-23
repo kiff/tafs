@@ -50,7 +50,7 @@ struct HaltScreen: View {
                         .disabled(busy)
                 case .halted:
                     if !(h.account && tafID != nil) {
-                        Button(busy ? "Resuming…" : "Resume with Face ID") {
+                        Button(busy ? "Resuming…" : "Resume with \(Biometry.name)") {
                             busy = true
                             Task { await model.resumeHalt(tafID); busy = false }
                         }

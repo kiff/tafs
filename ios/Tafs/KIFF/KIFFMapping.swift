@@ -210,7 +210,7 @@ enum KIFFMapping {
     }
 
     static func held(_ e: KIFFClient.CardException, tafID: UUID) -> HeldCall {
-        let reason = e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
+        let reason = moneyReason(e) ?? e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
         // A gateway call is filed under its tool call's id, which says nothing to the owner:
         // what it's on is in its arguments, as KIFF keeps them (kiff/tafs#102).
         let name = says(e.action, title: e.title)
@@ -230,6 +230,20 @@ enum KIFFMapping {
         call.nextSteps = e.nextSteps ?? []
         call.details = details(of: e)
         return call
+    }
+
+    /// Why a call is held, with its amounts written as the app writes money everywhere else
+    /// (kiff/tafs#206 6.8), when KIFF declares the limit's unit and it is the amount's: "€150
+    /// is over the €100 limit for one call". Otherwise nil, and KIFF's own words show.
+    static func moneyReason(_ e: KIFFClient.CardException) -> String? {
+        guard let b = e.breaches.first, let limit = b.limit, let unit = b.unit, b.unitAmbiguous != true,
+              let amount = amount(of: e), amount.currency == unit else { return nil }
+        let cap = Money(minor: limit, currency: unit, scale: b.scale ?? amount.scale).formatted
+        switch b.outcome {
+        case "per_action_exceeded": return "\(amount.formatted) is over the \(cap) limit for one call"
+        case "limit_reached": return "\(amount.formatted) would go over the \(cap) total"
+        default: return nil
+        }
     }
 
     /// What a held gateway call is on, one line an argument, as KIFF keeps them ("payment_intent:

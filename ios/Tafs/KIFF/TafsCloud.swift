@@ -163,7 +163,10 @@ final class TafsCloud {
 
         /// tafs cloud's record of it, for its chat, runs and schedule; nil for another agent.
         var cloudTaf: CloudTaf? {
-            id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun) }
+            // With unscheduled, or the taf page offers Run now and Pause a taf that works from
+            // its chat can't take (kiff/tafs#206 section 2).
+            id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
+                              unscheduled: unscheduled) }
         }
     }
 

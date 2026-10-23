@@ -209,4 +209,16 @@ final class KIFFTests: XCTestCase {
         XCTAssertEqual(demo.state, .idle)
         XCTAssertNil(home.others[0].cloudTaf, "an agent tafs doesn't run has no chat or schedule")
     }
+
+    /// A taf that works from its chat stays one on its page (kiff/tafs#206 section 2): no Run
+    /// now, Pause or "On its schedule".
+    func testATafThatWorksFromItsChatKeepsItInItsCloudTaf() throws {
+        let json = #"""
+        {"id":"taf-2","name":"Refunds","job":"refunds","unscheduled":true,"kiff_agent":"refunds-k3f9","status":"active","next_run":null,"last_run":null,
+         "color":1,"state":"working","waiting":0,
+         "card":{"ids":["m1"],"active":true,"expires":null,"tools":[],"rules":[],"used":{},"usage_unknown":[]}}
+        """#
+        let taf = try KIFFClient.decoder.decode(TafsCloud.HomeTaf.self, from: Data(json.utf8))
+        XCTAssertEqual(taf.cloudTaf?.worksFromChat, true)
+    }
 }

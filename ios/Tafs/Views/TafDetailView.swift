@@ -251,7 +251,7 @@ struct ConnectionsPanel: View {
                                 .font(.system(size: 12)).foregroundColor(Theme.dim)
                             if grant.connected {
                                 // What it may do, in words, not the tools' ids (kiff/tafs#138, item 52).
-                                Text(grant.request.tools.map(\.words).joined(separator: " · "))
+                                Text(grant.request.tools.filter(\.tafs).map(\.words).joined(separator: " · "))
                                     .font(.system(size: 12)).foregroundColor(Theme.soft)
                                 if model.leftOver(grant, of: tafID) {
                                     // Left over after a version moved its Card (kiff/tafs#138). An older version may still
@@ -488,8 +488,8 @@ struct VersionCardSheet: View {
                         ForEach(Array(cards.enumerated()), id: \.offset) { i, card in cardView(card, lines: lines[i]) }
                         ForEach(draft.retires ?? [], id: \.id) { retiredView($0) }
                         Text(draft.retires?.isEmpty == false
-                             ? "While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
-                             : "While it switches, your taf doesn't run. One Face ID confirms these Cards in KIFF, then this version goes live.")
+                             ? "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
+                             : "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF, then this version goes live.")
                             .font(.system(size: 12)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     } else if loaded {
                         Text(model.versionErrors[tafID] ?? "This version's Card couldn't be read.")

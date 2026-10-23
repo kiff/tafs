@@ -6,11 +6,13 @@ import SwiftUI
 /// purchase, no link to buy; a trial's end or a reached ceiling is said plainly.
 struct UsageView: View {
     @EnvironmentObject private var model: AppModel
+    /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
+    @State private var read = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                if let u = model.usage {
+                if read, let u = model.usage {
                     tasksPanel(u)
                     if let notice = Self.notice(u) {
                         Panel {
@@ -84,7 +86,7 @@ struct UsageView: View {
         .screenBackground()
         .navigationTitle("Usage")
         .inlineTitle()
-        .task { await model.refreshUsage() }
+        .task { await model.refreshUsage(); read = true }
         .refreshable { await model.refreshUsage() }
     }
 
@@ -181,11 +183,13 @@ struct CountedTaskRow: View {
 struct TafUsageView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
+    /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
+    @State private var read = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                if let mine = model.tafUsage(for: tafID) {
+                if read, let mine = model.tafUsage(for: tafID) {
                     Panel {
                         Eyebrow(text: model.taf(tafID)?.name ?? "This taf")
                         Text(UsageView.tafCount(mine.counted)).font(Theme.display(26)).foregroundColor(Theme.ink)
@@ -226,7 +230,7 @@ struct TafUsageView: View {
         .screenBackground()
         .navigationTitle("Usage")
         .inlineTitle()
-        .task { await model.refreshTafUsage(tafID) }
+        .task { await model.refreshUsage(); await model.refreshTafUsage(tafID); read = true }
         .refreshable { await model.refreshUsage(); await model.refreshTafUsage(tafID) }
     }
 }
@@ -273,7 +277,7 @@ struct CeilingView: View {
                 if let why = model.usageError {
                     Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
                 }
-                Button(saving ? "Saving…" : "Save with Face ID") {
+                Button(saving ? "Saving…" : "Save with \(Biometry.name)") {
                     saving = true
                     Task {
                         let done = await model.setTaskCeiling(tasks)
@@ -320,7 +324,7 @@ struct AIUseView: View {
                             Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
                         }
                         if model.mode == .kiff {
-                            Button(going ? "Going on…" : "Go on with Face ID") {
+                            Button(going ? "Going on…" : "Go on with \(Biometry.name)") {
                                 going = true
                                 Task { _ = await model.goOnAI(); going = false }
                             }

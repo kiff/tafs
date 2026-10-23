@@ -80,7 +80,11 @@ final class PlanqueClient {
                 /// What it does, in the owner's words, as Setup asked for it (kiff/planque#37).
                 var title: String?
                 let readOnly: Bool?
-                enum CodingKeys: String, CodingKey { case tool, name, title, readOnly = "read_only" }
+                /// Setup's own read, on Setup's reader Card, never the taf's (kiff/tafs#206 section 4).
+                var setupReads: Bool? = nil
+                enum CodingKeys: String, CodingKey { case tool, name, title, readOnly = "read_only", setupReads = "setup_reads" }
+                /// One of the taf's own tools, not Setup's read.
+                var tafs: Bool { setupReads != true }
                 /// Its name in KIFF and at the relay: the Card's action.
                 var action: String { name ?? tool }
                 /// What the owner reads for it: its title, else its action in words.

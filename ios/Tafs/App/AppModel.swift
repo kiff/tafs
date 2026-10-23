@@ -1771,6 +1771,8 @@ final class AppModel: ObservableObject {
                     await loadChat(tafID)
                 case .text(let t):
                     chatStates[tafID]?.live?.text += t
+                    // Writing again: the tool call it waited on is over (kiff/tafs#206 6.6).
+                    chatStates[tafID]?.live?.activity = nil
                 case .activity(let tool):
                     // The words so far are done; the answer goes on below them. Nothing is reloaded.
                     if let t = chatStates[tafID]?.live?.text, !t.isEmpty {
@@ -1789,12 +1791,15 @@ final class AppModel: ObservableObject {
                     }
                 case .end(let status, _):
                     ended = status
+                    chatStates[tafID]?.live?.activity = nil
                 case .component, .broken:
                     break
                 }
             }
         } catch {}
         guard gen == accountGeneration else { return }
+        // Nothing is at work once the stream is over, whatever comes next (kiff/tafs#206 6.6).
+        chatStates[tafID]?.live?.activity = nil
         // The run is over or paused on a held call (kiff/tafs#102): KIFF is read at once, so the
         // held call shows under the answer that names it, not at the next refresh, and the
         // Card's use and the record follow what it did.
@@ -2345,7 +2350,7 @@ final class AppModel: ObservableObject {
     /// older version may, so going back could need it. Unknown while the Card isn't read.
     func leftOver(_ grant: PlanqueClient.Grant, of tafID: UUID) -> Bool {
         guard grant.connected, let rules = taf(tafID)?.card.rules else { return false }
-        return Self.leftOver(tools: grant.request.tools.map(\.action), onCard: rules.map(\.action))
+        return Self.leftOver(tools: grant.request.tools.filter(\.tafs).map(\.action), onCard: rules.map(\.action))
     }
 
     /// Whether none of a connection's tools is among the Card's actions; never with no Card read.
