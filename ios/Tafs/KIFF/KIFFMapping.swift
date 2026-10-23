@@ -167,9 +167,10 @@ enum KIFFMapping {
     }
 
     /// An ISO 4217 code: a gateway's unit can name anything, so only a currency is money.
+    /// NSLocale's list, since the Mac app runs on macOS 12.
     static func isCurrency(_ unit: String?) -> Bool {
         guard let unit, unit.count == 3 else { return false }
-        return Locale.commonISOCurrencyCodes.contains(unit.uppercased())
+        return NSLocale.commonISOCurrencyCodes.contains(unit.uppercased())
     }
 
     /// What the tool did with an allowed call: its kind and the words for it. approved: the
