@@ -16,7 +16,7 @@ struct DeleteAccountView: View {
                         .font(.system(size: 15, weight: .semibold))
                 }
                 Section("What goes") {
-                    Label("Every taf, with its chats, runs, schedules and memory", systemImage: "person.2")
+                    Label("Every taf, with its runs, chats, notes and schedules", systemImage: "person.2")
                     Label("Your tools' sign-ins, disconnected", systemImage: "link")
                     Label("Your Cards and keys: they stop working", systemImage: "creditcard")
                     Label("KIFF's records of your account, erased after 30 days", systemImage: "doc.text")
@@ -46,7 +46,7 @@ struct DeleteAccountView: View {
                     }
                     .disabled(deleting)
                 } footer: {
-                    Text("You confirm with Face ID. Signed in elsewhere, you're signed out there too.")
+                    Text("You confirm with \(Biometry.name) before anything is deleted. Signed in elsewhere, you're signed out there too.")
                 }
             }
             .hiddenScrollBackground()

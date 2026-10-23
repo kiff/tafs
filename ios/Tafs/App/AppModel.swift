@@ -51,6 +51,27 @@ final class AppModel: ObservableObject {
     /// Sets the account's time zone to this device's, so a Card's day ends at the owner's
     /// midnight (kiff/tafs#96): a signed setup call (kiff-cloud #1278), which KIFF takes from
     /// the account's owner or an admin. The account is read again after.
+    /// The device's time zone, offered once when the account's differs (kiff/tafs#206 6.11):
+    /// "Use Europe/Paris for times in tafs?". Never changed without the owner: "Not now" is
+    /// remembered for that zone and account, and a new zone asks again.
+    @Published private(set) var timeZoneOffer: String?
+
+    private func offerTimeZone(_ account: KIFFClient.Account) {
+        let device = TimeZone.current.identifier
+        guard (account.timeZone ?? "UTC") != device else { timeZoneOffer = nil; return }
+        guard remembered?.string(forKey: declinedZoneKey) != device else { return }
+        timeZoneOffer = device
+    }
+
+    /// The owner's answer to the time zone offer: yes sets it (one Face ID), no is remembered.
+    func answerTimeZoneOffer(use: Bool) async {
+        guard let zone = timeZoneOffer else { return }
+        timeZoneOffer = nil
+        if use { await useThisDevicesTimeZone() } else { remembered?.set(zone, forKey: declinedZoneKey) }
+    }
+
+    private var declinedZoneKey: String { "tafs.timeZone.declined|\(kiffTenant ?? "")" }
+
     func useThisDevicesTimeZone() async {
         guard mode == .kiff, let tenant = kiffTenant else { return }
         let gen = accountGeneration
@@ -436,7 +457,7 @@ final class AppModel: ObservableObject {
         if pushToken == nil { requestPushToken?() }
         for _ in 0..<40 where pushToken == nil { try? await Task.sleep(nanoseconds: 250_000_000) }
         guard let token = pushToken else {
-            lastError = "The iPhone didn't give tafs a push token. Try again in a moment."
+            lastError = "This \(ThisDevice.kind) didn't give tafs a push token. Try again in a moment."
             return false
         }
 
@@ -504,7 +525,7 @@ final class AppModel: ObservableObject {
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
             if let done {
-                record = withDecisions(KIFFMapping.record(done, ids: holderIDs))
+                record = withDecisions(KIFFMapping.record(done, ids: holderIDs, vendors: toolVendors))
                 await nameRecordLines(gen: gen)
             }
             if !list.removing.isEmpty {
@@ -516,7 +537,10 @@ final class AppModel: ObservableObject {
             // Which account this is, once a sign-in: it doesn't change under it.
             if kiffAccount == nil {
                 let gen = accountGeneration
-                if let account = try? await kiff.me(), gen == accountGeneration { kiffAccount = account }
+                if let account = try? await kiff.me(), gen == accountGeneration {
+                    kiffAccount = account
+                    offerTimeZone(account)
+                }
             }
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
@@ -1469,7 +1493,7 @@ final class AppModel: ObservableObject {
             // Nothing shown, nothing signed.
             guard shownDraft != nil else { return false }
             guard sessionHasKey else {
-                versionErrors[tafID] = "Start from Connected tools on this iPhone first."
+                versionErrors[tafID] = "Start from Connected tools on this \(ThisDevice.kind) first."
                 return false
             }
             do { draft = try await kiff.draft(id: id) } catch {
@@ -2276,6 +2300,11 @@ final class AppModel: ObservableObject {
 
     /// The account's planque grants: connections, and connections waiting for the owner.
     @Published private(set) var grants: [PlanqueClient.Grant] = []
+
+    /// The vendor of each connected tool, by its name in KIFF: what a refusal names.
+    private var toolVendors: [String: String] {
+        Dictionary(grants.filter(\.connected).flatMap { g in (g.tools ?? []).map { ($0, g.vendor) } }, uniquingKeysWith: { first, _ in first })
+    }
     /// Approvals refused for the request itself (kiff/tafs#138): "<card id>|<grant digest>".
     /// Sent again unchanged, they'd fail the same way: Setup has to change the request.
     @Published private(set) var refusedRequests: Set<String> = []
@@ -2416,7 +2445,7 @@ final class AppModel: ObservableObject {
     /// signed.
     func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
-            lastError = "Start from Connected tools on this iPhone first."
+            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
             return nil
         }
         guard connecting == nil else { return nil }

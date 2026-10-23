@@ -124,4 +124,15 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertNil(KIFFMapping.naming([line], refs: ["tc-a": "pi_other"]).first?.onValue, "a value KIFF didn't hash is never shown")
         XCTAssertNil(KIFFMapping.naming([line], refs: ["tc-b": Self.paymentA]).first?.onValue, "another call's value")
     }
+
+    /// A call the vendor refused still counts (kiff/tafs#206 6.13): the Record and the chat say
+    /// so, naming the vendor as connected.
+    func testAVendorsRefusalSaysItStillCounts() {
+        let refused = KIFFClient.ActivityCall.ToolOutcome(status: "refused_by_tool", message: "charge_already_refunded")
+        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Stripe", moves: true).1,
+                       "Stripe refused it. No money moved, but it still counts against today's total.")
+        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: nil, moves: false).1,
+                       "The tool refused it: charge_already_refunded. Nothing was done, but it still counts toward today's limits.")
+    }
+
 }

@@ -102,10 +102,10 @@ struct CoachPanel: View {
                             })
                     }
                     .frame(width: width)
-                    .background(Theme.background)
-                    .clipShape(RoundedRectangle(cornerRadius: full ? 0 : 18, style: .continuous))
+                    // The full height, from the top edge to the bottom one, past the safe
+                    // area: nothing of the screen behind shows under it (kiff/tafs#206 6.10).
+                    .background(Theme.background.ignoresSafeArea())
                     .shadow(color: .black.opacity(0.18), radius: 24, x: -4)
-                    .padding(.vertical, full ? 0 : 8).padding(.trailing, full ? 0 : 8)
                     .transition(.move(edge: .trailing))
                 }
             }

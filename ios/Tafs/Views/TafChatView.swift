@@ -456,7 +456,8 @@ extension TafChatView {
     /// A call the owner answered, in the chat: what became of it (kiff/tafs#115).
     static func outcomeText(_ entry: RecordEntry) -> String {
         switch entry.kind {
-        case .notDone: return "\(entry.title): not done"
+        // Why, as the Record says it: a vendor's refusal still counts (kiff/tafs#206 6.13).
+        case .notDone: return "\(entry.title): \(entry.detail)"
         case .sending: return "\(entry.title): sent, waiting for the tool"
         case .unknown: return "\(entry.title): outcome unknown"
         // KIFF's own record of a held call, after a restart: what the owner decided (kiff/tafs#138).

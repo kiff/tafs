@@ -124,14 +124,16 @@ enum KIFFMapping {
     /// holder the app shows, newest first, each with an id the same on every refresh.
     /// KIFF's decision and what the tool then did are kept apart (kiff/tafs#115): a call is
     /// done only when the tool said so, and no outcome is never read as done.
-    static func record(_ calls: [KIFFClient.ActivityCall], ids: [String: UUID]) -> [RecordEntry] {
+    /// `vendors` names the vendor each connected tool is from, by its name in KIFF, for a
+    /// call the vendor refused (kiff/tafs#206 6.13).
+    static func record(_ calls: [KIFFClient.ActivityCall], ids: [String: UUID], vendors: [String: String] = [:]) -> [RecordEntry] {
         calls.compactMap { c in
             guard let actor = c.actorID, let tafID = ids[actor] else { return nil }
             let kind: RecordEntry.Kind
             let detail: String
             switch c.outcome {
             case "allowed":
-                (kind, detail) = executed(c.toolOutcome, approved: c.held)
+                (kind, detail) = executed(c.toolOutcome, approved: c.held, vendor: vendors[c.actionName], moves: c.amount != nil && c.readOnly != true)
             case "owner_required", "approval_required":
                 kind = .held; detail = "Waiting for you"
             default:
@@ -157,14 +159,19 @@ enum KIFFMapping {
 
     /// What the tool did with an allowed call: its kind and the words for it. approved: the
     /// owner approved it, held first.
-    static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool) -> (RecordEntry.Kind, String) {
+    /// A call the vendor refused still counts against the Card's totals (kiff-cloud#1344): it
+    /// says so plainly, naming the vendor as connected.
+    static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, moves: Bool = false) -> (RecordEntry.Kind, String) {
         let why = o?.message.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
         let allowed = approved ? "Approved by you" : "Allowed by its Card"
         switch o?.status {
         case "done"?:
             return approved ? (.approved, "Approved by you, then done") : (.done, "Done, within its Card")
         case "refused_by_tool"?:
-            return (.notDone, "\(allowed), but the tool refused it\(why)")
+            let who = vendor ?? "The tool"
+            return (.notDone, moves
+                ? "\(who) refused it. No money moved, but it still counts against today's total."
+                : "\(who) refused it\(why). Nothing was done, but it still counts toward today's limits.")
         case "not_sent"?:
             return (.notDone, "\(allowed), but it couldn't be sent: nothing reached the tool\(why)")
         case "sending"?:

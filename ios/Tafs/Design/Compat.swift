@@ -32,6 +32,16 @@ extension View {
         }
     }
 
+    /// A screen that covers the whole screen on iOS, with nothing behind it showing
+    /// (kiff/tafs#206 6.10); a sheet in a Mac window.
+    @ViewBuilder func fullCover<Content: View>(isPresented: Binding<Bool>, @ViewBuilder content: @escaping () -> Content) -> some View {
+        #if os(iOS)
+        fullScreenCover(isPresented: isPresented, content: content)
+        #else
+        sheet(isPresented: isPresented, content: content)
+        #endif
+    }
+
     /// Dragging the chat down puts the keyboard away; a Mac has none to put away.
     @ViewBuilder func dismissesKeyboardInteractively() -> some View {
         #if os(iOS)
