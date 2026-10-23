@@ -2988,7 +2988,7 @@ final class AppModel: ObservableObject {
                     setupLive?.text = ""
                 case .end(let status, _):
                     ended = status
-                case .broken, .taken:
+                case .broken, .taken, .held:
                     break
                 }
             }
