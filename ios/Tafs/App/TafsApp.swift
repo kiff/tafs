@@ -119,6 +119,14 @@ struct RootView: View {
         .onOpenURL { url in
             if url.host == "needs-you" { tab = .needsYou }
         }
+        // A tapped request for tasks: Usage, where it's answered, on its own screen (kiff/tafs#215).
+        .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {
+            NavigationStack {
+                UsageView()
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false } } }
+            }
+            .environmentObject(model)
+        }
         .onChange(of: model.requestedTab) { requested in showRequestedTab(requested) }
         .onAppear { showRequestedTab(model.requestedTab) }
         // The device's time zone, asked once (kiff/tafs#206 6.11).

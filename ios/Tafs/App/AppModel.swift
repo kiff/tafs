@@ -370,9 +370,17 @@ final class AppModel: ObservableObject {
     /// split view selects it and clears this.
     @Published var requestedTaf: UUID?
 
+    /// Usage, asked for by a tapped alert (a member's request for tasks, kiff/tafs#215): the
+    /// root view shows it on its own screen and clears this.
+    @Published var usageRequested = false
+
     /// Opens where a tapped alert points.
     func open(_ destination: String) {
-        if destination == "needs-you" { requestedTab = .needsYou }
+        switch destination {
+        case "needs-you": requestedTab = .needsYou
+        case "usage": usageRequested = true
+        default: break
+        }
     }
 
     static let alertHandoffAccount = "kiff.alert-handoff"

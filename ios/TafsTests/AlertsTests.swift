@@ -165,6 +165,14 @@ final class AlertsTests: XCTestCase {
         XCTAssertEqual(opened, ["needs-you", "needs-you"])
     }
 
+    /// A member's request for tasks opens Usage, where it's answered (kiff/tafs#215).
+    func testARequestForTasksOpensUsage() {
+        let model = model()
+        model.open("usage")
+        XCTAssertTrue(model.usageRequested)
+        XCTAssertNil(model.requestedTab, "Usage opens over the tab that's showing")
+    }
+
     func testTheModelAsksForNeedsYou() {
         let model = model()
         model.open("needs-you")
