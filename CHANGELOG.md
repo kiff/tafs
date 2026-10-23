@@ -26,6 +26,9 @@ version headings refer to releases, not merely to merged pull requests.
   after the words before it, and stays there once answered, in your words
   ("Refused by you · …"). tafs cloud's message stream gains a `held` event with
   KIFF's ids for the call.
+- A message you send stays at the top of the chat while the answer arrives
+  below it, in a taf's chat and in Coach mode (#206): the chat no longer jumps
+  to the end when the answer is short.
 
 Earlier history is available in [merged pull requests](https://github.com/kiff/tafs/pulls?q=is%3Apr+is%3Amerged)
 and [releases](https://github.com/kiff/tafs/releases). This file does not
