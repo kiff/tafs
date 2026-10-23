@@ -75,6 +75,9 @@ final class AppModel: ObservableObject {
     /// Whether this phone's KIFF session holds its signing key. A session from before
     /// the phone sent its key cannot answer: sign in again.
     var sessionHasKey = false
+    /// This device holds a key to sign with. A Mac without a Secure Enclave holds none
+    /// (kiff/tafs#85): it reads and writes in Coach mode, and approves on the iPhone.
+    var canSign: Bool { !signer.publicKeyDER.isEmpty }
     private let signer: ApprovalSigning
     private let store: SampleStore?
     private let clock: () -> Date
@@ -2591,6 +2594,10 @@ final class AppModel: ObservableObject {
     /// (kiff-cloud#1254), whose key tafs cloud claims. Done before the first message, so
     /// every grant Setup asks for can be read and shown.
     func startSetup() async -> Bool {
+        guard canSign else {
+            setupError = "Coach mode starts on your iPhone: open tafs there and tap Start once. Its conversations then show here too."
+            return false
+        }
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
             setupError = "Sign in with KIFF again: this sign-in can't sign for the phone."
             return false

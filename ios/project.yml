@@ -131,6 +131,8 @@ targets:
       path: Mac/Info.plist
       properties:
         CFBundleDisplayName: tafs
+        # The menu bar's name: the target is TafsMac, the app is tafs.
+        CFBundleName: tafs
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.productivity
