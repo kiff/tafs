@@ -34,7 +34,12 @@ describe("jobs", () => {
       // A write sent beside another on the same item outran KIFF's refusal of it
       // (Chargebacks, 21 Oct 15:52: close_dispute refused, update_dispute sent with it).
       expect(prompt.replace(/\s+/g, " ")).toContain("Writes are not batched: make one write on an item, read KIFF's answer, then decide the next");
-      expect(prompt.replace(/\s+/g, " ")).toContain("Never look up a value a tool's description says KIFF always sends.");
+      // A list says what's needed of each item: reading one again costs a turn (kiff/tafs#206).
+      expect(prompt.replace(/\s+/g, " ")).toContain("Never look up a value a tool's description says KIFF always sends, or read an item again for what a list you just read already says of it");
+      // KIFF decides the Card, not the taf: it decided a hold itself, so the call
+      // never reached the owner (kiff/tafs#206).
+      expect(prompt.replace(/\s+/g, " ")).toContain("KIFF decides what your Card allows, not you.");
+      expect(prompt).toContain("never a table");
       expect(prompt).toContain("Name each item by its reference and what\nbecame of it");
       expect(prompt).toContain(j.instructions);
     }

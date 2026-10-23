@@ -782,7 +782,7 @@ describe("upgrading running tafs (kiff/tafs#69)", () => {
     const w = world();
     const notes = "Only EU customers.\n\nNever after 6pm.";
     const old = definition(RAE, jobById("refunds"), { budgetCents: 150, ownerNotes: notes });
-    await w.agents.api.putAgent("t_acme", RAE, { ...old, instructions: old.instructions.replace("four ways", "three ways") });
+    await w.agents.api.putAgent("t_acme", RAE, { ...old, instructions: old.instructions.replace("five ways", "four ways") });
     // Max (t_other) is held as it is built: only its digest is new.
     await w.agents.api.putAgent("t_other", MAX, definition(MAX, jobById("refunds")));
     w.agents.calls.length = 0;
