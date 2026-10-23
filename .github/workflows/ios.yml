@@ -129,7 +129,9 @@ jobs:
           import json, sys
           devices = json.load(sys.stdin)["devices"]
           ios = sorted(k for k in devices if "iOS" in k)
-          print(next(d["udid"] for d in devices[ios[-1]] if d["name"].startswith("iPhone")))
+          # The App Store's iPhone screenshots are 6.9-inch: a Pro Max, when there is one (kiff/tafs#185).
+          iphones = [d for d in devices[ios[-1]] if d["name"].startswith("iPhone")]
+          print(next((d for d in iphones if "Pro Max" in d["name"]), iphones[0])["udid"])
           ')
           xcrun simctl boot "$DEVICE_ID" || true
           xcrun simctl bootstatus "$DEVICE_ID" -b
