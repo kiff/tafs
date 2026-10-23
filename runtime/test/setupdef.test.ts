@@ -176,6 +176,8 @@ describe("Setup's definition on kiff/agents", () => {
     // connection, sign-in and taf name in the owner's 605 retest).
     expect(flat).toContain("when you no longer have the taf's agent id or a grant's id, planque grants with no agent lists every connection you asked for");
     expect(flat).toContain("Never connect again, make a new taf, or ask the owner to sign in again for an id you lost");
+    // A taf's Cards are read wherever Coach is asked, never by sending the owner elsewhere (kiff/tafs#214, item 4).
+    expect(flat).toContain("with kiff_card {agent: its kiff_agent from tafs_state}, in whatever conversation you're in. Never send the owner elsewhere to ask.");
     // A fixed tool joins the same connection: no old connection is left over, only the old tool.
     expect(flat).toContain("The old tool stays on the connection, unused once the new version is installed: say so in the result's sentence");
     expect(flat).not.toContain("The old connection is left over");

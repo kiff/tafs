@@ -2233,7 +2233,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         ]);
         const live = state.versions.find((v) => v.live);
         return {
-          id: t.id, name: t.name, job: t.job,
+          id: t.id, name: t.name, job: t.job, kiff_agent: t.kiffAgent,
           ...(t.unscheduled ? { works_from_chat: true } : schedule
             ? { schedule: { cron: schedule.cron, time_zone: schedule.time_zone || "UTC", on: schedule.enabled, ...(schedule.next ? { next: iso(schedule.next) } : {}) } }
             : {}),
@@ -2243,7 +2243,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
           open_runs: runs.map(runSummary),
         };
       })),
-      cards: "What's left on each taf's Cards isn't read here: the owner sees it on the taf in tafs.",
+      cards: "Each taf's Cards aren't here: read them with kiff_card {agent: its kiff_agent}.",
     };
   }
   const taf = await coachTaf(call.tenant, args.taf, deps);
