@@ -45,7 +45,7 @@ struct SetupShapePanel: View {
                             .foregroundColor(step.state == .toDo || step.state == .skipped ? Theme.dim : Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                         if step.state == .needsYou {
-                            Text("Needs you").scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.amber)
+                            Text("Needs you").scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.amberText)
                         }
                     }
                 }
@@ -97,8 +97,8 @@ struct SetupShapePanel: View {
     private static func status(_ state: SetupShape.Tool.State) -> (String, Color) {
         switch state {
         case .connected: return ("Connected", Theme.ok)
-        case .signedIn: return ("Signed in", Theme.amber)
-        case .waiting: return ("Waiting for you", Theme.amber)
+        case .signedIn: return ("Signed in", Theme.amberText)
+        case .waiting: return ("Waiting for you", Theme.amberText)
         case .failed: return ("Not connected", Theme.no)
         }
     }

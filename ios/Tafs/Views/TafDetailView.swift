@@ -285,13 +285,13 @@ struct ConnectionsPanel: View {
                                     // Left over after a version moved its Card (kiff/tafs#138). An older version may still
                                     // run on it, so the words don't say to remove it.
                                     Text("Not on the live version's Card: the taf doesn't use it now. Going back to an older version may need it.")
-                                        .scaledFont(12, weight: .semibold).foregroundColor(Theme.amber)
+                                        .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
                             } else {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
                                 Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
-                                    .scaledFont(12, weight: .semibold).foregroundColor(Theme.amber)
+                                    .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                 if let end = grant.heldUntilDate {
                                     Text("Unless you approve its tools, the sign-in is revoked \(end.shown(date: .abbreviated, time: .shortened)).")
                                         .scaledFont(12).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
@@ -462,7 +462,7 @@ struct VersionsPanel: View {
         let version = model.versions[tafID]?.first { $0.n == sw.n }
         let working = model.switchingVersion[tafID] != nil
         return VStack(alignment: .leading, spacing: 6) {
-            Text("Installing version \(sw.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.amber)
+            Text("Installing version \(sw.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
             Text("Your taf doesn't run until it's installed or you cancel.")
                 .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
@@ -715,7 +715,7 @@ struct RunReportPanel: View {
             HStack {
                 Eyebrow(text: "Last run")
                 Spacer()
-                Button("Refresh", action: reload).scaledFont(13).foregroundColor(Theme.amber)
+                Button("Refresh", action: reload).scaledFont(13).foregroundColor(Theme.amberText)
             }
             if let report {
                 if let at = report.at {
@@ -764,6 +764,7 @@ struct TafCardFace: View {
     let issuedBy: String
     let color: Color
     var revoked = false
+    @Environment(\.dynamicTypeSize) private var textSize
 
     /// At most this wide, on the iPhone and the iPad alike.
     static let width: CGFloat = 300
@@ -774,6 +775,38 @@ struct TafCardFace: View {
     static func fill(_ card: TafCard, color: Color) -> Color { card.live ? color : Theme.dim }
 
     var body: some View {
+        face
+            // At the accessibility text sizes the Card grows to its text, never clipping it
+            // (kiff/tafs#210); otherwise it keeps a payment card's shape.
+            .aspectRatio(textSize.isAccessibilitySize ? nil : Self.ratio, contentMode: .fit)
+            .fixedSize(horizontal: false, vertical: textSize.isAccessibilitySize)
+            .background(Self.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
+            .overlay(alignment: .topTrailing) {
+                Circle().stroke(Color.white.opacity(0.18)).frame(width: 130, height: 130).offset(x: 35, y: -45)
+                    .allowsHitTesting(false).accessibilityHidden(true)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .frame(maxWidth: Self.width)
+            // VoiceOver reads its balance first (kiff/tafs#210).
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Self.spoken(card, issuedBy: issuedBy, revoked: revoked))
+    }
+
+    /// The Card as VoiceOver reads it: what's left, then its name, its limits, who issued it
+    /// and until when.
+    static func spoken(_ card: TafCard, issuedBy: String, revoked: Bool) -> String {
+        var parts: [String] = []
+        if let hero = card.hero { parts.append("\(hero.figure) \(hero.words)") }
+        parts.append("\(card.title), \(card.environmentLabel)")
+        parts += card.facts
+        if card.rules.isEmpty { parts.append("No actions yet") }
+        parts.append("Issued by \(issuedBy)")
+        let end = card.expires?.formatted(date: .abbreviated, time: .omitted)
+        parts.append(revoked ? "Revoked" : !card.active ? "Ended \(end ?? "")" : end.map { "Until \($0)" } ?? "No end date")
+        return parts.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: ". ") + "."
+    }
+
+    private var face: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Text(card.title).scaledFont(12, weight: .semibold, design: .monospaced).oneLineUnlessLarge()
@@ -810,16 +843,7 @@ struct TafCardFace: View {
         }
         .foregroundColor(.white)
         .padding(16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .aspectRatio(Self.ratio, contentMode: .fit)
-        .background(Self.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
-        .overlay(alignment: .topTrailing) {
-            Circle().stroke(Color.white.opacity(0.18)).frame(width: 130, height: 130).offset(x: 35, y: -45)
-                .allowsHitTesting(false).accessibilityHidden(true)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .frame(maxWidth: Self.width)
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, maxHeight: textSize.isAccessibilitySize ? nil : .infinity, alignment: .topLeading)
     }
 }
 

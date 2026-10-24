@@ -205,7 +205,7 @@ struct UsageView: View {
                     Spacer()
                     if Self.managedByApple(u) {
                         Button("Manage") { Task { await Purchases.manageSubscriptions() } }
-                            .scaledFont(15, weight: .semibold).foregroundColor(Theme.amber)
+                            .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                     }
                 }
             }

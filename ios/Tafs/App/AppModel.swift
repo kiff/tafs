@@ -3669,6 +3669,8 @@ enum Screenshots {
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
     /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
+    /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
+    static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
 
     /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
     /// purchase screens' screenshots.

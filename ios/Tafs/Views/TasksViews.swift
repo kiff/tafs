@@ -38,7 +38,7 @@ private struct AddTasksContent: View {
                                     }
                                 }
                                 .scaledFont(15, weight: .semibold)
-                                .foregroundColor(Theme.amber)
+                                .foregroundColor(Theme.amberText)
                                 .disabled(purchases.products[pack.appleProduct] == nil || purchases.buying != nil)
                             }
                         }

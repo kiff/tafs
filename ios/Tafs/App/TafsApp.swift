@@ -10,6 +10,8 @@ struct TafsApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                // The screenshots' narrow iPad window (kiff/tafs#210): Slide Over's width.
+                .modifier(NarrowForScreenshots())
                 .environmentObject(model)
                 .preferredColorScheme(.light)
                 .tint(Theme.amber)
@@ -160,5 +162,17 @@ struct RootView: View {
         }
         // The whole screen, ✦ and the panels with it, when it's laid out again.
         .id(layoutEpoch)
+    }
+}
+
+/// `-narrow YES`: the whole app at Slide Over's width, compact, as in a narrow iPad window.
+private struct NarrowForScreenshots: ViewModifier {
+    func body(content: Content) -> some View {
+        if Screenshots.narrow {
+            content.frame(width: 320).environment(\.horizontalSizeClass, .compact)
+                .frame(maxWidth: .infinity).background(Color.black)
+        } else {
+            content
+        }
     }
 }

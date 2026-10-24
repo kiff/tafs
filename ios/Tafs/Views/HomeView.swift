@@ -178,7 +178,7 @@ struct HomeView: View {
                     .foregroundColor(Theme.soft)
             }
             Spacer()
-            Text("Answer").scaledFont(14, weight: .medium).foregroundColor(Theme.amber)
+            Text("Answer").scaledFont(14, weight: .medium).foregroundColor(Theme.amberText)
         }
         .padding(14)
         .background(Theme.amber.opacity(0.1))

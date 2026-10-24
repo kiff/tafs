@@ -161,6 +161,13 @@ jobs:
           for pack in pico vonk rayo forte maxi; do
             shoot "iap-pack-$pack" -screenshots YES -screen add-tasks -pack "$pack"
           done
+          # The largest text size (kiff/tafs#210): text wraps, nothing cut off or overlapped.
+          xcrun simctl ui "$DEVICE_ID" content_size accessibility-extra-extra-extra-large
+          shoot ax-needs-you -screenshots YES -tab needs-you
+          shoot ax-record -screenshots YES -tab record
+          shoot ax-card -screenshots YES -tab tafs -screen card
+          shoot ax-chat -screenshots YES -tab tafs -screen chat
+          xcrun simctl ui "$DEVICE_ID" content_size large
           # The iPad (kiff/tafs#85): the sidebar beside the open taf. The largest iPad,
           # whose portrait width still fits the taf's second column.
           xcrun simctl shutdown "$DEVICE_ID" || true
@@ -179,6 +186,10 @@ jobs:
           # Needs you first: the first launch with sample data on a just-booted iPad can
           # take longer than a shot's 8 s, so a simple screen goes first.
           shoot ipad-3-needs-you -screenshots YES -tab needs-you
+          # A narrow window, Slide Over's width (kiff/tafs#210).
+          shoot ipad-narrow-tafs -screenshots YES -tab tafs -narrow YES
+          shoot ipad-narrow-needs-you -screenshots YES -tab needs-you -narrow YES
+          shoot ipad-narrow-chat -screenshots YES -tab tafs -screen chat -narrow YES
           shoot ipad-2-taf -screenshots YES -tab tafs -screen taf
           shoot ipad-4-cards -screenshots YES -tab tafs -screen card
           ls -la "$RUNNER_TEMP/shots"

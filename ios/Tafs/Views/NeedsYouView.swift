@@ -51,6 +51,8 @@ struct HeldCallCard: View {
     var body: some View {
         let taf = model.taf(call.tafID)
         Panel(stroke: Theme.amber.opacity(0.4)) {
+            // One sentence for VoiceOver (kiff/tafs#210): the taf, what it asks, when it lapses.
+            VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 if let taf { TafAvatar(taf: taf, size: 32) }
                 Text(taf?.name ?? "A taf").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
@@ -58,7 +60,7 @@ struct HeldCallCard: View {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     Text(remaining(at: context.date))
                         .scaledFont(12, design: .monospaced)
-                        .foregroundColor(Theme.amber)
+                        .foregroundColor(Theme.amberText)
                 }
             }
             if let amount = call.proposed.amount {
@@ -75,9 +77,12 @@ struct HeldCallCard: View {
             Text(call.reason)
                 .scaledFont(12, weight: .medium)
                 .padding(.horizontal, 10).padding(.vertical, 5)
-                .foregroundColor(Theme.amber)
+                .foregroundColor(Theme.amberText)
                 .background(Theme.amber.opacity(0.14))
                 .clipShape(Capsule())
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Self.sentence(call, taf: taf?.name))
 
             if model.canAnswer(call) {
                 if call.approvableOnce {
@@ -132,6 +137,13 @@ struct HeldCallCard: View {
         // The answer chosen on its notification (kiff/tafs#210): Approve asks for Face ID now.
         .onAppear { takeRequest() }
         .onChange(of: model.requestedHold) { _ in takeRequest() }
+    }
+
+    /// The hold as VoiceOver reads it: "Rae asks: Refund order 42, €150.00. Over €50 each.
+    /// It lapses at 14:05."
+    static func sentence(_ call: HeldCall, taf: String?) -> String {
+        let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
+        return "\(taf ?? "A taf") asks: \(what). \(call.reason). It lapses at \(call.expiresAt.shortTime)."
     }
 
     private func takeRequest() {
