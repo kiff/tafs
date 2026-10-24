@@ -9,6 +9,8 @@ import type { DoorStore } from "./doors/model.js";
  * One list per account, newest first, the latest KEPT for DAYS, written with
  * the store's compare-and-swap so two writes at once both land. Words for
  * people only: a taf's name and a sender as the door named them, never a key.
+ * A stranger's address isn't kept here, only the name their message gave: the
+ * knock itself keeps it for 30 days (docs/data.md).
  */
 export interface AccountEvent {
   at: string;
@@ -19,7 +21,7 @@ export interface AccountEvent {
   name?: string;
   /** The door's app ("email", "whatsapp") for a door's event. */
   app?: string;
-  /** Who wrote, for a knock or a pairing: their name, else their address. */
+  /** Who wrote: the name their message gave; for a pairing, else their address (now a key). */
   from?: string;
 }
 

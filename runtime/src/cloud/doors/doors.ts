@@ -242,7 +242,7 @@ async function addKnock(ctx: DoorsContext, tenant: string, taf: Taf, door: Door,
     text: cut(a.text).text, attachments: a.attachments, at: ctx.now.toISOString(), state: "open",
   };
   await changeKnocks(ctx.doors.store, tenant, taf.id, ctx.now, (knocks) => [knock, ...knocks]);
-  await logEvent(eventLog(ctx.doors.store), tenant, { kind: "knocked", taf: taf.id, name: taf.name, app: app.id, from: a.name ?? a.from }, ctx.now);
+  await logEvent(eventLog(ctx.doors.store), tenant, { kind: "knocked", taf: taf.id, name: taf.name, app: app.id, from: a.name }, ctx.now);
   await tellOwner(ctx, tenant, taf, `${a.name ?? a.from} wrote by ${app.label.toLowerCase()}${a.spoofed ? " (the sender check failed)" : ""}. Nothing was done.`, knock.id);
 }
 
@@ -636,7 +636,7 @@ export async function answerKnock(ctx: DoorsContext, owner: Owner, taf: Taf, kno
     throw new DoorError(400, "action is do, pair or ignore");
   }
   await changeKnocks(store, owner.tenant, taf.id, ctx.now, (now) => now.map((k) => (k.id === knock.id ? { ...k, state: next } : k)));
-  await logEvent(eventLog(store), owner.tenant, { kind: next === "done" ? "knock_done" : "knock_ignored", taf: taf.id, name: taf.name, app: knock.app, from: knock.name ?? knock.from }, ctx.now);
+  await logEvent(eventLog(store), owner.tenant, { kind: next === "done" ? "knock_done" : "knock_ignored", taf: taf.id, name: taf.name, app: knock.app, from: knock.name }, ctx.now);
   return { knock: knock.id, state: next, ...(started && typeof started === "object" ? started as object : {}) };
 }
 

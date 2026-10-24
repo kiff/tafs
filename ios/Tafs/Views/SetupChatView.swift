@@ -1367,7 +1367,7 @@ struct FlowRow: Layout {
         let width = proposal.width ?? .infinity
         var x: CGFloat = 0, y: CGFloat = 0, row: CGFloat = 0
         for s in subviews {
-            let size = s.sizeThatFits(.unspecified)
+            let size = Self.size(of: s, within: width)
             if x > 0 && x + size.width > width { x = 0; y += row + spacing; row = 0 }
             x += size.width + spacing
             row = max(row, size.height)
@@ -1378,12 +1378,20 @@ struct FlowRow: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var x = bounds.minX, y = bounds.minY, row: CGFloat = 0
         for s in subviews {
-            let size = s.sizeThatFits(.unspecified)
+            let size = Self.size(of: s, within: bounds.width)
             if x > bounds.minX && x + size.width > bounds.maxX { x = bounds.minX; y += row + spacing; row = 0 }
             s.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
             x += size.width + spacing
             row = max(row, size.height)
         }
+    }
+
+    /// A button at its own width, but never wider than the row: a long one wraps its lines
+    /// inside the card instead of running off its edge (kiff/tafs#236, item 32).
+    private static func size(of s: LayoutSubview, within width: CGFloat) -> CGSize {
+        let ideal = s.sizeThatFits(.unspecified)
+        guard width.isFinite, ideal.width > width else { return ideal }
+        return s.sizeThatFits(ProposedViewSize(width: width, height: nil))
     }
 }
 

@@ -958,12 +958,14 @@ final class AppModel: ObservableObject {
 
     /// `confirmed`: the owner just confirmed this step with Face ID (installing the version
     /// Coach asked for), so the answer is signed without asking again. `installed`: the
-    /// version Coach's held call names is live already.
-    /// The next answer was chosen on its notification: the unlock that opened the app for
-    /// it counts as its Face ID or Touch ID, once (kiff/tafs#236, item 25).
-    func answerFromNotification() { signer.allowUnlockReuseOnce() }
-
-    func answer(_ call: HeldCall, with answer: Answer, confirmed: Bool = false, installed: Bool = false) async {
+    /// version Coach's held call names is live already. `fromNotification`: the answer was
+    /// chosen on its notification, so the unlock that opened the app for it counts as its
+    /// Face ID or Touch ID (kiff/tafs#236, item 25), for this answer only: it ends here,
+    /// signed or not, and the next approval anywhere asks again.
+    func answer(_ call: HeldCall, with answer: Answer, confirmed: Bool = false, installed: Bool = false,
+                fromNotification: Bool = false) async {
+        if fromNotification { signer.allowUnlockReuse() }
+        defer { if fromNotification { signer.endUnlockReuse() } }
         guard held.contains(where: { same($0, call) }) else { return }
         // Approving Coach's install is installing it (kiff/tafs#206): the switch and its
         // Card come first, then this answer, so tafs never hears of a half-done install.

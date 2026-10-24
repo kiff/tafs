@@ -13,10 +13,18 @@ struct StubSigner: ApprovalSigning {
 final class RecordingSigner: ApprovalSigning {
     var signed: [String] = []
     var whileSigning: (() -> Void)?
+    /// Whether each Face ID it asked for could count the device unlock.
+    var reusedUnlock: [Bool] = []
+    private var reuse = false
 
     var publicKeyDER: Data { Data([0x30, 0x59]) }
 
+    func allowUnlockReuse() { reuse = true }
+    func endUnlockReuse() { reuse = false }
+
     func sign(_ message: Data, reason: String) async throws -> String {
+        reusedUnlock.append(reuse)
+        reuse = false
         signed.append(String(decoding: message, as: UTF8.self))
         whileSigning?()
         return "signature"

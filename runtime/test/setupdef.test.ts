@@ -179,6 +179,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain('A conversation that starts with "[improve taf <id>]" improves that taf; it doesn\'t set up a new one');
     expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
     expect(flat).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
+    // A change that can add or replace asks which (kiff/tafs#236, item 31).
+    expect(flat).toContain("A change that can add or replace (dollars next to euros, or instead of them) asks which first, in a confirm, with what each does");
     // The revision is confirmed at the switch, never in the chat (finding 1 on #107).
     expect(flat).toContain("Don't show an approval for this draft: the owner confirms it when they switch to the new version");
     expect(flat).toContain("planque request with agent set to the taf's own agent id (never name, which makes a new agent)");
@@ -198,7 +200,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
     // The schedule is decided before the result, with the owner's case as the example (item 43).
     expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
-    expect(flat).toContain("A refunds taf with Stripe's tools alone is unscheduled: Stripe lists payments, not requests to refund them.");
+    // The result applies that rule for any vendor; Stripe is its example (review on kiff/tafs#238).
+    expect(flat).toContain("Decide unscheduled by the rule above, for any vendor: a refunds taf with Stripe's tools alone is one, as Stripe lists payments, not requests to refund them");
     // The result's name is the one tafs will give it, not another taf's (kiff/tafs#236, item 5).
     expect(flat).toContain("Its name is one no other taf has (tafs_state): if it's taken, the first free \"<name> 2\", \"<name> 3\"…, as tafs would name it; call it that.");
     // A new taf asked for in an improve conversation is a new taf (kiff/tafs#138, item 36).

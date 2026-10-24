@@ -16,14 +16,17 @@ protocol ApprovalSigning {
     /// has just confirmed with Face ID (starting a taf signs each of its setup calls).
     func signConfirmed(_ message: Data) throws -> String
     /// See the extension: one answer from its notification may count the unlock.
-    func allowUnlockReuseOnce()
+    func allowUnlockReuse()
+    /// That answer is over, signed or not: the next one asks again.
+    func endUnlockReuse()
 }
 
 extension ApprovalSigning {
     /// The next Face ID or Touch ID may be the device unlock the owner gave seconds before:
     /// only for an answer chosen on its notification, where unlocking was for that answer
     /// (kiff/tafs#236, item 25). Signers that always ask ignore it.
-    func allowUnlockReuseOnce() {}
+    func allowUnlockReuse() {}
+    func endUnlockReuse() {}
 }
 
 @MainActor
@@ -50,13 +53,15 @@ final class ApprovalSigner: ApprovalSigning {
 
     private let enclaveKey: SecureEnclave.P256.Signing.PrivateKey?
     private let softwareKey: P256.Signing.PrivateKey?
-    /// Set for one answer chosen on its notification: its unlock, seconds ago, counts.
-    private var reuseUnlock = false
+    /// Set for one answer chosen on its notification: its unlock, seconds ago, counts. It
+    /// ends with that answer, whether it signed or stopped before (`endUnlockReuse`).
+    private(set) var reusesUnlock = false
 
     /// How long a device unlock counts for that one answer.
     static let unlockReuse: TimeInterval = 10
 
-    func allowUnlockReuseOnce() { reuseUnlock = true }
+    func allowUnlockReuse() { reusesUnlock = true }
+    func endUnlockReuse() { reusesUnlock = false }
 
     init() {
         let saved = Keychain.load(Self.keyAccount).flatMap { Data(base64Encoded: $0) }
@@ -116,8 +121,8 @@ final class ApprovalSigner: ApprovalSigning {
 
     private func authenticate(reason: String) async throws {
         let context = LAContext()
-        if reuseUnlock {
-            reuseUnlock = false
+        if reusesUnlock {
+            reusesUnlock = false
             context.touchIDAuthenticationAllowableReuseDuration = Self.unlockReuse
         }
         var error: NSError?

@@ -205,10 +205,7 @@ struct HeldCallCard: View {
         guard model.canAnswer(call) else { return }
         switch request.answer {
         case AlertAnswers.approve? where call.approvableOnce:
-            if call.install != nil { install() } else {
-                model.answerFromNotification()
-                send(.approveOnce)
-            }
+            if call.install != nil { install() } else { send(.approveOnce, fromNotification: true) }
         case AlertAnswers.refuse?:
             send(.refuse)
         default:
@@ -239,10 +236,10 @@ struct HeldCallCard: View {
         return "\(calls) \(who) refused today still counted toward it: nothing moved, but they used room."
     }
 
-    private func send(_ answer: Answer) {
+    private func send(_ answer: Answer, fromNotification: Bool = false) {
         sending = true
         Task {
-            await model.answer(call, with: answer)
+            await model.answer(call, with: answer, fromNotification: fromNotification)
             sending = false
         }
     }

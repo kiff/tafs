@@ -502,6 +502,18 @@ describe("knocks and keys", () => {
     expect(events[2]).toMatchObject({ taf: REFUNDS, app: "email", from: "Maya" });
   });
 
+  it("Activity keeps a stranger's name, never their address", async () => {
+    const w = world();
+    await emailDoor(w);
+    await emailHook(w, mail(w, { from: "Maya <maya@acme.example>" }));
+    await emailHook(w, mail(w, { from: "nobody@acme.example" }));
+    const knocks = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks;
+    for (const k of knocks) await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/knocks/${k.id}`, { token: "ana", body: { action: "ignore" } });
+    const events = (await send(w, "GET", "/v1/events", { token: "ana" })).body.events;
+    expect(JSON.stringify(events)).not.toContain("@acme.example");
+    expect(events.filter((e: { from?: string }) => e.from === "Maya")).toHaveLength(2);
+  });
+
   it("only someone who manages Cards can open a door, pair, or answer a knock", async () => {
     const w = world();
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "viewer", body: { app: "email" } })).status).toBe(403);
