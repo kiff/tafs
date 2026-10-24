@@ -153,12 +153,23 @@ extension View {
 /// it's the device's. Times sent to a server stay in ISO 8601, as they were.
 enum AccountTime {
     /// Set on the main actor as the account loads, read wherever a time is drawn.
+    /// `nonisolated(unsafe)`: written only when the account is read or signed out, and a
+    /// formatter that reads it a moment early or late draws one frame in the other zone,
+    /// which the next render puts right.
     nonisolated(unsafe) private(set) static var zone: TimeZone = .current
 
     /// The account's zone by its identifier; nil (no account) is the device's. An
     /// identifier this device doesn't know falls back to UTC, KIFF's own default.
     static func use(_ identifier: String?) {
         zone = identifier.map { TimeZone(identifier: $0) ?? TimeZone(identifier: "UTC")! } ?? .current
+    }
+
+    /// The zone's short name after a time (" CET") when the account's zone shows a
+    /// different clock from this device's at that moment, so a travelling owner doesn't
+    /// read it as their own local time; nothing when the clocks agree.
+    static func label(at date: Date) -> String {
+        guard zone.secondsFromGMT(for: date) != TimeZone.current.secondsFromGMT(for: date) else { return "" }
+        return zone.abbreviation(for: date).map { " " + $0 } ?? ""
     }
 
     /// A calendar in the account's zone, for "today" and the day a time falls on.
@@ -176,6 +187,14 @@ extension Date {
         f.dateFormat = "HH:mm"
         f.timeZone = AccountTime.zone
         return f.string(from: self)
+    }
+
+    /// `shortTime`, with the account zone's short name when it isn't this device's.
+    var zonedShortTime: String { shortTime + AccountTime.label(at: self) }
+
+    /// `shown(date:time:)`, with the account zone's short name when it isn't this device's.
+    func zonedShown(date: Date.FormatStyle.DateStyle, time: Date.FormatStyle.TimeStyle) -> String {
+        shown(date: date, time: time) + AccountTime.label(at: self)
     }
 
     /// This date in a style, in the account's zone.

@@ -64,19 +64,35 @@ final class TimeZoneTests: XCTestCase {
     /// Every time the app shows is in the account's zone, whatever this device's is
     /// (kiff/tafs#211, 6.11): a hold's deadline, a chat's times, the Record's days.
     func testTimesShowInTheAccountsZone() {
-        let at = Date(timeIntervalSince1970: 1_792_812_600) // 2026-10-24T03:30:00Z
+        // Far from today, so the Record's day reads as a weekday, never Today or Yesterday.
+        let at = Date(timeIntervalSince1970: 1_737_084_600) // 2025-01-17T03:30:00Z, a Friday in UTC
         AccountTime.use("America/New_York")
-        XCTAssertEqual(at.shortTime, "23:30")
-        XCTAssertEqual(AccountTime.calendar.component(.day, from: at), 23, "the day before, in New York")
-        XCTAssertTrue(RecordView.dayTitle(at).hasPrefix("Friday"), RecordView.dayTitle(at))
+        XCTAssertEqual(at.shortTime, "22:30")
+        XCTAssertEqual(AccountTime.calendar.component(.day, from: at), 16, "the day before, in New York")
+        XCTAssertTrue(RecordView.dayTitle(at).hasPrefix("Thursday"), RecordView.dayTitle(at))
         AccountTime.use("Asia/Tokyo")
         XCTAssertEqual(at.shortTime, "12:30")
-        XCTAssertEqual(AccountTime.calendar.component(.day, from: at), 24)
-        XCTAssertTrue(RecordView.dayTitle(at).hasPrefix("Saturday"), RecordView.dayTitle(at))
+        XCTAssertEqual(AccountTime.calendar.component(.day, from: at), 17)
+        XCTAssertTrue(RecordView.dayTitle(at).hasPrefix("Friday"), RecordView.dayTitle(at))
         AccountTime.use("Not/AZone")
         XCTAssertEqual(at.shortTime, "03:30", "a zone this device doesn't know is UTC, KIFF's default")
         AccountTime.use(nil)
         XCTAssertEqual(AccountTime.zone, TimeZone.current, "no account: this device's")
+    }
+
+    /// When the account's clock isn't this device's, a hold's deadline and the Record's
+    /// times name the zone; when the clocks agree, nothing is added.
+    func testATimeNamesTheZoneOnlyWhenItIsntThisDevicesClock() {
+        let at = Date(timeIntervalSince1970: 1_737_084_600)
+        AccountTime.use(TimeZone.current.identifier)
+        XCTAssertEqual(AccountTime.label(at: at), "")
+        XCTAssertEqual(at.zonedShortTime, at.shortTime)
+        let elsewhere = TimeZone.current.secondsFromGMT(for: at) == 9 * 3600 ? "America/New_York" : "Asia/Tokyo"
+        AccountTime.use(elsewhere)
+        let label = AccountTime.label(at: at)
+        XCTAssertFalse(label.isEmpty)
+        XCTAssertEqual(at.zonedShortTime, at.shortTime + label)
+        XCTAssertTrue(at.zonedShown(date: .abbreviated, time: .standard).hasSuffix(label))
     }
 
     /// The account's zone is the one in use once KIFF says it, and the device's again

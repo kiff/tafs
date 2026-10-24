@@ -169,7 +169,7 @@ struct HomeSplitView: View {
             Circle().fill(Theme.amber).frame(width: 8, height: 8)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(taf.name): \(call.proposed.summary)").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
-                Text("\(call.reason) · answer by \(call.expiresAt.shortTime)")
+                Text("\(call.reason) · answer by \(call.expiresAt.zonedShortTime)")
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.soft).lineLimit(1)
             }
         }

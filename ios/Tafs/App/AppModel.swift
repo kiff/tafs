@@ -616,6 +616,8 @@ final class AppModel: ObservableObject {
             let list = try await home
             let done = await activity
             let account = await me
+            // The account read began under this generation: a sign-out or another sign-in
+            // meanwhile moves it on, and the old account (and its zone) is dropped here.
             guard gen == accountGeneration else { return }
             if kiffAccount == nil, let account {
                 kiffAccount = account
