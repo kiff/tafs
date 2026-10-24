@@ -983,9 +983,12 @@ struct SetupComponentView: View {
                         .background(Theme.panel)
                         .overlay(Capsule().stroke(Theme.ink.opacity(0.18)))
                         .clipShape(Capsule())
-                        .disabled(model.answered.contains(c.id) || model.setupSending)
+                        // Setup at work doesn't stop a tap: the answer waits for it (kiff/tafs#236, item 2).
+                        .disabled(model.answered.contains(c.id))
+                        .opacity(model.answered.contains(c.id) ? 0.45 : 1)
                     }
                 }
+                CardNote(id: c.id)
             }
         }
     }
@@ -1026,6 +1029,7 @@ struct SetupComponentView: View {
                         .frame(maxWidth: .infinity)
                         .disabled(busy || answered)
                 }
+                CardNote(id: c.id)
             }
         }
     }
@@ -1072,24 +1076,32 @@ struct SetupComponentView: View {
     }
 
     private func handOver(_ c: SetupComponent) -> some View {
-        Panel(stroke: Theme.ok) {
-            Eyebrow(text: "Set up · \(c.taf?.name ?? "")", color: Theme.ok)
+        // The name the taf got, once started: tafs cloud gives a taken name the first free
+        // "<name> 2", "<name> 3"…, so Setup's may name another taf (kiff/tafs#236, item 5).
+        let started = c.taf.flatMap { model.taf(forAgent: $0.agent) }.flatMap { model.cloudTaf(for: $0) }
+        let name = started?.name ?? c.taf?.name ?? ""
+        let renamed = started != nil && started?.name != c.taf?.name
+        let open = renamed ? "Open \(name)" : c.yes ?? "See it on \(name)"
+        return Panel(stroke: Theme.ok) {
+            Eyebrow(text: "Set up · \(name)", color: Theme.ok)
             Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             if let tools = c.tools, !tools.isEmpty {
-                Text(tools.joined(separator: ", ")).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.soft)
+                // In words, as the approval named them (kiff/tafs#236, item 7).
+                Text(tools.map { model.toolTitle($0) ?? KIFFMapping.toolWords($0) }.joined(separator: " · "))
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
             if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                 if sizeClass == .regular {
                     // Beside the sidebar: select it there, so the list says which taf is open.
                     Button { model.requestedTaf = tafID; model.coachOpen = false } label: {
-                        Text(c.yes ?? "See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                        Text(open).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 } else {
                     NavigationLink {
                         TafDetailView(tafID: tafID)
                     } label: {
-                        Text(c.yes ?? "See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                        Text(open).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 }
@@ -1273,8 +1285,25 @@ struct SetupApproval: View {
                     .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil))
                 }
                 .disabled(busy || (answered && !state.isFailure))
+                CardNote(id: component.id)
                 Text("Approving asks for \(Biometry.name).").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
             }
+        }
+    }
+}
+
+/// Why a card's tap ended without reaching Setup, or that its answer waits for Setup
+/// (kiff/tafs#236): a tap always shows something.
+struct CardNote: View {
+    @EnvironmentObject private var model: AppModel
+    let id: String
+
+    var body: some View {
+        if let note = model.cardNotes[id] {
+            Label(note, systemImage: "info.circle")
+                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

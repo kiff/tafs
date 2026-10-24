@@ -48,11 +48,14 @@ struct QuestionsCard: View {
                     }
                     .buttonStyle(.plain)
                 }
+                CardNote(id: component.id)
             }
         }
     }
 
-    private var busy: Bool { model.answered.contains(component.id) || model.setupSending }
+    /// Answered on this phone. Setup at work doesn't stop a tap: the answer waits for it
+    /// (kiff/tafs#236, item 2).
+    private var busy: Bool { model.answered.contains(component.id) }
 
     @ViewBuilder private func question(_ q: SetupComponent.Question, number: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {

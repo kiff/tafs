@@ -70,10 +70,6 @@ struct HeldCallCard: View {
             if !call.proposed.context.isEmpty {
                 Text(call.proposed.context).scaledFont(14).foregroundColor(Theme.soft)
             }
-            // What it's on, as KIFF keeps the call (kiff/tafs#102): the payment, not a tool-call id.
-            ForEach(call.details ?? [], id: \.self) { line in
-                Text(line).scaledFont(12, design: .monospaced).foregroundColor(Theme.soft).textSelection(.enabled)
-            }
             Text(call.reason)
                 .scaledFont(12, weight: .medium)
                 .padding(.horizontal, 10).padding(.vertical, 5)
@@ -83,6 +79,22 @@ struct HeldCallCard: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Self.sentence(call, taf: taf?.name))
+
+            // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and
+            // a vendor's own values aren't words for the card's face (kiff/tafs#236, item 7).
+            if let details = call.details, !details.isEmpty {
+                DisclosureGroup {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(details, id: \.self) { line in
+                            Text(line).scaledFont(12, design: .monospaced).foregroundColor(Theme.soft).textSelection(.enabled)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
+                } label: {
+                    Text("Details").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
+                }
+            }
 
             if model.canAnswer(call) {
                 if call.approvableOnce {

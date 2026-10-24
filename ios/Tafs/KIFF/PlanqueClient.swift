@@ -140,8 +140,11 @@ final class PlanqueClient {
         /// A sign-in planque holds that no taf uses yet: the owner can see and end it.
         var holdsSignIn: Bool { listed || (status == "pending" && signedIn == true) }
         /// `heldUntil` as a date: its fraction of a second dropped, which a formatter can't read past milliseconds.
-        var heldUntilDate: Date? {
-            guard let raw = heldUntil else { return nil }
+        var heldUntilDate: Date? { heldUntil.flatMap(Self.date) }
+        /// When planque last changed it, from its latest event (kiff/tafs#236, item 3).
+        var changedAt: Date? { events.compactMap { Self.date($0.at) }.max() }
+
+        static func date(_ raw: String) -> Date? {
             let whole = raw.replacingOccurrences(of: #"\.\d+"#, with: "", options: .regularExpression)
             return ISO8601DateFormatter().date(from: whole)
         }

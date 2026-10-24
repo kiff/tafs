@@ -60,9 +60,18 @@ enum KIFFMapping {
     /// (stripe_create_refund); "Refund a payment", for create_refund, stays alone (kiff/tafs#138).
     static func says(_ action: String, title: String?) -> String {
         let name = KIFFMapping.name(action, title: title)
-        let words = toolWords(action)
+        var words = toolWords(action)
         let titleWords = Set(name.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber }))
-        guard let last = words.lowercased().split(separator: " ").last else { return name }
+        var parts = words.lowercased().split(separator: " ")
+        // planque ends a tool's name with four letters or digits of its grant ("create_refund_repg"):
+        // with a title, a last word of four the title doesn't have is that, and never shown
+        // (kiff/tafs#236, item 7).
+        if title?.isEmpty == false, parts.count > 1, let last = parts.last, last.count == 4,
+           !titleWords.contains(last), last.allSatisfy({ $0.isLetter || $0.isNumber }) {
+            parts.removeLast()
+            words = parts.joined(separator: " ")
+        }
+        guard let last = parts.last else { return name }
         return titleWords.contains(last) ? name : "\(name) · \(words)"
     }
 

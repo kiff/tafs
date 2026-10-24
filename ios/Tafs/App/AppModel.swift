@@ -311,7 +311,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         planque.deviceID = nil
@@ -350,7 +350,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
@@ -2030,7 +2030,7 @@ final class AppModel: ObservableObject {
                         chatStates[tafID]?.live?.parts.append(.text(t))
                         chatStates[tafID]?.live?.text = ""
                     }
-                    chatStates[tafID]?.live?.activity = step ?? Self.tafActivityWords(tool)
+                    chatStates[tafID]?.live?.activity = step ?? tafActivityWords(tool)
                 case .held(let exception, let invocation):
                     chatStates[tafID]?.live?.parts.append(.held(exception: exception, invocation: invocation))
                     // KIFF is read for the card, where the call was made.
@@ -2070,6 +2070,20 @@ final class AppModel: ObservableObject {
         if let live = chatStates[tafID]?.live { anchorHeld(live, tafID: tafID) }
         chatStates[tafID]?.live = nil
         await sendQueuedChatIfIdle(tafID)
+    }
+
+    /// What a taf is doing, in the owner's words: a connected tool by the title its
+    /// connection gives it ("Reading List payments (charges)…"), never its name in KIFF,
+    /// which ends in four letters of its grant (kiff/tafs#236, item 7).
+    func tafActivityWords(_ tool: String) -> String? {
+        if let title = toolTitle(tool) { return "Asking KIFF: \(title)…" }
+        return Self.tafActivityWords(tool)
+    }
+
+    /// A connected tool's title, as its connection gives it, by its name in KIFF.
+    func toolTitle(_ name: String) -> String? {
+        let title = grants.lazy.flatMap(\.request.tools).first(where: { $0.action == name })?.title
+        return title?.isEmpty == false ? title : nil
     }
 
     /// What a taf is doing, in the owner's words, from the tool it calls (#64). Every
@@ -2729,7 +2743,11 @@ final class AppModel: ObservableObject {
             lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
             return nil
         }
-        guard connecting == nil else { return nil }
+        quietStop = nil
+        guard connecting == nil else {
+            quietStop = "Another approval is going through. Approve this one once it's done."
+            return nil
+        }
         connecting = grantID
         vendorSignedIn = false
         defer { connecting = nil }
@@ -2766,7 +2784,10 @@ final class AppModel: ObservableObject {
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
                                           reason: "Give \(draft.agentID) its Card")
-            } catch { return nil }
+            } catch {
+                quietStop = Self.notConfirmed
+                return nil
+            }
             guard gen == accountGeneration else { return nil }
             kiff.setupSigner = { try signer.signConfirmed($0) }
             do {
@@ -2797,7 +2818,10 @@ final class AppModel: ObservableObject {
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
                                       reason: "Connect \(grant.vendor) to \(grant.request.agent)")
-        } catch { return nil }
+        } catch {
+            quietStop = Self.notConfirmed
+            return nil
+        }
         guard gen == accountGeneration else { return nil }
 
         let connected: PlanqueClient.Grant
@@ -3077,7 +3101,11 @@ final class AppModel: ObservableObject {
         // the grant as read before doesn't answer that (kiff/tafs#138).
         if approvals.contains(where: { c in
             guard let g = c.grant else { return false }
-            return !grants.contains { $0.id == g } || (c.type == .approval && !grantsReadFor.contains(c.id) && setupThread.answer(to: c.id) == nil)
+            guard c.type == .approval, setupThread.answer(to: c.id) == nil else { return !grants.contains { $0.id == g } }
+            // Not read yet, read before this card, or read as it was before the card (item 3
+            // on kiff/tafs#236): read again, for the first minute of the card.
+            return !grants.contains { $0.id == g } || !grantsReadFor.contains(c.id)
+                || (!changedSince(c) && staleRetry(c))
         }) {
             await refreshConnections()
         }
@@ -3244,7 +3272,22 @@ final class AppModel: ObservableObject {
     }
 
     private func sendQueuedIfIdle() async {
-        guard let queued = setupQueued, !setupThinking, !setupSending else { return }
+        guard !setupThinking, !setupSending else { return }
+        // A card's answer first: it's what Setup asked for (kiff/tafs#236, item 2).
+        if let line = setupAnswersWaiting.first {
+            setupAnswersWaiting.removeFirst()
+            let id = SetupThread.Answer(line)?.id
+            switch await deliverSetup(line) {
+            case .sent:
+                if let id { cardNotes[id] = nil }
+            case .kept:
+                if let id { answered.remove(id); cardNotes[id] = nil }
+            case .notTried:
+                setupAnswersWaiting.insert(line, at: 0)
+            }
+            return
+        }
+        guard let queued = setupQueued else { return }
         setupQueued = nil
         await sendSetup(queued)
     }
@@ -3476,6 +3519,10 @@ final class AppModel: ObservableObject {
         if readSince, let grant, grant.status == "failed" || grant.status == "disconnected" { return false }
         if let a = setupThread.answer(to: c.id), !a.failed, a.text.hasPrefix("approved") { return true }
         guard readSince else { return false }
+        // Read after the card appeared, but changed before it: Setup can show an approval in
+        // the same turn it changes the grant, and a read between the two still finds the
+        // grant as it was (kiff/tafs#236, item 3). Its state then says nothing of this card.
+        guard changedSince(c) else { return false }
         let draft = c.draft.flatMap { setupDrafts[$0] }
         let cardsWaiting = draft.map { !$0.confirmed } ?? (c.draft != nil)
         return (grant?.connected == true && !cardsWaiting) || (grant?.listed == true && c.draft == nil)
@@ -3498,6 +3545,22 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Whether a card whose grant reads as before it is young enough to read again: Setup
+    /// changes the grant within moments of showing it, so a minute covers it.
+    private func staleRetry(_ c: SetupComponent) -> Bool {
+        guard let shown = setupThread.components.first(where: { $0.id == c.id }) else { return false }
+        return clock().timeIntervalSince(shown.firstAt) < 60
+    }
+
+    /// Whether planque changed the card's grant after the card first appeared.
+    func changedSince(_ c: SetupComponent) -> Bool {
+        guard let g = c.grant, let grant = grants.first(where: { $0.id == g }),
+              let shown = setupThread.components.first(where: { $0.id == c.id }) else { return false }
+        guard let changed = grant.changedAt else { return false }
+        // planque writes seconds and more; tafs cloud's time is the same clock to the second.
+        return changed >= shown.firstAt.addingTimeInterval(-1)
+    }
+
     private func wroteSince(_ at: Date) -> Bool {
         setupThread.messages.contains { $0.from == .owner && $0.at > at }
     }
@@ -3507,8 +3570,28 @@ final class AppModel: ObservableObject {
     func answer(_ component: SetupComponent, _ text: String) async {
         setupUnsent.removeAll { SetupThread.Answer($0.text)?.id == component.id }
         answered.insert(component.id)
-        if !(await sendSetup("[\(component.type.rawValue) \(component.id)] \(text)")) { answered.remove(component.id) }
+        cardNotes[component.id] = nil
+        let line = "[\(component.type.rawValue) \(component.id)] \(text)"
+        // Setup at work: the answer waits for it, as a typed message does, and the card says
+        // so (kiff/tafs#236, item 2). It never goes quiet.
+        if setupThinking || setupSending {
+            setupAnswersWaiting.removeAll { SetupThread.Answer($0)?.id == component.id }
+            setupAnswersWaiting.append(line)
+            cardNotes[component.id] = "Sent once Setup has finished what it's doing."
+            return
+        }
+        switch await deliverSetup(line) {
+        case .sent: break
+        // Kept in the thread as not sent, with why and Retry.
+        case .kept: answered.remove(component.id)
+        case .notTried:
+            answered.remove(component.id)
+            cardNotes[component.id] = "Your answer couldn't be sent. Tap it again."
+        }
     }
+
+    /// Answers to cards given while Setup was at work, sent in order once it's done.
+    @Published private(set) var setupAnswersWaiting: [String] = []
 
     /// Approve on an approval (contract 4, one Face ID): the vendor's connection, then the
     /// taf's Cards when it names a draft. The answer says what happened, never more.
@@ -3518,10 +3601,15 @@ final class AppModel: ObservableObject {
         lastError = nil
         shownTermsChanged = false
         failureIsTheRequests = false
+        cardNotes[component.id] = nil
         // Connected, or connected first and listed (contract 5): Setup reads what's next.
         let done = await connect(grantID: grant, shown: shown, draftID: component.draft, shownDraft: shownDraft)
         // Changed terms aren't a failure to tell Setup: the owner reads them and approves again.
-        if shownTermsChanged { return }
+        if shownTermsChanged {
+            cardNotes[component.id] = lastError
+            lastError = nil
+            return
+        }
         if let done, done.connected || done.listed {
             if let e = lastError {
                 await answer(component, "failed: \(e)")
@@ -3537,6 +3625,9 @@ final class AppModel: ObservableObject {
             } else {
                 await answer(component, "failed: \(e)")
             }
+        } else if done == nil {
+            // Nothing happened that Setup should hear of: the card says why (kiff/tafs#236).
+            cardNotes[component.id] = quietStop ?? "Nothing was approved. Approve again."
         }
         await loadSetupThread()
     }
@@ -3563,12 +3654,19 @@ final class AppModel: ObservableObject {
         lastError = nil
         shownTermsChanged = false
         // The sign-in card shows no terms: it approves the grant as the app last showed it.
+        cardNotes[component.id] = nil
         let done = await connect(grantID: grant, shown: grants.first(where: { $0.id == grant })?.digest)
-        if shownTermsChanged { return }
+        if shownTermsChanged {
+            cardNotes[component.id] = lastError
+            lastError = nil
+            return
+        }
         if let done, done.connected || done.listed {
             await answer(component, "signed in")
         } else if let e = lastError {
             await answer(component, "failed: \(e)")
+        } else if done == nil {
+            cardNotes[component.id] = quietStop ?? "Nothing was signed in. Try again."
         }
     }
 
@@ -3577,6 +3675,15 @@ final class AppModel: ObservableObject {
 
     /// Whether the last connect opened the vendor's sign-in: the approval's answer says so.
     private var vendorSignedIn = false
+
+    /// Why the last connect stopped before anything happened that Setup should hear of: the
+    /// owner reads it on the card, which offers Approve again (kiff/tafs#236, item 1).
+    private var quietStop: String?
+    static var notConfirmed: String { "\(Biometry.name) didn't confirm, so nothing was approved. Approve again when you're ready." }
+
+    /// A line on a card whose tap ended without reaching Setup: why, in the owner's words
+    /// (kiff/tafs#236). A tap always shows something: the vendor's sign-in, Setup's answer, or this.
+    @Published private(set) var cardNotes: [String: String] = [:]
 
     /// Whether the last approval found terms other than those shown (kiff/tafs#115).
     @Published private(set) var shownTermsChanged = false
