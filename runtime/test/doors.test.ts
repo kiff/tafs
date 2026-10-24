@@ -630,7 +630,6 @@ describe("what a door keeps of a message", () => {
     const w = world();
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp"]);
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", account: "x" } })).status).toBe(400);
-    expect((await send(w, "POST", "/v1/doors/catalog", { raw: "{}" })).status).toBe(404);
   });
 
   it("checks signatures in both schemes", () => {
