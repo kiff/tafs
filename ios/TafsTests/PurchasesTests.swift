@@ -149,15 +149,15 @@ final class PurchasesTests: XCTestCase {
     /// Solo's terms go with every offer: its period and price, that it renews until
     /// cancelled, and how to cancel.
     func testSoloCarriesItsTerms() {
-        let trial = StoreProduct(id: "bot.tafs.solo.monthly", displayName: "Solo", displayPrice: "$8.99",
+        let trial = StoreProduct(id: "bot.tafs.solo.monthly", displayName: "Solo", displayPrice: "$10.99",
                                  subscription: .init(period: "month", freeTrial: "1 week"))
         XCTAssertEqual(SoloView.action(trial), "Try 1 week free")
         let terms = SoloView.terms(trial)
-        for part in ["Free for 1 week, then $8.99 a month.", "one month at $8.99", "renews every month until you cancel", "Cancel any time"] {
+        for part in ["Free for 1 week, then $10.99 a month.", "one month at $10.99", "renews every month until you cancel", "Cancel any time"] {
             XCTAssertTrue(terms.contains(part), "\(terms) lacks \(part)")
         }
-        let plain = StoreProduct(id: "bot.tafs.solo.monthly", displayName: "Solo", displayPrice: "$8.99", subscription: .init(period: "month"))
-        XCTAssertEqual(SoloView.action(plain), "Subscribe for $8.99 a month")
+        let plain = StoreProduct(id: "bot.tafs.solo.monthly", displayName: "Solo", displayPrice: "$10.99", subscription: .init(period: "month"))
+        XCTAssertEqual(SoloView.action(plain), "Subscribe for $10.99 a month")
         XCTAssertFalse(SoloView.terms(plain).contains("Free"))
     }
 

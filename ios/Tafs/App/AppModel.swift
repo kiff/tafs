@@ -3598,7 +3598,7 @@ enum Screenshots {
     }
     static var products: [StoreProduct] {
         packs.map { StoreProduct(id: "bot.tafs.pack.\($0.id)", displayName: $0.name, displayPrice: $0.price) } +
-            [StoreProduct(id: soloProduct, displayName: "Solo", displayPrice: "€8.99", subscription: .init(period: "month", freeTrial: "1 week"))]
+            [StoreProduct(id: soloProduct, displayName: "Solo", displayPrice: "€10.99", subscription: .init(period: "month", freeTrial: "1 week"))]
     }
     static var tab: Tab {
         switch UserDefaults.standard.string(forKey: "tab") {
