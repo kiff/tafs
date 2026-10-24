@@ -299,7 +299,7 @@ struct ConnectionsPanel: View {
                                 Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
                                     .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.amber)
                                 if let end = grant.heldUntilDate {
-                                    Text("Unless you approve its tools, the sign-in is revoked \(end.formatted(date: .abbreviated, time: .shortened)).")
+                                    Text("Unless you approve its tools, the sign-in is revoked \(end.shown(date: .abbreviated, time: .shortened)).")
                                         .font(.system(size: 12)).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
                                 }
                             }
@@ -494,7 +494,7 @@ struct VersionsPanel: View {
         case "setup": by = "By Coach mode"
         default: by = "By you"
         }
-        return [by, v.created.formatted(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
+        return [by, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
             .compactMap { $0 }.joined(separator: " · ")
     }
 }
@@ -809,7 +809,7 @@ struct TafCardFace: View {
                     // A Card with no end says so, never a far-off date (kiff/tafs#96).
                     Text(revoked ? "Revoked" : !card.active ? "Ended" : card.expires == nil ? "Ends" : "Until")
                         .font(.system(size: 10)).opacity(0.75)
-                    Text(card.expires?.formatted(date: .abbreviated, time: .omitted) ?? "No end date")
+                    Text(card.expires?.shown(date: .abbreviated, time: .omitted) ?? "No end date")
                         .font(.system(size: 12, weight: .semibold))
                 }
             }

@@ -56,6 +56,11 @@ version headings refer to releases, not merely to merged pull requests.
   that total resets, and the call goes on; the Card is as it was after that.
   Changing the limit for good stays in Coach mode. The hold card and the Card
   also say how many calls the vendor refused today still counted toward it.
+- Every time the app shows is in your account's time zone (#211): holds'
+  deadlines, chats, the Record's days, Usage, versions and a taf's next run, as
+  KIFF's Card days are. Without an account (sample mode), it's the device's. When
+  the account's clock isn't the device's, a hold's deadline and the Record's times
+  name the zone ("14:00 CET").
 - Words show once while an answer streams (#214): when the chat reloads mid-answer
   (a taf read what you wrote meanwhile, or Setup's conversation after a step), the
   words it already recorded no longer show a second time as the live answer.
