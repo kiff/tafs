@@ -50,6 +50,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- A taf that didn't start reaches Coach (#183): when tafs cloud refuses to start
+  the taf Coach handed over (its name is taken, for one), Coach hears it once, says
+  plainly that no taf was created, and hands it over again with the same Card,
+  under a new name if needed. It no longer claims a rename or a start that didn't
+  happen, or drafts a second Card. A server error still offers Try again.
 - Every time the app shows is in your account's time zone (#211): holds'
   deadlines, chats, the Record's days, Usage, versions and a taf's next run, as
   KIFF's Card days are. Without an account (sample mode), it's the device's. When
