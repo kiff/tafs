@@ -44,6 +44,33 @@ export interface CardSummary {
   used: Record<string, Money>;
   /** Actions whose use KIFF couldn't read: never shown as zero. */
   usage_unknown: string[];
+  /** Each Card on its own (kiff/tafs#211), the live ones first. */
+  cards: CardView[];
+}
+
+/** A Card's total for a window and what it has used; used is null when KIFF couldn't read it. */
+export interface Total<T> {
+  limit: T;
+  used: T | null;
+  window: Rule["window"];
+}
+
+/** One KIFF Card, drawn as its own Card. */
+export interface CardView {
+  id: string;
+  /** Its main tool's title, until KIFF gives a Card a title of its own. */
+  title: string;
+  /** The environment KIFF scopes it to, as KIFF names it; "" for every environment. */
+  environment: string;
+  /** It covers what the taf does for real: production, or every environment. */
+  live: boolean;
+  active: boolean;
+  expires: string | null;
+  rules: Rule[];
+  /** Its money total, at the ceiling it has now (extra room included). */
+  total: Total<Money> | null;
+  /** Its count of calls. */
+  calls: Total<number> | null;
 }
 
 /**
@@ -59,6 +86,8 @@ export type HomeState = "working" | "paused" | "waiting" | "idle" | "stopped";
 export interface Mandate {
   id: string;
   subject: string;
+  /** The environment it is scoped to; empty for every environment. */
+  environment?: string | null;
   grants?: { action: string; title?: string | null; per_action_max?: { quantity: string; max: number; unit?: string | null; scale?: number | null }[] | null }[] | null;
   aggregates?: { quantity: string; limit: number; window: string; unit?: string | null; scale?: number | null }[] | null;
   limits?: { quantity: string; window?: string | null; limit: number; used?: number | null; status?: string | null; unit?: string | null; scale?: number | null }[] | null;
@@ -165,6 +194,47 @@ export function rules(m: Mandate): Rule[] {
   return out;
 }
 
+/** Production, or a Card scoped to no environment, which applies in every one. */
+export function isLive(environment: string | null | undefined): boolean {
+  const env = (environment ?? "").trim().toLowerCase();
+  return env === "" || env === "production" || env === "prod" || env === "live";
+}
+
+/** A Card on its own: its lines, and its money total and call count with their use. */
+export function cardView(m: Mandate): CardView {
+  const lines = distinct(rules(m));
+  let total: CardView["total"] = null;
+  const shown = shownTotal(m);
+  if (shown) {
+    const { total: agg, line } = shown;
+    const ok = line?.status === "ok";
+    const unit = line?.unit ?? agg.unit;
+    const scale = line?.scale ?? agg.scale;
+    total = {
+      limit: money(ok && line ? line.limit : agg.limit, unit, scale),
+      used: ok && typeof line?.used === "number" ? money(line.used, unit, scale) : null,
+      window: window(agg.window),
+    };
+  }
+  let calls: CardView["calls"] = null;
+  const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity));
+  if (count) {
+    const line = (m.limits ?? []).find((l) => l.quantity === count.quantity && l.window === count.window);
+    const ok = line?.status === "ok";
+    calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, window: window(count.window) };
+  }
+  const environment = (m.environment ?? "").trim();
+  return {
+    id: m.id, title: lines[0]?.label ?? "No actions yet", environment, live: isLive(environment),
+    active: m.active, expires: m.valid_until ?? null, rules: lines, total, calls,
+  };
+}
+
+/** The live Cards first, then the active ones, each group in KIFF's order. */
+function shownOrder(a: CardView, b: CardView): number {
+  return Number(b.live) - Number(a.live) || Number(b.active) - Number(a.active);
+}
+
 /** What a holder's live Cards allow and have used. */
 export function summary(cards: Mandate[]): CardSummary {
   const lines = distinct(cards.flatMap(rules));
@@ -189,6 +259,7 @@ export function summary(cards: Mandate[]): CardSummary {
     rules: lines,
     used,
     usage_unknown: [...unknown],
+    cards: cards.map(cardView).sort(shownOrder),
   };
 }
 

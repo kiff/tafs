@@ -152,6 +152,7 @@ jobs:
           shoot 3-needs-you -screenshots YES -tab needs-you
           shoot 4-record -screenshots YES -tab record
           shoot 5-taf -screenshots YES -tab tafs -screen taf
+          shoot 5b-cards -screenshots YES -tab tafs -screen card
           shoot 6-new-taf -screenshots YES -tab tafs -screen new
           shoot 7-chat -screenshots YES -tab tafs -screen chat
           # Each product's purchase screen, for its review screenshot in App Store Connect:
@@ -179,6 +180,7 @@ jobs:
           # take longer than a shot's 8 s, so a simple screen goes first.
           shoot ipad-3-needs-you -screenshots YES -tab needs-you
           shoot ipad-2-taf -screenshots YES -tab tafs -screen taf
+          shoot ipad-4-cards -screenshots YES -tab tafs -screen card
           ls -la "$RUNNER_TEMP/shots"
 
       - uses: actions/upload-artifact@v7

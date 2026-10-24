@@ -419,6 +419,18 @@ describe("the home list", () => {
           count_per_window: 20, window: "day",
         }],
         used: { stripe_refund: { minor: 20000, unit: "EUR", scale: 2 } }, usage_unknown: [],
+        // The same Card on its own, with its environment, total and calls (kiff/tafs#211).
+        cards: [{
+          id: "card_rae", title: "Create refund", environment: "", live: true, active: true, expires: "2026-12-31T00:00:00Z",
+          rules: [{
+            action: "stripe_refund", label: "Create refund", outside: "hold",
+            per_action: { minor: 10000, unit: "EUR", scale: 2 }, per_window: { minor: 100000, unit: "EUR", scale: 2 },
+            count_per_window: 20, window: "day",
+          }],
+          total: { limit: { minor: 100000, unit: "EUR", scale: 2 }, used: { minor: 20000, unit: "EUR", scale: 2 }, window: "day" },
+          // KIFF sent no use for the count, so it's unknown, never zero.
+          calls: { limit: 20, used: null, window: "day" },
+        }],
       },
     }]);
     expect(r.body.others).toEqual([]);
@@ -454,7 +466,10 @@ describe("the home list", () => {
     expect(r.others).toEqual([{
       id: null, name: "support-demo", job: null, kiff_agent: "support-demo", status: null, next_run: null, last_run: null,
       color: 1, state: "idle", waiting: 0,
-      card: { ids: ["card_demo"], active: true, expires: null, tools: ["lookup"], rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "day" }], used: {}, usage_unknown: [] },
+      card: { ids: ["card_demo"], active: true, expires: null, tools: ["lookup"], rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "day" }], used: {}, usage_unknown: [],
+        cards: [{ id: "card_demo", title: "lookup", environment: "", live: true, active: true, expires: null,
+          rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "day" }],
+          total: null, calls: null }] },
     }]);
   });
 

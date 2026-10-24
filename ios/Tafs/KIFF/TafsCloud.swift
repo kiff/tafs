@@ -122,6 +122,28 @@ final class TafsCloud {
             }
         }
 
+        /// A Card's total for its window and what it has used; no use when KIFF couldn't read it.
+        struct Total<Value: Decodable & Equatable>: Decodable, Equatable {
+            let limit: Value
+            let used: Value?
+            let window: String
+        }
+
+        /// One KIFF Card on its own (kiff/tafs#211).
+        struct CardView: Decodable, Equatable {
+            let id: String
+            let title: String
+            /// As KIFF names it; empty for every environment.
+            let environment: String
+            /// Production, or every environment: what the taf does for real.
+            let live: Bool
+            let active: Bool
+            let expires: Date?
+            let rules: [Rule]
+            let total: Total<Amount>?
+            let calls: Total<Int>?
+        }
+
         struct CardSummary: Decodable, Equatable {
             /// The live Cards: what revoking stops.
             let ids: [String]
@@ -131,9 +153,11 @@ final class TafsCloud {
             let rules: [Rule]
             let used: [String: Amount]
             let usageUnknown: [String]
+            /// Each Card on its own, the live ones first; nil from an older tafs cloud.
+            var cards: [CardView]? = nil
 
             enum CodingKeys: String, CodingKey {
-                case ids, active, expires, tools, rules, used, usageUnknown = "usage_unknown"
+                case ids, active, expires, tools, rules, used, cards, usageUnknown = "usage_unknown"
             }
         }
 
