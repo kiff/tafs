@@ -8,12 +8,13 @@ final class DoorsTests: XCTestCase {
     private static let doorsJSON = #"""
     {"doors":[{"id":"email","app":"email","kind":"email","label":"Email","open":true,"address":"refunds@tafs.example",
       "proof":"proven","how":"The email must pass the sender check","keys":[{"id":"ana@acme.example","auto":true}],
-      "today":2,"limit":20,"resting":false}],
+      "today":2,"limit":20,"resting":false,"others_today":10,"others_limit":10}],
      "apps":[{"id":"email","label":"Email","kind":"email","proof":"proven","how":"x"},
-             {"id":"whatsapp","label":"WhatsApp","kind":"whatsapp","proof":"proven","how":"x"},
-             {"id":"form","label":"Web form","kind":"connector","proof":"none","how":"Anyone can type any name"}],
+             {"id":"whatsapp","label":"WhatsApp","kind":"whatsapp","proof":"proven","how":"x"}],
      "knocks":[{"id":"k-1","door":"email","app":"email","from":"ana@northwind.example","name":"Ana Lima","proof":"pass",
-       "subject":"Order 4471","text":"Refund order 4471.","attachments":0,"at":"2026-10-24T09:00:00.000Z","state":"open"}]}
+       "subject":"Order 4471","text":"Refund order 4471.","attachments":0,"at":"2026-10-24T09:00:00.000Z","state":"open"},
+      {"id":"k-2","door":"email","app":"email","from":"","proof":"none","text":"","attachments":0,
+       "at":"2026-10-24T09:05:00.000Z","state":"open","rest":"others","dropped":3}]}
     """#
 
     private func stubbedCloud() -> TafsCloud {
@@ -35,6 +36,18 @@ final class DoorsTests: XCTestCase {
         XCTAssertEqual(r.doors.first?.keys.first?.auto, true)
         XCTAssertTrue(r.doors.first?.holdsKeys ?? false)
         XCTAssertEqual(r.knocks.first?.who, "Ana Lima (ana@northwind.example)")
+        // The two caps, and the line that counts what was dropped past one.
+        XCTAssertEqual(r.doors.first?.othersToday, 10)
+        XCTAssertEqual(r.doors.first?.othersLimit, 10)
+        XCTAssertFalse(r.knocks[0].isLine)
+        XCTAssertEqual(r.knocks[1].rest, "others")
+        XCTAssertEqual(r.knocks[1].dropped, 3)
+    }
+
+    func testDoorsShowOnlyWhereTafsCloudOffersThem() throws {
+        let offered = #"{"tafs":[],"others":[],"removing":[],"doors_offered":["email"]}"#
+        XCTAssertEqual(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(offered.utf8)).doorsOffered, ["email"])
+        XCTAssertNil(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(HomeJSON.empty.utf8)).doorsOffered)
     }
 
     func testADoorsMessageAndItsAnswerAreMarked() throws {
@@ -80,13 +93,13 @@ final class DoorsTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/taf-1/doors/knocks/k-1"] = (200, #"{"knock":"k-1","state":"done"}"#)
         let model = DoorsModel(cloud: cloud, tafID: "taf-1")
         await model.load()
-        XCTAssertEqual(model.openKnocks.count, 1)
+        XCTAssertEqual(model.openKnocks.count, 2)
         // One email door per taf: email isn't offered again.
-        XCTAssertEqual(model.addable.map(\.id), ["whatsapp", "form"])
+        XCTAssertEqual(model.addable.map(\.id), ["whatsapp"])
 
         await model.answer(model.openKnocks[0], "do", say: "Refund 4471 only.")
         XCTAssertEqual(body("POST", "/v1/tafs/taf-1/doors/knocks/k-1"), ["action": "do", "say": "Refund 4471 only."])
-        XCTAssertTrue(model.openKnocks.isEmpty)
+        XCTAssertEqual(model.openKnocks.map(\.id), ["k-2"])
         XCTAssertNil(model.error)
     }
 
@@ -111,11 +124,5 @@ final class DoorsTests: XCTestCase {
         XCTAssertNil(door)
         XCTAssertNil(model.error)
         XCTAssertTrue(model.doors.isEmpty)
-    }
-
-    func testSampleModeHasDoorsWithoutTafsCloud() {
-        let model = DoorsModel(cloud: nil, tafID: nil)
-        XCTAssertEqual(model.doors.map(\.app), ["email"])
-        XCTAssertEqual(model.openKnocks.count, 1)
     }
 }

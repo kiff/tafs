@@ -12,7 +12,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
-import { addDoor, answerKnock, connectLink, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 
 /**
@@ -57,15 +57,14 @@ import { inbound, isDoorPath } from "./doors/inbound.js";
  *   POST /v1/mcp                        Coach's tools, through KIFF's gateway only (no sign-in: each call's KIFF permit is the check; kiff/tafs#206)
  *   POST /v1/runs/ended                 kiff/agents' note that a task Coach handed a taf, or a door's run, paused or ended (no sign-in: an unknown ref is dropped, and the run is read back)
  *   GET  /v1/tafs/{id}/doors            the taf's doors, the apps a door can open on here, and its open knocks
- *   POST /v1/tafs/{id}/doors            {app, code?, phone_number_id?, waba_id?, account?, label?}: open a door
- *   POST /v1/tafs/{id}/doors/connect    {app}: a sign-in link for a connector app
+ *   POST /v1/tafs/{id}/doors            {app, code?, phone_number_id?, waba_id?}: turn a door on (a taf has none until then)
  *   PATCH /v1/tafs/{id}/doors/{door}    {open}
  *   DELETE /v1/tafs/{id}/doors/{door}
  *   POST /v1/tafs/{id}/doors/{door}/keys  {id, name?}: pair a sender
  *   DELETE /v1/tafs/{id}/doors/{door}/keys/{key}
  *   POST /v1/tafs/{id}/doors/knocks/{knock}  {action: do | pair | ignore, say?}
- *   POST /v1/doors/email | /v1/doors/whatsapp | /v1/doors/catalog  the doors' webhooks (no sign-in: each provider's signature is the check)
- *   GET  /doors/whatsapp/connect, /doors/connected  the pages a door's signup opens and comes back through
+ *   POST /v1/doors/email | /v1/doors/whatsapp  the doors' webhooks (no sign-in: each provider's signature is the check)
+ *   GET  /doors/whatsapp/connect        the page WhatsApp's signup runs in
  */
 
 /** The Lambda function URL event, as much of it as we read. */
@@ -2124,7 +2123,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     taken.push(color);
     return { id: null, name: agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card };
   });
-  return { tafs: listed, others, removing };
+  // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
+  const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
+  return { tafs: listed, others, removing, ...(doors.length ? { doors_offered: doors } : {}) };
 }
 
 /** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */
@@ -2545,7 +2546,6 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   need(me, "cards.manage");
   const body = parseBody(event);
   if (parts.length === 4 && method === "POST") return addDoor(ctx, owner, taf, body);
-  if (parts.length === 5 && method === "POST" && a === "connect") return connectLink(ctx, owner, taf, body);
   if (parts.length === 6 && method === "POST" && a === "knocks") return answerKnock(ctx, owner, taf, b ?? "", body);
   if (parts.length === 5 && method === "PATCH" && a) {
     if (typeof body.open !== "boolean") throw new HTTPError(400, "open is true or false");

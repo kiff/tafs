@@ -8,8 +8,6 @@ import { forwardAlert, type ReadyRun } from "./forward.js";
 import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
-import { configuredApps } from "./doors/apps.js";
-import { catalogClient } from "./doors/catalog.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
 import { emailProvider } from "./doors/email.js";
 import type { DoorSecrets, DoorStore } from "./doors/model.js";
@@ -567,7 +565,6 @@ function readDoorsConfig(): Promise<DoorsConfig> {
     const str = (name: string) => (typeof k[name] === "string" ? (k[name] as string) : "");
     const cfg: DoorsConfig = {
       publicURL: (process.env.DOORS_PUBLIC_URL ?? "").replace(/\/+$/, ""),
-      apps: configuredApps(process.env.DOORS_APPS),
       secretsPrefix: process.env.DOORS_SECRETS_PREFIX ?? "tafs-doors/",
     };
     if (process.env.DOORS_EMAIL_DOMAIN && str("email_api_key") && str("email_webhook_secret")) {
@@ -580,14 +577,6 @@ function readDoorsConfig(): Promise<DoorsConfig> {
         client: whatsappClient({ id: str("whatsapp_app_id"), secret: str("whatsapp_app_secret") }),
         appID: str("whatsapp_app_id"), appSecret: str("whatsapp_app_secret"), configID: str("whatsapp_config_id"),
         verifyToken: str("whatsapp_verify_token"), ...(process.env.DOORS_WHATSAPP_REGION ? { region: process.env.DOORS_WHATSAPP_REGION } : {}),
-      };
-    }
-    if (str("catalog_api_key") && str("catalog_webhook_secret") && str("catalog_base_url")) {
-      const configs = typeof k.catalog_auth_configs === "object" && k.catalog_auth_configs !== null ? k.catalog_auth_configs as Record<string, unknown> : {};
-      cfg.catalog = {
-        client: catalogClient(str("catalog_api_key"), str("catalog_base_url")),
-        webhookSecret: str("catalog_webhook_secret"),
-        authConfigs: Object.fromEntries(Object.entries(configs).filter((e): e is [string, string] => typeof e[1] === "string")),
       };
     }
     return cfg;

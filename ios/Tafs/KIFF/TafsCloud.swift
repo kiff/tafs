@@ -203,6 +203,10 @@ final class TafsCloud {
         let tafs: [HomeTaf]
         let others: [HomeTaf]
         let removing: [PendingRemoval]
+        /// The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors.
+        var doorsOffered: [String]? = nil
+
+        enum CodingKeys: String, CodingKey { case tafs, others, removing, doorsOffered = "doors_offered" }
     }
 
     func home() async throws -> Home {

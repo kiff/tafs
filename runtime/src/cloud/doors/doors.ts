@@ -3,8 +3,7 @@ import { AgentsError, type AIBound, type Run } from "../agents.js";
 import { newRef, refTenant, type Note } from "../coach.js";
 import type { Device, PushStore, Sender } from "../push.js";
 import type { AgentsAPI, Taf, Tafs } from "../handler.js";
-import { apps, type DoorApp } from "./apps.js";
-import type { CatalogClient } from "./catalog.js";
+import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
 import { type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
@@ -27,14 +26,6 @@ export interface DoorsConfig {
     /** Where the number's message content is stored, from its registration. */
     region?: string;
   };
-  catalog?: {
-    client: CatalogClient;
-    webhookSecret: string;
-    /** The catalog's sign-in setup for each app, by app id: only these apps are offered. */
-    authConfigs: Record<string, string>;
-  };
-  /** The deployment's connector apps (apps.ts). */
-  apps: DoorApp[];
   /** Where a WhatsApp number's token is kept: <prefix><tenant>/whatsapp/<number>. */
   secretsPrefix: string;
 }
@@ -110,8 +101,8 @@ export async function sentOf(store: DoorStore, tenant: string, taf: string): Pro
   return Array.isArray(v?.sent) ? v.sent : [];
 }
 
-function appOf(cfg: DoorsConfig, id: string): DoorApp | undefined {
-  return apps(cfg.apps).find((a) => a.id === id);
+function appOf(_cfg: DoorsConfig, id: string): DoorApp | undefined {
+  return APPS.find((a) => a.id === id);
 }
 
 /* ------------------------------------------------------------------ the chat */
@@ -124,9 +115,7 @@ function appOf(cfg: DoorsConfig, id: string): DoorApp | undefined {
  */
 export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: string[]): string {
   const who = a.name ? `${a.name} <${a.from}>` : a.from;
-  const back = app.kind === "connector" && app.event
-    ? `answer them with ${app.event.reply.tool}${a.thread.to ? `, to ${a.thread.to}` : ""}${a.thread.thread ? `, in thread ${a.thread.thread}` : ""}`
-    : `your answer goes back by ${app.label.toLowerCase()}`;
+  const back = `your answer goes back by ${app.label.toLowerCase()}`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
@@ -154,8 +143,10 @@ export type Outcome = "unknown" | "closed" | "stale" | "seen" | "resting" | "emp
 /**
  * A message that came through a door. In order: its door (none, retired or
  * closed: dropped); not old (a delivery captured and sent again later starts
- * nothing); once only (a re-delivery starts nothing); the day's limit (past
- * it, the door rests, and the owner is told once); then a key's message
+ * nothing); once only (a re-delivery starts nothing); the day's cap, apart
+ * for keys (the owner and paired senders) and for everyone else, so
+ * strangers can't use up the owner's day (past either, what comes in is
+ * dropped and counted on one line for the owner); then a key's message
  * starts a run in the taf's chat, and anyone else's is a knock. If anything
  * fails before the run starts, the message isn't marked as seen, so the
  * provider's next try takes it; once the run started, it never starts again.
@@ -179,18 +170,15 @@ export async function arrive(a: Arrival, ctx: DoorsContext): Promise<Outcome> {
   try {
     // Replies a lost note left owed go out with any message that comes in.
     await settlePending(ctx, tenant, taf.id);
-    const today = day(ctx.now);
-    if (!(await store.bump(doorKeys.day(tenant, taf.id, door.id, today), DOOR.perDay, addDays(ctx.now, 2)))) {
-      if (await store.create(doorKeys.rested(tenant, taf.id, door.id, today), 1, addDays(ctx.now, 2))) {
-        await addKnock(ctx, tenant, taf, door, app, a, { rest: true });
-      }
+    if (!a.text && a.attachments === 0) return "empty";
+    const key = app.proof === "proven" && a.proven && door.keys.some((k) => k.id === a.from);
+    const who = key ? "keys" : "others";
+    if (!(await store.bump(doorKeys.day(tenant, taf.id, door.id, day(ctx.now), who), key ? DOOR.keysPerDay : DOOR.othersPerDay, addDays(ctx.now, 2)))) {
+      await countDropped(ctx, tenant, taf, door, app, who);
       return "resting";
     }
-    if (!a.text && a.attachments === 0) return "empty";
-
-    const key = app.proof === "proven" && a.proven && door.keys.some((k) => k.id === a.from);
     if (!key) {
-      await addKnock(ctx, tenant, taf, door, app, a, {});
+      await addKnock(ctx, tenant, taf, door, app, a);
       return "knock";
     }
     await startDoorRun(ctx, cfg, tenant, taf, door, app, a, () => { started = true; });
@@ -211,19 +199,16 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   const threadKey = doorKeys.thread(tenant, taf.id, door.id, hash(a.threadKey));
   const prior = (await store.get(threadKey)) as { session?: string } | undefined;
   const ai = (await store.get(doorKeys.bound(tenant))) as AIBound | undefined;
-  // A connector door's answer is the taf's own tool call, through KIFF: nothing for the door to send.
-  const ref = app.kind === "connector" ? undefined : newRef(tenant);
-  const notify = ref ? { url: `${cfg.publicURL}/v1/runs/ended`, ref } : undefined;
-  if (ref) {
-    // Owed before the run starts, so a run that ends at once still finds where its answer goes.
-    const reply: Reply = {
-      taf: taf.id, door: door.id, run: "", to: a.from, ...(a.name ? { name: a.name } : {}),
-      ...(a.subject ? { subject: a.subject } : {}), thread: a.thread, attachments: a.attachments, cut: wasCut, at: a.at,
-    };
-    await store.put(doorKeys.reply(tenant, ref), reply, addDays(ctx.now, DOOR.replyDays));
-    await update<{ refs: string[] }>(store, doorKeys.pending(tenant, taf.id),
-      (read) => ({ refs: [ref, ...(read?.refs ?? [])].slice(0, 50) }), addDays(ctx.now, DOOR.replyDays));
-  }
+  const ref = newRef(tenant);
+  const notify = { url: `${cfg.publicURL}/v1/runs/ended`, ref };
+  // Owed before the run starts, so a run that ends at once still finds where its answer goes.
+  const reply: Reply = {
+    taf: taf.id, door: door.id, run: "", to: a.from, ...(a.name ? { name: a.name } : {}),
+    ...(a.subject ? { subject: a.subject } : {}), thread: a.thread, attachments: a.attachments, cut: wasCut, at: a.at,
+  };
+  await store.put(doorKeys.reply(tenant, ref), reply, addDays(ctx.now, DOOR.replyDays));
+  await update<{ refs: string[] }>(store, doorKeys.pending(tenant, taf.id),
+    (read) => ({ refs: [ref, ...(read?.refs ?? [])].slice(0, 50) }), addDays(ctx.now, DOOR.replyDays));
   let run: Run;
   try {
     try {
@@ -234,32 +219,52 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
       run = await ctx.agents.startRun(tenant, taf.id, input, undefined, ai?.period ? ai : undefined, notify);
     }
   } catch (err) {
-    if (ref) await forgetReply(ctx, tenant, taf.id, ref).catch(() => undefined);
+    await forgetReply(ctx, tenant, taf.id, ref).catch(() => undefined);
     throw err;
   }
   started();
   // The run is going: what follows only helps, and its failure never starts it again.
   await store.put(threadKey, { session: run.session }, addDays(ctx.now, DOOR.threadDays))
     .catch((err) => console.error("door thread not kept:", err instanceof Error ? err.message : "error"));
-  if (ref) {
-    await update<Reply>(store, doorKeys.reply(tenant, ref), (read) => (read ? { ...read, run: run.id } : undefined), addDays(ctx.now, DOOR.replyDays))
-      .catch((err) => console.error("door reply not tied to its run:", err instanceof Error ? err.message : "error"));
-  }
+  await update<Reply>(store, doorKeys.reply(tenant, ref), (read) => (read ? { ...read, run: run.id } : undefined), addDays(ctx.now, DOOR.replyDays))
+    .catch((err) => console.error("door reply not tied to its run:", err instanceof Error ? err.message : "error"));
 }
 
-async function addKnock(ctx: DoorsContext, tenant: string, taf: Taf, door: Door, app: DoorApp, a: Arrival, opts: { rest?: boolean }): Promise<void> {
+async function addKnock(ctx: DoorsContext, tenant: string, taf: Taf, door: Door, app: DoorApp, a: Arrival): Promise<void> {
   const knock: Knock = {
     id: `k-${randomBytes(9).toString("base64url")}`,
     door: door.id, app: app.id, from: a.from, ...(a.name ? { name: a.name } : {}),
     proof: a.spoofed ? "fail" : app.proof === "proven" && a.proven ? "pass" : "none",
     ...(a.subject ? { subject: a.subject } : {}),
-    text: opts.rest ? "" : cut(a.text).text, attachments: a.attachments, at: ctx.now.toISOString(), state: "open",
-    ...(opts.rest ? { rest: true } : {}),
+    text: cut(a.text).text, attachments: a.attachments, at: ctx.now.toISOString(), state: "open",
   };
   await changeKnocks(ctx.doors.store, tenant, taf.id, ctx.now, (knocks) => [knock, ...knocks]);
-  await tellOwner(ctx, tenant, taf, opts.rest
-    ? `Your ${app.label.toLowerCase()} door had ${DOOR.perDay} messages today. It rests until tomorrow.`
-    : `${a.name ?? a.from} wrote by ${app.label.toLowerCase()}${a.spoofed ? " (the sender check failed)" : ""}. Nothing was done.`, knock.id);
+  await tellOwner(ctx, tenant, taf, `${a.name ?? a.from} wrote by ${app.label.toLowerCase()}${a.spoofed ? " (the sender check failed)" : ""}. Nothing was done.`, knock.id);
+}
+
+/**
+ * A message past the day's cap: dropped, and counted on one line for the
+ * owner, one line a day for each cap. Only the first is an alert.
+ */
+async function countDropped(ctx: DoorsContext, tenant: string, taf: Taf, door: Door, app: DoorApp, who: "keys" | "others"): Promise<void> {
+  const today = day(ctx.now);
+  let first = false;
+  let id = "";
+  await changeKnocks(ctx.doors.store, tenant, taf.id, ctx.now, (knocks) => {
+    const line = knocks.find((k) => k.rest === who && k.door === door.id && k.at.startsWith(today));
+    first = !line;
+    if (line) {
+      id = line.id;
+      return knocks.map((k) => (k === line ? { ...k, dropped: (k.dropped ?? 0) + 1, state: "open" as const } : k));
+    }
+    id = `k-${randomBytes(9).toString("base64url")}`;
+    return [{ id, door: door.id, app: app.id, from: "", proof: "none" as const, text: "", attachments: 0, at: ctx.now.toISOString(), state: "open" as const, rest: who, dropped: 1 }, ...knocks];
+  });
+  if (first) {
+    await tellOwner(ctx, tenant, taf, who === "keys"
+      ? `Your ${app.label.toLowerCase()} door had its ${DOOR.keysPerDay} messages from you and paired senders today. More are dropped until tomorrow.`
+      : `Your ${app.label.toLowerCase()} door had ${DOOR.othersPerDay} messages from people who aren't paired today. More are dropped until tomorrow.`, id);
+  }
 }
 
 /** One alert to the account's phones; a failure is logged, never in the way. */
@@ -395,7 +400,7 @@ async function sendReply(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, ta
       await cfg.whatsapp.client.send(door.phoneNumberID, token, reply.to, [...text].slice(0, 4000).join(""), reply.thread.message_id);
       return { sent: { ...base, status: "sent" } };
     }
-    return notSent("this door's answer is the taf's own");
+    return notSent("this door can't answer");
   } catch (err) {
     console.error("door reply not sent:", err instanceof Error ? err.message : "error");
     const status = (err as { status?: unknown })?.status;
@@ -405,22 +410,27 @@ async function sendReply(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, ta
 
 /* ------------------------------------------------------------------ the owner */
 
-/** A door as the app shows it. */
-export function doorView(d: Door, app: DoorApp | undefined, today: number) {
+/** A door as the app shows it, with today's counts: from keys, and from everyone else. */
+export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }) {
   return {
     id: d.id, app: d.app, kind: d.kind, label: app?.label ?? d.app, open: d.open, address: d.address,
     proof: app?.proof ?? "none", how: app?.how ?? "",
     keys: app?.proof === "proven" ? d.keys.map((k) => ({ id: k.id, ...(k.name ? { name: k.name } : {}), auto: k.auto === true })) : [],
-    today, limit: DOOR.perDay, resting: today >= DOOR.perDay,
+    today: today.keys, limit: DOOR.keysPerDay, resting: today.keys >= DOOR.keysPerDay,
+    others_today: today.others, others_limit: DOOR.othersPerDay,
   };
+}
+
+/** Today's counts of a door: messages from keys, and from everyone else. */
+async function todayOf(store: DoorStore, tenant: string, taf: string, door: string, now: Date): Promise<{ keys: number; others: number }> {
+  const [keys, others] = await Promise.all((["keys", "others"] as const).map((who) => store.get(doorKeys.day(tenant, taf, door, day(now), who))));
+  return { keys: typeof keys === "number" ? keys : 0, others: typeof others === "number" ? others : 0 };
 }
 
 /** The apps a door can open on here: what the deployment set up. */
 export function offered(cfg: DoorsConfig): Array<{ id: string; label: string; kind: string; proof: string; how: string }> {
-  return apps(cfg.apps).filter((a) =>
-    a.kind === "email" ? Boolean(cfg.email && cfg.emailDomain) :
-    a.kind === "whatsapp" ? Boolean(cfg.whatsapp) :
-    Boolean(cfg.catalog?.authConfigs[a.id])).map(({ id, label, kind, proof, how }) => ({ id, label, kind, proof, how }));
+  return APPS.filter((a) => (a.kind === "email" ? Boolean(cfg.email && cfg.emailDomain) : Boolean(cfg.whatsapp)))
+    .map(({ id, label, kind, proof, how }) => ({ id, label, kind, proof, how }));
 }
 
 export interface Owner {
@@ -437,11 +447,10 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   const { store } = ctx.doors;
   await settlePending(ctx, owner.tenant, taf.id);
   const doors = await doorsOf(store, owner.tenant, taf.id);
-  const today = day(ctx.now);
-  const counts = await Promise.all(doors.map((d) => store.get(doorKeys.day(owner.tenant, taf.id, d.id, today))));
+  const counts = await Promise.all(doors.map((d) => todayOf(store, owner.tenant, taf.id, d.id, ctx.now)));
   const knocks = (await knocksOf(store, owner.tenant, taf.id)).filter((k) => k.state === "open");
   return {
-    doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), typeof counts[i] === "number" ? counts[i] as number : 0)),
+    doors: doors.map((d, i) => doorView(d, appOf(cfg, d.app), counts[i])),
     apps: offered(cfg),
     knocks,
   };
@@ -453,7 +462,10 @@ export function localPart(name: string): string {
   return s || "taf";
 }
 
-/** Opens a door on the taf: email, a WhatsApp number from its signup, or a connector app after its sign-in. */
+/**
+ * Turns a door on for the taf: its email address, or a WhatsApp number from
+ * its signup. A taf has none until its owner turns one on.
+ */
 export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: Record<string, unknown>) {
   const cfg = await ctx.doors.config();
   const { store } = ctx.doors;
@@ -463,7 +475,7 @@ export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: R
   const doors = await doorsOf(store, owner.tenant, taf.id);
   const now = ctx.now.toISOString();
   let door: Door;
-  if (app.kind !== "connector" && doors.some((d) => d.kind === app.kind)) throw new DoorError(409, `${taf.name} already has ${app.kind === "email" ? "an email" : "a WhatsApp"} door`);
+  if (doors.some((d) => d.kind === app.kind)) throw new DoorError(409, `${taf.name} already has ${app.kind === "email" ? "an email" : "a WhatsApp"} door`);
   if (app.kind === "email") {
     const domain = (cfg.emailDomain ?? "").toLowerCase();
     let address = "";
@@ -475,25 +487,23 @@ export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: R
     if (!address) throw new DoorError(503, "no address was free; try again");
     const keys: Key[] = owner.email ? [{ id: owner.email.toLowerCase(), auto: true, added: now }] : [];
     door = { id: "email", kind: "email", app: "email", open: true, address, route: `email:${address}`, keys, created: now };
-  } else if (app.kind === "whatsapp") {
-    door = await connectWhatsApp(ctx, cfg, owner, taf, doors, body, now);
   } else {
-    door = await connectApp(ctx, cfg, owner, taf, app, body, now);
+    door = await connectWhatsApp(ctx, cfg, owner, taf, body, now);
   }
   try {
     await changeDoors(store, owner.tenant, taf.id, (now) => {
-      if (door.kind !== "connector" && now.some((d) => d.kind === door.kind)) throw new DoorError(409, `${taf.name} already has that door`);
+      if (now.some((d) => d.kind === door.kind)) throw new DoorError(409, `${taf.name} already has that door`);
       return [...now, door];
     });
   } catch (err) {
-    // Not kept: its address, number or sign-in mustn't stay claimed by nothing.
+    // Not kept: its address or number mustn't stay claimed by nothing.
     await closeDoor(ctx, cfg, owner.tenant, door, { retire: false }).catch(() => undefined);
     throw err;
   }
-  return { door: doorView(door, app, 0) };
+  return { door: doorView(door, app) };
 }
 
-async function connectWhatsApp(ctx: DoorsContext, cfg: DoorsConfig, owner: Owner, taf: Taf, doors: Door[], body: Record<string, unknown>, now: string): Promise<Door> {
+async function connectWhatsApp(ctx: DoorsContext, cfg: DoorsConfig, owner: Owner, taf: Taf, body: Record<string, unknown>, now: string): Promise<Door> {
   const wa = cfg.whatsapp!;
   const code = typeof body.code === "string" ? body.code : "";
   const phone = typeof body.phone_number_id === "string" ? body.phone_number_id : "";
@@ -517,45 +527,6 @@ async function connectWhatsApp(ctx: DoorsContext, cfg: DoorsConfig, owner: Owner
   }
 }
 
-/** The catalog's user for an account: a stand-in that names no one. */
-function catalogUser(tenant: string): string {
-  return `tafs-${hash("catalog-user", tenant).slice(0, 20)}`;
-}
-
-/** A sign-in link for a connector app; the door is added once it's done (addDoor with the account). */
-export async function connectLink(ctx: DoorsContext, owner: Owner, taf: Taf, body: Record<string, unknown>) {
-  const cfg = await ctx.doors.config();
-  const appID = typeof body.app === "string" ? body.app : "";
-  const app = appOf(cfg, appID);
-  const authConfig = cfg.catalog?.authConfigs[appID];
-  if (!app || app.kind !== "connector" || !authConfig || !cfg.catalog) throw new DoorError(400, "that app isn't offered here");
-  const back = `${cfg.publicURL}/doors/connected?taf=${encodeURIComponent(taf.id)}&app=${encodeURIComponent(appID)}`;
-  const { url, account } = await cfg.catalog.client.link(authConfig, catalogUser(owner.tenant), back);
-  // Only an account this link made can become this taf's door.
-  await ctx.doors.store.put(doorKeys.link(owner.tenant, account), { taf: taf.id, app: appID }, new Date(ctx.now.getTime() + 3600_000));
-  return { url, account };
-}
-
-async function connectApp(ctx: DoorsContext, cfg: DoorsConfig, owner: Owner, taf: Taf, app: DoorApp, body: Record<string, unknown>, now: string): Promise<Door> {
-  const account = typeof body.account === "string" ? body.account : "";
-  const link = (await ctx.doors.store.get(doorKeys.link(owner.tenant, account))) as { taf?: string; app?: string } | undefined;
-  if (!account || link?.taf !== taf.id || link.app !== app.id) throw new DoorError(400, `sign in to ${app.label} first`);
-  const route = `connector:${account}`;
-  const id = `c-${randomBytes(6).toString("hex")}`;
-  if (!(await ctx.doors.store.create(doorKeys.route(route), { tenant: owner.tenant, taf: taf.id, door: id }))) {
-    throw new DoorError(409, "that account is already a taf's door");
-  }
-  try {
-    const trigger = await cfg.catalog!.client.watch(app.event!.trigger, account);
-    await ctx.doors.store.remove(doorKeys.link(owner.tenant, account));
-    const label = typeof body.label === "string" && body.label.trim() ? body.label.trim().slice(0, 80) : `${app.label} account`;
-    return { id, kind: "connector", app: app.id, open: true, address: label, route, keys: [], created: now, account, trigger };
-  } catch (err) {
-    await ctx.doors.store.remove(doorKeys.route(route));
-    throw new DoorError(502, `${app.label} didn't connect: ${err instanceof Error ? err.message : "error"}`);
-  }
-}
-
 async function withDoor(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, change: (d: Door, doors: Door[]) => Door[]) {
   const next = await changeDoors(ctx.doors.store, owner.tenant, taf.id, (doors) => {
     const door = doors.find((d) => d.id === id);
@@ -569,7 +540,7 @@ async function withDoor(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, c
 export async function setOpen(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, open: boolean) {
   const cfg = await ctx.doors.config();
   const d = await withDoor(ctx, owner, taf, id, (door, doors) => doors.map((x) => (x.id === door.id ? { ...x, open } : x)));
-  return { door: doorView(d!, appOf(cfg, d!.app), 0) };
+  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now)) };
 }
 
 /** Pairs a sender with a door that can prove who writes. */
@@ -580,22 +551,21 @@ export async function pair(ctx: DoorsContext, owner: Owner, taf: Taf, id: string
   const d = await withDoor(ctx, owner, taf, id, (door, doors) => {
     const app = appOf(cfg, door.app);
     if (app?.proof !== "proven") throw new DoorError(409, `${app?.label ?? "this door"} can't prove who's writing, so it has no keys`);
-    const key = door.kind === "email" ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) ? raw : "")
-      : door.kind === "whatsapp" ? raw.replace(/\D/g, "").replace(/^00/, "") : raw;
-    if (!key || key.length > 200) throw new DoorError(400, door.kind === "email" ? "write an email address" : door.kind === "whatsapp" ? "write a phone number with its country code" : "write who to pair");
+    const key = door.kind === "email" ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) ? raw : "") : raw.replace(/\D/g, "").replace(/^00/, "");
+    if (!key || key.length > 200) throw new DoorError(400, door.kind === "email" ? "write an email address" : "write a phone number with its country code");
     if (door.keys.some((k) => k.id === key)) return doors;
     return doors.map((x) => (x.id === door.id ? { ...x, keys: [...x.keys, { id: key, ...(name ? { name } : {}), added: ctx.now.toISOString() }] } : x));
   });
-  return { door: doorView(d!, appOf(cfg, d!.app), 0) };
+  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now)) };
 }
 
 export async function unpair(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, key: string) {
   const cfg = await ctx.doors.config();
   const d = await withDoor(ctx, owner, taf, id, (door, doors) => doors.map((x) => (x.id === door.id ? { ...x, keys: x.keys.filter((k) => k.id !== key.toLowerCase()) } : x)));
-  return { door: doorView(d!, appOf(cfg, d!.app), 0) };
+  return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now)) };
 }
 
-/** Removes a door: its address or number stops being the taf's, and its sign-in goes. */
+/** Removes a door: its address or number stops being the taf's. */
 export async function removeDoor(ctx: DoorsContext, owner: Owner, taf: Taf, id: string) {
   const cfg = await ctx.doors.config();
   const door = (await doorsOf(ctx.doors.store, owner.tenant, taf.id)).find((d) => d.id === id);
@@ -606,16 +576,12 @@ export async function removeDoor(ctx: DoorsContext, owner: Owner, taf: Taf, id: 
 }
 
 /**
- * What a door holds outside its taf goes: its trigger and the app's sign-in,
- * its number's token, and its route. A removed email address is retired, not
+ * What a door holds outside its taf goes: its number's token, and its route.
+ * A removed email address is retired, not
  * freed: for a year no other taf gets it, so mail from its old senders never
  * reaches another account. The retired route names no account.
  */
 async function closeDoor(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, door: Door, opts: { retire: boolean }): Promise<void> {
-  if (door.kind === "connector" && cfg.catalog) {
-    if (door.trigger) await cfg.catalog.client.unwatch(door.trigger);
-    if (door.account) await cfg.catalog.client.disconnect(door.account);
-  }
   if (door.kind === "whatsapp" && door.phoneNumberID) await ctx.doors.secrets.remove(whatsappSecretName(cfg.secretsPrefix, tenant, door.phoneNumberID));
   if (door.kind === "email" && opts.retire) await ctx.doors.store.put(doorKeys.route(door.route), { retired: true }, addDays(ctx.now, DOOR.retiredDays));
   else await ctx.doors.store.remove(doorKeys.route(door.route));
@@ -691,13 +657,12 @@ export async function keepBound(doors: DoorsDeps, tenant: string, ai: AIBound | 
 export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date) {
   const doors = await doorsOf(store, tenant, taf);
   if (!doors.length) return [];
-  const today = day(now);
   const [counts, knocks] = await Promise.all([
-    Promise.all(doors.map((d) => store.get(doorKeys.day(tenant, taf, d.id, today)))),
+    Promise.all(doors.map((d) => todayOf(store, tenant, taf, d.id, now))),
     knocksOf(store, tenant, taf),
   ]);
   return doors.map((d, i) => ({
-    app: d.app, open: d.open, resting: typeof counts[i] === "number" && (counts[i] as number) >= DOOR.perDay,
+    app: d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
     knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
   }));
 }

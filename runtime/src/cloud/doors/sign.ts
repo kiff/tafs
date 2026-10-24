@@ -13,8 +13,7 @@ function same(a: Buffer, b: Buffer): boolean {
 }
 
 /**
- * The signed-webhook scheme the email provider and the connector catalog
- * both use: HMAC-SHA256 over "<id>.<timestamp>.<body>", base64, in a header
+ * The signed-webhook scheme the email provider uses: HMAC-SHA256 over "<id>.<timestamp>.<body>", base64, in a header
  * that may list several "v1,<signature>" (one per secret while one rotates).
  * The key is the secret's bytes: base64 after "whsec_", else as written.
  */

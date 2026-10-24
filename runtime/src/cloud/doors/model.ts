@@ -1,7 +1,7 @@
 /**
  * A taf's doors: the places where work reaches it from outside the app, with
- * the answer going back through the same door. Email first; a WhatsApp number;
- * and any app a connector catalog connects, described as data (apps.ts).
+ * the answer going back through the same door: an email address, and a
+ * WhatsApp number (apps.ts).
  *
  * Who wrote decides what happens:
  * - a key (a sender the owner paired, on a door that can prove who wrote, and
@@ -13,7 +13,7 @@
  *   information, never instructions.
  */
 
-export type DoorKind = "email" | "whatsapp" | "connector";
+export type DoorKind = "email" | "whatsapp";
 
 /** A sender who may give the taf work through one door. */
 export interface Key {
@@ -26,13 +26,13 @@ export interface Key {
 }
 
 export interface Door {
-  /** Unique among the taf's doors: "email", "whatsapp", or "c-…" for a connector's. */
+  /** Unique among the taf's doors: "email" or "whatsapp". */
   id: string;
   kind: DoorKind;
-  /** The app it opens on (apps.ts): "email", "whatsapp", "slack"… */
+  /** The app it opens on (apps.ts): "email" or "whatsapp". */
   app: string;
   open: boolean;
-  /** What the owner sees and shares: an email address, a phone number, an account. */
+  /** What the owner sees and shares: an email address or a phone number. */
   address: string;
   /** How an arriving message finds this door (`door#<route>` names it). */
   route: string;
@@ -40,9 +40,6 @@ export interface Door {
   created: string;
   /** A WhatsApp door's number, as the WhatsApp Business Platform names it. */
   phoneNumberID?: string;
-  /** A connector door's connected account and the trigger that reports its messages. */
-  account?: string;
-  trigger?: string;
 }
 
 /** Where a door's answer goes back, in the same thread: what the door's provider needs. */
@@ -53,12 +50,12 @@ export interface Arrival {
   route: string;
   /** The provider's id for the message: a message delivered twice starts nothing twice. */
   id: string;
-  /** The sender, as keys name them. */
+  /** The sender, as keys name them: an email address or a phone number. */
   from: string;
   name?: string;
   /**
    * Whether the provider proved the message comes from `from`: an email that
-   * passed the sender check, a WhatsApp number, an app's signed-in user. A
+   * passed the sender check, or a WhatsApp number. A
    * message that isn't proven is never a key's, whatever it says it is.
    */
   proven: boolean;
@@ -88,8 +85,12 @@ export interface Knock {
   attachments: number;
   at: string;
   state: "open" | "done" | "paired" | "ignored";
-  /** Not a message: the door had its day's messages and rests until tomorrow. */
-  rest?: boolean;
+  /**
+   * Not a message: the line saying the door had its day's messages, from keys
+   * or from everyone else, and how many more were dropped since.
+   */
+  rest?: "keys" | "others";
+  dropped?: number;
 }
 
 /** A reply a door owes: the run that answers a key's message, and where its answer goes. */
@@ -148,8 +149,10 @@ export interface DoorSecrets {
 
 /** Limits for one door. */
 export const DOOR = {
-  /** Messages a door takes in a day (UTC); past it, the door rests until tomorrow. */
-  perDay: 20,
+  /** Messages a door takes in a day (UTC) from the owner and paired senders; past it, more are dropped until tomorrow. */
+  keysPerDay: 20,
+  /** And from anyone else, apart, so strangers can't use up the owner's day. */
+  othersPerDay: 10,
   /** A message longer than this is cut, and the reply says so. */
   maxChars: 20_000,
   /** And never more than this many bytes, inside what a run takes. */
@@ -177,8 +180,7 @@ export const doorKeys = {
   route: (route: string) => `door#${route}`,
   doors: (tenant: string, taf: string) => `${tenant}#doors#${taf}`,
   seen: (tenant: string, hash: string) => `${tenant}#door-seen#${hash}`,
-  day: (tenant: string, taf: string, door: string, day: string) => `${tenant}#door-day#${taf}#${door}#${day}`,
-  rested: (tenant: string, taf: string, door: string, day: string) => `${tenant}#door-rested#${taf}#${door}#${day}`,
+  day: (tenant: string, taf: string, door: string, day: string, who: "keys" | "others") => `${tenant}#door-day#${taf}#${door}#${day}#${who}`,
   thread: (tenant: string, taf: string, door: string, hash: string) => `${tenant}#door-thread#${taf}#${door}#${hash}`,
   reply: (tenant: string, ref: string) => `${tenant}#door-reply#${ref}`,
   sending: (tenant: string, ref: string) => `${tenant}#door-sending#${ref}`,
@@ -186,7 +188,6 @@ export const doorKeys = {
   sent: (tenant: string, taf: string) => `${tenant}#door-sent#${taf}`,
   knocks: (tenant: string, taf: string) => `${tenant}#door-knocks#${taf}`,
   bound: (tenant: string) => `${tenant}#door-ai`,
-  link: (tenant: string, account: string) => `${tenant}#door-link#${account}`,
 };
 
 /** A WhatsApp number's business token, in the secret store. */

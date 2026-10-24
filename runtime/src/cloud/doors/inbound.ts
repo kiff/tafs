@@ -1,5 +1,3 @@
-import { apps } from "./apps.js";
-import { catalogArrival } from "./catalog.js";
 import { arrive, type DoorsContext, type Outcome } from "./doors.js";
 import { emailArrival } from "./email.js";
 import { signedWebhook, whatsappSigned } from "./sign.js";
@@ -31,8 +29,7 @@ const fail = (status: number, error: string): InboundResult => ({ status, type: 
 
 /** Whether tafs cloud serves this path as a door's webhook or page. */
 export function isDoorPath(path: string): boolean {
-  return path === "/v1/doors/email" || path === "/v1/doors/whatsapp" || path === "/v1/doors/catalog" ||
-    path === "/doors/whatsapp/connect" || path === "/doors/connected";
+  return path === "/v1/doors/email" || path === "/v1/doors/whatsapp" || path === "/doors/whatsapp/connect";
 }
 
 export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundResult> {
@@ -80,41 +77,11 @@ export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundR
     return ok({ outcomes });
   }
 
-  if (req.path === "/v1/doors/catalog" && req.method === "POST") {
-    const cat = cfg.catalog;
-    if (!cat) return fail(404, "not found");
-    const signed = signedWebhook({
-      secret: cat.webhookSecret, id: req.header("webhook-id"), timestamp: req.header("webhook-timestamp"),
-      signature: req.header("webhook-signature"), body: req.body, now: ctx.now,
-    });
-    if (!signed) return fail(401, "the signature doesn't hold");
-    const byTrigger = (t: string) => apps(cfg.apps).find((a) => a.event?.trigger.toUpperCase() === t);
-    const a = catalogArrival(parse(req.body), req.header("webhook-id"), byTrigger);
-    if (!a) return ok({ ignored: true });
-    try {
-      return ok({ outcome: await arrive(a, ctx) });
-    } catch (err) {
-      console.error("connector door:", err instanceof Error ? err.message : "error");
-      return fail(502, "try again");
-    }
-  }
-
   if (req.path === "/doors/whatsapp/connect" && req.method === "GET") {
     const wa = cfg.whatsapp;
     const taf = req.query.get("taf") ?? "";
     if (!wa || !/^[A-Za-z0-9-]{1,64}$/.test(taf)) return fail(404, "not found");
     return { status: 200, type: "html", body: signupPage({ appID: wa.appID, configID: wa.configID, taf, back: "tafs://doors/whatsapp" }) };
-  }
-
-  if (req.path === "/doors/connected" && req.method === "GET") {
-    // Back from an app's sign-in: to the app, which adds the door with the owner's session.
-    const q = new URLSearchParams();
-    for (const k of ["taf", "app", "status", "connected_account_id"]) {
-      const v = req.query.get(k);
-      if (v && /^[A-Za-z0-9_.-]{1,100}$/.test(v)) q.set(k, v);
-    }
-    const to = `tafs://doors/connected?${q}`;
-    return { status: 200, type: "html", body: `<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${to}"><title>Back to tafs</title><p style="font:17px system-ui;text-align:center;margin-top:48px"><a href="${to}">Back to tafs</a></p>` };
   }
 
   return fail(404, "not found");

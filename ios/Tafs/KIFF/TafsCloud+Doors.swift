@@ -4,7 +4,7 @@ import Foundation
 /// answer going back the same way. tafs cloud keeps them; the phone opens, pairs and
 /// closes them with the owner's session.
 extension TafsCloud {
-    /// One door: an email address, a WhatsApp number, or an account on a connected app.
+    /// One door: an email address or a WhatsApp number.
     struct Door: Decodable, Equatable, Identifiable {
         struct Key: Decodable, Equatable, Identifiable {
             let id: String
@@ -35,9 +35,18 @@ extension TafsCloud {
         /// How it knows who's writing, in a line.
         let how: String
         var keys: [Key]
+        /// Today's messages from the owner and paired senders, and their cap.
         var today: Int
         var limit: Int
         var resting: Bool
+        /// Today's messages from anyone else, and their own cap.
+        var othersToday: Int? = nil
+        var othersLimit: Int? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case id, app, kind, label, open, address, proof, how, keys, today, limit, resting
+            case othersToday = "others_today", othersLimit = "others_limit"
+        }
 
         var holdsKeys: Bool { proof == "proven" }
     }
@@ -65,15 +74,20 @@ extension TafsCloud {
         var attachments: Int = 0
         let at: Date
         let state: String
-        /// Not a message: the door had its day's messages.
-        var rest: Bool = false
+        /// Not a message: the line saying the door had its day's messages, from the owner and
+        /// paired senders ("keys") or from anyone else ("others"), and how many more were dropped.
+        var rest: String? = nil
+        var dropped: Int = 0
 
-        enum CodingKeys: String, CodingKey { case id, door, app, from, name, proof, subject, text, attachments, at, state, rest }
+        enum CodingKeys: String, CodingKey { case id, door, app, from, name, proof, subject, text, attachments, at, state, rest, dropped }
         init(id: String, door: String, app: String, from: String, name: String? = nil, proof: String, subject: String? = nil,
-             text: String, attachments: Int = 0, at: Date, state: String = "open", rest: Bool = false) {
+             text: String, attachments: Int = 0, at: Date, state: String = "open", rest: String? = nil, dropped: Int = 0) {
             self.id = id; self.door = door; self.app = app; self.from = from; self.name = name; self.proof = proof
-            self.subject = subject; self.text = text; self.attachments = attachments; self.at = at; self.state = state; self.rest = rest
+            self.subject = subject; self.text = text; self.attachments = attachments; self.at = at; self.state = state
+            self.rest = rest; self.dropped = dropped
         }
+
+        var isLine: Bool { rest != nil }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             id = try c.decode(String.self, forKey: .id)
@@ -87,7 +101,8 @@ extension TafsCloud {
             attachments = (try? c.decode(Int.self, forKey: .attachments)) ?? 0
             at = try c.decode(Date.self, forKey: .at)
             state = (try? c.decode(String.self, forKey: .state)) ?? "open"
-            rest = (try? c.decode(Bool.self, forKey: .rest)) ?? false
+            rest = try? c.decodeIfPresent(String.self, forKey: .rest)
+            dropped = (try? c.decode(Int.self, forKey: .dropped)) ?? 0
         }
 
         /// Who wrote, as the owner reads it.
@@ -106,20 +121,12 @@ extension TafsCloud {
         try await send("GET", "/v1/tafs/\(escaped(id))/doors")
     }
 
-    /// Opens a door. Email needs nothing more; WhatsApp, its signup's code and ids; a
-    /// connector app, the account its sign-in made.
+    /// Turns a door on. Email needs nothing more; WhatsApp, its signup's code and ids.
     func addDoor(_ id: String, app: String, extra: [String: String] = [:]) async throws -> Door {
         var body = extra
         body["app"] = app
         let r: DoorResponse = try await send("POST", "/v1/tafs/\(escaped(id))/doors", body: body)
         return r.door
-    }
-
-    struct ConnectLink: Decodable, Equatable { let url: String; let account: String }
-
-    /// The sign-in page for a connector app.
-    func connectLink(_ id: String, app: String) async throws -> ConnectLink {
-        try await send("POST", "/v1/tafs/\(escaped(id))/doors/connect", body: ["app": app])
     }
 
     func setDoorOpen(_ id: String, door: String, open: Bool) async throws -> Door {

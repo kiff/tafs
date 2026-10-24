@@ -1,9 +1,10 @@
 # Doors
 
 A door is a place where work reaches a taf from outside the app, with the answer
-going back through the same door. A taf can have an email address, a WhatsApp
-number, and a door on any app the deployment's connector catalog connects. The
-owner opens, pairs and closes doors in the taf's **Doors** tab.
+going back through the same door. A taf can have an email address and a WhatsApp
+number. A taf has no door until its owner turns one on in its **Doors** tab, where
+they also pair senders and close doors. The app shows Doors only where the
+deployment offers a door; WhatsApp is offered only once it's set up.
 
 ## The rules
 
@@ -14,17 +15,15 @@ owner opens, pairs and closes doors in the taf's **Doors** tab.
   - **email**: the receiving server's sender check passes (DMARC, or DKIM signed by
     the From domain, with DMARC not failing), and From names one mailbox. A spoofed
     From is treated as anyone else;
-  - **WhatsApp**: WhatsApp gives the sender's number;
-  - **a connector app**: the app gives who wrote (a workspace member, an account).
-    Apps where anyone can type any name, like a web form, can't prove who wrote:
-    their doors hold no keys, and everything there knocks.
+  - **WhatsApp**: WhatsApp gives the sender's number.
 - A key's message becomes a chat message for the taf, through the same path as the
   app's chat. The taf works under its Cards, with holds and Face ID unchanged, and
   everything is in the Record as usual.
 - Anyone else's message is a **knock**: information, never instructions. The owner
   is told who wrote and what they want, and answers **Do it**, **Pair** or
   **Ignore**. Do it starts a run from the owner's words, which come first, with the
-  message after them, fenced by a line its sender can't guess, as information. Pair makes the sender a key for their next message, never this one.
+  message after them, fenced by a line its sender can't guess, as information.
+  Pair makes the sender a key for their next message, never this one.
 - The door itself only ever writes to the key who wrote, in the same thread. Writing
   to anyone else is the taf's own action, through KIFF, under its Card, like any
   other tool call.
@@ -32,8 +31,11 @@ owner opens, pairs and closes doors in the taf's **Doors** tab.
 
 ## Limits
 
-- 20 messages a door a day. Past that, the door rests until the next day (UTC) and
-  the owner is told once.
+- Two daily caps a door, counted apart (days in UTC):
+  - 20 messages from the owner and paired senders;
+  - 10 from anyone else, so strangers can't use up the owner's day.
+  Past either cap, what comes in is dropped until the next day. The owner gets one
+  line for it, which counts how many more were dropped that day, and one alert.
 - A message longer than 20,000 characters is cut, and the reply says so.
 - v1 reads text only. A message with attachments is answered with a line saying
   they weren't opened.
@@ -60,10 +62,10 @@ it: no raw headers, no HTML, no attachments. [data.md](data.md) lists every item
 | File | What it does |
 |---|---|
 | `model.ts` | Doors, keys, knocks, replies; the limits; what is stored where |
-| `apps.ts` | The apps a door can open on, as data. Connector apps come from the deployment's config |
-| `doors.ts` | A message's way in (door, once, the day's limit, key or knock), the owner's routes, and the reply once the run ends |
+| `apps.ts` | The apps a door can open on: email and WhatsApp |
+| `doors.ts` | A message's way in (door, once, the day's caps, key or knock), the owner's routes, and the reply once the run ends |
 | `inbound.ts` | The webhooks: each checks its provider's signature before reading anything |
-| `email.ts`, `whatsapp.ts`, `catalog.ts` | The providers |
+| `email.ts`, `whatsapp.ts` | The providers |
 | `text.ts` | The text a person wrote: quoted history and signatures dropped, HTML read for its words, the cut |
 
 A door's run asks kiff/agents to announce when it ends (`/v1/runs/ended`, as Coach's
@@ -79,28 +81,10 @@ Nothing here is on until the deployment sets it up. tafs cloud reads:
   provider receives its mail and signs each delivery to `/v1/doors/email`.
 - `DOORS_SECRET_ID`: one secret, JSON, with the providers' keys:
   `email_api_key`, `email_webhook_secret`; `whatsapp_app_id`, `whatsapp_app_secret`,
-  `whatsapp_config_id`, `whatsapp_verify_token`; `catalog_api_key`,
-  `catalog_webhook_secret`, `catalog_base_url`, `catalog_auth_configs` (app id to the
-  catalog's sign-in setup). A provider whose keys aren't there isn't offered.
+  `whatsapp_config_id`, `whatsapp_verify_token`. A provider whose keys aren't there
+  isn't offered.
 - `DOORS_WHATSAPP_REGION`: where WhatsApp stores a number's message content, set at
   its registration.
-- `DOORS_APPS`: the connector apps, JSON. Each names its catalog trigger, where its
-  event keeps the sender, the text and the thread, and the tool the taf answers with:
-
-```json
-[{
-  "id": "slack", "label": "Slack", "kind": "connector", "proof": "proven",
-  "how": "The workspace signs people in",
-  "event": {
-    "trigger": "<the catalog's new-message trigger>",
-    "sender": "user", "name": "user_name", "text": "text", "thread": "thread_ts", "id": "ts",
-    "reply": { "tool": "slack_send_message", "to": "channel", "thread": "thread_ts" }
-  }
-}]
-```
-
-A connector door's answer is a tool call by the taf, so the taf needs that tool on
-its Card, connected through KIFF's gateway. Without it, the answer stays in the chat.
 
 ## WhatsApp
 

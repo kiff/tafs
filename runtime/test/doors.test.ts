@@ -3,8 +3,6 @@ import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
 import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
-import type { DoorApp } from "../src/cloud/doors/apps.js";
-import type { CatalogClient } from "../src/cloud/doors/catalog.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
 import { localPart, parseDoorMessage } from "../src/cloud/doors/doors.js";
 import { type EmailProvider, emailArrival, type OutgoingEmail, parseReceived, type ReceivedEmail } from "../src/cloud/doors/email.js";
@@ -21,7 +19,6 @@ const VIEWER = { ...OWNER, subject: "u_vi", capabilities: ["read"] };
 const REFUNDS = "taf-aaaa0000000000000000";
 const MAXTAF = "taf-bbbb0000000000000000";
 const EMAIL_SECRET = `whsec_${Buffer.from("email webhook secret, test only").toString("base64")}`;
-const CATALOG_SECRET = "catalog webhook secret, test only";
 const WA_SECRET = "whatsapp app secret, test only";
 
 function memoryDoorStore(now: () => Date): DoorStore & { held: Map<string, { value: unknown; until?: number }> } {
@@ -60,15 +57,6 @@ function memorySecrets(): DoorSecrets & { held: Map<string, string> } {
   return { held, async get(n) { return held.get(n); }, async put(n, v) { held.set(n, v); }, async remove(n) { held.delete(n); } };
 }
 
-const SLACK: DoorApp = {
-  id: "slack", label: "Slack", kind: "connector", proof: "proven", how: "The workspace signs people in",
-  event: { trigger: "SLACK_NEW_MESSAGE", sender: "user", name: "user_name", text: "text", thread: "thread_ts", id: "ts", reply: { tool: "slack_send_message", to: "channel", thread: "thread_ts" } },
-};
-const FORM: DoorApp = {
-  id: "form", label: "Web form", kind: "connector", proof: "none", how: "Anyone can type any name",
-  event: { trigger: "FORM_RESPONSE", sender: "email", name: "name", text: "message", id: "response_id", reply: { tool: "send_email", to: "email" } },
-};
-
 function world() {
   let clock = NOW;
   const now = () => clock;
@@ -103,27 +91,18 @@ function world() {
     async display() { return "+34 600 000 000"; },
     async send(phone, _token, to, text, replyTo) { waSent.push({ phone, to, text, ...(replyTo ? { replyTo } : {}) }); },
   };
-  const watched: string[] = [];
-  const catalog: CatalogClient = {
-    async link() { return { url: "https://catalog.example/link/1", account: "ca_slack1" }; },
-    async watch(trigger, account) { watched.push(`${trigger} ${account}`); return `ti_${account}`; },
-    async unwatch(id) { watched.push(`unwatch ${id}`); },
-    async disconnect(account) { watched.push(`disconnect ${account}`); },
-  };
   const config: DoorsConfig = {
     publicURL: "https://tafs.example",
     emailDomain: "tafs.example",
     email,
     emailWebhookSecret: EMAIL_SECRET,
     whatsapp: { client: whatsapp, appID: "123", appSecret: WA_SECRET, configID: "456", verifyToken: "verify-me", region: "DE" },
-    catalog: { client: catalog, webhookSecret: CATALOG_SECRET, authConfigs: { slack: "ac_slack", form: "ac_form" } },
-    apps: [SLACK, FORM],
     secretsPrefix: "tafs-doors/",
   };
   const devices: Device[] = [{ token: "phone1", environment: "production", subject: "u_ana", answers: true, at: NOW.toISOString() }];
   const pushed: Array<{ token: string; payload: Record<string, unknown> }> = [];
   return {
-    agents, tafs, store, secrets, inbox, outbox, waSent, watched, config, pushed, devices,
+    agents, tafs, store, secrets, inbox, outbox, waSent, config, pushed, devices,
     slots: memorySlots(),
     at: (d: Date) => { clock = d; },
     now,
@@ -365,7 +344,7 @@ describe("the email door", () => {
     expect(w.agents.runs).toHaveLength(1);
   });
 
-  it("the daily limit holds: 20 a day, then the door rests and the owner is told once", async () => {
+  it("the daily limit holds: 20 a day from paired senders, then one line counts what was dropped", async () => {
     const w = world();
     await emailDoor(w);
     for (let i = 0; i < 20; i++) expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("run");
@@ -373,11 +352,30 @@ describe("the email door", () => {
     expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("resting");
     expect(w.agents.runs).toHaveLength(20);
     const doors = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
-    expect(doors.body.doors[0]).toMatchObject({ today: 20, resting: true });
-    expect(doors.body.knocks.filter((k: { rest?: boolean }) => k.rest)).toHaveLength(1);
+    expect(doors.body.doors[0]).toMatchObject({ today: 20, limit: 20, resting: true, others_today: 0, others_limit: 10 });
+    expect(doors.body.knocks.filter((k: { rest?: string }) => k.rest)).toEqual([expect.objectContaining({ rest: "keys", dropped: 2 })]);
+    // One alert for the line, however many are dropped.
+    expect(w.pushed).toHaveLength(1);
     // Tomorrow it opens again.
     w.at(new Date(NOW.getTime() + 24 * 3600_000));
     expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("run");
+  });
+
+  it("strangers have their own 10 a day, so they can't use up the owner's", async () => {
+    const w = world();
+    await emailDoor(w);
+    for (let i = 0; i < 10; i++) expect((await emailHook(w, mail(w, { from: `S${i} <s${i}@else.example>` }))).body.outcome).toBe("knock");
+    for (let i = 0; i < 3; i++) expect((await emailHook(w, mail(w, { from: `T${i} <t${i}@else.example>` }))).body.outcome).toBe("resting");
+    // The owner's own still works.
+    expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("run");
+    const doors = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    expect(doors.body.doors[0]).toMatchObject({ today: 1, resting: false, others_today: 10 });
+    const lines = doors.body.knocks.filter((k: { rest?: string }) => k.rest);
+    expect(lines).toEqual([expect.objectContaining({ rest: "others", dropped: 3 })]);
+    expect(doors.body.knocks.filter((k: { rest?: string }) => !k.rest)).toHaveLength(10);
+    // 10 knocks and one line, each told once.
+    expect(w.pushed).toHaveLength(11);
+    expect((w.pushed.at(-1)!.payload.aps as { alert: { body: string } }).alert.body).toContain("10 messages from people who aren't paired");
   });
 
   it("a long email is cut at 20,000 characters, and the reply says so", async () => {
@@ -489,6 +487,17 @@ describe("knocks and keys", () => {
     expect(gone.body.door.keys).toHaveLength(1);
   });
 
+  it("a taf has no door until its owner turns one on, and the home list says which doors are offered", async () => {
+    const w = world();
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.doors).toEqual([]);
+    expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toEqual(["email", "whatsapp"]);
+    // A deployment with no doors set up offers none, and the app shows no Doors.
+    w.config.email = undefined;
+    w.config.whatsapp = undefined;
+    expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toBeUndefined();
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "email" } })).status).toBe(400);
+  });
+
   it("the home list lights each taf's doors, and says when a knock waits", async () => {
     const w = world();
     await emailDoor(w);
@@ -586,64 +595,6 @@ describe("the WhatsApp door", () => {
   });
 });
 
-/** The catalog's signed delivery of an app's event. */
-function catalogHook(w: World, trigger: string, account: string, data: Record<string, unknown>, id = `wh_${++n}`) {
-  const raw = JSON.stringify({ metadata: { trigger_slug: trigger, connected_account_id: account }, data, timestamp: NOW.toISOString() });
-  const ts = String(Math.floor(w.now().getTime() / 1000));
-  const sig = createHmac("sha256", CATALOG_SECRET).update(`${id}.${ts}.${raw}`).digest("base64");
-  return send(w, "POST", "/v1/doors/catalog", { raw, headers: { "webhook-id": id, "webhook-timestamp": ts, "webhook-signature": `v1,${sig}` } });
-}
-
-describe("connector doors", () => {
-  it("lists only the apps this deployment set up", async () => {
-    const w = world();
-    w.config.catalog!.authConfigs = { slack: "ac_slack" };
-    const r = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
-    expect(r.body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp", "slack"]);
-  });
-
-  it("an app becomes a door after its sign-in, and a key's message asks the taf to answer with the app's tool", async () => {
-    const w = world();
-    const link = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/connect`, { token: "ana", body: { app: "slack" } });
-    expect(link.body).toEqual({ url: "https://catalog.example/link/1", account: "ca_slack1" });
-    // Another account can't take this link's account.
-    expect((await send(w, "POST", `/v1/tafs/${MAXTAF}/doors`, { token: "max", body: { app: "slack", account: "ca_slack1" } })).status).toBe(400);
-    const added = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", account: "ca_slack1", label: "Acme workspace" } });
-    expect(added.body.door).toMatchObject({ app: "slack", address: "Acme workspace" });
-    expect(w.watched).toEqual(["SLACK_NEW_MESSAGE ca_slack1"]);
-    await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/${added.body.door.id}/keys`, { token: "ana", body: { id: "U123", name: "Maya" } });
-
-    const r = await catalogHook(w, "SLACK_NEW_MESSAGE", "ca_slack1", { user: "U123", user_name: "Maya", text: "Credit $25 to account 2290", channel: "D1", ts: "1.1", thread_ts: "1.0" });
-    expect(r.body.outcome).toBe("run");
-    const input = (w.agents.events.get(w.agents.runs[0]!.session)![0]!.body as { text: string }).text;
-    expect(input).toContain("answer them with slack_send_message, to D1, in thread 1.0");
-    // The taf answers with its own tool, through KIFF: the door sends nothing.
-    expect(w.agents.notified.size).toBe(0);
-    expect((await catalogHook(w, "SLACK_NEW_MESSAGE", "ca_slack1", { user: "U999", text: "Hi", channel: "D2", ts: "2.1" })).body.outcome).toBe("knock");
-    // Removing the door stops its trigger and the app's sign-in.
-    await send(w, "DELETE", `/v1/tafs/${REFUNDS}/doors/${added.body.door.id}`, { token: "ana" });
-    expect(w.watched.slice(-2)).toEqual(["unwatch ti_ca_slack1", "disconnect ca_slack1"]);
-  });
-
-  it("a door that can't prove who wrote has no keys: everything there knocks", async () => {
-    const w = world();
-    w.config.catalog!.client.link = async () => ({ url: "u", account: "ca_form1" });
-    await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/connect`, { token: "ana", body: { app: "form" } });
-    const door = (await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "form", account: "ca_form1" } })).body.door;
-    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/${door.id}/keys`, { token: "ana", body: { id: "ana@acme.example" } })).status).toBe(409);
-    expect((await catalogHook(w, "FORM_RESPONSE", "ca_form1", { email: "ana@acme.example", message: "Cancel order 5120", response_id: "r1" })).body.outcome).toBe("knock");
-    const knock = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0];
-    expect(knock.proof).toBe("none");
-  });
-
-  it("refuses an event whose signature doesn't hold", async () => {
-    const w = world();
-    const raw = JSON.stringify({ metadata: { trigger_slug: "SLACK_NEW_MESSAGE", connected_account_id: "ca_slack1" }, data: {} });
-    const r = await send(w, "POST", "/v1/doors/catalog", { raw, headers: { "webhook-id": "x", "webhook-timestamp": String(Math.floor(NOW.getTime() / 1000)), "webhook-signature": "v1,AAAA" } });
-    expect(r.status).toBe(401);
-  });
-});
-
 describe("what a door keeps of a message", () => {
   it("drops quoted history and the signature", () => {
     expect(ownText("Yes, refund it.\n\nOn Mon, 20 Oct 2026 at 10:00, Refunds <refunds@tafs.example> wrote:\n> Shall I refund?")).toBe("Yes, refund it.");
@@ -673,6 +624,13 @@ describe("what a door keeps of a message", () => {
   it("parses a door's message back, and leaves other messages alone", () => {
     expect(parseDoorMessage("[door email · from Ana <a@b.example> · your answer goes back by email]\n\nSubject: Hi\n\nBody")).toEqual({ app: "email", from: "Ana <a@b.example>", subject: "Hi", text: "Body" });
     expect(parseDoorMessage("[door email] spoofed by the owner")).toBeUndefined();
+  });
+
+  it("offers no connector door", async () => {
+    const w = world();
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp"]);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", account: "x" } })).status).toBe(400);
+    expect((await send(w, "POST", "/v1/doors/catalog", { raw: "{}" })).status).toBe(404);
   });
 
   it("checks signatures in both schemes", () => {

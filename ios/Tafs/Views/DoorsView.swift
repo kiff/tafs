@@ -17,7 +17,7 @@ struct DoorsView: View {
     @State private var confirmRemove: TafsCloud.Door?
     @State private var copied = false
 
-    init(taf: Taf, cloud: TafsCloud?, cloudID: String?) {
+    init(taf: Taf, cloud: TafsCloud, cloudID: String) {
         self.taf = taf
         _doors = StateObject(wrappedValue: DoorsModel(cloud: cloud, tafID: cloudID))
     }
@@ -35,7 +35,7 @@ struct DoorsView: View {
                     .frame(maxWidth: .infinity)
             }
             if let door { panel(door) } else { addPanel }
-            let waiting = doors.openKnocks.filter { !$0.rest }
+            let waiting = doors.openKnocks.filter { !$0.isLine }
             if !waiting.isEmpty {
                 Panel(stroke: Theme.amber.opacity(0.45)) {
                     Eyebrow(text: "Knocks · waiting on you", color: Theme.amber)
@@ -74,7 +74,7 @@ struct DoorsView: View {
     private var addPanel: some View {
         Panel {
             Eyebrow(text: "Add a door")
-            Text("Give \(taf.name) an address people can write to: email, WhatsApp, or an app you connect. Its Card still decides what it does.")
+            Text("Give \(taf.name) an address people can write to. It has none until you turn one on, and its Card still decides what it does.")
                 .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             Button("Add a door") { adding = true }.buttonStyle(PrimaryButtonStyle()).disabled(!doors.loaded || doors.addable.isEmpty)
             if doors.loaded && doors.addable.isEmpty {
@@ -107,9 +107,13 @@ struct DoorsView: View {
                     .buttonStyle(OutlineButtonStyle())
                 }
                 Meter(fraction: Double(door.today) / Double(max(door.limit, 1)), color: door.resting ? Theme.dim : Theme.tafColor(taf.colorIndex))
-                Text(door.resting ? "\(door.limit) of \(door.limit) today. It rests until tomorrow."
-                     : "\(door.today) of \(door.limit) messages today. Text only: attachments aren't opened, and the reply says so.")
+                Text(door.resting ? "\(door.limit) of \(door.limit) from you and paired senders today. More are dropped until tomorrow."
+                     : "\(door.today) of \(door.limit) from you and paired senders today. Text only: attachments aren't opened, and the reply says so.")
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                if let others = door.othersToday, let cap = door.othersLimit {
+                    Text("\(others) of \(cap) from anyone else today.")
+                        .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                }
             }
             Panel {
                 Eyebrow(text: door.holdsKeys ? "Paired · can give work" : "No one is paired here")
@@ -255,7 +259,7 @@ struct DoorDial: View {
         let a = CGFloat(DialMath.angle(index: i, stops: stops, rotation: rotation) * .pi / 180)
         let isSelected = i == selected
         let door = i < doors.count ? doors[i] : nil
-        let knocking = door.map { d in knocks.contains { $0.door == d.id && !$0.rest } } ?? false
+        let knocking = door.map { d in knocks.contains { $0.door == d.id && !$0.isLine } } ?? false
         return ZStack {
             Group {
                 if let door {
@@ -428,7 +432,7 @@ struct AddDoorSheet: View {
                         Text(query.isEmpty ? "No more doors can be added here." : "No app called \"\(query)\" here yet.")
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                     }
-                    Text("An app signs in once. Replies and anything the taf does still go through KIFF.")
+                    Text("Replies go only to who wrote. Anything else the taf does still goes through KIFF.")
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).padding(.top, 6)
                 }
             }
@@ -518,9 +522,11 @@ struct KnockCard: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("● KNOCK · BY \(DoorNames.label(knock.app).uppercased())\(knock.proof == "fail" ? " · DIDN'T CHECK OUT" : "")")
                 .font(Theme.mono(10, weight: .semibold)).foregroundColor(Theme.amber)
-            if knock.rest {
-                Text("This door had its messages for today. It rests until tomorrow.")
-                    .scaledFont(14).foregroundColor(Theme.ink)
+            if let rest = knock.rest {
+                Text(rest == "keys"
+                     ? "This door had its messages from you and paired senders for today. \(knock.dropped) more \(knock.dropped == 1 ? "was" : "were") dropped."
+                     : "This door had its messages from people who aren't paired for today. \(knock.dropped) more \(knock.dropped == 1 ? "was" : "were") dropped.")
+                    .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Button("OK") { Task { await doors.answer(knock, "ignore") } }.buttonStyle(OutlineButtonStyle())
             } else {
                 Text("\(knock.who) wrote\(knock.subject.map { " about \"\($0)\"" } ?? ""). Nothing was done.")
@@ -613,7 +619,7 @@ struct ChatKnocks: View {
     let refresh: Int
     @StateObject private var doors: DoorsModel
 
-    init(taf: Taf?, cloud: TafsCloud?, cloudID: String?, refresh: Int) {
+    init(taf: Taf?, cloud: TafsCloud, cloudID: String, refresh: Int) {
         self.taf = taf
         self.refresh = refresh
         _doors = StateObject(wrappedValue: DoorsModel(cloud: cloud, tafID: cloudID))

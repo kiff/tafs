@@ -65,8 +65,8 @@ struct TafDetailView: View {
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
-                                if section == 3 && hasDoors(taf) {
-                                    DoorsView(taf: taf, cloud: model.mode == .kiff ? model.cloud : nil, cloudID: model.cloudTaf(for: taf.id)?.id)
+                                if section == 3, hasDoors(taf), let cloudID = model.cloudTaf(for: taf.id)?.id {
+                                    DoorsView(taf: taf, cloud: model.cloud, cloudID: cloudID)
                                 } else if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)
@@ -111,9 +111,10 @@ struct TafDetailView: View {
         }
     }
 
-    /// Doors are tafs cloud's: a taf it runs, or the sample's.
+    /// Doors are tafs cloud's, and only where it offers one (docs/doors.md): a taf it runs,
+    /// signed in to KIFF. The sample has none.
     private func hasDoors(_ taf: Taf) -> Bool {
-        model.mode == .sample || model.cloudTaf(for: taf.id) != nil
+        model.mode == .kiff && !model.doorsOffered.isEmpty && model.cloudTaf(for: taf.id) != nil
     }
 
     /// The Card in front of the stack: the one tapped, else the first, the live one.
