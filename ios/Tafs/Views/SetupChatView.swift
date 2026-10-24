@@ -207,8 +207,8 @@ struct SetupChatView: View {
                                      retry: { await model.retrySetup(unsent) }, discard: { model.discardUnsent(unsent) })
                             .id(unsent.id)
                     }
-                    if let live = model.setupLive, !live.text.isEmpty {
-                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: live.text, session: "live"), taf: nil, fullWidth: true).id("live")
+                    if !model.setupLiveText.isEmpty {
+                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live"), taf: nil, fullWidth: true).id("live")
                     } else if thinking {
                         TypingBubble(taf: nil, fullWidth: true).id("thinking")
                     }
@@ -363,7 +363,7 @@ struct SetupChatView: View {
     /// written, or its message still revealed, the cards that come with it wait, so the
     /// question or approval never shows above words still arriving.
     private func textBeforeCards(_ items: [SetupThread.Item]) -> [SetupThread.Item] {
-        let streaming = !(model.setupLive?.text.isEmpty ?? true)
+        let streaming = !model.setupLiveText.isEmpty
         let lastOwner = items.last { if case .message(let m) = $0 { return m.from == .owner } else { return false } }?.at
         var holding = false
         return items.filter { item in

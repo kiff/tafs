@@ -2246,15 +2246,37 @@ final class AppModel: ObservableObject {
         return out
     }
 
+    /// Whether words of the answer streaming now are in the thread already (kiff/tafs#214,
+    /// item 9). A reload while it streams (the taf read what the owner wrote meanwhile, or
+    /// Setup's thread after a tool call) brings the turns recorded so far, and the live copy
+    /// would show the same words twice. The recorded message wins: it's the one that stays.
+    /// Only the live session's messages from about when it started count (two minutes for
+    /// the device's clock against tafs cloud's), so an earlier answer with the same words
+    /// doesn't hide this one.
+    nonisolated static func alreadyRecorded(_ words: String, session: String?, started: Date,
+                                            in messages: [TafsCloud.ChatMessage]) -> Bool {
+        let w = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let session, !w.isEmpty else { return false }
+        let since = started.addingTimeInterval(-120)
+        // A recorded turn can hold more than the live words: its message grows as it's written.
+        return messages.contains {
+            $0.from == .taf && $0.session == session && $0.at >= since
+                && $0.text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(w)
+        }
+    }
+
     /// The answer streaming now as chat items, in the order it came: its words up to each
     /// tool call, each held call's card where it was made, and the words being written.
+    /// Words the thread already holds show there, once.
     private func streamingItems(_ live: LiveAnswer, held: [HeldCall], tafID: UUID) -> [ChatItem] {
         let run = live.run ?? "live"
+        let recorded = chats[tafID] ?? []
         var out: [ChatItem] = []
         var n = 0
         func words(_ t: String) {
+            defer { n += 1 }
+            if Self.alreadyRecorded(t, session: live.session, started: live.started, in: recorded) { return }
             out.append(.streaming(id: "s|\(run)|\(n)", TafsCloud.ChatMessage(at: live.started, from: .taf, text: t, session: live.session ?? "live")))
-            n += 1
         }
         for part in live.parts {
             switch part {
@@ -3249,6 +3271,14 @@ final class AppModel: ObservableObject {
         } catch {
             return nil
         }
+    }
+
+    /// Setup's words being written now, unless the thread holds them already (kiff/tafs#214,
+    /// item 9): `loadSetupThread` sets the thread before it reads the grants and drafts its
+    /// cards need, and until the stream clears its bubble the same words would show twice.
+    var setupLiveText: String {
+        guard let live = setupLive else { return "" }
+        return Self.alreadyRecorded(live.text, session: live.session, started: live.started, in: setupThread.messages) ? "" : live.text
     }
 
     /// Draws the stream: text into the live bubble; at each tool call or component the
