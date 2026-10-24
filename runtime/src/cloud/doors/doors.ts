@@ -556,7 +556,9 @@ export async function pair(ctx: DoorsContext, owner: Owner, taf: Taf, id: string
     const key = door.kind === "email" ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) ? raw : "") : raw.replace(/\D/g, "").replace(/^00/, "");
     if (!key || key.length > 200) throw new DoorError(400, door.kind === "email" ? "write an email address" : "write a phone number with its country code");
     if (door.keys.some((k) => k.id === key)) return doors;
-    return doors.map((x) => (x.id === door.id ? { ...x, keys: [...x.keys, { id: key, ...(name ? { name } : {}), added: ctx.now.toISOString() }] } : x));
+    // A name that's only the address again isn't kept: the sender shows once (kiff/tafs#236, item 20).
+    const named = name && name.toLowerCase() !== key && name.replace(/\D/g, "") !== key ? name : "";
+    return doors.map((x) => (x.id === door.id ? { ...x, keys: [...x.keys, { id: key, ...(named ? { name: named } : {}), added: ctx.now.toISOString() }] } : x));
   });
   return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now)) };
 }
@@ -620,7 +622,10 @@ export async function answerKnock(ctx: DoorsContext, owner: Owner, taf: Taf, kno
   } else if (action === "pair") {
     if (knock.proof !== "pass") throw new DoorError(409, knock.proof === "fail" ? "this message didn't pass the sender check, so its sender can't be paired from it" : `${app?.label ?? "this door"} can't prove who wrote it`);
     await pair(ctx, owner, taf, knock.door, { id: knock.from, name: knock.name });
-    next = "paired";
+    // The sender is a key from now on; this message still waits for the owner's Do it or
+    // Ignore, never dropped without a word (kiff/tafs#236, item 18).
+    await changeKnocks(store, owner.tenant, taf.id, ctx.now, (now) => now.map((k) => (k.id === knock.id ? { ...k, paired: true } : k)));
+    return { knock: knock.id, state: "open", paired: true };
   } else if (action === "ignore") {
     next = "ignored";
   } else {

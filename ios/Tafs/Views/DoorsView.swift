@@ -116,8 +116,12 @@ struct DoorsView: View {
                     ForEach(door.keys) { key in
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(key.auto ? "You" : key.name ?? key.id).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                                Text(key.id).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
+                                // The address once, when the name is only the address (kiff/tafs#236, item 20).
+                                let name = key.auto ? "You" : key.name.flatMap { $0.lowercased() == key.id.lowercased() ? nil : $0 }
+                                Text(name ?? key.id).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                                if name != nil {
+                                    Text(key.id).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
+                                }
                             }
                             Spacer()
                             if !key.auto {
@@ -542,7 +546,7 @@ struct KnockCard: View {
                             .padding(.horizontal, 14).padding(.vertical, 8)
                             .background(Theme.amber).clipShape(Capsule())
                     }
-                    if knock.proof == "pass" {
+                    if knock.proof == "pass", !knock.paired {
                         Button("Pair \(knock.name?.components(separatedBy: " ").first ?? "them")") { Task { await doors.answer(knock, "pair") } }
                             .buttonStyle(.plain).scaledFont(14, weight: .medium).foregroundColor(Theme.ink)
                             .padding(.horizontal, 12).padding(.vertical, 8)
@@ -623,9 +627,8 @@ struct ChatKnocks: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(doors.openKnocks) { KnockCard(knock: $0, taf: taf, doors: doors) }
-            if let error = doors.error {
-                Text(error).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.no)
-            }
+            // A read that fails in the background says nothing in the chat: the Doors tab
+            // says it, in plain words, if it keeps failing (kiff/tafs#236, item 22).
         }
         .task(id: refresh) { await doors.load() }
     }

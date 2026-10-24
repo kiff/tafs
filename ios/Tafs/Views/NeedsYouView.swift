@@ -11,7 +11,9 @@ struct NeedsYouView: View {
                 if model.mode == .kiff, model.sessionHasKey, model.canAnswerHolds != false, model.alertsReady != true {
                     AlertsCard()
                 }
-                if model.held.isEmpty {
+                // A knock at a taf's door waits for the owner too (kiff/tafs#236, item 17).
+                let knocked = model.tafs.filter { knocks($0) > 0 }
+                if model.held.isEmpty && knocked.isEmpty {
                     Panel {
                         Text("Nothing is waiting.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text("When a taf asks for something outside its Card, it shows up here and on your lock screen.")
@@ -19,6 +21,26 @@ struct NeedsYouView: View {
                     }
                 } else {
                     ForEach(model.held) { call in HeldCallCard(call: call).id(call.id) }
+                    ForEach(knocked) { taf in
+                        NavigationLink { TafDetailView(tafID: taf.id) } label: {
+                            Panel(stroke: Theme.amber.opacity(0.4)) {
+                                HStack(spacing: 10) {
+                                    TafAvatar(taf: taf, size: 32)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(taf.name).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                                        let n = knocks(taf)
+                                        Text(n == 1 ? "Someone knocked at its door. Nothing was done." : "\(n) knocks at its doors. Nothing was done.")
+                                            .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens \(taf.name), where you answer it")
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -33,6 +55,8 @@ struct NeedsYouView: View {
         .refreshable { await model.refresh() }
         .screenBackground()
     }
+
+    private func knocks(_ taf: Taf) -> Int { (taf.doors ?? []).reduce(0) { $0 + $1.knocks } }
 
     private func scroll(to request: AppModel.HoldRequest?, _ reader: ScrollViewProxy) {
         guard let request, let call = model.held.first(where: { $0.kiffID == request.kiffID }) else { return }

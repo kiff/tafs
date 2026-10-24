@@ -484,8 +484,13 @@ describe("knocks and keys", () => {
     await emailDoor(w);
     await emailHook(w, mail(w, { from: "Maya <maya@acme.example>" }));
     const knock = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0];
-    await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/knocks/${knock.id}`, { token: "ana", body: { action: "pair" } });
+    const paired = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/knocks/${knock.id}`, { token: "ana", body: { action: "pair" } });
+    expect(paired.body).toMatchObject({ state: "open", paired: true });
     expect(w.agents.runs).toHaveLength(0);
+    // The message itself still waits for Do it or Ignore (kiff/tafs#236, item 18).
+    const waiting = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks;
+    expect(waiting).toMatchObject([{ id: knock.id, state: "open", paired: true }]);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/knocks/${knock.id}`, { token: "ana", body: { action: "ignore" } })).body.state).toBe("ignored");
     expect((await emailHook(w, mail(w, { from: "Maya <maya@acme.example>" }))).body.outcome).toBe("run");
   });
 

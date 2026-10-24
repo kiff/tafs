@@ -85,6 +85,8 @@ export interface Knock {
   attachments: number;
   at: string;
   state: "open" | "done" | "paired" | "ignored";
+  /** Its sender was paired from it; the message still waits for Do it or Ignore (kiff/tafs#236, item 18). */
+  paired?: boolean;
   /**
    * Not a message: the line saying the door had its day's messages, from keys
    * or from everyone else, and how many more were dropped since.

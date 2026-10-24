@@ -78,8 +78,10 @@ extension TafsCloud {
         /// paired senders ("keys") or from anyone else ("others"), and how many more were dropped.
         var rest: String? = nil
         var dropped: Int = 0
+        /// Its sender was paired from it; the message still waits (kiff/tafs#236, item 18).
+        var paired = false
 
-        enum CodingKeys: String, CodingKey { case id, door, app, from, name, proof, subject, text, attachments, at, state, rest, dropped }
+        enum CodingKeys: String, CodingKey { case id, door, app, from, name, proof, subject, text, attachments, at, state, rest, dropped, paired }
         init(id: String, door: String, app: String, from: String, name: String? = nil, proof: String, subject: String? = nil,
              text: String, attachments: Int = 0, at: Date, state: String = "open", rest: String? = nil, dropped: Int = 0) {
             self.id = id; self.door = door; self.app = app; self.from = from; self.name = name; self.proof = proof
@@ -103,6 +105,7 @@ extension TafsCloud {
             state = (try? c.decode(String.self, forKey: .state)) ?? "open"
             rest = try? c.decodeIfPresent(String.self, forKey: .rest)
             dropped = (try? c.decode(Int.self, forKey: .dropped)) ?? 0
+            paired = (try? c.decode(Bool.self, forKey: .paired)) ?? false
         }
 
         /// Who wrote, as the owner reads it.
