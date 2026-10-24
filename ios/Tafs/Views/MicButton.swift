@@ -13,15 +13,20 @@ struct MicButton: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            if dictation.state == .listening, dictation.languages.count > 1 {
-                // The language, switched while dictating, among the device's own.
-                Button(dictation.language.label) {
+            if dictation.languages.count > 1 {
+                // The language, a switch among the owner's own (their keyboards'), before
+                // dictating or while (kiff/tafs#236, item 23).
+                Button {
                     Task { await dictation.switchLanguage(text: text, hints: model.dictationHints) { text = $0 } }
+                } label: {
+                    Text(dictation.language.label)
+                        .font(Theme.mono(12, weight: .semibold))
+                        .foregroundColor(Theme.ink)
+                        .padding(.horizontal, 8).frame(height: 28)
+                        .overlay(Capsule().stroke(Theme.line))
                 }
-                .font(Theme.mono(12, weight: .semibold))
-                .foregroundColor(Theme.ink)
-                .frame(width: 34, height: 40)
-                .accessibilityLabel("Dictating in \(dictation.language.name). Switch language")
+                .frame(minWidth: 40, minHeight: 40)
+                .accessibilityLabel("Dictation in \(dictation.language.name). Switch language")
             }
             Button {
                 Task { await dictation.toggle(text: text, hints: model.dictationHints) { text = $0 } }
@@ -60,8 +65,8 @@ struct MicButton: View {
 }
 
 /// Under the message bar while dictating (kiff/tafs#208): the microphone's sound as it comes,
-/// so it's plain that dictation is on, with cancel (the box goes back as it was) and stop
-/// (what was heard stays, unsent).
+/// so it's plain that dictation is on, with cancel (the box goes back as it was). Stop is the
+/// mic's own, in the bar.
 struct DictationBar: View {
     @ObservedObject var dictation: Dictation
 
@@ -82,16 +87,7 @@ struct DictationBar: View {
                     .frame(height: 28)
                     .accessibilityElement()
                     .accessibilityLabel("Listening in \(dictation.language.name)")
-                Button { dictation.stop() } label: {
-                    Image(systemName: "stop.fill")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(width: 36, height: 36)
-                        .background(Theme.no)
-                        .clipShape(Circle())
-                }
-                .accessibilityLabel("Stop dictating")
-                .accessibilityHint("What you said stays in the message box, unsent.")
+                // One stop: the mic's, in the message bar (kiff/tafs#236, item 24).
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
             .background(Theme.panel.opacity(0.6))

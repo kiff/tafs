@@ -119,6 +119,24 @@ final class AfterTheTestTests: XCTestCase {
         XCTAssertEqual(held.reason, "\(Money(minor: 15000, currency: "EUR", scale: 2).formatted) is over the \(Money(minor: 10000, currency: "EUR", scale: 2).formatted) limit for one call")
     }
 
+    // A call over both its limit for one call and a day's total gives one reason: the total,
+    // which is what blocks it and what the card explains (kiff/tafs#236, item 33).
+    func testAHeldCallOverBothLimitsGivesOneReason() throws {
+        let json = #"""
+        {"exceptions":[{"id":"ce_2","subject":"refunds-k5j6m5qx","action":"create_refund","title":"Refund a payment","entity_id":"tc-1",
+          "status":"held","can_approve_once":false,
+          "breaches":[{"outcome":"per_action_exceeded","reason":"300.00 EUR is above the 100.00 EUR limit for one call","quantity":"sum(amount)","limit":10000,"unit":"EUR","scale":2},
+                      {"outcome":"limit_reached","reason":"300.00 EUR would go over the 250.00 EUR total","quantity":"sum(amount)","limit":25000,"unit":"EUR","scale":2}],
+          "parameters":{"amount":30000},"parameter_units":{"amount":{"unit":"EUR","scale":2}},
+          "created_at":"2026-10-24T19:00:00.000Z","expires_at":"2026-10-24T19:10:00Z"}]}
+        """#
+        struct List: Decodable { let exceptions: [KIFFClient.CardException] }
+        let e = try decoder.decode(List.self, from: Data(json.utf8)).exceptions[0]
+        let held = KIFFMapping.held(e, tafID: UUID())
+        XCTAssertFalse(held.approvableOnce)
+        XCTAssertEqual(held.reason, "\(Money(minor: 30000, currency: "EUR", scale: 2).formatted) would go over the \(Money(minor: 25000, currency: "EUR", scale: 2).formatted) total")
+    }
+
     func testTheCardSaysWhatsLeft() {
         var rule = CardRule(action: "create_refund", label: "Refund a payment")
         rule.perWindow = Money(minor: 100000, currency: "EUR", scale: 2)

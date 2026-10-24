@@ -39,7 +39,10 @@ describe("jobs", () => {
       // KIFF decides the Card, not the taf: it decided a hold itself, so the call
       // never reached the owner (kiff/tafs#206).
       expect(prompt.replace(/\s+/g, " ")).toContain("KIFF decides what your Card allows, not you.");
-      expect(prompt).toContain("never a table");
+      // A table when the owner asks for one: the app draws them (kiff/tafs#236, item 29).
+      expect(prompt.replace(/\s+/g, " ")).toContain("a table only when the owner asks for one");
+      // A deadline as time left, never in UTC (item 26).
+      expect(prompt.replace(/\s+/g, " ")).toContain("no clock times or time zones, a deadline included");
       expect(prompt).toContain("Name each item by its reference and what\nbecame of it");
       expect(prompt).toContain(j.instructions);
     }
@@ -57,6 +60,8 @@ describe("jobs", () => {
     for (const j of JOBS) {
       const flat = systemPrompt(j).replace(/\s+/g, " ");
       expect(flat).toContain("A request the owner makes in the chat (\"refund this payment\") is enough to act on: do it within your Card, without the checks your job runs on work you find yourself");
+      // Even then it reads what it acts on first (kiff/tafs#236, item 10).
+      expect(flat).toContain("Still read what you act on before you ask for it: that it's the one meant, and nothing already settles it (a dispute, an earlier refund, what's left on it).");
       // The owner's request skips the job's checks, never its "Never" rules (review on #103).
       expect(flat).toContain("since the owner has decided. Your job's \"Never\" rules still hold for the owner's requests too.");
       expect(j.instructions).toMatch(/Never /);

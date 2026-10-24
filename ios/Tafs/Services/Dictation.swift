@@ -58,6 +58,17 @@ final class Dictation: ObservableObject {
             for id in have.sorted() { add(id) }
             return out
         }
+
+        /// The owner's own languages among them, theirs first: the keyboards they set up
+        /// (where dictation's languages are), then the device's languages (kiff/tafs#236,
+        /// item 23). All of the device's when none of theirs is there.
+        static func owners(supported: [String], keyboards: [String], preferred: [String] = Locale.preferredLanguages) -> [Language] {
+            let theirs = keyboards + preferred
+            let codes = Set(theirs.map { Language(id: $0.replacingOccurrences(of: "_", with: "-")).code })
+            let all = ordered(supported: supported, preferred: theirs)
+            let mine = all.filter { codes.contains($0.code) }
+            return mine.isEmpty ? all : mine
+        }
     }
 
     /// The line the system shows with its microphone and speech prompts (Info.plist).
@@ -93,8 +104,22 @@ final class Dictation: ObservableObject {
         let engine = engine ?? NoSpeech()
         #endif
         self.engine = engine
-        self.language = language ?? engine.languages().first ?? .english
+        // The language the owner last dictated in, when the device still has it; only the
+        // device's recognizer keeps it, never a stand-in.
+        #if os(iOS)
+        remembers = engine is DeviceSpeech
+        #else
+        remembers = false
+        #endif
+        let have = engine.languages()
+        let last = remembers ? UserDefaults.standard.string(forKey: Self.lastLanguageKey).flatMap { id in have.first { $0.id == id } } : nil
+        self.language = language ?? last ?? have.first ?? .english
     }
+
+    /// Whether the language chosen is kept for next time.
+    private let remembers: Bool
+
+    static let lastLanguageKey = "dictation.language"
 
     var listening: Bool { state == .listening || state == .starting }
 
@@ -183,6 +208,7 @@ final class Dictation: ObservableObject {
         let wasListening = listening
         if wasListening { stop() }
         language = next
+        if remembers { UserDefaults.standard.set(next.id, forKey: Self.lastLanguageKey) }
         if wasListening { await start(text: text, hints: hints, write: write) }
     }
 
@@ -327,10 +353,11 @@ final class DeviceSpeech: SpeechEngine {
     }
 
     /// The device's on-device languages, read once: asking each recognizer takes a moment.
-    private lazy var have: [Dictation.Language] = Dictation.Language.ordered(
+    private lazy var have: [Dictation.Language] = Dictation.Language.owners(
         supported: SFSpeechRecognizer.supportedLocales().map(\.identifier).filter {
             SFSpeechRecognizer(locale: Locale(identifier: $0))?.supportsOnDeviceRecognition == true
-        })
+        },
+        keyboards: UITextInputMode.activeInputModes.compactMap(\.primaryLanguage).filter { $0 != "emoji" && $0 != "dictation" })
 
     func languages() -> [Dictation.Language] { have }
 

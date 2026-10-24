@@ -729,22 +729,44 @@ struct UnsentBubble: View {
     let busy: Bool
     let retry: () async -> Void
     let discard: () -> Void
+    /// The taf the chat is with, when it has one: a send refused for its halt says so and
+    /// offers Resume, since Retry can't pass a halt (kiff/tafs#236, item 14).
+    var taf: (id: UUID, name: String)? = nil
+
+    /// Whether the send was refused because the taf, or its account, is halted.
+    static func halted(_ why: String) -> Bool {
+        let w = why.lowercased()
+        return w.hasPrefix("halted") || w.contains("is halted")
+    }
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 6) {
             ChatBubble(message: TafsCloud.ChatMessage(at: message.at, from: .owner, text: words, session: "unsent"), taf: nil)
                 .opacity(0.6)
-            HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.circle.fill").foregroundColor(Theme.no)
-                Text("Not sent").foregroundColor(Theme.no)
-                Text("·").foregroundColor(Theme.dim)
-                Button("Retry") { Task { await retry() } }
-                    .foregroundColor(Theme.ink).semibold()
-                    .disabled(busy)
+            if let taf, Self.halted(message.why) {
+                HStack(spacing: 6) {
+                    Image(systemName: "hand.raised.fill").foregroundColor(Theme.no)
+                    Text("\(taf.name) is halted").foregroundColor(Theme.no)
+                    Text("·").foregroundColor(Theme.dim)
+                    NavigationLink { HaltScreen(tafID: taf.id) } label: { Text("Resume").foregroundColor(Theme.ink).semibold() }
+                }
+                .scaledFont(13, relativeTo: .footnote)
+                Text("Nothing reaches it until you resume it. Then send this again.")
+                    .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.circle.fill").foregroundColor(Theme.no)
+                    Text("Not sent").foregroundColor(Theme.no)
+                    Text("·").foregroundColor(Theme.dim)
+                    Button("Retry") { Task { await retry() } }
+                        .foregroundColor(Theme.ink).semibold()
+                        .disabled(busy)
+                }
+                .scaledFont(13, relativeTo: .footnote)
+                Text(message.why).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
             }
-            .scaledFont(13, relativeTo: .footnote)
-            Text(message.why).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {
@@ -983,9 +1005,12 @@ struct SetupComponentView: View {
                         .background(Theme.panel)
                         .overlay(Capsule().stroke(Theme.ink.opacity(0.18)))
                         .clipShape(Capsule())
-                        .disabled(model.answered.contains(c.id) || model.setupSending)
+                        // Setup at work doesn't stop a tap: the answer waits for it (kiff/tafs#236, item 2).
+                        .disabled(model.answered.contains(c.id))
+                        .opacity(model.answered.contains(c.id) ? 0.45 : 1)
                     }
                 }
+                CardNote(id: c.id)
             }
         }
     }
@@ -1026,6 +1051,7 @@ struct SetupComponentView: View {
                         .frame(maxWidth: .infinity)
                         .disabled(busy || answered)
                 }
+                CardNote(id: c.id)
             }
         }
     }
@@ -1072,24 +1098,32 @@ struct SetupComponentView: View {
     }
 
     private func handOver(_ c: SetupComponent) -> some View {
-        Panel(stroke: Theme.ok) {
-            Eyebrow(text: "Set up · \(c.taf?.name ?? "")", color: Theme.ok)
+        // The name the taf got, once started: tafs cloud gives a taken name the first free
+        // "<name> 2", "<name> 3"…, so Setup's may name another taf (kiff/tafs#236, item 5).
+        let started = c.taf.flatMap { model.taf(forAgent: $0.agent) }.flatMap { model.cloudTaf(for: $0) }
+        let name = started?.name ?? c.taf?.name ?? ""
+        let renamed = started != nil && started?.name != c.taf?.name
+        let open = renamed ? "Open \(name)" : c.yes ?? "See it on \(name)"
+        return Panel(stroke: Theme.ok) {
+            Eyebrow(text: "Set up · \(name)", color: Theme.ok)
             Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             if let tools = c.tools, !tools.isEmpty {
-                Text(tools.joined(separator: ", ")).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.soft)
+                // In words, as the approval named them (kiff/tafs#236, item 7).
+                Text(tools.map { model.toolTitle($0) ?? KIFFMapping.toolWords($0) }.joined(separator: " · "))
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
             if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                 if sizeClass == .regular {
                     // Beside the sidebar: select it there, so the list says which taf is open.
                     Button { model.requestedTaf = tafID; model.coachOpen = false } label: {
-                        Text(c.yes ?? "See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                        Text(open).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 } else {
                     NavigationLink {
                         TafDetailView(tafID: tafID)
                     } label: {
-                        Text(c.yes ?? "See it on \(c.taf?.name ?? "the taf")").frame(maxWidth: .infinity)
+                        Text(open).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 }
@@ -1273,8 +1307,25 @@ struct SetupApproval: View {
                     .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil))
                 }
                 .disabled(busy || (answered && !state.isFailure))
+                CardNote(id: component.id)
                 Text("Approving asks for \(Biometry.name).").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
             }
+        }
+    }
+}
+
+/// Why a card's tap ended without reaching Setup, or that its answer waits for Setup
+/// (kiff/tafs#236): a tap always shows something.
+struct CardNote: View {
+    @EnvironmentObject private var model: AppModel
+    let id: String
+
+    var body: some View {
+        if let note = model.cardNotes[id] {
+            Label(note, systemImage: "info.circle")
+                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -1316,7 +1367,7 @@ struct FlowRow: Layout {
         let width = proposal.width ?? .infinity
         var x: CGFloat = 0, y: CGFloat = 0, row: CGFloat = 0
         for s in subviews {
-            let size = s.sizeThatFits(.unspecified)
+            let size = Self.size(of: s, within: width)
             if x > 0 && x + size.width > width { x = 0; y += row + spacing; row = 0 }
             x += size.width + spacing
             row = max(row, size.height)
@@ -1327,12 +1378,20 @@ struct FlowRow: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var x = bounds.minX, y = bounds.minY, row: CGFloat = 0
         for s in subviews {
-            let size = s.sizeThatFits(.unspecified)
+            let size = Self.size(of: s, within: bounds.width)
             if x > bounds.minX && x + size.width > bounds.maxX { x = bounds.minX; y += row + spacing; row = 0 }
             s.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
             x += size.width + spacing
             row = max(row, size.height)
         }
+    }
+
+    /// A button at its own width, but never wider than the row: a long one wraps its lines
+    /// inside the card instead of running off its edge (kiff/tafs#236, item 32).
+    private static func size(of s: LayoutSubview, within width: CGFloat) -> CGSize {
+        let ideal = s.sizeThatFits(.unspecified)
+        guard width.isFinite, ideal.width > width else { return ideal }
+        return s.sizeThatFits(ProposedViewSize(width: width, height: nil))
     }
 }
 

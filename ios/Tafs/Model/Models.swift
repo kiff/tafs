@@ -176,6 +176,15 @@ struct TafCard: Identifiable, Hashable, Codable {
         return nil
     }
 
+    /// What's left, short enough for a Card's edge in the stack (kiff/tafs#236, item 9):
+    /// "US$170 left", "998 calls left".
+    var leftLine: String? {
+        guard let hero else { return nil }
+        if total != nil { return hero.words.hasPrefix("left") ? "\(hero.figure) left" : hero.figure }
+        if let c = calls, c.used != nil { return "\(hero.figure) \(hero.figure == "1" ? "call" : "calls") left" }
+        return nil
+    }
+
     /// The face's small lines under the figure: the main tool's limit for one call and what
     /// happens above it, then how many more tools the Card covers. A Card with no figure
     /// shows its first lines instead.
@@ -220,6 +229,8 @@ struct Card: Hashable, Codable {
 
 enum TafState: String, Codable {
     case working, waiting, idle, paused, revoked
+    /// Halted, on its own or with its account (kiff/tafs#236, item 13): nothing of it runs until resumed.
+    case halted
 
     var label: String {
         switch self {
@@ -228,6 +239,7 @@ enum TafState: String, Codable {
         case .idle: return "Ready"
         case .paused: return "Paused"
         case .revoked: return "Stopped"
+        case .halted: return "Halted"
         }
     }
 }
@@ -259,7 +271,15 @@ struct Taf: Identifiable, Hashable, Codable {
 
     /// The Cards its page draws: each KIFF Card, else its lines as one Card.
     var shownCards: [TafCard] {
-        if let kiffCards, !kiffCards.isEmpty { return kiffCards }
+        // The live Cards first, and among them the one that counts money (kiff/tafs#236,
+        // item 9): for a taf that pays out, what's left to spend matters most. Otherwise as KIFF lists them.
+        if let kiffCards, !kiffCards.isEmpty {
+            return kiffCards.enumerated().sorted { a, b in
+                let ka = (a.element.live ? 0 : 2) + (a.element.total != nil ? 0 : 1)
+                let kb = (b.element.live ? 0 : 2) + (b.element.total != nil ? 0 : 1)
+                return ka != kb ? ka < kb : a.offset < b.offset
+            }.map(\.element)
+        }
         return [TafCard.merged(id: "merged", title: name, rules: card.rules, expires: card.expires, active: !card.revoked,
                                used: used, unknown: usageUnknown ?? [], counted: counted)]
     }
@@ -355,7 +375,11 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     /// done and approved: the tool did it. notDone: allowed, but the tool refused it or it
     /// was never sent. sending: sent, the tool hasn't answered. unknown: whether the tool did
     /// it isn't known (kiff/tafs#115).
-    enum Kind: String, Codable { case done, approved, refused, held, unknown, revoked, started, notDone = "not_done", sending }
+    enum Kind: String, Codable {
+        case done, approved, refused, held, unknown, revoked, started, notDone = "not_done", sending
+        /// Something done in tafs itself, not a call: a halt, a resume, a door's knock (kiff/tafs#236).
+        case inTafs = "in_tafs"
+    }
 
     var id = UUID()
     var tafID: UUID

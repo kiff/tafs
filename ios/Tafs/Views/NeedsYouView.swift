@@ -11,7 +11,9 @@ struct NeedsYouView: View {
                 if model.mode == .kiff, model.sessionHasKey, model.canAnswerHolds != false, model.alertsReady != true {
                     AlertsCard()
                 }
-                if model.held.isEmpty {
+                // A knock at a taf's door waits for the owner too (kiff/tafs#236, item 17).
+                let knocked = model.tafs.filter { knocks($0) > 0 }
+                if model.held.isEmpty && knocked.isEmpty {
                     Panel {
                         Text("Nothing is waiting.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text("When a taf asks for something outside its Card, it shows up here and on your lock screen.")
@@ -19,6 +21,26 @@ struct NeedsYouView: View {
                     }
                 } else {
                     ForEach(model.held) { call in HeldCallCard(call: call).id(call.id) }
+                    ForEach(knocked) { taf in
+                        NavigationLink { TafDetailView(tafID: taf.id) } label: {
+                            Panel(stroke: Theme.amber.opacity(0.4)) {
+                                HStack(spacing: 10) {
+                                    TafAvatar(taf: taf, size: 32)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(taf.name).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                                        let n = knocks(taf)
+                                        Text(n == 1 ? "Someone knocked at its door. Nothing was done." : "\(n) knocks at its doors. Nothing was done.")
+                                            .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens \(taf.name), where you answer it")
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -33,6 +55,8 @@ struct NeedsYouView: View {
         .refreshable { await model.refresh() }
         .screenBackground()
     }
+
+    private func knocks(_ taf: Taf) -> Int { (taf.doors ?? []).reduce(0) { $0 + $1.knocks } }
 
     private func scroll(to request: AppModel.HoldRequest?, _ reader: ScrollViewProxy) {
         guard let request, let call = model.held.first(where: { $0.kiffID == request.kiffID }) else { return }
@@ -57,8 +81,10 @@ struct HeldCallCard: View {
                 if let taf { TafAvatar(taf: taf, size: 32) }
                 Text(taf?.name ?? "A taf").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer()
+                // The system counts it down, every second, wherever the card is (kiff/tafs#236,
+                // item 8); the timeline only turns it to "expired" at the end.
                 TimelineView(.periodic(from: .now, by: 1)) { context in
-                    Text(remaining(at: context.date))
+                    remaining(at: context.date)
                         .scaledFont(12, design: .monospaced)
                         .foregroundColor(Theme.amberText)
                 }
@@ -70,10 +96,6 @@ struct HeldCallCard: View {
             if !call.proposed.context.isEmpty {
                 Text(call.proposed.context).scaledFont(14).foregroundColor(Theme.soft)
             }
-            // What it's on, as KIFF keeps the call (kiff/tafs#102): the payment, not a tool-call id.
-            ForEach(call.details ?? [], id: \.self) { line in
-                Text(line).scaledFont(12, design: .monospaced).foregroundColor(Theme.soft).textSelection(.enabled)
-            }
             Text(call.reason)
                 .scaledFont(12, weight: .medium)
                 .padding(.horizontal, 10).padding(.vertical, 5)
@@ -83,6 +105,22 @@ struct HeldCallCard: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Self.sentence(call, taf: taf?.name))
+
+            // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and
+            // a vendor's own values aren't words for the card's face (kiff/tafs#236, item 7).
+            if let details = call.details, !details.isEmpty {
+                DisclosureGroup {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(details, id: \.self) { line in
+                            Text(line).scaledFont(12, design: .monospaced).foregroundColor(Theme.soft).textSelection(.enabled)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
+                } label: {
+                    Text("Details").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
+                }
+            }
 
             if model.canAnswer(call) {
                 if call.approvableOnce {
@@ -167,7 +205,7 @@ struct HeldCallCard: View {
         guard model.canAnswer(call) else { return }
         switch request.answer {
         case AlertAnswers.approve? where call.approvableOnce:
-            if call.install != nil { install() } else { send(.approveOnce) }
+            if call.install != nil { install() } else { send(.approveOnce, fromNotification: true) }
         case AlertAnswers.refuse?:
             send(.refuse)
         default:
@@ -198,17 +236,21 @@ struct HeldCallCard: View {
         return "\(calls) \(who) refused today still counted toward it: nothing moved, but they used room."
     }
 
-    private func send(_ answer: Answer) {
+    private func send(_ answer: Answer, fromNotification: Bool = false) {
         sending = true
         Task {
-            await model.answer(call, with: answer)
+            await model.answer(call, with: answer, fromNotification: fromNotification)
             sending = false
         }
     }
 
-    private func remaining(at date: Date) -> String {
-        let seconds = max(0, Int(call.expiresAt.timeIntervalSince(date)))
-        return seconds == 0 ? "expired" : String(format: "%d:%02d left", seconds / 60, seconds % 60)
+    private func remaining(at date: Date) -> Text {
+        let seconds = Int(call.expiresAt.timeIntervalSince(date))
+        guard seconds >= 1 else { return Text("expired") }
+        if #available(iOS 16, macOS 13, *) {
+            return Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(" left")
+        }
+        return Text(String(format: "%d:%02d left", seconds / 60, seconds % 60))
     }
 }
 

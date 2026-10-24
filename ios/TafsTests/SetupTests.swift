@@ -698,6 +698,31 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Setup shows a second approval of a grant in the turn it changes the grant: a read
+    /// between the two finds the grant as it was, signed in, and that says nothing of the new
+    /// card (kiff/tafs#236, item 3). It waits for the owner until the grant changes after it.
+    func testASecondApprovalIsntDoneByTheGrantAsItWas() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        // Listed at 10:00:00, before the second card (10:00:05): the read before Setup's change.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "listed", signedIn: true))]}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+            {"messages":[{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"Refunds, please","session":"s1"},
+                         {"at":"2026-10-17T10:00:03.000Z","from":"owner","kind":"message","text":"[approval connect] approved, signed in","session":"s1"}],
+             "components":[
+              {"at":"2026-10-17T09:59:58.000Z","session":"s1","run":"r1","seq":1,"component":{"type":"approval","id":"connect","grant":"g_01"}},
+              {"at":"2026-10-17T10:00:05.000Z","session":"s1","run":"r2","seq":1,"component":{"type":"approval","id":"reads","grant":"g_01"}}]}
+            """)
+        await model.loadSetup()
+        let reads = try SetupTests.component(#"{"type":"approval","id":"reads","grant":"g_01"}"#)
+        let connect = try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01"}"#)
+        XCTAssertEqual(model.setupCardState(connect), .done, "the first card's answer says so")
+        XCTAssertEqual(model.setupCardState(reads), .needsYou, "signed in before it, so not its approval")
+        XCTAssertEqual(model.setupWaiting?.id, "reads")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// The owner's answers read as what they chose, and each card knows where it stands:
     /// the one waiting for the owner, then declined, failed with why, or done (#58 B4, B7).
     func testCardsKnowWhereTheyStand() async throws {

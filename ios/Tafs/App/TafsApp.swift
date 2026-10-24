@@ -135,7 +135,7 @@ struct RootView: View {
         // Halt all, from a halt alert or from Siri when it needed the app (kiff/tafs#210).
         .sheet(isPresented: Binding(get: { model.signedIn && model.haltRequested }, set: { model.haltRequested = $0 })) {
             NavigationStack {
-                HaltScreen(tafID: nil)
+                HaltScreen(tafID: model.haltRequestedTaf)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.haltRequested = false }.keyboardShortcut(.cancelAction) } }
             }
             .environmentObject(model)

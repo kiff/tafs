@@ -8,6 +8,7 @@ import { type EmailProvider, replySubject } from "./email.js";
 import { type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
+import { eventLog, logEvent } from "../events.js";
 
 /** What doors are set up with in a deployment; a door whose part is missing isn't offered. */
 export interface DoorsConfig {
@@ -241,6 +242,7 @@ async function addKnock(ctx: DoorsContext, tenant: string, taf: Taf, door: Door,
     text: cut(a.text).text, attachments: a.attachments, at: ctx.now.toISOString(), state: "open",
   };
   await changeKnocks(ctx.doors.store, tenant, taf.id, ctx.now, (knocks) => [knock, ...knocks]);
+  await logEvent(eventLog(ctx.doors.store), tenant, { kind: "knocked", taf: taf.id, name: taf.name, app: app.id, from: a.name }, ctx.now);
   await tellOwner(ctx, tenant, taf, `${a.name ?? a.from} wrote by ${app.label.toLowerCase()}${a.spoofed ? " (the sender check failed)" : ""}. Nothing was done.`, knock.id);
 }
 
@@ -556,7 +558,9 @@ export async function pair(ctx: DoorsContext, owner: Owner, taf: Taf, id: string
     const key = door.kind === "email" ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) ? raw : "") : raw.replace(/\D/g, "").replace(/^00/, "");
     if (!key || key.length > 200) throw new DoorError(400, door.kind === "email" ? "write an email address" : "write a phone number with its country code");
     if (door.keys.some((k) => k.id === key)) return doors;
-    return doors.map((x) => (x.id === door.id ? { ...x, keys: [...x.keys, { id: key, ...(name ? { name } : {}), added: ctx.now.toISOString() }] } : x));
+    // A name that's only the address again isn't kept: the sender shows once (kiff/tafs#236, item 20).
+    const named = name && name.toLowerCase() !== key && name.replace(/\D/g, "") !== key ? name : "";
+    return doors.map((x) => (x.id === door.id ? { ...x, keys: [...x.keys, { id: key, ...(named ? { name: named } : {}), added: ctx.now.toISOString() }] } : x));
   });
   return { door: doorView(d!, appOf(cfg, d!.app), await todayOf(ctx.doors.store, owner.tenant, taf.id, id, ctx.now)) };
 }
@@ -574,6 +578,7 @@ export async function removeDoor(ctx: DoorsContext, owner: Owner, taf: Taf, id: 
   if (!door) throw new DoorError(404, "no such door");
   await closeDoor(ctx, cfg, owner.tenant, door, { retire: true });
   await changeDoors(ctx.doors.store, owner.tenant, taf.id, (doors) => doors.filter((x) => x.id !== id));
+  await logEvent(eventLog(ctx.doors.store), owner.tenant, { kind: "door_removed", taf: taf.id, name: taf.name, app: door.app }, ctx.now);
   return { removed: id };
 }
 
@@ -620,13 +625,18 @@ export async function answerKnock(ctx: DoorsContext, owner: Owner, taf: Taf, kno
   } else if (action === "pair") {
     if (knock.proof !== "pass") throw new DoorError(409, knock.proof === "fail" ? "this message didn't pass the sender check, so its sender can't be paired from it" : `${app?.label ?? "this door"} can't prove who wrote it`);
     await pair(ctx, owner, taf, knock.door, { id: knock.from, name: knock.name });
-    next = "paired";
+    // The sender is a key from now on; this message still waits for the owner's Do it or
+    // Ignore, never dropped without a word (kiff/tafs#236, item 18).
+    await changeKnocks(store, owner.tenant, taf.id, ctx.now, (now) => now.map((k) => (k.id === knock.id ? { ...k, paired: true } : k)));
+    await logEvent(eventLog(store), owner.tenant, { kind: "paired", taf: taf.id, name: taf.name, app: knock.app, from: knock.name ?? knock.from }, ctx.now);
+    return { knock: knock.id, state: "open", paired: true };
   } else if (action === "ignore") {
     next = "ignored";
   } else {
     throw new DoorError(400, "action is do, pair or ignore");
   }
   await changeKnocks(store, owner.tenant, taf.id, ctx.now, (now) => now.map((k) => (k.id === knock.id ? { ...k, state: next } : k)));
+  await logEvent(eventLog(store), owner.tenant, { kind: next === "done" ? "knock_done" : "knock_ignored", taf: taf.id, name: taf.name, app: knock.app, from: knock.name }, ctx.now);
   return { knock: knock.id, state: next, ...(started && typeof started === "object" ? started as object : {}) };
 }
 

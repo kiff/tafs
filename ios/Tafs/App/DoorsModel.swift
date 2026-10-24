@@ -30,19 +30,33 @@ final class DoorsModel: ObservableObject {
         apps.filter { app in !doors.contains { $0.kind == app.kind } }
     }
 
+    /// Waits between tries of a read that failed: a device's first request after it wakes
+    /// often times out (kiff/tafs#236, item 22).
+    var retryDelays: [UInt64] = [1_000_000_000, 3_000_000_000]
+
+    /// Reads the doors, trying again quietly when a read fails; only a read that keeps
+    /// failing says so, in plain words.
     func load() async {
-        do {
-            let r = try await cloud.doors(tafID)
-            doors = r.doors
-            apps = r.apps
-            knocks = r.knocks
-            loaded = true
-        } catch is CancellationError {
-            // The screen went away before the read ended: nothing went wrong.
-        } catch let error as URLError where error.code == .cancelled {
-        } catch {
-            self.error = "Couldn't read the doors: \(error.localizedDescription)"
+        for attempt in 0...retryDelays.count {
+            do {
+                let r = try await cloud.doors(tafID)
+                doors = r.doors
+                apps = r.apps
+                knocks = r.knocks
+                loaded = true
+                error = nil
+                return
+            } catch is CancellationError {
+                // The screen went away before the read ended: nothing went wrong.
+                return
+            } catch let error as URLError where error.code == .cancelled {
+                return
+            } catch {
+                guard attempt < retryDelays.count else { break }
+                do { try await Task.sleep(nanoseconds: retryDelays[attempt]) } catch { return }
+            }
         }
+        error = "The doors couldn't be read just now. They're tried again when you come back here."
     }
 
     /// Turns a door on: email at once; WhatsApp after its signup.
@@ -92,8 +106,8 @@ final class DoorsModel: ObservableObject {
         defer { busy = false }
         do {
             try await cloud.answerKnock(tafID, knock: knock.id, action: action, say: say)
-            knocks.removeAll { $0.id == knock.id }
-            if action == "pair" { await load() }
+            // Pairing keeps the message waiting, with Do it and Ignore (kiff/tafs#236, item 18).
+            if action == "pair" { await load() } else { knocks.removeAll { $0.id == knock.id } }
         } catch {
             self.error = error.localizedDescription
         }

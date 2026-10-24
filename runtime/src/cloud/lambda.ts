@@ -12,6 +12,7 @@ import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
 import { emailProvider } from "./doors/email.js";
 import type { DoorSecrets, DoorStore } from "./doors/model.js";
 import { whatsappClient } from "./doors/whatsapp.js";
+import { eventLog } from "./events.js";
 
 /**
  * kiff/agents, where every taf runs: its API (AWS_IAM function URL, signed
@@ -587,11 +588,14 @@ function readDoorsConfig(): Promise<DoorsConfig> {
   return doorsConfig;
 }
 
+/** Halts, resumes and door events, in the same table as the doors (kiff/tafs#236). */
+const events = eventLog(doorStore);
+
 /** Doors run only where the deployment says where it is: its runs must be able to announce they ended. */
 const doors: DoorsDeps | undefined = process.env.DOORS_PUBLIC_URL ? { store: doorStore, secrets: doorSecrets, config: readDoorsConfig } : undefined;
 
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach, ...(doors ? { doors } : {}) };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach, events, ...(doors ? { doors } : {}) };
 }
 
 /**

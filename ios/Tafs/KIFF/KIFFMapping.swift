@@ -60,9 +60,18 @@ enum KIFFMapping {
     /// (stripe_create_refund); "Refund a payment", for create_refund, stays alone (kiff/tafs#138).
     static func says(_ action: String, title: String?) -> String {
         let name = KIFFMapping.name(action, title: title)
-        let words = toolWords(action)
+        var words = toolWords(action)
         let titleWords = Set(name.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber }))
-        guard let last = words.lowercased().split(separator: " ").last else { return name }
+        var parts = words.lowercased().split(separator: " ")
+        // planque ends a tool's name with four letters or digits of its grant ("create_refund_repg"):
+        // with a title, a last word of four the title doesn't have is that, and never shown
+        // (kiff/tafs#236, item 7).
+        if title?.isEmpty == false, parts.count > 1, let last = parts.last, last.count == 4,
+           !titleWords.contains(last), last.allSatisfy({ $0.isLetter || $0.isNumber }) {
+            parts.removeLast()
+            words = parts.joined(separator: " ")
+        }
+        guard let last = parts.last else { return name }
         return titleWords.contains(last) ? name : "\(name) · \(words)"
     }
 
@@ -107,6 +116,8 @@ enum KIFFMapping {
         switch h.state {
         case "waiting": taf.state = .waiting; taf.now = "Waiting on you"
         case "paused": taf.state = .paused; taf.now = "Paused"
+        // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
+        case "halted": taf.state = .halted; taf.now = "Halted · resume it from Halt"
         // A taf with no schedule isn't at work until it's told something in its chat
         // (kiff/tafs#138, item 55): it reads as ready, not running.
         case "working" where h.unscheduled == true: taf.state = .idle; taf.now = "Works from its chat"
@@ -242,7 +253,7 @@ enum KIFFMapping {
     /// `coach`: the account's Setup agent, once the app has connected Coach's tools itself; a
     /// held version_install is Coach's only from it (kiff/tafs#206).
     static func held(_ e: KIFFClient.CardException, tafID: UUID, coach: String? = nil) -> HeldCall {
-        let reason = moneyReason(e) ?? e.breaches.first?.reason ?? e.reason ?? outcomeText(e.breaches.first?.outcome)
+        let reason = moneyReason(e) ?? reasonBreach(e)?.reason ?? e.reason ?? outcomeText(reasonBreach(e)?.outcome)
         // A gateway call is filed under its tool call's id, which says nothing to the owner:
         // what it's on is in its arguments, as KIFF keeps them (kiff/tafs#102).
         let name = says(e.action, title: e.title)
@@ -276,11 +287,21 @@ enum KIFFMapping {
         return VersionInstall(taf: taf, n: n)
     }
 
+    /// The one breach a held call names (kiff/tafs#236, item 33). A call over both its limit
+    /// for one call and a total can't be approved once, and the card says it's the total:
+    /// the reason names that total too, not the first breach KIFF lists.
+    static func reasonBreach(_ e: KIFFClient.CardException) -> KIFFClient.CardException.Breach? {
+        if e.canApproveOnce == false, let total = e.breaches.first(where: { $0.outcome != "per_action_exceeded" }) {
+            return total
+        }
+        return e.breaches.first
+    }
+
     /// Why a call is held, with its amounts written as the app writes money everywhere else
     /// (kiff/tafs#206 6.8), when KIFF declares the limit's unit and it is the amount's: "€150
     /// is over the €100 limit for one call". Otherwise nil, and KIFF's own words show.
     static func moneyReason(_ e: KIFFClient.CardException) -> String? {
-        guard let b = e.breaches.first, let limit = b.limit, let unit = b.unit, b.unitAmbiguous != true,
+        guard let b = reasonBreach(e), let limit = b.limit, let unit = b.unit, b.unitAmbiguous != true,
               let amount = amount(of: e), amount.currency == unit else { return nil }
         let cap = Money(minor: limit, currency: unit, scale: b.scale ?? amount.scale).formatted
         switch b.outcome {

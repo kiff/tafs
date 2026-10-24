@@ -33,7 +33,7 @@ struct StateChip: View {
         switch state {
         case .working: return Theme.ok
         case .waiting: return Theme.amber
-        case .revoked: return Theme.no
+        case .revoked, .halted: return Theme.no
         case .idle, .paused: return Theme.soft
         }
     }

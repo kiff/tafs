@@ -157,6 +157,30 @@ final class KIFFAnswerTests: XCTestCase {
         XCTAssertEqual(answersSent, ["/v1/me/card-exceptions/ce_1/approve-once"])
     }
 
+    /// An approval chosen on its notification may count the unlock that opened the app, for
+    /// that answer only (kiff/tafs#236, item 25): one that stops before signing doesn't leave
+    /// it on, and a later approval asks again.
+    func testAnUnlockFromANotificationCountsForThatAnswerOnly() async throws {
+        let signer = RecordingSigner()
+        let model = try await makeModel(verifies: true, signer: signer)
+        let call = try XCTUnwrap(model.held.first)
+        var gone = call
+        gone.id = UUID()
+        gone.kiffID = "ce_gone"
+        await model.answer(gone, with: .approveOnce, fromNotification: true)
+        XCTAssertEqual(signer.signed, [], "it stopped before signing")
+        await model.answer(call, with: .approveOnce)
+        XCTAssertEqual(signer.reusedUnlock, [false], "the next approval asks again")
+    }
+
+    func testAnApprovalFromItsNotificationCountsTheUnlock() async throws {
+        let signer = RecordingSigner()
+        let model = try await makeModel(verifies: true, signer: signer)
+        await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce, fromNotification: true)
+        XCTAssertEqual(signer.reusedUnlock, [true])
+        XCTAssertEqual(answersSent, ["/v1/me/card-exceptions/ce_1/approve-once"])
+    }
+
     /// Extra room is KIFF's change-card, signed as an answer like the others
     /// (kiff/tafs#211, 6.13): the call goes on, and the decision says what was done.
     func testExtraRoomSignsChangeCard() async throws {

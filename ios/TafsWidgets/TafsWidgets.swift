@@ -15,7 +15,6 @@ private let cream = Color(red: 0xFB / 255.0, green: 0xF7 / 255.0, blue: 0xEE / 2
 private let ink = Color(red: 0x1B / 255.0, green: 0x17 / 255.0, blue: 0x26 / 255.0)
 private let dim = Color(red: 0x8A / 255.0, green: 0x84 / 255.0, blue: 0x96 / 255.0)
 private let orange = Color(red: 1.0, green: 0x8A / 255.0, blue: 0x1F / 255.0)
-private let pink = Color(red: 1.0, green: 0x4F / 255.0, blue: 0x7B / 255.0)
 private let islandText = Color(red: 0xF4 / 255.0, green: 0xEF / 255.0, blue: 0xE6 / 255.0)
 private let islandDim = Color(white: 0.65)
 
@@ -96,7 +95,9 @@ private struct LockScreenView: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(timerInterval: Date()...max(Date(), state.expiresAt), countsDown: true)
                         .font(.system(size: 26, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(LinearGradient(colors: [orange, pink], startPoint: .leading, endPoint: .trailing))
+                        // A plain colour: under a gradient the lock screen drew the timer once
+                        // and it stood still (kiff/tafs#236, item 8). The island's moves; it's plain too.
+                        .foregroundColor(orange)
                         .multilineTextAlignment(.trailing)
                     Text("then refused").font(.caption2).foregroundColor(dim)
                 }

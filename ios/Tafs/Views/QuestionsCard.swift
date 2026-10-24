@@ -48,11 +48,14 @@ struct QuestionsCard: View {
                     }
                     .buttonStyle(.plain)
                 }
+                CardNote(id: component.id)
             }
         }
     }
 
-    private var busy: Bool { model.answered.contains(component.id) || model.setupSending }
+    /// Answered on this phone. Setup at work doesn't stop a tap: the answer waits for it
+    /// (kiff/tafs#236, item 2).
+    private var busy: Bool { model.answered.contains(component.id) }
 
     @ViewBuilder private func question(_ q: SetupComponent.Question, number: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -85,14 +88,20 @@ struct QuestionsCard: View {
         } label: {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label).scaledFont(15, weight: on ? .semibold : .regular)
-                if let detail, !detail.isEmpty { Text(detail).scaledFont(12).opacity(0.8) }
+                    .fixedSize(horizontal: false, vertical: true)
+                if let detail, !detail.isEmpty {
+                    Text(detail).scaledFont(12).opacity(0.8).fixedSize(horizontal: false, vertical: true)
+                }
             }
+            .multilineTextAlignment(.leading)
             .foregroundColor(on ? .white : Theme.ink)
             .padding(.horizontal, 16).padding(.vertical, 10)
             .frame(minHeight: 44)
             .background(on ? Theme.coach : Theme.panel)
-            .overlay(Capsule().stroke(on ? Theme.coach : Theme.ink.opacity(0.18)))
-            .clipShape(Capsule())
+            // A capsule cuts the corners off an option that wraps to a second line; a rounded
+            // rectangle keeps its words inside (kiff/tafs#236, item 32).
+            .overlay(RoundedRectangle(cornerRadius: 22).stroke(on ? Theme.coach : Theme.ink.opacity(0.18)))
+            .clipShape(RoundedRectangle(cornerRadius: 22))
         }
         .buttonStyle(.plain)
         .disabled(busy)
