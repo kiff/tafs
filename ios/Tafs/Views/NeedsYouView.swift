@@ -81,19 +81,23 @@ struct HeldCallCard: View {
                     // Over a total the Card keeps across calls: approving once can't pass it
                     // (kiff/tafs#138, item 49). Extra room can, for this call, until that total
                     // resets (kiff/tafs#211, 6.13); a lasting change is Coach's.
-                    Text("Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was.")
-                        .font(.system(size: 13)).foregroundColor(Theme.soft)
+                    Text(model.canManageCards
+                         ? "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was."
+                         : "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it.")
+                        .scaledFont(13).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                     if let refused = HeldCallCard.refusedLine(model.refusedToday(call.tafID)) {
                         Text(refused)
-                            .font(.system(size: 13)).foregroundColor(Theme.soft)
+                            .scaledFont(13).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Button { send(.extraRoom) } label: {
-                        Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                    if model.canManageCards {
+                        Button { send(.extraRoom) } label: {
+                            Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(sending)
                     }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(sending)
                     Button {
                         model.improveTaf(call.tafID)
                         model.coachOpen = true
@@ -148,8 +152,8 @@ struct HeldCallCard: View {
     /// in a line, naming the vendor when every one is the same; nil for none.
     static func refusedLine(_ refused: [RecordEntry]) -> String? {
         guard !refused.isEmpty else { return nil }
-        let vendors = Set(refused.compactMap { e in e.detail.range(of: " refused it").map { String(e.detail[..<$0.lowerBound]) } })
-        let who = vendors.count == 1 ? vendors.first! : "the vendor"
+        let vendors = Set(refused.compactMap(\.refusedBy))
+        let who = vendors.count == 1 && refused.allSatisfy({ $0.refusedBy != nil }) ? vendors.first! : "the vendor"
         let calls = refused.count == 1 ? "1 call" : "\(refused.count) calls"
         return "\(calls) \(who) refused today still counted toward it: nothing moved, but they used room."
     }

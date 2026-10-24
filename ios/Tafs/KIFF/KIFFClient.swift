@@ -253,10 +253,13 @@ final class KIFFClient {
         let email: String?
         /// The account's time zone, which ends a Card's day (kiff-cloud #1121).
         var timeZone: String? = nil
+        /// What this person may do on the account, as KIFF says ("cards.manage", …); nil
+        /// from a KIFF that doesn't say.
+        var capabilities: [String]? = nil
 
         enum CodingKeys: String, CodingKey {
             case tenantID = "tenant_id", slug = "tenant_slug", displayName = "tenant_display_name", email
-            case timeZone = "time_zone"
+            case timeZone = "time_zone", capabilities
         }
 
         /// The account as the owner knows it: its name, else its slug.

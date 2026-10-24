@@ -216,7 +216,7 @@ struct TafDetailView: View {
         // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13).
         if let refused = HeldCallCard.refusedLine(model.refusedToday(taf.id)) {
             Text(refused)
-                .font(.system(size: 13)).foregroundColor(Theme.soft)
+                .scaledFont(13).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         }
         ConnectionsPanel(tafID: taf.id)

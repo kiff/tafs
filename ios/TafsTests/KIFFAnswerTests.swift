@@ -175,6 +175,18 @@ final class KIFFAnswerTests: XCTestCase {
         XCTAssertEqual(Answer.extraRoom.wireName, "change-card")
     }
 
+    /// Extra room is offered only to someone KIFF says may manage Cards; a KIFF that
+    /// doesn't say leaves it to KIFF to decide.
+    func testExtraRoomIsForWhoManagesCards() throws {
+        let approver = try JSONDecoder().decode(KIFFClient.Account.self, from: Data(#"{"tenant_id":"t1","tenant_slug":"acme","capabilities":["holds.answer","cards.read"]}"#.utf8))
+        XCTAssertEqual(approver.capabilities, ["holds.answer", "cards.read"])
+        XCTAssertFalse(AppModel.managesCards(approver.capabilities))
+        XCTAssertTrue(AppModel.managesCards(["holds.answer", "cards.manage"]))
+        let older = try JSONDecoder().decode(KIFFClient.Account.self, from: Data(#"{"tenant_id":"t1","tenant_slug":"acme"}"#.utf8))
+        XCTAssertNil(older.capabilities)
+        XCTAssertTrue(AppModel.managesCards(older.capabilities))
+    }
+
     /// The hold card's line on the vendor's refusals counts today's only, and names the
     /// vendor when all are the same.
     func testTheRefusedLineCountsTodaysRefusals() {
@@ -182,6 +194,7 @@ final class KIFFAnswerTests: XCTestCase {
         func refused(_ who: String, at: Date) -> RecordEntry {
             var e = RecordEntry(tafID: taf, kind: .notDone, title: "Refund", detail: "\(who) refused it. No money moved, but it still counts against today's total.", at: at)
             e.refusedByTool = true
+            e.refusedBy = who
             return e
         }
         XCTAssertNil(HeldCallCard.refusedLine([]))

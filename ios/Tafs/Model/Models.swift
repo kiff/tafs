@@ -385,4 +385,6 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     /// KIFF allowed the call and the vendor refused it, and it still counts against the
     /// Card's totals (kiff/tafs#211, 6.13).
     var refusedByTool: Bool?
+    /// Who refused it at the tool: the vendor as connected, when known.
+    var refusedBy: String?
 }

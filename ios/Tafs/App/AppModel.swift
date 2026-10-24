@@ -868,7 +868,6 @@ final class AppModel: ObservableObject {
         call.kiffID == nil || (kiff.serverVerifiesSignatures && sessionHasKey && kiffTenant != nil && call.accountingVersion != nil)
     }
 
-    /// Where a held call from KIFF is answered while the phone cannot answer it.
     /// The answer as KIFF's signed answer message, kiff.answer.v1, names it.
     nonisolated static func kiffAnswer(_ answer: Answer) -> String {
         switch answer {
@@ -884,6 +883,15 @@ final class AppModel: ObservableObject {
         entries(for: tafID).filter { $0.refusedByTool == true && AccountTime.calendar.isDateInToday($0.at) }
     }
 
+    /// Whether this person may give a Card extra room (KIFF's cards.manage): Extra room on
+    /// a hold is offered only to them. A KIFF that doesn't say leaves it to KIFF to decide.
+    var canManageCards: Bool { Self.managesCards(kiffAccount?.capabilities) }
+
+    nonisolated static func managesCards(_ capabilities: [String]?) -> Bool {
+        capabilities.map { $0.contains("cards.manage") } ?? true
+    }
+
+    /// Where a held call from KIFF is answered while the phone cannot answer it.
     func answerPage(for call: HeldCall) -> URL? {
         call.kiffID.map(kiff.answerPage(for:))
     }
