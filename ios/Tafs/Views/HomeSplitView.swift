@@ -20,7 +20,7 @@ enum HomeSelection: Hashable {
     case taf(UUID)
     /// A held call, shown on its taf's page.
     case held(UUID, taf: UUID)
-    /// Every taf's halt (kiff/kiff-cloud#1061), as the phone's home has it.
+    /// Every taf's halt, as the phone's home has it.
     case haltAll
 }
 
@@ -103,8 +103,8 @@ struct HomeSplitView: View {
                     Button { model.openCoach() } label: {
                         Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
                     }
-                    // Every taf at once, from its own screen, as on the phone's home
-                    // (kiff/kiff-cloud#1061). The owner looked for it here (kiff/tafs#138).
+                    // Every taf at once, from its own screen, as on the phone's home.
+                    // The owner looked for it here (kiff/tafs#138).
                     if !model.cloudTafs.isEmpty {
                         NavigationLink(value: HomeSelection.haltAll) { haltAllRow }
                     }

@@ -86,7 +86,7 @@ export async function draftConfirmed(token: string, draftID: string, doFetch: Fe
 }
 
 /**
- * Claims a confirmed draft's agent key (kiff-cloud #1217): the draft's claim
+ * Claims a confirmed draft's agent key: the draft's claim
  * secret, shown once to whoever submitted it, buys the key once. The key comes
  * straight here and goes into Secrets Manager, where kiff/agents reads it for the
  * taf's runs; the phone never holds it.
@@ -131,20 +131,20 @@ export async function cardRevisions(token: string, ids: string[], doFetch: Fetch
 
 /**
  * A draft that brings back these Cards' terms at these revisions, for going back
- * to the version that ran under them (kiff-cloud#1288). It only waits: the owner
+ * to the version that ran under them. It only waits: the owner
  * confirms it with the phone's signature.
  */
 export async function restoreDraft(token: string, agent: string, revisions: Array<{ id: string; revision: number }>, label: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<string> {
   return (await ask<{ id: string }>(token, "POST", "/v1/me/agent-drafts/restore", { agent_id: agent, label, revisions }, doFetch, base)).id;
 }
 
-/** A revision draft submitted again, for one that expired or went stale (kiff-cloud#1288). It only waits. */
+/** A revision draft submitted again, for one that expired or went stale. It only waits. */
 export async function redraft(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<string> {
   return (await ask<{ id: string }>(token, "POST", `/v1/me/agent-drafts/${encodeURIComponent(draftID)}/redraft`, {}, doFetch, base)).id;
 }
 
 /**
- * A halt as KIFF reports it (kiff/kiff-cloud#1061): `halted` only once its gateway (`kiff_ack`)
+ * A halt as KIFF reports it: `halted` only once its gateway (`kiff_ack`)
  * and planque (`planque_ack`) both hold it, `halting` until then. While halted, KIFF refuses the
  * agent's calls, held ones and permits issued before the halt too.
  */

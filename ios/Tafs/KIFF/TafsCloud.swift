@@ -263,7 +263,7 @@ final class TafsCloud {
 
     // MARK: Halt
 
-    /// A halt (kiff/kiff-cloud#1061) of one taf or of the whole account, as tafs cloud reads
+    /// A halt of one taf or of the whole account, as tafs cloud reads
     /// it from kiff/agents and KIFF: halted only once all three hold it.
     struct Halt: Decodable, Equatable {
         enum State: String, Decodable { case running, halting, halted }
@@ -641,7 +641,7 @@ final class TafsCloud {
         return r.setup
     }
 
-    /// Starts the account's Setup from a confirmed no-tools KIFF draft (kiff-cloud#1254).
+    /// Starts the account's Setup from a confirmed no-tools KIFF draft.
     /// tafs cloud claims its key with the claim secret, as for a taf.
     func startSetup(draftID: String, claimSecret: String) async throws -> CloudTaf {
         struct Body: Encodable {

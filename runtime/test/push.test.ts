@@ -322,7 +322,7 @@ describe("KIFF's alerts", () => {
     expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_A, TOKEN_B, TOKEN_B]);
   });
 
-  /** KIFF's retry queue (apps/api/internal/alert/retry.go): first try, then these waits, until a 2xx. */
+  /** KIFF's retry queue: first try, then these waits, until a 2xx. */
   const KIFF_RETRY_WAITS_S = [60, 300, 900, 3600, 10800, 21600, 43200];
 
   it("keeps KIFF retrying while a run that died mid-send still holds its lease, then sends", async () => {

@@ -16,8 +16,7 @@ id in it is masked. (kiff/tafs#31)
 - **The owner's answer is the phone's.** A held call is answered on the
   owner's phone: Face ID signs KIFF's `kiff.answer.v1` message (this hold,
   this answer, the hold's accounting version, the time) with the phone's key.
-  A session bound to that phone can't answer without the signature
-  (kiff-cloud #1218).
+  A session bound to that phone can't answer without the signature.
 
 ## Every night: held, then answered on the phone
 
@@ -77,7 +76,7 @@ signs KIFF's `kiff.answer.v1` with the device's key. Times are UTC.
 - **The approved refunds count.** The Card's day went from €1,000 to €850
   after B, €830 after A, and €680 after C.
 - **The answer is the device's.** The app answers only by signing on the
-  device; an answer without the signature is refused (kiff-cloud #1218), and
+  device; an answer without the signature is refused, and
   the nightly checks that refusal every night.
 
 **What the run found, and what changed** (kiff/tafs#138):

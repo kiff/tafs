@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A halt (kiff/kiff-cloud#1061) of one taf or, with none, of every taf: its own screen,
+/// A halt of one taf or, with none, of every taf: its own screen,
 /// opened from a row. Halting is one tap, no Face ID: it only takes authority away. It reads
 /// Halted only once kiff/agents, KIFF and planque all hold it, Halting… until then. Resuming
 /// asks for Face ID, and what the taf was doing before the halt doesn't come back.

@@ -6,7 +6,7 @@ import SwiftUI
 ///
 /// A Mac without a Secure Enclave holds no signing key, so it signs in without one and
 /// approves nothing itself: what needs a signature is done on the owner's iPhone, until
-/// KIFF takes an authenticator code (kiff/kiff-cloud#1267).
+/// KIFF takes an authenticator code.
 @main
 struct TafsMacApp: App {
     @StateObject private var model = AppModel(remembered: .standard)

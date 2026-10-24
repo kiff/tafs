@@ -29,7 +29,7 @@
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update both functions' code, nothing else.
 #
-# Everything is named tafs-*, in us-east-1, and touches nothing of kiff-cloud's.
+# Everything is named tafs-*, in us-east-1, and touches nothing of KIFF's own.
 # Usage: infra/aws.sh path/to/lambda.zip
 #
 # Applied on 2026-10-14 step by step (each part checked before the next), not by
