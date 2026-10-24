@@ -1324,9 +1324,15 @@ describe("halting", () => {
     expect(w.pushed.map((p) => p.token)).toEqual(["a".repeat(64), "a".repeat(64)]);
     expect(w.pushed[0]!.n).toMatchObject({ kind: "alert", collapseID: "halt-Rae", payload: {
       aps: { alert: { title: "Halting Rae", body: "Nothing new is sent until you resume in tafs." }, category: "halt", "interruption-level": "time-sensitive", sound: "default" },
-      open: "halt",
+      open: `halt:${RAE}`,
     } });
-    expect(w.pushed[1]!.n).toMatchObject({ collapseID: "halt-all", payload: { aps: { alert: { title: "All your tafs halted" } } } });
+    expect(w.pushed[1]!.n).toMatchObject({ collapseID: "halt-all", payload: { aps: { alert: { title: "All your tafs halted" } }, open: "halt" } });
+    // A resume replaces the halt's notification, quietly (kiff/tafs#236, item 21).
+    w.account.halts!.rae = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" })).status).toBe(200);
+    expect(w.pushed.at(-1)!.n).toMatchObject({ collapseID: "halt-Rae", payload: {
+      aps: { alert: { title: "Rae resumed" }, "interruption-level": "passive" }, open: `halt:${RAE}`,
+    } });
   });
 
   it("cancels the taf's pending runs when it halts", async () => {

@@ -15,6 +15,15 @@ protocol ApprovalSigning {
     /// Signs `message` without asking again: only for the requests of a step the owner
     /// has just confirmed with Face ID (starting a taf signs each of its setup calls).
     func signConfirmed(_ message: Data) throws -> String
+    /// See the extension: one answer from its notification may count the unlock.
+    func allowUnlockReuseOnce()
+}
+
+extension ApprovalSigning {
+    /// The next Face ID or Touch ID may be the device unlock the owner gave seconds before:
+    /// only for an answer chosen on its notification, where unlocking was for that answer
+    /// (kiff/tafs#236, item 25). Signers that always ask ignore it.
+    func allowUnlockReuseOnce() {}
 }
 
 @MainActor
@@ -41,6 +50,13 @@ final class ApprovalSigner: ApprovalSigning {
 
     private let enclaveKey: SecureEnclave.P256.Signing.PrivateKey?
     private let softwareKey: P256.Signing.PrivateKey?
+    /// Set for one answer chosen on its notification: its unlock, seconds ago, counts.
+    private var reuseUnlock = false
+
+    /// How long a device unlock counts for that one answer.
+    static let unlockReuse: TimeInterval = 10
+
+    func allowUnlockReuseOnce() { reuseUnlock = true }
 
     init() {
         let saved = Keychain.load(Self.keyAccount).flatMap { Data(base64Encoded: $0) }
@@ -100,6 +116,10 @@ final class ApprovalSigner: ApprovalSigning {
 
     private func authenticate(reason: String) async throws {
         let context = LAContext()
+        if reuseUnlock {
+            reuseUnlock = false
+            context.touchIDAuthenticationAllowableReuseDuration = Self.unlockReuse
+        }
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             #if targetEnvironment(simulator)

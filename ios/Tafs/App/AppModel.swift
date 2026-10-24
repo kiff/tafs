@@ -384,6 +384,8 @@ final class AppModel: ObservableObject {
     /// Halt all, asked for by a tapped halt alert or by "Halt all tafs" when it couldn't
     /// finish without the app (kiff/tafs#210): the root view shows it on its own screen.
     @Published var haltRequested = false
+    /// The taf whose halt alert was tapped: its own halt opens, not every taf's (kiff/tafs#236, item 21).
+    @Published var haltRequestedTaf: UUID?
 
     /// A hold opened from its notification, with the answer chosen there (kiff/tafs#210):
     /// Needs you shows it and takes this. Approve is sent only once Face ID confirms it.
@@ -398,7 +400,11 @@ final class AppModel: ObservableObject {
         switch destination {
         case "needs-you": requestedTab = .needsYou
         case "usage": usageRequested = true
-        case "halt": haltRequested = true
+        case "halt": haltRequestedTaf = nil; haltRequested = true
+        case let d where d.hasPrefix("halt:"):
+            let cloudID = String(d.dropFirst("halt:".count))
+            haltRequestedTaf = cloudTafs.first { $0.value.id == cloudID }.flatMap { holderIDs[$0.key] }
+            haltRequested = true
         // A Coach task's run ended (kiff/tafs#210): its line is in Coach's chat.
         case "coach": if mode == .kiff { coachOpen = true }
         default:
@@ -918,6 +924,10 @@ final class AppModel: ObservableObject {
     /// `confirmed`: the owner just confirmed this step with Face ID (installing the version
     /// Coach asked for), so the answer is signed without asking again. `installed`: the
     /// version Coach's held call names is live already.
+    /// The next answer was chosen on its notification: the unlock that opened the app for
+    /// it counts as its Face ID or Touch ID, once (kiff/tafs#236, item 25).
+    func answerFromNotification() { signer.allowUnlockReuseOnce() }
+
     func answer(_ call: HeldCall, with answer: Answer, confirmed: Bool = false, installed: Bool = false) async {
         guard held.contains(where: { same($0, call) }) else { return }
         // Approving Coach's install is installing it (kiff/tafs#206): the switch and its

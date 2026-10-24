@@ -671,7 +671,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
       agentsCall(() => deps.agents.halt(me.tenantID, taf?.id))]);
     const view = haltView(kiff, runtime);
     // A halt interrupts (kiff/tafs#210): every phone that answers hears it, through a Focus.
-    await tellPhones(deps, me.tenantID, haltNotification(taf?.name, view.state === "halted"));
+    await tellPhones(deps, me.tenantID, haltNotification(taf, view.state === "halted"));
     return { halt: view };
   }
   if (method === "DELETE") {
@@ -682,13 +682,19 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     }
     if (kiff.state !== "running") throw new HTTPError(409, "resume it in KIFF first: the phone signs that with Face ID");
     const runtime = await agentsCall(() => deps.agents.resume(me.tenantID, taf?.id));
+    // The halt's notification is replaced, quietly, so none says halted after a resume (kiff/tafs#236, item 21).
+    await tellPhones(deps, me.tenantID, resumeNotification(taf));
     return { halt: haltView({ status: "fulfilled", value: kiff }, runtime) };
   }
   throw new HTTPError(404, "not found");
 }
 
-/** A halt, told to the account's phones: one per taf or for all, a later one replacing it. */
-function haltNotification(name: string | undefined, halted: boolean): Notification {
+/**
+ * A halt, told to the account's phones: one per taf or for all, a later one replacing it.
+ * A taf's opens its own halt, not every taf's (kiff/tafs#236, item 21).
+ */
+function haltNotification(taf: Taf | undefined, halted: boolean): Notification {
+  const name = taf?.name;
   const who = name ?? "All your tafs";
   return {
     kind: "alert",
@@ -699,11 +705,29 @@ function haltNotification(name: string | undefined, halted: boolean): Notificati
         category: "halt",
         ...apsFor(levelOf("halt", false)),
       },
-      open: "halt",
+      open: taf ? `halt:${taf.id}` : "halt",
     },
-    collapseID: `halt-${name ?? "all"}`.slice(0, 64),
+    collapseID: haltCollapseID(name),
   };
 }
+
+/** A resume, in place of its halt's notification: quiet, since nothing needs the owner. */
+function resumeNotification(taf: Taf | undefined): Notification {
+  return {
+    kind: "alert",
+    payload: {
+      aps: {
+        alert: { title: `${taf?.name ?? "All your tafs"} resumed`, body: "It works again as it did before the halt." },
+        "thread-id": "halt",
+        ...apsFor("quiet"),
+      },
+      open: taf ? `halt:${taf.id}` : "halt",
+    },
+    collapseID: haltCollapseID(taf?.name),
+  };
+}
+
+const haltCollapseID = (name: string | undefined) => `halt-${name ?? "all"}`.slice(0, 64);
 
 /**
  * A halt as the app shows it. `halted` only once kiff/agents, KIFF's gateway and planque all hold

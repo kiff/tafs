@@ -205,7 +205,10 @@ struct HeldCallCard: View {
         guard model.canAnswer(call) else { return }
         switch request.answer {
         case AlertAnswers.approve? where call.approvableOnce:
-            if call.install != nil { install() } else { send(.approveOnce) }
+            if call.install != nil { install() } else {
+                model.answerFromNotification()
+                send(.approveOnce)
+            }
         case AlertAnswers.refuse?:
             send(.refuse)
         default:
