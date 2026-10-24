@@ -705,8 +705,10 @@ final class AppModel: ObservableObject {
         await loadSample()
         save()
         if Screenshots.purchases {
-            // The purchase screens at the App Store's prices (the sample's usage has the store).
+            // The purchase screens at the App Store's prices: the sample's usage, which has the
+            // store, is otherwise read only when Usage opens.
             purchases.showSample(Screenshots.products)
+            await refreshUsage()
         }
     }
 
