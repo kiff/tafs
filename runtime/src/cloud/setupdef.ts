@@ -376,5 +376,8 @@ export function setupDefinition(id: string): AgentDefinition {
     drafts: true,
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
     deferred_tools: [...COACH_TOOLS],
+    // The vendor's read tools KIFF adds once the owner approves a connection load only when Setup
+    // searches for them, so the conversation's cache doesn't start over (kiff/agents#197).
+    defer_vendor_tools: true,
   };
 }
