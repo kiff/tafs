@@ -116,8 +116,6 @@ targets:
       - Tafs/KIFF
       - path: Tafs/Model
         excludes: [SetupShape.swift]
-      - path: Tafs/Design
-        excludes: [Keyboard.swift]
       - Tafs/Services/HoldNotification.swift
     dependencies:
       - package: swift-secp256k1
