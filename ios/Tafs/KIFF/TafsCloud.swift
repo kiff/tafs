@@ -123,7 +123,8 @@ final class TafsCloud {
         }
 
         /// A Card's total for its window and what it has used; no use when KIFF couldn't read it.
-        struct Total<Value: Decodable & Equatable>: Decodable, Equatable {
+        /// Sendable said outright: a generic type isn't taken as Sendable on its own.
+        struct Total<Value: Decodable & Equatable & Sendable>: Decodable, Equatable, Sendable {
             let limit: Value
             let used: Value?
             let window: String

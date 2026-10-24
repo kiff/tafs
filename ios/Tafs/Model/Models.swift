@@ -131,7 +131,7 @@ struct CardRule: Identifiable, Hashable, Codable {
 
 /// A Card's total for its window and what it has used: nil when KIFF couldn't read it,
 /// never shown as zero.
-struct CardTotal<Value: Hashable & Codable>: Hashable, Codable {
+struct CardTotal<Value: Hashable & Codable & Sendable>: Hashable, Codable, Sendable {
     var limit: Value
     var used: Value?
     var window: Window
