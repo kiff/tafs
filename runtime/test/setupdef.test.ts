@@ -80,6 +80,19 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("confirmed but not claimed means the taf didn't start");
   });
 
+  // What Coach answers about holds, usage and halting, in its base: it read none of these
+  // when they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218).
+  it("knows holds, tasks and packs, and halting", () => {
+    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(flat).toContain("Refused: nothing was sent, and nothing waits for anyone. Never say it waits for the owner, or that the owner refused it unless they did");
+    expect(flat).toContain("a call past a total the Card keeps across calls, such as a day's, can't: the owner gives extra room for it from the hold");
+    expect(flat).toContain("a task is an action a taf took that KIFF allowed, sent, and that worked");
+    expect(flat).toContain("With no tasks left, the tafs stop until a pack adds some");
+    expect(flat).toContain("never buy, request or approve a pack");
+    expect(flat).toContain("You can't halt or resume: say so in one sentence");
+    expect(flat).toContain("Pause is different: a taf's schedule stops, and it still takes work in its chat");
+  });
+
   it("tells Setup an answer in the chat isn't proof, and never to take a key", () => {
     expect(SETUP_INSTRUCTIONS).toContain("not proof");
     expect(SETUP_INSTRUCTIONS).toContain("only connected means the tools are in KIFF");
