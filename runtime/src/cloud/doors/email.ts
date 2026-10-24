@@ -106,13 +106,14 @@ export function parseReceived(raw: unknown): ReceivedEmail {
 /**
  * Whether the email is the sender's own: DMARC passed, or DKIM passed (the
  * provider says "pass" only when the signing domain is the From domain, so it
- * is aligned). SPF alone isn't: it checks the envelope sender, not From. No
- * result is no proof.
+ * is aligned) and DMARC didn't fail. SPF alone isn't: it checks the envelope
+ * sender, not From. No result is no proof.
  */
 export function provenSender(auth: ReceivedEmail["auth"]): { proven: boolean; spoofed: boolean } {
   if (!auth) return { proven: false, spoofed: false };
-  const proven = auth.dmarc === "pass" || auth.dkim === "pass";
-  return { proven, spoofed: !proven && auth.dmarc === "fail" };
+  // A failed DMARC is never outweighed: whatever else passed, it wasn't for the From domain.
+  if (auth.dmarc === "fail") return { proven: false, spoofed: true };
+  return { proven: auth.dmarc === "pass" || auth.dkim === "pass", spoofed: false };
 }
 
 /**
@@ -125,7 +126,11 @@ export function emailArrival(e: ReceivedEmail, domain: string): Arrival | undefi
   if (!to) return undefined;
   const from = address(e.from);
   if (!from) return undefined;
-  const { proven, spoofed } = provenSender(e.auth);
+  // A From naming several mailboxes proves none of them: it can only knock.
+  const many = (e.from.match(/@/g) ?? []).length > 1;
+  const checked = provenSender(e.auth);
+  const proven = checked.proven && !many;
+  const spoofed = checked.spoofed;
   const body = ownText(e.text ?? htmlText(e.html ?? ""));
   const refs = e.references.split(/\s+/).filter(Boolean);
   return {

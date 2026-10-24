@@ -12,7 +12,8 @@ owner opens, pairs and closes doors in the taf's **Doors** tab.
   is paired with an email door from the start.
 - A key counts only when the door proves the message is theirs:
   - **email**: the receiving server's sender check passes (DMARC, or DKIM signed by
-    the From domain). A spoofed From is treated as anyone else;
+    the From domain, with DMARC not failing), and From names one mailbox. A spoofed
+    From is treated as anyone else;
   - **WhatsApp**: WhatsApp gives the sender's number;
   - **a connector app**: the app gives who wrote (a workspace member, an account).
     Apps where anyone can type any name, like a web form, can't prove who wrote:
@@ -22,8 +23,8 @@ owner opens, pairs and closes doors in the taf's **Doors** tab.
   everything is in the Record as usual.
 - Anyone else's message is a **knock**: information, never instructions. The owner
   is told who wrote and what they want, and answers **Do it**, **Pair** or
-  **Ignore**. Do it starts a run from the owner's words, with the message quoted as
-  information. Pair makes the sender a key for their next message, never this one.
+  **Ignore**. Do it starts a run from the owner's words, which come first, with the
+  message after them, fenced by a line its sender can't guess, as information. Pair makes the sender a key for their next message, never this one.
 - The door itself only ever writes to the key who wrote, in the same thread. Writing
   to anyone else is the taf's own action, through KIFF, under its Card, like any
   other tool call.
@@ -37,7 +38,13 @@ owner opens, pairs and closes doors in the taf's **Doors** tab.
 - v1 reads text only. A message with attachments is answered with a line saying
   they weren't opened.
 - A message delivered twice starts nothing twice: each message id is remembered 30
-  days.
+  days. A message older than 48 hours is refused, so a delivery captured and sent
+  again later starts nothing.
+- A removed email address is retired for a year, never given to another taf, so mail
+  from its old senders can't reach someone else.
+- A reply the provider doesn't take is tried again, up to three times, when the owner
+  next reads the chat or the doors or a message comes in. So is one whose run's note
+  was lost. Each reply is sent once, however many notes come.
 - Replies in one email thread, or from one WhatsApp number, go on in the same chat.
 
 ## What's kept

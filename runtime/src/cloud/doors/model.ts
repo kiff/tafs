@@ -105,6 +105,8 @@ export interface Reply {
   cut: boolean;
   /** When the message arrived: WhatsApp takes a free-form reply for 24 hours. */
   at: string;
+  /** Tries the provider didn't take. */
+  tries?: number;
 }
 
 /** How a door's reply went, for the chat's stamp. */
@@ -130,6 +132,11 @@ export interface DoorStore {
   remove(key: string): Promise<void>;
   /** Adds one to the count at key while it is below max; false at max. */
   bump(key: string, max: number, expiresAt: Date): Promise<boolean>;
+  /**
+   * Writes `next` only while the item is still `prev` as `get` read it
+   * (undefined: still absent); false, and nothing written, when it changed.
+   */
+  swap(key: string, prev: unknown, next: unknown, expiresAt?: Date): Promise<boolean>;
 }
 
 /** Secrets a door needs, by name: a WhatsApp number's business token. */
@@ -151,8 +158,14 @@ export const DOOR = {
   seenDays: 30,
   /** A thread goes on in its chat this long after its last message. */
   threadDays: 30,
-  /** A reply waits this long for its run to end. */
-  replyDays: 7,
+  /** A reply waits this long for its run to end (a run can wait on the owner for days). */
+  replyDays: 30,
+  /** A reply the provider didn't take is tried this many times. */
+  replyTries: 3,
+  /** A message older than this is refused: a delivery captured and sent again later starts nothing. */
+  staleHours: 48,
+  /** A removed email address isn't given to another taf for this long, so its old senders never reach someone else. */
+  retiredDays: 365,
   /** Knocks kept per taf, newest first, and how long. */
   knocksKept: 50,
   knockDays: 30,
@@ -168,6 +181,8 @@ export const doorKeys = {
   rested: (tenant: string, taf: string, door: string, day: string) => `${tenant}#door-rested#${taf}#${door}#${day}`,
   thread: (tenant: string, taf: string, door: string, hash: string) => `${tenant}#door-thread#${taf}#${door}#${hash}`,
   reply: (tenant: string, ref: string) => `${tenant}#door-reply#${ref}`,
+  sending: (tenant: string, ref: string) => `${tenant}#door-sending#${ref}`,
+  pending: (tenant: string, taf: string) => `${tenant}#door-pending#${taf}`,
   sent: (tenant: string, taf: string) => `${tenant}#door-sent#${taf}`,
   knocks: (tenant: string, taf: string) => `${tenant}#door-knocks#${taf}`,
   bound: (tenant: string) => `${tenant}#door-ai`,

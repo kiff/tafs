@@ -119,6 +119,7 @@ struct TafChatView: View {
                     // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
                     if model.mode == .kiff, let cloudID = model.cloudTaf(for: tafID)?.id {
                         ChatKnocks(taf: taf, cloud: model.cloud, cloudID: cloudID, refresh: items.count)
+                            .id(cloudID)
                     }
                     if let queued = state.queued {
                         QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }

@@ -138,7 +138,7 @@ p{color:#4F4A5E;max-width:30em;margin:16px auto}</style></head><body>
 <button id="go">Continue</button><p id="note"></p>
 <script>
 const C=${cfg};let ids={};
-window.addEventListener("message",e=>{if(!/facebook\\.com$/.test(new URL(e.origin).hostname))return;try{const d=JSON.parse(e.data);if(d.type==="WA_EMBEDDED_SIGNUP"&&d.event==="FINISH")ids=d.data||{}}catch{}});
+window.addEventListener("message",e=>{if(!/(^|\\.)facebook\\.com$/.test(new URL(e.origin).hostname))return;try{const d=JSON.parse(e.data);if(d.type==="WA_EMBEDDED_SIGNUP"&&d.event==="FINISH")ids=d.data||{}}catch{}});
 window.fbAsyncInit=()=>FB.init({appId:C.appID,autoLogAppEvents:true,xfbml:false,version:"v21.0"});
 document.getElementById("go").onclick=()=>FB.login(r=>{const code=r&&r.authResponse&&r.authResponse.code;
 if(!code){document.getElementById("note").textContent="Not connected. You can try again.";return}

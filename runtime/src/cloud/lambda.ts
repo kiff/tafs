@@ -500,6 +500,22 @@ const doorStore: DoorStore = {
   async remove(key) {
     await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: key } } }));
   },
+  async swap(key, prev, next, expiresAt) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: TABLE,
+        Item: { id: { S: key }, doc: { S: JSON.stringify(next) }, ...(expiresAt ? { ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } } : {}) },
+        // What get read: the same JSON, written by JSON.stringify, read back by JSON.parse.
+        ...(prev === undefined
+          ? { ConditionExpression: "attribute_not_exists(id) OR #ttl < :now", ExpressionAttributeNames: { "#ttl": "ttl" }, ExpressionAttributeValues: { ":now": { N: String(Math.floor(Date.now() / 1000)) } } }
+          : { ConditionExpression: "#doc = :prev", ExpressionAttributeNames: { "#doc": "doc" }, ExpressionAttributeValues: { ":prev": { S: JSON.stringify(prev) } } }),
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
   async bump(key, max, expiresAt) {
     try {
       await dynamo.send(new UpdateItemCommand({

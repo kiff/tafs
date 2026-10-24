@@ -12,7 +12,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
-import { addDoor, answerKnock, connectLink, DoorError, doorLights, doorRunEnded, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addDoor, answerKnock, connectLink, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 
 /**
@@ -422,6 +422,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { session, report: report(run) };
   }
   if (parts.length === 4 && method === "GET" && action === "conversation") {
+    // A door's reply a lost note left owed goes out now, and shows as sent.
+    if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const { messages, components, sessions } = await conversation(me, taf, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(await coachLines(me, taf, deps)), ...(await openKnocks(me, taf, deps)) };

@@ -17,6 +17,8 @@ export interface CatalogClient {
   watch(trigger: string, account: string): Promise<string>;
   /** It stops. Already gone counts as done. */
   unwatch(triggerID: string): Promise<void>;
+  /** The app's sign-in goes from the catalog. Already gone counts as done. */
+  disconnect(account: string): Promise<void>;
 }
 
 export class CatalogError extends Error {
@@ -49,6 +51,9 @@ export function catalogClient(apiKey: string, base: string, doFetch: Fetch = fet
     },
     async unwatch(triggerID) {
       await call("DELETE", `/trigger_instances/manage/${encodeURIComponent(triggerID)}`);
+    },
+    async disconnect(account) {
+      await call("DELETE", `/connected_accounts/${encodeURIComponent(account)}`);
     },
   };
 }
