@@ -123,6 +123,7 @@ enum KIFFMapping {
                     total: c.total.flatMap { t in amount(t.limit).map { CardTotal(limit: $0, used: amount(t.used), window: Window(rawValue: t.window) ?? .day) } },
                     calls: c.calls.map { CardTotal(limit: $0.limit, used: $0.used, window: Window(rawValue: $0.window) ?? .day) })
         }
+        taf.doors = h.doors
         taf.used = h.card.used.compactMapValues { amount($0) }
         taf.usageUnknown = Set(h.card.usageUnknown)
         return taf

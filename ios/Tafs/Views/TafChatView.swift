@@ -116,6 +116,11 @@ struct TafChatView: View {
                         }
                     }
                     if !thinking { ended(taf) }
+                    // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
+                    if model.mode == .kiff, !model.doorsOffered.isEmpty, let cloudID = model.cloudTaf(for: tafID)?.id {
+                        ChatKnocks(taf: taf, cloud: model.cloud, cloudID: cloudID, refresh: items.count)
+                            .id(cloudID)
+                    }
                     if let queued = state.queued {
                         QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
                             .id("queued")
@@ -380,6 +385,20 @@ struct ChatBubble: View {
     var fullWidth = false
 
     var body: some View {
+        if let door = message.door, message.kind != .kickoff {
+            // A door's message, or its answer: marked with where it came from and how it went back.
+            VStack(alignment: message.from == .owner ? .trailing : .leading, spacing: 4) {
+                if message.from == .owner { DoorStamp(mark: door, fromOwner: true) }
+                bubble
+                if message.from == .taf { DoorStamp(mark: door, fromOwner: false) }
+            }
+        } else {
+            bubble
+        }
+    }
+
+    @ViewBuilder
+    private var bubble: some View {
         if message.kind == .kickoff {
             Text("Run started \(message.at.shortTime) · \(message.text)")
                 .font(.system(size: 12)).foregroundColor(Theme.dim).lineLimit(2)

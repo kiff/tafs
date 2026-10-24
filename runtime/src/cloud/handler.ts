@@ -12,6 +12,8 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
+import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { inbound, isDoorPath } from "./doors/inbound.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -21,7 +23,7 @@ import { Steps } from "./steps.js";
  * and only on that account's tafs.
  *
  *   GET  /v1/jobs
- *   GET  /v1/home                       the app's list: each taf's state, colour and Card summary, and the account's other agents with Cards
+ *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary and doors, and the account's other agents with Cards
  *   GET  /v1/tafs
  *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}
  *   POST /v1/tafs/{id}/pause | resume | run
@@ -53,12 +55,22 @@ import { Steps } from "./steps.js";
  *   GET  /v1/alerts                     whether tafs cloud holds KIFF's alert secret for the account
  *   POST /v1/kiff/alerts                KIFF's signed held-call alerts (no sign-in: the signature is the check)
  *   POST /v1/mcp                        Coach's tools, through KIFF's gateway only (no sign-in: each call's KIFF permit is the check; kiff/tafs#206)
- *   POST /v1/runs/ended                 kiff/agents' note that a task Coach handed a taf paused or ended (no sign-in: an unknown ref is dropped, and the run is read back)
+ *   POST /v1/runs/ended                 kiff/agents' note that a task Coach handed a taf, or a door's run, paused or ended (no sign-in: an unknown ref is dropped, and the run is read back)
+ *   GET  /v1/tafs/{id}/doors            the taf's doors, the apps a door can open on here, and its open knocks
+ *   POST /v1/tafs/{id}/doors            {app, code?, phone_number_id?, waba_id?}: turn a door on (a taf has none until then)
+ *   PATCH /v1/tafs/{id}/doors/{door}    {open}
+ *   DELETE /v1/tafs/{id}/doors/{door}
+ *   POST /v1/tafs/{id}/doors/{door}/keys  {id, name?}: pair a sender
+ *   DELETE /v1/tafs/{id}/doors/{door}/keys/{key}
+ *   POST /v1/tafs/{id}/doors/knocks/{knock}  {action: do | pair | ignore, say?}
+ *   POST /v1/doors/email | /v1/doors/whatsapp  the doors' webhooks (no sign-in: each provider's signature is the check)
+ *   GET  /doors/whatsapp/connect        the page WhatsApp's signup runs in
  */
 
 /** The Lambda function URL event, as much of it as we read. */
 export interface HTTPEvent {
   rawPath: string;
+  rawQueryString?: string;
   headers?: Record<string, string | undefined>;
   body?: string | null;
   isBase64Encoded?: boolean;
@@ -121,6 +133,8 @@ export interface Deps {
   coach?: CoachStore;
   /** KIFF's permit keys, by kid; missing, the ones KIFF publishes. */
   permitKeys?: PermitKeys;
+  /** A taf's doors: where work reaches it from outside the app. Missing: no doors here. */
+  doors?: DoorsDeps;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
@@ -303,9 +317,11 @@ class HTTPError extends Error {
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   try {
     if (event.rawPath === "/v1/mcp") return await mcpRoute(event, deps);
+    if (isDoorPath(event.rawPath)) return await doorWebhook(event, deps);
     return json(200, await route(event, deps));
   } catch (err) {
     if (err instanceof HTTPError) return json(err.status, { error: err.message, ...err.extra });
+    if (err instanceof DoorError) return json(err.status, { error: err.message });
     if (err instanceof KIFFError || err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
     return json(500, { error: "something went wrong on tafs cloud" });
@@ -380,6 +396,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   const taf = await owned(me, parts[2] ?? "", deps);
   const action = parts[3];
+  if (action === "doors") return doorRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && action === "halt") return haltRoute(event, method, me, taf, deps);
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume" || action === "run") && taf.unscheduled) {
     throw new HTTPError(409, `${taf.name} works from its chat: it has no schedule to ${action === "run" ? "run" : action}. Tell it what to do there`);
@@ -404,9 +421,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { session, report: report(run) };
   }
   if (parts.length === 4 && method === "GET" && action === "conversation") {
+    // A door's reply a lost note left owed goes out now, and shows as sent.
+    if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const { messages, components, sessions } = await conversation(me, taf, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(await coachLines(me, taf, deps)) };
+    return { messages, components, working: latest.working, steering: latest.steering, ...(await coachLines(me, taf, deps)), ...(await openKnocks(me, taf, deps)) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const only = await ownChat(me, taf, parts[4] ?? "", deps);
@@ -1011,6 +1030,8 @@ async function remove(taf: Taf, me: KIFFIdentity, deps: Deps) {
   if (!taf.removing) await deps.tafs.put(me.tenantID, { ...taf, removing: true });
   await step(["schedule", "history", "memory"], () => deps.agents.deleteAgent(me.tenantID, taf.id));
   if (failed.length === 0) await step(["key"], () => deps.keys.remove(me.tenantID, taf.id));
+  // Its doors' addresses and numbers stop being its, and their sign-ins go.
+  if (failed.length === 0 && deps.doors) await step(["doors"], () => removeTafDoors(doorContext(deps), me.tenantID, taf.id));
   // Only this taf's own claim: if a newer start holds the name, it keeps it.
   if (failed.length === 0) await step(["name"], () => deps.names.release(me.tenantID, taf.name, taf.nameClaim));
   if (failed.length === 0) {
@@ -1086,6 +1107,12 @@ export interface ThreadMessage {
   kind: "kickoff" | "message";
   text: string;
   session: string;
+  /**
+   * A door's message and its answer: which door, who wrote (and the email's
+   * subject); on the answer, whether it went back ("sent"), couldn't
+   * ("not_sent", with why), or hasn't yet ("pending").
+   */
+  door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending"; why?: string };
 }
 
 /**
@@ -1125,6 +1152,9 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
   const components: ThreadComponent[] = [];
+  /** Runs a door's message started, by run: their answers go back through it. */
+  const doorRuns = new Map<string, string>();
+  const sent = new Map((deps.doors ? await sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : []).map((x) => [x.run, x]));
   for (const r of read) {
     if (!r) continue;
     const seenRun = new Set<string>();
@@ -1140,9 +1170,20 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         // Each job run opens with the job's instruction: not something the owner typed.
         const kind = r.session.kind === "run" && !seenRun.has(e.run) ? "kickoff" : "message";
         seenRun.add(e.run);
-        messages.push({ at: iso(e.time), from: "owner", kind, text: ownerWords(text), session: r.session.id });
+        // A message that came through a door is shown as written, marked with its door and sender.
+        const door = parseDoorMessage(text);
+        if (door) doorRuns.set(e.run, door.app);
+        messages.push({
+          at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : ownerWords(text), session: r.session.id,
+          ...(door ? { door: { app: door.app, from: door.from, ...(door.subject ? { subject: door.subject } : {}) } } : {}),
+        });
       } else {
-        messages.push({ at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id });
+        const app = doorRuns.get(e.run);
+        const reply = app ? sent.get(e.run) : undefined;
+        messages.push({
+          at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id,
+          ...(app ? { door: { app, reply: reply?.status ?? "pending", ...(reply?.why ? { why: reply.why } : {}) } } : {}),
+        });
       }
     }
   }
@@ -1211,6 +1252,7 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
 async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<unknown> {
   await claimChatSlot(me, taf, deps);
   const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
+  if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   if (live) {
     try {
       const run = await deps.agents.startRun(me.tenantID, taf.id, text, live, ai);
@@ -2060,13 +2102,15 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
   const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
+  // Each taf's doors, for its avatar's rim: a read that fails shows none.
+  const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const card = summary(cards.get(t.kiffAgent) ?? []);
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
     const words = JOBS.find((j) => j.id === v.job)?.summary;
-    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
+    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.
@@ -2079,7 +2123,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     taken.push(color);
     return { id: null, name: agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card };
   });
-  return { tafs: listed, others, removing };
+  // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
+  const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
+  return { tafs: listed, others, removing, ...(doors.length ? { doors_offered: doors } : {}) };
 }
 
 /** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */
@@ -2373,6 +2419,7 @@ async function mcpRoute(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
  */
 async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const note = parseNote(rawBody(event));
+  if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
   const key = coachKeys.task(tenant, note.ref);
@@ -2459,4 +2506,60 @@ async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coa
   const lines = (kept ?? []).filter((l): l is { at: string; taf: string; said: string } =>
     typeof l.at === "string" && typeof l.taf === "string" && typeof l.said === "string").map(({ at, taf, said }) => ({ at, taf, said }));
   return lines.length ? { coach_lines: lines } : {};
+}
+
+/* A taf's doors (doors/): where work reaches it from outside the app. */
+
+function doorContext(deps: Deps): DoorsContext {
+  if (!deps.doors) throw new HTTPError(404, "not found");
+  return { doors: deps.doors, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now: deps.now?.() ?? new Date() };
+}
+
+/** A door's webhook or page: no sign-in, its provider's signature is the check (doors/inbound.ts). */
+async function doorWebhook(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
+  if (!deps.doors) return json(404, { error: "not found" });
+  const r = await inbound({
+    method: event.requestContext.http.method.toUpperCase(),
+    path: event.rawPath,
+    query: new URLSearchParams(event.rawQueryString ?? ""),
+    header: (name) => header(event, name),
+    body: rawBody(event),
+  }, doorContext(deps));
+  const type = r.type === "html" ? "text/html; charset=utf-8" : r.type === "text" ? "text/plain; charset=utf-8" : "application/json";
+  return { statusCode: r.status, headers: { "content-type": type, "cache-control": "no-store" }, body: r.body };
+}
+
+/** The owner's door routes, under /v1/tafs/{id}/doors. Reading needs a session; changing, cards.manage. */
+async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  const ctx = doorContext(deps);
+  const owner: Owner = {
+    tenant: me.tenantID,
+    ...(me.email ? { email: me.email } : {}),
+    say: (text) => startMessage(event, me, taf, text, deps),
+  };
+  const [, , , , a, b, c] = parts;
+  if (parts.length === 4 && method === "GET") {
+    // The bound the owner's session can read now, kept for the door's runs.
+    await keepBound(ctx.doors, me.tenantID, await aiBound(event, deps).catch(() => undefined), ctx.now);
+    return listDoors(ctx, owner, taf);
+  }
+  need(me, "cards.manage");
+  const body = parseBody(event);
+  if (parts.length === 4 && method === "POST") return addDoor(ctx, owner, taf, body);
+  if (parts.length === 6 && method === "POST" && a === "knocks") return answerKnock(ctx, owner, taf, b ?? "", body);
+  if (parts.length === 5 && method === "PATCH" && a) {
+    if (typeof body.open !== "boolean") throw new HTTPError(400, "open is true or false");
+    return setOpen(ctx, owner, taf, a, body.open);
+  }
+  if (parts.length === 5 && method === "DELETE" && a) return removeDoor(ctx, owner, taf, a);
+  if (parts.length === 6 && method === "POST" && a && b === "keys") return pair(ctx, owner, taf, a, body);
+  if (parts.length === 7 && method === "DELETE" && a && b === "keys" && c) return unpair(ctx, owner, taf, a, decodeURIComponent(c));
+  throw new HTTPError(404, "not found");
+}
+
+/** The taf's open knocks, for its thread: someone without a key wrote, and waits for the owner. */
+async function openKnocks(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ knocks?: unknown[] }> {
+  if (!deps.doors) return {};
+  const knocks = (await knocksOf(deps.doors.store, me.tenantID, taf.id).catch(() => [])).filter((k) => k.state === "open");
+  return knocks.length ? { knocks } : {};
 }

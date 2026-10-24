@@ -302,6 +302,7 @@ final class AppModel: ObservableObject {
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
+        doorsOffered = []
         grants = []
         grantsReadFor = []
         refusedRequests = []
@@ -340,6 +341,7 @@ final class AppModel: ObservableObject {
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         unfinishedRemovals = []
+        doorsOffered = []
         grants = []
         grantsReadFor = []
         refusedRequests = []
@@ -648,6 +650,7 @@ final class AppModel: ObservableObject {
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running
         unfinishedRemovals = home.removing
+        doorsOffered = home.doorsOffered ?? []
         tafs = home.tafs.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
         otherAgents = home.others.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
         let coach = coachWithTools
@@ -795,6 +798,9 @@ final class AppModel: ObservableObject {
     /// Removals tafs cloud began and didn't finish (a step failed, or the answer was lost).
     /// Archived tafs aren't listed, so the app finishes these itself on each refresh.
     @Published private(set) var unfinishedRemovals: [TafsCloud.PendingRemoval] = []
+
+    /// The doors tafs cloud offers this account (docs/doors.md): none, and no taf shows Doors.
+    @Published private(set) var doorsOffered: [String] = []
 
     /// The tafs cloud taf behind a taf, when there is one.
     func cloudTaf(for tafID: UUID) -> TafsCloud.CloudTaf? {

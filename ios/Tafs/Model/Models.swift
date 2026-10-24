@@ -252,6 +252,8 @@ struct Taf: Identifiable, Hashable, Codable {
     /// Each of its KIFF Cards on its own, the live ones first (kiff/tafs#211); nil from an
     /// older tafs cloud, and in the sample.
     var kiffCards: [TafCard]?
+    /// Its doors, as its avatar's rim shows them; nil when it has none, or before doors.
+    var doors: [DoorLight]? = nil
 
     var initial: String { String(name.prefix(1)).uppercased() }
 
@@ -260,6 +262,29 @@ struct Taf: Identifiable, Hashable, Codable {
         if let kiffCards, !kiffCards.isEmpty { return kiffCards }
         return [TafCard.merged(id: "merged", title: name, rules: card.rules, expires: card.expires, active: !card.revoked,
                                used: used, unknown: usageUnknown ?? [], counted: counted)]
+    }
+}
+
+/// One of a taf's doors, as its avatar's rim shows it: lit while open, amber while a
+/// knock waits, grey while it rests for the day.
+struct DoorLight: Hashable, Codable {
+    var app: String
+    var open: Bool
+    var resting: Bool = false
+    var knocks: Int = 0
+
+    init(app: String, open: Bool, resting: Bool = false, knocks: Int = 0) {
+        self.app = app; self.open = open; self.resting = resting; self.knocks = knocks
+    }
+
+    enum CodingKeys: String, CodingKey { case app, open, resting, knocks }
+    /// What's missing reads as nothing to show, so a rim never stops the list loading.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        app = (try? c.decode(String.self, forKey: .app)) ?? ""
+        open = (try? c.decode(Bool.self, forKey: .open)) ?? false
+        resting = (try? c.decode(Bool.self, forKey: .resting)) ?? false
+        knocks = (try? c.decode(Int.self, forKey: .knocks)) ?? 0
     }
 }
 

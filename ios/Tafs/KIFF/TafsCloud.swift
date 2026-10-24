@@ -180,9 +180,11 @@ final class TafsCloud {
         /// Its calls held for the owner.
         let waiting: Int
         let card: CardSummary
+        /// Its doors, for its avatar's rim; absent when it has none.
+        var doors: [DoorLight]? = nil
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card, unscheduled
+            case id, name, job, status, color, state, waiting, card, unscheduled, doors
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
         }
 
@@ -201,6 +203,10 @@ final class TafsCloud {
         let tafs: [HomeTaf]
         let others: [HomeTaf]
         let removing: [PendingRemoval]
+        /// The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors.
+        var doorsOffered: [String]? = nil
+
+        enum CodingKeys: String, CodingKey { case tafs, others, removing, doorsOffered = "doors_offered" }
     }
 
     func home() async throws -> Home {
@@ -350,12 +356,14 @@ final class TafsCloud {
         let kind: Kind
         let text: String
         let session: String
+        /// It came through one of the taf's doors, or answers one that did.
+        var door: DoorMark? = nil
 
-        init(at: Date, from: From, kind: Kind = .message, text: String, session: String) {
-            self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session
+        init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil) {
+            self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session; self.door = door
         }
 
-        enum CodingKeys: String, CodingKey { case at, from, kind, text, session }
+        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             at = try c.decode(Date.self, forKey: .at)
@@ -363,7 +371,20 @@ final class TafsCloud {
             kind = (try? c.decode(Kind.self, forKey: .kind)) ?? .message
             text = try c.decode(String.self, forKey: .text)
             session = try c.decode(String.self, forKey: .session)
+            // A mark the app can't read leaves the message as a plain one.
+            door = try? c.decodeIfPresent(DoorMark.self, forKey: .door)
         }
+    }
+
+    /// A door's message or its answer (docs/doors.md): which door, who wrote and the
+    /// email's subject; on the answer, whether it went back.
+    struct DoorMark: Decodable, Equatable {
+        let app: String
+        var from: String? = nil
+        var subject: String? = nil
+        /// "sent", "not_sent" or "pending"; nil on the message itself.
+        var reply: String? = nil
+        var why: String? = nil
     }
 
     /// The taf's thread, oldest first.
@@ -909,15 +930,15 @@ final class TafsCloud {
 
     // MARK: Transport
 
-    private func escaped(_ s: String) -> String {
+    func escaped(_ s: String) -> String {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
 
-    private func send<T: Decodable>(_ method: String, _ path: String) async throws -> T {
+    func send<T: Decodable>(_ method: String, _ path: String) async throws -> T {
         try await send(method, path, body: Optional<[String: String]>.none)
     }
 
-    private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?) async throws -> T {
+    func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?) async throws -> T {
         guard let url = URL(string: path, relativeTo: baseURL) else { throw CloudError(status: 0, message: "Bad path") }
         var request = URLRequest(url: url)
         request.httpMethod = method

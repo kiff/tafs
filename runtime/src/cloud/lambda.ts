@@ -8,6 +8,10 @@ import { forwardAlert, type ReadyRun } from "./forward.js";
 import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import type { Device, PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
+import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
+import { emailProvider } from "./doors/email.js";
+import type { DoorSecrets, DoorStore } from "./doors/model.js";
+import { whatsappClient } from "./doors/whatsapp.js";
 
 /**
  * kiff/agents, where every taf runs: its API (AWS_IAM function URL, signed
@@ -457,8 +461,137 @@ const coach: CoachStore = {
   },
 };
 
+/**
+ * What doors keep (doors/model.ts), in the same table: each item a JSON doc
+ * with an optional ttl, and a day's count as a number (`n`) that only grows
+ * to its limit.
+ */
+const doorStore: DoorStore = {
+  async get(key) {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: key } }, ConsistentRead: true }));
+    const ttl = out.Item?.ttl?.N;
+    if (!out.Item || (ttl && Number(ttl) * 1000 <= Date.now())) return undefined;
+    if (out.Item.n?.N !== undefined) return Number(out.Item.n.N);
+    return out.Item.doc?.S !== undefined ? JSON.parse(out.Item.doc.S) : undefined;
+  },
+  async put(key, value, expiresAt) {
+    await dynamo.send(new PutItemCommand({
+      TableName: TABLE,
+      Item: { id: { S: key }, doc: { S: JSON.stringify(value) }, ...(expiresAt ? { ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } } : {}) },
+    }));
+  },
+  async create(key, value, expiresAt) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: TABLE,
+        Item: { id: { S: key }, doc: { S: JSON.stringify(value) }, ...(expiresAt ? { ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } } : {}) },
+        ConditionExpression: "attribute_not_exists(id) OR #ttl < :now",
+        ExpressionAttributeNames: { "#ttl": "ttl" },
+        ExpressionAttributeValues: { ":now": { N: String(Math.floor(Date.now() / 1000)) } },
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+  async remove(key) {
+    await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: key } } }));
+  },
+  async swap(key, prev, next, expiresAt) {
+    try {
+      await dynamo.send(new PutItemCommand({
+        TableName: TABLE,
+        Item: { id: { S: key }, doc: { S: JSON.stringify(next) }, ...(expiresAt ? { ttl: { N: String(Math.floor(expiresAt.getTime() / 1000)) } } : {}) },
+        // What get read: the same JSON, written by JSON.stringify, read back by JSON.parse.
+        ...(prev === undefined
+          ? { ConditionExpression: "attribute_not_exists(id) OR #ttl < :now", ExpressionAttributeNames: { "#ttl": "ttl" }, ExpressionAttributeValues: { ":now": { N: String(Math.floor(Date.now() / 1000)) } } }
+          : { ConditionExpression: "#doc = :prev", ExpressionAttributeNames: { "#doc": "doc" }, ExpressionAttributeValues: { ":prev": { S: JSON.stringify(prev) } } }),
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+  async bump(key, max, expiresAt) {
+    try {
+      await dynamo.send(new UpdateItemCommand({
+        TableName: TABLE, Key: { id: { S: key } },
+        UpdateExpression: "ADD n :one SET #ttl = :ttl",
+        ConditionExpression: "attribute_not_exists(n) OR n < :max",
+        ExpressionAttributeNames: { "#ttl": "ttl" },
+        ExpressionAttributeValues: { ":one": { N: "1" }, ":max": { N: String(max) }, ":ttl": { N: String(Math.floor(expiresAt.getTime() / 1000)) } },
+      }));
+      return true;
+    } catch (err) {
+      if (err instanceof ConditionalCheckFailedException) return false;
+      throw err;
+    }
+  },
+};
+
+/** A door's secrets (a WhatsApp number's business token), beside the tafs' keys. */
+const doorSecrets: DoorSecrets = {
+  async get(name) {
+    try {
+      return (await secrets.send(new GetSecretValueCommand({ SecretId: name }))).SecretString;
+    } catch (err) {
+      if (err instanceof ResourceNotFoundException) return undefined;
+      throw err;
+    }
+  },
+  put: (name, value) => putSecret(name, value, "A taf door's token"),
+  async remove(name) {
+    try {
+      await secrets.send(new DeleteSecretCommand({ SecretId: name, ForceDeleteWithoutRecovery: true }));
+    } catch (err) {
+      if (!(err instanceof ResourceNotFoundException)) throw err;
+    }
+  },
+};
+
+/**
+ * Doors' setup, read once per container: the deployment's URL and email
+ * domain from the environment, and the providers' keys from one secret
+ * (DOORS_SECRET_ID, JSON). A provider whose keys aren't there isn't offered.
+ */
+let doorsConfig: Promise<DoorsConfig> | undefined;
+function readDoorsConfig(): Promise<DoorsConfig> {
+  doorsConfig ??= (async () => {
+    const id = process.env.DOORS_SECRET_ID;
+    const raw = id ? (await secrets.send(new GetSecretValueCommand({ SecretId: id }))).SecretString ?? "{}" : "{}";
+    const k = JSON.parse(raw) as Record<string, unknown>;
+    const str = (name: string) => (typeof k[name] === "string" ? (k[name] as string) : "");
+    const cfg: DoorsConfig = {
+      publicURL: (process.env.DOORS_PUBLIC_URL ?? "").replace(/\/+$/, ""),
+      secretsPrefix: process.env.DOORS_SECRETS_PREFIX ?? "tafs-doors/",
+    };
+    if (process.env.DOORS_EMAIL_DOMAIN && str("email_api_key") && str("email_webhook_secret")) {
+      cfg.emailDomain = process.env.DOORS_EMAIL_DOMAIN;
+      cfg.email = emailProvider(str("email_api_key"));
+      cfg.emailWebhookSecret = str("email_webhook_secret");
+    }
+    if (str("whatsapp_app_id") && str("whatsapp_app_secret") && str("whatsapp_config_id") && str("whatsapp_verify_token")) {
+      cfg.whatsapp = {
+        client: whatsappClient({ id: str("whatsapp_app_id"), secret: str("whatsapp_app_secret") }),
+        appID: str("whatsapp_app_id"), appSecret: str("whatsapp_app_secret"), configID: str("whatsapp_config_id"),
+        verifyToken: str("whatsapp_verify_token"), ...(process.env.DOORS_WHATSAPP_REGION ? { region: process.env.DOORS_WHATSAPP_REGION } : {}),
+      };
+    }
+    return cfg;
+  })().catch((err) => {
+    doorsConfig = undefined;
+    throw err;
+  });
+  return doorsConfig;
+}
+
+/** Doors run only where the deployment says where it is: its runs must be able to announce they ended. */
+const doors: DoorsDeps | undefined = process.env.DOORS_PUBLIC_URL ? { store: doorStore, secrets: doorSecrets, config: readDoorsConfig } : undefined;
+
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach, ...(doors ? { doors } : {}) };
 }
 
 /**

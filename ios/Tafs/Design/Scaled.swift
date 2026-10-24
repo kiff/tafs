@@ -35,9 +35,12 @@ enum Haptics {
     #if canImport(UIKit)
     static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
     static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+    /// A click as a dial reaches each stop.
+    static func step() { UISelectionFeedbackGenerator().selectionChanged() }
     #else
     // A Mac has no taps to give.
     static func tap() {}
     static func success() {}
+    static func step() {}
     #endif
 }
