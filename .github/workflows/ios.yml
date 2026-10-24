@@ -281,7 +281,8 @@ jobs:
         run: |
           ruby ios/scripts/asc-profiles.rb \
             bot.tafs.app+push+timesensitive="tafs App Store CI" \
-            bot.tafs.app.widgets="tafs widgets App Store CI"
+            bot.tafs.app.widgets="tafs widgets App Store CI" \
+            bot.tafs.app.notify="tafs notify App Store CI"
 
       - name: Archive
         run: |
@@ -295,6 +296,7 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             TAFS_PROFILE_APP="tafs App Store CI" \
             TAFS_PROFILE_WIDGETS="tafs widgets App Store CI" \
+            TAFS_PROFILE_NOTIFY="tafs notify App Store CI" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/signing.keychain-db" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}"
 
@@ -314,6 +316,7 @@ jobs:
             <dict>
               <key>bot.tafs.app</key><string>tafs App Store CI</string>
               <key>bot.tafs.app.widgets</key><string>tafs widgets App Store CI</string>
+              <key>bot.tafs.app.notify</key><string>tafs notify App Store CI</string>
             </dict>
             <key>uploadSymbols</key><true/>
           </dict>

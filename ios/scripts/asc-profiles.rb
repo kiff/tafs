@@ -72,6 +72,13 @@ ARGV.each do |arg|
   abort "unknown capability in #{spec}" unless unknown.empty?
   wanted = CAPABILITIES.slice(*capabilities)
   bundle = api("get", "/v1/bundleIds?filter[identifier]=#{identifier}&limit=5")["data"].find { |b| b.dig("attributes", "identifier") == identifier }
+  # A new extension's bundle ID (the notification extension, kiff/tafs#210) is registered
+  # here, under the app's: only ever one below bot.tafs.app.
+  if bundle.nil? && identifier.start_with?("bot.tafs.app.")
+    bundle = api("post", "/v1/bundleIds", { data: { type: "bundleIds",
+      attributes: { identifier: identifier, name: "tafs #{identifier.split(".").last}", platform: "IOS" } } })["data"]
+    puts "registered bundle ID #{identifier}"
+  end
   abort "bundle ID #{identifier} is not registered" unless bundle
 
   unless wanted.empty?

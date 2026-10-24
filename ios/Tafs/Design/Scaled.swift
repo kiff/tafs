@@ -1,8 +1,6 @@
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
-#else
-import AppKit
 #endif
 
 /// A system font at `size` points at the default text size, growing and shrinking with
@@ -65,10 +63,11 @@ extension View {
 @MainActor
 enum Motion {
     static var reduced: Bool {
+        // iPhone and iPad (v1); the Mac target only compiles.
         #if canImport(UIKit)
         UIAccessibility.isReduceMotionEnabled
         #else
-        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        false
         #endif
     }
 }
