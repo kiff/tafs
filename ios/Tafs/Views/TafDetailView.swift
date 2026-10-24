@@ -955,6 +955,10 @@ struct CardStack: View {
                     HStack(spacing: 8) {
                         Text(card.title).scaledFont(11, weight: .semibold, design: .monospaced).oneLineUnlessLarge()
                         Spacer(minLength: 4)
+                        // What's left on it shows on its edge too, so no Card hides another's (kiff/tafs#236, item 9).
+                        if let left = card.leftLine {
+                            Text(left).scaledFont(12, weight: .bold).monospacedDigit().oneLineUnlessLarge()
+                        }
                         EnvironmentPill(text: card.environmentLabel)
                     }
                     .foregroundColor(.white)
@@ -965,7 +969,7 @@ struct CardStack: View {
                     .shadow(color: .black.opacity(0.12), radius: 3, y: -1)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(card.title), \(card.environmentLabel). Show this Card")
+                .accessibilityLabel("\(card.title), \(card.environmentLabel)\(card.leftLine.map { ", \($0)" } ?? ""). Show this Card")
             }
             if let shown {
                 TafCardFace(card: shown, issuedBy: issuedBy, color: color, revoked: revoked)

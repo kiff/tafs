@@ -176,6 +176,15 @@ struct TafCard: Identifiable, Hashable, Codable {
         return nil
     }
 
+    /// What's left, short enough for a Card's edge in the stack (kiff/tafs#236, item 9):
+    /// "US$170 left", "998 calls left".
+    var leftLine: String? {
+        guard let hero else { return nil }
+        if total != nil { return hero.words.hasPrefix("left") ? "\(hero.figure) left" : hero.figure }
+        if let c = calls, c.used != nil { return "\(hero.figure) \(hero.figure == "1" ? "call" : "calls") left" }
+        return nil
+    }
+
     /// The face's small lines under the figure: the main tool's limit for one call and what
     /// happens above it, then how many more tools the Card covers. A Card with no figure
     /// shows its first lines instead.
@@ -259,7 +268,15 @@ struct Taf: Identifiable, Hashable, Codable {
 
     /// The Cards its page draws: each KIFF Card, else its lines as one Card.
     var shownCards: [TafCard] {
-        if let kiffCards, !kiffCards.isEmpty { return kiffCards }
+        // The live Cards first, and among them the one that counts money (kiff/tafs#236,
+        // item 9): for a taf that pays out, what's left to spend matters most. Otherwise as KIFF lists them.
+        if let kiffCards, !kiffCards.isEmpty {
+            return kiffCards.enumerated().sorted { a, b in
+                let ka = (a.element.live ? 0 : 2) + (a.element.total != nil ? 0 : 1)
+                let kb = (b.element.live ? 0 : 2) + (b.element.total != nil ? 0 : 1)
+                return ka != kb ? ka < kb : a.offset < b.offset
+            }.map(\.element)
+        }
         return [TafCard.merged(id: "merged", title: name, rules: card.rules, expires: card.expires, active: !card.revoked,
                                used: used, unknown: usageUnknown ?? [], counted: counted)]
     }

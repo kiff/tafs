@@ -57,8 +57,10 @@ struct HeldCallCard: View {
                 if let taf { TafAvatar(taf: taf, size: 32) }
                 Text(taf?.name ?? "A taf").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer()
+                // The system counts it down, every second, wherever the card is (kiff/tafs#236,
+                // item 8); the timeline only turns it to "expired" at the end.
                 TimelineView(.periodic(from: .now, by: 1)) { context in
-                    Text(remaining(at: context.date))
+                    remaining(at: context.date)
                         .scaledFont(12, design: .monospaced)
                         .foregroundColor(Theme.amberText)
                 }
@@ -218,9 +220,9 @@ struct HeldCallCard: View {
         }
     }
 
-    private func remaining(at date: Date) -> String {
-        let seconds = max(0, Int(call.expiresAt.timeIntervalSince(date)))
-        return seconds == 0 ? "expired" : String(format: "%d:%02d left", seconds / 60, seconds % 60)
+    private func remaining(at date: Date) -> Text {
+        guard call.expiresAt.timeIntervalSince(date) >= 1 else { return Text("expired") }
+        return Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(" left")
     }
 }
 

@@ -197,7 +197,10 @@ describe("Setup's definition on kiff/agents", () => {
     // The owner's own limit is the limit (item 44).
     expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
     // The schedule is decided before the result, with the owner's case as the example (item 43).
-    expect(flat).toContain("Before you show it, decide unscheduled from the tools on its Card: if none of them lists the work (for refunds: the refund requests), set unscheduled: true. A refunds taf with Stripe's tools alone is one");
+    expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
+    expect(flat).toContain("A refunds taf with Stripe's tools alone is unscheduled: Stripe lists payments, not requests to refund them.");
+    // The result's name is the one tafs will give it, not another taf's (kiff/tafs#236, item 5).
+    expect(flat).toContain("Its name is one no other taf has (tafs_state): if it's taken, the first free \"<name> 2\", \"<name> 3\"…, as tafs would name it; call it that.");
     // A new taf asked for in an improve conversation is a new taf (kiff/tafs#138, item 36).
     expect(flat).toContain("unless the owner asks for a new taf (\"I want a taf that…\", \"set up a…\", \"a new taf\"): then set one up, as in a conversation without that line, with no improves in its result");
     expect(flat).toContain("When you can't tell whether they mean that taf or a new one, ask once with a confirm");
@@ -232,7 +235,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("when you no longer have the taf's agent id or a grant's id, planque grants with no agent lists every connection you asked for");
     expect(flat).toContain("Never connect again, make a new taf, or ask the owner to sign in again for an id you lost");
     // A taf's Cards are read wherever Coach is asked, never by sending the owner elsewhere (kiff/tafs#214, item 4).
-    expect(flat).toContain("with kiff_card {agent: its kiff_agent from tafs_state}, in whatever conversation you're in. Never send the owner elsewhere to ask.");
+    expect(flat).toContain("with kiff_card {agent: its kiff_agent}, in whatever conversation you're in. Never send the owner elsewhere, or say you can't tell which taf it is.");
+    // A taf the owner names is found by that name (kiff/tafs#236, item 6).
+    expect(flat).toContain("A taf the owner names is in tafs_state, by that name, with its kiff_agent.");
     // Coach says which Card covers live actions, and never gives a test Card's limits as real ones.
     expect(flat).toContain("say which Card covers its live actions, the production one, and keep a test Card's limits apart");
     expect(flat).toContain("never tell the owner the taf may do nothing");
