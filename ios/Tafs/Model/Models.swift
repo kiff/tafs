@@ -77,6 +77,15 @@ enum Window: String, Codable, CaseIterable {
         case .month: return "a month"
         }
     }
+
+    /// The window now: "today", "this week", "this month".
+    var current: String {
+        switch self {
+        case .day: return "today"
+        case .week: return "this week"
+        case .month: return "this month"
+        }
+    }
 }
 
 /// What happens to an action the Card does not allow.
@@ -105,13 +114,7 @@ struct CardRule: Identifiable, Hashable, Codable {
     func left(used: Money?) -> String? {
         guard let total = perWindow, let used, total.currency == used.currency, total.scale == used.scale else { return nil }
         let left = Money(minor: max(0, total.minor - used.minor), currency: total.currency, scale: total.scale)
-        let when: String
-        switch window {
-        case .day: when = "today"
-        case .week: when = "this week"
-        case .month: when = "this month"
-        }
-        return "\(left.formatted) left \(when)"
+        return "\(left.formatted) left \(window.current)"
     }
 
     var summary: String {
@@ -123,6 +126,86 @@ struct CardRule: Identifiable, Hashable, Codable {
         if let perWindow { parts.append(perWindow.hasUnit ? "\(perWindow.formatted) \(window.label)" : "\(perWindow.formatted) in total \(window.label)") }
         if let countPerWindow { parts.append("\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label)") }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// A Card's total for its window and what it has used: nil when KIFF couldn't read it,
+/// never shown as zero.
+struct CardTotal<Value: Hashable & Codable & Sendable>: Hashable, Codable, Sendable {
+    var limit: Value
+    var used: Value?
+    var window: Window
+}
+
+/// One KIFF Card, drawn on its own (kiff/tafs#211): a taf can hold several, each with its
+/// own limits and balance, and a test Card is kept apart from the live one.
+struct TafCard: Identifiable, Hashable, Codable {
+    var id: String
+    /// Its own title from KIFF, else its main tool's.
+    var title: String
+    /// The environment KIFF scopes it to, as KIFF names it; empty for every environment.
+    var environment = ""
+    /// It covers what the taf does for real: production, or every environment.
+    var live = true
+    var active = true
+    var expires: Date?
+    var rules: [CardRule]
+    /// Its money total, at the ceiling it has now.
+    var total: CardTotal<Money>?
+    /// Its count of calls.
+    var calls: CardTotal<Int>?
+
+    /// The pill on the face: LIVE, or the environment it's scoped to ("TEST").
+    var environmentLabel: String { live ? "LIVE" : environment.uppercased() }
+
+    /// The face's big figure and the words under it: what's left of the money total, else of
+    /// the calls. Use KIFF couldn't read shows the limit alone, never as zero left or used.
+    var hero: (figure: String, words: String)? {
+        if let t = total {
+            if let used = t.used, used.currency == t.limit.currency, used.scale == t.limit.scale {
+                let left = Money(minor: max(0, t.limit.minor - used.minor), currency: t.limit.currency, scale: t.limit.scale)
+                return (left.formatted, "left \(t.window.current) of \(t.limit.formatted)")
+            }
+            return (t.limit.formatted, "\(t.window.label) · use unavailable")
+        }
+        if let c = calls {
+            guard let used = c.used else { return ("\(c.limit)", "calls \(c.window.label) · use unavailable") }
+            let left = max(0, c.limit - used)
+            return ("\(left)", "\(left == 1 ? "call" : "calls") left \(c.window.current) of \(c.limit)")
+        }
+        return nil
+    }
+
+    /// The face's small lines under the figure: the main tool's limit for one call and what
+    /// happens above it, then how many more tools the Card covers. A Card with no figure
+    /// shows its first lines instead.
+    var facts: [String] {
+        var out: [String] = []
+        if hero == nil {
+            out = rules.prefix(2).map { "\($0.label.lowercased()) \($0.summary)" }
+            if rules.count > 2 { out.append("\(rules.count - 2) more") }
+            return out
+        }
+        if let rule = rules.first(where: { $0.perAction != nil }), let each = rule.perAction {
+            out.append("≤ \(each.formatted) each · \(rule.outside == .hold ? "asks you above" : "refused above")")
+        }
+        if rules.count > 1 { out.append("\(rules.count) tools") }
+        return out
+    }
+
+    /// One Card from a taf's lines as the app had them before KIFF's Cards came apart: a
+    /// draft's, the sample's, or a list from an older tafs cloud.
+    static func merged(id: String, title: String, rules: [CardRule], expires: Date?, active: Bool = true,
+                       used: [String: Money] = [:], unknown: Set<String> = [], counted: [String: Int] = [:]) -> TafCard {
+        var card = TafCard(id: id, title: title, active: active, expires: expires, rules: rules)
+        if let rule = rules.first(where: { $0.perWindow != nil }), let limit = rule.perWindow {
+            let read = used[rule.action] ?? (unknown.contains(rule.action) ? nil : Money(minor: 0, currency: limit.currency, scale: limit.scale))
+            card.total = CardTotal(limit: limit, used: read, window: rule.window)
+        } else if let rule = rules.first(where: { $0.countPerWindow != nil }), let limit = rule.countPerWindow {
+            // As the money total: no count is none used, unless KIFF couldn't read it.
+            card.calls = CardTotal(limit: limit, used: counted[rule.action] ?? (unknown.contains(rule.action) ? nil : 0), window: rule.window)
+        }
+        return card
     }
 }
 
@@ -166,8 +249,18 @@ struct Taf: Identifiable, Hashable, Codable {
     var counted: [String: Int] = [:]
     /// The KIFF Cards this taf holds, when signed in to KIFF.
     var kiffCardIDs: [String] = []
+    /// Each of its KIFF Cards on its own, the live ones first (kiff/tafs#211); nil from an
+    /// older tafs cloud, and in the sample.
+    var kiffCards: [TafCard]?
 
     var initial: String { String(name.prefix(1)).uppercased() }
+
+    /// The Cards its page draws: each KIFF Card, else its lines as one Card.
+    var shownCards: [TafCard] {
+        if let kiffCards, !kiffCards.isEmpty { return kiffCards }
+        return [TafCard.merged(id: "merged", title: name, rules: card.rules, expires: card.expires, active: !card.revoked,
+                               used: used, unknown: usageUnknown ?? [], counted: counted)]
+    }
 }
 
 /// An action a taf asked to take.

@@ -2372,6 +2372,9 @@ final class AppModel: ObservableObject {
         // Pulling to refresh plays the next round.
         playNextDemoActions()
         playNextDemoActions()
+        if Screenshots.enabled, Screenshots.screen == "card", let i = tafs.firstIndex(where: { $0.name == "Refunds" }) {
+            tafs[i].kiffCards = Screenshots.cards(tafs[i])
+        }
         if let refunds = tafs.first(where: { $0.name == "Refunds" }) {
             chats[refunds.id] = [
                 sampleMessage(.taf, Self.sampleHello(refunds)),
@@ -3576,7 +3579,7 @@ enum Tab: Hashable { case tafs, needsYou, record }
 /// without asking for notifications.
 enum Screenshots {
     static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
-    /// `-screen taf` opens a taf's page; `-screen new` the new-taf flow; `-screen solo` and
+    /// `-screen taf` opens a taf's page, `-screen card` its Cards; `-screen new` the new-taf flow; `-screen solo` and
     /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
     /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
@@ -3588,6 +3591,23 @@ enum Screenshots {
         ("pico", "Pico", 12, "€4.99"), ("vonk", "Vonk", 30, "€9.99"), ("rayo", "Rayo", 70, "€19.99"),
         ("forte", "Forte", 200, "€49.99"), ("maxi", "Maxi", 450, "€99.99"),
     ]
+    /// `-screen card`: the Refunds taf's Cards as KIFF would list them (kiff/tafs#211), a live
+    /// one with its total, a read-only one with its calls, and a test one.
+    static func cards(_ taf: Taf) -> [TafCard] {
+        let refunds = TafCard(id: "sample-refunds", title: "Refunds · Stripe", rules: Array(taf.card.rules.prefix(2)),
+                              total: CardTotal(limit: .usd(2_000), used: .usd(480), window: .day))
+        let reads = TafCard(id: "sample-reads", title: "Read Stripe",
+                            rules: [CardRule(action: "list_charges", label: "List charges", countPerWindow: 200),
+                                    CardRule(action: "get_charge", label: "Look up a charge")],
+                            calls: CardTotal(limit: 200, used: 20, window: .day))
+        var test = refunds
+        test.id = "sample-test"
+        test.title = "Refunds · Stripe test"
+        test.environment = "test"
+        test.live = false
+        return [refunds, reads, test]
+    }
+
     /// Whether this run's screenshot is a purchase screen.
     static var purchases: Bool { enabled && (screen == "solo" || screen == "add-tasks") }
     static let soloProduct = "bot.tafs.solo.monthly"

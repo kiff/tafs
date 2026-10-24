@@ -4,23 +4,36 @@ struct TafDetailView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     /// 0 chat, 1 activity, 2 card. Chat first: talking to a taf is the main thing.
-    @State private var section = Screenshots.enabled && Screenshots.screen == "taf" ? 1 : 0
+    @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2 : 0
     @State private var confirmRevoke = false
     @State private var confirmRemove = false
     /// What removing it did, shown once it's done.
     @State private var removal: String?
     /// Set on the tap itself, before the request starts, so a second tap can't send one.
     @State private var runTapped = false
+    /// The Card in front of the stack (kiff/tafs#211); nil for the first, the live one.
+    @State private var frontCard: String?
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     #else
     private let sizeClass: UserInterfaceSizeClass? = .regular
     #endif
     @State private var width: CGFloat = 0
+    @State private var height: CGFloat = 0
+
+    /// The side column's width, and the least the chat keeps beside it: the largest iPhone's
+    /// width (kiff/tafs#211, the owner's 4A).
+    static let sideWidth: CGFloat = 360
+    static let chatAtLeast: CGFloat = 430
 
     /// A wide screen (kiff/tafs#85): beside the chat or the activity, a second column with
-    /// the call waiting for the owner and the Card. A compact width keeps one column.
-    private var sideColumn: Bool { sizeClass == .regular && width >= 700 && section != 2 }
+    /// the call waiting for the owner and the Cards. Only in landscape and only when the chat
+    /// keeps an iPhone's width beside it (kiff/tafs#211): iPad landscape and the Mac. A
+    /// narrower screen keeps one column, with the Card bar above it.
+    private var sideColumn: Bool {
+        sizeClass == .regular && section != 2 && width > height
+            && width - Self.sideWidth - 32 >= Self.chatAtLeast
+    }
 
     var body: some View {
         if let taf = model.taf(tafID) {
@@ -33,6 +46,13 @@ struct TafDetailView: View {
                         Text("Card").tag(2)
                     }
                     .pickerStyle(.segmented)
+                    // Without the side column, the Cards are one line above the chat or the
+                    // activity; it opens the Card tab (kiff/tafs#211).
+                    if section != 2 && !sideColumn, let front = shownFront(taf) {
+                        CardBar(card: front, count: taf.shownCards.count, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked) {
+                            section = 2
+                        }
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
@@ -54,12 +74,14 @@ struct TafDetailView: View {
                     if sideColumn {
                         ScrollView { side(taf).padding(.horizontal, 16).padding(.vertical, 12) }
                             .coachClearance()
-                            .frame(width: 360)
+                            .frame(width: Self.sideWidth)
                     }
                 }
             }
             .background(GeometryReader { g in
-                Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { width = $0 }
+                Color.clear.onAppear { width = g.size.width; height = g.size.height }
+                    .onChange(of: g.size.width) { width = $0 }
+                    .onChange(of: g.size.height) { height = $0 }
             })
             .screenBackground()
             .inlineTitle()
@@ -84,6 +106,12 @@ struct TafDetailView: View {
         } else {
             Text("This taf is gone.").foregroundColor(Theme.dim).screenBackground()
         }
+    }
+
+    /// The Card in front of the stack: the one tapped, else the first, the live one.
+    private func shownFront(_ taf: Taf) -> TafCard? {
+        let cards = taf.shownCards
+        return cards.first(where: { $0.id == frontCard }) ?? cards.first
     }
 
     private func header(_ taf: Taf) -> some View {
@@ -158,20 +186,25 @@ struct TafDetailView: View {
                 Eyebrow(text: "Needs you", color: Theme.amber)
                 ForEach(held) { HeldCallCard(call: $0) }
             }
-            Eyebrow(text: "Card")
-            CardFace(name: taf.name, rules: taf.card.rules, issuedBy: taf.card.issuedBy,
-                     expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), used: taf.used, revoked: taf.card.revoked)
-            Button("All of the Card") { section = 2 }
+            let cards = taf.shownCards
+            Eyebrow(text: cards.count == 1 ? "Card" : "Cards")
+            CardStack(cards: cards, issuedBy: taf.card.issuedBy, color: Theme.tafColor(taf.colorIndex),
+                      revoked: taf.card.revoked, front: $frontCard)
+            Button(cards.count == 1 ? "All of the Card" : "All of the Cards") { section = 2 }
                 .buttonStyle(OutlineButtonStyle())
         }
     }
 
     @ViewBuilder
     private func card(_ taf: Taf) -> some View {
-        CardFace(name: taf.name, rules: taf.card.rules, issuedBy: taf.card.issuedBy,
-                 expires: taf.card.expires, color: Theme.tafColor(taf.colorIndex), used: taf.used, revoked: taf.card.revoked)
+        let cards = taf.shownCards
+        let shown = cards.first(where: { $0.id == frontCard }) ?? cards.first
+        CardStack(cards: cards, issuedBy: taf.card.issuedBy, color: Theme.tafColor(taf.colorIndex),
+                  revoked: taf.card.revoked, front: $frontCard)
+            .frame(maxWidth: .infinity)
+        // All of the front Card's limits: the face shows the main one.
         Panel {
-            ForEach(taf.card.rules) { rule in
+            ForEach(shown?.rules ?? []) { rule in
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(rule.label).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
@@ -712,7 +745,7 @@ struct RunReportPanel: View {
     }
 }
 
-/// A Card drawn as a card: the limits, who issued it, until when.
+/// A Card drawn from its lines, as one Card: a draft's, before KIFF issued it.
 struct CardFace: View {
     let name: String
     let rules: [CardRule]
@@ -724,45 +757,171 @@ struct CardFace: View {
     var revoked = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text("tafs").font(Theme.mono(13, weight: .semibold)).tracking(1.2)
-                Spacer()
-                Text("Card by KIFF · \(name)").font(Theme.mono(11))
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(rules) { rule in
-                    Text("\(rule.label.lowercased()) \(rule.summary)").font(Theme.mono(13))
-                    // What's left of the window's total, as the owner spends it (kiff/tafs#102).
-                    if let left = rule.left(used: used[rule.action]) {
-                        Text(left).font(Theme.mono(12, weight: .semibold)).opacity(0.85)
-                    }
-                }
-                if rules.isEmpty { Text("no actions yet").font(Theme.mono(13)) }
+        TafCardFace(card: TafCard.merged(id: "draft", title: name, rules: rules, expires: expires, active: !revoked, used: used),
+                    issuedBy: issuedBy, color: color, revoked: revoked)
+    }
+}
+
+/// A Card drawn as a card (kiff/tafs#211): a payment card's shape at a set size, never the
+/// full width; what's left is the big figure, the other limits small lines under it.
+struct TafCardFace: View {
+    let card: TafCard
+    let issuedBy: String
+    let color: Color
+    var revoked = false
+
+    /// At most this wide, on the iPhone and the iPad alike.
+    static let width: CGFloat = 300
+    /// A payment card's proportions, 85.6 by 54 mm.
+    static let ratio: CGFloat = 85.6 / 54
+
+    /// A live Card in the taf's colour; one scoped to another environment in grey.
+    static func fill(_ card: TafCard, color: Color) -> Color { card.live ? color : Theme.dim }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text(card.title).font(Theme.mono(12, weight: .semibold)).lineLimit(1)
+                Spacer(minLength: 4)
+                EnvironmentPill(text: card.environmentLabel)
             }
             Spacer(minLength: 0)
-            HStack(alignment: .bottom) {
+            if let hero = card.hero {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Issued by").font(.system(size: 11)).opacity(0.7)
-                    Text(issuedBy).font(.system(size: 13, weight: .semibold))
+                    Text(hero.figure).font(.system(size: 34, weight: .bold).monospacedDigit())
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                    Text(hero.words).font(.system(size: 12, weight: .medium)).opacity(0.9).lineLimit(1)
+                }
+            }
+            ForEach(card.facts, id: \.self) { fact in
+                Text(fact).font(Theme.mono(11)).opacity(0.92).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            if card.rules.isEmpty { Text("no actions yet").font(Theme.mono(12)) }
+            Spacer(minLength: 0)
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Issued by").font(.system(size: 10)).opacity(0.75)
+                    Text(issuedBy).font(.system(size: 12, weight: .semibold)).lineLimit(1)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: 1) {
                     // A Card with no end says so, never a far-off date (kiff/tafs#96).
-                    Text(revoked ? "Revoked" : expires == nil ? "Ends" : "Until").font(.system(size: 11)).opacity(0.7)
-                    Text(expires?.formatted(date: .abbreviated, time: .omitted) ?? "No end date").font(.system(size: 13, weight: .semibold))
+                    Text(revoked ? "Revoked" : !card.active ? "Ended" : card.expires == nil ? "Ends" : "Until")
+                        .font(.system(size: 10)).opacity(0.75)
+                    Text(card.expires?.formatted(date: .abbreviated, time: .omitted) ?? "No end date")
+                        .font(.system(size: 12, weight: .semibold))
                 }
             }
         }
         .foregroundColor(.white)
-        .padding(20)
-        .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
-        .background(color.opacity(revoked ? 0.4 : 1))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .aspectRatio(Self.ratio, contentMode: .fit)
+        .background(Self.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
         .overlay(alignment: .topTrailing) {
-            Circle().stroke(Theme.background.opacity(0.15)).frame(width: 150, height: 150).offset(x: 40, y: -40)
-                .clipped().allowsHitTesting(false).accessibilityHidden(true)
+            Circle().stroke(Color.white.opacity(0.18)).frame(width: 130, height: 130).offset(x: 35, y: -45)
+                .allowsHitTesting(false).accessibilityHidden(true)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .frame(maxWidth: Self.width)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// A taf's Cards in one line (kiff/tafs#211): the front Card's balance, its name, its
+/// environment and how many Cards there are. Tapping it opens the Card tab.
+struct CardBar: View {
+    let card: TafCard
+    let count: Int
+    let color: Color
+    var revoked = false
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            HStack(spacing: 12) {
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(TafCardFace.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
+                    .frame(width: 46, height: 29)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(card.hero.map { "\($0.figure) \($0.words)" } ?? card.title)
+                        .font(.system(size: 15, weight: .semibold).monospacedDigit()).foregroundColor(Theme.ink)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                    Text(details).font(.system(size: 12)).foregroundColor(Theme.dim).lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 9)
+            .background(Theme.panel)
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.line))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Shows the Cards")
+    }
+
+    /// "Refunds · Live · 3 Cards": the Card's name, its environment, and the others.
+    private var details: String {
+        var parts = [card.title, card.live ? "Live" : card.environment.capitalized]
+        if count > 1 { parts.append("\(count) Cards") }
+        return parts.joined(separator: " · ")
+    }
+}
+
+/// LIVE, or the environment a Card is scoped to.
+struct EnvironmentPill: View {
+    let text: String
+    var body: some View {
+        Text(text).font(Theme.mono(10, weight: .semibold)).tracking(0.6)
+            .padding(.horizontal, 6).padding(.vertical, 2)
+            .background(Color.white.opacity(0.22)).clipShape(Capsule())
+    }
+}
+
+/// A taf's Cards as a wallet stack (kiff/tafs#211): the Card in front whole, the others
+/// behind it showing their top edge, so their number and names read at once. Tapping one
+/// brings it forward.
+struct CardStack: View {
+    let cards: [TafCard]
+    let issuedBy: String
+    let color: Color
+    var revoked = false
+    /// The Card in front; nil for the first, the live one.
+    @Binding var front: String?
+
+    /// How much of a Card behind shows.
+    private static let edge: CGFloat = 40
+
+    var body: some View {
+        let shown = cards.first(where: { $0.id == front }) ?? cards.first
+        // The furthest back on top, as in a wallet: the reverse of the order they're listed in.
+        let behind = cards.filter { $0.id != shown?.id }.reversed()
+        VStack(spacing: -12) {
+            ForEach(Array(behind)) { card in
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { front = card.id }
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(card.title).font(Theme.mono(11, weight: .semibold)).lineLimit(1)
+                        Spacer(minLength: 4)
+                        EnvironmentPill(text: card.environmentLabel)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16).padding(.top, 9)
+                    .frame(maxWidth: .infinity, minHeight: Self.edge + 12, alignment: .topLeading)
+                    .background(TafCardFace.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .shadow(color: .black.opacity(0.12), radius: 3, y: -1)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(card.title), \(card.environmentLabel). Show this Card")
+            }
+            if let shown {
+                TafCardFace(card: shown, issuedBy: issuedBy, color: color, revoked: revoked)
+                    .shadow(color: .black.opacity(0.12), radius: 3, y: -1)
+            }
+        }
+        .frame(maxWidth: TafCardFace.width)
     }
 }
