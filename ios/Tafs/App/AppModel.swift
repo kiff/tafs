@@ -3275,7 +3275,7 @@ final class AppModel: ObservableObject {
     }
 
     private func sendQueuedIfIdle() async {
-        guard !setupThinking, !setupSending else { return }
+        guard !setupSending else { return }
         // A card's answer first: it's what Setup asked for (kiff/tafs#236, item 2).
         if let line = setupAnswersWaiting.first {
             setupAnswersWaiting.removeFirst()
@@ -3290,7 +3290,7 @@ final class AppModel: ObservableObject {
             }
             return
         }
-        guard let queued = setupQueued else { return }
+        guard !setupThinking, let queued = setupQueued else { return }
         setupQueued = nil
         await sendSetup(queued)
     }
@@ -3555,11 +3555,18 @@ final class AppModel: ObservableObject {
         return clock().timeIntervalSince(shown.firstAt) < 60
     }
 
-    /// Whether planque changed the card's grant after the card first appeared.
+    /// Whether planque changed the card's grant after the card first appeared. Asked only of a
+    /// later approval of a grant the thread asked about before: the first one's grant is new
+    /// with it, and Setup changes a grant it shows again (kiff/tafs#236, item 3).
     func changedSince(_ c: SetupComponent) -> Bool {
         guard let g = c.grant, let grant = grants.first(where: { $0.id == g }),
               let shown = setupThread.components.first(where: { $0.id == c.id }) else { return false }
-        guard let changed = grant.changedAt else { return false }
+        let askedBefore = setupThread.components.contains {
+            $0.id != c.id && $0.component.type == .approval && $0.component.grant == g && $0.firstAt < shown.firstAt
+        }
+        guard askedBefore else { return true }
+        // No events (an older planque): its state is all there is to go by.
+        guard let changed = grant.changedAt else { return true }
         // planque writes seconds and more; tafs cloud's time is the same clock to the second.
         return changed >= shown.firstAt.addingTimeInterval(-1)
     }
@@ -3575,12 +3582,12 @@ final class AppModel: ObservableObject {
         answered.insert(component.id)
         cardNotes[component.id] = nil
         let line = "[\(component.type.rawValue) \(component.id)] \(text)"
-        // Setup at work: the answer waits for it, as a typed message does, and the card says
-        // so (kiff/tafs#236, item 2). It never goes quiet.
-        if setupThinking || setupSending {
+        // A message on its way: the answer waits for it, and the card says so (kiff/tafs#236,
+        // item 2). It used to be dropped without a word.
+        if setupSending {
             setupAnswersWaiting.removeAll { SetupThread.Answer($0)?.id == component.id }
             setupAnswersWaiting.append(line)
-            cardNotes[component.id] = "Sent once Setup has finished what it's doing."
+            cardNotes[component.id] = "Sent once your last message has gone."
             return
         }
         switch await deliverSetup(line) {
