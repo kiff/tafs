@@ -498,8 +498,9 @@ final class TafsCloud {
         case session(String, newSession: Bool, run: String? = nil)
         /// More of the answer, as it is written.
         case text(String)
-        /// A tool the agent calls, by name: never what it was given.
-        case activity(String)
+        /// A tool the agent calls, by name, with what it's doing in a few words when tafs
+        /// cloud says ("Checking your Stripe connection…"): never what it was given.
+        case activity(String, step: String? = nil)
         /// The agent showed a component: the conversation has it.
         case component
         /// The run stopped: its status, and why.
@@ -563,7 +564,7 @@ final class TafsCloud {
         case "session": return (o["session"] as? String).map { .session($0, newSession: o["new_session"] as? Bool ?? false, run: o["run"] as? String) }
         case "taken": return .taken
         case "text": return (o["text"] as? String).map(StreamEvent.text)
-        case "activity": return (o["tool"] as? String).map(StreamEvent.activity)
+        case "activity": return (o["tool"] as? String).map { .activity($0, step: o["step"] as? String) }
         case "component": return .component
         case "end": return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "")
         case "error": return .broken

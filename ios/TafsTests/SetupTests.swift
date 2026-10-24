@@ -315,6 +315,9 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(e("session", #"{"session":"s1","new_session":true}"#), .session("s1", newSession: true))
         XCTAssertEqual(e("text", #"{"text":"a\nb"}"#), .text("a\nb"))
         XCTAssertEqual(e("activity", #"{"tool":"planque"}"#), .activity("planque"))
+        // What Coach is doing, in tafs cloud's words (kiff/tafs#214).
+        XCTAssertEqual(e("activity", #"{"tool":"planque","step":"Checking your Stripe connection…"}"#),
+                       .activity("planque", step: "Checking your Stripe connection…"))
         XCTAssertEqual(e("component", #"{"component":{}}"#), .component)
         XCTAssertEqual(e("end", #"{"status":"COMPLETED","stop":"answered"}"#), .end(status: "COMPLETED", stop: "answered"))
         XCTAssertEqual(e("error", #"{"error":"x"}"#), .broken)
