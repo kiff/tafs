@@ -42,14 +42,14 @@ struct HomeView: View {
                     // Connecting tools is Coach mode's (kiff/tafs#138).
                     Button { model.openCoach() } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: "plus").font(.system(size: 16, weight: .bold)).foregroundColor(.white)
+                            Image(systemName: "plus").scaledFont(16, weight: .bold).foregroundColor(.white)
                                 .frame(width: 36, height: 36).background(Theme.brand).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Connect a tool").font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.ink)
-                                Text("You sign in and approve each step").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                Text("Connect a tool").scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                                Text("You sign in and approve each step").scaledFont(13).foregroundColor(Theme.dim)
                             }
                             Spacer()
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
+                            Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
                         }
                         .padding(14)
                         .background(Theme.panel)
@@ -66,17 +66,17 @@ struct HomeView: View {
 
                 ForEach(model.unfinishedRemovals) { r in
                     Panel {
-                        Text("\(r.name) isn't fully removed yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                        Text("\(r.name) isn't fully removed yet.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text("It no longer runs. tafs deletes what's left each time it refreshes.")
-                            .font(.system(size: 14)).foregroundColor(Theme.soft)
+                            .scaledFont(14).foregroundColor(Theme.soft)
                     }
                 }
 
                 if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
                     Panel {
-                        Text("No tafs yet.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                        Text("No tafs yet.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text("Connect a tool to set up your first taf. Pull down to refresh.")
-                            .font(.system(size: 14)).foregroundColor(Theme.soft)
+                            .scaledFont(14).foregroundColor(Theme.soft)
                     }
                 }
 
@@ -84,11 +84,11 @@ struct HomeView: View {
                     Button("Play the next sample actions") { model.playNextDemoActions() }
                         .buttonStyle(OutlineButtonStyle(color: Theme.soft))
                     Text("Sample data. The Card is checked on this phone; signed in with KIFF, KIFF decides.")
-                        .font(.system(size: 12))
+                        .scaledFont(12)
                         .foregroundColor(Theme.dim)
                 } else {
                     Text("Signed in with KIFF. KIFF decides every action. Pull down to refresh.")
-                        .font(.system(size: 12))
+                        .scaledFont(12)
                         .foregroundColor(Theme.dim)
                 }
             }
@@ -111,7 +111,7 @@ struct HomeView: View {
                     // A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59).
                     Button { if model.mode == .kiff { model.startNewTaf() } else { showingNew = true } } label: {
                         Image(systemName: "plus")
-                            .font(.system(size: 17, weight: .bold))
+                            .scaledFont(17, weight: .bold)
                             .foregroundColor(Theme.amberInk)
                             .frame(width: 36, height: 36)
                             .background(Theme.brand)
@@ -162,7 +162,7 @@ struct HomeView: View {
                     .foregroundColor(Theme.dim)
             }
         }
-        .font(Theme.display(36))
+        .scaledFont(36, weight: .bold, design: .rounded, relativeTo: .title)
     }
 
     private func needsYouStrip(_ call: HeldCall, _ taf: Taf) -> some View {
@@ -170,15 +170,15 @@ struct HomeView: View {
             Circle().fill(Theme.amber).frame(width: 10, height: 10)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(taf.name): \(call.proposed.summary)")
-                    .font(.system(size: 14, weight: .semibold))
+                    .scaledFont(14, weight: .semibold)
                     .foregroundColor(Theme.ink)
-                    .lineLimit(1)
+                    .oneLineUnlessLarge()
                 Text("\(call.reason) · answer by \(call.expiresAt.zonedShortTime)")
-                    .font(.system(size: 13))
+                    .scaledFont(13)
                     .foregroundColor(Theme.soft)
             }
             Spacer()
-            Text("Answer").font(.system(size: 14, weight: .medium)).foregroundColor(Theme.amber)
+            Text("Answer").scaledFont(14, weight: .medium).foregroundColor(Theme.amberText)
         }
         .padding(14)
         .background(Theme.amber.opacity(0.1))
@@ -195,8 +195,8 @@ struct TafRow: View {
             HStack(spacing: 12) {
                 TafAvatar(taf: taf)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(taf.name).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
-                    Text(taf.now).font(.system(size: 13)).foregroundColor(Theme.dim).lineLimit(1)
+                    Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                    Text(taf.now).scaledFont(13).foregroundColor(Theme.dim).oneLineUnlessLarge()
                 }
                 Spacer(minLength: 8)
                 StateChip(state: taf.state)
@@ -209,9 +209,9 @@ struct TafRow: View {
                     HStack {
                         Text("\(rule.label) · \(limit.formatted) \(rule.window.label)")
                         Spacer()
-                        Text(unknown ? "use unavailable" : used.formatted).font(Theme.mono(12))
+                        Text(unknown ? "use unavailable" : used.formatted).scaledFont(12, design: .monospaced)
                     }
-                    .font(.system(size: 12))
+                    .scaledFont(12)
                     .foregroundColor(Theme.dim)
                     if !unknown {
                         Meter(fraction: Double(used.minor) / Double(max(limit.minor, 1)), color: Theme.tafColor(taf.colorIndex))

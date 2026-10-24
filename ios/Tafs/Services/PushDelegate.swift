@@ -19,6 +19,8 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // Set before launch ends, so a tap that launched the app is delivered here.
         UNUserNotificationCenter.current().delegate = self
+        // Approve and Refuse on a hold's notification (kiff/tafs#210).
+        UNUserNotificationCenter.current().setNotificationCategories(AlertAnswers.categories())
         return true
     }
 
@@ -29,16 +31,47 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                             withCompletionHandler completionHandler: @escaping () -> Void) {
-        let destination = response.notification.request.content.userInfo["open"] as? String
+        let info = response.notification.request.content.userInfo
+        let destination = info["open"] as? String
+        let hold = info["hold_id"] as? String
+        let action = response.actionIdentifier
+        // Refuse is sent from the notification, iOS waiting until it's done (kiff/tafs#210).
+        if let hold, action == AlertAnswers.refuse {
+            let done = Done(completionHandler)
+            Task { @MainActor in
+                await NotificationRefuse.refuseKept(hold: hold)
+                await self.onHeldChanged?()
+                done.call()
+            }
+            return
+        }
         completionHandler()
-        guard let destination else { return }
-        Task { @MainActor in self.open(destination) }
+        // A hold opens itself, not the home screen; Approve opens it with Approve chosen.
+        let target: String?
+        if let hold, action == AlertAnswers.approve {
+            target = AlertAnswers.destination(hold: hold, answer: AlertAnswers.approve)
+        } else if let hold, destination == "needs-you" {
+            target = AlertAnswers.destination(hold: hold)
+        } else {
+            target = destination
+        }
+        guard let target else { return }
+        Task { @MainActor in self.open(target) }
     }
 
-    /// With tafs open, an alert still shows, and the app reloads what needs the owner.
+    /// iOS's completion handler, handed to the main actor once the answer is sent.
+    private struct Done: @unchecked Sendable {
+        let call: () -> Void
+        init(_ call: @escaping () -> Void) { self.call = call }
+    }
+
+    /// With tafs open, an alert still shows, and the app reloads what needs the owner. A halt
+    /// or a quiet line only goes in the list: the screen already shows it.
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
                                             withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .list, .sound])
+        let content = notification.request.content
+        completionHandler(content.categoryIdentifier == AlertAnswers.haltCategory || content.interruptionLevel == .passive
+                          ? [.list] : [.banner, .list, .sound])
         Task { @MainActor in await self.onHeldChanged?() }
     }
 
@@ -80,7 +113,7 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
     }
 
     /// Takes away the alerts shown for a held call that was answered.
-    private static func removeAlerts(forHold hold: String) {
+    static func removeAlerts(forHold hold: String) {
         UNUserNotificationCenter.current().getDeliveredNotifications { delivered in
             let ids = delivered.filter { $0.request.content.userInfo["hold_id"] as? String == hold }.map(\.request.identifier)
             UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids)

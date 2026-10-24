@@ -19,7 +19,7 @@ struct UsageView: View {
                     tasksPanel(u)
                     if let notice = Self.notice(u) {
                         Panel {
-                            Text(notice).font(.system(size: 15)).foregroundColor(Theme.ink)
+                            Text(notice).scaledFont(15).foregroundColor(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
@@ -29,19 +29,19 @@ struct UsageView: View {
                         billingPanel(u)
                     }
                     if let message = model.tasksMessage {
-                        Panel { Text(message).font(.system(size: 14)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
+                        Panel { Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                     }
                     if let packs = u.packList, !packs.isEmpty {
                         Panel {
                             Eyebrow(text: "Packs")
                             ForEach(packs) { p in
                                 HStack {
-                                    Text(p.name).font(.system(size: 14)).foregroundColor(Theme.ink)
+                                    Text(p.name).scaledFont(14).foregroundColor(Theme.ink)
                                     Spacer()
-                                    Text(Self.packLeft(p)).font(.system(size: 14)).foregroundColor(Theme.soft)
+                                    Text(Self.packLeft(p)).scaledFont(14).foregroundColor(Theme.soft)
                                 }
                             }
-                            Text(Self.packOrder).font(.system(size: 13)).foregroundColor(Theme.dim)
+                            Text(Self.packOrder).scaledFont(13).foregroundColor(Theme.dim)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
@@ -49,11 +49,11 @@ struct UsageView: View {
                         NavigationLink(destination: AIUseView().environmentObject(model)) {
                             Panel {
                                 HStack {
-                                    Text("AI use").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                    Text("AI use").scaledFont(15).foregroundColor(Theme.ink)
                                     Spacer()
-                                    Text(ai.paused ? "Asking you" : "\(used)%").font(.system(size: 15))
+                                    Text(ai.paused ? "Asking you" : "\(used)%").scaledFont(15)
                                         .foregroundColor(ai.paused ? Theme.amber : Theme.soft)
-                                    Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                    Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
                                 }
                             }
                         }
@@ -76,9 +76,9 @@ struct UsageView: View {
                     }
                     Panel {
                         Eyebrow(text: "Your own agents in KIFF")
-                        Text(Self.count(u.actions.counted, of: u.actions.included, "actions")).font(.system(size: 15)).foregroundColor(Theme.ink)
+                        Text(Self.count(u.actions.counted, of: u.actions.included, "actions")).scaledFont(15).foregroundColor(Theme.ink)
                         Text("Actions your own agents take through KIFF, apart from the tafs.")
-                            .font(.system(size: 13)).foregroundColor(Theme.dim)
+                            .scaledFont(13).foregroundColor(Theme.dim)
                     }
                     if !model.countedTasks.isEmpty {
                         Panel {
@@ -87,7 +87,7 @@ struct UsageView: View {
                         }
                     }
                 } else if let why = model.usageError {
-                    Panel { Text(why).font(.system(size: 14)).foregroundColor(Theme.no) }
+                    Panel { Text(why).scaledFont(14).foregroundColor(Theme.no) }
                 } else {
                     ProgressView()
                 }
@@ -108,16 +108,16 @@ struct UsageView: View {
     private func tasksPanel(_ u: KIFFClient.Usage) -> some View {
         Panel {
             Eyebrow(text: Self.planName(u.plan))
-            Text(Self.count(u.tasks.counted, of: u.tasks.left == nil ? 0 : u.tasks.total, "tasks")).font(Theme.display(26)).foregroundColor(Theme.ink)
+            Text(Self.count(u.tasks.counted, of: u.tasks.left == nil ? 0 : u.tasks.total, "tasks")).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             if u.tasks.left != nil, u.tasks.total > 0 {
                 Meter(fraction: Double(u.tasks.counted) / Double(u.tasks.total),
                       color: u.tasks.usedUp ? Theme.no : Theme.ok)
             }
             if let left = Self.leftLine(u) {
-                Text(left).font(.system(size: 15, weight: .semibold)).foregroundColor(u.tasks.usedUp ? Theme.no : Theme.ink)
+                Text(left).scaledFont(15, weight: .semibold).foregroundColor(u.tasks.usedUp ? Theme.no : Theme.ink)
             }
             Text("\(Self.taskMeaning) This period ends \(u.period.end.shown(date: .abbreviated, time: .omitted)).")
-                .font(.system(size: 13)).foregroundColor(Theme.soft)
+                .scaledFont(13).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -137,11 +137,11 @@ struct UsageView: View {
                         Panel {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("Solo").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
-                                    Text("Tafs and KIFF for one person, every month.").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                    Text("Solo").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                                    Text("Tafs and KIFF for one person, every month.").scaledFont(13).foregroundColor(Theme.dim)
                                 }
                                 Spacer()
-                                Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
                             }
                         }
                     }
@@ -150,13 +150,13 @@ struct UsageView: View {
             } else if let mine = Self.waiting(u) {
                 Panel {
                     Eyebrow(text: "Waiting")
-                    Text("You asked for \(Self.packLine(mine.pack, in: u)). An admin answers.").font(.system(size: 15)).foregroundColor(Theme.ink)
+                    Text("You asked for \(Self.packLine(mine.pack, in: u)). An admin answers.").scaledFont(15).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Button("Withdraw") { Task { await model.withdrawRequest(mine) } }.buttonStyle(OutlineButtonStyle())
                 }
             } else {
                 if let answer = Self.lastAnswer(u) {
-                    Panel { Text(answer).font(.system(size: 14)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
+                    Panel { Text(answer).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                 }
                 if u.tasks.usedUp {
                     Button("Ask an admin") { asking = true }.buttonStyle(PrimaryButtonStyle())
@@ -176,10 +176,10 @@ struct UsageView: View {
                 Eyebrow(text: "Requests", color: Theme.amber)
                 ForEach(open) { r in
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("A member asks for \(Self.packLine(r.pack, in: u)).").font(.system(size: 15)).foregroundColor(Theme.ink)
+                        Text("A member asks for \(Self.packLine(r.pack, in: u)).").scaledFont(15).foregroundColor(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                         if !r.reason.isEmpty {
-                            Text(r.reason).font(.system(size: 14)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                            Text(r.reason).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         }
                         HStack(spacing: 10) {
                             Button("Approve") {
@@ -201,11 +201,11 @@ struct UsageView: View {
         if let line = Self.billingLine(u) {
             Panel {
                 HStack {
-                    Text(line).font(.system(size: 15)).foregroundColor(Theme.ink)
+                    Text(line).scaledFont(15).foregroundColor(Theme.ink)
                     Spacer()
                     if Self.managedByApple(u) {
                         Button("Manage") { Task { await Purchases.manageSubscriptions() } }
-                            .font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.amber)
+                            .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                     }
                 }
             }
@@ -342,9 +342,9 @@ struct CountedTaskRow: View {
             RecordRow(entry: entry, showTaf: true)
         } else {
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.tafName(forAgent: task.agent)).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                Text(model.tafName(forAgent: task.agent)).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 Text("\(UsageView.toolName(task)) · \(task.at.formatted(.relative(presentation: .named)))")
-                    .font(.system(size: 13)).foregroundColor(Theme.dim)
+                    .scaledFont(13).foregroundColor(Theme.dim)
             }
         }
     }
@@ -364,8 +364,8 @@ struct TafUsageView: View {
                 if read, let mine = model.tafUsage(for: tafID) {
                     Panel {
                         Eyebrow(text: model.taf(tafID)?.name ?? "This taf")
-                        Text(UsageView.tafCount(mine.counted)).font(Theme.display(26)).foregroundColor(Theme.ink)
-                        Text(UsageView.taskMeaning).font(.system(size: 13)).foregroundColor(Theme.soft)
+                        Text(UsageView.tafCount(mine.counted)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                        Text(UsageView.taskMeaning).scaledFont(13).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if let free = mine.free, !free.lines.isEmpty {
@@ -383,15 +383,15 @@ struct TafUsageView: View {
                     NavigationLink(destination: UsageView().environmentObject(model)) {
                         Panel {
                             HStack {
-                                Text("The account's usage").font(.system(size: 15)).foregroundColor(Theme.ink)
+                                Text("The account's usage").scaledFont(15).foregroundColor(Theme.ink)
                                 Spacer()
-                                Image(systemName: "chevron.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                                Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
                             }
                         }
                     }
                     .buttonStyle(.plain)
                 } else if let why = model.usageError {
-                    Panel { Text(why).font(.system(size: 14)).foregroundColor(Theme.no) }
+                    Panel { Text(why).scaledFont(14).foregroundColor(Theme.no) }
                 } else {
                     ProgressView()
                 }
@@ -413,9 +413,9 @@ private struct CountRow: View {
 
     var body: some View {
         HStack {
-            Text(label).font(.system(size: 14)).foregroundColor(Theme.ink)
+            Text(label).scaledFont(14).foregroundColor(Theme.ink)
             Spacer()
-            Text("\(count)").font(.system(size: 14)).foregroundColor(Theme.soft)
+            Text("\(count)").scaledFont(14).foregroundColor(Theme.soft)
         }
     }
 }
@@ -431,14 +431,14 @@ struct AIUseView: View {
                 if let ai = model.aiUse, let used = ai.usedPct {
                     Panel {
                         Eyebrow(text: "AI use this month")
-                        Text("\(used)%").font(Theme.display(26)).foregroundColor(Theme.ink)
+                        Text("\(used)%").scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                         Meter(fraction: Double(used) / Double(max(ai.asksAtPct ?? 100, 1)), color: ai.paused ? Theme.amber : Theme.ok)
-                        Text(Self.explain(ai)).font(.system(size: 13)).foregroundColor(Theme.soft)
+                        Text(Self.explain(ai)).scaledFont(13).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if ai.paused {
                         Panel {
-                            Text(Self.asking).font(.system(size: 15)).foregroundColor(Theme.ink)
+                            Text(Self.asking).scaledFont(15).foregroundColor(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }

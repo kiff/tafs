@@ -381,12 +381,31 @@ final class AppModel: ObservableObject {
     /// root view shows it on its own screen and clears this.
     @Published var usageRequested = false
 
+    /// Halt all, asked for by a tapped halt alert or by "Halt all tafs" when it couldn't
+    /// finish without the app (kiff/tafs#210): the root view shows it on its own screen.
+    @Published var haltRequested = false
+
+    /// A hold opened from its notification, with the answer chosen there (kiff/tafs#210):
+    /// Needs you shows it and takes this. Approve is sent only once Face ID confirms it.
+    struct HoldRequest: Equatable {
+        let kiffID: String
+        let answer: String?
+    }
+    @Published var requestedHold: HoldRequest?
+
     /// Opens where a tapped alert points.
     func open(_ destination: String) {
         switch destination {
         case "needs-you": requestedTab = .needsYou
         case "usage": usageRequested = true
-        default: break
+        case "halt": haltRequested = true
+        // A Coach task's run ended (kiff/tafs#210): its line is in Coach's chat.
+        case "coach": if mode == .kiff { coachOpen = true }
+        default:
+            if let hold = AlertAnswers.request(from: destination) {
+                requestedTab = .needsYou
+                requestedHold = hold
+            }
         }
     }
 
@@ -3650,6 +3669,8 @@ enum Screenshots {
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
     /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
+    /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
+    static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
 
     /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
     /// purchase screens' screenshots.

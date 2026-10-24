@@ -154,7 +154,7 @@ struct TafChatView: View {
                     if let waiting, !heldInView.contains(waiting.id) {
                         NeedsYouPill(text: "Needs you · " + waiting.proposed.summary) {
                             following = false
-                            withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("k|" + AppModel.heldKey(waiting), anchor: .center) }
+                            withMotion(.easeOut(duration: 0.25)) { proxy.scrollTo("k|" + AppModel.heldKey(waiting), anchor: .center) }
                         }
                     }
                     if !atBottom && !following {
@@ -162,10 +162,10 @@ struct TafChatView: View {
                             following = true
                             unseen = false
                             pinned = nil
-                            withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
+                            withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
                         } label: {
                             Image(systemName: "arrow.down")
-                                .font(.system(size: 15, weight: .bold)).foregroundColor(Theme.ink)
+                                .scaledFont(15, weight: .bold).foregroundColor(Theme.ink)
                                 .frame(width: 38, height: 38)
                                 .background(Theme.panel)
                                 .overlay(Circle().stroke(Theme.line))
@@ -248,7 +248,7 @@ struct TafChatView: View {
 
     private func follow(_ proxy: ScrollViewProxy) {
         guard following, pinned == nil else { return }
-        withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
+        withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
     }
 
     /// Opening the chat lands at the held call waiting for the owner, or at the latest.
@@ -317,19 +317,20 @@ struct TafChatView: View {
                 // While the taf works, Send is Stop: its run is cancelled.
                 Button { Task { await model.stopChat(tafID) } } label: {
                     Image(systemName: "stop.fill")
-                        .font(.system(size: 14, weight: .bold))
+                        .scaledFont(14, weight: .bold)
                         .foregroundColor(.white)
                         .frame(width: 40, height: 40)
                         .background(Theme.ink)
                         .clipShape(Circle())
                 }
                 .accessibilityLabel("Stop")
+                .shortcut(.stop)
             } else {
                 // While the taf works, what's written goes to its run, which reads it at its
                 // next step; or, behind a queued message, waits for it to be done.
                 Button(action: send) {
                     Image(systemName: "arrow.up")
-                        .font(.system(size: 16, weight: .bold))
+                        .scaledFont(16, weight: .bold)
                         .foregroundColor(.white)
                         .frame(width: 40, height: 40)
                         .background(Theme.brand)
@@ -337,6 +338,7 @@ struct TafChatView: View {
                         .opacity(empty ? 0.4 : 1)
                 }
                 .disabled(empty)
+                .shortcut(.send)
                 .accessibilityLabel(thinking ? "Send to \(name) while it works" : "Send")
             }
         }
@@ -401,7 +403,7 @@ struct ChatBubble: View {
     private var bubble: some View {
         if message.kind == .kickoff {
             Text("Run started \(message.at.shortTime) · \(message.text)")
-                .font(.system(size: 12)).foregroundColor(Theme.dim).lineLimit(2)
+                .scaledFont(12).foregroundColor(Theme.dim).lineLimit(2)
                 .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 4)
         } else if message.from == .owner {
             HStack {
@@ -522,7 +524,7 @@ extension ScrollViewProxy {
     @MainActor func pinToTop<ID: Hashable>(_ id: ID, animated: Bool, touched: @escaping () -> Bool) {
         DispatchQueue.main.async {
             if animated {
-                withAnimation(.easeOut(duration: 0.25)) { self.scrollTo(id, anchor: .top) }
+                withMotion(.easeOut(duration: 0.25)) { self.scrollTo(id, anchor: .top) }
             } else {
                 self.scrollTo(id, anchor: .top)
             }

@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { apsFor, levelOf } from "./levels.js";
 
 /**
  * Alerts that reach a closed app: KIFF tells tafs cloud when a call is held
@@ -216,12 +217,17 @@ function heldNotification(body: AlertBody, holdID: string, now: Date): Notificat
     payload: {
       aps: {
         alert: { title: "A taf needs you", body: `${capitalize(action)} waits for your answer.` },
-        sound: "default",
         "thread-id": "held",
-        "interruption-level": "active",
+        // Approve and Refuse on the notification (kiff/tafs#210, part 2).
+        category: "hold",
+        // The phone fills in the taf, the amount and the deadline, read from KIFF
+        // with its own session: KIFF never sends a call's parameters through Apple.
+        "mutable-content": 1,
+        ...apsFor(levelOf("hold", false)),
       },
       open: "needs-you",
       hold_id: holdID,
+      ...(expires && !Number.isNaN(expires.getTime()) ? { expires_at: expires.toISOString() } : {}),
     },
     collapseID: holdID.slice(0, 64),
     expiresAt: expires && !Number.isNaN(expires.getTime()) && expires > now ? expires : undefined,
@@ -234,8 +240,8 @@ function requestNotification(requestID: string): Notification {
     payload: {
       aps: {
         alert: { title: "More tasks asked for", body: "Someone on your account asks you to add tasks. Open Usage to answer." },
-        sound: "default",
         "thread-id": "tasks",
+        ...apsFor(levelOf("tasks_requested", false)),
       },
       open: "usage",
       request_id: requestID,
@@ -265,7 +271,7 @@ function answerNotification(requestID: string, status: unknown, pack: unknown, n
   return {
     kind: "alert",
     payload: {
-      aps: { alert: { title: "Your request for tasks", body }, sound: "default", "thread-id": "tasks" },
+      aps: { alert: { title: "Your request for tasks", body }, "thread-id": "tasks", ...apsFor(levelOf("request_answered", false)) },
       open: "usage",
       request_id: requestID,
     },

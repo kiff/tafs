@@ -26,6 +26,8 @@ targets:
     sources: [Tafs, Shared]
     dependencies:
       - target: TafsWidgets
+      # Fills in a hold's notification from KIFF (kiff/tafs#210).
+      - target: TafsNotify
       - package: swift-secp256k1
         product: libsecp256k1
     info:
@@ -61,6 +63,12 @@ targets:
       path: Tafs/Tafs.entitlements
       properties:
         aps-environment: $(TAFS_APS_ENVIRONMENT)
+        # A hold and a halt come through a Focus (kiff/tafs#210).
+        com.apple.developer.usernotifications.time-sensitive: true
+        # The app's own Keychain group, named so the notification extension shares it: the
+        # app's items stay where they are, since this is the group it used by default.
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)bot.tafs.app
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
@@ -97,6 +105,39 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.widgets
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WIDGETS)
         # As the app: an extension supports every device its app does.
+        TARGETED_DEVICE_FAMILY: "1,2"
+  # Fills in a hold's notification before it shows (kiff/tafs#210): the taf, the amount
+  # and the deadline, read from KIFF with the app's session, in the app's own words.
+  TafsNotify:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Notify
+      - Tafs/KIFF
+      - path: Tafs/Model
+        excludes: [SetupShape.swift]
+      - Tafs/Services/HoldNotification.swift
+    dependencies:
+      - package: swift-secp256k1
+        product: libsecp256k1
+    info:
+      path: Notify/Info.plist
+      properties:
+        CFBundleDisplayName: tafs
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.usernotifications.service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).NotificationService
+    entitlements:
+      path: Notify/TafsNotify.entitlements
+      properties:
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)bot.tafs.app
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.notify
+        PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_NOTIFY)
         TARGETED_DEVICE_FAMILY: "1,2"
   # The Mac app (kiff/tafs#85): native SwiftUI on macOS 12, the owner's Mac's last system.
   # The model, clients and services are the iPhone app's; its window is its own (Mac/).

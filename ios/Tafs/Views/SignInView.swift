@@ -15,19 +15,19 @@ struct SignInView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Sign in with KIFF").font(Theme.display(34)).foregroundColor(Theme.ink)
+                Text("Sign in with KIFF").scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 Text("Your tafs act under KIFF Cards. Approve this phone in KIFF, and the Cards you issued show up here.")
-                    .font(.system(size: 15)).foregroundColor(Theme.soft)
+                    .scaledFont(15).foregroundColor(Theme.soft)
 
                 if let start {
                     Panel(stroke: Theme.amber.opacity(0.4)) {
                         Eyebrow(text: "Your code")
                         Text(start.userCode)
-                            .font(Theme.mono(34, weight: .semibold))
+                            .scaledFont(34, weight: .semibold, design: .monospaced)
                             .foregroundColor(Theme.ink)
                             .textSelection(.enabled)
                         Text("Check that KIFF shows the same code before you approve.")
-                            .font(.system(size: 13)).foregroundColor(Theme.dim)
+                            .scaledFont(13).foregroundColor(Theme.dim)
                     }
                     Button("Open KIFF to approve") {
                         if let url = URL(string: start.verificationURIComplete) { openURL(url) }
@@ -35,19 +35,19 @@ struct SignInView: View {
                     .buttonStyle(PrimaryButtonStyle())
                     HStack(spacing: 10) {
                         ProgressView().tint(Theme.amber)
-                        Text("Waiting for your approval…").font(.system(size: 14)).foregroundColor(Theme.soft)
+                        Text("Waiting for your approval…").scaledFont(14).foregroundColor(Theme.soft)
                     }
                 } else if problem == nil {
                     ProgressView().tint(Theme.amber)
                 }
 
                 if let problem {
-                    Text(problem).font(.system(size: 14)).foregroundColor(Theme.no)
+                    Text(problem).scaledFont(14).foregroundColor(Theme.no)
                     Button("Try again") { begin() }.buttonStyle(OutlineButtonStyle())
                 }
                 Spacer()
                 Text("By signing in, you agree to KIFF's [Terms](https://kiff.dev/terms#tafs), which cover tafs, and its [Privacy policy](https://kiff.dev/privacy#tafs).")
-                    .font(.system(size: 12)).foregroundColor(Theme.dim).tint(Theme.amber)
+                    .scaledFont(12).foregroundColor(Theme.dim).tint(Theme.amber)
             }
             .padding(24)
             .screenBackground()
@@ -113,7 +113,7 @@ struct SettingsView: View {
                 }
                 Section("How it works") {
                     Text("Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this \(ThisDevice.kind).")
-                        .font(.system(size: 14)).foregroundColor(Theme.soft)
+                        .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 Section("Legal") {
                     Link("Terms", destination: Legal.terms)
@@ -127,7 +127,7 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .screenBackground()
             .navigationTitle("Settings")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
         }
     }
@@ -172,7 +172,7 @@ struct AccountView: View {
                     }
                 }
                 if let why = model.timeZoneError {
-                    Text(why).font(.system(size: 13)).foregroundColor(Theme.no)
+                    Text(why).scaledFont(13).foregroundColor(Theme.no)
                 }
             } footer: {
                 Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.")

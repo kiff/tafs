@@ -13,7 +13,7 @@ struct DeleteAccountView: View {
             List {
                 Section {
                     Text("This deletes your KIFF account and everything tafs keeps for it. It can't be undone.")
-                        .font(.system(size: 15, weight: .semibold))
+                        .scaledFont(15, weight: .semibold)
                 }
                 Section("What goes") {
                     Label("Every taf, with its runs, chats, notes and schedules", systemImage: "person.2")
@@ -21,10 +21,10 @@ struct DeleteAccountView: View {
                     Label("Your Cards and keys: they stop working", systemImage: "creditcard")
                     Label("KIFF's records of your account, erased after 30 days", systemImage: "doc.text")
                 }
-                .font(.system(size: 14))
+                .scaledFont(14)
                 if let why = model.deleteAccountError {
                     Section {
-                        Text(why).font(.system(size: 14)).foregroundColor(Theme.no)
+                        Text(why).scaledFont(14).foregroundColor(Theme.no)
                     }
                 }
                 Section {
@@ -52,7 +52,7 @@ struct DeleteAccountView: View {
             .hiddenScrollBackground()
             .screenBackground()
             .navigationTitle("Delete account")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(deleting) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(deleting).keyboardShortcut(.cancelAction) } }
             .onAppear { model.deleteAccountError = nil }
         }
     }

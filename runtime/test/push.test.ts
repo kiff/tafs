@@ -164,6 +164,15 @@ describe("KIFF's alerts", () => {
     expect(n.collapseID).toBe("hold_1");
     expect(n.expiresAt?.toISOString()).toBe("2026-10-15T09:10:00.000Z");
     expect(n.payload).toMatchObject({ aps: { alert: { title: "A taf needs you", body: "Stripe refund waits for your answer." } }, open: "needs-you", hold_id: "hold_1" });
+    // An interruption (kiff/tafs#210): Time Sensitive, with Approve and Refuse, and the
+    // phone fills in the rest from KIFF, so the push carries no parameters.
+    expect(n.payload).toEqual({
+      aps: {
+        alert: { title: "A taf needs you", body: "Stripe refund waits for your answer." }, "thread-id": "held", category: "hold",
+        "mutable-content": 1, sound: "default", "interruption-level": "time-sensitive",
+      },
+      open: "needs-you", hold_id: "hold_1", expires_at: "2026-10-15T09:10:00.000Z",
+    });
   });
 
   it("hands the alert to kiff/agents as KIFF signed it, so the held run goes on", async () => {
@@ -393,6 +402,9 @@ describe("KIFF's alerts", () => {
     expect((await alert(answer("evt_ok", { status: "approved" }), push, { apns })).body).toEqual({ sent: 1 });
     expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_B]);
     expect(apns.sent[0]!.n).toMatchObject({ kind: "alert", payload: { aps: { alert: { body: "Your admin added Rayo." } }, open: "usage", request_id: "pr_1" } });
+    // Quiet (kiff/tafs#210): no sound or banner.
+    expect(apns.sent[0]!.n.payload.aps).toMatchObject({ "interruption-level": "passive" });
+    expect(apns.sent[0]!.n.payload.aps).not.toHaveProperty("sound");
     expect((await alert(answer("evt_no", { status: "declined", note: "  Next\nmonth " }), push, { apns })).body).toEqual({ sent: 1 });
     expect(apns.sent[1]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined: Next month" } } } });
     expect((await alert(answer("evt_bare", { status: "declined" }), push, { apns })).body).toEqual({ sent: 1 });

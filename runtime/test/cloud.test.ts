@@ -4,6 +4,7 @@ import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upg
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
+import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -118,6 +119,9 @@ function world() {
   const w = {
     agents, tafs,
     names: memoryNames(), claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(), keys: memoryKeys(), accounts: memoryAccounts(),
+    slots: memorySlots(),
+    /** The account's phones, and what was pushed to them (kiff/tafs#210). */
+    phones: [] as Device[], pushed: [] as Array<{ token: string; n: Notification }>,
     claimed: [] as string[], drafts: DRAFTS, newIDs: [NEW, NEW2],
     /** The accounts whose own records tafs cloud erased; `eraseFails` makes the next erase throw. */
     erased: [] as string[], eraseFails: false,
@@ -150,9 +154,9 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
 function depsOf(w: World): Deps {
   return {
     agents: w.agents.api, keys: w.keys, accounts: w.accounts, tafs: w.tafs,
-    names: w.names, slots: memorySlots(), claims: w.claims, removals: w.removals, archived: w.archived,
-    push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
-    apns: { send: async () => "sent" as const },
+    names: w.names, slots: w.slots, claims: w.claims, removals: w.removals, archived: w.archived,
+    push: { get: async () => ({ devices: w.phones, secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
+    apns: { send: async (d, n) => { w.pushed.push({ token: d.token, n }); return "sent" as const; } },
     forward: async () => undefined,
     sleep: async () => undefined,
     fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account),
@@ -404,8 +408,11 @@ describe("the home list", () => {
   it("gives each taf its state, colour and Card summary, so the app combines nothing", async () => {
     const w = world();
     w.account.mandates = [raeCard];
+    expect(await w.slots.held(`present#t_acme`)).toBe(false);
     const r = await call(w, "GET", "/v1/home", { token: "ana" });
     expect(r.status).toBe(200);
+    // The owner is around (kiff/tafs#210): what isn't urgent is told quietly, not kept for later.
+    expect(await w.slots.held(`present#t_acme`)).toBe(true);
     expect(r.body.tafs).toEqual([{
       id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null,
       // Its job in words, for its page (kiff/tafs#167).
@@ -1291,6 +1298,21 @@ describe("halting", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "viewer" })).status).toBe(403);
     // Another account's taf isn't there.
     expect((await call(w, "POST", `/v1/tafs/${MAX}/halt`, { token: "ana" })).status).toBe(404);
+  });
+
+  it("tells every phone that answers of a halt, Time Sensitive, and says halted only once it is (kiff/tafs#210)", async () => {
+    const w = world();
+    w.phones.push({ token: "a".repeat(64), environment: "production", subject: "u_ana", answers: true, at: "" },
+      { token: "b".repeat(64), environment: "production", subject: "u_vic", answers: false, at: "" });
+    await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    w.account.acksAtOnce = true;
+    await call(w, "POST", "/v1/halt", { token: "ana" });
+    expect(w.pushed.map((p) => p.token)).toEqual(["a".repeat(64), "a".repeat(64)]);
+    expect(w.pushed[0]!.n).toMatchObject({ kind: "alert", collapseID: "halt-Rae", payload: {
+      aps: { alert: { title: "Halting Rae", body: "Nothing new is sent until you resume in tafs." }, category: "halt", "interruption-level": "time-sensitive", sound: "default" },
+      open: "halt",
+    } });
+    expect(w.pushed[1]!.n).toMatchObject({ collapseID: "halt-all", payload: { aps: { alert: { title: "All your tafs halted" } } } });
   });
 
   it("cancels the taf's pending runs when it halts", async () => {
