@@ -461,9 +461,8 @@ final class KIFFClient {
         try await send("GET", "/v1/me/usage")
     }
 
-    /// The period's counted tasks, newest first, a page at a time.
-    /// The period's counted tasks, newest first, a page at a time; with `agent`, that taf's only
-    ///.
+    /// The period's counted tasks, newest first, a page at a time; with `agent`, that taf's
+    /// only.
     func countedTasks(cursor: String? = nil, agent: String? = nil) async throws -> (tasks: [CountedTask], next: String?) {
         struct Page: Decodable { let items: [CountedTask]; var next: String? }
         let query = [agent.map { "agent=\(escaped($0))" }, cursor.map { "cursor=\(escaped($0))" }].compactMap { $0 }
@@ -471,8 +470,8 @@ final class KIFFClient {
         return (page.items, page.next)
     }
 
-    /// Sets the account's time zone (an IANA name): a signed setup call from a phone
-    ///, which only the account's owner or an admin may make.
+    /// Sets the account's time zone (an IANA name): a signed setup call from a phone, which
+    /// only the account's owner or an admin may make.
     func setTimeZone(_ zone: String) async throws -> String {
         struct Saved: Decodable { let timeZone: String; enum CodingKeys: String, CodingKey { case timeZone = "time_zone" } }
         let saved: Saved = try await send("PUT", "/v1/me/time-zone", body: ["time_zone": zone])
@@ -763,8 +762,8 @@ final class KIFFClient {
         try await send("GET", "/v1/me/agent-drafts/\(escaped(id))")
     }
 
-    /// Confirms a draft another agent submitted, exactly the version the owner was shown
-    ///: KIFF issues its Cards. A signed setup call.
+    /// Confirms a draft another agent submitted, exactly the version the owner was shown:
+    /// KIFF issues its Cards. A signed setup call.
     func confirmDraft(id: String, version: String) async throws -> AgentDraft {
         try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version])
     }

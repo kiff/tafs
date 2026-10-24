@@ -103,8 +103,8 @@ struct HomeSplitView: View {
                     Button { model.openCoach() } label: {
                         Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
                     }
-                    // Every taf at once, from its own screen, as on the phone's home
-                    //. The owner looked for it here (kiff/tafs#138).
+                    // Every taf at once, from its own screen, as on the phone's home.
+                    // The owner looked for it here (kiff/tafs#138).
                     if !model.cloudTafs.isEmpty {
                         NavigationLink(value: HomeSelection.haltAll) { haltAllRow }
                     }

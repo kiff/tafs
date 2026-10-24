@@ -3030,9 +3030,9 @@ final class AppModel: ObservableObject {
     }
 
     /// Starts connecting tools, once per account, behind one Face ID: planque gets this
-    /// phone's key and a connector key, and Setup is started from a draft with no tools
-    ///, whose key tafs cloud claims. Done before the first message, so
-    /// every grant Setup asks for can be read and shown.
+    /// phone's key and a connector key, and Setup is started from a draft with no tools,
+    /// whose key tafs cloud claims. Done before the first message, so every grant Setup
+    /// asks for can be read and shown.
     func startSetup() async -> Bool {
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
             setupError = "Sign in with KIFF again: this sign-in can't sign for the phone."
