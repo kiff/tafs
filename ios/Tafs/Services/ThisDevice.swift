@@ -13,7 +13,7 @@ enum ThisDevice {
     /// "iPhone" or "iPad". The model, not the idiom: an iPhone-only build on an iPad is
     /// still the owner's iPad.
     static var kind: String { UIDevice.current.model.hasPrefix("iPad") ? "iPad" : "iPhone" }
-    /// The platform KIFF records for this device's key (kiff/kiff-cloud#1267).
+    /// The platform KIFF records for this device's key.
     static var platform: String { kind == "iPad" ? "ipados" : "ios" }
     #endif
 }

@@ -2,7 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// The account's time zone, which ends a Card's day (kiff/tafs#96): shown from GET /v1/me
-/// and set from Settings as a signed setup call (kiff-cloud #1278).
+/// and set from Settings as a signed setup call.
 @MainActor
 final class TimeZoneTests: XCTestCase {
     override func tearDown() {

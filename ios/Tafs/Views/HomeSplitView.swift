@@ -20,7 +20,7 @@ enum HomeSelection: Hashable {
     case taf(UUID)
     /// A held call, shown on its taf's page.
     case held(UUID, taf: UUID)
-    /// Every taf's halt (kiff/kiff-cloud#1061), as the phone's home has it.
+    /// Every taf's halt, as the phone's home has it.
     case haltAll
 }
 
@@ -103,8 +103,8 @@ struct HomeSplitView: View {
                     Button { model.openCoach() } label: {
                         Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
                     }
-                    // Every taf at once, from its own screen, as on the phone's home
-                    // (kiff/kiff-cloud#1061). The owner looked for it here (kiff/tafs#138).
+                    // Every taf at once, from its own screen, as on the phone's home.
+                    // The owner looked for it here (kiff/tafs#138).
                     if !model.cloudTafs.isEmpty {
                         NavigationLink(value: HomeSelection.haltAll) { haltAllRow }
                     }
@@ -156,8 +156,8 @@ struct HomeSplitView: View {
         HStack(spacing: 12) {
             TafAvatar(taf: taf, size: 34)
             VStack(alignment: .leading, spacing: 2) {
-                Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
-                Text(taf.now).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim).lineLimit(1)
+                Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
+                Text(taf.now).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim).oneLineUnlessLarge()
             }
         }
         .padding(.vertical, 2)
@@ -168,9 +168,9 @@ struct HomeSplitView: View {
         HStack(spacing: 10) {
             Circle().fill(Theme.amber).frame(width: 8, height: 8)
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(taf.name): \(call.proposed.summary)").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
+                Text("\(taf.name): \(call.proposed.summary)").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                 Text("\(call.reason) · answer by \(call.expiresAt.zonedShortTime)")
-                    .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.soft).lineLimit(1)
+                    .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.soft).oneLineUnlessLarge()
             }
         }
         .padding(.vertical, 2)

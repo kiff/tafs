@@ -37,8 +37,15 @@ final class LockScreen {
                 content.body = [call.proposed.amount?.formatted, call.proposed.summary, "·", call.reason]
                     .compactMap { $0 }.joined(separator: " ")
                 content.sound = .default
-                content.userInfo = ["open": "needs-you"]
-                content.interruptionLevel = .active
+                // As tafs cloud's (kiff/tafs#210): Time Sensitive, and a hold from KIFF opens
+                // itself and is answered from the notification.
+                content.interruptionLevel = .timeSensitive
+                if let kiffID = call.kiffID {
+                    content.userInfo = ["open": "needs-you", "hold_id": kiffID]
+                    content.categoryIdentifier = AlertAnswers.holdCategory
+                } else {
+                    content.userInfo = ["open": "needs-you"]
+                }
                 let request = UNNotificationRequest(identifier: call.id.uuidString, content: content, trigger: nil)
                 try? await center.add(request)
             }

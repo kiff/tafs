@@ -1,9 +1,8 @@
 import XCTest
 @testable import Tafs
 
-/// The device's check of a KIFF receipt (kiff/tafs#167), against a receipt signed by
-/// kiff-cloud's own LocalAttester and written by the receipts endpoint's encoder, with a
-/// test key. Its chain has what a Swift re-encoding would change: escaped <, > and &, a
+/// The device's check of a KIFF receipt (kiff/tafs#167), against a receipt signed the
+/// way KIFF signs and written by the receipts endpoint's encoder, with a test key. Its chain has what a Swift re-encoding would change: escaped <, > and &, a
 /// map's sorted keys, and Go's 1e+21.
 @MainActor
 final class ReceiptCheckTests: XCTestCase {

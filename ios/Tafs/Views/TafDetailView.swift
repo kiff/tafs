@@ -127,9 +127,9 @@ struct TafDetailView: View {
         HStack(spacing: 12) {
             TafAvatar(taf: taf, size: 52)
             VStack(alignment: .leading, spacing: 4) {
-                Text(taf.name).font(Theme.display(30)).foregroundColor(Theme.ink)
+                Text(taf.name).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 Text(taf.tools.isEmpty ? "No tools yet" : taf.tools.joined(separator: " · "))
-                    .font(.system(size: 13)).foregroundColor(Theme.dim)
+                    .scaledFont(13).foregroundColor(Theme.dim)
             }
             Spacer()
             StateChip(state: taf.state)
@@ -140,7 +140,7 @@ struct TafDetailView: View {
     private func activity(_ taf: Taf) -> some View {
         Panel {
             Eyebrow(text: "The job")
-            Text(taf.job).font(.system(size: 15)).foregroundColor(Theme.ink)
+            Text(taf.job).scaledFont(15).foregroundColor(Theme.ink)
         }
         // How it does the job, beside the job: not part of its Card (kiff/tafs#96).
         if model.mode == .sample || model.cloudTaf(for: taf.id) != nil {
@@ -153,10 +153,10 @@ struct TafDetailView: View {
                 if cloud.worksFromChat {
                     // Its tools can't find its work by themselves (kiff/tafs#138): no schedule.
                     Text("It works when you tell it, in its chat: no schedule runs it.")
-                        .font(.system(size: 15)).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                        .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 } else {
                 Text(cloud.paused ? "Paused" : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? "On its schedule")
-                    .font(.system(size: 15)).foregroundColor(Theme.ink)
+                    .scaledFont(15).foregroundColor(Theme.ink)
                 HStack(spacing: 8) {
                     Button(inFlight ? "Starting a run…" : "Run now") {
                         guard !runTapped else { return }
@@ -213,8 +213,14 @@ struct TafDetailView: View {
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
+        // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13).
+        if let refused = HeldCallCard.refusedLine(model.refusedToday(taf.id)) {
+            Text(refused)
+                .scaledFont(13).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+        }
         ConnectionsPanel(tafID: taf.id)
-        // Halting is a job of its own too (kiff/kiff-cloud#1061): its row opens its screen.
+        // Halting is a job of its own too: its row opens its screen.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked {
             Panel { HaltRow(tafID: taf.id) }
         }
@@ -223,10 +229,10 @@ struct TafDetailView: View {
             Panel {
                 NavigationLink { TafUsageView(tafID: taf.id).environmentObject(model) } label: {
                     HStack {
-                        Label("Usage", systemImage: "chart.bar").font(.system(size: 15, weight: .semibold))
+                        Label("Usage", systemImage: "chart.bar").scaledFont(15, weight: .semibold)
                         Spacer()
                         if let n = model.countedTasks(for: taf.id) {
-                            Text(UsageView.tafCount(n)).font(.system(size: 14)).foregroundColor(Theme.soft)
+                            Text(UsageView.tafCount(n)).scaledFont(14).foregroundColor(Theme.soft)
                         }
                     }
                 }
@@ -238,7 +244,7 @@ struct TafDetailView: View {
             Panel {
                 NavigationLink { VersionsScreen(tafID: taf.id) } label: {
                     Label("Versions", systemImage: "square.stack.3d.up")
-                        .font(.system(size: 15, weight: .semibold))
+                        .scaledFont(15, weight: .semibold)
                 }
             }
         }
@@ -274,37 +280,37 @@ struct ConnectionsPanel: View {
                 ForEach(connections) { grant in
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(KIFFMapping.vendorWords(grant.vendor)).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                            Text(KIFFMapping.vendorWords(grant.vendor)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                             Text("Keys kept sealed\(grant.account.map { " · \($0)" } ?? "")")
-                                .font(.system(size: 12)).foregroundColor(Theme.dim)
+                                .scaledFont(12).foregroundColor(Theme.dim)
                             if grant.connected {
                                 // What it may do, in words, not the tools' ids (kiff/tafs#138, item 52).
                                 Text(grant.request.tools.filter(\.tafs).map(\.words).joined(separator: " · "))
-                                    .font(.system(size: 12)).foregroundColor(Theme.soft)
+                                    .scaledFont(12).foregroundColor(Theme.soft)
                                 if model.leftOver(grant, of: tafID) {
                                     // Left over after a version moved its Card (kiff/tafs#138). An older version may still
                                     // run on it, so the words don't say to remove it.
                                     Text("Not on the live version's Card: the taf doesn't use it now. Going back to an older version may need it.")
-                                        .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.amber)
+                                        .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
                             } else {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
                                 Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
-                                    .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.amber)
+                                    .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
                                 if let end = grant.heldUntilDate {
                                     Text("Unless you approve its tools, the sign-in is revoked \(end.shown(date: .abbreviated, time: .shortened)).")
-                                        .font(.system(size: 12)).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                                        .scaledFont(12).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
                                 }
                             }
                             if let last = grant.events.last {
-                                Text(last.what).font(.system(size: 12)).foregroundColor(Theme.soft)
+                                Text(last.what).scaledFont(12).foregroundColor(Theme.soft)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                         Spacer(minLength: 0)
                         Button("Disconnect") { confirming = grant }
-                            .font(.system(size: 14, weight: .semibold))
+                            .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.no)
                     }
                 }
@@ -363,7 +369,7 @@ struct VersionsPanel: View {
         Panel {
             Eyebrow(text: "Versions")
             Text("Try a version first: it does the work you give it, and KIFF decides each call without sending any. Installing one makes it the live version.")
-                .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             if let sw = model.switches[tafID] { switchUnderWay(sw) }
             if let n = model.staleVersionCards[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
                 Button("Draft its Card again") { use(v, redraft: true) }
@@ -372,14 +378,14 @@ struct VersionsPanel: View {
             if let list = model.versions[tafID] {
                 if list.isEmpty {
                     Text("One version so far. When you improve it, each change is kept here.")
-                        .font(.system(size: 14)).foregroundColor(Theme.soft)
+                        .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 ForEach(list.reversed()) { row($0) }
             } else if model.versionErrors[tafID] == nil {
                 ProgressView().tint(Theme.amber)
             }
             if let error = model.versionErrors[tafID] {
-                Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+                Text(error).scaledFont(13).foregroundColor(Theme.no)
             }
             if let n = model.blockedInstalls[tafID], let v = model.versions[tafID]?.first(where: { $0.n == n }) {
                 // One step: what's in the way stops (a held call withdrawn, nothing sent), then
@@ -401,23 +407,23 @@ struct VersionsPanel: View {
         let switching = model.switchingVersion[tafID]
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text("Version \(v.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                Text("Version \(v.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 if v.live {
-                    Text("Live now").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                    Text("Live now").scaledFont(11, weight: .bold).foregroundColor(.white)
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(Theme.ok).clipShape(Capsule())
                 }
                 Spacer(minLength: 0)
             }
             if let note = v.note, !note.isEmpty {
-                Text(note).font(.system(size: 14)).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                Text(note).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             }
-            Text(Self.byline(v)).font(.system(size: 12)).foregroundColor(Theme.dim)
+            Text(Self.byline(v)).scaledFont(12).foregroundColor(Theme.dim)
             if trying == v.n {
                 // What to try (kiff/tafs#138): a task in the owner's words. The version's note
                 // describes the change, so it's the hint, not the task.
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("What should it try?").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
+                    Text("What should it try?").scaledFont(12, weight: .semibold).foregroundColor(Theme.dim)
                     TextField(v.note.map { "For example, to check: \($0)" } ?? "For example: look up payment pi_…", text: $trialInput)
                         .textFieldStyle(.roundedBorder)
                     HStack(spacing: 8) {
@@ -462,9 +468,9 @@ struct VersionsPanel: View {
         let version = model.versions[tafID]?.first { $0.n == sw.n }
         let working = model.switchingVersion[tafID] != nil
         return VStack(alignment: .leading, spacing: 6) {
-            Text("Installing version \(sw.n)").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.amber)
+            Text("Installing version \(sw.n)").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
             Text("Your taf doesn't run until it's installed or you cancel.")
-                .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
                 if let version {
                     Button(working ? "Installing…" : "Finish") { use(version) }
@@ -512,7 +518,7 @@ struct VersionCardSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Version \(version.n)\(version.note.map { ": \($0)" } ?? "")")
-                        .font(.system(size: 17, weight: .semibold)).foregroundColor(Theme.ink)
+                        .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     if let draft, let cards = draft.cards {
                         let lines = draft.cardLines
@@ -521,10 +527,10 @@ struct VersionCardSheet: View {
                         Text(draft.retires?.isEmpty == false
                              ? "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
                              : "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF, then this version goes live.")
-                            .font(.system(size: 12)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                            .scaledFont(12).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     } else if loaded {
                         Text(model.versionErrors[tafID] ?? "This version's Card couldn't be read.")
-                            .font(.system(size: 13)).foregroundColor(Theme.no)
+                            .scaledFont(13).foregroundColor(Theme.no)
                     } else {
                         ProgressView().tint(Theme.amber)
                     }
@@ -568,9 +574,9 @@ struct VersionCardSheet: View {
         Panel {
             Eyebrow(text: "Removes a Card")
             ForEach(card.current?.lines ?? [], id: \.self) {
-                Text($0).font(.system(size: 14)).foregroundColor(Theme.soft).strikethrough()
+                Text($0).strikethrough().scaledFont(14).foregroundColor(Theme.soft)
             }
-            Text("Your taf can't do this any more.").font(.system(size: 12)).foregroundColor(Theme.dim)
+            Text("Your taf can't do this any more.").scaledFont(12).foregroundColor(Theme.dim)
         }
     }
 
@@ -581,24 +587,24 @@ struct VersionCardSheet: View {
             if card.isUnchanged {
                 // Re-issued as it is (kiff/tafs#138): its terms once, not a now and after.
                 Eyebrow(text: "Unchanged")
-                ForEach(lines, id: \.self) { Text($0).font(.system(size: 14)).foregroundColor(Theme.soft) }
+                ForEach(lines, id: \.self) { Text($0).scaledFont(14).foregroundColor(Theme.soft) }
             } else if let current = card.current {
                 Eyebrow(text: "Changes a Card")
-                Text("Now").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
-                ForEach(current.lines, id: \.self) { Text($0).font(.system(size: 14)).foregroundColor(Theme.soft) }
-                Text("After").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.dim)
+                Text("Now").scaledFont(12, weight: .semibold).foregroundColor(Theme.dim)
+                ForEach(current.lines, id: \.self) { Text($0).scaledFont(14).foregroundColor(Theme.soft) }
+                Text("After").scaledFont(12, weight: .semibold).foregroundColor(Theme.dim)
             } else {
                 Eyebrow(text: "A new Card")
             }
             if !card.isUnchanged {
-                ForEach(lines, id: \.self) { Text($0).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink) }
+                ForEach(lines, id: \.self) { Text($0).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink) }
             }
         }
     }
 }
 
 /// A trial as it goes: each call the version made, with what KIFF decided. No call was sent,
-/// reads included (kiff-cloud#1285): a read had no data, and the version went on without it.
+/// reads included: a read had no data, and the version went on without it.
 struct TrialView: View {
     let trial: AppModel.VersionTrial
 
@@ -606,16 +612,16 @@ struct TrialView: View {
         VStack(alignment: .leading, spacing: 8) {
             Divider()
             Text(trial.trial.run.finished ? "Trial of version \(trial.version)" : "Trying version \(trial.version)…")
-                .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
             ForEach(Array(trial.trial.writes.enumerated()), id: \.offset) { _, write in
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: Self.symbol(write.decision)).foregroundColor(Self.color(write.decision))
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(write.title ?? write.tool).font(.system(size: 14)).foregroundColor(Theme.ink)
+                        Text(write.title ?? write.tool).scaledFont(14).foregroundColor(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                         Text(Self.words(write.decision) + (write.reason.map { ": \($0)" } ?? ""))
-                            .font(.system(size: 12)).foregroundColor(Theme.soft)
+                            .scaledFont(12).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -623,19 +629,19 @@ struct TrialView: View {
             }
             if trial.trial.run.finished {
                 if trial.trial.writes.isEmpty {
-                    Text("It made no writes.").font(.system(size: 13)).foregroundColor(Theme.dim)
+                    Text("It made no writes.").scaledFont(13).foregroundColor(Theme.dim)
                 }
                 if let output = trial.trial.run.output, !output.isEmpty {
                     MarkdownText(output, size: 14).foregroundColor(Theme.ink)
                 }
                 if let error = trial.trial.run.error, !error.isEmpty {
-                    Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+                    Text(error).scaledFont(13).foregroundColor(Theme.no)
                 }
             } else {
                 ProgressView().tint(Theme.amber)
             }
             Text("No call was sent, reads included: KIFF decided each one and stopped there.")
-                .font(.system(size: 12)).foregroundColor(Theme.soft)
+                .scaledFont(12).foregroundColor(Theme.soft)
         }
     }
 
@@ -675,30 +681,30 @@ struct MemoryPanel: View {
             if let notes = model.memories[tafID] {
                 if notes.isEmpty {
                     Text("Nothing yet. It writes down what it learns about how you like the job done.")
-                        .font(.system(size: 14)).foregroundColor(Theme.soft)
+                        .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 ForEach(notes) { note in
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(note.content).font(.system(size: 15)).foregroundColor(Theme.ink)
+                            Text(note.content).scaledFont(15).foregroundColor(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
-                            Text("\(note.title) · \(note.updatedAt.shortTime)").font(.system(size: 12)).foregroundColor(Theme.soft)
+                            Text("\(note.title) · \(note.updatedAt.shortTime)").scaledFont(12).foregroundColor(Theme.soft)
                         }
                         Spacer(minLength: 0)
                         Button("Forget") { Task { await model.forget(note, from: tafID) } }
-                            .font(.system(size: 14, weight: .semibold))
+                            .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.soft)
                             .frame(minHeight: 44)
                             .accessibilityLabel("Forget: \(note.content)")
                     }
                 }
                 Text("Every run and chat starts with these. They shape how it works, never what its Card allows. Forget removes that one note and its earlier versions; past chats and run reports stay until the taf is removed.")
-                    .font(.system(size: 12)).foregroundColor(Theme.soft)
+                    .scaledFont(12).foregroundColor(Theme.soft)
             } else if model.memoryErrors[tafID] == nil {
                 ProgressView().tint(Theme.amber)
             }
             if let error = model.memoryErrors[tafID] {
-                Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+                Text(error).scaledFont(13).foregroundColor(Theme.no)
             }
         }
         .task(id: tafID) { await model.loadMemory(tafID) }
@@ -715,23 +721,23 @@ struct RunReportPanel: View {
             HStack {
                 Eyebrow(text: "Last run")
                 Spacer()
-                Button("Refresh", action: reload).font(.system(size: 13)).foregroundColor(Theme.amber)
+                Button("Refresh", action: reload).scaledFont(13).foregroundColor(Theme.amberText)
             }
             if let report {
                 if let at = report.at {
                     Text("\(at.shortTime) · \(report.finished ? "finished" : report.status == "running" ? "still running" : "no session")")
-                        .font(Theme.mono(12)).foregroundColor(Theme.dim)
+                        .scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
                 if !report.text.isEmpty {
                     // A taf writes markdown: shown as the chat shows it, never raw (kiff/tafs#96).
                     MarkdownText(report.text, size: 14).foregroundColor(Theme.ink).textSelection(.enabled)
                 } else if report.session == nil && report.error == nil {
-                    Text("No run yet.").font(.system(size: 14)).foregroundColor(Theme.dim)
+                    Text("No run yet.").scaledFont(14).foregroundColor(Theme.dim)
                 } else if !report.finished && report.error == nil {
-                    Text("Its report shows here when the run ends.").font(.system(size: 14)).foregroundColor(Theme.dim)
+                    Text("Its report shows here when the run ends.").scaledFont(14).foregroundColor(Theme.dim)
                 }
                 if let error = report.error {
-                    Text(error).font(.system(size: 13)).foregroundColor(Theme.no)
+                    Text(error).scaledFont(13).foregroundColor(Theme.no)
                 }
             } else {
                 ProgressView().tint(Theme.amber)
@@ -764,6 +770,7 @@ struct TafCardFace: View {
     let issuedBy: String
     let color: Color
     var revoked = false
+    @Environment(\.dynamicTypeSize) private var textSize
 
     /// At most this wide, on the iPhone and the iPad alike.
     static let width: CGFloat = 300
@@ -774,52 +781,75 @@ struct TafCardFace: View {
     static func fill(_ card: TafCard, color: Color) -> Color { card.live ? color : Theme.dim }
 
     var body: some View {
+        face
+            // At the accessibility text sizes the Card grows to its text, never clipping it
+            // (kiff/tafs#210); otherwise it keeps a payment card's shape.
+            .aspectRatio(textSize.isAccessibilitySize ? nil : Self.ratio, contentMode: .fit)
+            .fixedSize(horizontal: false, vertical: textSize.isAccessibilitySize)
+            .background(Self.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
+            .overlay(alignment: .topTrailing) {
+                Circle().stroke(Color.white.opacity(0.18)).frame(width: 130, height: 130).offset(x: 35, y: -45)
+                    .allowsHitTesting(false).accessibilityHidden(true)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .frame(maxWidth: Self.width)
+            // VoiceOver reads its balance first (kiff/tafs#210).
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Self.spoken(card, issuedBy: issuedBy, revoked: revoked))
+    }
+
+    /// The Card as VoiceOver reads it: what's left, then its name, its limits, who issued it
+    /// and until when.
+    static func spoken(_ card: TafCard, issuedBy: String, revoked: Bool) -> String {
+        var parts: [String] = []
+        if let hero = card.hero { parts.append("\(hero.figure) \(hero.words)") }
+        parts.append("\(card.title), \(card.environmentLabel)")
+        parts += card.facts
+        if card.rules.isEmpty { parts.append("No actions yet") }
+        parts.append("Issued by \(issuedBy)")
+        let end = card.expires?.formatted(date: .abbreviated, time: .omitted)
+        parts.append(revoked ? "Revoked" : !card.active ? "Ended \(end ?? "")" : end.map { "Until \($0)" } ?? "No end date")
+        return parts.map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: ". ") + "."
+    }
+
+    private var face: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text(card.title).font(Theme.mono(12, weight: .semibold)).lineLimit(1)
+                Text(card.title).scaledFont(12, weight: .semibold, design: .monospaced).oneLineUnlessLarge()
                 Spacer(minLength: 4)
                 EnvironmentPill(text: card.environmentLabel)
             }
             Spacer(minLength: 0)
             if let hero = card.hero {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(hero.figure).font(.system(size: 34, weight: .bold).monospacedDigit())
-                        .lineLimit(1).minimumScaleFactor(0.6)
-                    Text(hero.words).font(.system(size: 12, weight: .medium)).opacity(0.9).lineLimit(1)
+                    Text(hero.figure).scaledFont(34, weight: .bold, relativeTo: .title).monospacedDigit()
+                        .oneLineUnlessLarge().minimumScaleFactor(0.6)
+                    Text(hero.words).scaledFont(12, weight: .medium).opacity(0.9).oneLineUnlessLarge()
                 }
             }
             ForEach(card.facts, id: \.self) { fact in
-                Text(fact).font(Theme.mono(11)).opacity(0.92).lineLimit(1).minimumScaleFactor(0.8)
+                Text(fact).scaledFont(11, design: .monospaced).opacity(0.92).oneLineUnlessLarge().minimumScaleFactor(0.8)
             }
-            if card.rules.isEmpty { Text("no actions yet").font(Theme.mono(12)) }
+            if card.rules.isEmpty { Text("no actions yet").scaledFont(12, design: .monospaced) }
             Spacer(minLength: 0)
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Issued by").font(.system(size: 10)).opacity(0.75)
-                    Text(issuedBy).font(.system(size: 12, weight: .semibold)).lineLimit(1)
+                    Text("Issued by").scaledFont(10).opacity(0.75)
+                    Text(issuedBy).scaledFont(12, weight: .semibold).oneLineUnlessLarge()
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
                     // A Card with no end says so, never a far-off date (kiff/tafs#96).
                     Text(revoked ? "Revoked" : !card.active ? "Ended" : card.expires == nil ? "Ends" : "Until")
-                        .font(.system(size: 10)).opacity(0.75)
+                        .scaledFont(10).opacity(0.75)
                     Text(card.expires?.shown(date: .abbreviated, time: .omitted) ?? "No end date")
-                        .font(.system(size: 12, weight: .semibold))
+                        .scaledFont(12, weight: .semibold)
                 }
             }
         }
         .foregroundColor(.white)
         .padding(16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .aspectRatio(Self.ratio, contentMode: .fit)
-        .background(Self.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
-        .overlay(alignment: .topTrailing) {
-            Circle().stroke(Color.white.opacity(0.18)).frame(width: 130, height: 130).offset(x: 35, y: -45)
-                .allowsHitTesting(false).accessibilityHidden(true)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .frame(maxWidth: Self.width)
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, maxHeight: textSize.isAccessibilitySize ? nil : .infinity, alignment: .topLeading)
     }
 }
 
@@ -840,12 +870,12 @@ struct CardBar: View {
                     .frame(width: 46, height: 29)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(card.hero.map { "\($0.figure) \($0.words)" } ?? card.title)
-                        .font(.system(size: 15, weight: .semibold).monospacedDigit()).foregroundColor(Theme.ink)
-                        .lineLimit(1).minimumScaleFactor(0.8)
-                    Text(details).font(.system(size: 12)).foregroundColor(Theme.dim).lineLimit(1)
+                        .scaledFont(15, weight: .semibold).monospacedDigit().foregroundColor(Theme.ink)
+                        .oneLineUnlessLarge().minimumScaleFactor(0.8)
+                    Text(details).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge()
                 }
                 Spacer(minLength: 4)
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
+                Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
             }
             .padding(.horizontal, 14).padding(.vertical, 9)
             .background(Theme.panel)
@@ -875,12 +905,12 @@ struct CardLines: View {
             ForEach(rules) { rule in
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(rule.label).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                        Text(rule.label).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text(rule.outside == .hold ? "Outside: held for you" : "Outside: refused")
-                            .font(.system(size: 12)).foregroundColor(Theme.dim)
+                            .scaledFont(12).foregroundColor(Theme.dim)
                     }
                     Spacer()
-                    Text(rule.summary).font(Theme.mono(13))
+                    Text(rule.summary).scaledFont(13, design: .monospaced)
                         .foregroundColor(rule.never ? Theme.no : Theme.ink)
                         .multilineTextAlignment(.trailing)
                 }
@@ -893,7 +923,7 @@ struct CardLines: View {
 struct EnvironmentPill: View {
     let text: String
     var body: some View {
-        Text(text).font(Theme.mono(10, weight: .semibold)).tracking(0.6)
+        Text(text).tracking(0.6).scaledFont(10, weight: .semibold, design: .monospaced)
             .padding(.horizontal, 6).padding(.vertical, 2)
             .background(Color.white.opacity(0.22)).clipShape(Capsule())
     }
@@ -920,10 +950,10 @@ struct CardStack: View {
         VStack(spacing: -12) {
             ForEach(Array(behind)) { card in
                 Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { front = card.id }
+                    withMotion(.spring(response: 0.35, dampingFraction: 0.85)) { front = card.id }
                 } label: {
                     HStack(spacing: 8) {
-                        Text(card.title).font(Theme.mono(11, weight: .semibold)).lineLimit(1)
+                        Text(card.title).scaledFont(11, weight: .semibold, design: .monospaced).oneLineUnlessLarge()
                         Spacer(minLength: 4)
                         EnvironmentPill(text: card.environmentLabel)
                     }

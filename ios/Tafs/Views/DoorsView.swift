@@ -92,7 +92,7 @@ struct DoorsView: View {
                     Toggle("Open", isOn: Binding(get: { door.open }, set: { on in Task { await doors.setOpen(door, on) } }))
                         .labelsHidden().tint(Theme.ok).disabled(doors.busy)
                 }
-                Text(door.address).font(Theme.mono(15, weight: .medium)).foregroundColor(Theme.ink).textSelection(.enabled)
+                Text(door.address).scaledFont(15, weight: .medium, design: .monospaced).foregroundColor(Theme.ink).textSelection(.enabled)
                 if door.kind == "email" {
                     Button(copied ? "Copied" : "Copy address") {
                         Clipboard.copy(door.address)
@@ -117,7 +117,7 @@ struct DoorsView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(key.auto ? "You" : key.name ?? key.id).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                                Text(key.id).font(Theme.mono(12)).foregroundColor(Theme.dim)
+                                Text(key.id).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                             }
                             Spacer()
                             if !key.auto {
@@ -193,7 +193,7 @@ struct DoorDial: View {
                     .buttonStyle(.plain)
                     .offset(y: -6)
                     .accessibilityHidden(true)
-                Text(centerLine).font(Theme.mono(10, weight: .semibold)).foregroundColor(centerColor)
+                Text(centerLine).scaledFont(10, weight: .semibold, design: .monospaced).foregroundColor(centerColor)
                     .offset(y: 38)
             }
             .frame(width: g.size.width, height: g.size.height)
@@ -203,7 +203,7 @@ struct DoorDial: View {
         .onAppear {
             rotation = Double(selected) * step
             guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) { breathe = true }
+            withMotion(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) { breathe = true }
         }
         .onChange(of: stops) { _ in snap(to: min(selected, stops - 1)) }
         .accessibilityElement()
@@ -309,7 +309,7 @@ struct DoorDial: View {
     private func snap(to raw: Int) {
         let target = Double(raw) * step
         if reduceMotion { rotation = target } else {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) { rotation = target }
+            withMotion(.spring(response: 0.35, dampingFraction: 0.78)) { rotation = target }
         }
         let now = DialMath.stop(rotation: target, stops: stops)
         if now != selected { Haptics.step() }
@@ -413,7 +413,7 @@ struct AddDoorSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("Add a door").font(Theme.display(24)).foregroundColor(Theme.ink)
+                Text("Add a door").scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 Spacer()
                 Button("Done") { dismiss() }
             }
@@ -482,7 +482,7 @@ struct PairSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Pair someone").font(Theme.display(24)).foregroundColor(Theme.ink)
+            Text("Pair someone").scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text("Their messages to this \(door.label.lowercased()) door give work, within the Card. Anyone else's only knock.")
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             TextField(door.kind == "email" ? "Email address" : door.kind == "whatsapp" ? "Phone number, with its country code" : "Who, as \(door.label) names them", text: $sender)
@@ -516,7 +516,7 @@ struct KnockCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("● KNOCK · BY \(DoorNames.label(knock.app).uppercased())\(knock.proof == "fail" ? " · DIDN'T CHECK OUT" : "")")
-                .font(Theme.mono(10, weight: .semibold)).foregroundColor(Theme.amber)
+                .scaledFont(10, weight: .semibold, design: .monospaced).foregroundColor(Theme.amberText)
             if let rest = knock.rest {
                 Text(rest == "keys"
                      ? "This door had its messages from you and paired senders for today. \(knock.dropped) more \(knock.dropped == 1 ? "was" : "were") dropped."
@@ -582,7 +582,7 @@ struct DoItSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Tell \(taf?.name ?? "your taf") what to do").font(Theme.display(22)).foregroundColor(Theme.ink)
+            Text("Tell \(taf?.name ?? "your taf") what to do").scaledFont(22, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text("\(knock.who)'s message goes with your words, as information. \(taf?.name ?? "It") acts on what you say, within its Card, and doesn't write back to them unless you ask.")
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             TextEditor(text: $say)
@@ -637,7 +637,7 @@ struct DoorStamp: View {
     let fromOwner: Bool
 
     var body: some View {
-        Text(text).font(Theme.mono(10, weight: .medium)).foregroundColor(color)
+        Text(text).scaledFont(10, weight: .medium, design: .monospaced).foregroundColor(color)
             .lineLimit(2)
             .frame(maxWidth: .infinity, alignment: fromOwner ? .trailing : .leading)
             .accessibilityLabel(text.lowercased())
@@ -681,7 +681,7 @@ struct DoorRim: View {
                 .rotationEffect(.degrees(spin ? 360 : 0))
                 .onAppear {
                     guard !reduceMotion else { return }
-                    withAnimation(.linear(duration: 4.5).repeatForever(autoreverses: false)) { spin = true }
+                    withMotion(.linear(duration: 4.5).repeatForever(autoreverses: false)) { spin = true }
                 }
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)

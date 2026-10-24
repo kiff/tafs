@@ -4,28 +4,39 @@ struct NeedsYouView: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
+        ScrollViewReader { reader in
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Needs you").font(Theme.display(34)).foregroundColor(Theme.ink)
+                Text("Needs you").scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 if model.mode == .kiff, model.sessionHasKey, model.canAnswerHolds != false, model.alertsReady != true {
                     AlertsCard()
                 }
                 if model.held.isEmpty {
                     Panel {
-                        Text("Nothing is waiting.").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                        Text("Nothing is waiting.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text("When a taf asks for something outside its Card, it shows up here and on your lock screen.")
-                            .font(.system(size: 14)).foregroundColor(Theme.soft)
+                            .scaledFont(14).foregroundColor(Theme.soft)
                     }
                 } else {
-                    ForEach(model.held) { call in HeldCallCard(call: call) }
+                    ForEach(model.held) { call in HeldCallCard(call: call).id(call.id) }
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
+        // A hold opened from its notification is brought into view (kiff/tafs#210).
+        .onChange(of: model.requestedHold) { request in scroll(to: request, reader) }
+        .onChange(of: model.held) { _ in scroll(to: model.requestedHold, reader) }
+        .onAppear { scroll(to: model.requestedHold, reader) }
+        }
         .coachClearance()
         .refreshable { await model.refresh() }
         .screenBackground()
+    }
+
+    private func scroll(to request: AppModel.HoldRequest?, _ reader: ScrollViewProxy) {
+        guard let request, let call = model.held.first(where: { $0.kiffID == request.kiffID }) else { return }
+        withMotion { reader.scrollTo(call.id, anchor: .top) }
     }
 }
 
@@ -40,33 +51,38 @@ struct HeldCallCard: View {
     var body: some View {
         let taf = model.taf(call.tafID)
         Panel(stroke: Theme.amber.opacity(0.4)) {
+            // One sentence for VoiceOver (kiff/tafs#210): the taf, what it asks, when it lapses.
+            VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 if let taf { TafAvatar(taf: taf, size: 32) }
-                Text(taf?.name ?? "A taf").font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                Text(taf?.name ?? "A taf").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer()
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     Text(remaining(at: context.date))
-                        .font(Theme.mono(12))
-                        .foregroundColor(Theme.amber)
+                        .scaledFont(12, design: .monospaced)
+                        .foregroundColor(Theme.amberText)
                 }
             }
             if let amount = call.proposed.amount {
-                Text(amount.formatted).font(Theme.display(44)).foregroundColor(Theme.ink)
+                Text(amount.formatted).scaledFont(44, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             }
-            Text(call.proposed.summary).font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.ink)
+            Text(call.proposed.summary).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
             if !call.proposed.context.isEmpty {
-                Text(call.proposed.context).font(.system(size: 14)).foregroundColor(Theme.soft)
+                Text(call.proposed.context).scaledFont(14).foregroundColor(Theme.soft)
             }
             // What it's on, as KIFF keeps the call (kiff/tafs#102): the payment, not a tool-call id.
             ForEach(call.details ?? [], id: \.self) { line in
-                Text(line).font(Theme.mono(12)).foregroundColor(Theme.soft).textSelection(.enabled)
+                Text(line).scaledFont(12, design: .monospaced).foregroundColor(Theme.soft).textSelection(.enabled)
             }
             Text(call.reason)
-                .font(.system(size: 12, weight: .medium))
+                .scaledFont(12, weight: .medium)
                 .padding(.horizontal, 10).padding(.vertical, 5)
-                .foregroundColor(Theme.amber)
+                .foregroundColor(Theme.amberText)
                 .background(Theme.amber.opacity(0.14))
                 .clipShape(Capsule())
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Self.sentence(call, taf: taf?.name))
 
             if model.canAnswer(call) {
                 if call.approvableOnce {
@@ -78,18 +94,33 @@ struct HeldCallCard: View {
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(sending)
                 } else {
-                    // Over a total the Card keeps across calls: approving once can't pass it, so
-                    // the card says so and offers what can (kiff/tafs#138, item 49).
-                    Text("Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Refuse it, or change the Card's limit.")
-                        .font(.system(size: 13)).foregroundColor(Theme.soft)
+                    // Over a total the Card keeps across calls: approving once can't pass it
+                    // (kiff/tafs#138, item 49). Extra room can, for this call, until that total
+                    // resets (kiff/tafs#211, 6.13); a lasting change is Coach's.
+                    Text(model.canManageCards
+                         ? "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was."
+                         : "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it.")
+                        .scaledFont(13).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
+                    if let refused = HeldCallCard.refusedLine(model.refusedToday(call.tafID)) {
+                        Text(refused)
+                            .scaledFont(13).foregroundColor(Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if model.canManageCards {
+                        Button { send(.extraRoom) } label: {
+                            Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(sending)
+                    }
                     Button {
                         model.improveTaf(call.tafID)
                         model.coachOpen = true
                     } label: {
                         Label("Change the limit in Coach mode", systemImage: "sparkle")
                     }
-                    .buttonStyle(PrimaryButtonStyle())
+                    .buttonStyle(OutlineButtonStyle())
                     .disabled(sending)
                 }
 
@@ -104,7 +135,7 @@ struct HeldCallCard: View {
                 .disabled(sending)
             } else {
                 Text("Answering from the phone arrives once KIFF checks the phone's signature. Until then, answer in KIFF.")
-                    .font(.system(size: 13)).foregroundColor(Theme.soft)
+                    .scaledFont(13).foregroundColor(Theme.soft)
                 if let page = model.answerPage(for: call) {
                     Button {
                         openURL(page)
@@ -117,6 +148,30 @@ struct HeldCallCard: View {
         }
         .sheet(item: $installing) { ready in
             VersionCardSheet(version: ready.version, tafID: ready.tafID, approving: ready.call)
+        }
+        // The answer chosen on its notification (kiff/tafs#210): Approve asks for Face ID now.
+        .onAppear { takeRequest() }
+        .onChange(of: model.requestedHold) { _ in takeRequest() }
+    }
+
+    /// The hold as VoiceOver reads it: "Rae asks: Refund order 42, €150.00. Over €50 each.
+    /// It lapses at 14:05."
+    static func sentence(_ call: HeldCall, taf: String?) -> String {
+        let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
+        return "\(taf ?? "A taf") asks: \(what). \(call.reason). It lapses at \(call.expiresAt.shortTime)."
+    }
+
+    private func takeRequest() {
+        guard let request = model.requestedHold, request.kiffID == call.kiffID, !sending else { return }
+        model.requestedHold = nil
+        guard model.canAnswer(call) else { return }
+        switch request.answer {
+        case AlertAnswers.approve? where call.approvableOnce:
+            if call.install != nil { install() } else { send(.approveOnce) }
+        case AlertAnswers.refuse?:
+            send(.refuse)
+        default:
+            break
         }
     }
 
@@ -131,6 +186,16 @@ struct HeldCallCard: View {
             }
             sending = false
         }
+    }
+
+    /// How many calls the vendor refused today that still count toward the Card's totals,
+    /// in a line, naming the vendor when every one is the same; nil for none.
+    static func refusedLine(_ refused: [RecordEntry]) -> String? {
+        guard !refused.isEmpty else { return nil }
+        let vendors = Set(refused.compactMap(\.refusedBy))
+        let who = vendors.count == 1 && refused.allSatisfy({ $0.refusedBy != nil }) ? vendors.first! : "the vendor"
+        let calls = refused.count == 1 ? "1 call" : "\(refused.count) calls"
+        return "\(calls) \(who) refused today still counted toward it: nothing moved, but they used room."
     }
 
     private func send(_ answer: Answer) {
@@ -154,9 +219,9 @@ struct AlertsCard: View {
 
     var body: some View {
         Panel {
-            Text("Know the moment a taf needs you").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+            Text("Know the moment a taf needs you").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
             Text("Get an alert when a call waits for your answer, even with tafs closed.")
-                .font(.system(size: 14)).foregroundColor(Theme.soft)
+                .scaledFont(14).foregroundColor(Theme.soft)
             Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
                 Task { await model.turnOnAlerts() }
             }
