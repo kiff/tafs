@@ -318,7 +318,7 @@ struct ReceiptView: View {
                 .padding(20)
             }
             .screenBackground()
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
         .task { await loadReceipt() }
     }

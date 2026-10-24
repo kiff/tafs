@@ -52,7 +52,7 @@ struct DeleteAccountView: View {
             .hiddenScrollBackground()
             .screenBackground()
             .navigationTitle("Delete account")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(deleting) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(deleting).keyboardShortcut(.cancelAction) } }
             .onAppear { model.deleteAccountError = nil }
         }
     }

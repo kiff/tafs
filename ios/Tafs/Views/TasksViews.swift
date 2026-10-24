@@ -54,7 +54,7 @@ private struct AddTasksContent: View {
             .screenBackground()
             .navigationTitle("Add tasks")
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { done() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { done() }.keyboardShortcut(.cancelAction) } }
         }
     }
 }
@@ -121,7 +121,7 @@ struct AskAdminView: View {
             .screenBackground()
             .navigationTitle("Ask an admin")
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
     }
 }
@@ -163,7 +163,7 @@ struct DeclineRequestView: View {
             .screenBackground()
             .navigationTitle("Decline")
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
     }
 }

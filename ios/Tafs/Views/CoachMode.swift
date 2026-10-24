@@ -45,7 +45,7 @@ struct CoachView: View {
             SetupChatView()
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Close") { model.coachOpen = false }
+                        Button("Close") { model.coachOpen = false }.shortcut(.close)
                     }
                     if let fullScreen {
                         ToolbarItem(placement: .navigationBarLeading) {

@@ -324,6 +324,7 @@ struct TafChatView: View {
                         .clipShape(Circle())
                 }
                 .accessibilityLabel("Stop")
+                .shortcut(.stop)
             } else {
                 // While the taf works, what's written goes to its run, which reads it at its
                 // next step; or, behind a queued message, waits for it to be done.
@@ -337,6 +338,7 @@ struct TafChatView: View {
                         .opacity(empty ? 0.4 : 1)
                 }
                 .disabled(empty)
+                .shortcut(.send)
                 .accessibilityLabel(thinking ? "Send to \(name) while it works" : "Send")
             }
         }

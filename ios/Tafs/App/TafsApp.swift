@@ -107,6 +107,8 @@ struct RootView: View {
                     .ignoresSafeArea(.keyboard)
             }
         }
+        // The keyboard's shortcuts on every screen (kiff/tafs#210).
+        .background { if model.signedIn { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         // A wide screen: a panel beside what's open. A phone: a sheet, with Close, that a drag
@@ -124,7 +126,7 @@ struct RootView: View {
         .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {
             NavigationStack {
                 UsageView()
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false } } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false }.keyboardShortcut(.cancelAction) } }
             }
             .environmentObject(model)
         }
@@ -132,7 +134,7 @@ struct RootView: View {
         .sheet(isPresented: Binding(get: { model.signedIn && model.haltRequested }, set: { model.haltRequested = $0 })) {
             NavigationStack {
                 HaltScreen(tafID: nil)
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.haltRequested = false } } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.haltRequested = false }.keyboardShortcut(.cancelAction) } }
             }
             .environmentObject(model)
         }

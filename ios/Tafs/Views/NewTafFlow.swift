@@ -24,7 +24,7 @@ struct NewTafFlow: View {
             }
             .screenBackground()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.keyboardShortcut(.cancelAction) }
                 if step > 1 {
                     ToolbarItem(placement: .navigationBarLeading) { Button("Back") { step -= 1 } }
                 }

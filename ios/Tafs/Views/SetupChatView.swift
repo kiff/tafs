@@ -537,6 +537,7 @@ struct SetupChatView: View {
                         .clipShape(Circle())
                 }
                 .accessibilityLabel("Stop")
+                .shortcut(.stop)
             } else {
                 // While Setup works, what's written waits and is sent once it's done.
                 Button(action: send) {
@@ -549,6 +550,7 @@ struct SetupChatView: View {
                         .opacity(empty ? 0.4 : 1)
                 }
                 .disabled(empty)
+                .shortcut(.send)
                 .accessibilityLabel(thinking ? "Send when this answer is done" : "Send")
             }
         }
@@ -646,7 +648,7 @@ struct SetupChatsList: View {
             .screenBackground()
             .navigationTitle("Previous conversations")
             .inlineTitle()
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
             .task { await model.loadSetupChats() }
         }
     }
