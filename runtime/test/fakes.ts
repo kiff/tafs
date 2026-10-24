@@ -464,7 +464,7 @@ export function memorySlots(): Slots & { taken: Set<string> } {
     taken,
     async claim(key) { if (taken.has(key)) return false; taken.add(key); return true; },
     async release(key) { taken.delete(key); },
-    async keep() {},
+    async keep(key) { taken.add(key); },
     async held(key) { return taken.has(key); },
   };
 }
