@@ -80,7 +80,7 @@ export interface CardView {
  * - idle: an agent tafs doesn't run (made through KIFF's API), acting only when its own software calls;
  * - stopped: no active Card.
  */
-export type HomeState = "working" | "paused" | "waiting" | "idle" | "stopped";
+export type HomeState = "working" | "paused" | "waiting" | "idle" | "stopped" | "halted";
 
 /** KIFF's Card as `GET /v1/me/mandates?include=use` sends it, as much as the list reads. */
 export interface Mandate {

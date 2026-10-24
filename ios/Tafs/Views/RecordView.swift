@@ -120,7 +120,12 @@ extension RecordEntry {
         guard let amount, let value = Decimal(string: amount.value, locale: Locale(identifier: "en_US_POSIX")) else { return nil }
         guard let unit = amount.unit, !unit.isEmpty else { return amount.value }
         if unit.count == 3, unit == unit.uppercased(), Locale.isoCurrencyCodes.contains(unit) {
-            return value.formatted(.currency(code: unit))
+            // As the app writes money everywhere: "US$80", never "US$80,00" (kiff/tafs#236, item 16).
+            let scale = amount.value.split(separator: ".").dropFirst().first?.count ?? 0
+            var minor = value * Decimal(sign: .plus, exponent: scale, significand: 1)
+            var whole = Decimal()
+            NSDecimalRound(&whole, &minor, 0, .plain)
+            return Money(minor: NSDecimalNumber(decimal: whole).int64Value, currency: unit, scale: scale).formatted
         }
         return "\(amount.value) \(unit)"
     }

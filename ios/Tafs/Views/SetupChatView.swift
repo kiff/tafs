@@ -729,22 +729,44 @@ struct UnsentBubble: View {
     let busy: Bool
     let retry: () async -> Void
     let discard: () -> Void
+    /// The taf the chat is with, when it has one: a send refused for its halt says so and
+    /// offers Resume, since Retry can't pass a halt (kiff/tafs#236, item 14).
+    var taf: (id: UUID, name: String)? = nil
+
+    /// Whether the send was refused because the taf, or its account, is halted.
+    static func halted(_ why: String) -> Bool {
+        let w = why.lowercased()
+        return w.hasPrefix("halted") || w.contains("is halted")
+    }
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 6) {
             ChatBubble(message: TafsCloud.ChatMessage(at: message.at, from: .owner, text: words, session: "unsent"), taf: nil)
                 .opacity(0.6)
-            HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.circle.fill").foregroundColor(Theme.no)
-                Text("Not sent").foregroundColor(Theme.no)
-                Text("·").foregroundColor(Theme.dim)
-                Button("Retry") { Task { await retry() } }
-                    .foregroundColor(Theme.ink).semibold()
-                    .disabled(busy)
+            if let taf, Self.halted(message.why) {
+                HStack(spacing: 6) {
+                    Image(systemName: "hand.raised.fill").foregroundColor(Theme.no)
+                    Text("\(taf.name) is halted").foregroundColor(Theme.no)
+                    Text("·").foregroundColor(Theme.dim)
+                    NavigationLink { HaltScreen(tafID: taf.id) } label: { Text("Resume").foregroundColor(Theme.ink).semibold() }
+                }
+                .scaledFont(13, relativeTo: .footnote)
+                Text("Nothing reaches it until you resume it. Then send this again.")
+                    .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.circle.fill").foregroundColor(Theme.no)
+                    Text("Not sent").foregroundColor(Theme.no)
+                    Text("·").foregroundColor(Theme.dim)
+                    Button("Retry") { Task { await retry() } }
+                        .foregroundColor(Theme.ink).semibold()
+                        .disabled(busy)
+                }
+                .scaledFont(13, relativeTo: .footnote)
+                Text(message.why).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
             }
-            .scaledFont(13, relativeTo: .footnote)
-            Text(message.why).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .contextMenu {

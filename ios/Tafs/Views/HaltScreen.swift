@@ -145,6 +145,8 @@ struct HaltRow: View {
                 Spacer()
                 Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
             }
+            // The whole row opens it, not only its words and caret (kiff/tafs#236, item 12).
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .task(id: tafID) { await model.refreshHalt(tafID) }

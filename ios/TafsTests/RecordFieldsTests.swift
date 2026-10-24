@@ -67,6 +67,11 @@ final class RecordFieldsTests: XCTestCase {
         let gw = try XCTUnwrap(byID["p_gw"])
         XCTAssertEqual(gw.amount, .init(value: "150", unit: nil))
         XCTAssertEqual(gw.amountText, "150")
+        // In a currency it reads as the app writes money everywhere (kiff/tafs#236, item 16).
+        XCTAssertEqual(b.amountText, Money(minor: 15000, currency: "EUR", scale: 2).formatted)
+        var whole = b
+        whole.amount = .init(value: "80.00", unit: "USD")
+        XCTAssertEqual(whole.amountText, Money(minor: 8000, currency: "USD", scale: 2).formatted, "no ,00 on a whole amount")
 
         let d = try XCTUnwrap(byID["p_d"])
         XCTAssertEqual(d.readOnly, true)

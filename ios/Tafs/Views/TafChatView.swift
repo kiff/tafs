@@ -89,7 +89,8 @@ struct TafChatView: View {
                     ForEach(state.unsent) { unsent in
                         UnsentBubble(message: unsent, words: unsent.text, busy: model.chatSending.contains(tafID),
                                      retry: { await model.retryChat(unsent, to: tafID) },
-                                     discard: { model.discardUnsentChat(unsent, from: tafID) })
+                                     discard: { model.discardUnsentChat(unsent, from: tafID) },
+                                     taf: (tafID, taf?.name ?? "This taf"))
                             .id(unsent.id)
                     }
                     // The answer streaming now is in the items, in the order it came (kiff/tafs#206):

@@ -463,6 +463,20 @@ describe("the home list", () => {
     expect(stopped.card).toMatchObject({ ids: [], active: false, rules: [] });
   });
 
+  it("says halted while the taf or its account is halted, over its schedule and holds (kiff/tafs#236, item 13)", async () => {
+    const w = world();
+    w.account.mandates = [raeCard];
+    w.account.held = [{ subject: "rae" }];
+    await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" });
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0]).toMatchObject({ state: "halted", waiting: 1 });
+    // Resumed (KIFF first, as the phone signs it): its own state again.
+    w.account.halts!.rae = { state: "running", kiff_ack: false, planque_ack: false };
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/halt`, { token: "ana" })).status).toBe(200);
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].state).toBe("waiting");
+    await call(w, "POST", "/v1/halt", { token: "ana" });
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].state).toBe("halted");
+  });
+
   it("lists the account's other agents with Cards apart: idle, and never Setup's or a taf being removed", async () => {
     const w = world();
     await w.tafs.put("t_acme", { id: NEW, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-14T09:00:00Z" });

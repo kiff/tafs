@@ -229,6 +229,8 @@ struct Card: Hashable, Codable {
 
 enum TafState: String, Codable {
     case working, waiting, idle, paused, revoked
+    /// Halted, on its own or with its account (kiff/tafs#236, item 13): nothing of it runs until resumed.
+    case halted
 
     var label: String {
         switch self {
@@ -237,6 +239,7 @@ enum TafState: String, Codable {
         case .idle: return "Ready"
         case .paused: return "Paused"
         case .revoked: return "Stopped"
+        case .halted: return "Halted"
         }
     }
 }

@@ -1161,6 +1161,8 @@ final class AppModel: ObservableObject {
             let h = try await cloud.halt(key.isEmpty ? nil : key)
             guard gen == accountGeneration else { return }
             halts[key] = h
+            // The list reads it halted at once, not at its next read (kiff/tafs#236, item 13).
+            await refresh()
         } catch {
             lastError = "tafs couldn't halt \(tafID == nil ? "your tafs" : "it"): \(error.localizedDescription). Try again."
         }
@@ -1385,6 +1387,7 @@ final class AppModel: ObservableObject {
             let h = try await cloud.releaseHalt(key.isEmpty ? nil : key)
             guard gen == accountGeneration else { return false }
             halts[key] = h
+            await refresh()
             return true
         } catch {
             lastError = "KIFF resumed \(name ?? "your tafs"), but tafs cloud didn't yet: \(error.localizedDescription). Try again."

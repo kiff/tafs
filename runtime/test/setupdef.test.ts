@@ -238,6 +238,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("with kiff_card {agent: its kiff_agent}, in whatever conversation you're in. Never send the owner elsewhere, or say you can't tell which taf it is.");
     // A taf the owner names is found by that name (kiff/tafs#236, item 6).
     expect(flat).toContain("A taf the owner names is in tafs_state, by that name, with its kiff_agent.");
+    // A question on a taf's work goes to the taf, never back to the owner (kiff/tafs#236, item 30).
+    expect(flat).toContain("Hand a taf its job, or a question on its work, with taf_task; never do it yourself.");
     // Coach says which Card covers live actions, and never gives a test Card's limits as real ones.
     expect(flat).toContain("say which Card covers its live actions, the production one, and keep a test Card's limits apart");
     expect(flat).toContain("never tell the owner the taf may do nothing");

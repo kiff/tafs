@@ -116,6 +116,8 @@ enum KIFFMapping {
         switch h.state {
         case "waiting": taf.state = .waiting; taf.now = "Waiting on you"
         case "paused": taf.state = .paused; taf.now = "Paused"
+        // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
+        case "halted": taf.state = .halted; taf.now = "Halted · resume it from Halt"
         // A taf with no schedule isn't at work until it's told something in its chat
         // (kiff/tafs#138, item 55): it reads as ready, not running.
         case "working" where h.unscheduled == true: taf.state = .idle; taf.now = "Works from its chat"

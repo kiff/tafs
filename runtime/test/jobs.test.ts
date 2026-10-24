@@ -39,7 +39,10 @@ describe("jobs", () => {
       // KIFF decides the Card, not the taf: it decided a hold itself, so the call
       // never reached the owner (kiff/tafs#206).
       expect(prompt.replace(/\s+/g, " ")).toContain("KIFF decides what your Card allows, not you.");
-      expect(prompt).toContain("never a table");
+      // A table when the owner asks for one: the app draws them (kiff/tafs#236, item 29).
+      expect(prompt.replace(/\s+/g, " ")).toContain("a table only when the owner asks for one");
+      // A deadline as time left, never in UTC (item 26).
+      expect(prompt.replace(/\s+/g, " ")).toContain("no clock times or time zones, a deadline included");
       expect(prompt).toContain("Name each item by its reference and what\nbecame of it");
       expect(prompt).toContain(j.instructions);
     }

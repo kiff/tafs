@@ -2127,6 +2127,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
   const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
+  // A halted taf reads halted everywhere (kiff/tafs#236, item 13): kiff/agents holds it, on
+  // its own or with its account. A read that fails leaves its state as the rest says.
+  const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
   const listed = tafs.map((t, i) => {
@@ -2135,7 +2138,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
     const words = JOBS.find((j) => j.id === v.job)?.summary;
-    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}) };
+    const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
+    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.
