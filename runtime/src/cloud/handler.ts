@@ -1,8 +1,8 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, view as aiView } from "./aiuse.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
-import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Run, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
@@ -25,7 +25,7 @@ import { type EventLog, logEvent } from "./events.js";
  * and only on that account's tafs.
  *
  *   GET  /v1/jobs
- *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary and doors, and the account's other agents with Cards
+ *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary, doors and open trial, and the account's other agents with Cards
  *   GET  /v1/tafs
  *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}
  *   POST /v1/tafs/{id}/pause | resume | run
@@ -47,6 +47,13 @@ import { type EventLog, logEvent } from "./events.js";
  *   POST /v1/tafs/{id}/versions/{n}/trial  {input?}: a trial of version n, its writes decided by KIFF, nothing sent
  *   GET  /v1/tafs/{id}/trials/{run}     a trial so far: its run and what KIFF decided for each write
  *   POST /v1/tafs/{id}/versions/{n}/live   make version n live, once its Card revision is confirmed in KIFF
+ *   POST /v1/tafs/{id}/versions/{n}/try    the KIFF draft to confirm as version n's trial Card (kiff/tafs#173)
+ *   PUT  /v1/tafs/{id}/trial            {n, draft}: open the trial, once KIFF has that draft trying
+ *   GET  /v1/tafs/{id}/trial            the open trial, or none
+ *   GET  /v1/tafs/{id}/trial/conversation  its chat
+ *   POST /v1/tafs/{id}/trial/messages   {text}: one turn of the version being tried
+ *   POST /v1/tafs/{id}/trial/install    once KIFF has confirmed its draft live: that version goes live, the trial ends
+ *   DELETE /v1/tafs/{id}/trial          Go back: KIFF ends its trial Cards, the trial ends, the live version stays
  *   POST /v1/tafs/{id}/improve          {text}: a new conversation with the account's Setup, opening on this taf (kiff/tafs#107)
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
@@ -90,7 +97,8 @@ export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
-  "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs">;
+  "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
+  "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
 
 export interface Deps {
   agents: AgentsAPI;
@@ -473,6 +481,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return message(event, me, taf, deps);
   }
   if (action === "versions" || action === "trials" || action === "switching") return versionRoute(event, method, parts, me, taf, deps);
+  if (action === "trial") return trialRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && method === "POST" && action === "improve") {
     need(me, "cards.manage");
     return improve(event, me, taf, deps);
@@ -1365,6 +1374,10 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     if (!input || input.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters for the trial`);
     return { run: await agentsCall(() => deps.agents.startTrial(me.tenantID, taf.id, n, input)) };
   }
+  if (sub === "try") {
+    if (version.live) throw new HTTPError(409, "that version is live already");
+    return { draft: await trialDraftFor(event, me, taf, version, deps) };
+  }
   if (sub === "switch") {
     if (version.live) throw new HTTPError(409, "that version is live already");
     const again = parseBody(event).redraft === true;
@@ -1398,6 +1411,97 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     return { live: n };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * Trying a version (kiff/tafs#173): the owner chats with it under a trial Card
+ * of its own, while the live version keeps its schedule, Card and budget. The
+ * phone confirms the version's draft as a trial in KIFF, signed, as for any
+ * draft; tafs cloud then opens the trial in kiff/agents. It ends on Install
+ * (the phone confirms the same draft live, then the version goes live here),
+ * on Go back (KIFF revokes the trial Cards), or unused for 7 days (kiff/agents'
+ * sweep). Its chat is then deleted, and the version keeps one line with KIFF's
+ * counts.
+ */
+async function trialRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
+  const sub = parts.length === 5 ? parts[4] : parts.length === 4 ? "" : undefined;
+  if (sub === "" && method === "GET") return { trial: (await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id))) ?? null };
+  if (sub === undefined) throw new HTTPError(404, "not found");
+  if (sub === "conversation" && method === "GET") {
+    const open = await openTrialOf(me, taf, deps);
+    if (!open.session) return { messages: [], components: [], working: false, steering: [] };
+    const only = await ownChat(me, taf, open.session, deps, "trial");
+    const { messages, components, sessions } = await conversation(me, taf, deps, only);
+    const latest = await latestRun(me, taf, sessions, deps);
+    return { messages, components, working: latest.working, steering: latest.steering };
+  }
+  need(me, "cards.manage");
+  const token = bearer(event);
+  if (sub === "" && method === "PUT") {
+    const body = parseBody(event);
+    const n = Number(body.n);
+    const draft = str(body.draft);
+    if (!Number.isInteger(n) || n < 1 || !draft) throw new HTTPError(400, "a trial needs its version (n) and its Card's draft");
+    const version = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.n === n);
+    if (!version) throw new HTTPError(404, "no such version");
+    if (version.live) throw new HTTPError(409, "that version is live already");
+    // Only this taf's own draft, and only once KIFF has it trying: its calls then go under its trial Cards.
+    const d = await draftInfo(token, draft, deps.fetch, deps.kiffBase);
+    if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(404, "no such draft for this taf");
+    if (d.status !== "trying") throw new HTTPError(409, "start trying this version's Card in KIFF first");
+    return { trial: await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft)) };
+  }
+  if (sub === "messages" && method === "POST") {
+    const text = chatText(event);
+    const { run, trial } = await agentsCall(() => deps.agents.trialMessage(me.tenantID, taf.id, text));
+    return { session: run.session, run: run.id, trial };
+  }
+  if (sub === "install" && method === "POST") {
+    const open = await openTrialOf(me, taf, deps);
+    // The phone confirmed the trial's draft live in KIFF: the version goes live
+    // under it, and KIFF ended the trial with it.
+    if (!(await draftConfirmed(token, open.draft, deps.fetch, deps.kiffBase))) throw new HTTPError(409, "confirm this version's Card first");
+    await goLive(event, me, taf, open.n, deps);
+    const counts = (await trialOf(token, open.draft, deps.fetch, deps.kiffBase)) ?? { calls: 0, held: 0, refused: 0 };
+    const ended = await agentsCall(() => deps.agents.endTrial(me.tenantID, taf.id, "installed", counts));
+    return { live: open.n, ended };
+  }
+  if (sub === "" && method === "DELETE") {
+    const open = await openTrialOf(me, taf, deps);
+    const counts = await endTrialIn(token, open.draft, deps.fetch, deps.kiffBase).catch((err: unknown) => {
+      if (err instanceof KIFFError && err.status === 409) throw new HTTPError(409, "KIFF couldn't end this trial's Card yet; try again");
+      throw err;
+    });
+    return { ended: await agentsCall(() => deps.agents.endTrial(me.tenantID, taf.id, "back", counts)) };
+  }
+  throw new HTTPError(404, "not found");
+}
+
+/** The taf's open trial, or 404. */
+async function openTrialOf(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Trial> {
+  const open = await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id));
+  if (!open) throw new HTTPError(404, "this taf has no open trial");
+  return open;
+}
+
+/**
+ * The KIFF draft the phone confirms as version n's trial Card: the draft a
+ * switch to it would wait for (draftFor), or, for a version that runs under
+ * the Cards in force, those Cards drafted as they stand, so the trial still
+ * gets Cards of its own and the live ones keep their counters.
+ */
+async function trialDraftFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, version: AgentVersion, deps: Deps): Promise<string> {
+  const drafted = await draftFor(event, me, taf, version, false, deps);
+  if (drafted) return drafted;
+  const cards = await liveCards(event, taf, deps);
+  if (!cards.length) throw new HTTPError(409, "this taf has no Cards to try a version under");
+  try {
+    return await restoreDraft(bearer(event), taf.kiffAgent, cards, `${taf.name}, trying version ${version.n}`, deps.fetch, deps.kiffBase);
+  } catch (err) {
+    if (err instanceof KIFFError && (err.status === 404 || err.status === 409)) throw new HTTPError(409, `KIFF can't prepare this version's Card: ${err.message}`);
+    throw err;
+  }
 }
 
 /** Most characters a version's note and its instructions from the owner may have. */
@@ -1700,7 +1804,7 @@ async function chatFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
 }
 
 /** One of the taf's chats, by its id: another taf's, a job run's or none is 404. */
-async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps): Promise<Session> {
+async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind: "chat" | "trial" = "chat"): Promise<Session> {
   if (!id) throw new HTTPError(404, "no such chat");
   let read: Awaited<ReturnType<Deps["agents"]["session"]>>;
   try {
@@ -1709,7 +1813,7 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps): Prom
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no such chat");
     throw agentsFailure(err);
   }
-  if (read.session.agent !== taf.id || read.session.kind !== "chat") throw new HTTPError(404, "no such chat");
+  if (read.session.agent !== taf.id || read.session.kind !== kind) throw new HTTPError(404, "no such chat");
   return read.session;
 }
 
@@ -2161,6 +2265,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
   const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
+  // Each taf's open trial, its own entry in the app's menu (kiff/tafs#173). One that can't
+  // be read leaves that entry out, never the list.
+  const trials = await Promise.all(tafs.map((t) => deps.agents.openedTrial(me.tenantID, t.id).catch(() => undefined)));
   // A halted taf reads halted everywhere (kiff/tafs#236, item 13): kiff/agents holds it, on
   // its own or with its account. A read that fails leaves its state as the rest says.
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
@@ -2168,12 +2275,13 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
+    const trial = trials[i];
     const card = summary(cards.get(t.kiffAgent) ?? []);
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
     const words = JOBS.find((j) => j.id === v.job)?.summary;
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
-    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}) };
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.

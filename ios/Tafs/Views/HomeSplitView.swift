@@ -39,7 +39,7 @@ struct HomeSplitView: View {
             NavigationStack {
                 switch selection {
                 case .taf(let id)?, .held(_, let id)?:
-                    TafDetailView(tafID: id)
+                    if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
                 case .haltAll?:
                     HaltScreen(tafID: nil)
                 case nil:
@@ -122,6 +122,10 @@ struct HomeSplitView: View {
             Section {
                 ForEach(model.tafs) { taf in
                     NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
+                    // Its open trial, its own entry under it (kiff/tafs#173).
+                    if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
+                        NavigationLink(value: HomeSelection.taf(chat)) { tafRow(trying) }
+                    }
                 }
                 if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
                     Text("Connect a tool to set up your first taf.")
