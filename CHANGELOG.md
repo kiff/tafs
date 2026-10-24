@@ -50,6 +50,20 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Dictation uses any language the device dictates in (#208), the owner's first,
+  and the switch while dictating goes through those. Before, it knew Spain's
+  Spanish and US English only: a device with French dictation, or Spanish from
+  Colombia, said Spanish wasn't available. With none on the device, it says how
+  to turn dictation on.
+- Dictating goes on through pauses (#208): after a pause the next words go after
+  what was said, where before they replaced it, and the recognizer ending by
+  itself no longer stops dictation. The mic stays in the message bar when the
+  box has text, so you can carry on dictating after typing.
+- While dictating, a bar under the message box shows your voice as it comes, so
+  it's plain that the mic is on, with cancel (the box goes back as it was) and
+  stop (what you said stays, unsent).
+- The doors no longer show "Couldn't read the doors: cancelled" when their
+  screen closes before the read ends.
 - A taf that didn't start reaches Coach (#183): when tafs cloud refuses to start
   the taf Coach handed over, Coach hears it once and says plainly that no taf was
   created. When the name was taken, it hands it over again with the same Card under

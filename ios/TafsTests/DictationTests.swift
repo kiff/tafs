@@ -7,22 +7,33 @@ import XCTest
 final class FakeSpeech: SpeechEngine {
     var refused: String?
     var notHere: String?
+    var have: [Dictation.Language] = [.english, .spanish]
     var startedWith: (language: Dictation.Language, hints: [String])?
     var stops = 0
-    private var onText: (@Sendable (String) -> Void)?
+    var starts = 0
+    /// From this start on, starting throws: the microphone was taken.
+    var failFrom: Int?
+    private var onText: (@Sendable (String, Bool) -> Void)?
+    private var onLevel: (@Sendable (Float) -> Void)?
     private var onEnd: (@Sendable (String?) -> Void)?
 
     func authorize() async -> String? { refused }
+    func languages() -> [Dictation.Language] { have }
+    var noLanguage: String { "Dictation isn't on this iPhone yet." }
     func unavailable(_ language: Dictation.Language) -> String? { notHere }
-    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String) -> Void,
-               onEnd: @escaping @Sendable (String?) -> Void) throws {
+    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
+               onLevel: @escaping @Sendable (Float) -> Void, onEnd: @escaping @Sendable (String?) -> Void) throws {
+        starts += 1
+        if let failFrom, starts >= failFrom { throw URLError(.cannotConnectToHost) }
         startedWith = (language, hints)
         self.onText = onText
+        self.onLevel = onLevel
         self.onEnd = onEnd
     }
     func stop() { stops += 1 }
 
-    func hear(_ words: String) { onText?(words) }
+    func hear(_ words: String, done: Bool = false) { onText?(words, done) }
+    func sound(_ level: Float) { onLevel?(level) }
     func end(_ why: String? = nil) { onEnd?(why) }
 }
 
@@ -77,9 +88,46 @@ final class DictationTests: XCTestCase {
         XCTAssertEqual(writes, 2)
     }
 
-    /// The recognizer's own end (a final result, or an error) stops listening, never sends,
-    /// and says why when it wasn't the owner.
-    func testTheRecognizersEndStopsListening() async {
+    /// A pause ends a stretch of speech: what was said stays, and the next words go after
+    /// it, never over it (in a test on a device, a long pause replaced the whole text).
+    func testAfterAPauseTheNextWordsGoAfterTheEarlierOnes() async {
+        let speech = FakeSpeech()
+        let dictation = Dictation(engine: speech, language: .english)
+        var box = "Hi"
+        await dictation.start(text: box, hints: []) { box = $0 }
+        speech.hear("refund order")
+        await settle()
+        speech.hear("refund order 4471", done: true)
+        await settle()
+        await settle()
+        speech.hear("and tell")
+        await settle()
+        speech.hear("and tell the customer")
+        await settle()
+        await settle()
+        XCTAssertEqual(box, "Hi refund order 4471 and tell the customer")
+        // Without the recognizer saying the stretch was done: its text starts afresh.
+        speech.hear("thanks")
+        await settle()
+        XCTAssertEqual(box, "Hi refund order 4471 and tell the customer thanks")
+        // A revision of the stretch being heard replaces it, as it should.
+        speech.hear("thanks a lot")
+        await settle()
+        XCTAssertEqual(box, "Hi refund order 4471 and tell the customer thanks a lot")
+    }
+
+    func testStartsAfresh() {
+        XCTAssertFalse(Dictation.startsAfresh("", "hello"))
+        XCTAssertFalse(Dictation.startsAfresh("refund ten", "refund 10"), "a revision keeps its start")
+        XCTAssertFalse(Dictation.startsAfresh("refund", "refund order"))
+        XCTAssertTrue(Dictation.startsAfresh("refund order 4471", "and"))
+        XCTAssertFalse(Dictation.startsAfresh("hi", "and tell the customer"), "longer: still being heard")
+    }
+
+    /// The recognizer's own end (a pause, its limit, an error) doesn't stop dictating: it
+    /// listens again, after what was heard. Only after a few ends with nothing heard does it
+    /// stop, quietly; nothing is ever sent.
+    func testTheRecognizersEndListensAgainUntilItsQuiet() async {
         let speech = FakeSpeech()
         let dictation = Dictation(engine: speech, language: .english)
         var box = ""
@@ -88,13 +136,51 @@ final class DictationTests: XCTestCase {
         await settle()
         speech.end()
         await settle()
-        XCTAssertEqual(dictation.state, .idle)
-        XCTAssertEqual(box, "Halt the refunds")
+        XCTAssertEqual(dictation.state, .listening)
+        XCTAssertEqual(speech.starts, 2)
+        speech.hear("now")
+        await settle()
+        XCTAssertEqual(box, "Halt the refunds now")
 
-        await dictation.start(text: box, hints: []) { box = $0 }
         speech.end("Dictation stopped. Tap the mic to start again.")
         await settle()
+        speech.end()
+        await settle()
+        XCTAssertEqual(dictation.state, .listening, "two quiet ends: still listening")
+        speech.end()
+        await settle()
+        XCTAssertEqual(dictation.state, .idle, "the third quiet end stops it, with no alert")
+        XCTAssertEqual(box, "Halt the refunds now")
+    }
+
+    /// Listening again can fail (a call took the microphone): it says so, never stops silently.
+    func testAFailedRestartSaysWhy() async {
+        let speech = FakeSpeech()
+        speech.failFrom = 2
+        let dictation = Dictation(engine: speech, language: .english)
+        var box = ""
+        await dictation.start(text: box, hints: []) { box = $0 }
+        speech.hear("Refund")
+        await settle()
+        speech.end()
+        await settle()
+        guard case .blocked(let why) = dictation.state else { return XCTFail("state \(dictation.state)") }
+        XCTAssertTrue(why.hasPrefix("Dictation stopped: "), why)
+        XCTAssertTrue(why.hasSuffix("Tap the mic to start again."), why)
+        XCTAssertEqual(box, "Refund", "what was heard stays")
+    }
+
+    /// Ending with errors three times stops it with the last error, not silently.
+    func testRepeatedErrorsStopWithTheLastWhy() async {
+        let speech = FakeSpeech()
+        let dictation = Dictation(engine: speech, language: .english)
+        await dictation.start(text: "", hints: []) { _ in }
+        for _ in 0..<3 {
+            speech.end("Dictation stopped. Tap the mic to start again.")
+            await settle()
+        }
         XCTAssertEqual(dictation.state, .blocked("Dictation stopped. Tap the mic to start again."))
+        XCTAssertEqual(speech.starts, 3)
     }
 
     func testSwitchingLanguageListensAgainInTheOther() async {
@@ -121,5 +207,85 @@ final class DictationTests: XCTestCase {
         XCTAssertEqual(Dictation.cleaned(["Stripe", " stripe ", "", "Rayo"]), ["Stripe", "Rayo"])
         XCTAssertEqual(Dictation.cleaned((0..<150).map { "w\($0)" }).count, 100)
         XCTAssertEqual(Dictation.purpose, "tafs turns your voice into text on this device. Your voice isn't sent anywhere.")
+    }
+
+    /// Any language the device dictates in, not a fixed two (a device with only French
+    /// dictation): one form each, the owner's own first, then the rest by code.
+    func testTheDevicesOwnLanguagesTheOwnersFirst() {
+        let supported = ["en-US", "en-GB", "es-ES", "es-MX", "fr-FR", "fr-CA", "de-DE"]
+        XCTAssertEqual(Dictation.Language.ordered(supported: supported, preferred: ["es-CO", "fr_CA"]).map(\.id),
+                       ["es-ES", "fr-CA", "de-DE", "en-GB"])
+        XCTAssertEqual(Dictation.Language.ordered(supported: ["fr-FR"], preferred: ["es-CO", "en-US"]).map(\.id), ["fr-FR"])
+        XCTAssertEqual(Dictation.Language.ordered(supported: [], preferred: ["es-CO"]), [])
+        XCTAssertEqual(Dictation.Language(id: "fr-FR").label, "FR")
+        XCTAssertEqual(Dictation.Language(id: "fr-FR").name, "Français")
+        XCTAssertEqual(Dictation.Language(id: "es-MX").name, "Español")
+    }
+
+    /// Only French on the device: dictation starts in French, and the switch has nowhere to go.
+    func testItDictatesInTheLanguageTheDeviceHas() async {
+        let speech = FakeSpeech()
+        speech.have = [Dictation.Language(id: "fr-FR")]
+        let dictation = Dictation(engine: speech, language: .spanish)
+        var box = ""
+        await dictation.start(text: box, hints: []) { box = $0 }
+        XCTAssertEqual(speech.startedWith?.language, Dictation.Language(id: "fr-FR"))
+        await dictation.switchLanguage(text: box, hints: []) { box = $0 }
+        XCTAssertEqual(dictation.language, Dictation.Language(id: "fr-FR"))
+    }
+
+    /// No language on the device: why, and how to turn dictation on, and nothing starts.
+    func testNoLanguageSaysHowToTurnItOn() async {
+        let speech = FakeSpeech()
+        speech.have = []
+        let dictation = Dictation(engine: speech)
+        var box = ""
+        await dictation.start(text: box, hints: []) { box = $0 }
+        XCTAssertEqual(dictation.state, .blocked("Dictation isn't on this iPhone yet."))
+        XCTAssertNil(speech.startedWith)
+    }
+
+    /// While listening, the bar draws how loud the microphone was lately, so it's plain that
+    /// dictation is on; stopping clears it.
+    func testTheLevelsShowWhileListening() async {
+        let speech = FakeSpeech()
+        let dictation = Dictation(engine: speech, language: .english)
+        await dictation.start(text: "", hints: []) { _ in }
+        for i in 0..<(Dictation.levelCount + 10) { speech.sound(i == 0 ? 2 : 0.5) }
+        for _ in 0..<50 where dictation.levels.count < Dictation.levelCount { await settle() }
+        XCTAssertEqual(dictation.levels.count, Dictation.levelCount, "the latest only")
+        XCTAssertTrue(dictation.levels.allSatisfy { $0 >= 0 && $0 <= 1 })
+        dictation.stop()
+        XCTAssertEqual(dictation.levels, [])
+        speech.sound(0.5)
+        await settle()
+        XCTAssertEqual(dictation.levels, [], "nothing after it stopped")
+    }
+
+    func testLevelOfASound() {
+        let silence = [Float](repeating: 0, count: 256)
+        let speech = [Float](repeating: 0.1, count: 256) // -20 dB
+        let loud = [Float](repeating: 1, count: 256)
+        silence.withUnsafeBufferPointer { XCTAssertEqual(Dictation.level($0), 0) }
+        speech.withUnsafeBufferPointer { XCTAssertEqual(Dictation.level($0), 0.75, accuracy: 0.01) }
+        loud.withUnsafeBufferPointer { XCTAssertEqual(Dictation.level($0), 1) }
+        [Float]().withUnsafeBufferPointer { XCTAssertEqual(Dictation.level($0), 0) }
+    }
+
+    /// Cancel puts the box back as it was before dictating: nothing heard stays, nothing is sent.
+    func testCancelPutsTheBoxBack() async {
+        let speech = FakeSpeech()
+        let dictation = Dictation(engine: speech, language: .english)
+        var box = "Hi"
+        await dictation.start(text: box, hints: []) { box = $0 }
+        speech.hear("refund order 4471")
+        await settle()
+        XCTAssertEqual(box, "Hi refund order 4471")
+        dictation.cancel()
+        XCTAssertEqual(box, "Hi")
+        XCTAssertEqual(dictation.state, .idle)
+        speech.hear("late words")
+        await settle()
+        XCTAssertEqual(box, "Hi")
     }
 }

@@ -42,6 +42,9 @@ struct TafChatView: View {
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
             }
             composer
+            #if os(iOS)
+            DictationBar(dictation: model.dictation)
+            #endif
         }
         .task(id: tafID) { await model.followChat(tafID) }
     }
@@ -311,7 +314,7 @@ struct TafChatView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             #if os(iOS)
             // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
-            MicButton(dictation: model.dictation, text: $draft, empty: empty)
+            MicButton(dictation: model.dictation, text: $draft)
             #endif
             if thinking && empty {
                 // While the taf works, Send is Stop: its run is cancelled.
