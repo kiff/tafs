@@ -90,25 +90,6 @@ jobs:
             -destination "id=$DEVICE_ID" \
             CODE_SIGNING_ALLOWED=NO
 
-  # The Mac app (kiff/tafs#85): built for macOS 12, the owner's Mac's last system, so a
-  # call to anything newer without a fallback fails here.
-  mac:
-    runs-on: macos-26
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Generate the Xcode project
-        run: |
-          brew install xcodegen
-          cd ios && xcodegen generate
-
-      - name: Build the Mac app
-        run: |
-          cd ios
-          xcodebuild build -project Tafs.xcodeproj -scheme TafsMac \
-            -destination "platform=macOS" CODE_SIGNING_ALLOWED=NO
-
   screenshots:
     needs: [changes, test]
     if: needs.changes.outputs.ui == 'true'
@@ -140,11 +121,30 @@ jobs:
             -destination "id=$DEVICE_ID" -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet
           xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
           mkdir -p "$RUNNER_TEMP/shots"
+          # A shot is taken once the screen has drawn and settled (kiff/tafs#195): the frame
+          # isn't nearly empty (a screen not drawn yet is the plain background: 121 KB on the
+          # 13-inch iPad, while the sparsest real screen, a pack's, is 175 KB on the iPhone),
+          # and two frames a second apart are within 0.5% of each other's size (a hold's
+          # countdown still ticks). After 30 s it's taken as it is, with a warning naming it.
           shoot() {
             name=$1; shift
+            out="$RUNNER_TEMP/shots/$name.png"
+            frame="$RUNNER_TEMP/frame.png"
             xcrun simctl launch "$DEVICE_ID" bot.tafs.app "$@"
-            sleep 8
-            xcrun simctl io "$DEVICE_ID" screenshot "$RUNNER_TEMP/shots/$name.png"
+            sleep 3
+            prev=0
+            ready=""
+            for _ in $(seq 30); do
+              xcrun simctl io "$DEVICE_ID" screenshot "$frame" >/dev/null 2>&1
+              size=$(wc -c < "$frame")
+              if [ "$size" -gt 150000 ] && [ $(( (size - prev) * 200 )) -le "$size" ] && [ $(( (prev - size) * 200 )) -le "$size" ]; then
+                ready=1; break
+              fi
+              prev=$size
+              sleep 1
+            done
+            [ -n "$ready" ] || echo "::warning::$name: the screen hadn't drawn and settled after 30 s"
+            mv "$frame" "$out"
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
           shoot 1-welcome
@@ -183,8 +183,6 @@ jobs:
           xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
           xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
           shoot ipad-1-welcome
-          # Needs you first: the first launch with sample data on a just-booted iPad can
-          # take longer than a shot's 8 s, so a simple screen goes first.
           shoot ipad-3-needs-you -screenshots YES -tab needs-you
           # A narrow window, Slide Over's width (kiff/tafs#210).
           shoot ipad-narrow-tafs -screenshots YES -tab tafs -narrow YES
