@@ -145,7 +145,7 @@ struct SetupChatView: View {
     private var intro: some View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
-            Text("Coach mode").font(Theme.display(30)).foregroundColor(Theme.coach)
+            Text("Coach mode").scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)
             Text("Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
@@ -254,7 +254,7 @@ struct SetupChatView: View {
                     if let waiting, !cardsInView.contains(waiting.id) {
                         NeedsYouBar(shown: waiting) {
                             following = false
-                            withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("c|" + waiting.id, anchor: .center) }
+                            withMotion(.easeOut(duration: 0.25)) { proxy.scrollTo("c|" + waiting.id, anchor: .center) }
                         }
                     }
                     if !atBottom && !following {
@@ -262,10 +262,10 @@ struct SetupChatView: View {
                             following = true
                             unseen = false
                             pinned = nil
-                            withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
+                            withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
                         } label: {
                             Image(systemName: "arrow.down")
-                                .font(.system(size: 15, weight: .bold)).foregroundColor(Theme.ink)
+                                .scaledFont(15, weight: .bold).foregroundColor(Theme.ink)
                                 .frame(width: 38, height: 38)
                                 .background(Theme.panel)
                                 .overlay(Circle().stroke(Theme.line))
@@ -337,7 +337,7 @@ struct SetupChatView: View {
 
     private func follow(_ proxy: ScrollViewProxy) {
         guard following, pinned == nil else { return }
-        withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
+        withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
     }
 
     /// Opening the chat lands at the card waiting for the owner, or at the latest (#58).
@@ -403,14 +403,14 @@ struct SetupChatView: View {
             startSwitch
             if let taf = model.setupImproving {
                 Text("Improve \(taf.name)")
-                    .font(Theme.display(26)).foregroundColor(Theme.ink)
+                    .scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
                 Text("Say what should change, or ask how it's going. Coach mode starts from what \(taf.name) did and what its Card allows.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("Ask anything about your tafs")
-                    .font(Theme.display(26)).foregroundColor(Theme.ink)
+                    .scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
                 Text("Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval.")
@@ -463,7 +463,7 @@ struct SetupChatView: View {
             Haptics.tap()
             action()
         } label: {
-            Text(title).scaledFont(14, weight: .semibold).lineLimit(1)
+            Text(title).scaledFont(14, weight: .semibold).oneLineUnlessLarge()
                 .foregroundColor(selected ? .white : Theme.coach)
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .background(selected ? Theme.coach : Color.clear)
@@ -530,7 +530,7 @@ struct SetupChatView: View {
                 // While Setup works, Send is Stop: its run is cancelled.
                 Button { Task { await model.stopSetup() } } label: {
                     Image(systemName: "stop.fill")
-                        .font(.system(size: 14, weight: .bold))
+                        .scaledFont(14, weight: .bold)
                         .foregroundColor(.white)
                         .frame(width: 40, height: 40)
                         .background(Theme.ink)
@@ -542,7 +542,7 @@ struct SetupChatView: View {
                 // While Setup works, what's written waits and is sent once it's done.
                 Button(action: send) {
                     Image(systemName: "arrow.up")
-                        .font(.system(size: 16, weight: .bold))
+                        .scaledFont(16, weight: .bold)
                         .foregroundColor(.white)
                         .frame(width: 40, height: 40)
                         .background(Theme.coach)
@@ -783,9 +783,9 @@ struct NeedsYouPill: View {
         Button(action: go) {
             HStack(spacing: 10) {
                 Circle().fill(Theme.amber).frame(width: 8, height: 8)
-                Text(text).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
+                Text(text).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                 Spacer(minLength: 4)
-                Image(systemName: "chevron.up").font(.system(size: 13, weight: .bold)).foregroundColor(Theme.dim)
+                Image(systemName: "chevron.up").scaledFont(13, weight: .bold).foregroundColor(Theme.dim)
             }
             .padding(.horizontal, 14).padding(.vertical, 10)
             .background(Theme.panel)
@@ -860,19 +860,19 @@ struct SetupPlan: View {
         let done = steps.filter { $0.status == "done" }.count
         let now = SetupPlan.current(steps)
         Panel {
-            Button { withAnimation(.easeOut(duration: 0.2)) { open.toggle() } } label: {
+            Button { withMotion(.easeOut(duration: 0.2)) { open.toggle() } } label: {
                 HStack(spacing: 10) {
                     if !open, let now { StepMark(status: now.status) }
                     VStack(alignment: .leading, spacing: 2) {
                         Eyebrow(text: "Plan · \(done) of \(steps.count)")
                         if !open {
                             Text(now?.label ?? (shown.component.title ?? "Plan"))
-                                .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).lineLimit(1)
+                                .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                         }
                     }
                     Spacer(minLength: 4)
                     Image(systemName: open ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, weight: .bold)).foregroundColor(Theme.dim)
+                        .scaledFont(12, weight: .bold).foregroundColor(Theme.dim)
                 }
                 .contentShape(Rectangle())
             }
@@ -909,10 +909,10 @@ struct StepMark: View {
             switch status {
             case "done":
                 Circle().fill(Theme.ok)
-                Image(systemName: "checkmark").font(.system(size: 9, weight: .heavy)).foregroundColor(.white)
+                Image(systemName: "checkmark").scaledFont(9, weight: .heavy).foregroundColor(.white)
             case "failed":
                 Circle().fill(Theme.no)
-                Image(systemName: "xmark").font(.system(size: 9, weight: .heavy)).foregroundColor(.white)
+                Image(systemName: "xmark").scaledFont(9, weight: .heavy).foregroundColor(.white)
             case "active":
                 Circle().stroke(Theme.amber, lineWidth: 2.5)
             default:
@@ -1001,7 +1001,7 @@ struct SetupComponentView: View {
             Panel(stroke: state == .needsYou ? Theme.amber : Theme.ink) {
                 Eyebrow(text: state.isFailure ? "Didn't go through · sign in" : "Needs you · sign in",
                         color: state.isFailure ? Theme.no : Theme.amber)
-                Text("Sign in at \(vendor)").font(Theme.display(20)).foregroundColor(Theme.ink)
+                Text("Sign in at \(vendor)").scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 if case .failed(let why) = state {
                     Text(why.map { "It didn't go through: \($0)" } ?? "It didn't go through.")
                         .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
@@ -1132,13 +1132,13 @@ struct SetupApproval: View {
             if replaced && !open {
                 // A newer request for this connection is below (kiff/tafs#138): this one is
                 // history, and never shows that connection's live state or its error.
-                Button { withAnimation(.easeOut(duration: 0.2)) { open = true } } label: {
+                Button { withMotion(.easeOut(duration: 0.2)) { open = true } } label: {
                     OutcomeLine(text: replacedLine, tone: Theme.dim, mark: "arrow.down.circle.fill", more: true)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Shows the earlier request")
             } else if (state == .done || state == .declined) && !open {
-                Button { withAnimation(.easeOut(duration: 0.2)) { open = true } } label: {
+                Button { withMotion(.easeOut(duration: 0.2)) { open = true } } label: {
                     OutcomeLine(text: outcome(state, grant), tone: state == .done ? Theme.ok : Theme.dim,
                                 mark: state == .done ? "checkmark.circle.fill" : "minus.circle.fill", more: true)
                 }
@@ -1193,7 +1193,7 @@ struct SetupApproval: View {
                 Eyebrow(text: eyebrow, color: color)
                 Spacer()
                 if open {
-                    Button("Fold") { withAnimation(.easeOut(duration: 0.2)) { open = false } }
+                    Button("Fold") { withMotion(.easeOut(duration: 0.2)) { open = false } }
                         .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                 }
             }
@@ -1213,7 +1213,7 @@ struct SetupApproval: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 ForEach(Array(terms.enumerated()), id: \.offset) { _, line in Text(line) }
                             }
-                            .font(Theme.mono(11.5)).foregroundColor(Theme.dim).textSelection(.enabled)
+                            .scaledFont(11.5, design: .monospaced).foregroundColor(Theme.dim).textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.top, 6)
                         } label: {
@@ -1282,7 +1282,7 @@ struct OutcomeLine: View {
             Image(systemName: mark).foregroundColor(tone)
             Text(text).foregroundColor(Theme.soft).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            if more { Image(systemName: "chevron.down").font(.system(size: 11, weight: .bold)).foregroundColor(Theme.dim) }
+            if more { Image(systemName: "chevron.down").scaledFont(11, weight: .bold).foregroundColor(Theme.dim) }
         }
         .scaledFont(14)
         .padding(.horizontal, 12).padding(.vertical, 10)

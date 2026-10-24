@@ -21,14 +21,14 @@ private struct AddTasksContent: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("A pack adds tasks once. Your plan's tasks are used first each period, then packs, oldest first.")
-                        .font(.system(size: 15)).foregroundColor(Theme.soft)
+                        .scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                     ForEach(model.usage?.store?.packs ?? []) { pack in
                         Panel {
                             HStack(alignment: .center, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(pack.line).font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.ink)
-                                    Text(AddTasksView.lasts(pack)).font(.system(size: 13)).foregroundColor(Theme.dim)
+                                    Text(pack.line).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                                    Text(AddTasksView.lasts(pack)).scaledFont(13).foregroundColor(Theme.dim)
                                 }
                                 Spacer()
                                 Button(purchases.products[pack.appleProduct]?.displayPrice ?? "…") {
@@ -37,17 +37,17 @@ private struct AddTasksContent: View {
                                         if model.tasksMessage == nil { done() }
                                     }
                                 }
-                                .font(.system(size: 15, weight: .semibold))
+                                .scaledFont(15, weight: .semibold)
                                 .foregroundColor(Theme.amber)
                                 .disabled(purchases.products[pack.appleProduct] == nil || purchases.buying != nil)
                             }
                         }
                     }
                     if let message = model.tasksMessage {
-                        Text(message).font(.system(size: 14)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                        Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                     }
                     Button("Restore purchases") { Task { await model.restorePurchases() } }
-                        .font(.system(size: 14)).foregroundColor(Theme.soft)
+                        .scaledFont(14).foregroundColor(Theme.soft)
                 }
                 .padding(16)
             }
@@ -79,14 +79,14 @@ struct AskAdminView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Your account's admins get your request. When one adds the pack, your tafs go on.")
-                        .font(.system(size: 15)).foregroundColor(Theme.soft)
+                        .scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                     Panel {
                         Eyebrow(text: "Which pack")
                         ForEach(model.usage?.store?.packs ?? []) { p in
                             Button { pack = p.id } label: {
                                 HStack {
-                                    Text(p.line).font(.system(size: 15)).foregroundColor(Theme.ink)
+                                    Text(p.line).scaledFont(15).foregroundColor(Theme.ink)
                                     Spacer()
                                     Image(systemName: pack == p.id ? "checkmark.circle.fill" : "circle")
                                         .foregroundColor(pack == p.id ? Theme.amber : Theme.dim)
@@ -99,10 +99,10 @@ struct AskAdminView: View {
                     Panel {
                         Eyebrow(text: "Why (optional)")
                         TextField("What the tasks are for", text: $reason)
-                            .font(.system(size: 15))
+                            .scaledFont(15)
                     }
                     if let message = model.tasksMessage {
-                        Text(message).font(.system(size: 14)).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                        Text(message).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                     }
                     Button(sending ? "Asking…" : "Ask") {
                         guard let id = pack, let p = model.usage?.store?.packs.first(where: { $0.id == id }) else { return }
@@ -138,14 +138,14 @@ struct DeclineRequestView: View {
         NavStack {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Decline the request for \(UsageView.packLine(request.pack, in: model.usage))?")
-                    .font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.ink)
+                    .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Panel {
                     Eyebrow(text: "Note (optional)")
-                    TextField("Why, for them", text: $note).font(.system(size: 15))
+                    TextField("Why, for them", text: $note).scaledFont(15)
                 }
                 if let message = model.tasksMessage {
-                    Text(message).font(.system(size: 14)).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                    Text(message).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                 }
                 Button(sending ? "Declining…" : "Decline") {
                     sending = true
@@ -189,33 +189,33 @@ private struct SoloContent: View {
                 if let store = model.usage?.store, let product = purchases.products[store.soloProduct] {
                     Panel {
                         Eyebrow(text: "Solo")
-                        Text(SoloView.price(product)).font(Theme.display(26)).foregroundColor(Theme.ink)
+                        Text(SoloView.price(product)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                         if let trial = product.subscription?.freeTrial {
-                            Text("Starts with \(trial) free.").font(.system(size: 15)).foregroundColor(Theme.ok)
+                            Text("Starts with \(trial) free.").scaledFont(15).foregroundColor(Theme.ok)
                         }
                         Text("One person: tafs, and KIFF for your own agents, with tasks included each month.")
-                            .font(.system(size: 15)).foregroundColor(Theme.soft)
+                            .scaledFont(15).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Button(SoloView.action(product)) { Task { await model.subscribeSolo() } }
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(purchases.buying != nil)
-                    Text(SoloView.terms(product)).font(.system(size: 13)).foregroundColor(Theme.dim)
+                    Text(SoloView.terms(product)).scaledFont(13).foregroundColor(Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 16) {
                         Link("Terms of Use", destination: Legal.terms)
                         Link("Privacy Policy", destination: Legal.privacy)
                     }
-                    .font(.system(size: 13))
+                    .scaledFont(13)
                     .foregroundColor(Theme.soft)
                 } else {
-                    Panel { Text("Solo isn't available from the App Store right now.").font(.system(size: 15)).foregroundColor(Theme.soft) }
+                    Panel { Text("Solo isn't available from the App Store right now.").scaledFont(15).foregroundColor(Theme.soft) }
                 }
                 if let message = model.tasksMessage {
-                    Text(message).font(.system(size: 14)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    Text(message).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 }
                 Button("Restore purchases") { Task { await model.restorePurchases() } }
-                    .font(.system(size: 14)).foregroundColor(Theme.soft)
+                    .scaledFont(14).foregroundColor(Theme.soft)
             }
             .padding(16)
         }

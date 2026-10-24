@@ -13,7 +13,7 @@ struct SetupShapePanel: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Eyebrow(text: "Taking shape")
                     if let heading = shape.name ?? shape.title {
-                        Text(heading).font(Theme.display(26)).foregroundColor(Theme.ink)
+                        Text(heading).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if shape.isEmpty {

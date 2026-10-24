@@ -11,12 +11,12 @@ struct RecordView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Record").font(Theme.display(34)).foregroundColor(Theme.ink)
+                Text("Record").scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 Text("Everything your tafs did, were refused, or asked you. Newest first.")
-                    .font(.system(size: 14)).foregroundColor(Theme.soft)
+                    .scaledFont(14).foregroundColor(Theme.soft)
                 chips
                 ForEach(days, id: \.key) { day in
-                    Text(day.title).font(Theme.mono(11, weight: .medium)).textCase(.uppercase)
+                    Text(day.title).scaledFont(11, weight: .medium, design: .monospaced).textCase(.uppercase)
                         .foregroundColor(Theme.dim).padding(.top, 6)
                     ForEach(day.lines) { RecordRow(entry: $0, showTaf: true) }
                     if !day.reads.isEmpty {
@@ -27,13 +27,13 @@ struct RecordView: View {
                             if openReads.contains(day.key) { openReads.remove(day.key) } else { openReads.insert(day.key) }
                         } label: {
                             Text("· \(day.reads.count == 1 ? "1 read" : "\(day.reads.count) reads") of data, within its Card · \(openReads.contains(day.key) ? "Hide" : "Show")")
-                                .font(.system(size: 13)).foregroundColor(Theme.dim).padding(.horizontal, 4)
+                                .scaledFont(13).foregroundColor(Theme.dim).padding(.horizontal, 4)
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 if days.isEmpty {
-                    Text(filter == .all ? "Nothing yet." : "Nothing here.").font(.system(size: 14)).foregroundColor(Theme.dim).padding(.top, 8)
+                    Text(filter == .all ? "Nothing yet." : "Nothing here.").scaledFont(14).foregroundColor(Theme.dim).padding(.top, 8)
                 }
             }
             // The full width on an iPad, as the other tabs (kiff/tafs#96).
@@ -49,7 +49,7 @@ struct RecordView: View {
         HStack(spacing: 6) {
             ForEach(RecordFilter.allCases, id: \.self) { f in
                 Button { filter = f } label: {
-                    Text(f.title).font(.system(size: 13))
+                    Text(f.title).scaledFont(13)
                         .foregroundColor(filter == f ? .white : Theme.soft)
                         .padding(.horizontal, 11).padding(.vertical, 5)
                         .background(filter == f ? Theme.ink : Theme.panel)
@@ -197,18 +197,18 @@ struct RecordRow: View {
             Circle().fill(color).frame(width: 9, height: 9).padding(.top, 6).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(entry.titleWithAmount).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                    Text(entry.titleWithAmount).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                     Spacer()
-                    Text(entry.at.zonedShortTime).font(Theme.mono(12)).foregroundColor(Theme.dim)
+                    Text(entry.at.zonedShortTime).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
-                Text(detail).font(.system(size: 13)).foregroundColor(Theme.soft)
+                Text(detail).scaledFont(13).foregroundColor(Theme.soft)
                 if entry.receipt?.status == "signed" {
                     // KIFF says it's signed; the seal is for the sheet's own check.
                     Label("KIFF receipt", systemImage: "doc.text")
-                        .font(.system(size: 12)).foregroundColor(Theme.ok)
+                        .scaledFont(12).foregroundColor(Theme.ok)
                 } else if entry.signature != nil {
                     Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal")
-                        .font(.system(size: 12)).foregroundColor(Theme.ok)
+                        .scaledFont(12).foregroundColor(Theme.ok)
                 }
             }
         }
@@ -277,9 +277,9 @@ struct ReceiptView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 8) {
                         Circle().fill(entry.kind.color).frame(width: 10, height: 10)
-                        Text(stateLabel).font(.system(size: 14, weight: .semibold)).foregroundColor(entry.kind.color)
+                        Text(stateLabel).scaledFont(14, weight: .semibold).foregroundColor(entry.kind.color)
                     }
-                    Text(entry.titleWithAmount).font(Theme.display(30)).foregroundColor(Theme.ink)
+                    Text(entry.titleWithAmount).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     Panel {
                         line("Taf", model.taf(entry.tafID)?.name ?? "–")
                         line("When", entry.at.zonedShown(date: .abbreviated, time: .standard))
@@ -298,11 +298,11 @@ struct ReceiptView: View {
                     if let signature = entry.signature {
                         Panel(stroke: Theme.ok.opacity(0.4)) {
                             Label("Signed on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
-                                .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
+                                .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
                             Text("Your answer was signed with a key that never leaves this device, after \(Biometry.name).")
-                                .font(.system(size: 13)).foregroundColor(Theme.soft)
+                                .scaledFont(13).foregroundColor(Theme.soft)
                             Text(signature)
-                                .font(Theme.mono(11)).foregroundColor(Theme.dim)
+                                .scaledFont(11, design: .monospaced).foregroundColor(Theme.dim)
                                 .lineLimit(3).textSelection(.enabled)
                         }
                     }
@@ -347,9 +347,9 @@ struct ReceiptView: View {
         case .verified(let signer)?:
             Panel(stroke: Theme.ok.opacity(0.4)) {
                 Label("KIFF's receipt · checked on this \(ThisDevice.kind)", systemImage: "checkmark.seal.fill")
-                    .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ok)
+                    .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
                 Text("KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since.")
-                    .font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 receiptFacts(signer: signer)
                 fullReceipt(signer: signer)
                 receiptButtons(share: true)
@@ -358,13 +358,13 @@ struct ReceiptView: View {
             Panel {
                 HStack(spacing: 8) {
                     Circle().fill(Theme.amber).frame(width: 9, height: 9)
-                    Text("KIFF's receipt · not signed yet").font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.ink)
+                    Text("KIFF's receipt · not signed yet").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 }
                 Text("KIFF signs receipts within a minute of deciding. Check again shortly.")
-                    .font(.system(size: 13)).foregroundColor(Theme.soft)
+                    .scaledFont(13).foregroundColor(Theme.soft)
                 if Date().timeIntervalSince(entry.at) > 10 * 60 {
-                    Text("If this stays, tell us the receipt id below.").font(.system(size: 13)).foregroundColor(Theme.soft)
-                    Text(entry.receipt?.traceID ?? "").font(Theme.mono(11.5)).foregroundColor(Theme.dim).textSelection(.enabled)
+                    Text("If this stays, tell us the receipt id below.").scaledFont(13).foregroundColor(Theme.soft)
+                    Text(entry.receipt?.traceID ?? "").scaledFont(11.5, design: .monospaced).foregroundColor(Theme.dim).textSelection(.enabled)
                 }
             }
         case .failed?:
@@ -372,12 +372,12 @@ struct ReceiptView: View {
         case nil:
             Panel {
                 if let loadProblem {
-                    Text(loadProblem).font(.system(size: 13)).foregroundColor(Theme.no)
+                    Text(loadProblem).scaledFont(13).foregroundColor(Theme.no)
                     Button("Try again") { Task { await loadReceipt() } }.buttonStyle(OutlineButtonStyle())
                 } else {
                     HStack(spacing: 8) {
                         ProgressView().controlSize(.small)
-                        Text("Checking KIFF's receipt on this \(ThisDevice.kind)…").font(.system(size: 13)).foregroundColor(Theme.soft)
+                        Text("Checking KIFF's receipt on this \(ThisDevice.kind)…").scaledFont(13).foregroundColor(Theme.soft)
                     }
                 }
             }
@@ -387,8 +387,8 @@ struct ReceiptView: View {
     private func failedPanel(_ why: String) -> some View {
         Panel(stroke: Theme.no.opacity(0.5)) {
             Label("KIFF's receipt doesn't check out", systemImage: "xmark.seal.fill")
-                .font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.no)
-            Text(why).font(.system(size: 13)).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                .scaledFont(14, weight: .semibold).foregroundColor(Theme.no)
+            Text(why).scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             receiptFacts(signer: nil)
             fullReceipt(signer: nil)
             receiptButtons(share: false)
@@ -421,7 +421,7 @@ struct ReceiptView: View {
         // receipt" (kiff/tafs#138): ids aren't for reading at a glance.
         var lines = [decisionWords]
         if let issued { lines.append("issued \(issued.zonedShown(date: .abbreviated, time: .standard))") }
-        return Text(lines.joined(separator: " · ")).font(Theme.mono(11.5)).foregroundColor(Theme.dim).textSelection(.enabled)
+        return Text(lines.joined(separator: " · ")).scaledFont(11.5, design: .monospaced).foregroundColor(Theme.dim).textSelection(.enabled)
     }
 
     /// Every step KIFF signed, with its hash, in the sheet.
@@ -444,10 +444,10 @@ struct ReceiptView: View {
                         }
                     }
                 }
-                .font(Theme.mono(11.5)).foregroundColor(Theme.dim).textSelection(.enabled)
+                .scaledFont(11.5, design: .monospaced).foregroundColor(Theme.dim).textSelection(.enabled)
                 .padding(.top, 8)
             } label: {
-                Text("Show the full receipt").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.blue)
+                Text("Show the full receipt").scaledFont(13, weight: .semibold).foregroundColor(Theme.blue)
             }
         }
     }
@@ -506,9 +506,9 @@ struct ReceiptView: View {
                         if i < steps.count - 1 { Rectangle().fill(Theme.line).frame(width: 2).frame(maxHeight: .infinity) }
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(step.words.prefix(1).uppercased() + step.words.dropFirst()).font(.system(size: 14)).foregroundColor(Theme.ink)
+                        Text(step.words.prefix(1).uppercased() + step.words.dropFirst()).scaledFont(14).foregroundColor(Theme.ink)
                         if let at = step.at {
-                            Text(at.zonedShown(date: .omitted, time: .standard)).font(Theme.mono(12)).foregroundColor(Theme.dim)
+                            Text(at.zonedShown(date: .omitted, time: .standard)).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                         }
                     }
                     .padding(.bottom, 12)
@@ -572,8 +572,8 @@ struct ReceiptView: View {
 
     private func line(_ name: String, _ value: String, bold: Bool = false) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(name).font(.system(size: 13)).foregroundColor(Theme.dim).frame(width: 90, alignment: .leading)
-            Text(value).font(.system(size: 14, weight: bold ? .semibold : .regular)).foregroundColor(Theme.ink)
+            Text(name).scaledFont(13).foregroundColor(Theme.dim).frame(width: 90, alignment: .leading)
+            Text(value).scaledFont(14, weight: bold ? .semibold : .regular).foregroundColor(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }

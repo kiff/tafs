@@ -22,7 +22,7 @@ struct CoachButton: View {
     var body: some View {
         Button { model.openCoach() } label: {
             Label(wide ? "Coach mode" : "Coach", systemImage: "sparkle")
-                .font(.system(size: 15, weight: .semibold))
+                .scaledFont(15, weight: .semibold)
                 .foregroundColor(.white)
                 .padding(.horizontal, 16)
                 .frame(height: Self.height)
@@ -73,6 +73,8 @@ struct CoachPanel: View {
     @AppStorage("coach.full") private var full = false
     /// How far the edge is being dragged, in points, while it is.
     @State private var drag: CGFloat = 0
+    /// With Reduce Motion on, it fades in and out rather than slide (kiff/tafs#210).
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let narrowest = 1.0 / 3
 
@@ -106,11 +108,11 @@ struct CoachPanel: View {
                     // area: nothing of the screen behind shows under it (kiff/tafs#206 6.10).
                     .background(Theme.background.ignoresSafeArea())
                     .shadow(color: .black.opacity(0.18), radius: 24, x: -4)
-                    .transition(.move(edge: .trailing))
+                    .transition(reduceMotion ? .opacity : .move(edge: .trailing))
                 }
             }
-            .animation(.easeOut(duration: 0.22), value: model.coachOpen)
-            .animation(.easeOut(duration: 0.22), value: full)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: model.coachOpen)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: full)
         }
     }
 

@@ -6,9 +6,9 @@ import XCTest
 final class KeyboardTests: XCTestCase {
     private func combo(_ c: KeyCommand) -> String {
         (c.modifiers.contains(.command) ? "⌘" : "") + {
-            switch c.key {
-            case .return: "↩"
-            case .escape: "Esc"
+            switch c.key.character {
+            case KeyEquivalent.return.character: "↩"
+            case KeyEquivalent.escape.character: "Esc"
             default: String(c.key.character)
             }
         }()

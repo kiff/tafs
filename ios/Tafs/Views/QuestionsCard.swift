@@ -29,7 +29,7 @@ struct QuestionsCard: View {
                 HStack {
                     Eyebrow(text: component.title ?? "Setup needs")
                     Spacer()
-                    Text("\(answeredCount) of \(questions.count) answered").font(Theme.mono(12)).foregroundColor(Theme.dim)
+                    Text("\(answeredCount) of \(questions.count) answered").scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
                 ForEach(Array(questions.enumerated()), id: \.element.id) { i, q in
                     question(q, number: i + 1)
