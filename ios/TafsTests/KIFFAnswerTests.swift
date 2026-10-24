@@ -92,6 +92,7 @@ final class KIFFAnswerTests: XCTestCase {
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, heldJSON)
         StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
         StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/reject"] = (200, #"{"id":"ce_1"}"#)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/change-card"] = (200, #"{"id":"ce_1"}"#)
         let fixed = now
         let model = AppModel(signer: signer, kiff: client, clock: { fixed })
         model.kiffTenant = "t1"
@@ -102,7 +103,7 @@ final class KIFFAnswerTests: XCTestCase {
     }
 
     private var answersSent: [String] {
-        StubProtocol.sent.compactMap(\.url?.path).filter { $0.hasSuffix("/approve-once") || $0.hasSuffix("/reject") }
+        StubProtocol.sent.compactMap(\.url?.path).filter { $0.hasSuffix("/approve-once") || $0.hasSuffix("/reject") || $0.hasSuffix("/change-card") }
     }
 
     func testALiveAnswerIsNotSentUntilKIFFVerifiesTheSignature() async throws {
@@ -154,6 +155,52 @@ final class KIFFAnswerTests: XCTestCase {
         await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce)
         XCTAssertEqual(signer.signed, ["kiff.answer.v1\nt1\nce_1\napprove-once\n\n\n2\n2026-10-14T10:45:00Z"])
         XCTAssertEqual(answersSent, ["/v1/me/card-exceptions/ce_1/approve-once"])
+    }
+
+    /// Extra room is KIFF's change-card, signed as an answer like the others
+    /// (kiff/tafs#211, 6.13): the call goes on, and the decision says what was done.
+    func testExtraRoomSignsChangeCard() async throws {
+        let signer = RecordingSigner()
+        let model = try await makeModel(verifies: true, signer: signer)
+        await model.answer(try XCTUnwrap(model.held.first), with: .extraRoom)
+        XCTAssertEqual(signer.signed, ["kiff.answer.v1\nt1\nce_1\nchange-card\n\n\n2\n2026-10-14T10:45:00Z"])
+        XCTAssertEqual(answersSent, ["/v1/me/card-exceptions/ce_1/change-card"])
+        let sent = try XCTUnwrap(StubProtocol.sent.last?.httpBody)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: sent) as? [String: Any])
+        XCTAssertNotNil(body["signature"], "signed, as an answer")
+        XCTAssertNil(body["next_step"])
+        XCTAssertTrue(model.held.isEmpty)
+        XCTAssertTrue(model.record.contains { $0.kind == .approved && $0.title.hasPrefix("Extra room by you") }, "\(model.record.map(\.title))")
+        XCTAssertEqual(Answer.extraRoom.wireName, "change-card")
+    }
+
+    /// Extra room is offered only to someone KIFF says may manage Cards; a KIFF that
+    /// doesn't say leaves it to KIFF to decide.
+    func testExtraRoomIsForWhoManagesCards() throws {
+        let approver = try JSONDecoder().decode(KIFFClient.Account.self, from: Data(#"{"tenant_id":"t1","tenant_slug":"acme","capabilities":["holds.answer","cards.read"]}"#.utf8))
+        XCTAssertEqual(approver.capabilities, ["holds.answer", "cards.read"])
+        XCTAssertFalse(AppModel.managesCards(approver.capabilities))
+        XCTAssertTrue(AppModel.managesCards(["holds.answer", "cards.manage"]))
+        let older = try JSONDecoder().decode(KIFFClient.Account.self, from: Data(#"{"tenant_id":"t1","tenant_slug":"acme"}"#.utf8))
+        XCTAssertNil(older.capabilities)
+        XCTAssertTrue(AppModel.managesCards(older.capabilities))
+    }
+
+    /// The hold card's line on the vendor's refusals counts today's only, and names the
+    /// vendor when all are the same.
+    func testTheRefusedLineCountsTodaysRefusals() {
+        let taf = UUID()
+        func refused(_ who: String, at: Date) -> RecordEntry {
+            var e = RecordEntry(tafID: taf, kind: .notDone, title: "Refund", detail: "\(who) refused it. No money moved, but it still counts against today's total.", at: at)
+            e.refusedByTool = true
+            e.refusedBy = who
+            return e
+        }
+        XCTAssertNil(HeldCallCard.refusedLine([]))
+        XCTAssertEqual(HeldCallCard.refusedLine([refused("Stripe", at: Date())]),
+                       "1 call Stripe refused today still counted toward it: nothing moved, but they used room.")
+        XCTAssertEqual(HeldCallCard.refusedLine([refused("Stripe", at: Date()), refused("Shopify", at: Date())]),
+                       "2 calls the vendor refused today still counted toward it: nothing moved, but they used room.")
     }
 
     func testASessionWithoutThePhonesKeyCannotAnswer() async throws {

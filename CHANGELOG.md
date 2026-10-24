@@ -50,6 +50,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Extra room on a held call (#211): a call over a total the Card keeps across
+  calls, such as a day's, which approving once can't pass, now offers **Extra
+  room** with Face ID. KIFF gives the Card just the room this call needs, until
+  that total resets, and the call goes on; the Card is as it was after that.
+  Changing the limit for good stays in Coach mode. The hold card and the Card
+  also say how many calls the vendor refused today still counted toward it.
 - Every time the app shows is in your account's time zone (#211): holds'
   deadlines, chats, the Record's days, Usage, versions and a taf's next run, as
   KIFF's Card days are. Without an account (sample mode), it's the device's. When

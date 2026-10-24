@@ -253,10 +253,13 @@ final class KIFFClient {
         let email: String?
         /// The account's time zone, which ends a Card's day.
         var timeZone: String? = nil
+        /// What this person may do on the account, as KIFF says ("cards.manage", …); nil
+        /// from a KIFF that doesn't say.
+        var capabilities: [String]? = nil
 
         enum CodingKeys: String, CodingKey {
             case tenantID = "tenant_id", slug = "tenant_slug", displayName = "tenant_display_name", email
-            case timeZone = "time_zone"
+            case timeZone = "time_zone", capabilities
         }
 
         /// The account as the owner knows it: its name, else its slug.
@@ -607,6 +610,14 @@ final class KIFFClient {
     func reject(_ id: String, nextStep: String? = nil, signature: AnswerSignature? = nil) async throws {
         let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/reject",
                                       body: AnswerBody(nextStep: nextStep, signature: signature))
+    }
+
+    /// Gives the held call's Card the extra room this call needs, until that total resets,
+    /// and lets the call go on (kiff/tafs#211, 6.13): KIFF's change-card, signed as an
+    /// answer. Only for a call over a total kept across calls; it needs Card management.
+    func changeCard(_ id: String, signature: AnswerSignature? = nil) async throws {
+        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/change-card",
+                                      body: AnswerBody(signature: signature))
     }
 
     // MARK: Cards
