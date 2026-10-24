@@ -1829,13 +1829,13 @@ final class AppModel: ObservableObject {
                     chatStates[tafID]?.live?.text += t
                     // Writing again: the tool call it waited on is over (kiff/tafs#206 6.6).
                     chatStates[tafID]?.live?.activity = nil
-                case .activity(let tool):
+                case .activity(let tool, let step):
                     // The words so far are done; the answer goes on below them. Nothing is reloaded.
                     if let t = chatStates[tafID]?.live?.text, !t.isEmpty {
                         chatStates[tafID]?.live?.parts.append(.text(t))
                         chatStates[tafID]?.live?.text = ""
                     }
-                    chatStates[tafID]?.live?.activity = Self.tafActivityWords(tool)
+                    chatStates[tafID]?.live?.activity = step ?? Self.tafActivityWords(tool)
                 case .held(let exception, let invocation):
                     chatStates[tafID]?.live?.parts.append(.held(exception: exception, invocation: invocation))
                     // KIFF is read for the card, where the call was made.
@@ -3126,10 +3126,11 @@ final class AppModel: ObservableObject {
                     settleSetupChat(session)
                 case .text(let t):
                     setupLive?.text += t
-                case .activity(let tool):
+                case .activity(let tool, let step):
+                    // The step shows at once; the thread then picks up the words written so far.
+                    setupLive?.activity = step ?? Self.activityWords(tool)
                     await loadSetupThread()
                     setupLive?.text = ""
-                    setupLive?.activity = Self.activityWords(tool)
                 case .component:
                     await loadSetupThread()
                     setupLive?.text = ""

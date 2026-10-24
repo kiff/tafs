@@ -74,12 +74,33 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.events.map((e) => e.event)).toEqual(["session", "text", "text", "activity", "component", "end"]);
     expect(r.events[0]!.data).toMatchObject({ new_session: true });
     expect(r.events.filter((e) => e.event === "text").map((e) => e.data.text).join("")).toBe("I'll connect **Stripe**.");
-    expect(r.events[3]!.data).toEqual({ tool: "planque" });
+    expect(r.events[3]!.data).toEqual({ tool: "planque", step: "Reading what your provider offers…" });
     expect(r.events.at(-1)!.data).toEqual({ status: "COMPLETED", stop: "answered" });
     // What tools were given and what they answered never reaches the phone.
     expect(r.raw).not.toContain("grt_secret");
     expect(r.raw).not.toContain("acct_123");
     expect(w.agents.calls).toEqual(["streamRun " + RAE + " new"]);
+  });
+
+  it("says each step in a few words, naming the vendor once its grant is known, never the arguments (kiff/tafs#214)", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", server: "https://mcp.stripe.com/v1", name: "refunds" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "grant grt_AbC123xyz pending; agent refunds-k3f9" } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "status", grant: "grt_AbC123xyz" } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c3", tool: "kiff_draft", input: { action: "submit", agent_id: "refunds-k3f9", cards: [] } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c4", tool: "show", input: { type: "approval" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Set up refunds" } });
+    expect(r.events.filter((e) => e.event === "activity").map((e) => e.data)).toEqual([
+      { tool: "planque", step: "Preparing the connection to Stripe…" },
+      { tool: "planque", step: "Checking your Stripe connection…" },
+      { tool: "kiff_draft", step: "Drafting the Card…" },
+      { tool: "show" },
+    ]);
+    expect(r.raw).not.toContain("grt_AbC123xyz");
+    expect(r.raw).not.toContain("refunds-k3f9");
+    expect(r.raw).not.toContain("mcp.stripe.com");
   });
 
   it("says where KIFF held a call, by KIFF's keys only (kiff/tafs#206)", async () => {

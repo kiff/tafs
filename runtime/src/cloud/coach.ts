@@ -39,7 +39,7 @@ export const TOOLS: ToolDef[] = [
     name: "tafs_state", read: true, properties: {}, required: [],
     description: "Everything about the account's tafs in one read: each taf, its live version and versions, a switch under way, " +
       "its schedule or that it works from its chat, and its open runs with what each waits on (the held call, its arguments and deadline). " +
-      "What's left on a taf's Cards isn't here: tell the owner to open the taf in tafs to see it.",
+      "Each taf's kiff_agent is its KIFF agent: kiff_card {agent: kiff_agent} reads its live Cards, with what's used and left.",
   },
   {
     name: "taf_run", read: true, properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
