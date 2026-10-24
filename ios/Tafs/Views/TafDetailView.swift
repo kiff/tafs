@@ -19,10 +19,21 @@ struct TafDetailView: View {
     private let sizeClass: UserInterfaceSizeClass? = .regular
     #endif
     @State private var width: CGFloat = 0
+    @State private var height: CGFloat = 0
+
+    /// The side column's width, and the least the chat keeps beside it: the largest iPhone's
+    /// width (kiff/tafs#211, the owner's 4A).
+    static let sideWidth: CGFloat = 360
+    static let chatAtLeast: CGFloat = 430
 
     /// A wide screen (kiff/tafs#85): beside the chat or the activity, a second column with
-    /// the call waiting for the owner and the Card. A compact width keeps one column.
-    private var sideColumn: Bool { sizeClass == .regular && width >= 700 && section != 2 }
+    /// the call waiting for the owner and the Cards. Only in landscape and only when the chat
+    /// keeps an iPhone's width beside it (kiff/tafs#211): iPad landscape and the Mac. A
+    /// narrower screen keeps one column, with the Card bar above it.
+    private var sideColumn: Bool {
+        sizeClass == .regular && section != 2 && width > height
+            && width - Self.sideWidth - 32 >= Self.chatAtLeast
+    }
 
     var body: some View {
         if let taf = model.taf(tafID) {
@@ -35,6 +46,13 @@ struct TafDetailView: View {
                         Text("Card").tag(2)
                     }
                     .pickerStyle(.segmented)
+                    // Without the side column, the Cards are one line above the chat or the
+                    // activity; it opens the Card tab (kiff/tafs#211).
+                    if section != 2 && !sideColumn, let front = shownFront(taf) {
+                        CardBar(card: front, count: taf.shownCards.count, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked) {
+                            section = 2
+                        }
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
@@ -56,12 +74,14 @@ struct TafDetailView: View {
                     if sideColumn {
                         ScrollView { side(taf).padding(.horizontal, 16).padding(.vertical, 12) }
                             .coachClearance()
-                            .frame(width: 360)
+                            .frame(width: Self.sideWidth)
                     }
                 }
             }
             .background(GeometryReader { g in
-                Color.clear.onAppear { width = g.size.width }.onChange(of: g.size.width) { width = $0 }
+                Color.clear.onAppear { width = g.size.width; height = g.size.height }
+                    .onChange(of: g.size.width) { width = $0 }
+                    .onChange(of: g.size.height) { height = $0 }
             })
             .screenBackground()
             .inlineTitle()
@@ -86,6 +106,12 @@ struct TafDetailView: View {
         } else {
             Text("This taf is gone.").foregroundColor(Theme.dim).screenBackground()
         }
+    }
+
+    /// The Card in front of the stack: the one tapped, else the first, the live one.
+    private func shownFront(_ taf: Taf) -> TafCard? {
+        let cards = taf.shownCards
+        return cards.first(where: { $0.id == frontCard }) ?? cards.first
     }
 
     private func header(_ taf: Taf) -> some View {
@@ -799,6 +825,47 @@ struct TafCardFace: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .frame(maxWidth: Self.width)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A taf's Cards in one line (kiff/tafs#211): the front Card's balance, its name, its
+/// environment and how many Cards there are. Tapping it opens the Card tab.
+struct CardBar: View {
+    let card: TafCard
+    let count: Int
+    let color: Color
+    var revoked = false
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            HStack(spacing: 12) {
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(TafCardFace.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
+                    .frame(width: 46, height: 29)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(card.hero.map { "\($0.figure) \($0.words)" } ?? card.title)
+                        .font(.system(size: 15, weight: .semibold).monospacedDigit()).foregroundColor(Theme.ink)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                    Text(details).font(.system(size: 12)).foregroundColor(Theme.dim).lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 9)
+            .background(Theme.panel)
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.line))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Shows the Cards")
+    }
+
+    /// "Refunds · Live · 3 Cards": the Card's name, its environment, and the others.
+    private var details: String {
+        var parts = [card.title, card.live ? "Live" : card.environment.capitalized]
+        if count > 1 { parts.append("\(count) Cards") }
+        return parts.joined(separator: " · ")
     }
 }
 

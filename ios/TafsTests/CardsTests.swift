@@ -2,6 +2,7 @@ import XCTest
 @testable import Tafs
 
 /// Each KIFF Card drawn on its own (kiff/tafs#211): its figure, its lines, its environment.
+@MainActor
 final class CardsTests: XCTestCase {
     private let eur = { (minor: Int64) in Money(minor: minor, currency: "EUR", scale: 2) }
 
