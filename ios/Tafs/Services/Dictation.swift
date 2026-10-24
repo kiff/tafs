@@ -2,6 +2,7 @@ import Foundation
 #if os(iOS)
 import AVFoundation
 import Speech
+import UIKit
 #endif
 
 /// Speaking a message instead of typing it (kiff/tafs#208), in a taf's chat and in Coach
@@ -25,7 +26,21 @@ final class Dictation: ObservableObject {
 
         var label: String { self == .english ? "EN" : "ES" }
         var name: String { self == .english ? "English" : "Spanish" }
-        var locale: Locale { Locale(identifier: rawValue) }
+
+        /// The regional forms to try, best first: the owner's own (the device's Spanish
+        /// from Colombia, say), then the common ones. A device only recognizes on the
+        /// device in the forms whose model it has, so one hard-coded form isn't enough.
+        func candidates(preferred: [String] = Locale.preferredLanguages) -> [String] {
+            let prefix = self == .english ? "en" : "es"
+            let common = self == .english ? ["en-US", "en-GB", "en-AU", "en-CA", "en-IN"]
+                : ["es-419", "es-MX", "es-US", "es-CO", "es-CL", "es-ES"]
+            var out: [String] = []
+            for id in preferred.map({ $0.replacingOccurrences(of: "_", with: "-") }) + common
+            where id.lowercased().hasPrefix(prefix + "-") && !out.contains(id) {
+                out.append(id)
+            }
+            return out
+        }
 
         /// The device's language when it's one of these, else English.
         static var device: Language {
@@ -195,15 +210,15 @@ final class DeviceSpeech: SpeechEngine {
     }
 
     func unavailable(_ language: Dictation.Language) -> String? {
-        guard let recognizer = SFSpeechRecognizer(locale: language.locale), recognizer.supportsOnDeviceRecognition else {
-            return "Dictation in \(language.name) isn't available on this device."
+        guard let recognizer = Self.recognizer(for: language) else {
+            return "Dictation in \(language.name) isn't on this \(Self.device) yet. Add a \(language.name) keyboard with dictation on in Settings › General › Keyboard › Keyboards, wait for it to download, then try again."
         }
         return recognizer.isAvailable ? nil : "Dictation isn't available right now. Try again in a moment."
     }
 
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String) -> Void,
                onEnd: @escaping @Sendable (String?) -> Void) throws {
-        guard let recognizer = SFSpeechRecognizer(locale: language.locale) else {
+        guard let recognizer = Self.recognizer(for: language) else {
             throw DictationError.unavailable
         }
         let session = AVAudioSession.sharedInstance()
@@ -234,6 +249,16 @@ final class DeviceSpeech: SpeechEngine {
         task = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
+
+    /// The first of the language's regional forms this device recognizes on the device.
+    private static func recognizer(for language: Dictation.Language) -> SFSpeechRecognizer? {
+        for id in language.candidates() {
+            if let r = SFSpeechRecognizer(locale: Locale(identifier: id)), r.supportsOnDeviceRecognition { return r }
+        }
+        return nil
+    }
+
+    private static var device: String { UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone" }
 
     nonisolated private static func speechPermission() async -> SFSpeechRecognizerAuthorizationStatus {
         await withCheckedContinuation { done in

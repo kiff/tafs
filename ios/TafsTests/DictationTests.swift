@@ -122,4 +122,16 @@ final class DictationTests: XCTestCase {
         XCTAssertEqual(Dictation.cleaned((0..<150).map { "w\($0)" }).count, 100)
         XCTAssertEqual(Dictation.purpose, "tafs turns your voice into text on this device. Your voice isn't sent anywhere.")
     }
+
+    /// The owner's own Spanish first (a device in Colombian Spanish), then the common forms:
+    /// a device recognizes on the device only in the forms whose model it has.
+    func testTheOwnersOwnRegionalFormIsTriedFirst() {
+        XCTAssertEqual(Dictation.Language.spanish.candidates(preferred: ["es-CO", "en-US"]),
+                       ["es-CO", "es-419", "es-MX", "es-US", "es-CL", "es-ES"])
+        XCTAssertEqual(Dictation.Language.english.candidates(preferred: ["es-CO", "en_GB"]),
+                       ["en-GB", "en-US", "en-AU", "en-CA", "en-IN"])
+        // Without one of its own, the common forms, Spain's last for Spanish.
+        XCTAssertEqual(Dictation.Language.spanish.candidates(preferred: ["fr-FR"]).last, "es-ES")
+        XCTAssertEqual(Dictation.Language.english.candidates(preferred: []).first, "en-US")
+    }
 }
