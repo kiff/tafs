@@ -151,14 +151,15 @@ jobs:
             xcrun simctl launch "$DEVICE_ID" bot.tafs.app "$@"
             sleep 3
             prev=""
+            ready=""
             for _ in $(seq 30); do
               xcrun simctl io "$DEVICE_ID" screenshot "$frame" >/dev/null 2>&1
               sum=$(shasum "$frame" | cut -d' ' -f1)
-              if [ "$sum" = "$prev" ] && [ "$(wc -c < "$frame")" -gt 200000 ]; then break; fi
+              if [ "$sum" = "$prev" ] && [ "$(wc -c < "$frame")" -gt 200000 ]; then ready=1; break; fi
               prev=$sum
               sleep 1
             done
-            [ "$sum" = "$prev" ] || echo "::warning::$name: the screen hadn't settled after 30 s"
+            [ -n "$ready" ] || echo "::warning::$name: the screen hadn't drawn and settled after 30 s"
             mv "$frame" "$out"
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
