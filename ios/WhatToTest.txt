@@ -1,9 +1,11 @@
 What to test in this build:
 
-1. Coach's steps, live. Start a new taf with Coach. While Coach works, the chat says what it's doing ("Checking your Stripe connection…", "Drafting the Card…"), and Coach's words appear as it writes them.
+1. A taf's Cards. Open a taf, then its Card tab. Each Card shows at a set size, with what's left today as the big number. A taf with several Cards shows them as a stack: tap one to bring it forward. A test Card is grey and marked TEST. On the Chat and Activity tabs, a one-line Card bar sits above the chat on the iPhone and on the iPad in portrait; on the iPad in landscape, the Cards sit beside the chat.
 
-2. A taf's Card, from any conversation. In Coach, ask what one of your tafs may do. Coach reads that taf's Card itself, says which Card covers live actions and which only test mode, and never sends you elsewhere to look.
+2. Coach's steps, live. Start a new taf with Coach. While Coach works, the chat says what it's doing ("Checking your Stripe connection…", "Drafting the Card…"), and Coach's words appear as it writes them.
 
-3. Packs and Solo, with test purchases. In Settings, open Usage, then Add tasks, and buy a pack; on the trial, subscribe to Solo. Purchases in TestFlight are test purchases: on a test account they add tasks; on any other account the app finishes the purchase, adds nothing, and says "Test purchases don't add tasks to this account."
+3. A taf's Card, from any conversation. In Coach, ask what one of your tafs may do. Coach reads that taf's Card itself, says which Card covers live actions and which only test mode, and never sends you elsewhere to look.
 
-4. Asking an admin. As a member who can't add tasks, ask for a pack with a reason. As the admin, you're alerted: open Usage and approve it by buying the pack, or decline it with a note. The member is told the answer.
+4. Packs and Solo, with test purchases. In Settings, open Usage, then Add tasks, and buy a pack; on the trial, subscribe to Solo. Purchases in TestFlight are test purchases: on a test account they add tasks; on any other account the app finishes the purchase, adds nothing, and says "Test purchases don't add tasks to this account."
+
+5. Asking an admin. As a member who can't add tasks, ask for a pack with a reason. As the admin, you're alerted: open Usage and approve it by buying the pack, or decline it with a note. The member is told the answer.
