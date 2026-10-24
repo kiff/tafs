@@ -568,7 +568,7 @@ struct VersionCardSheet: View {
         Panel {
             Eyebrow(text: "Removes a Card")
             ForEach(card.current?.lines ?? [], id: \.self) {
-                Text($0).scaledFont(14).foregroundColor(Theme.soft).strikethrough()
+                Text($0).strikethrough().scaledFont(14).foregroundColor(Theme.soft)
             }
             Text("Your taf can't do this any more.").scaledFont(12).foregroundColor(Theme.dim)
         }
@@ -917,7 +917,7 @@ struct CardLines: View {
 struct EnvironmentPill: View {
     let text: String
     var body: some View {
-        Text(text).scaledFont(10, weight: .semibold, design: .monospaced).tracking(0.6)
+        Text(text).tracking(0.6).scaledFont(10, weight: .semibold, design: .monospaced)
             .padding(.horizontal, 6).padding(.vertical, 2)
             .background(Color.white.opacity(0.22)).clipShape(Capsule())
     }

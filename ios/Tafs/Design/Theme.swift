@@ -22,9 +22,9 @@ enum Theme {
 
     static let orange = Color(hex: 0xFF9A2E)
     static let pink = Color(hex: 0xFF4F7B)
-    static let blue = Color(hex: 0x2F6BFF)
+    static let blue = Color(hex: 0x2A64F5)
     /// Coach mode's own blue, and its wash (kiff/tafs#138): never a taf's chat.
-    static let coach = Color(hex: 0x2F6BFF)
+    static let coach = Color(hex: 0x2A64F5)
     static let coachWash = Color(hex: 0xEEF3FF)
     /// What Coach mode has made so far, beside the conversation: a shade deeper than its wash.
     static let coachPanel = Color(hex: 0xE3EBFF)
@@ -39,7 +39,7 @@ enum Theme {
     /// more (kiff/tafs#210).
     static let tafColors: [Color] = [
         Color(hex: 0xC25100), Color(hex: 0xE51255), Color(hex: 0x7B4DFF),
-        Color(hex: 0x2F6BFF), Color(hex: 0x0B7DA4), Color(hex: 0x128462),
+        Color(hex: 0x2A64F5), Color(hex: 0x0B7DA4), Color(hex: 0x128462),
     ]
 
     static var tafColorCount: Int { tafColors.count }
