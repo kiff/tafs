@@ -24,7 +24,7 @@ struct NewTafFlow: View {
             }
             .screenBackground()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.keyboardShortcut(.cancelAction) }
                 if step > 1 {
                     ToolbarItem(placement: .navigationBarLeading) { Button("Back") { step -= 1 } }
                 }
@@ -36,11 +36,11 @@ struct NewTafFlow: View {
 
     private var jobStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("What's the job?").font(Theme.display(38)).foregroundColor(Theme.ink)
+            Text("What's the job?").scaledFont(38, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text("Say it the way you'd brief a new hire. Include what it must never do.")
-                .font(.system(size: 15)).foregroundColor(Theme.soft)
+                .scaledFont(15).foregroundColor(Theme.soft)
             TextEditor(text: $job)
-                .font(.system(size: 17))
+                .scaledFont(17)
                 .scrollContentBackground(.hidden)
                 .padding(12)
                 .frame(minHeight: 160)
@@ -48,7 +48,7 @@ struct NewTafFlow: View {
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.line))
                 .clipShape(RoundedRectangle(cornerRadius: 18))
                 .accessibilityLabel("The job")
-            Text("Or start from one of these").font(.system(size: 13)).foregroundColor(Theme.dim)
+            Text("Or start from one of these").scaledFont(13).foregroundColor(Theme.dim)
             ForEach(TafTemplates.all) { t in
                 JobRow(template: t, selected: job == t.job) { job = t.job }
             }
@@ -66,20 +66,20 @@ struct NewTafFlow: View {
     private var draftStep: some View {
         VStack(alignment: .leading, spacing: 16) {
             TextField("Name", text: $draft.name)
-                .font(Theme.display(34))
+                .scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title)
                 .foregroundColor(Theme.ink)
-            Text("Drafted from your words. Change anything.").font(.system(size: 13)).foregroundColor(Theme.dim)
+            Text("Drafted from your words. Change anything.").scaledFont(13).foregroundColor(Theme.dim)
 
             Eyebrow(text: "Tools it needs")
             if draft.tools.isEmpty {
                 Text("No tools matched this job yet. Pick a starting job to see a full draft.")
-                    .font(.system(size: 14)).foregroundColor(Theme.soft)
+                    .scaledFont(14).foregroundColor(Theme.soft)
             }
             ForEach(draft.tools, id: \.self) { tool in
                 HStack {
-                    Text(tool).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                    Text(tool).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                     Spacer()
-                    Text("through KIFF").font(.system(size: 12)).foregroundColor(Theme.dim)
+                    Text("through KIFF").scaledFont(12).foregroundColor(Theme.dim)
                 }
                 .padding(14).background(Theme.panel).clipShape(RoundedRectangle(cornerRadius: 14))
             }
@@ -97,7 +97,7 @@ struct NewTafFlow: View {
 
     private var issueStep: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("Give \(draft.name) its Card").font(Theme.display(32)).foregroundColor(Theme.ink)
+            Text("Give \(draft.name) its Card").scaledFont(32, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             CardFace(name: draft.name, rules: draft.rules, issuedBy: model.ownerName,
                      expires: Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date(),
                      color: Theme.tafColor(model.tafs.count))
@@ -127,7 +127,7 @@ struct NewTafFlow: View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Circle().fill(color).frame(width: 9, height: 9).accessibilityHidden(true)
             (Text(lead).bold().foregroundColor(Theme.ink) + Text(" " + rest).foregroundColor(Theme.soft))
-                .font(.system(size: 14))
+                .scaledFont(14)
         }
     }
 }
@@ -139,17 +139,17 @@ struct RuleEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(rule.label).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                Text(rule.label).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer()
                 Text(rule.never ? "Refused, never asked" : (rule.outside == .hold ? "Outside: held for you" : "Outside: refused"))
-                    .font(.system(size: 12)).foregroundColor(rule.never ? Theme.no : Theme.dim)
+                    .scaledFont(12).foregroundColor(rule.never ? Theme.no : Theme.dim)
             }
             if !rule.never {
                 if rule.perAction != nil { amountField("Up to, each", $rule.perAction) }
                 if rule.perWindow != nil { amountField("Up to, \(rule.window.label)", $rule.perWindow) }
                 if let count = rule.countPerWindow {
                     Stepper(value: Binding(get: { count }, set: { rule.countPerWindow = $0 }), in: 1...10_000) {
-                        Text("\(count) \(rule.window.label)").font(Theme.mono(14)).foregroundColor(Theme.ink)
+                        Text("\(count) \(rule.window.label)").scaledFont(14, design: .monospaced).foregroundColor(Theme.ink)
                     }
                 }
             }
@@ -162,7 +162,7 @@ struct RuleEditor: View {
 
     private func amountField(_ label: String, _ money: Binding<Money?>) -> some View {
         HStack {
-            Text(label).font(.system(size: 14)).foregroundColor(Theme.soft)
+            Text(label).scaledFont(14).foregroundColor(Theme.soft)
             Spacer()
             TextField("0", text: Binding(
                 get: { money.wrappedValue.map { String($0.minor / 100) } ?? "" },
@@ -170,7 +170,7 @@ struct RuleEditor: View {
             ))
             .keyboardType(.numberPad)
             .multilineTextAlignment(.trailing)
-            .font(Theme.mono(15))
+            .scaledFont(15, design: .monospaced)
             .foregroundColor(Theme.ink)
             .frame(width: 110)
             .padding(.vertical, 8).padding(.horizontal, 10)
@@ -193,8 +193,8 @@ struct JobRow: View {
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(selected ? AnyShapeStyle(Theme.brand) : AnyShapeStyle(Theme.dim))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(template.name).font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.ink)
-                    Text(template.job).font(.system(size: 13)).foregroundColor(Theme.soft).lineLimit(3)
+                    Text(template.name).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                    Text(template.job).scaledFont(13).foregroundColor(Theme.soft).lineLimit(3)
                 }
                 Spacer(minLength: 0)
             }

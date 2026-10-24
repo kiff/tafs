@@ -34,14 +34,14 @@ final class KIFFClient {
     /// KIFF's MCP gateway, which lists the account's connected tools.
     let gatewayURL: URL
     var token: String?
-    /// Whether KIFF checks the phone's signature on an answer (kiff/kiff-cloud#1218). Without
+    /// Whether KIFF checks the phone's signature on an answer. Without
     /// it the phone does not answer KIFF's held calls: an answer that KIFF accepts on the
     /// session alone would not prove this iPhone's owner gave it.
     let serverVerifiesSignatures: Bool
     private let session: URLSession
     /// The account the phone signed in to, for signed setup calls.
     var tenant: String?
-    /// Signs a setup call for a phone session bound to its key (kiff-cloud #1225): set
+    /// Signs a setup call for a phone session bound to its key: set
     /// while a start the owner confirmed with Face ID runs, nil otherwise.
     var setupSigner: (@MainActor (Data) throws -> String)?
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
@@ -58,7 +58,7 @@ final class KIFFClient {
         if signedSetupPaths.contains(path) { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
         if parts.count == 6 && path.hasPrefix("/v1/me/pack-requests/") && parts[5] == "decline" && !parts[4].isEmpty { return true }
-        // Resuming a halted agent, or the whole account (kiff/kiff-cloud#1061): it gives authority back.
+        // Resuming a halted agent, or the whole account: it gives authority back.
         if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
     }
@@ -116,7 +116,7 @@ final class KIFFClient {
         var body: [String: String] = [:]
         if let publicKey { body["public_key"] = publicKey.base64EncodedString() }
         if let deviceName { body["device_name"] = deviceName }
-        // KIFF's device list names the platform (kiff/kiff-cloud#1267): ios, ipados, macos.
+        // KIFF's device list names the platform: ios, ipados, macos.
         if let platform { body["platform"] = platform }
         return try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
     }
@@ -139,7 +139,7 @@ final class KIFFClient {
         let _: Empty = try await send("POST", "/v1/auth/device/logout", body: [String: String]())
     }
 
-    /// This device's id in KIFF (`dev_…`, kiff-cloud #1267), from the person's device list:
+    /// This device's id in KIFF (`dev_…`), from the person's device list:
     /// planque asks KIFF about the device by it (kiff/planque#10). Nil when KIFF lists
     /// this session without a device yet.
     func thisDeviceID() async throws -> String? {
@@ -223,7 +223,7 @@ final class KIFFClient {
         /// counts only for the hold as it stood when the owner saw it.
         let accountingVersion: Int?
 
-        /// The held call's tool, as KIFF names it for people (kiff-cloud#1277).
+        /// The held call's tool, as KIFF names it for people.
         var title: String? = nil
         /// What a held gateway call asks, as KIFF keeps it (its arguments), each as text:
         /// what the call is on, which the tool-call id it's filed under doesn't say.
@@ -251,12 +251,15 @@ final class KIFFClient {
         let slug: String
         let displayName: String?
         let email: String?
-        /// The account's time zone, which ends a Card's day (kiff-cloud #1121).
+        /// The account's time zone, which ends a Card's day.
         var timeZone: String? = nil
+        /// What this person may do on the account, as KIFF says ("cards.manage", …); nil
+        /// from a KIFF that doesn't say.
+        var capabilities: [String]? = nil
 
         enum CodingKeys: String, CodingKey {
             case tenantID = "tenant_id", slug = "tenant_slug", displayName = "tenant_display_name", email
-            case timeZone = "time_zone"
+            case timeZone = "time_zone", capabilities
         }
 
         /// The account as the owner knows it: its name, else its slug.
@@ -273,7 +276,7 @@ final class KIFFClient {
     /// the trial.
     struct Usage: Decodable, Equatable {
         struct Period: Decodable, Equatable { let start: Date; let end: Date }
-        /// What wasn't counted, by why (kiff-cloud#1316's "never counted").
+        /// What wasn't counted, by why ("never counted").
         struct Free: Decodable, Equatable {
             var refused = 0, heldRefused = 0, halted = 0, failed = 0, invalid = 0, retry = 0, read = 0, trial = 0, setupRead = 0
             enum CodingKeys: String, CodingKey {
@@ -297,7 +300,7 @@ final class KIFFClient {
                     .filter { $0.1 > 0 }
             }
         }
-        /// One taf's part of the period (kiff-cloud#1334): what it counted, and what it didn't and why.
+        /// One taf's part of the period: what it counted, and what it didn't and why.
         struct AgentCount: Decodable, Equatable {
             let agent: String
             let counted: Int
@@ -450,7 +453,7 @@ final class KIFFClient {
         let record: String
         let agent: String
         let tool: String
-        /// The tool as the Record names it (kiff-cloud#1334): "Refund an order".
+        /// The tool as the Record names it: "Refund an order".
         var toolTitle: String? = nil
         let at: Date
         var id: String { record }
@@ -461,9 +464,8 @@ final class KIFFClient {
         try await send("GET", "/v1/me/usage")
     }
 
-    /// The period's counted tasks, newest first, a page at a time.
-    /// The period's counted tasks, newest first, a page at a time; with `agent`, that taf's only
-    /// (kiff-cloud#1334).
+    /// The period's counted tasks, newest first, a page at a time; with `agent`, that taf's
+    /// only.
     func countedTasks(cursor: String? = nil, agent: String? = nil) async throws -> (tasks: [CountedTask], next: String?) {
         struct Page: Decodable { let items: [CountedTask]; var next: String? }
         let query = [agent.map { "agent=\(escaped($0))" }, cursor.map { "cursor=\(escaped($0))" }].compactMap { $0 }
@@ -471,18 +473,18 @@ final class KIFFClient {
         return (page.items, page.next)
     }
 
-    /// Sets the account's time zone (an IANA name): a signed setup call from a phone
-    /// (kiff-cloud #1278), which only the account's owner or an admin may make.
+    /// Sets the account's time zone (an IANA name): a signed setup call from a phone, which
+    /// only the account's owner or an admin may make.
     func setTimeZone(_ zone: String) async throws -> String {
         struct Saved: Decodable { let timeZone: String; enum CodingKeys: String, CodingKey { case timeZone = "time_zone" } }
         let saved: Saved = try await send("PUT", "/v1/me/time-zone", body: ["time_zone": zone])
         return saved.timeZone
     }
 
-    /// One call of the account's, as KIFF's activity records it (kiff-cloud #1279): what a
+    /// One call of the account's, as KIFF's activity records it: what a
     /// taf did, newest first, with the tool's title for people.
     struct ActivityCall: Decodable, Equatable {
-        /// How the call ended at the tool (kiff-cloud `tooloutcome`): done, refused_by_tool,
+        /// How the call ended at the tool, as KIFF's activity says: done, refused_by_tool,
         /// not_sent, sending, unknown or not_recorded, with the tool's or gateway's message.
         struct ToolOutcome: Decodable, Equatable {
             let status: String
@@ -581,8 +583,8 @@ final class KIFFClient {
         enum CodingKeys: String, CodingKey { case nextStep = "next_step", signature }
     }
 
-    /// What the phone signs to answer a held call: KIFF's `kiff.answer.v1` message, one
-    /// field per line (kiff-cloud apps/api/internal/auth/devicekey.go).
+    /// What the phone signs to answer a held call: KIFF's signed answer message,
+    /// `kiff.answer.v1`, one field per line.
     static func answerMessage(tenant: String, exceptionID: String, answer: String, nextStep: String?,
                               note: String? = nil, accountingVersion: Int, signedAt: String) -> Data {
         let noteHash = note.flatMap { $0.isEmpty ? nil : $0 }
@@ -592,8 +594,8 @@ final class KIFFClient {
         return Data(lines.joined(separator: "\n").utf8)
     }
 
-    /// What the phone signs for a setup call: KIFF's `kiff.request.v1` message
-    /// (kiff-cloud apps/api/internal/auth/devicekey.go).
+    /// What the phone signs for a setup call: KIFF's signed request message,
+    /// `kiff.request.v1`.
     static func requestMessage(tenant: String, method: String, uri: String, body: Data, signedAt: String) -> Data {
         let bodyHash = SHA256.hash(data: body).map { String(format: "%02x", $0) }.joined()
         return Data(["kiff.request.v1", tenant, method, uri, bodyHash, signedAt].joined(separator: "\n").utf8)
@@ -610,6 +612,14 @@ final class KIFFClient {
                                       body: AnswerBody(nextStep: nextStep, signature: signature))
     }
 
+    /// Gives the held call's Card the extra room this call needs, until that total resets,
+    /// and lets the call go on (kiff/tafs#211, 6.13): KIFF's change-card, signed as an
+    /// answer. Only for a call over a total kept across calls; it needs Card management.
+    func changeCard(_ id: String, signature: AnswerSignature? = nil) async throws {
+        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/change-card",
+                                      body: AnswerBody(signature: signature))
+    }
+
     // MARK: Cards
 
     func revoke(cardID: String) async throws {
@@ -618,7 +628,7 @@ final class KIFFClient {
 
     // MARK: Drafts
 
-    /// A new agent and its Cards, submitted as one draft (kiff-cloud #1217). Submitted
+    /// A new agent and its Cards, submitted as one draft. Submitted
     /// by someone who may issue Cards and give keys, from their phone and signed, it is
     /// confirmed at once: KIFF issues the Cards. Its key is minted only when the
     /// `claimSecret` is claimed, which tafs cloud does, so the key never reaches the phone.
@@ -636,7 +646,7 @@ final class KIFFClient {
         /// The Cards it would issue, as the owner reads them before confirming. Read
         /// leniently: a field KIFF adds later doesn't stop the draft being shown.
         var cards: [DraftCard]?
-        /// An agent that holds no tools (kiff-cloud#1254): Setup.
+        /// An agent that holds no tools: Setup.
         var noTools: Bool?
         /// The name it was submitted with, such as the taf's ("Refunds assistant").
         var label: String?
@@ -676,7 +686,7 @@ final class KIFFClient {
     /// One Card of a draft, as the owner reads it: each action and its limits.
     struct DraftCard: Decodable, Equatable {
         struct Grant: Decodable, Equatable {
-            /// `unit` and `scale` when the tool declares them (kiff-cloud #1274).
+            /// `unit` and `scale` when the tool declares them.
             struct PerAction: Decodable, Equatable { let quantity: String; let max: Int64; var unit: String?; var scale: Int? }
             let action: String
             var title: String?
@@ -686,7 +696,7 @@ final class KIFFClient {
         struct Aggregate: Decodable, Equatable { let quantity: String; let limit: Int64; let window: String; var unit: String?; var scale: Int? }
         let grants: [Grant]?
         let aggregates: [Aggregate]?
-        /// A revision draft's Card for one the agent holds (kiff-cloud#1287): that Card's id,
+        /// A revision draft's Card for one the agent holds: that Card's id,
         /// and its terms as they are now, so the owner reads now → after.
         var revises: String?
         var current: Terms?
@@ -746,7 +756,7 @@ final class KIFFClient {
         }
     }
 
-    /// A draft for Setup, an agent that holds no tools (kiff-cloud#1254). From the phone,
+    /// A draft for Setup, an agent that holds no tools. From the phone,
     /// signed, it is confirmed at once; tafs cloud then claims its key.
     func submitNoToolsDraft(agentID: String, label: String) async throws -> AgentDraft {
         struct Body: Encodable {
@@ -763,8 +773,8 @@ final class KIFFClient {
         try await send("GET", "/v1/me/agent-drafts/\(escaped(id))")
     }
 
-    /// Confirms a draft another agent submitted, exactly the version the owner was shown
-    /// (kiff-cloud #1237): KIFF issues its Cards. A signed setup call.
+    /// Confirms a draft another agent submitted, exactly the version the owner was shown:
+    /// KIFF issues its Cards. A signed setup call.
     func confirmDraft(id: String, version: String) async throws -> AgentDraft {
         try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version])
     }
@@ -878,7 +888,7 @@ final class KIFFClient {
 
     // MARK: Alerts
 
-    /// Where KIFF sends the account's held calls, as a phone registers it (kiff-cloud #1234):
+    /// Where KIFF sends the account's held calls, as a phone registers it:
     /// only to an app backend KIFF lists, for held calls and their answers only. The signing
     /// secret is shown this once.
     struct AlertTarget: Codable, Equatable {
@@ -895,7 +905,7 @@ final class KIFFClient {
 
     // MARK: Connector key
 
-    /// The key planque keeps to register a taf's tools in KIFF (kiff-cloud #1251): it
+    /// The key planque keeps to register a taf's tools in KIFF: it
     /// connects tools and does nothing else. Minted from the phone with a signed setup call;
     /// the plaintext is shown this once and goes straight to planque, never to storage.
     func mintConnectorKey() async throws -> String {
@@ -905,7 +915,7 @@ final class KIFFClient {
         return minted.plaintext
     }
 
-    /// Resumes a halted agent in KIFF, or with none the whole account (kiff/kiff-cloud#1061).
+    /// Resumes a halted agent in KIFF, or with none the whole account.
     /// KIFF takes it only signed by this phone, after Face ID: set `setupSigner` first.
     func resume(agent: String?) async throws {
         let _: Empty = try await send("POST", agent.map { "/v1/agents/\(escaped($0))/resume" } ?? "/v1/resume", body: [String: String]())

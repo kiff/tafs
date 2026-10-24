@@ -46,8 +46,7 @@ enum KIFFMapping {
     /// title as KIFF gives it, else the action in words. The title is Setup's, set on the
     /// grant the owner signed, else the vendor's label (kiff/planque#37); the action's own
     /// name, a grant prefix included, stays out (kiff/tafs#138, items 52, 53). Never a name
-    /// made up here. A vendor's label can be shared by several tools (kiff-cloud#1277's
-    /// review), so where it would read alike, a Card's lines and a held call add the action
+    /// made up here. A vendor's label can be shared by several tools (/// review), so where it would read alike, a Card's lines and a held call add the action
     /// in words (`DraftCard.lines`, `says`); planque refuses two titles alike (kiff/planque#38).
     static func name(_ action: String, title: String?) -> String {
         let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -152,6 +151,10 @@ enum KIFFMapping {
             var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
                                     detail: detail, at: c.createdAt)
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
+            if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" {
+                entry.refusedByTool = true
+                entry.refusedBy = vendors[c.actionName]
+            }
             entry.amount = c.amount
             entry.readOnly = c.readOnly
             entry.entityID = c.entityID
@@ -184,7 +187,7 @@ enum KIFFMapping {
 
     /// What the tool did with an allowed call: its kind and the words for it. approved: the
     /// owner approved it, held first.
-    /// A call the vendor refused still counts against the Card's totals (kiff-cloud#1344): it
+    /// A call the vendor refused still counts against the Card's totals: it
     /// says so plainly, naming the vendor as connected.
     static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, counts: Counted = .nothing) -> (RecordEntry.Kind, String) {
         let why = o?.message.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""

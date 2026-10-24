@@ -29,7 +29,7 @@
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update both functions' code, nothing else.
 #
-# Everything is named tafs-*, in us-east-1, and touches nothing of kiff-cloud's.
+# Everything is named tafs-*, in us-east-1, and touches nothing of KIFF's own.
 # Usage: infra/aws.sh path/to/lambda.zip
 #
 # Applied on 2026-10-14 step by step (each part checked before the next), not by
@@ -109,6 +109,26 @@ aws iam attach-role-policy --role-name "$LAMBDA_ROLE" \
 AGENTS_REGION=eu-west-1
 AGENTS_FN_ARN=arn:aws:lambda:$AGENTS_REGION:$ACCOUNT:function:agents
 AGENTS_SECRETS=arn:aws:secretsmanager:$AGENTS_REGION:$ACCOUNT:secret
+# The doors (docs/doors.md), off unless a deployment sets them up: each setting
+# as passed in, or else the one tafs-cloud already has, so a rerun never turns
+# a door off. Names only here; the values live on the function.
+DOORS_ENV=""
+for v in DOORS_PUBLIC_URL DOORS_EMAIL_DOMAIN DOORS_SECRET_ID DOORS_SECRETS_PREFIX DOORS_WHATSAPP_REGION; do
+  if [ -z "${!v:-}" ]; then
+    kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
+    [ "$kept" = None ] && kept=""
+    printf -v "$v" '%s' "$kept"
+  fi
+  [ -n "${!v}" ] && DOORS_ENV="$DOORS_ENV,$v=${!v}"
+done
+# The doors' secret, in kiff/agents' region where tafs cloud's secrets client
+# reads: tafs cloud may read it, nothing more.
+DOORS_READ=""
+if [ -n "$DOORS_SECRET_ID" ]; then
+  DOORS_SECRET_ARN=$(command aws --region "$AGENTS_REGION" secretsmanager describe-secret --secret-id "$DOORS_SECRET_ID" --query ARN --output text)
+  DOORS_READ=",
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$DOORS_SECRET_ARN\"]}"
+fi
 aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-access --policy-document "{
   \"Version\": \"2012-10-17\",
   \"Statement\": [
@@ -119,7 +139,7 @@ aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-acce
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$AGENTS_FN_ARN\",
      \"Condition\": {\"Bool\": {\"lambda:InvokedViaFunctionUrl\": \"true\"}}},
     {\"Effect\": \"Allow\", \"Action\": [\"secretsmanager:CreateSecret\", \"secretsmanager:PutSecretValue\", \"secretsmanager:DeleteSecret\", \"secretsmanager:DescribeSecret\"],
-     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}
+     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}$DOORS_READ
   ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)
@@ -127,7 +147,7 @@ LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn -
 # The function.
 AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
 AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
-ENV="Variables={AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,NODE_OPTIONS=--enable-source-maps}"
+ENV="Variables={AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,NODE_OPTIONS=--enable-source-maps$DOORS_ENV}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

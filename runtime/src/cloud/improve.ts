@@ -8,7 +8,7 @@
 import type { CardSummary, Money, Rule } from "./home.js";
 import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 
-/** One call of the account's, as KIFF's activity records it (kiff-cloud#1279), as much as Setup reads. */
+/** One call of the account's, as KIFF's activity records it, as much as Setup reads. */
 export interface ActivityCall {
   actor_id?: string | null;
   action_name: string;
@@ -62,7 +62,7 @@ function list(v: unknown): unknown[] {
 }
 
 /**
- * The taf's active Cards, each as a revision draft takes it (kiff-cloud#1287):
+ * The taf's active Cards, each as a revision draft takes it:
  * a draft's Cards are decoded with unknown fields refused, so only a draft
  * body's keys are copied from KIFF's view, never what the view adds (a
  * grant's title, a limit's unit and scale, an aggregate's room), and each

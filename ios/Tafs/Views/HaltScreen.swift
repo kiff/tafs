@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A halt (kiff/kiff-cloud#1061) of one taf or, with none, of every taf: its own screen,
+/// A halt of one taf or, with none, of every taf: its own screen,
 /// opened from a row. Halting is one tap, no Face ID: it only takes authority away. It reads
 /// Halted only once kiff/agents, KIFF and planque all hold it, Halting… until then. Resuming
 /// asks for Face ID, and what the taf was doing before the halt doesn't come back.
@@ -17,9 +17,9 @@ struct HaltScreen: View {
             VStack(alignment: .leading, spacing: 16) {
                 Panel {
                     Eyebrow(text: name, color: h.state == .running ? Theme.dim : Theme.no)
-                    Text(Self.headline(h)).font(Theme.display(26)).foregroundColor(Theme.ink)
+                    Text(Self.headline(h)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     Text(Self.explanation(h, all: tafID == nil))
-                        .font(.system(size: 15)).foregroundColor(Theme.soft)
+                        .scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if h.state != .running {
@@ -30,7 +30,7 @@ struct HaltScreen: View {
                         HoldRow(text: "planque sends nothing to your tools", held: h.planque)
                         if h.account && tafID != nil {
                             Text("Halted with all your tafs. Resume them all to let it run.")
-                                .font(.system(size: 13)).foregroundColor(Theme.dim)
+                                .scaledFont(13).foregroundColor(Theme.dim)
                         }
                     }
                 }
@@ -42,7 +42,7 @@ struct HaltScreen: View {
                 case .halting:
                     HStack(spacing: 8) {
                         ProgressView()
-                        Text("Halting… waiting for every part to confirm.").font(.system(size: 14)).foregroundColor(Theme.dim)
+                        Text("Halting… waiting for every part to confirm.").scaledFont(14).foregroundColor(Theme.dim)
                     }
                     // Halt again: a part that didn't take it the first time is asked again.
                     Button("Halt again") { halt() }
@@ -119,9 +119,9 @@ private struct HoldRow: View {
         HStack(spacing: 10) {
             Image(systemName: held ? "checkmark.circle.fill" : "circle.dotted")
                 .foregroundColor(held ? Theme.ok : Theme.dim)
-            Text(text).font(.system(size: 15)).foregroundColor(Theme.ink)
+            Text(text).scaledFont(15).foregroundColor(Theme.ink)
             Spacer()
-            Text(held ? "Done" : "Waiting").font(.system(size: 13)).foregroundColor(Theme.dim)
+            Text(held ? "Done" : "Waiting").scaledFont(13).foregroundColor(Theme.dim)
         }
     }
 }
@@ -136,14 +136,14 @@ struct HaltRow: View {
         NavigationLink { HaltScreen(tafID: tafID) } label: {
             HStack(spacing: 12) {
                 Image(systemName: h.state == .running ? "hand.raised" : "hand.raised.fill")
-                    .font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.no)
+                    .scaledFont(16, weight: .semibold).foregroundColor(Theme.no)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(tafID == nil ? "Halt all" : "Halt").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                    Text(tafID == nil ? "Halt all" : "Halt").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                     Text(h.state == .running ? "Stop it until you resume" : HaltScreen.headline(h))
-                        .font(.system(size: 13)).foregroundColor(h.state == .running ? Theme.dim : Theme.no)
+                        .scaledFont(13).foregroundColor(h.state == .running ? Theme.dim : Theme.no)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
+                Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
             }
         }
         .buttonStyle(.plain)

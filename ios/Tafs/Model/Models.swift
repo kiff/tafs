@@ -330,12 +330,15 @@ struct VersionInstall: Hashable, Codable {
     var n: Int
 }
 
-/// The owner's answer to a held call: approve it once, refuse it, or refuse it with
-/// one of the Card's next steps for the taf to follow ("Return first").
+/// The owner's answer to a held call: approve it once, refuse it, refuse it with one of
+/// the Card's next steps for the taf to follow ("Return first"), or give its Card the
+/// extra room this call needs until that total resets (kiff/tafs#211, 6.13): KIFF's
+/// change-card, the only answer that passes a call over a total kept across calls.
 enum Answer: Hashable, Codable {
     case approveOnce
     case refuse
     case nextStep(String)
+    case extraRoom
 
     /// The words signed and sent, stable across versions.
     var wireName: String {
@@ -343,6 +346,7 @@ enum Answer: Hashable, Codable {
         case .approveOnce: return "approve-once"
         case .refuse: return "reject"
         case .nextStep(let step): return "reject:\(step)"
+        case .extraRoom: return "change-card"
         }
     }
 }
@@ -378,4 +382,9 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     /// When the call was made (KIFF's first decision), and why it wasn't sent, in KIFF's words.
     var madeAt: Date?
     var reason: String?
+    /// KIFF allowed the call and the vendor refused it, and it still counts against the
+    /// Card's totals (kiff/tafs#211, 6.13).
+    var refusedByTool: Bool?
+    /// Who refused it at the tool: the vendor as connected, when known.
+    var refusedBy: String?
 }
