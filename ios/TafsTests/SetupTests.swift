@@ -476,6 +476,35 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A 401 is a sign-in to renew, not a refusal: Setup isn't told. And a failure Setup
+    /// couldn't be told of isn't marked told: the card keeps Try again (kiff/tafs#183).
+    func testAFailedStartIsToldOnlyOnceTheMessageWent() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        await model.loadSetup()
+        let result = try SetupTests.component(#"{"type":"result","id":"done","taf":{"agent":"refunds-x","name":"Refunds","job":"refunds","draft":"drf_s1"},"text":"Refunds can refund within its Card.","tools":["refund_payment"]}"#)
+
+        StubProtocol.responses["POST /v1/tafs"] = (401, #"{"error":"sign in again"}"#)
+        StubProtocol.sent = []
+        await model.startSetupTaf(result)
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "a 401 isn't a refusal")
+        XCTAssertFalse(model.startFailureTold(result))
+
+        // Refused, but the message to Setup doesn't go: not told, so it's tried again later.
+        StubProtocol.responses["POST /v1/tafs"] = (403, #"{"error":"only someone who manages Cards can start a taf"}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (500, #"{"error":"down"}"#)
+        await model.startSetupTaf(result)
+        XCTAssertFalse(model.startFailureTold(result), "the message didn't go")
+        XCTAssertNotNil(model.tafStartErrors["done"], "the card keeps Try again")
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        await model.startSetupTaf(result)
+        XCTAssertTrue(model.startFailureTold(result))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// The hand-over starts its taf when it arrives, wherever the owner is (kiff/tafs#96):
     /// no result card on screen needed, so the new taf reaches the list.
     func testAHandOverStartsItsTafWithoutTheCardOnScreen() async throws {

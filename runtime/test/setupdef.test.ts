@@ -76,7 +76,8 @@ describe("Setup's definition on kiff/agents", () => {
   it("hands over again after a failed start, with the same draft", () => {
     expect(SETUP_INSTRUCTIONS).toContain("no taf exists: say so in one sentence");
     expect(SETUP_INSTRUCTIONS).toContain("never submit a second draft for that agent");
-    expect(SETUP_INSTRUCTIONS).toContain("confirmed but not claimed means the taf\n  didn't start");
+    expect(SETUP_INSTRUCTIONS).toContain("For any other reason, say what failed and ask\n  the owner what to do");
+    expect(SETUP_INSTRUCTIONS).toContain("confirmed but not claimed means the taf didn't start");
   });
 
   it("tells Setup an answer in the chat isn't proof, and never to take a key", () => {
