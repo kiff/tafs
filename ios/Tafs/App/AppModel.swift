@@ -857,7 +857,7 @@ final class AppModel: ObservableObject {
     }
 
     /// Where a held call from KIFF is answered while the phone cannot answer it.
-    /// The answer as KIFF's kiff.answer.v1 message names it (kiff-cloud's devicekey.go).
+    /// The answer as KIFF's signed answer message, kiff.answer.v1, names it.
     nonisolated static func kiffAnswer(_ answer: Answer) -> String {
         switch answer {
         case .approveOnce: return "approve-once"
