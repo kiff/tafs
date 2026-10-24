@@ -1,9 +1,4 @@
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#else
-import AppKit
-#endif
 
 /// A taf's Doors tab (docs/doors.md): a dial around the taf, one stop per door and a
 /// last stop to add one. Turn it to pick a door, press the taf to open or close it.
@@ -691,17 +686,5 @@ struct DoorRim: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
-    }
-}
-
-/// The clipboard, on iOS and the Mac.
-enum Clipboard {
-    @MainActor static func copy(_ text: String) {
-        #if canImport(UIKit)
-        UIPasteboard.general.string = text
-        #else
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
-        #endif
     }
 }
