@@ -50,6 +50,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Coach reads what only some conversations need when one does (#218): changing
+  a taf, why a taf waits or was refused, tasks and packs, and halting are skills
+  it reads before answering, instead of instructions carried in every turn.
+  Setting up a taf reads none of them. Coach's instructions in every turn are
+  about 13% shorter, counting the list of skills, and it now knows holds, packs
+  and halting, which it didn't.
 - Tables in a chat are drawn as tables (#211): a header, a line between rows,
   amounts aligned on the right, and a wide table scrolls sideways. VoiceOver reads
   each row with its column names. Before, a table showed as text with its pipes.
