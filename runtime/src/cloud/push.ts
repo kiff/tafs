@@ -87,6 +87,8 @@ const HELD = "owner_required";
 const ANSWERED = "hold_answered";
 /** A member asked the account's admins for more tasks. */
 export const PACK_REQUESTED = "pack_requested";
+/** An admin answered a member's request: approved (a pack bought), declined or withdrawn. */
+export const PACK_REQUEST_ANSWERED = "pack_request_answered";
 
 /**
  * Checks `KIFF-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, "<t>.<body>")>`
@@ -116,6 +118,8 @@ interface AlertBody {
   action?: unknown;
   entity_id?: unknown;
   hold?: { id?: unknown; expires_at?: unknown } | null;
+  /** On a pack request's alerts: the request, who asked (their sign-in subject) and an admin's note. */
+  request?: { id?: unknown; pack?: unknown; status?: unknown; asked_by?: unknown; note?: unknown } | null;
 }
 
 export interface AlertDeps {
@@ -149,11 +153,21 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   if (!signedByKIFF(signature, raw, secrets, deps.now)) throw new PushError(401, "not signed by KIFF");
 
   const outcome = typeof body.outcome === "string" ? body.outcome : "";
-  if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED) return { ignored: outcome };
+  if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED && outcome !== PACK_REQUEST_ANSWERED) return { ignored: outcome };
   const eventID = typeof body.event_id === "string" ? body.event_id : "";
   let n: Notification;
   let to: (d: Device) => boolean;
-  if (outcome === PACK_REQUESTED) {
+  if (outcome === PACK_REQUEST_ANSWERED) {
+    const r = body.request;
+    const requestID = typeof r?.id === "string" ? r.id : "";
+    const askedBy = typeof r?.asked_by === "string" ? r.asked_by : "";
+    if (!eventID || !requestID || !askedBy) throw new PushError(400, "an answer names its event, its request and who asked");
+    const answer = answerNotification(requestID, r?.status, r?.pack, r?.note);
+    if (!answer) return { ignored: `${outcome}: ${String(r?.status)}` };
+    n = answer;
+    // Only the member who asked hears the answer.
+    to = (d) => d.subject === askedBy;
+  } else if (outcome === PACK_REQUESTED) {
     const requestID = typeof body.entity_id === "string" ? body.entity_id : "";
     if (!eventID || !requestID) throw new PushError(400, "an alert names its event and its request");
     n = requestNotification(requestID);
@@ -223,6 +237,35 @@ function requestNotification(requestID: string): Notification {
         sound: "default",
         "thread-id": "tasks",
       },
+      open: "usage",
+      request_id: requestID,
+    },
+    collapseID: requestID.slice(0, 64),
+  };
+}
+
+/** Most of an admin's note a push shows. */
+export const MAX_NOTE = 180;
+
+/**
+ * The member's answer to their request: "Your admin added Rayo" or "Your admin declined:
+ * <note>". A withdrawn or expired request tells nobody (undefined).
+ */
+function answerNotification(requestID: string, status: unknown, pack: unknown, note: unknown): Notification | undefined {
+  const name = typeof pack === "string" && pack ? capitalize(pack) : "tasks";
+  let body: string;
+  if (status === "approved") {
+    body = `Your admin added ${name}.`;
+  } else if (status === "declined") {
+    const why = typeof note === "string" ? note.replace(/\s+/g, " ").trim() : "";
+    body = why ? `Your admin declined: ${why.length > MAX_NOTE ? why.slice(0, MAX_NOTE - 1) + "…" : why}` : "Your admin declined your request for more tasks.";
+  } else {
+    return undefined;
+  }
+  return {
+    kind: "alert",
+    payload: {
+      aps: { alert: { title: "Your request for tasks", body }, sound: "default", "thread-id": "tasks" },
       open: "usage",
       request_id: requestID,
     },

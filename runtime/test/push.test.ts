@@ -381,6 +381,27 @@ describe("KIFF's alerts", () => {
     expect((await alert(request, push, { apns, forward, slots })).body).toEqual({ duplicate: true });
     expect(apns.sent).toHaveLength(1);
   });
+
+  it("tells only the member who asked when their request is answered, and nobody when it was withdrawn", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const answer = (event: string, request: Record<string, unknown>) => JSON.stringify({
+      schema_version: "1", type: "kiff.pack_request", tenant_id: "t_acme", action: "tafs.pack_request", entity_id: "pr_1",
+      entity_type: "pack_request", outcome: "pack_request_answered", reasons: ["rayo", String(request.status)], decided_at: "2026-10-15T09:00:00Z",
+      event_id: event, request: { id: "pr_1", pack: "rayo", asked_by: "u_bo", ...request },
+    });
+    expect((await alert(answer("evt_ok", { status: "approved" }), push, { apns })).body).toEqual({ sent: 1 });
+    expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_B]);
+    expect(apns.sent[0]!.n).toMatchObject({ kind: "alert", payload: { aps: { alert: { body: "Your admin added Rayo." } }, open: "usage", request_id: "pr_1" } });
+    expect((await alert(answer("evt_no", { status: "declined", note: "  Next\nmonth " }), push, { apns })).body).toEqual({ sent: 1 });
+    expect(apns.sent[1]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined: Next month" } } } });
+    expect((await alert(answer("evt_bare", { status: "declined" }), push, { apns })).body).toEqual({ sent: 1 });
+    expect(apns.sent[2]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined your request for more tasks." } } } });
+    expect((await alert(answer("evt_gone", { status: "withdrawn" }), push, { apns })).body).toEqual({ ignored: "pack_request_answered: withdrawn" });
+    expect(apns.sent).toHaveLength(3);
+    // An answer that doesn't say who asked tells nobody.
+    expect((await alert(answer("evt_who", { status: "approved", asked_by: "" }), push, { apns })).status).toBe(400);
+  });
 });
 
 describe("KIFF's alert target without a phone (kiff/tafs#206)", () => {
