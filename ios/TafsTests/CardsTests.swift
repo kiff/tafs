@@ -91,4 +91,15 @@ final class CardsTests: XCTestCase {
         taf.usageUnknown = ["refund"]
         XCTAssertNil(taf.shownCards[0].total?.used, "KIFF couldn't read it: unknown, not zero")
     }
+
+    func testOneCardCountsCallsAsItCountsMoney() {
+        var taf = Taf(name: "Reads", job: "", tools: [], colorIndex: 0,
+                      card: Card(rules: [CardRule(action: "list", label: "List charges", countPerWindow: 200)], issuedBy: "You", expires: nil))
+        XCTAssertEqual(taf.shownCards[0].calls?.used, 0, "nothing counted yet: none used")
+        taf.counted = ["list": 20]
+        XCTAssertEqual(taf.shownCards[0].hero?.figure, "180")
+        taf.counted = [:]
+        taf.usageUnknown = ["list"]
+        XCTAssertNil(taf.shownCards[0].calls?.used, "KIFF couldn't read it: unknown, not zero")
+    }
 }

@@ -141,7 +141,7 @@ struct CardTotal<Value: Hashable & Codable & Sendable>: Hashable, Codable, Senda
 /// own limits and balance, and a test Card is kept apart from the live one.
 struct TafCard: Identifiable, Hashable, Codable {
     var id: String
-    /// Its main tool's title, until KIFF gives a Card a title of its own (kiff-cloud#1364).
+    /// Its own title from KIFF, else its main tool's.
     var title: String
     /// The environment KIFF scopes it to, as KIFF names it; empty for every environment.
     var environment = ""
@@ -202,7 +202,8 @@ struct TafCard: Identifiable, Hashable, Codable {
             let read = used[rule.action] ?? (unknown.contains(rule.action) ? nil : Money(minor: 0, currency: limit.currency, scale: limit.scale))
             card.total = CardTotal(limit: limit, used: read, window: rule.window)
         } else if let rule = rules.first(where: { $0.countPerWindow != nil }), let limit = rule.countPerWindow {
-            card.calls = CardTotal(limit: limit, used: counted[rule.action], window: rule.window)
+            // As the money total: no count is none used, unless KIFF couldn't read it.
+            card.calls = CardTotal(limit: limit, used: counted[rule.action] ?? (unknown.contains(rule.action) ? nil : 0), window: rule.window)
         }
         return card
     }

@@ -58,7 +58,7 @@ export interface Total<T> {
 /** One KIFF Card, drawn as its own Card. */
 export interface CardView {
   id: string;
-  /** Its main tool's title, until KIFF gives a Card a title of its own. */
+  /** Its own title from KIFF, else its main tool's. */
   title: string;
   /** The environment KIFF scopes it to, as KIFF names it; "" for every environment. */
   environment: string;
@@ -88,6 +88,8 @@ export interface Mandate {
   subject: string;
   /** The environment it is scoped to; empty for every environment. */
   environment?: string | null;
+  /** Its title for people, when KIFF has one for it. */
+  title?: string | null;
   grants?: { action: string; title?: string | null; per_action_max?: { quantity: string; max: number; unit?: string | null; scale?: number | null }[] | null }[] | null;
   aggregates?: { quantity: string; limit: number; window: string; unit?: string | null; scale?: number | null }[] | null;
   limits?: { quantity: string; window?: string | null; limit: number; used?: number | null; status?: string | null; unit?: string | null; scale?: number | null }[] | null;
@@ -225,7 +227,7 @@ export function cardView(m: Mandate): CardView {
   }
   const environment = (m.environment ?? "").trim();
   return {
-    id: m.id, title: lines[0]?.label ?? "No actions yet", environment, live: isLive(environment),
+    id: m.id, title: m.title?.trim() || lines[0]?.label || "No actions yet", environment, live: isLive(environment),
     active: m.active, expires: m.valid_until ?? null, rules: lines, total, calls,
   };
 }

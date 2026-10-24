@@ -67,6 +67,12 @@ describe("each Card on its own (kiff/tafs#211)", () => {
     expect(s.cards.map((c) => [c.id, c.live])).toEqual([["reads", true], ["live", true], ["test", false]]);
   });
 
+  it("takes the Card's own title when KIFF gives one, else its main tool's", () => {
+    expect(cardView({ ...refunds, title: "  Refunds on Stripe " }).title).toBe("Refunds on Stripe");
+    expect(cardView({ ...refunds, title: "" }).title).toBe("Refund a payment");
+    expect(cardView({ ...refunds, title: null }).title).toBe("Refund a payment");
+  });
+
   it("reads production, live and no environment as live, any other as not", () => {
     expect([isLive("production"), isLive("Live"), isLive(""), isLive(null), isLive("test"), isLive("staging")]).toEqual([true, true, true, true, false, false]);
   });
