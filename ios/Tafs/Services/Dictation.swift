@@ -205,9 +205,10 @@ final class Dictation: ObservableObject {
         }
     }
 
-    /// The recognizer ended by itself, after a pause or at its own limit: listening goes on,
-    /// after what was heard, until the owner stops it. After a few ends with nothing heard,
-    /// it stops quietly; the mic is there to start again.
+    /// The recognizer ended by itself, after a pause, at its own limit or with an error:
+    /// listening goes on, after what was heard, until the owner stops it. After a few ends
+    /// with nothing heard it stops: quietly after silence, saying why after an error. It never
+    /// stops without a word when something went wrong (#208).
     private func ended(_ why: String?) {
         guard state == .listening else { return }
         before = Self.joined(before, hearing)
@@ -220,10 +221,13 @@ final class Dictation: ObservableObject {
                 return
             } catch {
                 engine.stop()
+                write = nil
+                state = .blocked("Dictation stopped: \(error.localizedDescription) Tap the mic to start again.")
+                return
             }
         }
         write = nil
-        state = .idle
+        state = why.map { .blocked($0) } ?? .idle
     }
 
     /// Whether the recognizer's text starts a new stretch rather than revising the one being

@@ -11,6 +11,8 @@ final class FakeSpeech: SpeechEngine {
     var startedWith: (language: Dictation.Language, hints: [String])?
     var stops = 0
     var starts = 0
+    /// From this start on, starting throws: the microphone was taken.
+    var failFrom: Int?
     private var onText: (@Sendable (String, Bool) -> Void)?
     private var onLevel: (@Sendable (Float) -> Void)?
     private var onEnd: (@Sendable (String?) -> Void)?
@@ -22,6 +24,7 @@ final class FakeSpeech: SpeechEngine {
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
                onLevel: @escaping @Sendable (Float) -> Void, onEnd: @escaping @Sendable (String?) -> Void) throws {
         starts += 1
+        if let failFrom, starts >= failFrom { throw URLError(.cannotConnectToHost) }
         startedWith = (language, hints)
         self.onText = onText
         self.onLevel = onLevel
@@ -148,6 +151,36 @@ final class DictationTests: XCTestCase {
         await settle()
         XCTAssertEqual(dictation.state, .idle, "the third quiet end stops it, with no alert")
         XCTAssertEqual(box, "Halt the refunds now")
+    }
+
+    /// Listening again can fail (a call took the microphone): it says so, never stops silently.
+    func testAFailedRestartSaysWhy() async {
+        let speech = FakeSpeech()
+        speech.failFrom = 2
+        let dictation = Dictation(engine: speech, language: .english)
+        var box = ""
+        await dictation.start(text: box, hints: []) { box = $0 }
+        speech.hear("Refund")
+        await settle()
+        speech.end()
+        await settle()
+        guard case .blocked(let why) = dictation.state else { return XCTFail("state \(dictation.state)") }
+        XCTAssertTrue(why.hasPrefix("Dictation stopped: "), why)
+        XCTAssertTrue(why.hasSuffix("Tap the mic to start again."), why)
+        XCTAssertEqual(box, "Refund", "what was heard stays")
+    }
+
+    /// Ending with errors three times stops it with the last error, not silently.
+    func testRepeatedErrorsStopWithTheLastWhy() async {
+        let speech = FakeSpeech()
+        let dictation = Dictation(engine: speech, language: .english)
+        await dictation.start(text: "", hints: []) { _ in }
+        for _ in 0..<3 {
+            speech.end("Dictation stopped. Tap the mic to start again.")
+            await settle()
+        }
+        XCTAssertEqual(dictation.state, .blocked("Dictation stopped. Tap the mic to start again."))
+        XCTAssertEqual(speech.starts, 3)
     }
 
     func testSwitchingLanguageListensAgainInTheOther() async {
