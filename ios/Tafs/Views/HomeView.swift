@@ -173,7 +173,7 @@ struct HomeView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(Theme.ink)
                     .lineLimit(1)
-                Text("\(call.reason) · answer by \(call.expiresAt.shortTime)")
+                Text("\(call.reason) · answer by \(call.expiresAt.zonedShortTime)")
                     .font(.system(size: 13))
                     .foregroundColor(Theme.soft)
             }

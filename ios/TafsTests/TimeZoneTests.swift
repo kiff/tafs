@@ -6,6 +6,7 @@ import XCTest
 @MainActor
 final class TimeZoneTests: XCTestCase {
     override func tearDown() {
+        AccountTime.use(nil)
         Keychain.delete(AppModel.tokenAccount)
         Keychain.delete(AppModel.tenantAccount)
         Keychain.delete(AppModel.keyedAccount)
@@ -59,4 +60,60 @@ final class TimeZoneTests: XCTestCase {
         await model.useThisDevicesTimeZone()
         XCTAssertNotNil(model.timeZoneError, "KIFF decides who may")
     }
+
+    /// Every time the app shows is in the account's zone, whatever this device's is
+    /// (kiff/tafs#211, 6.11): a hold's deadline, a chat's times, the Record's days.
+    func testTimesShowInTheAccountsZone() {
+        // Far from today, so the Record's day reads as a weekday, never Today or Yesterday.
+        let at = Date(timeIntervalSince1970: 1_737_084_600) // 2025-01-17T03:30:00Z, a Friday in UTC
+        AccountTime.use("America/New_York")
+        XCTAssertEqual(at.shortTime, "22:30")
+        XCTAssertEqual(AccountTime.calendar.component(.day, from: at), 16, "the day before, in New York")
+        XCTAssertTrue(RecordView.dayTitle(at).hasPrefix("Thursday"), RecordView.dayTitle(at))
+        AccountTime.use("Asia/Tokyo")
+        XCTAssertEqual(at.shortTime, "12:30")
+        XCTAssertEqual(AccountTime.calendar.component(.day, from: at), 17)
+        XCTAssertTrue(RecordView.dayTitle(at).hasPrefix("Friday"), RecordView.dayTitle(at))
+        AccountTime.use("Not/AZone")
+        XCTAssertEqual(at.shortTime, "03:30", "a zone this device doesn't know is UTC, KIFF's default")
+        AccountTime.use(nil)
+        XCTAssertEqual(AccountTime.zone, TimeZone.current, "no account: this device's")
+    }
+
+    /// When the account's clock isn't this device's, a hold's deadline and the Record's
+    /// times name the zone; when the clocks agree, nothing is added.
+    func testATimeNamesTheZoneOnlyWhenItIsntThisDevicesClock() {
+        let at = Date(timeIntervalSince1970: 1_737_084_600)
+        AccountTime.use(TimeZone.current.identifier)
+        XCTAssertEqual(AccountTime.label(at: at), "")
+        XCTAssertEqual(at.zonedShortTime, at.shortTime)
+        let elsewhere = TimeZone.current.secondsFromGMT(for: at) == 9 * 3600 ? "America/New_York" : "Asia/Tokyo"
+        AccountTime.use(elsewhere)
+        let label = AccountTime.label(at: at)
+        XCTAssertFalse(label.isEmpty)
+        XCTAssertEqual(at.zonedShortTime, at.shortTime + label)
+        XCTAssertTrue(at.zonedShown(date: .abbreviated, time: .standard).hasSuffix(label))
+    }
+
+    /// The account's zone is the one in use once KIFF says it, and the device's again
+    /// once signed out.
+    func testSigningInUsesTheAccountsZone() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: RecordingSigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme","time_zone":"Asia/Tokyo"}"#)
+        await model.useSession("kiff_dev_x", tenant: "t1")
+        XCTAssertEqual(AccountTime.zone.identifier, "Asia/Tokyo")
+        await model.signOut()
+        XCTAssertEqual(AccountTime.zone, TimeZone.current)
+    }
+
 }

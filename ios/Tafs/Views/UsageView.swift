@@ -116,7 +116,7 @@ struct UsageView: View {
             if let left = Self.leftLine(u) {
                 Text(left).font(.system(size: 15, weight: .semibold)).foregroundColor(u.tasks.usedUp ? Theme.no : Theme.ink)
             }
-            Text("\(Self.taskMeaning) This period ends \(u.period.end.formatted(date: .abbreviated, time: .omitted)).")
+            Text("\(Self.taskMeaning) This period ends \(u.period.end.shown(date: .abbreviated, time: .omitted)).")
                 .font(.system(size: 13)).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -264,7 +264,7 @@ struct UsageView: View {
 
     /// "60 of 70 left, until 22 Oct 2027".
     static func packLeft(_ p: KIFFClient.Usage.HeldPack) -> String {
-        "\(p.tasksLeft) of \(p.tasks) left, until \(p.expiresAt.formatted(date: .abbreviated, time: .omitted))"
+        "\(p.tasksLeft) of \(p.tasks) left, until \(p.expiresAt.shown(date: .abbreviated, time: .omitted))"
     }
 
     static let packOrder = "Your plan's tasks are used first each period, then packs, oldest first."

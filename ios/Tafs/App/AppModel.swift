@@ -36,7 +36,10 @@ final class AppModel: ObservableObject {
     /// The KIFF account this phone signed in to; part of every signed answer.
     var kiffTenant: String?
     /// The KIFF account signed in to, as KIFF says (kiff/tafs#73): what Settings shows.
-    @Published private(set) var kiffAccount: KIFFClient.Account?
+    @Published private(set) var kiffAccount: KIFFClient.Account? {
+        // Every time the app shows is in the account's time zone (kiff/tafs#211, 6.11).
+        didSet { AccountTime.use(kiffAccount.map { $0.timeZone ?? "UTC" }) }
+    }
     /// Why the account's time zone didn't change, when it didn't.
     @Published private(set) var timeZoneError: String?
     /// The account's usage this billing period, once read.
@@ -580,6 +583,12 @@ final class AppModel: ObservableObject {
     }
 
     /// Reloads Cards and held calls from KIFF; in sample mode, plays the next sample actions.
+    /// KIFF's account, read only while it isn't known yet; nil when it can't be read.
+    private func accountIfUnknown() async -> KIFFClient.Account? {
+        guard kiffAccount == nil else { return nil }
+        return try? await kiff.me()
+    }
+
     func refresh() async {
         guard mode == .kiff else { playNextDemoActions(); return }
         refreshing = true
@@ -599,10 +608,21 @@ final class AppModel: ObservableObject {
             async let home = cloud.home()
             async let calls = kiff.heldCalls()
             async let activity = activityCalls()
+            // Which account this is, once a sign-in: it doesn't change under it. Read beside
+            // the list and set before it's shown: its time zone is the one the list's times
+            // are drawn in (kiff/tafs#211, 6.11).
+            async let me = accountIfUnknown()
             let exceptions = try await calls
             let list = try await home
             let done = await activity
+            let account = await me
+            // The account read began under this generation: a sign-out or another sign-in
+            // meanwhile moves it on, and the old account (and its zone) is dropped here.
             guard gen == accountGeneration else { return }
+            if kiffAccount == nil, let account {
+                kiffAccount = account
+                offerTimeZone(account)
+            }
             show(list, exceptions)
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
@@ -616,14 +636,6 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return }
             }
             await refreshConnections()
-            // Which account this is, once a sign-in: it doesn't change under it.
-            if kiffAccount == nil {
-                let gen = accountGeneration
-                if let account = try? await kiff.me(), gen == accountGeneration {
-                    kiffAccount = account
-                    offerTimeZone(account)
-                }
-            }
         } catch KIFFClient.KIFFError.unauthorized {
             await signOut()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
