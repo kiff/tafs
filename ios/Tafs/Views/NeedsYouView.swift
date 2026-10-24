@@ -4,6 +4,7 @@ struct NeedsYouView: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
+        ScrollViewReader { reader in
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Needs you").font(Theme.display(34)).foregroundColor(Theme.ink)
@@ -17,15 +18,25 @@ struct NeedsYouView: View {
                             .font(.system(size: 14)).foregroundColor(Theme.soft)
                     }
                 } else {
-                    ForEach(model.held) { call in HeldCallCard(call: call) }
+                    ForEach(model.held) { call in HeldCallCard(call: call).id(call.id) }
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
+        // A hold opened from its notification is brought into view (kiff/tafs#210).
+        .onChange(of: model.requestedHold) { request in scroll(to: request, reader) }
+        .onChange(of: model.held) { _ in scroll(to: model.requestedHold, reader) }
+        .onAppear { scroll(to: model.requestedHold, reader) }
+        }
         .coachClearance()
         .refreshable { await model.refresh() }
         .screenBackground()
+    }
+
+    private func scroll(to request: AppModel.HoldRequest?, _ reader: ScrollViewProxy) {
+        guard let request, let call = model.held.first(where: { $0.kiffID == request.kiffID }) else { return }
+        withAnimation { reader.scrollTo(call.id, anchor: .top) }
     }
 }
 
@@ -117,6 +128,23 @@ struct HeldCallCard: View {
         }
         .sheet(item: $installing) { ready in
             VersionCardSheet(version: ready.version, tafID: ready.tafID, approving: ready.call)
+        }
+        // The answer chosen on its notification (kiff/tafs#210): Approve asks for Face ID now.
+        .onAppear { takeRequest() }
+        .onChange(of: model.requestedHold) { _ in takeRequest() }
+    }
+
+    private func takeRequest() {
+        guard let request = model.requestedHold, request.kiffID == call.kiffID, !sending else { return }
+        model.requestedHold = nil
+        guard model.canAnswer(call) else { return }
+        switch request.answer {
+        case AlertAnswers.approve? where call.approvableOnce:
+            if call.install != nil { install() } else { send(.approveOnce) }
+        case AlertAnswers.refuse?:
+            send(.refuse)
+        default:
+            break
         }
     }
 

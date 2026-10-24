@@ -5,11 +5,14 @@
 #
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH  the API key
 #   DIST_CERT_SERIAL                          the certificate in the keychain
-#   ruby asc-profiles.rb bot.tafs.app+push="tafs App Store CI" bot.tafs.app.widgets="tafs widgets App Store CI"
+#   ruby asc-profiles.rb bot.tafs.app+push+timesensitive="tafs App Store CI" bot.tafs.app.widgets="tafs widgets App Store CI"
 #
 # "+push" turns on Push Notifications for that bundle ID first, and replaces a
 # profile made before it was on: a profile carries the capabilities its bundle
-# ID had when it was made.
+# ID had when it was made. "+timesensitive" (kiff/tafs#210) replaces a profile
+# made without Time Sensitive Notifications too, but the API can't turn that on:
+# it is turned on once for the bundle ID in the developer portal, and until
+# then this stops and says so.
 require "openssl"
 require "json"
 require "base64"
@@ -28,6 +31,13 @@ def jwt
 end
 
 TOKEN = jwt
+
+# Each "+capability": App Store Connect's type (nil: the API has none), and the
+# entitlement a profile made with it names.
+CAPABILITIES = {
+  "push" => ["PUSH_NOTIFICATIONS", "aps-environment"],
+  "timesensitive" => [nil, "com.apple.developer.usernotifications.time-sensitive"],
+}
 
 def api(method, path, body = nil)
   uri = URI("https://api.appstoreconnect.apple.com#{path}")
@@ -58,18 +68,20 @@ FileUtils.mkdir_p(dir)
 ARGV.each do |arg|
   spec, name = arg.split("=", 2)
   identifier, *capabilities = spec.split("+")
-  push = capabilities.delete("push")
-  abort "unknown capability in #{spec}" unless capabilities.empty?
+  unknown = capabilities - CAPABILITIES.keys
+  abort "unknown capability in #{spec}" unless unknown.empty?
+  wanted = CAPABILITIES.slice(*capabilities)
   bundle = api("get", "/v1/bundleIds?filter[identifier]=#{identifier}&limit=5")["data"].find { |b| b.dig("attributes", "identifier") == identifier }
   abort "bundle ID #{identifier} is not registered" unless bundle
 
-  if push
+  unless wanted.empty?
     have = api("get", "/v1/bundleIds/#{bundle["id"]}/bundleIdCapabilities")["data"] || []
-    unless have.any? { |c| c.dig("attributes", "capabilityType") == "PUSH_NOTIFICATIONS" }
+    wanted.each do |label, (type, _)|
+      next if type.nil? || have.any? { |c| c.dig("attributes", "capabilityType") == type }
       api("post", "/v1/bundleIdCapabilities", { data: { type: "bundleIdCapabilities",
-        attributes: { capabilityType: "PUSH_NOTIFICATIONS" },
+        attributes: { capabilityType: type },
         relationships: { bundleId: { data: { type: "bundleIds", id: bundle["id"] } } } } })
-      puts "turned on Push Notifications for #{identifier}"
+      puts "turned on #{label} for #{identifier}"
     end
   end
 
@@ -77,8 +89,8 @@ ARGV.each do |arg|
   profile = (found["data"] || []).find do |p|
     p.dig("attributes", "profileState") == "ACTIVE" &&
       (p.dig("relationships", "certificates", "data") || []).any? { |c| c["id"] == cert["id"] } &&
-      # The profile's signed plist names aps-environment only when it was made with push on.
-      (!push || Base64.decode64(p.dig("attributes", "profileContent").to_s).include?("aps-environment"))
+      # The profile's signed plist names each capability's entitlement only when it was made with it on.
+      wanted.values.all? { |(_, entitlement)| Base64.decode64(p.dig("attributes", "profileContent").to_s).include?(entitlement) }
   end
   # A profile of ours that is no longer usable (expired, or for another certificate) is replaced.
   (found["data"] || []).reject { |p| p == profile }.each do |p|
@@ -91,6 +103,11 @@ ARGV.each do |arg|
       relationships: { bundleId: { data: { type: "bundleIds", id: bundle["id"] } },
                        certificates: { data: [{ type: "certificates", id: cert["id"] }] } } } })["data"]
     puts "created profile #{profile["id"]} (#{name})"
+  end
+  content = Base64.decode64(profile.dig("attributes", "profileContent").to_s)
+  missing = wanted.reject { |_, (_, entitlement)| content.include?(entitlement) }.keys
+  unless missing.empty?
+    abort "#{identifier}'s new profile lacks #{missing.join(", ")}: turn it on for #{identifier} in the developer portal (Identifiers), then run this again"
   end
   uuid = profile.dig("attributes", "uuid")
   File.binwrite(File.join(dir, "#{uuid}.mobileprovision"), Base64.decode64(profile.dig("attributes", "profileContent")))

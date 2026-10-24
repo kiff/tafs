@@ -27,6 +27,7 @@ struct TafsApp: App {
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
                     push.onOpen = { [weak model] destination in model?.open(destination) }
+                    Routes.shared.onOpen = { [weak model] destination in model?.open(destination) }
                     // From launch: renewals, refunds and purchases made elsewhere reach KIFF.
                     model.purchases.start()
                     await model.restore()
@@ -124,6 +125,14 @@ struct RootView: View {
             NavigationStack {
                 UsageView()
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false } } }
+            }
+            .environmentObject(model)
+        }
+        // Halt all, from a halt alert or from Siri when it needed the app (kiff/tafs#210).
+        .sheet(isPresented: Binding(get: { model.signedIn && model.haltRequested }, set: { model.haltRequested = $0 })) {
+            NavigationStack {
+                HaltScreen(tafID: nil)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.haltRequested = false } } }
             }
             .environmentObject(model)
         }

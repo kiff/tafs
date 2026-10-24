@@ -693,6 +693,8 @@ final class TafsCloud {
         let at: Date
         let taf: String
         let said: String
+        /// Kept while the owner was away (kiff/tafs#210): shown in "While you were away".
+        var away: Bool?
         var id: String { "\(at.timeIntervalSince1970)|\(taf)|\(said)" }
     }
 

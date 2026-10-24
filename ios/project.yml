@@ -61,6 +61,8 @@ targets:
       path: Tafs/Tafs.entitlements
       properties:
         aps-environment: $(TAFS_APS_ENVIRONMENT)
+        # A hold and a halt come through a Focus (kiff/tafs#210).
+        com.apple.developer.usernotifications.time-sensitive: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app

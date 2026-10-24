@@ -192,8 +192,13 @@ struct SetupChatView: View {
                         }
                         .id(item.id)
                     }
+                    // What ended while the owner was away, in one message, a line each (kiff/tafs#210).
+                    let away = model.setupThread.coachLines.filter { $0.away == true }
+                    if !away.isEmpty {
+                        WhileYouWereAway(lines: away).id("while-away")
+                    }
                     // How the tasks Coach handed tafs went, until Coach reads them (kiff/tafs#206).
-                    ForEach(model.setupThread.coachLines) { line in
+                    ForEach(model.setupThread.coachLines.filter { $0.away != true }) { line in
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
                             Image(systemName: "arrow.turn.down.right").scaledFont(11, relativeTo: .caption).foregroundColor(Theme.dim)
                             Text("\(line.taf): \(line.said)").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
@@ -1333,5 +1338,26 @@ private extension View {
         #else
         self
         #endif
+    }
+}
+
+/// Coach's one message for what ended while the owner was away (kiff/tafs#210): each
+/// taf's line in one sentence, read by VoiceOver as one element.
+struct WhileYouWereAway: View {
+    let lines: [TafsCloud.CoachLine]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("While you were away").scaledFont(14, weight: .semibold, relativeTo: .subheadline).foregroundColor(Theme.ink)
+            ForEach(lines) { line in
+                Text("\(line.taf): \(line.said)").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.raised)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 }
