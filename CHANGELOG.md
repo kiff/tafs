@@ -7,6 +7,18 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- Doors: a taf can have an email address of its own, a WhatsApp number, and a door
+  on any app your connector catalog connects. Turn the dial in the taf's Doors tab
+  to pick a door, press the taf to open or close it, and turn to the last stop to
+  add one. A paired sender's message works like a chat message, under the taf's
+  Cards, and the answer goes back the same way, in the same thread; the chat marks
+  both. Anyone else knocks: you're told who wrote and what they want, and answer Do
+  it, Pair or Ignore. Your own email is paired from the start; an email counts as
+  a paired sender's only when it passes the sender check. 20 messages a door a day,
+  20,000 characters a message, text only. tafs cloud gains `/v1/tafs/{id}/doors`
+  and the doors' webhooks; conversation messages may carry `door`, and the
+  conversation `knocks`.
+
 - Security reporting, contribution and agent guidance, issue and pull-request
   templates, code owners, and dependency-update configuration.
 - Halt (kiff/kiff-cloud#1061): one tap stops a taf, or every taf with Halt all,

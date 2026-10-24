@@ -11,6 +11,8 @@ export interface KIFFIdentity {
   /** The agent an agent key is bound to; empty for sessions. */
   agentID: string;
   capabilities: string[];
+  /** The person's sign-in email, when KIFF gives it (sessions only). */
+  email?: string;
 }
 
 export class KIFFError extends Error {
@@ -34,6 +36,7 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     api_key?: boolean;
     agent_id?: string;
     capabilities?: string[];
+    email?: string;
   };
   if (!me.tenant_id) throw new KIFFError(502, "KIFF did not say which account this is");
   return {
@@ -42,6 +45,7 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     apiKey: me.api_key === true,
     agentID: me.agent_id ?? "",
     capabilities: me.capabilities ?? [],
+    ...(typeof me.email === "string" && me.email ? { email: me.email } : {}),
   };
 }
 

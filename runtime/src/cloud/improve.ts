@@ -143,10 +143,11 @@ export function improveContext(taf: ImprovedTaf, card: CardSummary, calls: Activ
 /**
  * What the owner wrote, as the app shows it: an improvement's first message
  * carries the taf's context in front (improveContext), which is Setup's to
- * read, not the owner's words. Any other message is shown as it is.
+ * read, not the owner's words; so does the owner's answer to a door's knock
+ * (doors.ts), which quotes the message. Any other message is shown as it is.
  */
 export function ownerWords(text: string): string {
-  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]")) return text;
+  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]") && !text.startsWith("[door knock ")) return text;
   const at = text.lastIndexOf("\nThe owner says: ");
   return at < 0 ? text : text.slice(at + "\nThe owner says: ".length).trim();
 }
