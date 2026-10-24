@@ -38,6 +38,13 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Words show once while an answer streams (#214): when the chat reloads mid-answer
+  (a taf read what you wrote meanwhile, or Setup's conversation after a step), the
+  words it already recorded no longer show a second time as the live answer.
+- Setup says each thing once and keeps its plan with you (#214): a question's card
+  isn't repeated in its message, the plan comes once the job is known and never
+  restates a message, a step waiting for you stays in progress instead of failed,
+  and the plan moves first once you answer, approve or sign in.
 - A taf's answer only grows as it streams (#206): its words stay as written at
   each tool call, and a call KIFF holds shows its card where the call was made,
   after the words before it, and stays there once answered, in your words

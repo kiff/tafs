@@ -53,6 +53,16 @@ describe("Setup's definition on kiff/agents", () => {
     expect(taf.drafts).toBeUndefined();
   });
 
+  // The owner's retest of 605 (kiff/tafs#214, items 10 to 12): the opening said three times,
+  // a waiting step drawn as failed, and the plan a step behind the owner.
+  it("says each thing once, keeps a waiting step active, and moves the plan first", () => {
+    expect(SETUP_INSTRUCTIONS).toContain("your message doesn't say it too");
+    expect(SETUP_INSTRUCTIONS).toContain("never while you still ask what the job is");
+    expect(SETUP_INSTRUCTIONS).toContain("never your message or a question in other words");
+    expect(SETUP_INSTRUCTIONS).toContain("never shows as failed for waiting");
+    expect(SETUP_INSTRUCTIONS).toContain("show \"plan\" first that turn");
+  });
+
   it("tells Setup an answer in the chat isn't proof, and never to take a key", () => {
     expect(SETUP_INSTRUCTIONS).toContain("not proof");
     expect(SETUP_INSTRUCTIONS).toContain("only connected means the tools are in KIFF");

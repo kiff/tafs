@@ -505,6 +505,55 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(order, ["m|" + messages[0].id, "m|" + messages[1].id, "k|" + AppModel.heldKey(held), "m|" + messages[2].id])
     }
 
+    /// A reload while the answer streams (the taf read what the owner wrote meanwhile)
+    /// brings the words it recorded so far: they show once, as the thread's message, not
+    /// again as the live answer's (kiff/tafs#214, item 9). Words still only live stay.
+    func testWordsTheThreadHoldsShowOnceWhileTheAnswerStreams() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        var continuation: AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation?
+        model.streamOpener = { _, _ in AsyncThrowingStream { continuation = $0 } }
+        await model.sendChat("Refund $300 of T-3002", to: id)
+        let stream = try XCTUnwrap(continuation)
+        stream.yield(.session("sesn_9", newSession: false, run: "r1"))
+        stream.yield(.text("I didn't refund the $300."))
+        stream.yield(.activity("list_charges"))
+        for _ in 0..<2000 where model.chatState(id).live?.parts.isEmpty ?? true { try await Task.sleep(nanoseconds: 1_000_000) }
+        let now = ISO8601DateFormatter().string(from: Date())
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"\(now)","from":"owner","kind":"message","text":"Refund $300 of T-3002","session":"sesn_9"},
+                     {"at":"\(now)","from":"taf","kind":"message","text":"I didn't refund the $300.","session":"sesn_9"}]}
+        """)
+        stream.yield(.taken)
+        stream.yield(.text("Checking the charge."))
+        for _ in 0..<2000 where model.chatState(id).live?.text.isEmpty ?? true { try await Task.sleep(nanoseconds: 1_000_000) }
+        let texts = model.chatItems(id).compactMap { item -> String? in
+            switch item {
+            case .message(let m) where m.from == .taf: return m.text
+            case .streaming(_, let m): return m.text
+            default: return nil
+            }
+        }
+        XCTAssertEqual(texts, ["I didn't refund the $300.", "Checking the charge."], "each once, the recorded words first")
+        stream.finish()
+        await model.chatStreams[id]?.value
+    }
+
+    /// Recorded words hide live ones only for the live session, from about when it started.
+    func testOnlyThisAnswersRecordedWordsHideItsLiveOnes() {
+        let start = Date(timeIntervalSince1970: 1_800_000_000)
+        let said = TafsCloud.ChatMessage(at: start.addingTimeInterval(4), from: .taf, text: "The three tools are connected. Approve the rules.", session: "s1")
+        XCTAssertTrue(AppModel.alreadyRecorded("The three tools are connected.", session: "s1", started: start, in: [said]),
+                      "a recorded turn can hold more than the live words")
+        XCTAssertFalse(AppModel.alreadyRecorded("The three tools are connected.", session: "s2", started: start, in: [said]))
+        XCTAssertFalse(AppModel.alreadyRecorded("The three tools are connected.", session: nil, started: start, in: [said]))
+        XCTAssertFalse(AppModel.alreadyRecorded("The three tools are connected.", session: "s1", started: start.addingTimeInterval(600), in: [said]),
+                       "an earlier answer with the same words doesn't hide this one")
+        XCTAssertFalse(AppModel.alreadyRecorded("  ", session: "s1", started: start, in: [said]))
+        let owner = TafsCloud.ChatMessage(at: start.addingTimeInterval(4), from: .owner, text: "The three tools are connected.", session: "s1")
+        XCTAssertFalse(AppModel.alreadyRecorded("The three tools are connected.", session: "s1", started: start, in: [owner]))
+    }
+
     /// The owner's answer to a held call and KIFF's outcome for it are one line that
     /// keeps the owner's words (kiff/tafs#206): no "refused, not sent" in its place.
     func testKIFFsOutcomeKeepsTheOwnersWords() {
