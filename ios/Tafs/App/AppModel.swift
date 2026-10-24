@@ -1144,6 +1144,7 @@ final class AppModel: ObservableObject {
         case .cancelled: break
         case .pending: tasksMessage = "The purchase is waiting for approval. Your tasks are added once it's done."
         case .notRecorded: tasksMessage = "Bought. KIFF hasn't added it yet: tafs tries again when it opens."
+        case .notAdded(let why): tasksMessage = why
         case .failed(let why): tasksMessage = "The purchase didn't go through: \(why)"
         }
     }
@@ -1155,6 +1156,7 @@ final class AppModel: ObservableObject {
         switch await purchases.restore() {
         case .done: tasksMessage = "Purchases restored."
         case .notRecorded: tasksMessage = "Restored. KIFF hasn't added everything yet: tafs tries again when it opens."
+        case .notAdded(let why): tasksMessage = why
         case .failed(let why): tasksMessage = "Purchases couldn't be restored: \(why)"
         default: break
         }

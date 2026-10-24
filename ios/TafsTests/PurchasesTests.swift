@@ -220,6 +220,20 @@ final class PurchasesTests: XCTestCase {
         XCTAssertNil(model.tasksMessage)
     }
 
+    /// A test purchase on an account that takes only real ones: KIFF refuses it, so the app
+    /// finishes it, adds nothing, and says so; it isn't sent again at the next launch.
+    func testARefusedTestPurchaseIsFinishedAndSaysSo() async throws {
+        let log = StoreLog()
+        let (model, store, _) = await signedIn(log)
+        StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (403,
+            #"{"error":"test_purchase","message":"Test purchases don't add tasks to this account."}"#)
+        let pack = try XCTUnwrap(model.usage?.store?.packs.first)
+        store.bought = store.purchaseNamed(8)
+        await model.buyPack(pack)
+        XCTAssertEqual(log.lines, ["finish 8"])
+        XCTAssertEqual(model.tasksMessage, "Test purchases don't add tasks to this account.")
+    }
+
     /// Declining is the admin's answer, signed behind Face ID; asking and withdrawing are a
     /// member's, unsigned.
     func testDecliningIsSignedAndAskingIsNot() async throws {

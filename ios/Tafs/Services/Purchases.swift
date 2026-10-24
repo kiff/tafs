@@ -43,6 +43,9 @@ enum PurchaseOutcome: Equatable {
     case pending
     /// Bought, but KIFF hasn't recorded it yet: it's sent again at the next launch.
     case notRecorded(String)
+    /// KIFF refused it for good, such as a test purchase on a real account: finished,
+    /// with nothing added. The text is what the person reads.
+    case notAdded(String)
     /// The App Store couldn't sell it.
     case failed(String)
 }
@@ -133,7 +136,11 @@ final class Purchases: ObservableObject {
         do {
             var outcome = PurchaseOutcome.done
             for p in try await front.restore() {
-                if case .notRecorded(let why) = await deliver(p, requestID: nil) { outcome = .notRecorded(why) }
+                switch await deliver(p, requestID: nil) {
+                case .notRecorded(let why): outcome = .notRecorded(why)
+                case .notAdded(let why) where outcome == .done: outcome = .notAdded(why)
+                default: break
+                }
             }
             return outcome
         } catch {
@@ -146,6 +153,11 @@ final class Purchases: ObservableObject {
         guard let record else { return .notRecorded("Not signed in.") }
         do {
             try await record(p.signed, requestID)
+        } catch KIFFClient.KIFFError.server(403, "test_purchase", _) {
+            // A test purchase (TestFlight, the sandbox) on an account that takes only real
+            // ones: KIFF adds nothing, now or on a retry, so it's finished.
+            await p.finish()
+            return .notAdded(Self.testPurchase)
         } catch {
             return .notRecorded(error.localizedDescription)
         }
@@ -153,6 +165,9 @@ final class Purchases: ObservableObject {
         await recorded?()
         return .done
     }
+
+    /// What the person reads when KIFF refused a test purchase.
+    static let testPurchase = "Test purchases don't add tasks to this account."
 
     /// Opens the App Store's page for this Apple account's subscriptions.
     static func manageSubscriptions() async {
