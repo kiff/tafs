@@ -121,23 +121,26 @@ jobs:
             -destination "id=$DEVICE_ID" -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet
           xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
           mkdir -p "$RUNNER_TEMP/shots"
-          # A shot is taken once the screen has drawn and settled (kiff/tafs#195): two frames
-          # a second apart are the same (a spinner still turns, so it never settles), and the
-          # frame isn't nearly empty (a screen not drawn yet is the plain background: 121 KB on
-          # the 13-inch iPad). After 30 s it's taken as it is, with a warning naming the shot.
+          # A shot is taken once the screen has drawn and settled (kiff/tafs#195): the frame
+          # isn't nearly empty (a screen not drawn yet is the plain background: 121 KB on the
+          # 13-inch iPad, while the sparsest real screen, a pack's, is 175 KB on the iPhone),
+          # and two frames a second apart are within 0.5% of each other's size (a hold's
+          # countdown still ticks). After 30 s it's taken as it is, with a warning naming it.
           shoot() {
             name=$1; shift
             out="$RUNNER_TEMP/shots/$name.png"
             frame="$RUNNER_TEMP/frame.png"
             xcrun simctl launch "$DEVICE_ID" bot.tafs.app "$@"
             sleep 3
-            prev=""
+            prev=0
             ready=""
             for _ in $(seq 30); do
               xcrun simctl io "$DEVICE_ID" screenshot "$frame" >/dev/null 2>&1
-              sum=$(shasum "$frame" | cut -d' ' -f1)
-              if [ "$sum" = "$prev" ] && [ "$(wc -c < "$frame")" -gt 200000 ]; then ready=1; break; fi
-              prev=$sum
+              size=$(wc -c < "$frame")
+              if [ "$size" -gt 150000 ] && [ $(( (size - prev) * 200 )) -le "$size" ] && [ $(( (prev - size) * 200 )) -le "$size" ]; then
+                ready=1; break
+              fi
+              prev=$size
               sleep 1
             done
             [ -n "$ready" ] || echo "::warning::$name: the screen hadn't drawn and settled after 30 s"
