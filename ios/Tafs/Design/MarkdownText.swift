@@ -242,6 +242,8 @@ struct MarkdownTable: View {
     /// The table read aloud, row by row: each cell after its column's header.
     static func spoken(_ rows: [[AttributedString]]) -> String {
         guard let header = rows.first.map({ $0.map { String($0.characters) } }) else { return "" }
+        // A header with no rows yet, as a streamed answer can be for a moment: its columns.
+        if rows.count == 1 { return header.filter { !$0.isEmpty }.joined(separator: ", ") }
         return rows.dropFirst().map { row in
             row.enumerated().map { i, cell in
                 (i < header.count && !header[i].isEmpty ? header[i] + ": " : "") + String(cell.characters)

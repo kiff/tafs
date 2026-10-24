@@ -63,7 +63,7 @@ struct TafChatView: View {
                     ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                         // A time between parts of the thread that are far apart, not on every line.
                         if i == 0 || item.at.timeIntervalSince(items[i - 1].at) >= 3600 {
-                            Text(Calendar.current.isDateInToday(item.at) ? item.at.shortTime : item.at.formatted(date: .abbreviated, time: .shortened))
+                            Text(AccountTime.calendar.isDateInToday(item.at) ? item.at.shortTime : item.at.shown(date: .abbreviated, time: .shortened))
                                 .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                                 .frame(maxWidth: .infinity).padding(.top, 6)
                         }

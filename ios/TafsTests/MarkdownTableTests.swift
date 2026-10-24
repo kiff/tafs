@@ -42,5 +42,6 @@ final class MarkdownTableTests: XCTestCase {
             return XCTFail("no table")
         }
         XCTAssertEqual(MarkdownTable.spoken(rows), "Order: T-3002, Amount: $20.00")
+        XCTAssertEqual(MarkdownTable.spoken([rows[0]]), "Order, Amount", "a header with no rows yet reads its columns")
     }
 }

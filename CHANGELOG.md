@@ -53,6 +53,11 @@ version headings refer to releases, not merely to merged pull requests.
 - Tables in a chat are drawn as tables (#211): a header, a line between rows,
   amounts aligned on the right, and a wide table scrolls sideways. VoiceOver reads
   each row with its column names. Before, a table showed as text with its pipes.
+- Every time the app shows is in your account's time zone (#211): holds'
+  deadlines, chats, the Record's days, Usage, versions and a taf's next run, as
+  KIFF's Card days are. Without an account (sample mode), it's the device's. When
+  the account's clock isn't the device's, a hold's deadline and the Record's times
+  name the zone ("14:00 CET").
 - Words show once while an answer streams (#214): when the chat reloads mid-answer
   (a taf read what you wrote meanwhile, or Setup's conversation after a step), the
   words it already recorded no longer show a second time as the live answer.
