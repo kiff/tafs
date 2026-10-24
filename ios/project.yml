@@ -198,7 +198,11 @@ targets:
   TafsTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [TafsTests]
+    sources:
+      - TafsTests
+      # The App Store's products for StoreKit's local testing (StoreKitLocalTests).
+      - path: Tafs.storekit
+        buildPhase: resources
     dependencies:
       - target: Tafs
     settings:
