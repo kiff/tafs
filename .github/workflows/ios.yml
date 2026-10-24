@@ -140,11 +140,26 @@ jobs:
             -destination "id=$DEVICE_ID" -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet
           xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
           mkdir -p "$RUNNER_TEMP/shots"
+          # A shot is taken once the screen has drawn and settled (kiff/tafs#195): two frames
+          # a second apart are the same (a spinner still turns, so it never settles), and the
+          # frame isn't nearly empty (a screen not drawn yet is the plain background, a few
+          # KB). After 30 s it's taken as it is, with a warning naming the shot.
           shoot() {
             name=$1; shift
+            out="$RUNNER_TEMP/shots/$name.png"
+            frame="$RUNNER_TEMP/frame.png"
             xcrun simctl launch "$DEVICE_ID" bot.tafs.app "$@"
-            sleep 8
-            xcrun simctl io "$DEVICE_ID" screenshot "$RUNNER_TEMP/shots/$name.png"
+            sleep 3
+            prev=""
+            for _ in $(seq 30); do
+              xcrun simctl io "$DEVICE_ID" screenshot "$frame" >/dev/null 2>&1
+              sum=$(shasum "$frame" | cut -d' ' -f1)
+              if [ "$sum" = "$prev" ] && [ "$(wc -c < "$frame")" -gt 100000 ]; then break; fi
+              prev=$sum
+              sleep 1
+            done
+            [ "$sum" = "$prev" ] || echo "::warning::$name: the screen hadn't settled after 30 s"
+            mv "$frame" "$out"
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
           shoot 1-welcome
@@ -183,8 +198,6 @@ jobs:
           xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
           xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
           shoot ipad-1-welcome
-          # Needs you first: the first launch with sample data on a just-booted iPad can
-          # take longer than a shot's 8 s, so a simple screen goes first.
           shoot ipad-3-needs-you -screenshots YES -tab needs-you
           # A narrow window, Slide Over's width (kiff/tafs#210).
           shoot ipad-narrow-tafs -screenshots YES -tab tafs -narrow YES
