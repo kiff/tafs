@@ -1093,6 +1093,13 @@ struct SetupComponentView: View {
                     }
                     .buttonStyle(PrimaryButtonStyle())
                 }
+            } else if model.startFailureTold(c) {
+                // Setup heard it wasn't created (kiff/tafs#183): it hands it over again, so the
+                // same start isn't offered here.
+                Text(model.tafStartErrors[c.id] ?? "\(c.taf?.name ?? "The taf") wasn't created: \(model.setupThread.answer(to: c.id)?.why ?? "it didn't start").")
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                Text("Coach knows, and hands it over again.")
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             } else if let error = model.tafStartErrors[c.id] {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                 Button("Try again") { Task { await model.startSetupTaf(c) } }
