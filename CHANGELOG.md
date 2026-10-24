@@ -59,6 +59,9 @@ version headings refer to releases, not merely to merged pull requests.
   what was said, where before they replaced it, and the recognizer ending by
   itself no longer stops dictation. The mic stays in the message bar when the
   box has text, so you can carry on dictating after typing.
+- While dictating, a bar under the message box shows your voice as it comes, so
+  it's plain that the mic is on, with cancel (the box goes back as it was) and
+  stop (what you said stays, unsent).
 - The doors no longer show "Couldn't read the doors: cancelled" when their
   screen closes before the read ends.
 - Tables in a chat are drawn as tables (#211): a header, a line between rows,

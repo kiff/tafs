@@ -42,6 +42,9 @@ struct TafChatView: View {
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
             }
             composer
+            #if os(iOS)
+            DictationBar(dictation: model.dictation)
+            #endif
         }
         .task(id: tafID) { await model.followChat(tafID) }
     }

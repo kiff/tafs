@@ -65,6 +65,10 @@ final class Dictation: ObservableObject {
 
     @Published private(set) var state: State = .idle
     @Published private(set) var language: Language
+    /// How loud the microphone was lately, 0 to 1, oldest first: the listening bar draws them,
+    /// so it's plain that dictation is on.
+    @Published private(set) var levels: [Float] = []
+    static let levelCount = 48
 
     private let engine: SpeechEngine
     /// The languages this device dictates in, the owner's first.
@@ -75,6 +79,8 @@ final class Dictation: ObservableObject {
     /// The stretch of speech being heard now, as the recognizer has it so far.
     private var hearing = ""
     private var hints: [String] = []
+    /// The box as it was when dictation started: cancelling puts it back.
+    private var original = ""
     private var write: ((String) -> Void)?
     /// How many times the recognizer ended by itself with nothing heard since: after a few,
     /// listening stops quietly instead of starting again.
@@ -120,8 +126,10 @@ final class Dictation: ObservableObject {
             return
         }
         before = text
+        original = text
         hearing = ""
         quietEnds = 0
+        levels = []
         self.hints = Self.cleaned(hints)
         self.write = write
         do {
@@ -136,6 +144,8 @@ final class Dictation: ObservableObject {
     private func listen() throws {
         try engine.start(language: language, hints: hints, onText: { [weak self] heard, done in
             Task { @MainActor in self?.heard(heard, done: done) }
+        }, onLevel: { [weak self] level in
+            Task { @MainActor in self?.heard(level: level) }
         }, onEnd: { [weak self] why in
             Task { @MainActor in self?.ended(why) }
         })
@@ -147,6 +157,21 @@ final class Dictation: ObservableObject {
         engine.stop()
         state = .idle
         write = nil
+        levels = []
+    }
+
+    /// Stops listening and puts the box back as it was before dictating: nothing heard stays.
+    func cancel() {
+        guard listening else { return }
+        let write = write
+        stop()
+        write?(original)
+    }
+
+    private func heard(level: Float) {
+        guard state == .listening else { return }
+        levels.append(max(0, min(1, level)))
+        if levels.count > Self.levelCount { levels.removeFirst(levels.count - Self.levelCount) }
     }
 
     /// Switches to the device's next language while dictating: listening starts again in it,
@@ -210,6 +235,16 @@ final class Dictation: ObservableObject {
         return now.count < was.count && first(now) != a
     }
 
+    /// How loud a stretch of sound is, 0 to 1: its root mean square in decibels, from a
+    /// quiet room (-50 dB) to speech up close (-10 dB).
+    nonisolated static func level(_ samples: UnsafeBufferPointer<Float>) -> Float {
+        guard !samples.isEmpty else { return 0 }
+        var sum: Float = 0
+        for x in samples { sum += x * x }
+        let db = 20 * log10(max(sqrtf(sum / Float(samples.count)), 1e-7))
+        return max(0, min(1, (db + 50) / 40))
+    }
+
     /// The box's text before dictation, then what was heard, with one space between.
     static func joined(_ before: String, _ heard: String) -> String {
         let words = heard.trimmingCharacters(in: .whitespaces)
@@ -247,9 +282,10 @@ protocol SpeechEngine: AnyObject {
     func unavailable(_ language: Dictation.Language) -> String?
     /// Starts listening: what it hears so far goes to `onText`, and its end to `onEnd`, with
     /// why it stopped when that wasn't the owner.
-    /// `onText`'s flag is true when the stretch of speech it heard is done (a pause).
+    /// `onText`'s flag is true when the stretch of speech it heard is done (a pause). `onLevel`
+    /// is how loud the microphone is, 0 to 1, many times a second.
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
-               onEnd: @escaping @Sendable (String?) -> Void) throws
+               onLevel: @escaping @Sendable (Float) -> Void, onEnd: @escaping @Sendable (String?) -> Void) throws
     func stop()
 }
 
@@ -261,7 +297,7 @@ final class NoSpeech: SpeechEngine {
     var noLanguage: String { "Dictation isn't available here." }
     func unavailable(_ language: Dictation.Language) -> String? { "Dictation isn't available here." }
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
-               onEnd: @escaping @Sendable (String?) -> Void) throws {}
+               onLevel: @escaping @Sendable (Float) -> Void, onEnd: @escaping @Sendable (String?) -> Void) throws {}
     func stop() {}
 }
 
@@ -304,7 +340,7 @@ final class DeviceSpeech: SpeechEngine {
     }
 
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
-               onEnd: @escaping @Sendable (String?) -> Void) throws {
+               onLevel: @escaping @Sendable (Float) -> Void, onEnd: @escaping @Sendable (String?) -> Void) throws {
         guard let recognizer = Self.recognizer(for: language) else {
             throw DictationError.unavailable
         }
@@ -321,7 +357,7 @@ final class DeviceSpeech: SpeechEngine {
         self.request = request
 
         let input = audio.inputNode
-        input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0), block: Self.feeding(request))
+        input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0), block: Self.feeding(request, onLevel: onLevel))
         audio.prepare()
         try audio.start()
         task = recognizer.recognitionTask(with: request, resultHandler: Self.results(onText: onText, onEnd: onEnd))
@@ -357,10 +393,14 @@ final class DeviceSpeech: SpeechEngine {
         }
     }
 
-    /// The microphone's sound, to the request, on the audio thread.
-    nonisolated private static func feeding(_ request: SFSpeechAudioBufferRecognitionRequest) -> AVAudioNodeTapBlock {
+    /// The microphone's sound, to the request, and how loud it is, on the audio thread.
+    nonisolated private static func feeding(_ request: SFSpeechAudioBufferRecognitionRequest,
+                                            onLevel: @escaping @Sendable (Float) -> Void) -> AVAudioNodeTapBlock {
         nonisolated(unsafe) let request = request
-        return { buffer, _ in request.append(buffer) }
+        return { buffer, _ in
+            request.append(buffer)
+            onLevel(Dictation.level(buffer))
+        }
     }
 
     /// What the recognizer heard so far, and its end, on the recognizer's thread.
@@ -377,6 +417,14 @@ final class DeviceSpeech: SpeechEngine {
                 onEnd("Dictation stopped. Tap the mic to start again.")
             }
         }
+    }
+}
+
+extension Dictation {
+    /// How loud a buffer from the microphone is, from its first channel.
+    nonisolated static func level(_ buffer: AVAudioPCMBuffer) -> Float {
+        guard let data = buffer.floatChannelData else { return 0 }
+        return level(UnsafeBufferPointer(start: data[0], count: Int(buffer.frameLength)))
     }
 }
 

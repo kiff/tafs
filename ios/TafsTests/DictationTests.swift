@@ -12,6 +12,7 @@ final class FakeSpeech: SpeechEngine {
     var stops = 0
     var starts = 0
     private var onText: (@Sendable (String, Bool) -> Void)?
+    private var onLevel: (@Sendable (Float) -> Void)?
     private var onEnd: (@Sendable (String?) -> Void)?
 
     func authorize() async -> String? { refused }
@@ -19,15 +20,17 @@ final class FakeSpeech: SpeechEngine {
     var noLanguage: String { "Dictation isn't on this iPhone yet." }
     func unavailable(_ language: Dictation.Language) -> String? { notHere }
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
-               onEnd: @escaping @Sendable (String?) -> Void) throws {
+               onLevel: @escaping @Sendable (Float) -> Void, onEnd: @escaping @Sendable (String?) -> Void) throws {
         starts += 1
         startedWith = (language, hints)
         self.onText = onText
+        self.onLevel = onLevel
         self.onEnd = onEnd
     }
     func stop() { stops += 1 }
 
     func hear(_ words: String, done: Bool = false) { onText?(words, done) }
+    func sound(_ level: Float) { onLevel?(level) }
     func end(_ why: String? = nil) { onEnd?(why) }
 }
 
@@ -207,5 +210,49 @@ final class DictationTests: XCTestCase {
         await dictation.start(text: box, hints: []) { box = $0 }
         XCTAssertEqual(dictation.state, .blocked("Dictation isn't on this iPhone yet."))
         XCTAssertNil(speech.startedWith)
+    }
+
+    /// While listening, the bar draws how loud the microphone was lately, so it's plain that
+    /// dictation is on; stopping clears it.
+    func testTheLevelsShowWhileListening() async {
+        let speech = FakeSpeech()
+        let dictation = Dictation(engine: speech, language: .english)
+        await dictation.start(text: "", hints: []) { _ in }
+        for i in 0..<(Dictation.levelCount + 10) { speech.sound(i == 0 ? 2 : 0.5) }
+        for _ in 0..<50 where dictation.levels.count < Dictation.levelCount { await settle() }
+        XCTAssertEqual(dictation.levels.count, Dictation.levelCount, "the latest only")
+        XCTAssertTrue(dictation.levels.allSatisfy { $0 >= 0 && $0 <= 1 })
+        dictation.stop()
+        XCTAssertEqual(dictation.levels, [])
+        speech.sound(0.5)
+        await settle()
+        XCTAssertEqual(dictation.levels, [], "nothing after it stopped")
+    }
+
+    func testLevelOfASound() {
+        let silence = [Float](repeating: 0, count: 256)
+        let speech = [Float](repeating: 0.1, count: 256) // -20 dB
+        let loud = [Float](repeating: 1, count: 256)
+        silence.withUnsafeBufferPointer { XCTAssertEqual(Dictation.level($0), 0) }
+        speech.withUnsafeBufferPointer { XCTAssertEqual(Dictation.level($0), 0.75, accuracy: 0.01) }
+        loud.withUnsafeBufferPointer { XCTAssertEqual(Dictation.level($0), 1) }
+        [Float]().withUnsafeBufferPointer { XCTAssertEqual(Dictation.level($0), 0) }
+    }
+
+    /// Cancel puts the box back as it was before dictating: nothing heard stays, nothing is sent.
+    func testCancelPutsTheBoxBack() async {
+        let speech = FakeSpeech()
+        let dictation = Dictation(engine: speech, language: .english)
+        var box = "Hi"
+        await dictation.start(text: box, hints: []) { box = $0 }
+        speech.hear("refund order 4471")
+        await settle()
+        XCTAssertEqual(box, "Hi refund order 4471")
+        dictation.cancel()
+        XCTAssertEqual(box, "Hi")
+        XCTAssertEqual(dictation.state, .idle)
+        speech.hear("late words")
+        await settle()
+        XCTAssertEqual(box, "Hi")
     }
 }

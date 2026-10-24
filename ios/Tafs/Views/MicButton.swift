@@ -58,4 +58,71 @@ struct MicButton: View {
         return nil
     }
 }
+
+/// Under the message bar while dictating (kiff/tafs#208): the microphone's sound as it comes,
+/// so it's plain that dictation is on, with cancel (the box goes back as it was) and stop
+/// (what was heard stays, unsent).
+struct DictationBar: View {
+    @ObservedObject var dictation: Dictation
+
+    var body: some View {
+        if dictation.listening {
+            HStack(spacing: 12) {
+                Button { dictation.cancel() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(Theme.ink)
+                        .frame(width: 36, height: 36)
+                        .background(Theme.panel)
+                        .clipShape(Circle())
+                }
+                .accessibilityLabel("Cancel dictating")
+                .accessibilityHint("Puts the message box back as it was.")
+                Waveform(levels: dictation.levels)
+                    .frame(height: 28)
+                    .accessibilityElement()
+                    .accessibilityLabel("Listening in \(dictation.language.name)")
+                Button { dictation.stop() } label: {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 36, height: 36)
+                        .background(Theme.no)
+                        .clipShape(Circle())
+                }
+                .accessibilityLabel("Stop dictating")
+                .accessibilityHint("What you said stays in the message box, unsent.")
+            }
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(Theme.panel.opacity(0.6))
+            .overlay(Capsule().stroke(Theme.line))
+            .clipShape(Capsule())
+            .padding(.horizontal, 16).padding(.bottom, 8)
+            .transition(.opacity)
+        }
+    }
+}
+
+/// The latest levels as bars, newest on the right; dots where it was quiet.
+private struct Waveform: View {
+    let levels: [Float]
+
+    var body: some View {
+        GeometryReader { geo in
+            let count = Dictation.levelCount
+            let step = geo.size.width / CGFloat(count)
+            let shown = Array(repeating: Float(0), count: max(0, count - levels.count)) + levels.suffix(count)
+            HStack(alignment: .center, spacing: 0) {
+                ForEach(Array(shown.enumerated()), id: \.offset) { _, level in
+                    Capsule()
+                        .fill(level > 0.05 ? Theme.ink : Theme.dim)
+                        .frame(width: max(2, step * 0.45), height: max(2, geo.size.height * CGFloat(level)))
+                        .frame(width: step)
+                }
+            }
+            .frame(height: geo.size.height)
+            .animation(.linear(duration: 0.08), value: levels)
+        }
+    }
+}
 #endif
