@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, type Deps, handle, type HTTPEvent, putDefinition, SETUP_JOB, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
+import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
-import { SKILLS } from "../src/coach-skills.js";
 import { jobById } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -633,8 +632,7 @@ describe("Setup (kiff/agents#91)", () => {
     expect(w.keys.held.get(`t_acme#${NEW}`)).toBe("key_setup");
     const def = w.agents.agents.get(`t_acme|${NEW}`)!;
     expect(def).toMatchObject({ show: true, planque: "https://planque.kiff.dev", key_ref: `kiff/${NEW}`, gateway: KIFF_GATEWAY });
-    // Its skills are stored first: kiff/agents refuses a definition naming one it lacks (kiff/tafs#218).
-    expect(w.agents.calls).toEqual([...SKILLS.map((k) => `putSkill ${k.name}@${k.version}`), `putAgent ${NEW}`]);
+    expect(w.agents.calls).toEqual([`putAgent ${NEW}`]);
     expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body.setup).toMatchObject({ id: NEW, name: "Setup" });
     // It's not listed with the tafs, and its chat uses the taf routes by its id.
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
@@ -838,7 +836,7 @@ describe("upgrading running tafs (kiff/tafs#69)", () => {
     const w = world();
     const SETUP = "taf-5e70000000000000000a";
     w.tafs.held.set(`t_acme#${SETUP}`, { id: SETUP, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
-    await putDefinition({ agents: w.agents.api }, "t_acme", SETUP, { ...setupDefinition(SETUP), instructions: "an older Setup" });
+    await w.agents.api.putAgent("t_acme", SETUP, { ...setupDefinition(SETUP), instructions: "an older Setup" });
     w.tafs.held.set("t_acme#taf-gone00000000000000000", { id: "taf-gone00000000000000000", name: "Gone", job: "refunds", kiffAgent: "g", nameClaim: "c", created: "2026-10-17T09:00:00Z", removing: true });
     w.tafs.held.set("t_acme#taf-odd000000000000000000", { id: "taf-odd000000000000000000", name: "Odd", job: "payroll", kiffAgent: "o", nameClaim: "c", created: "2026-10-17T09:00:00Z", budgetCents: 200 });
     const out = await upgradeDefinitions(depsOf(w), { dryRun: false });
@@ -874,7 +872,7 @@ describe("improving a taf (kiff/tafs#107)", () => {
   const withSetup = () => {
     const w = world();
     w.tafs.held.set(`t_acme#${SETUP}`, { id: SETUP, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
-    void putDefinition({ agents: w.agents.api }, "t_acme", SETUP, setupDefinition(SETUP));
+    void w.agents.api.putAgent("t_acme", SETUP, setupDefinition(SETUP));
     w.account.mandates = [raeCard];
     w.account.calls = [
       { actor_id: "rae", action_name: "create_refund_k3f9", title: "Refund a charge", outcome: "allowed", created_at: "2026-10-19T09:00:00Z", tool_outcome: { status: "done" } },

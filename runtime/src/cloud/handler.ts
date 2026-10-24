@@ -1,5 +1,4 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { SKILLS } from "../coach-skills.js";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, refusedForAI, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
@@ -87,7 +86,7 @@ export interface HTTPResult {
 
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
-  "putAgent" | "putSkill" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
+  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs">;
@@ -968,7 +967,7 @@ async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promi
     definition: digest(setupDef),
   };
   try {
-    await putDefinition(deps, me.tenantID, tafID, setupDef);
+    await deps.agents.putAgent(me.tenantID, tafID, setupDef);
     await deps.tafs.put(me.tenantID, setup);
   } catch (err) {
     const recordGone = await deps.tafs.remove(me.tenantID, tafID).then(() => true, () => false);
@@ -1954,20 +1953,6 @@ async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): P
 }
 
 /**
- * Writes an agent's definition, storing first the skills it names (kiff/tafs#218):
- * kiff/agents refuses a definition naming a skill the account hasn't stored. A
- * stored version never changes, and storing it again is fine.
- */
-export async function putDefinition(deps: Pick<Deps, "agents">, tenant: string, id: string, def: AgentDefinition): Promise<void> {
-  for (const ref of def.skills ?? []) {
-    const s = SKILLS.find((k) => k.name === ref.name && k.version === ref.version);
-    if (!s) throw new Error(`the definition names skill ${ref.name}@${ref.version}, which tafs doesn't have`);
-    await deps.agents.putSkill(tenant, s.name, s.version, s.skill_md);
-  }
-  await deps.agents.putAgent(tenant, id, def);
-}
-
-/**
  * What an upgrade did with one taf (kiff/tafs#69): its definition was current,
  * written (or, in a dry run, would be), or the upgrade failed for it, with why.
  */
@@ -2048,7 +2033,7 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
         if (record.definition !== wanted) {
           one.outcome = opts.dryRun ? "would write" : "written";
           if (!opts.dryRun) {
-            await putDefinition(deps, tenant, taf.id, want);
+            await deps.agents.putAgent(tenant, taf.id, want);
             record = { ...record, definition: wanted };
           }
         }

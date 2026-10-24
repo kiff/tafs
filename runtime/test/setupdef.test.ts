@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_EFFORT, SETUP_INSTRUCTIONS, setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, KIFF_GATEWAY, MODEL, PRICE } from "../src/cloud/tafdef.js";
-import { SKILLS } from "../src/coach-skills.js";
 import { jobById } from "../src/jobs.js";
 
 const ID = "taf-0123456789abcdef0123";
@@ -15,12 +14,10 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.gateway).toBe(KIFF_GATEWAY);
     expect(d.key_ref).toBe(`kiff/${ID}`);
     expect(Object.keys(d).sort()).toEqual(
-      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "price", "price_fast", "show", "skills", "speed"].sort());
+      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "price", "price_fast", "show", "speed"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
     expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"]);
-    // What only some conversations need, read when one does (kiff/tafs#218).
-    expect(d.skills).toEqual(SKILLS.map(({ name, version }) => ({ name, version })));
   });
 
   it("runs as a taf runs, with its own cost cap and effort", () => {
@@ -83,6 +80,19 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("confirmed but not claimed means the taf didn't start");
   });
 
+  // What Coach answers about holds, usage and halting, in its base: it read none of these
+  // when they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218).
+  it("knows holds, tasks and packs, and halting", () => {
+    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(flat).toContain("Refused: nothing was sent, and nothing waits for anyone. Never say it waits for the owner, or that the owner refused it unless they did");
+    expect(flat).toContain("a call past a total the Card keeps across calls, such as a day's, can't: the owner gives extra room for it from the hold");
+    expect(flat).toContain("a task is an action a taf took that KIFF allowed, sent, and that worked");
+    expect(flat).toContain("With no tasks left, the tafs stop until a pack adds some");
+    expect(flat).toContain("never buy, request or approve a pack");
+    expect(flat).toContain("You can't halt or resume: say so in one sentence");
+    expect(flat).toContain("Pause is different: a taf's schedule stops, and it still takes work in its chat");
+  });
+
   it("tells Setup an answer in the chat isn't proof, and never to take a key", () => {
     expect(SETUP_INSTRUCTIONS).toContain("not proof");
     expect(SETUP_INSTRUCTIONS).toContain("only connected means the tools are in KIFF");
@@ -129,8 +139,6 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("its steps stay the same, in the same words");
     // Phrases checked on the rules with their line breaks as spaces, so a rewrap never fails them.
     const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
-    // Changing a taf the account has is a skill Setup reads when a conversation needs it (kiff/tafs#218).
-    const changeATaf = SKILLS.find((k) => k.name === "change-a-taf")!.skill_md.replace(/\s+/g, " ");
     // kiff/agents#115's "keeps its plan": a changed plan is a new plan, by its id.
     expect(flat).toContain("show a new plan, with a new id (such as plan-2)");
     // The owner's phone test (#89): Setup chose live mode itself, said "connected"
@@ -168,20 +176,20 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("check that its tools cover the whole job: find the work, check an item, act on it, and say what it did");
     expect(flat).not.toContain("the fewest tools");
     // Improving a taf: from its context, the change made as its next version (kiff/tafs#107).
-    expect(changeATaf).toContain('A conversation that starts with "[improve taf <id>]" improves that taf; it doesn\'t set up a new one');
-    expect(changeATaf).toContain("Then make it as the taf's next version, never as a new taf");
-    expect(changeATaf).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
+    expect(flat).toContain('A conversation that starts with "[improve taf <id>]" improves that taf; it doesn\'t set up a new one');
+    expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
+    expect(flat).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
     // The revision is confirmed at the switch, never in the chat (finding 1 on #107).
-    expect(changeATaf).toContain("Don't show an approval for this draft: the owner confirms it when they switch to the new version");
-    expect(changeATaf).toContain("planque request with agent set to the taf's own agent id (never name, which makes a new agent)");
-    expect(changeATaf).toContain("improves: the taf's id from the first line");
-    expect(changeATaf).toContain("Never say it's live: the owner decides");
+    expect(flat).toContain("Don't show an approval for this draft: the owner confirms it when they switch to the new version");
+    expect(flat).toContain("planque request with agent set to the taf's own agent id (never name, which makes a new agent)");
+    expect(flat).toContain("improves: the taf's id from the first line");
+    expect(flat).toContain("Never say it's live: the owner decides");
     expect(flat).not.toContain("A taf can't move to a new version yet");
     // A read tool left off the Card is refused by KIFF: every tool goes on it (review on #108).
     expect(flat).toContain("Every tool the taf gets goes on its Card, the read tools too: KIFF refuses any call no Card covers");
     // A question gets its answer, not a plan (the owner's Coach mode test on 429).
-    expect(changeATaf).toContain("When the owner asks a question (how it's going, why something happened), answer it in one or two short sentences and stop");
-    expect(changeATaf).toContain("If they turn an offer down (\"Not now\"), that is the answer: say so in one sentence and stop, without offering another change");
+    expect(flat).toContain("When the owner asks a question (how it's going, why something happened), answer it in one or two short sentences and stop");
+    expect(flat).toContain("If they turn an offer down (\"Not now\"), that is the answer: say so in one sentence and stop, without offering another change");
     // Only the taf's own tools, and a money tool's amount limited (kiff/tafs#138, item 41).
     expect(flat).toContain("The draft names only the tools planque lists for this taf's own grant, and of those never one you asked for with setup_reads");
     expect(flat).toContain("Never another tool KIFF knows on the account");
@@ -191,12 +199,12 @@ describe("Setup's definition on kiff/agents", () => {
     // The schedule is decided before the result, with the owner's case as the example (item 43).
     expect(flat).toContain("Before you show it, decide unscheduled from the tools on its Card: if none of them lists the work (for refunds: the refund requests), set unscheduled: true. A refunds taf with Stripe's tools alone is one");
     // A new taf asked for in an improve conversation is a new taf (kiff/tafs#138, item 36).
-    expect(changeATaf).toContain("unless the owner asks for a new taf (\"I want a taf that…\", \"set up a…\", \"a new taf\"): then set one up, as in a conversation without that line, with no improves in its result");
-    expect(changeATaf).toContain("When you can't tell whether they mean that taf or a new one, ask once with a confirm");
+    expect(flat).toContain("unless the owner asks for a new taf (\"I want a taf that…\", \"set up a…\", \"a new taf\"): then set one up, as in a conversation without that line, with no improves in its result");
+    expect(flat).toContain("When you can't tell whether they mean that taf or a new one, ask once with a confirm");
     // The question is asked once, by the confirm (item 39).
     expect(flat).toContain("Not \"Should I make this change?\" in the message and \"Make this change?\" in the confirm");
     // Trying and installing is the owner's step, open in the plan (item 40).
-    expect(changeATaf).toContain("The plan for an improvement ends with trying it and installing it, the owner's step: it stays to do in the plan you show with the result, never done");
+    expect(flat).toContain("The plan for an improvement ends with trying it and installing it, the owner's step: it stays to do in the plan you show with the result, never done");
     // A taf whose tools can't list its work has no schedule (kiff/tafs#138, item 26).
     expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
     // A second choice beside a confirm went into prose (measure of #138): it goes in the card.
@@ -217,7 +225,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("put that tool in the same first tools, with setup_reads: true");
     // One connection per vendor per taf (kiff/tafs#138, the owner's retest: five Face IDs and Stripe sign-ins).
     expect(flat).toContain("Never in a connection of its own: each new connection is one more approval and vendor sign-in for the owner");
-    expect(changeATaf).toContain("A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has one to that vendor, add the tool to it");
+    expect(flat).toContain("A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has one to that vendor, add the tool to it");
     expect(flat).not.toMatch(/small grant/);
     // A lost id is looked up, never a reason to connect again (kiff/tafs#214, item 1: a second
     // connection, sign-in and taf name in the owner's 605 retest).
@@ -229,7 +237,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("say which Card covers its live actions, the production one, and keep a test Card's limits apart");
     expect(flat).toContain("never tell the owner the taf may do nothing");
     // A fixed tool joins the same connection: no old connection is left over, only the old tool.
-    expect(changeATaf).toContain("The old tool stays on the connection, unused once the new version is installed: say so in the result's sentence");
+    expect(flat).toContain("The old tool stays on the connection, unused once the new version is installed: say so in the result's sentence");
     expect(flat).not.toContain("The old connection is left over");
     expect(flat).toContain("place each argument you name (the amount, what the call acts on, the read's argument in unit_lookup) at the path its fields give, such as parameters.id");
     expect(flat).toContain("Without such a tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares");

@@ -106,19 +106,11 @@ export interface AgentDefinition {
   drafts?: boolean;
   /** Tool name prefixes kept out of the prompt until the model searches for them (kiff/tafs#206). */
   deferred_tools?: string[];
-  /** The account's skills the agent reads when it needs them (kiff/tafs#218), by name and version. */
-  skills?: SkillRef[];
   /**
    * Every gateway tool that isn't KIFF's own (kiff_*) kept out of the prompt until the model searches
    * for it, so a Card that adds a vendor's tools mid-conversation keeps the cache (kiff/agents#197).
    */
   defer_vendor_tools?: boolean;
-}
-
-/** A skill a definition names: one stored version, which never changes. */
-export interface SkillRef {
-  name: string;
-  version: string;
 }
 
 /** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */
@@ -289,16 +281,6 @@ export class Agents {
 
   putAgent(tenant: string, id: string, def: AgentDefinition): Promise<AgentDefinition> {
     return this.call("PUT", tenant, ["agents", id], def);
-  }
-
-  // Skills (kiff/agents#101, kiff/tafs#218).
-
-  /**
-   * Stores one version of a skill for the account. Storing the same content again is
-   * fine, so every write of a definition can store the skills it names first.
-   */
-  async putSkill(tenant: string, name: string, version: string, skillMD: string): Promise<void> {
-    await this.call("PUT", tenant, ["skills", name, version], { skill_md: skillMD });
   }
 
   // Versions (kiff/tafs#107).

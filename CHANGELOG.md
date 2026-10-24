@@ -50,6 +50,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Coach knows holds, tasks and packs, and halting (#218): why a call is held or
+  refused and what the owner can do about it, what counts as a task and what
+  happens when tasks run out, and what a halt stops. It no longer says a refused
+  call waits for you. They're in its instructions: when they were skills it could
+  read on demand, it read none of them in the Eval.
 - Dictation uses any language the device dictates in (#208), the owner's first,
   and the switch while dictating goes through those. Before, it knew Spain's
   Spanish and US English only: a device with French dictation, or Spanish from

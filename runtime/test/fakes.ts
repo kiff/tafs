@@ -24,7 +24,6 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     }
   };
   const agents = new Map<string, AgentDefinition>();
-  const skills = new Map<string, string>();
   const schedules = new Map<string, Schedule>();
   const runs: Array<Run & { tenant: string }> = [];
   const sessions: Array<Session & { tenant: string }> = [];
@@ -165,20 +164,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!r) throw gone();
       return { run: { ...r }, writes: trialWrites.get(run) ?? [] };
     },
-    async putSkill(tenant, name, version, skillMD) {
-      calls.push(`putSkill ${name}@${version}`);
-      failing("putSkill");
-      const was = skills.get(k(tenant, `${name}@${version}`));
-      if (was !== undefined && was !== skillMD) throw new AgentsError(409, "a stored version never changes");
-      skills.set(k(tenant, `${name}@${version}`), skillMD);
-    },
     async putAgent(tenant, id, def) {
       calls.push(`putAgent ${id}`);
       failing("putAgent");
-      // kiff/agents refuses a definition naming a skill the tenant hasn't stored.
-      for (const r of def.skills ?? []) {
-        if (!skills.has(k(tenant, `${r.name}@${r.version}`))) throw new AgentsError(400, `the agent names skill ${r.name}@${r.version}, which the tenant hasn't stored`);
-      }
       agents.set(k(tenant, id), { ...def, tenant, id });
       return { ...def, tenant, id };
     },
