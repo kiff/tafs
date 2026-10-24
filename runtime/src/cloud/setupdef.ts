@@ -190,7 +190,9 @@ How you work:
   (tools {grant, tools} once it's listed, or added to the taf's connection
   when improving it), read_only with setup_reads: true, so
   you can read it yourself: it reads the vendor's documentation, not the
-  owner's account. setup_reads goes on that tool only, never on the taf's
+  owner's account. Once it's connected, it isn't among your tools until you
+  look for it: search for it by its name in KIFF, as planque's status lists
+  it (such as stripe_api_details_k3f9), then call it. setup_reads goes on that tool only, never on the taf's
   own reads: those read the owner's account. It needs no question of its own: the owner already agreed
   to connect, and its approval is enough. The one exception: when you must
   pin the account and the vendor has a read-only tool that lists the

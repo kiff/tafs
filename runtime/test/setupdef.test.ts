@@ -49,6 +49,8 @@ describe("Setup's definition on kiff/agents", () => {
   // The vendor's read tools a Card adds mid-conversation load on search, so the cache holds (kiff/agents#197).
   it("defers the vendor's tools, and a taf's definition doesn't", () => {
     expect(setupDefinition(ID).defer_vendor_tools).toBe(true);
+    // Its own reads are deferred too, so its rules say to search for them before calling them.
+    expect(SETUP_INSTRUCTIONS).toContain("isn't among your tools until you\n  look for it: search for it by its name in KIFF");
     expect(definition(ID, jobById("refunds")).defer_vendor_tools).toBeUndefined();
   });
 
