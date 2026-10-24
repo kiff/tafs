@@ -220,6 +220,8 @@ schemes:
       storeKitConfiguration: Tafs.storekit
     test:
       targets: [TafsTests]
+      # StoreKit's local testing (StoreKitLocalTests): the test host's App Store is this file's.
+      storeKitConfiguration: Tafs.storekit
   TafsMac:
     build:
       targets:
