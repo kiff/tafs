@@ -203,21 +203,7 @@ struct TafDetailView: View {
                   revoked: taf.card.revoked, front: $frontCard)
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.
-        Panel {
-            ForEach(shown?.rules ?? []) { rule in
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(rule.label).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
-                        Text(rule.outside == .hold ? "Outside: held for you" : "Outside: refused")
-                            .font(.system(size: 12)).foregroundColor(Theme.dim)
-                    }
-                    Spacer()
-                    Text(rule.summary).font(Theme.mono(13))
-                        .foregroundColor(rule.never ? Theme.no : Theme.ink)
-                        .multilineTextAlignment(.trailing)
-                }
-            }
-        }
+        CardLines(rules: shown?.rules ?? [])
         ConnectionsPanel(tafID: taf.id)
         // Halting is a job of its own too (kiff/kiff-cloud#1061): its row opens its screen.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked {
@@ -866,6 +852,31 @@ struct CardBar: View {
         var parts = [card.title, card.live ? "Live" : card.environment.capitalized]
         if count > 1 { parts.append("\(count) Cards") }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// Every action a Card covers, with its limits and what happens outside them: what the
+/// owner reads in full on the Card tab and wherever they sign for a Card, since the face
+/// shows only its main limit (kiff/tafs#211).
+struct CardLines: View {
+    let rules: [CardRule]
+
+    var body: some View {
+        Panel {
+            ForEach(rules) { rule in
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(rule.label).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.ink)
+                        Text(rule.outside == .hold ? "Outside: held for you" : "Outside: refused")
+                            .font(.system(size: 12)).foregroundColor(Theme.dim)
+                    }
+                    Spacer()
+                    Text(rule.summary).font(Theme.mono(13))
+                        .foregroundColor(rule.never ? Theme.no : Theme.ink)
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+        }
     }
 }
 

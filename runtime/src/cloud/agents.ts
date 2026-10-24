@@ -106,6 +106,11 @@ export interface AgentDefinition {
   drafts?: boolean;
   /** Tool name prefixes kept out of the prompt until the model searches for them (kiff/tafs#206). */
   deferred_tools?: string[];
+  /**
+   * Every gateway tool that isn't KIFF's own (kiff_*) kept out of the prompt until the model searches
+   * for it, so a Card that adds a vendor's tools mid-conversation keeps the cache (kiff/agents#197).
+   */
+  defer_vendor_tools?: boolean;
 }
 
 /** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */

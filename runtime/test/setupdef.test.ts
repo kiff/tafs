@@ -14,7 +14,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.gateway).toBe(KIFF_GATEWAY);
     expect(d.key_ref).toBe(`kiff/${ID}`);
     expect(Object.keys(d).sort()).toEqual(
-      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "price", "price_fast", "show", "speed"].sort());
+      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "price", "price_fast", "show", "speed"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
     expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"]);
@@ -44,6 +44,14 @@ describe("Setup's definition on kiff/agents", () => {
     const taf = definition(ID, jobById("refunds"));
     expect(taf.speed).toBeUndefined();
     expect(taf.price_fast).toBeUndefined();
+  });
+
+  // The vendor's read tools a Card adds mid-conversation load on search, so the cache holds (kiff/agents#197).
+  it("defers the vendor's tools, and a taf's definition doesn't", () => {
+    expect(setupDefinition(ID).defer_vendor_tools).toBe(true);
+    // Its own reads are deferred too, so its rules say to search for them before calling them.
+    expect(SETUP_INSTRUCTIONS).toContain("isn't among your tools until you\n  look for it: search for it by its name in KIFF");
+    expect(definition(ID, jobById("refunds")).defer_vendor_tools).toBeUndefined();
   });
 
   it("a taf's definition doesn't get Setup's tools", () => {

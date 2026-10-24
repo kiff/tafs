@@ -101,6 +101,8 @@ struct NewTafFlow: View {
             CardFace(name: draft.name, rules: draft.rules, issuedBy: model.ownerName,
                      expires: Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date(),
                      color: Theme.tafColor(model.tafs.count))
+            // What Face ID signs, in full: every action and its limits, not only the face's main one.
+            CardLines(rules: draft.rules)
             VStack(alignment: .leading, spacing: 10) {
                 rule("Inside the Card,", "it acts and you get a receipt.", Theme.ok)
                 rule("Outside it,", "it waits for you, here and on your lock screen.", Theme.amber)
