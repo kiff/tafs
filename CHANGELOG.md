@@ -50,6 +50,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- A taf that didn't start reaches Coach (#183): when tafs cloud refuses to start
+  the taf Coach handed over, Coach hears it once and says plainly that no taf was
+  created. When the name was taken, it hands it over again with the same Card under
+  a new name; for any other reason, it asks you what to do first. It no longer
+  claims a rename or a start that didn't happen, or drafts a second Card. A server
+  error or an expired sign-in still offers Try again.
 - Tables in a chat are drawn as tables (#211): a header, a line between rows,
   amounts aligned on the right, and a wide table scrolls sideways. VoiceOver reads
   each row with its column names. Before, a table showed as text with its pipes.

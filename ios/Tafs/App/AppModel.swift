@@ -3594,7 +3594,8 @@ final class AppModel: ObservableObject {
 
     /// Setup's hand-over starts its taf once, wherever the owner is (kiff/tafs#96): not
     /// only while the result card is on screen, so the taf reaches the list either way. One
-    /// that didn't start waits for the card's Try again.
+    /// that didn't start waits for the card's Try again; one whose failure Setup was told of
+    /// (kiff/tafs#183) is Setup's to hand over again.
     private func startHandedOverTafs() {
         for c in setupThread.components.map(\.component) where c.type == .result {
             // An improvement makes the taf's next version, never a new taf (kiff/tafs#107).
@@ -3606,6 +3607,20 @@ final class AppModel: ObservableObject {
             }
             guard let taf = c.taf, taf.job != nil, taf.draft != nil else { continue }
             if cloudTafs[taf.agent] != nil || startingTafs.contains(c.id) || tafStartErrors[c.id] != nil { continue }
+            if startFailureTold(c) { continue }
+            // A result Setup handed over again after a failed start (kiff/tafs#183) starts by
+            // itself once per agent; one that fails again waits for the owner's Try again, so a
+            // refusal that isn't about the name can't loop with no one in it.
+            let again = setupThread.components.contains {
+                $0.component.id != c.id && $0.component.taf?.agent == taf.agent && startFailureTold($0.component)
+            }
+            if again {
+                if restartedAgents.contains(taf.agent) {
+                    tafStartErrors[c.id] = "\(taf.name) isn't started yet: its start failed before. Try again when you're ready."
+                    continue
+                }
+                restartedAgents.insert(taf.agent)
+            }
             Task { await startSetupTaf(c) }
         }
     }
@@ -3658,6 +3673,13 @@ final class AppModel: ObservableObject {
         } catch {
             guard gen == accountGeneration else { return }
             tafStartErrors[component.id] = "\(taf.name) isn't started yet: \(error.localizedDescription)"
+            // tafs cloud refused it (a 4xx): trying the same again fails the same way, so
+            // Setup hears of it (kiff/tafs#183). A server error or a lost connection may pass:
+            // the card's Try again stays, and Setup isn't told.
+            // Not a 401: signing in again fixes it, as time does a 429.
+            if let e = error as? TafsCloud.CloudError, (400..<500).contains(e.status), ![401, 429].contains(e.status) {
+                await tellSetupStartFailed(component, why: e.message)
+            }
             return
         }
         guard gen == accountGeneration else { return }
@@ -3665,7 +3687,34 @@ final class AppModel: ObservableObject {
         // A 409 can also mean another taf has the name: say so rather than wait forever.
         if nameTaken, cloudTafs[taf.agent] == nil {
             tafStartErrors[component.id] = "\(taf.name) isn't started yet: the account already has a taf by that name."
+            await tellSetupStartFailed(component, why: "the account already has a taf named \(taf.name)")
         }
+    }
+
+    /// The results this phone told Setup didn't start, before the thread shows the answer.
+    @Published private(set) var toldStartFailures: Set<String> = []
+    /// The agents whose re-handed-over result already started by itself once (kiff/tafs#183).
+    private var restartedAgents: Set<String> = []
+    /// The results whose failure is being sent to Setup now, so it's sent once.
+    private var tellingStartFailures: Set<String> = []
+
+    /// Whether Setup was told this hand-over failed (kiff/tafs#183): it then shows a new
+    /// result, and the card waits for it rather than offering the same start again.
+    func startFailureTold(_ component: SetupComponent) -> Bool {
+        setupThread.answer(to: component.id)?.failed == true || toldStartFailures.contains(component.id)
+    }
+
+    /// Tells Setup, once, that the taf its result handed over wasn't created and why
+    /// (kiff/tafs#183), as the answer to that result: its draft is confirmed and unclaimed,
+    /// so Setup hands it over again, under a new name when the name was taken.
+    private func tellSetupStartFailed(_ component: SetupComponent, why: String) async {
+        guard !startFailureTold(component), !tellingStartFailures.contains(component.id) else { return }
+        tellingStartFailures.insert(component.id)
+        defer { tellingStartFailures.remove(component.id) }
+        await answer(component, "failed: the taf wasn't created: \(why)")
+        // Told only once it went: a send that failed leaves Try again on the card, and the
+        // next failure tries to tell Setup again.
+        if answered.contains(component.id) { toldStartFailures.insert(component.id) }
     }
 }
 

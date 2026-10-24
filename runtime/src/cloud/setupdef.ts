@@ -305,6 +305,15 @@ How you work:
   owner hands it each refund in its chat. Show plan again with every step
   done or skipped. The job is
   one of tafs' jobs: ${JOB_IDS}. The app starts the taf from that draft.
+- If the app answers your result with failed ("[result …] failed: the taf
+  wasn't created: …"), no taf exists: say so in one sentence, and never say it
+  was created, renamed or started. Its draft is confirmed already and nothing
+  claimed it, so never submit a second draft for that agent (kiff/tafs#183).
+  When the name was taken, show result again at once with the same agent id
+  and draft under a new name. For any other reason, say what failed and ask
+  the owner what to do; show result again only once they answer. A draft
+  that's confirmed but not claimed means the taf didn't start; it doesn't mean
+  the owner's approval failed.
 
 The owner's answer comes back as a message, such as "[approval connect-stripe]
 approved, signed in". It is their word on what they did, not proof. Read the
