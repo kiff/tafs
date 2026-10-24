@@ -11,6 +11,7 @@ import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
+import { Steps } from "./steps.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -1816,6 +1817,7 @@ async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string 
 
 /** kiff/agents' run stream, trimmed to what the phone shows. */
 async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, newSession: boolean): AsyncGenerator<string> {
+  const steps = new Steps();
   const out = (e: RunStreamEvent): string | undefined => {
     const d = (e.data ?? {}) as Record<string, unknown>;
     switch (e.event) {
@@ -1823,10 +1825,15 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         return sse("session", { session: d.session, new_session: newSession, run: d.id });
       case "delta":
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
-        if (d.kind === "tool_call" && typeof d.tool === "string") return sse("activity", { tool: d.tool });
+        if (d.kind === "tool_call" && typeof d.tool === "string") {
+          // What it's doing, in a few words: only these, never the call's arguments.
+          const step = steps.call(d.tool, d.input, typeof d.call_id === "string" ? d.call_id : undefined);
+          return sse("activity", step === undefined ? { tool: d.tool } : { tool: d.tool, step });
+        }
         if (d.kind === "component" && d.component !== undefined) return sse("component", { component: d.component });
         if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
         if (d.kind === "tool_result") {
+          steps.result(d.call_id, (d.result as { text?: unknown } | undefined)?.text);
           // Where KIFF held a call: the app shows the owner's card here in the answer. Only
           // KIFF's keys for it, never what the tool answered.
           const r = (d.result ?? {}) as { state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
@@ -2246,7 +2253,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         ]);
         const live = state.versions.find((v) => v.live);
         return {
-          id: t.id, name: t.name, job: t.job,
+          id: t.id, name: t.name, job: t.job, kiff_agent: t.kiffAgent,
           ...(t.unscheduled ? { works_from_chat: true } : schedule
             ? { schedule: { cron: schedule.cron, time_zone: schedule.time_zone || "UTC", on: schedule.enabled, ...(schedule.next ? { next: iso(schedule.next) } : {}) } }
             : {}),
@@ -2256,7 +2263,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
           open_runs: runs.map(runSummary),
         };
       })),
-      cards: "What's left on each taf's Cards isn't read here: the owner sees it on the taf in tafs.",
+      cards: "Each taf's Cards aren't here: read them with kiff_card {agent: its kiff_agent}.",
     };
   }
   const taf = await coachTaf(call.tenant, args.taf, deps);

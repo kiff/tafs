@@ -119,7 +119,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(other.result?.isError).toBe(true);
   });
 
-  it("tafs_state shows each taf, its versions and schedule, and what its open runs wait on, and never Setup or Cards", async () => {
+  it("tafs_state shows each taf, its KIFF agent, versions and schedule, and what its open runs wait on, and never Setup or Cards", async () => {
     const w = world();
     const run = await w.agents.api.startRun(T, RAE, "Refund order 42");
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, {
@@ -130,11 +130,12 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(r.isError).toBe(false);
     expect(r.json.tafs).toHaveLength(1);
     expect(r.json.tafs[0]).toMatchObject({
-      id: RAE, name: "Refunds", live_version: 1, schedule: { cron: "*/30 * * * *", on: true },
+      id: RAE, name: "Refunds", kiff_agent: "agent_rae", live_version: 1, schedule: { cron: "*/30 * * * *", on: true },
       versions: [{ n: 1, live: true }, { n: 2, live: false }],
       open_runs: [{ run: run.id, status: "PAUSED", waits_on: [{ tool: "stripe_refund", arguments: { amount: 9000, currency: "eur" }, deadline: "2026-10-16T13:00:00.000Z" }] }],
     });
-    expect(r.json.cards).toMatch(/open|on the taf in tafs/);
+    // Coach reads a taf's Cards itself, by its KIFF agent (kiff/tafs#214, item 4).
+    expect(r.json.cards).toContain("kiff_card {agent: its kiff_agent}");
   });
 
   it("taf_task starts a run announced back to tafs cloud, under the taf's own agent", async () => {
