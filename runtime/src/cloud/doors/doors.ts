@@ -571,3 +571,21 @@ export async function keepBound(doors: DoorsDeps, tenant: string, ai: AIBound | 
   if (!ai) return;
   await doors.store.put(doorKeys.bound(tenant), ai, addDays(now, 40)).catch(() => undefined);
 }
+
+/**
+ * The taf's doors as its avatar's rim shows them, for the home list: each
+ * door's app, whether it's open or resting today, and whether a knock waits.
+ */
+export async function doorLights(store: DoorStore, tenant: string, taf: string, now: Date) {
+  const doors = await doorsOf(store, tenant, taf);
+  if (!doors.length) return [];
+  const today = day(now);
+  const [counts, knocks] = await Promise.all([
+    Promise.all(doors.map((d) => store.get(doorKeys.day(tenant, taf, d.id, today)))),
+    knocksOf(store, tenant, taf),
+  ]);
+  return doors.map((d, i) => ({
+    app: d.app, open: d.open, resting: typeof counts[i] === "number" && (counts[i] as number) >= DOOR.perDay,
+    knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
+  }));
+}

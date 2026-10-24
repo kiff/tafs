@@ -11,6 +11,8 @@ struct TafAvatar: View {
             .frame(width: size, height: size)
             .background(Theme.tafColor(taf.colorIndex))
             .clipShape(RoundedRectangle(cornerRadius: size * 0.3, style: .continuous))
+            // Its doors (docs/doors.md): a lit rim while one is open.
+            .overlay(DoorRim(lights: taf.doors ?? [], size: size, color: Theme.tafColor(taf.colorIndex)))
             .accessibilityHidden(true)
     }
 }

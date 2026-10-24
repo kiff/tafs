@@ -51,9 +51,8 @@ export const BUILT_IN: DoorApp[] = [
  * apps can't be replaced.
  */
 export function apps(extra: DoorApp[] = []): DoorApp[] {
-  const byID = new Map<string, DoorApp>();
-  for (const a of extra) if (a.kind === "connector" && a.event && validApp(a)) byID.set(a.id, a);
-  for (const a of BUILT_IN) byID.set(a.id, a);
+  const byID = new Map<string, DoorApp>(BUILT_IN.map((a) => [a.id, a]));
+  for (const a of extra) if (!byID.has(a.id) && a.kind === "connector" && a.event && validApp(a)) byID.set(a.id, a);
   return [...byID.values()];
 }
 

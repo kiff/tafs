@@ -12,7 +12,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
-import { addDoor, answerKnock, connectLink, DoorError, doorRunEnded, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addDoor, answerKnock, connectLink, DoorError, doorLights, doorRunEnded, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 
 /**
@@ -23,7 +23,7 @@ import { inbound, isDoorPath } from "./doors/inbound.js";
  * and only on that account's tafs.
  *
  *   GET  /v1/jobs
- *   GET  /v1/home                       the app's list: each taf's state, colour and Card summary, and the account's other agents with Cards
+ *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary and doors, and the account's other agents with Cards
  *   GET  /v1/tafs
  *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}
  *   POST /v1/tafs/{id}/pause | resume | run
@@ -2101,13 +2101,15 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
   const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
+  // Each taf's doors, for its avatar's rim: a read that fails shows none.
+  const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const card = summary(cards.get(t.kiffAgent) ?? []);
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
     const words = JOBS.find((j) => j.id === v.job)?.summary;
-    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card };
+    return { ...v, ...(words ? { job_summary: words } : {}), color: t.color ?? colors.get(t.id) ?? 0, state: stateOf(card, held, v.status === "paused" ? "paused" : "active"), waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.

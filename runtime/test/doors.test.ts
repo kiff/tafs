@@ -406,6 +406,15 @@ describe("knocks and keys", () => {
     expect(gone.body.door.keys).toHaveLength(1);
   });
 
+  it("the home list lights each taf's doors, and says when a knock waits", async () => {
+    const w = world();
+    await emailDoor(w);
+    await emailHook(w, mail(w, { from: "Ana Lima <ana@northwind.example>" }));
+    const home = await send(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.status).toBe(200);
+    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", open: true, resting: false, knocks: 1 }]);
+  });
+
   it("removing the taf removes its doors", async () => {
     const w = world();
     await emailDoor(w);
@@ -492,7 +501,7 @@ describe("connector doors", () => {
     const w = world();
     w.config.catalog!.authConfigs = { slack: "ac_slack" };
     const r = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
-    expect(r.body.apps.map((a: { id: string }) => a.id)).toEqual(["slack", "email", "whatsapp"]);
+    expect(r.body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp", "slack"]);
   });
 
   it("an app becomes a door after its sign-in, and a key's message asks the taf to answer with the app's tool", async () => {

@@ -3,7 +3,7 @@ import SwiftUI
 struct TafDetailView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
-    /// 0 chat, 1 activity, 2 card. Chat first: talking to a taf is the main thing.
+    /// 0 chat, 1 activity, 2 card, 3 doors. Chat first: talking to a taf is the main thing.
     @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2 : 0
     @State private var confirmRevoke = false
     @State private var confirmRemove = false
@@ -31,7 +31,7 @@ struct TafDetailView: View {
     /// keeps an iPhone's width beside it (kiff/tafs#211): iPad landscape and the Mac. A
     /// narrower screen keeps one column, with the Card bar above it.
     private var sideColumn: Bool {
-        sizeClass == .regular && section != 2 && width > height
+        sizeClass == .regular && section < 2 && width > height
             && width - Self.sideWidth - 32 >= Self.chatAtLeast
     }
 
@@ -44,6 +44,7 @@ struct TafDetailView: View {
                         if model.canChat(taf.id) { Text("Chat").tag(0) }
                         Text("Activity").tag(1)
                         Text("Card").tag(2)
+                        if hasDoors(taf) { Text("Doors").tag(3) }
                     }
                     .pickerStyle(.segmented)
                     // Without the side column, the Cards are one line above the chat or the
@@ -64,7 +65,9 @@ struct TafDetailView: View {
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
-                                if section == 2 { card(taf) } else { activity(taf) }
+                                if section == 3 && hasDoors(taf) {
+                                    DoorsView(taf: taf, cloud: model.mode == .kiff ? model.cloud : nil, cloudID: model.cloudTaf(for: taf.id)?.id)
+                                } else if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
@@ -106,6 +109,11 @@ struct TafDetailView: View {
         } else {
             Text("This taf is gone.").foregroundColor(Theme.dim).screenBackground()
         }
+    }
+
+    /// Doors are tafs cloud's: a taf it runs, or the sample's.
+    private func hasDoors(_ taf: Taf) -> Bool {
+        model.mode == .sample || model.cloudTaf(for: taf.id) != nil
     }
 
     /// The Card in front of the stack: the one tapped, else the first, the live one.
