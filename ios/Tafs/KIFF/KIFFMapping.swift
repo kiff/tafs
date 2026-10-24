@@ -152,6 +152,7 @@ enum KIFFMapping {
             var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
                                     detail: detail, at: c.createdAt)
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
+            if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" { entry.refusedByTool = true }
             entry.amount = c.amount
             entry.readOnly = c.readOnly
             entry.entityID = c.entityID

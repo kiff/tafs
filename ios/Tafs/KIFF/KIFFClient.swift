@@ -610,6 +610,14 @@ final class KIFFClient {
                                       body: AnswerBody(nextStep: nextStep, signature: signature))
     }
 
+    /// Gives the held call's Card the extra room this call needs, until that total resets,
+    /// and lets the call go on (kiff/tafs#211, 6.13): KIFF's change-card, signed as an
+    /// answer. Only for a call over a total kept across calls; it needs Card management.
+    func changeCard(_ id: String, signature: AnswerSignature? = nil) async throws {
+        let _: Empty = try await send("POST", "/v1/me/card-exceptions/\(escaped(id))/change-card",
+                                      body: AnswerBody(signature: signature))
+    }
+
     // MARK: Cards
 
     func revoke(cardID: String) async throws {

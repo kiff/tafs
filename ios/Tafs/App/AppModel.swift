@@ -857,6 +857,21 @@ final class AppModel: ObservableObject {
     }
 
     /// Where a held call from KIFF is answered while the phone cannot answer it.
+    /// The answer as KIFF's kiff.answer.v1 message names it (kiff-cloud's devicekey.go).
+    nonisolated static func kiffAnswer(_ answer: Answer) -> String {
+        switch answer {
+        case .approveOnce: return "approve-once"
+        case .refuse, .nextStep: return "reject"
+        case .extraRoom: return "change-card"
+        }
+    }
+
+    /// Calls KIFF allowed today that the vendor refused, which still count against the
+    /// taf's Card totals (kiff/tafs#211, 6.13), newest first.
+    func refusedToday(_ tafID: UUID) -> [RecordEntry] {
+        entries(for: tafID).filter { $0.refusedByTool == true && Calendar.current.isDateInToday($0.at) }
+    }
+
     func answerPage(for call: HeldCall) -> URL? {
         call.kiffID.map(kiff.answerPage(for:))
     }
@@ -894,7 +909,7 @@ final class AppModel: ObservableObject {
                 var nextStep: String?
                 if case .nextStep(let step) = answer { nextStep = step }
                 let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: kiffID,
-                                                       answer: answer == .approveOnce ? "approve-once" : "reject",
+                                                       answer: Self.kiffAnswer(answer),
                                                        nextStep: nextStep, accountingVersion: version, signedAt: signedAt)
                 signature = confirmed ? try signer.signConfirmed(message) : try await signer.sign(message, reason: reason)
                 signed = KIFFClient.AnswerSignature(signedAt: signedAt, value: signature)
@@ -912,6 +927,7 @@ final class AppModel: ObservableObject {
                 case .approveOnce: try await kiff.approveOnce(kiffID, signature: signed)
                 case .refuse: try await kiff.reject(kiffID, signature: signed)
                 case .nextStep(let step): try await kiff.reject(kiffID, nextStep: step, signature: signed)
+                case .extraRoom: try await kiff.changeCard(kiffID, signature: signed)
                 }
             } catch {
                 lastError = "KIFF didn't take the answer: \(error.localizedDescription)"
@@ -947,6 +963,10 @@ final class AppModel: ObservableObject {
             decide(call, .refused, "Refused by you · \(when), with a next step · \(call.proposed.summary)",
                    "Refused, with a next step for the taf: \(step)", signature: signature)
             if let i { tafs[i].now = step }
+        case .extraRoom:
+            decide(call, .approved, "Extra room by you · \(when) · \(call.proposed.summary)",
+                   "Its Card got the room this call needed, until that total resets", signature: signature)
+            if let i { tafs[i].now = call.proposed.summary }
         case .refuse:
             decide(call, .refused, "Refused by you · \(when) · \(call.proposed.summary)", call.reason, signature: signature)
             if let i { tafs[i].now = "Refused · \(call.proposed.summary)" }

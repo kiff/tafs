@@ -213,6 +213,12 @@ struct TafDetailView: View {
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
+        // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13).
+        if let refused = HeldCallCard.refusedLine(model.refusedToday(taf.id)) {
+            Text(refused)
+                .font(.system(size: 13)).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+        }
         ConnectionsPanel(tafID: taf.id)
         // Halting is a job of its own too (kiff/kiff-cloud#1061): its row opens its screen.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked {

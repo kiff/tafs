@@ -50,6 +50,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Extra room on a held call (#211): a call over a total the Card keeps across
+  calls, such as a day's, which approving once can't pass, now offers **Extra
+  room** with Face ID. KIFF gives the Card just the room this call needs, until
+  that total resets, and the call goes on; the Card is as it was after that.
+  Changing the limit for good stays in Coach mode. The hold card and the Card
+  also say how many calls the vendor refused today still counted toward it.
 - Words show once while an answer streams (#214): when the chat reloads mid-answer
   (a taf read what you wrote meanwhile, or Setup's conversation after a step), the
   words it already recorded no longer show a second time as the live answer.
