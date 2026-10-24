@@ -389,7 +389,7 @@ struct SetupChatView: View {
     private func gapTime(_ items: [SetupThread.Item], _ i: Int) -> String? {
         let at = items[i].at
         if i > 0, at.timeIntervalSince(items[i - 1].at) < 3600 { return nil }
-        return Calendar.current.isDateInToday(at) ? at.shortTime : at.formatted(date: .abbreviated, time: .shortened)
+        return AccountTime.calendar.isDateInToday(at) ? at.shortTime : at.shown(date: .abbreviated, time: .shortened)
     }
 
     /// The empty chat: the question it answers (#82), what Setup does, and ways to start (#58).
@@ -608,7 +608,7 @@ struct SetupChatsList: View {
                     Button { open(chat.session) } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(chat.title).scaledFont(15).foregroundColor(Theme.ink).lineLimit(2)
-                            Text(chat.updated.formatted(date: .abbreviated, time: .shortened))
+                            Text(chat.updated.shown(date: .abbreviated, time: .shortened))
                                 .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                         }
                     }
@@ -675,7 +675,7 @@ struct ArchivedSetupChats: View {
                 Button { open(chat.session) } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(chat.title).scaledFont(15).foregroundColor(Theme.ink).lineLimit(2)
-                        Text(chat.updated.formatted(date: .abbreviated, time: .shortened))
+                        Text(chat.updated.shown(date: .abbreviated, time: .shortened))
                             .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     }
                 }

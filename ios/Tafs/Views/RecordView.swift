@@ -71,7 +71,7 @@ struct RecordView: View {
 
     /// The Record by day, newest first; a day's reads apart, to fold.
     private var days: [Day] {
-        let calendar = Calendar.current
+        let calendar = AccountTime.calendar
         var out: [Day] = []
         for entry in model.record.filter(filter.keeps).sorted(by: { $0.at > $1.at }) {
             let start = calendar.startOfDay(for: entry.at)
@@ -82,11 +82,11 @@ struct RecordView: View {
         return out
     }
 
-    static func dayTitle(_ day: Date, calendar: Calendar = .current) -> String {
-        let date = day.formatted(.dateTime.day().month(.abbreviated))
+    static func dayTitle(_ day: Date, calendar: Calendar = AccountTime.calendar) -> String {
+        let date = day.shown(.dateTime.day().month(.abbreviated))
         if calendar.isDateInToday(day) { return "Today · \(date)" }
         if calendar.isDateInYesterday(day) { return "Yesterday · \(date)" }
-        return day.formatted(.dateTime.weekday(.wide)) + " · " + date
+        return day.shown(.dateTime.weekday(.wide)) + " · " + date
     }
 }
 
@@ -282,7 +282,7 @@ struct ReceiptView: View {
                     Text(entry.titleWithAmount).font(Theme.display(30)).foregroundColor(Theme.ink)
                     Panel {
                         line("Taf", model.taf(entry.tafID)?.name ?? "–")
-                        line("When", entry.at.formatted(date: .abbreviated, time: .standard))
+                        line("When", entry.at.shown(date: .abbreviated, time: .standard))
                         if let value = entry.onValue {
                             line("On", "\((entry.onArg ?? "").replacingOccurrences(of: "_", with: " ")) \(value)")
                         }
@@ -420,7 +420,7 @@ struct ReceiptView: View {
         // The decision and when; the receipt's id and signer are under "Show the full
         // receipt" (kiff/tafs#138): ids aren't for reading at a glance.
         var lines = [decisionWords]
-        if let issued { lines.append("issued \(issued.formatted(date: .abbreviated, time: .standard))") }
+        if let issued { lines.append("issued \(issued.shown(date: .abbreviated, time: .standard))") }
         return Text(lines.joined(separator: " · ")).font(Theme.mono(11.5)).foregroundColor(Theme.dim).textSelection(.enabled)
     }
 
@@ -434,7 +434,7 @@ struct ReceiptView: View {
                     ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
                         HStack(alignment: .top, spacing: 6) {
                             Text("\(i + 1)").frame(width: 18, alignment: .leading)
-                            Text("\(step.words) · \(step.at.map { $0.formatted(date: .omitted, time: .standard) } ?? "")\nhash \(step.hash)")
+                            Text("\(step.words) · \(step.at.map { $0.shown(date: .omitted, time: .standard) } ?? "")\nhash \(step.hash)")
                         }
                     }
                     if let sig = receiptAttestation("signature") {
@@ -508,7 +508,7 @@ struct ReceiptView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(step.words.prefix(1).uppercased() + step.words.dropFirst()).font(.system(size: 14)).foregroundColor(Theme.ink)
                         if let at = step.at {
-                            Text(at.formatted(date: .omitted, time: .standard)).font(Theme.mono(12)).foregroundColor(Theme.dim)
+                            Text(at.shown(date: .omitted, time: .standard)).font(Theme.mono(12)).foregroundColor(Theme.dim)
                         }
                     }
                     .padding(.bottom, 12)

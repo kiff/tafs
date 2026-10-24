@@ -50,6 +50,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Every time the app shows is in your account's time zone (#211): holds'
+  deadlines, chats, the Record's days, Usage, versions and a taf's next run, as
+  KIFF's Card days are. Without an account (sample mode), it's the device's.
 - Words show once while an answer streams (#214): when the chat reloads mid-answer
   (a taf read what you wrote meanwhile, or Setup's conversation after a step), the
   words it already recorded no longer show a second time as the live answer.
