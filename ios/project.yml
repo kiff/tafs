@@ -46,6 +46,9 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         UIUserInterfaceStyle: Light
         NSFaceIDUsageDescription: tafs asks for Face ID before an approval is signed and sent.
+        # Dictation (kiff/tafs#208): recognized on the device, no audio leaves the phone.
+        NSMicrophoneUsageDescription: tafs turns your voice into text on this device. Your voice isn't sent anywhere.
+        NSSpeechRecognitionUsageDescription: tafs turns your voice into text on this device. Your voice isn't sent anywhere.
         ITSAppUsesNonExemptEncryption: false
         NSSupportsLiveActivities: true
         # A silent push says a held call was answered elsewhere, so its alert goes.

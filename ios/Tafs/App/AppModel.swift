@@ -25,6 +25,8 @@ final class AppModel: ObservableObject {
     @Published var lastError: String?
 
     let ownerName: String
+    /// Speaking a message instead of typing it, in any chat (kiff/tafs#208): one at a time.
+    let dictation = Dictation()
     let kiff: KIFFClient
     let cloud: TafsCloud
     /// planque, which keeps each taf's vendor sign-ins (kiff/planque, #51).
@@ -3577,6 +3579,22 @@ enum Tab: Hashable { case tafs, needsYou, record }
 
 /// CI's screenshot run: `-screenshots YES -tab needs-you` opens the sample on a tab,
 /// without asking for notifications.
+extension AppModel {
+    /// The words the owner is likely to say, so dictation spells them right (kiff/tafs#208):
+    /// the account's taf names, the connected tools' names, the people it knows of, the packs
+    /// and plans. Read each time dictation starts, so it follows the account's changes.
+    var dictationHints: [String] {
+        var words = ["tafs", "Coach", "KIFF", "Solo", "Team", "Company", ownerName]
+        for taf in tafs {
+            words.append(taf.name)
+            words.append(contentsOf: taf.tools)
+        }
+        words.append(contentsOf: grants.map { KIFFMapping.vendorWords($0.vendor) })
+        words.append(contentsOf: usage?.store?.packs.map(\.name) ?? [])
+        return Dictation.cleaned(words)
+    }
+}
+
 enum Screenshots {
     static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
     /// `-screen taf` opens a taf's page, `-screen card` its Cards; `-screen new` the new-taf flow; `-screen solo` and

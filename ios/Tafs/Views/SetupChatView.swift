@@ -517,6 +517,10 @@ struct SetupChatView: View {
                 .background(Theme.panel)
                 .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            #if os(iOS)
+            // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
+            MicButton(dictation: model.dictation, text: $draft, empty: empty)
+            #endif
             if thinking && empty {
                 // While Setup works, Send is Stop: its run is cancelled.
                 Button { Task { await model.stopSetup() } } label: {
@@ -545,6 +549,8 @@ struct SetupChatView: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         .barBackground()
+        // Leaving the chat stops dictating, so its words never land in another chat's box.
+        .onDisappear { model.dictation.stop() }
         // Ready to type (#82): the keyboard shows when the chat opens. Just after the
         // push, since a field focused while the view still slides in isn't. Not over a
         // card that waits for the owner: that card is what they came back to answer.
@@ -560,6 +566,8 @@ struct SetupChatView: View {
     }
 
     private func send() {
+        // Sending stops dictating: what was heard goes with it, as it stands in the box.
+        model.dictation.stop()
         let text = draft
         draft = ""
         // A sent message goes to the top of the view and stays (kiff/tafs#138), even while

@@ -304,6 +304,10 @@ struct TafChatView: View {
                 .background(Theme.panel)
                 .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            #if os(iOS)
+            // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
+            MicButton(dictation: model.dictation, text: $draft, empty: empty)
+            #endif
             if thinking && empty {
                 // While the taf works, Send is Stop: its run is cancelled.
                 Button { Task { await model.stopChat(tafID) } } label: {
@@ -335,12 +339,16 @@ struct TafChatView: View {
         .frame(maxWidth: Self.readable)
         .frame(maxWidth: .infinity)
         .barBackground()
+        // Leaving the chat stops dictating, so its words never land in another chat's box.
+        .onDisappear { model.dictation.stop() }
     }
 
     /// The chat's widest column: about 75 characters of text.
     static let readable: CGFloat = 720
 
     private func send() {
+        // Sending stops dictating: what was heard goes with it, as it stands in the box.
+        model.dictation.stop()
         let text = draft
         draft = ""
         // A sent message goes to the top of the view and stays (kiff/tafs#138): the reply,
