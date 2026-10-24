@@ -69,9 +69,16 @@ final class Dictation: ObservableObject {
     private let engine: SpeechEngine
     /// The languages this device dictates in, the owner's first.
     var languages: [Language] { engine.languages() }
-    /// What the box held when dictation started: the words go after it.
+    /// What the box held when dictation started, and each finished stretch of speech since:
+    /// the words being heard go after it.
     private var before = ""
+    /// The stretch of speech being heard now, as the recognizer has it so far.
+    private var hearing = ""
+    private var hints: [String] = []
     private var write: ((String) -> Void)?
+    /// How many times the recognizer ended by itself with nothing heard since: after a few,
+    /// listening stops quietly instead of starting again.
+    private var quietEnds = 0
 
     init(engine: SpeechEngine? = nil, language: Language? = nil) {
         #if os(iOS)
@@ -113,18 +120,25 @@ final class Dictation: ObservableObject {
             return
         }
         before = text
+        hearing = ""
+        quietEnds = 0
+        self.hints = Self.cleaned(hints)
         self.write = write
         do {
-            try engine.start(language: language, hints: Self.cleaned(hints), onText: { [weak self] heard in
-                Task { @MainActor in self?.heard(heard) }
-            }, onEnd: { [weak self] why in
-                Task { @MainActor in self?.ended(why) }
-            })
+            try listen()
             state = .listening
         } catch {
             engine.stop()
             state = .blocked("Dictation couldn't start: \(error.localizedDescription)")
         }
+    }
+
+    private func listen() throws {
+        try engine.start(language: language, hints: hints, onText: { [weak self] heard, done in
+            Task { @MainActor in self?.heard(heard, done: done) }
+        }, onEnd: { [weak self] why in
+            Task { @MainActor in self?.ended(why) }
+        })
     }
 
     /// Stops listening. What was heard stays in the box, unsent.
@@ -152,16 +166,48 @@ final class Dictation: ObservableObject {
         if case .blocked = state { state = .idle }
     }
 
-    private func heard(_ words: String) {
+    /// What the recognizer heard of the stretch of speech now. After a pause it starts a new
+    /// stretch: what was heard before stays, and the new words go after it, never over it.
+    private func heard(_ words: String, done: Bool) {
         guard state == .listening, let write else { return }
-        write(Self.joined(before, words))
+        if Self.startsAfresh(hearing, words) { before = Self.joined(before, hearing) }
+        hearing = words
+        if !words.trimmingCharacters(in: .whitespaces).isEmpty { quietEnds = 0 }
+        write(Self.joined(before, hearing))
+        if done {
+            before = Self.joined(before, hearing)
+            hearing = ""
+        }
     }
 
+    /// The recognizer ended by itself, after a pause or at its own limit: listening goes on,
+    /// after what was heard, until the owner stops it. After a few ends with nothing heard,
+    /// it stops quietly; the mic is there to start again.
     private func ended(_ why: String?) {
-        guard listening else { return }
+        guard state == .listening else { return }
+        before = Self.joined(before, hearing)
+        hearing = ""
         engine.stop()
+        quietEnds += 1
+        if quietEnds <= 2 {
+            do {
+                try listen()
+                return
+            } catch {
+                engine.stop()
+            }
+        }
         write = nil
-        state = why.map { .blocked($0) } ?? .idle
+        state = .idle
+    }
+
+    /// Whether the recognizer's text starts a new stretch rather than revising the one being
+    /// heard: shorter, and not beginning with the same word. A revision ("refund ten" to
+    /// "refund 10") keeps its start.
+    static func startsAfresh(_ was: String, _ now: String) -> Bool {
+        let first = { (s: String) in s.split(separator: " ").first.map { $0.lowercased() } }
+        guard let a = first(was) else { return false }
+        return now.count < was.count && first(now) != a
     }
 
     /// The box's text before dictation, then what was heard, with one space between.
@@ -201,7 +247,8 @@ protocol SpeechEngine: AnyObject {
     func unavailable(_ language: Dictation.Language) -> String?
     /// Starts listening: what it hears so far goes to `onText`, and its end to `onEnd`, with
     /// why it stopped when that wasn't the owner.
-    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String) -> Void,
+    /// `onText`'s flag is true when the stretch of speech it heard is done (a pause).
+    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
                onEnd: @escaping @Sendable (String?) -> Void) throws
     func stop()
 }
@@ -213,7 +260,7 @@ final class NoSpeech: SpeechEngine {
     func languages() -> [Dictation.Language] { [] }
     var noLanguage: String { "Dictation isn't available here." }
     func unavailable(_ language: Dictation.Language) -> String? { "Dictation isn't available here." }
-    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String) -> Void,
+    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
                onEnd: @escaping @Sendable (String?) -> Void) throws {}
     func stop() {}
 }
@@ -256,7 +303,7 @@ final class DeviceSpeech: SpeechEngine {
         return recognizer.isAvailable ? nil : "Dictation isn't available right now. Try again in a moment."
     }
 
-    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String) -> Void,
+    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
                onEnd: @escaping @Sendable (String?) -> Void) throws {
         guard let recognizer = Self.recognizer(for: language) else {
             throw DictationError.unavailable
@@ -317,12 +364,14 @@ final class DeviceSpeech: SpeechEngine {
     }
 
     /// What the recognizer heard so far, and its end, on the recognizer's thread.
-    nonisolated private static func results(onText: @escaping @Sendable (String) -> Void,
+    nonisolated private static func results(onText: @escaping @Sendable (String, Bool) -> Void,
                                             onEnd: @escaping @Sendable (String?) -> Void)
         -> @Sendable (SFSpeechRecognitionResult?, (any Error)?) -> Void {
         { result, error in
             if let result {
-                onText(result.bestTranscription.formattedString)
+                // Metadata comes with the last result of a stretch of speech, at a pause:
+                // the recognizer's next text starts a new one.
+                onText(result.bestTranscription.formattedString, result.isFinal || result.speechRecognitionMetadata != nil)
                 if result.isFinal { onEnd(nil) }
             } else if error != nil {
                 onEnd("Dictation stopped. Tap the mic to start again.")

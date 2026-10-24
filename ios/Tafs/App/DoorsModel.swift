@@ -37,6 +37,9 @@ final class DoorsModel: ObservableObject {
             apps = r.apps
             knocks = r.knocks
             loaded = true
+        } catch is CancellationError {
+            // The screen went away before the read ended: nothing went wrong.
+        } catch let error as URLError where error.code == .cancelled {
         } catch {
             self.error = "Couldn't read the doors: \(error.localizedDescription)"
         }

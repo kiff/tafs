@@ -55,6 +55,12 @@ version headings refer to releases, not merely to merged pull requests.
   Spanish and US English only: a device with French dictation, or Spanish from
   Colombia, said Spanish wasn't available. With none on the device, it says how
   to turn dictation on.
+- Dictating goes on through pauses (#208): after a pause the next words go after
+  what was said, where before they replaced it, and the recognizer ending by
+  itself no longer stops dictation. The mic stays in the message bar when the
+  box has text, so you can carry on dictating after typing.
+- The doors no longer show "Couldn't read the doors: cancelled" when their
+  screen closes before the read ends.
 - Tables in a chat are drawn as tables (#211): a header, a line between rows,
   amounts aligned on the right, and a wide table scrolls sideways. VoiceOver reads
   each row with its column names. Before, a table showed as text with its pipes.

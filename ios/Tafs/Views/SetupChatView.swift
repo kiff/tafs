@@ -524,7 +524,7 @@ struct SetupChatView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             #if os(iOS)
             // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
-            MicButton(dictation: model.dictation, text: $draft, empty: empty)
+            MicButton(dictation: model.dictation, text: $draft)
             #endif
             if thinking && empty {
                 // While Setup works, Send is Stop: its run is cancelled.
