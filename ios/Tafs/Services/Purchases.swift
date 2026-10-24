@@ -192,7 +192,7 @@ final class Purchases: ObservableObject {
     /// What the person reads when the purchase is another tafs account's.
     static let anotherAccount = "This purchase belongs to another tafs account on this Apple ID, so nothing was added here."
     /// What the person reads when KIFF can't add what they paid for.
-    static let contactSupport = "KIFF can't add this purchase to this account. You paid for it, so contact support at hello@kiff.dev and we'll sort it out."
+    static let contactSupport = "KIFF can't add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we'll sort it out."
 
     /// Opens the App Store's page for this Apple account's subscriptions.
     static func manageSubscriptions() async {

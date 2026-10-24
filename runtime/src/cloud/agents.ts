@@ -83,6 +83,12 @@ export interface AgentDefinition {
   max_tokens: number;
   /** How hard the model works on each turn ("low" to "max"); absent is the provider's default. */
   effort?: Effort;
+  /**
+   * "fast": the turns run at the provider's fast output, at price_fast, when someone waits on the
+   * run (kiff/agents#197); a conversation keeps one speed. Absent: standard.
+   */
+  speed?: "standard" | "fast";
+  price_fast?: Price;
   gateway: string;
   /** Names the agent's KIFF key in the tenant's secrets; never the key. */
   key_ref: string;

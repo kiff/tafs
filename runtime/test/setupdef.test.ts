@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PLANQUE, SETUP_BUDGET_CENTS, SETUP_EFFORT, SETUP_INSTRUCTIONS, setupDefinition } from "../src/cloud/setupdef.js";
-import { definition, KIFF_GATEWAY, MODEL } from "../src/cloud/tafdef.js";
+import { definition, KIFF_GATEWAY, MODEL, PRICE } from "../src/cloud/tafdef.js";
 import { jobById } from "../src/jobs.js";
 
 const ID = "taf-0123456789abcdef0123";
@@ -14,7 +14,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.gateway).toBe(KIFF_GATEWAY);
     expect(d.key_ref).toBe(`kiff/${ID}`);
     expect(Object.keys(d).sort()).toEqual(
-      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "price", "show"].sort());
+      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "price", "price_fast", "show", "speed"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
     expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"]);
@@ -29,6 +29,21 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_EFFORT).toBe("high");
     expect(d.keep).toEqual(taf.keep);
     expect(d.max_cost_micro_usd).toBe(SETUP_BUDGET_CENTS * 10_000);
+  });
+
+  // Coach answers someone who waits: its turns run at the fast output, at its price, and its cost
+  // cap keeps the same room (kiff/agents#197). A taf's runs stay at standard speed.
+  it("runs fast, at the fast price, with the room its cap gave", () => {
+    const d = setupDefinition(ID);
+    expect(d.speed).toBe("fast");
+    expect(d.price_fast).toEqual({
+      Input: 2 * PRICE.Input, Output: 2 * PRICE.Output, CacheRead: 2 * PRICE.CacheRead, CacheWrite: 2 * PRICE.CacheWrite,
+      CacheWrite1h: 2 * PRICE.CacheWrite1h,
+    });
+    expect(SETUP_BUDGET_CENTS).toBe(600);
+    const taf = definition(ID, jobById("refunds"));
+    expect(taf.speed).toBeUndefined();
+    expect(taf.price_fast).toBeUndefined();
   });
 
   it("a taf's definition doesn't get Setup's tools", () => {

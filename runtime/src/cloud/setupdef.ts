@@ -1,7 +1,7 @@
 import { JOBS } from "../jobs.js";
 import { type AgentDefinition, type Effort } from "./agents.js";
 import { TOOLS } from "./coach.js";
-import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE } from "./tafdef.js";
+import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE, PRICE_FAST } from "./tafdef.js";
 
 /**
  * Setup, the agent that connects a company's tools for its tafs in the app's
@@ -24,8 +24,10 @@ export const SETUP_EFFORT: Effort = "high";
 /** Coach's tools on the account's tafs MCP server, by name: deferred, so an ordinary turn pays nothing for them. */
 export const COACH_TOOLS = TOOLS.map((t) => t.name);
 
-/** What one setup run may cost at most, in cents. */
-export const SETUP_BUDGET_CENTS = 300;
+/** What one setup run may cost at most, in cents: the same room at the fast output (kiff/agents#197). */
+export const SETUP_BUDGET_CENTS = 600;
+/** Coach answers someone who waits, so its turns run at the fast output (kiff/agents#197). */
+export const SETUP_SPEED = "fast" as const;
 
 /** The jobs a taf Setup makes may do, as the result names them. */
 const JOB_IDS = JOBS.map((j) => j.id).join(", ");
@@ -358,6 +360,8 @@ export function setupDefinition(id: string): AgentDefinition {
     instructions: SETUP_INSTRUCTIONS,
     model: MODEL,
     price: { ...PRICE },
+    speed: SETUP_SPEED,
+    price_fast: { ...PRICE_FAST },
     max_tokens: MAX_TOKENS,
     effort: SETUP_EFFORT,
     gateway: KIFF_GATEWAY,

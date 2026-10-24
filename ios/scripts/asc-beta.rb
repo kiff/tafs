@@ -138,7 +138,14 @@ module AscBeta
       email, first, last = entry.split(":", 3).map(&:strip)
       found = (api.("get", "/v1/betaTesters?filter[email]=#{URI.encode_www_form_component(email)}")[1]["data"] || []).first
       if found
-        api.("post", "/v1/betaGroups/#{group["id"]}/relationships/betaTesters", { data: [{ type: "betaTesters", id: found["id"] }] })
+        # A 409 here means the tester is already in the group ("Tester(s) cannot be assigned"): the
+        # build is in and submitted by now, so it isn't a failure.
+        status, body = api.("post", "/v1/betaGroups/#{group["id"]}/relationships/betaTesters",
+          { data: [{ type: "betaTesters", id: found["id"] }] }, [409])
+        if status == 409
+          out.puts "tester #{i + 1} is already in #{GROUP} (#{errors(body)})"
+          next
+        end
       else
         tester = { email: email }
         tester[:firstName] = first if first && !first.empty?

@@ -64,6 +64,27 @@ class AscBetaTest < Minitest::Test
     refute_includes out, "example.com", "no email in the log"
   end
 
+  # App Store Connect answers 409 for a tester already in the group: the build is in and
+  # submitted, so the run doesn't fail.
+  def test_a_tester_already_in_the_group_is_fine
+    asc = FakeASC.new
+    asc.on("get", "/v1/betaTesters?filter[email]=t%40example.com", 200, { "data" => [{ "id" => "tester1" }] })
+    asc.on("post", "/v1/betaGroups/grp1/relationships/betaTesters", 409,
+           { "errors" => [{ "code" => "STATE_ERROR", "detail" => "Tester(s) cannot be assigned" }] })
+    out = run_with(asc)
+    assert_includes out, "submitted to Beta App Review"
+    assert_includes out, "tester 1 is already in Beta testers"
+    refute_includes out, "example.com", "no email in the log"
+  end
+
+  # Any other refusal there still fails the run.
+  def test_another_refusal_to_add_a_tester_fails
+    asc = FakeASC.new
+    asc.on("get", "/v1/betaTesters?filter[email]=t%40example.com", 200, { "data" => [{ "id" => "tester1" }] })
+    asc.on("post", "/v1/betaGroups/grp1/relationships/betaTesters", 403, { "errors" => [] })
+    assert_raises(AscBeta::Failure) { run_with(asc) }
+  end
+
   def test_sets_what_to_test_on_the_build
     asc = FakeASC.new
     out = run_with(asc, ENV_OK.merge("WHAT_TO_TEST" => "Try the packs.\n"))
