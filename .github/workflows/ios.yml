@@ -85,10 +85,13 @@ jobs:
           iphones = [d for d in devices[ios[-1]] if d["name"].startswith("iPhone")]
           print(next((d for d in iphones if "Pro Max" in d["name"]), iphones[0])["udid"])
           ')
+          # Signed ad hoc ("-", no certificate needed on a simulator): StoreKit's local
+          # testing keeps its store under the host app's signed identity, and an unsigned
+          # app has none (SKInternalErrorDomain 3).
           xcodebuild test \
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER=
 
   # The Mac app (kiff/tafs#85): built for macOS 12, the owner's Mac's last system, so a
   # call to anything newer without a fallback fails here.
