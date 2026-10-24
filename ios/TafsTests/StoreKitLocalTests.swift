@@ -19,6 +19,12 @@ final class StoreKitLocalTests: XCTestCase {
         session.resetToDefaultState()
         session.disableDialogs = true
         session.clearTransactions()
+        // CI's simulator has no local App Store: even the products don't load there. The
+        // real check is a sandbox purchase on a TestFlight build; these run wherever local
+        // StoreKit testing works.
+        if try await Product.products(for: [solo]).isEmpty {
+            throw XCTSkip("StoreKit's local testing has no store on this machine: no products load.")
+        }
     }
 
     override func tearDown() async throws {
