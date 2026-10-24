@@ -50,6 +50,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Tables in a chat are drawn as tables (#211): a header, a line between rows,
+  amounts aligned on the right, and a wide table scrolls sideways. VoiceOver reads
+  each row with its column names. Before, a table showed as text with its pipes.
 - Extra room on a held call (#211): a call over a total the Card keeps across
   calls, such as a day's, which approving once can't pass, now offers **Extra
   room** with Face ID. KIFF gives the Card just the room this call needs, until
