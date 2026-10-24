@@ -15,6 +15,7 @@ import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
+import { type EventLog, logEvent } from "./events.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -136,6 +137,8 @@ export interface Deps {
   permitKeys?: PermitKeys;
   /** A taf's doors: where work reaches it from outside the app. Missing: no doors here. */
   doors?: DoorsDeps;
+  /** What happens in tafs itself, for the app's Activity (kiff/tafs#236). Missing: not kept. */
+  events?: EventLog;
   fetch?: Fetch;
   kiffBase?: string;
   now?: () => Date;
@@ -347,6 +350,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
+  // Halts, resumes and door events, newest first, for Activity (kiff/tafs#236, items 15 and 19).
+  if (parts[1] === "events" && parts.length === 2 && method === "GET") {
+    const me = await person(event, deps);
+    return { events: deps.events ? await deps.events.list(me.tenantID) : [] };
+  }
   if (parts[1] === "account" && parts.length === 3 && parts[2] === "delete" && method === "POST") return deleteAccount(await person(event, deps), deps);
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
@@ -672,6 +680,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     const view = haltView(kiff, runtime);
     // A halt interrupts (kiff/tafs#210): every phone that answers hears it, through a Focus.
     await tellPhones(deps, me.tenantID, haltNotification(taf, view.state === "halted"));
+    await logEvent(deps.events, me.tenantID, { kind: "halted", ...(taf ? { taf: taf.id, name: taf.name } : {}) }, deps.now?.());
     return { halt: view };
   }
   if (method === "DELETE") {
@@ -684,6 +693,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     const runtime = await agentsCall(() => deps.agents.resume(me.tenantID, taf?.id));
     // The halt's notification is replaced, quietly, so none says halted after a resume (kiff/tafs#236, item 21).
     await tellPhones(deps, me.tenantID, resumeNotification(taf));
+    await logEvent(deps.events, me.tenantID, { kind: "resumed", ...(taf ? { taf: taf.id, name: taf.name } : {}) }, deps.now?.());
     return { halt: haltView({ status: "fulfilled", value: kiff }, runtime) };
   }
   throw new HTTPError(404, "not found");

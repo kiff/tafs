@@ -8,6 +8,7 @@ import { type EmailProvider, replySubject } from "./email.js";
 import { type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
+import { eventLog, logEvent } from "../events.js";
 
 /** What doors are set up with in a deployment; a door whose part is missing isn't offered. */
 export interface DoorsConfig {
@@ -241,6 +242,7 @@ async function addKnock(ctx: DoorsContext, tenant: string, taf: Taf, door: Door,
     text: cut(a.text).text, attachments: a.attachments, at: ctx.now.toISOString(), state: "open",
   };
   await changeKnocks(ctx.doors.store, tenant, taf.id, ctx.now, (knocks) => [knock, ...knocks]);
+  await logEvent(eventLog(ctx.doors.store), tenant, { kind: "knocked", taf: taf.id, name: taf.name, app: app.id, from: a.name ?? a.from }, ctx.now);
   await tellOwner(ctx, tenant, taf, `${a.name ?? a.from} wrote by ${app.label.toLowerCase()}${a.spoofed ? " (the sender check failed)" : ""}. Nothing was done.`, knock.id);
 }
 
@@ -576,6 +578,7 @@ export async function removeDoor(ctx: DoorsContext, owner: Owner, taf: Taf, id: 
   if (!door) throw new DoorError(404, "no such door");
   await closeDoor(ctx, cfg, owner.tenant, door, { retire: true });
   await changeDoors(ctx.doors.store, owner.tenant, taf.id, (doors) => doors.filter((x) => x.id !== id));
+  await logEvent(eventLog(ctx.doors.store), owner.tenant, { kind: "door_removed", taf: taf.id, name: taf.name, app: door.app }, ctx.now);
   return { removed: id };
 }
 
@@ -625,6 +628,7 @@ export async function answerKnock(ctx: DoorsContext, owner: Owner, taf: Taf, kno
     // The sender is a key from now on; this message still waits for the owner's Do it or
     // Ignore, never dropped without a word (kiff/tafs#236, item 18).
     await changeKnocks(store, owner.tenant, taf.id, ctx.now, (now) => now.map((k) => (k.id === knock.id ? { ...k, paired: true } : k)));
+    await logEvent(eventLog(store), owner.tenant, { kind: "paired", taf: taf.id, name: taf.name, app: knock.app, from: knock.name ?? knock.from }, ctx.now);
     return { knock: knock.id, state: "open", paired: true };
   } else if (action === "ignore") {
     next = "ignored";
@@ -632,6 +636,7 @@ export async function answerKnock(ctx: DoorsContext, owner: Owner, taf: Taf, kno
     throw new DoorError(400, "action is do, pair or ignore");
   }
   await changeKnocks(store, owner.tenant, taf.id, ctx.now, (now) => now.map((k) => (k.id === knock.id ? { ...k, state: next } : k)));
+  await logEvent(eventLog(store), owner.tenant, { kind: next === "done" ? "knock_done" : "knock_ignored", taf: taf.id, name: taf.name, app: knock.app, from: knock.name ?? knock.from }, ctx.now);
   return { knock: knock.id, state: next, ...(started && typeof started === "object" ? started as object : {}) };
 }
 

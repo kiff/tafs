@@ -8,6 +8,7 @@ import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import type { AccountEvent } from "../src/cloud/events.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -122,6 +123,8 @@ function world() {
     slots: memorySlots(),
     /** The account's phones, and what was pushed to them (kiff/tafs#210). */
     phones: [] as Device[], pushed: [] as Array<{ token: string; n: Notification }>,
+    /** What happened in tafs itself, newest first (kiff/tafs#236). */
+    events: [] as AccountEvent[],
     claimed: [] as string[], drafts: DRAFTS, newIDs: [NEW, NEW2],
     /** The accounts whose own records tafs cloud erased; `eraseFails` makes the next erase throw. */
     erased: [] as string[], eraseFails: false,
@@ -161,6 +164,10 @@ function depsOf(w: World): Deps {
     sleep: async () => undefined,
     fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
+    events: {
+      add: async (_tenant, e, now) => { w.events.unshift({ at: (now ?? new Date()).toISOString(), ...e }); },
+      list: async () => w.events,
+    },
     accountData: {
       erase: async (tenant) => {
         if (w.eraseFails) { w.eraseFails = false; throw new Error("timeout"); }
@@ -1333,6 +1340,9 @@ describe("halting", () => {
     expect(w.pushed.at(-1)!.n).toMatchObject({ collapseID: "halt-Rae", payload: {
       aps: { alert: { title: "Rae resumed" }, "interruption-level": "passive" }, open: `halt:${RAE}`,
     } });
+    // Each halt and resume is in Activity, newest first (kiff/tafs#236, item 15).
+    const events = (await call(w, "GET", "/v1/events", { token: "ana" })).body.events;
+    expect(events.map((e: { kind: string; name?: string }) => [e.kind, e.name])).toEqual([["resumed", "Rae"], ["halted", undefined], ["halted", "Rae"]]);
   });
 
   it("cancels the taf's pending runs when it halts", async () => {

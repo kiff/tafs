@@ -213,6 +213,24 @@ final class TafsCloud {
         try await send("GET", "/v1/home")
     }
 
+    /// What happened in tafs itself (kiff/tafs#236, items 15 and 19): a halt or resume, a
+    /// knock at a door and what the owner did with it, a door's removal. Newest first.
+    struct AccountEvent: Decodable, Equatable {
+        let at: Date
+        let kind: String
+        /// The taf's id in tafs cloud; nil for all of the account's tafs.
+        var taf: String? = nil
+        var name: String? = nil
+        var app: String? = nil
+        var from: String? = nil
+    }
+
+    func events() async throws -> [AccountEvent] {
+        struct Response: Decodable { let events: [AccountEvent] }
+        let r: Response = try await send("GET", "/v1/events")
+        return r.events
+    }
+
     /// The period's AI use, from chats and Setup (kiff/tafs#193): a share of the plan's fair
     /// use, where the tafs ask next (100%, then 200% after a go on…), and whether they're
     /// asking now. Nil shares: no bound on this account.

@@ -180,6 +180,7 @@ extension RecordEntry {
         case .sending: return "sent, no answer yet"
         case .unknown: return "result unknown"
         case .started: return "started"
+        case .inTafs: return ""
         }
     }
 }
@@ -191,10 +192,15 @@ struct RecordRow: View {
     @State private var showingReceipt = false
 
     var body: some View {
-        Button { showingReceipt = true } label: { row }
-            .buttonStyle(.plain)
-            .sheet(isPresented: $showingReceipt) { ReceiptView(entry: entry).environmentObject(model) }
-            .accessibilityHint("Shows the receipt")
+        if entry.kind == .inTafs {
+            // Done in tafs, not a call: there's no receipt to show (kiff/tafs#236).
+            row.accessibilityElement(children: .combine)
+        } else {
+            Button { showingReceipt = true } label: { row }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $showingReceipt) { ReceiptView(entry: entry).environmentObject(model) }
+                .accessibilityHint("Shows the receipt")
+        }
     }
 
     private var row: some View {
@@ -247,6 +253,7 @@ extension RecordEntry.Kind {
         case .done, .approved, .started: return Theme.ok
         case .held, .unknown, .sending: return Theme.amber
         case .refused, .revoked, .notDone: return Theme.no
+        case .inTafs: return Theme.dim
         }
     }
 
@@ -261,6 +268,7 @@ extension RecordEntry.Kind {
         case .sending: return "In progress"
         case .revoked: return "Card revoked"
         case .started: return "Taf started"
+        case .inTafs: return "In tafs"
         }
     }
 }

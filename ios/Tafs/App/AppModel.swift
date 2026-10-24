@@ -633,6 +633,7 @@ final class AppModel: ObservableObject {
             async let home = cloud.home()
             async let calls = kiff.heldCalls()
             async let activity = activityCalls()
+            async let events = try? cloud.events()
             // Which account this is, once a sign-in: it doesn't change under it. Read beside
             // the list and set before it's shown: its time zone is the one the list's times
             // are drawn in (kiff/tafs#211, 6.11).
@@ -640,6 +641,7 @@ final class AppModel: ObservableObject {
             let exceptions = try await calls
             let list = try await home
             let done = await activity
+            let happened = await events
             let account = await me
             // The account read began under this generation: a sign-out or another sign-in
             // meanwhile moves it on, and the old account (and its zone) is dropped here.
@@ -654,6 +656,10 @@ final class AppModel: ObservableObject {
             if let done {
                 record = withDecisions(KIFFMapping.record(done, ids: holderIDs, vendors: toolVendors))
                 await nameRecordLines(gen: gen)
+            }
+            // What happened in tafs itself sits beside KIFF's calls (kiff/tafs#236, items 15 and 19).
+            if let happened {
+                record = (record.filter { $0.kind != .inTafs } + inTafs(happened)).sorted { $0.at > $1.at }
             }
             if !list.removing.isEmpty {
                 await finishRemovals(list.removing, gen: gen)
@@ -704,6 +710,35 @@ final class AppModel: ObservableObject {
         let id = UUID()
         holderIDs[agent] = id
         return id
+    }
+
+    /// tafs cloud's events as Activity entries, in the owner's words: one a taf, and one for
+    /// each taf when it was all of them.
+    func inTafs(_ events: [TafsCloud.AccountEvent]) -> [RecordEntry] {
+        events.flatMap { e -> [RecordEntry] in
+            let ids: [UUID] = e.taf.map { id in cloudTafs.first { $0.value.id == id }.flatMap { holderIDs[$0.key] }.map { [$0] } ?? [] }
+                ?? tafs.map(\.id)
+            guard let (title, detail) = Self.eventWords(e) else { return [] }
+            return ids.map { taf in
+                RecordEntry(id: KIFFMapping.recordID("event|\(e.kind)|\(e.at.timeIntervalSince1970)|\(taf)"), tafID: taf,
+                            kind: .inTafs, title: title, detail: detail, at: e.at)
+            }
+        }
+    }
+
+    static func eventWords(_ e: TafsCloud.AccountEvent) -> (String, String)? {
+        let door = e.app.map(DoorNames.label) ?? "a door"
+        let who = e.from ?? "Someone"
+        switch e.kind {
+        case "halted": return (e.taf == nil ? "Halted with all your tafs" : "Halted", "Nothing of it runs until you resume it")
+        case "resumed": return (e.taf == nil ? "Resumed with all your tafs" : "Resumed", "It works again as before the halt")
+        case "knocked": return ("\(who) wrote by \(door)", "Not paired, so nothing was done")
+        case "knock_done": return ("You had it act on \(who)'s message", "By \(door), in your words")
+        case "knock_ignored": return ("You ignored \(who)'s message", "By \(door): nothing was done")
+        case "paired": return ("You paired \(who)", "Their messages by \(door) give it work from now on")
+        case "door_removed": return ("You removed its \(door) door", "Its address no longer reaches it")
+        default: return nil
+        }
     }
 
     private func activityCalls() async -> [KIFFClient.ActivityCall]? {

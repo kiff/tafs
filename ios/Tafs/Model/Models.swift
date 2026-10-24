@@ -375,7 +375,11 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     /// done and approved: the tool did it. notDone: allowed, but the tool refused it or it
     /// was never sent. sending: sent, the tool hasn't answered. unknown: whether the tool did
     /// it isn't known (kiff/tafs#115).
-    enum Kind: String, Codable { case done, approved, refused, held, unknown, revoked, started, notDone = "not_done", sending }
+    enum Kind: String, Codable {
+        case done, approved, refused, held, unknown, revoked, started, notDone = "not_done", sending
+        /// Something done in tafs itself, not a call: a halt, a resume, a door's knock (kiff/tafs#236).
+        case inTafs = "in_tafs"
+    }
 
     var id = UUID()
     var tafID: UUID

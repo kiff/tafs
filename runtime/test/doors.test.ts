@@ -11,6 +11,7 @@ import { signedWebhook, whatsappSigned } from "../src/cloud/doors/sign.js";
 import { cut, htmlText, ownText } from "../src/cloud/doors/text.js";
 import type { WhatsAppClient } from "../src/cloud/doors/whatsapp.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { eventLog } from "../src/cloud/events.js";
 
 const NOW = new Date("2026-10-24T09:00:00Z");
 const OWNER = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"], email: "Ana@Acme.example" };
@@ -135,6 +136,7 @@ async function send(w: World, method: string, path: string, opts: { token?: stri
     forward: async () => undefined,
     fetch: kiff({ ana: OWNER, max: OTHER, viewer: VIEWER }),
     doors: { store: w.store, secrets: w.secrets, config: async () => w.config },
+    events: eventLog(w.store),
     now: w.now,
   });
   let body: unknown;
@@ -429,6 +431,8 @@ describe("the email door", () => {
     expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("closed");
     await send(w, "DELETE", `/v1/tafs/${REFUNDS}/doors/email`, { token: "ana" });
     expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("unknown");
+    // The removal is in Activity (kiff/tafs#236, item 19).
+    expect((await send(w, "GET", "/v1/events", { token: "ana" })).body.events[0]).toMatchObject({ kind: "door_removed", taf: REFUNDS, app: "email" });
     // Retired, naming no account: another taf of the same name gets another address.
     expect(w.store.held.get("door#email:refunds@tafs.example")?.value).toEqual({ retired: true });
     const other = await send(w, "POST", `/v1/tafs/${MAXTAF}/doors`, { token: "max", body: { app: "email" } });
@@ -492,6 +496,10 @@ describe("knocks and keys", () => {
     expect(waiting).toMatchObject([{ id: knock.id, state: "open", paired: true }]);
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/knocks/${knock.id}`, { token: "ana", body: { action: "ignore" } })).body.state).toBe("ignored");
     expect((await emailHook(w, mail(w, { from: "Maya <maya@acme.example>" }))).body.outcome).toBe("run");
+    // The knock, the pairing and the answer are in Activity, newest first (kiff/tafs#236, item 19).
+    const events = (await send(w, "GET", "/v1/events", { token: "ana" })).body.events;
+    expect(events.map((e: { kind: string }) => e.kind)).toEqual(["knock_ignored", "paired", "knocked"]);
+    expect(events[2]).toMatchObject({ taf: REFUNDS, app: "email", from: "Maya" });
   });
 
   it("only someone who manages Cards can open a door, pair, or answer a knock", async () => {

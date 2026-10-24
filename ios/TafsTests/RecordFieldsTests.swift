@@ -161,4 +161,20 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertEqual(KIFFMapping.counted(call), .nothing)
     }
 
+
+    /// What happened in tafs itself reads as words in Activity (kiff/tafs#236, items 15 and 19).
+    @MainActor
+    func testEventsInTafsReadAsWords() {
+        let at = Date(timeIntervalSince1970: 1_792_000_000)
+        func words(_ kind: String, taf: String? = "taf-1", app: String? = nil, from: String? = nil) -> String? {
+            AppModel.eventWords(TafsCloud.AccountEvent(at: at, kind: kind, taf: taf, name: "Refunds 3", app: app, from: from))?.0
+        }
+        XCTAssertEqual(words("halted"), "Halted")
+        XCTAssertEqual(words("halted", taf: nil), "Halted with all your tafs")
+        XCTAssertEqual(words("resumed"), "Resumed")
+        XCTAssertEqual(words("knocked", app: "email", from: "Maya"), "Maya wrote by email")
+        XCTAssertEqual(words("paired", app: "email", from: "Maya"), "You paired Maya")
+        XCTAssertEqual(words("door_removed", app: "email"), "You removed its email door")
+        XCTAssertNil(words("something new"), "a kind this app doesn't know isn't shown")
+    }
 }
