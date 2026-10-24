@@ -142,8 +142,8 @@ jobs:
           mkdir -p "$RUNNER_TEMP/shots"
           # A shot is taken once the screen has drawn and settled (kiff/tafs#195): two frames
           # a second apart are the same (a spinner still turns, so it never settles), and the
-          # frame isn't nearly empty (a screen not drawn yet is the plain background, a few
-          # KB). After 30 s it's taken as it is, with a warning naming the shot.
+          # frame isn't nearly empty (a screen not drawn yet is the plain background: 121 KB on
+          # the 13-inch iPad). After 30 s it's taken as it is, with a warning naming the shot.
           shoot() {
             name=$1; shift
             out="$RUNNER_TEMP/shots/$name.png"
@@ -154,7 +154,7 @@ jobs:
             for _ in $(seq 30); do
               xcrun simctl io "$DEVICE_ID" screenshot "$frame" >/dev/null 2>&1
               sum=$(shasum "$frame" | cut -d' ' -f1)
-              if [ "$sum" = "$prev" ] && [ "$(wc -c < "$frame")" -gt 100000 ]; then break; fi
+              if [ "$sum" = "$prev" ] && [ "$(wc -c < "$frame")" -gt 200000 ]; then break; fi
               prev=$sum
               sleep 1
             done
