@@ -178,6 +178,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Never connect again, make a new taf, or ask the owner to sign in again for an id you lost");
     // A taf's Cards are read wherever Coach is asked, never by sending the owner elsewhere (kiff/tafs#214, item 4).
     expect(flat).toContain("with kiff_card {agent: its kiff_agent from tafs_state}, in whatever conversation you're in. Never send the owner elsewhere to ask.");
+    // Coach says which Card covers live actions, and never gives a test Card's limits as real ones.
+    expect(flat).toContain("say which Card covers its live actions, the production one, and keep a test Card's limits apart");
+    expect(flat).toContain("never tell the owner the taf may do nothing");
     // A fixed tool joins the same connection: no old connection is left over, only the old tool.
     expect(flat).toContain("The old tool stays on the connection, unused once the new version is installed: say so in the result's sentence");
     expect(flat).not.toContain("The old connection is left over");
