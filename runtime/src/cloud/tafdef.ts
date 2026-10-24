@@ -18,6 +18,11 @@ export const MODEL = "claude-opus-5-5";
  * doesn't wait while it is read again (kiff/tafs#138, item 58).
  */
 export const PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 } as const;
+/** What MODEL costs at its fast output (kiff/agents#197). */
+export const PRICE_FAST = {
+  Input: 2 * PRICE.Input, Output: 2 * PRICE.Output, CacheRead: 2 * PRICE.CacheRead, CacheWrite: 2 * PRICE.CacheWrite,
+  CacheWrite1h: 2 * PRICE.CacheWrite1h,
+} as const;
 export const MAX_TOKENS = 16_000;
 /**
  * How hard the model works on each turn. Medium, Opus 5.5's own default: a taf's
