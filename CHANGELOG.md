@@ -50,10 +50,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
-- Dictation in Spanish works on a device set to another Spanish (#208). It asked
-  for Spain's Spanish only, so a device in Colombian or Mexican Spanish said
-  Spanish wasn't available. It now uses the owner's own Spanish, then the common
-  forms, and when the device has none it says how to turn dictation on.
+- Dictation uses any language the device dictates in (#208), the owner's first,
+  and the switch while dictating goes through those. Before, it knew Spain's
+  Spanish and US English only: a device with French dictation, or Spanish from
+  Colombia, said Spanish wasn't available. With none on the device, it says how
+  to turn dictation on.
 - Tables in a chat are drawn as tables (#211): a header, a line between rows,
   amounts aligned on the right, and a wide table scrolls sideways. VoiceOver reads
   each row with its column names. Before, a table showed as text with its pipes.

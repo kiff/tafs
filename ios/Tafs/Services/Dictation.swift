@@ -19,32 +19,44 @@ final class Dictation: ObservableObject {
         case blocked(String)
     }
 
-    /// The languages it understands, Spanish and English to start.
-    enum Language: String, CaseIterable {
-        case english = "en-US"
-        case spanish = "es-ES"
+    /// A language the device recognizes on the device, by its locale ("fr-FR", "es-CO"):
+    /// any it has, not a fixed list, so a device with French dictation dictates in French.
+    struct Language: Hashable {
+        let id: String
 
-        var label: String { self == .english ? "EN" : "ES" }
-        var name: String { self == .english ? "English" : "Spanish" }
+        static let english = Language(id: "en-US")
+        static let spanish = Language(id: "es-ES")
 
-        /// The regional forms to try, best first: the owner's own (the device's Spanish
-        /// from Colombia, say), then the common ones. A device only recognizes on the
-        /// device in the forms whose model it has, so one hard-coded form isn't enough.
-        func candidates(preferred: [String] = Locale.preferredLanguages) -> [String] {
-            let prefix = self == .english ? "en" : "es"
-            let common = self == .english ? ["en-US", "en-GB", "en-AU", "en-CA", "en-IN"]
-                : ["es-419", "es-MX", "es-US", "es-CO", "es-CL", "es-ES"]
-            var out: [String] = []
-            for id in preferred.map({ $0.replacingOccurrences(of: "_", with: "-") }) + common
-            where id.lowercased().hasPrefix(prefix + "-") && !out.contains(id) {
-                out.append(id)
-            }
-            return out
+        private var code: String { String(id.prefix { $0 != "-" && $0 != "_" }).lowercased() }
+        /// The switch's label: "FR".
+        var label: String { code.uppercased() }
+        /// Its own name, as its speakers write it: "Français", "Español", "English".
+        var name: String {
+            let own = Locale(identifier: id).localizedString(forLanguageCode: code) ?? code
+            return own.prefix(1).uppercased() + own.dropFirst()
         }
 
-        /// The device's language when it's one of these, else English.
-        static var device: Language {
-            Locale.preferredLanguages.first?.lowercased().hasPrefix("es") == true ? .spanish : .english
+        /// The device's languages, one form each, the owner's first: for each of their
+        /// preferred languages, the form they use when the device has it, else another of
+        /// that language; then the rest, by code. `supported` are the forms the device
+        /// recognizes on the device.
+        static func ordered(supported: [String], preferred: [String] = Locale.preferredLanguages) -> [Language] {
+            let have = supported.map { $0.replacingOccurrences(of: "_", with: "-") }
+            var out: [Language] = []
+            func add(_ id: String) {
+                let l = Language(id: id)
+                if !out.contains(where: { $0.code == l.code }) { out.append(l) }
+            }
+            for p in preferred.map({ $0.replacingOccurrences(of: "_", with: "-") }) {
+                let code = Language(id: p).code
+                if let exact = have.first(where: { $0.caseInsensitiveCompare(p) == .orderedSame }) {
+                    add(exact)
+                } else if let same = have.filter({ Language(id: $0).code == code }).sorted().first {
+                    add(same)
+                }
+            }
+            for id in have.sorted() { add(id) }
+            return out
         }
     }
 
@@ -55,17 +67,20 @@ final class Dictation: ObservableObject {
     @Published private(set) var language: Language
 
     private let engine: SpeechEngine
+    /// The languages this device dictates in, the owner's first.
+    var languages: [Language] { engine.languages() }
     /// What the box held when dictation started: the words go after it.
     private var before = ""
     private var write: ((String) -> Void)?
 
-    init(engine: SpeechEngine? = nil, language: Language = .device) {
+    init(engine: SpeechEngine? = nil, language: Language? = nil) {
         #if os(iOS)
-        self.engine = engine ?? DeviceSpeech()
+        let engine = engine ?? DeviceSpeech()
         #else
-        self.engine = engine ?? NoSpeech()
+        let engine = engine ?? NoSpeech()
         #endif
-        self.language = language
+        self.engine = engine
+        self.language = language ?? engine.languages().first ?? .english
     }
 
     var listening: Bool { state == .listening || state == .starting }
@@ -87,6 +102,12 @@ final class Dictation: ObservableObject {
             state = .blocked(why)
             return
         }
+        let have = engine.languages()
+        guard let first = have.first else {
+            state = .blocked(engine.noLanguage)
+            return
+        }
+        if !have.contains(language) { language = first }
         if let why = engine.unavailable(language) {
             state = .blocked(why)
             return
@@ -114,10 +135,12 @@ final class Dictation: ObservableObject {
         write = nil
     }
 
-    /// Switches the language while dictating: listening starts again in it, after what was
-    /// already heard.
+    /// Switches to the device's next language while dictating: listening starts again in it,
+    /// after what was already heard.
     func switchLanguage(text: String, hints: [String], write: @escaping (String) -> Void) async {
-        let next: Language = language == .english ? .spanish : .english
+        let have = engine.languages()
+        guard have.count > 1 else { return }
+        let next = have[((have.firstIndex(of: language) ?? -1) + 1) % have.count]
         let wasListening = listening
         if wasListening { stop() }
         language = next
@@ -169,6 +192,11 @@ protocol SpeechEngine: AnyObject {
     /// Asks for microphone and speech permission: nil when given, else why not and how to
     /// turn it on.
     func authorize() async -> String?
+    /// The languages it recognizes on the device, the owner's first; none means it can't
+    /// dictate at all.
+    func languages() -> [Dictation.Language]
+    /// Why it can't dictate in any language, and how to turn dictation on.
+    var noLanguage: String { get }
     /// Whether recognition runs on this device in `language`: nil when it does, else why not.
     func unavailable(_ language: Dictation.Language) -> String?
     /// Starts listening: what it hears so far goes to `onText`, and its end to `onEnd`, with
@@ -182,6 +210,8 @@ protocol SpeechEngine: AnyObject {
 @MainActor
 final class NoSpeech: SpeechEngine {
     func authorize() async -> String? { "Dictation isn't available here." }
+    func languages() -> [Dictation.Language] { [] }
+    var noLanguage: String { "Dictation isn't available here." }
     func unavailable(_ language: Dictation.Language) -> String? { "Dictation isn't available here." }
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String) -> Void,
                onEnd: @escaping @Sendable (String?) -> Void) throws {}
@@ -209,10 +239,20 @@ final class DeviceSpeech: SpeechEngine {
         return await Self.microphonePermission() ? nil : "The microphone is off for tafs. Turn it on in Settings › tafs › Microphone."
     }
 
+    /// The device's on-device languages, read once: asking each recognizer takes a moment.
+    private lazy var have: [Dictation.Language] = Dictation.Language.ordered(
+        supported: SFSpeechRecognizer.supportedLocales().map(\.identifier).filter {
+            SFSpeechRecognizer(locale: Locale(identifier: $0))?.supportsOnDeviceRecognition == true
+        })
+
+    func languages() -> [Dictation.Language] { have }
+
+    var noLanguage: String {
+        "Dictation isn't on this \(Self.device) yet. Add a keyboard with dictation on in Settings › General › Keyboard › Keyboards, wait for its language to download, then try again."
+    }
+
     func unavailable(_ language: Dictation.Language) -> String? {
-        guard let recognizer = Self.recognizer(for: language) else {
-            return "Dictation in \(language.name) isn't on this \(Self.device) yet. Add a \(language.name) keyboard with dictation on in Settings › General › Keyboard › Keyboards, wait for it to download, then try again."
-        }
+        guard let recognizer = Self.recognizer(for: language) else { return noLanguage }
         return recognizer.isAvailable ? nil : "Dictation isn't available right now. Try again in a moment."
     }
 
@@ -250,12 +290,10 @@ final class DeviceSpeech: SpeechEngine {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
-    /// The first of the language's regional forms this device recognizes on the device.
+    /// The language's recognizer, when it runs on the device.
     private static func recognizer(for language: Dictation.Language) -> SFSpeechRecognizer? {
-        for id in language.candidates() {
-            if let r = SFSpeechRecognizer(locale: Locale(identifier: id)), r.supportsOnDeviceRecognition { return r }
-        }
-        return nil
+        guard let r = SFSpeechRecognizer(locale: Locale(identifier: language.id)), r.supportsOnDeviceRecognition else { return nil }
+        return r
     }
 
     private static var device: String { UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone" }

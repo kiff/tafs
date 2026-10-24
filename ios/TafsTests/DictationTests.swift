@@ -7,12 +7,15 @@ import XCTest
 final class FakeSpeech: SpeechEngine {
     var refused: String?
     var notHere: String?
+    var have: [Dictation.Language] = [.english, .spanish]
     var startedWith: (language: Dictation.Language, hints: [String])?
     var stops = 0
     private var onText: (@Sendable (String) -> Void)?
     private var onEnd: (@Sendable (String?) -> Void)?
 
     func authorize() async -> String? { refused }
+    func languages() -> [Dictation.Language] { have }
+    var noLanguage: String { "Dictation isn't on this iPhone yet." }
     func unavailable(_ language: Dictation.Language) -> String? { notHere }
     func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String) -> Void,
                onEnd: @escaping @Sendable (String?) -> Void) throws {
@@ -123,15 +126,39 @@ final class DictationTests: XCTestCase {
         XCTAssertEqual(Dictation.purpose, "tafs turns your voice into text on this device. Your voice isn't sent anywhere.")
     }
 
-    /// The owner's own Spanish first (a device in Colombian Spanish), then the common forms:
-    /// a device recognizes on the device only in the forms whose model it has.
-    func testTheOwnersOwnRegionalFormIsTriedFirst() {
-        XCTAssertEqual(Dictation.Language.spanish.candidates(preferred: ["es-CO", "en-US"]),
-                       ["es-CO", "es-419", "es-MX", "es-US", "es-CL", "es-ES"])
-        XCTAssertEqual(Dictation.Language.english.candidates(preferred: ["es-CO", "en_GB"]),
-                       ["en-GB", "en-US", "en-AU", "en-CA", "en-IN"])
-        // Without one of its own, the common forms, Spain's last for Spanish.
-        XCTAssertEqual(Dictation.Language.spanish.candidates(preferred: ["fr-FR"]).last, "es-ES")
-        XCTAssertEqual(Dictation.Language.english.candidates(preferred: []).first, "en-US")
+    /// Any language the device dictates in, not a fixed two (a device with only French
+    /// dictation): one form each, the owner's own first, then the rest by code.
+    func testTheDevicesOwnLanguagesTheOwnersFirst() {
+        let supported = ["en-US", "en-GB", "es-ES", "es-MX", "fr-FR", "fr-CA", "de-DE"]
+        XCTAssertEqual(Dictation.Language.ordered(supported: supported, preferred: ["es-CO", "fr_CA"]).map(\.id),
+                       ["es-ES", "fr-CA", "de-DE", "en-GB"])
+        XCTAssertEqual(Dictation.Language.ordered(supported: ["fr-FR"], preferred: ["es-CO", "en-US"]).map(\.id), ["fr-FR"])
+        XCTAssertEqual(Dictation.Language.ordered(supported: [], preferred: ["es-CO"]), [])
+        XCTAssertEqual(Dictation.Language(id: "fr-FR").label, "FR")
+        XCTAssertEqual(Dictation.Language(id: "fr-FR").name, "Français")
+        XCTAssertEqual(Dictation.Language(id: "es-MX").name, "Español")
+    }
+
+    /// Only French on the device: dictation starts in French, and the switch has nowhere to go.
+    func testItDictatesInTheLanguageTheDeviceHas() async {
+        let speech = FakeSpeech()
+        speech.have = [Dictation.Language(id: "fr-FR")]
+        let dictation = Dictation(engine: speech, language: .spanish)
+        var box = ""
+        await dictation.start(text: box, hints: []) { box = $0 }
+        XCTAssertEqual(speech.startedWith?.language, Dictation.Language(id: "fr-FR"))
+        await dictation.switchLanguage(text: box, hints: []) { box = $0 }
+        XCTAssertEqual(dictation.language, Dictation.Language(id: "fr-FR"))
+    }
+
+    /// No language on the device: why, and how to turn dictation on, and nothing starts.
+    func testNoLanguageSaysHowToTurnItOn() async {
+        let speech = FakeSpeech()
+        speech.have = []
+        let dictation = Dictation(engine: speech)
+        var box = ""
+        await dictation.start(text: box, hints: []) { box = $0 }
+        XCTAssertEqual(dictation.state, .blocked("Dictation isn't on this iPhone yet."))
+        XCTAssertNil(speech.startedWith)
     }
 }

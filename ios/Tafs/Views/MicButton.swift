@@ -16,15 +16,15 @@ struct MicButton: View {
     var body: some View {
         if empty || dictation.listening {
             HStack(spacing: 4) {
-                if dictation.state == .listening {
-                    // The language, switched while dictating.
+                if dictation.state == .listening, dictation.languages.count > 1 {
+                    // The language, switched while dictating, among the device's own.
                     Button(dictation.language.label) {
                         Task { await dictation.switchLanguage(text: text, hints: model.dictationHints) { text = $0 } }
                     }
                     .font(Theme.mono(12, weight: .semibold))
                     .foregroundColor(Theme.ink)
                     .frame(width: 34, height: 40)
-                    .accessibilityLabel("Dictating in \(dictation.language.name). Switch to \(dictation.language == .english ? "Spanish" : "English")")
+                    .accessibilityLabel("Dictating in \(dictation.language.name). Switch language")
                 }
                 Button {
                     Task { await dictation.toggle(text: text, hints: model.dictationHints) { text = $0 } }
