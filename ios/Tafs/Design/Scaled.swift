@@ -44,3 +44,37 @@ enum Haptics {
     static func step() {}
     #endif
 }
+
+/// One line at the usual text sizes; at the accessibility sizes the text wraps rather than
+/// be cut off (kiff/tafs#210).
+struct OneLineUnlessLarge: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var size
+
+    func body(content: Content) -> some View {
+        content.lineLimit(size.isAccessibilitySize ? nil : 1)
+    }
+}
+
+extension View {
+    func oneLineUnlessLarge() -> some View { modifier(OneLineUnlessLarge()) }
+}
+
+/// Whether the owner turned on Reduce Motion (kiff/tafs#210).
+@MainActor
+enum Motion {
+    static var reduced: Bool {
+        // iPhone and iPad (v1); the Mac target only compiles.
+        #if canImport(UIKit)
+        UIAccessibility.isReduceMotionEnabled
+        #else
+        false
+        #endif
+    }
+}
+
+/// `withAnimation`, except with Reduce Motion on: then nothing slides or bounces, it just
+/// changes (kiff/tafs#210).
+@MainActor
+func withMotion<Result>(_ animation: Animation? = .default, _ body: () throws -> Result) rethrows -> Result {
+    try withAnimation(Motion.reduced ? nil : animation, body)
+}

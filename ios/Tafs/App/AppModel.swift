@@ -52,13 +52,13 @@ final class AppModel: ObservableObject {
     let purchases: Purchases
     /// What happened to the last purchase, request or answer, when there's something to say.
     @Published private(set) var tasksMessage: String?
-    /// Each taf's counted tasks this period, newest first: the first page (kiff-cloud#1334).
+    /// Each taf's counted tasks this period, newest first: the first page.
     @Published private(set) var tafTasks: [UUID: [KIFFClient.CountedTask]] = [:]
     /// The period's AI use from chats and Setup (kiff/tafs#193), from tafs cloud; nil until read.
     @Published private(set) var aiUse: TafsCloud.AIUse?
 
     /// Sets the account's time zone to this device's, so a Card's day ends at the owner's
-    /// midnight (kiff/tafs#96): a signed setup call (kiff-cloud #1278), which KIFF takes from
+    /// midnight (kiff/tafs#96): a signed setup call, which KIFF takes from
     /// the account's owner or an admin. The account is read again after.
     /// The device's time zone, offered once when the account's differs (kiff/tafs#206 6.11):
     /// "Use Europe/Paris for times in tafs?". Never changed without the owner: "Not now" is
@@ -381,12 +381,31 @@ final class AppModel: ObservableObject {
     /// root view shows it on its own screen and clears this.
     @Published var usageRequested = false
 
+    /// Halt all, asked for by a tapped halt alert or by "Halt all tafs" when it couldn't
+    /// finish without the app (kiff/tafs#210): the root view shows it on its own screen.
+    @Published var haltRequested = false
+
+    /// A hold opened from its notification, with the answer chosen there (kiff/tafs#210):
+    /// Needs you shows it and takes this. Approve is sent only once Face ID confirms it.
+    struct HoldRequest: Equatable {
+        let kiffID: String
+        let answer: String?
+    }
+    @Published var requestedHold: HoldRequest?
+
     /// Opens where a tapped alert points.
     func open(_ destination: String) {
         switch destination {
         case "needs-you": requestedTab = .needsYou
         case "usage": usageRequested = true
-        default: break
+        case "halt": haltRequested = true
+        // A Coach task's run ended (kiff/tafs#210): its line is in Coach's chat.
+        case "coach": if mode == .kiff { coachOpen = true }
+        default:
+            if let hold = AlertAnswers.request(from: destination) {
+                requestedTab = .needsYou
+                requestedHold = hold
+            }
         }
     }
 
@@ -1117,7 +1136,7 @@ final class AppModel: ObservableObject {
 
     // MARK: Halt
 
-    /// Each halt as last read (kiff/kiff-cloud#1061), by the taf's tafs cloud id, "" for the
+    /// Each halt as last read, by the taf's tafs cloud id, "" for the
     /// whole account.
     @Published private(set) var halts: [String: TafsCloud.Halt] = [:]
 
@@ -1275,7 +1294,7 @@ final class AppModel: ObservableObject {
         holderIDs.first(where: { $0.value == tafID })?.key
     }
 
-    /// The taf's part of the period, from KIFF's `by_agent` (kiff-cloud#1334); nil until usage
+    /// The taf's part of the period, from KIFF's `by_agent`; nil until usage
     /// is read. A taf KIFF doesn't list counted nothing.
     func tafUsage(for tafID: UUID) -> KIFFClient.Usage.AgentCount? {
         guard let u = usage else { return nil }
@@ -1757,7 +1776,7 @@ final class AppModel: ObservableObject {
             } catch {
                 guard gen == accountGeneration else { return false }
                 if case KIFFClient.KIFFError.server(409, _, "card_revised") = error {
-                    // A Card moved on since it was drafted (KIFF's reason, kiff-cloud#1291):
+                    // A Card moved on since it was drafted (KIFF's reason):
                     // drafted again, it's read again.
                     staleVersionCards[tafID] = version.n
                     versionErrors[tafID] = "Version \(version.n)'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve."
@@ -2635,8 +2654,8 @@ final class AppModel: ObservableObject {
     }
 
     /// Sets this phone up with planque, once per account, behind one Face ID: planque gets
-    /// the phone's key, and a KIFF key that connects tools and does nothing else (kiff-cloud
-    /// #1251), minted with a signed setup call and never kept on the phone. Done before a
+    /// the phone's key, and a KIFF key that connects tools and does nothing else, minted
+    /// with a signed setup call and never kept on the phone. Done before a
     /// connection is asked for, so every grant is read and shown before it is approved.
     func setUpPlanque() async -> Bool {
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
@@ -3070,9 +3089,9 @@ final class AppModel: ObservableObject {
     }
 
     /// Starts connecting tools, once per account, behind one Face ID: planque gets this
-    /// phone's key and a connector key, and Setup is started from a draft with no tools
-    /// (kiff-cloud#1254), whose key tafs cloud claims. Done before the first message, so
-    /// every grant Setup asks for can be read and shown.
+    /// phone's key and a connector key, and Setup is started from a draft with no tools,
+    /// whose key tafs cloud claims. Done before the first message, so every grant Setup
+    /// asks for can be read and shown.
     func startSetup() async -> Bool {
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
             setupError = "Sign in with KIFF again: this sign-in can't sign for the phone."
@@ -3678,6 +3697,8 @@ enum Screenshots {
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
     /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
+    /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
+    static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
 
     /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
     /// purchase screens' screenshots.

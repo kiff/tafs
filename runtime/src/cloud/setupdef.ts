@@ -232,7 +232,7 @@ How you work:
   tool that moves money, name the read that says the currency (unit_lookup:
   that read's name, the read's argument that takes the same id, and where
   the currency is in its answer, such as currency): KIFF refuses a call in
-  another currency than the Card's (kiff/kiff-cloud#1299). Mark tools that
+  another currency than the Card's. Mark tools that
   only read as read_only: reading in the owner's account is open, with no
   limits.
 - Test or live is the owner's choice, never yours (kiff/tafs#89). Before you

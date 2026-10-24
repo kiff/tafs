@@ -2,8 +2,8 @@ import CryptoKit
 import Foundation
 import libsecp256k1
 
-/// Checks a KIFF receipt on the device (kiff/tafs#167), as KIFF's own `VerifyAttestation`
-/// does (kiff-cloud `receipt/attester.go`): the signed digest is
+/// Checks a KIFF receipt on the device (kiff/tafs#167), as KIFF's own verification does:
+/// the signed digest is
 /// keccak256(ascii(sha256hex(causal_chain))), and the signer recovered from the 65-byte
 /// signature must be KIFF's.
 ///
@@ -20,8 +20,8 @@ enum ReceiptCheck: Equatable {
     case failed(String)
 
     /// KIFF's receipt signer in production (kiff/tafs#167): one key for every account, the
-    /// deployer in kiff-cloud's `contract/deployments.json` and the sender of its anchor
-    /// transactions. A rotation ships in a new build first.
+    /// deployer of KIFF's anchor contract and the sender of its anchor transactions. A
+    /// rotation ships in a new build first.
     static let kiffSigner = "0x2f297affd7b62ef712a1e3158421ccb4bf2efcbe"
 
     static let algorithm = "secp256k1+keccak256"

@@ -11,10 +11,10 @@ struct OnboardingView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("They taf.\nYou kiff.")
-                    .font(Theme.display(48))
+                    .scaledFont(48, weight: .bold, design: .rounded, relativeTo: .title)
                     .foregroundColor(Theme.ink)
                 Text("Hand a job to a taf. It works inside a Card you set, and asks you when it needs more.")
-                    .font(.system(size: 16))
+                    .scaledFont(16)
                     .foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -56,7 +56,7 @@ struct OnboardingView: View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Circle().fill(color).frame(width: 9, height: 9).accessibilityHidden(true)
             (Text(lead).bold().foregroundColor(Theme.ink) + Text(" " + rest).foregroundColor(Theme.soft))
-                .font(.system(size: 15))
+                .scaledFont(15)
         }
     }
 }

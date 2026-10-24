@@ -10,6 +10,8 @@ struct TafsApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                // The screenshots' narrow iPad window (kiff/tafs#210): Slide Over's width.
+                .modifier(NarrowForScreenshots())
                 .environmentObject(model)
                 .preferredColorScheme(.light)
                 .tint(Theme.amber)
@@ -27,6 +29,7 @@ struct TafsApp: App {
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
                     push.onOpen = { [weak model] destination in model?.open(destination) }
+                    Routes.shared.onOpen = { [weak model] destination in model?.open(destination) }
                     // From launch: renewals, refunds and purchases made elsewhere reach KIFF.
                     model.purchases.start()
                     await model.restore()
@@ -106,6 +109,8 @@ struct RootView: View {
                     .ignoresSafeArea(.keyboard)
             }
         }
+        // The keyboard's shortcuts on every screen (kiff/tafs#210).
+        .background { if model.signedIn { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         // A wide screen: a panel beside what's open. A phone: a sheet, with Close, that a drag
@@ -123,7 +128,15 @@ struct RootView: View {
         .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {
             NavigationStack {
                 UsageView()
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false } } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false }.keyboardShortcut(.cancelAction) } }
+            }
+            .environmentObject(model)
+        }
+        // Halt all, from a halt alert or from Siri when it needed the app (kiff/tafs#210).
+        .sheet(isPresented: Binding(get: { model.signedIn && model.haltRequested }, set: { model.haltRequested = $0 })) {
+            NavigationStack {
+                HaltScreen(tafID: nil)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.haltRequested = false }.keyboardShortcut(.cancelAction) } }
             }
             .environmentObject(model)
         }
@@ -149,5 +162,17 @@ struct RootView: View {
         }
         // The whole screen, ✦ and the panels with it, when it's laid out again.
         .id(layoutEpoch)
+    }
+}
+
+/// `-narrow YES`: the whole app at Slide Over's width, compact, as in a narrow iPad window.
+private struct NarrowForScreenshots: ViewModifier {
+    func body(content: Content) -> some View {
+        if Screenshots.narrow {
+            content.frame(width: 320).environment(\.horizontalSizeClass, .compact)
+                .frame(maxWidth: .infinity).background(Color.black)
+        } else {
+            content
+        }
     }
 }

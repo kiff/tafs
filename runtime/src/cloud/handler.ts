@@ -4,8 +4,9 @@ import { aiFor, type AIView, base, periodName, planOf, refusedForAI, view as aiV
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
 import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
-import { alertTarget, MAX_DEVICES, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
+import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
@@ -648,7 +649,7 @@ async function alerts(event: HTTPEvent, method: string, me: KIFFIdentity, deps: 
 }
 
 /**
- * A halt (kiff/kiff-cloud#1061) of one taf or, with none, of the whole account. POST halts it in
+ * A halt of one taf or, with none, of the whole account. POST halts it in
  * KIFF and in kiff/agents together: one tap, no signature, since it only takes authority away.
  * DELETE resumes kiff/agents only once KIFF says it runs again: the phone resumes it in KIFF
  * itself, signed with Face ID, so nothing here resumes what the owner didn't. GET reads both.
@@ -668,7 +669,10 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     // Both at once. KIFF failing, or not answering yet, leaves it halting: nothing reads it as halted.
     const [kiff, runtime] = await Promise.all([inKIFF(() => haltInKIFF(token, agent, deps.fetch, deps.kiffBase)),
       agentsCall(() => deps.agents.halt(me.tenantID, taf?.id))]);
-    return { halt: haltView(kiff, runtime) };
+    const view = haltView(kiff, runtime);
+    // A halt interrupts (kiff/tafs#210): every phone that answers hears it, through a Focus.
+    await tellPhones(deps, me.tenantID, haltNotification(taf?.name, view.state === "halted"));
+    return { halt: view };
   }
   if (method === "DELETE") {
     let kiff: KIFFHalt;
@@ -681,6 +685,24 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     return { halt: haltView({ status: "fulfilled", value: kiff }, runtime) };
   }
   throw new HTTPError(404, "not found");
+}
+
+/** A halt, told to the account's phones: one per taf or for all, a later one replacing it. */
+function haltNotification(name: string | undefined, halted: boolean): Notification {
+  const who = name ?? "All your tafs";
+  return {
+    kind: "alert",
+    payload: {
+      aps: {
+        alert: { title: halted ? `${who} halted` : `Halting ${name ?? "all your tafs"}`, body: "Nothing new is sent until you resume in tafs." },
+        "thread-id": "halt",
+        category: "halt",
+        ...apsFor(levelOf("halt", false)),
+      },
+      open: "halt",
+    },
+    collapseID: `halt-${name ?? "all"}`.slice(0, 64),
+  };
 }
 
 /**
@@ -906,7 +928,7 @@ async function setupOf(me: KIFFIdentity, deps: Deps): Promise<Taf | undefined> {
 /**
  * Starts the account's Setup, the agent that connects tools in the setup
  * chat (kiff/agents#91), once. Its key comes from a draft the phone
- * submitted with no Cards (no_tools, kiff-cloud#1254): tafs cloud claims it
+ * submitted with no Cards (no_tools): tafs cloud claims it
  * itself, so the key never reaches the phone, as for a taf.
  */
 async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
@@ -2081,6 +2103,9 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule)
  * list rather than showing tafs without their Cards.
  */
 async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
+  // The owner is around (kiff/tafs#210): what isn't urgent is pushed quietly, not kept for later.
+  await deps.slots.keep(presenceKey(me.tenantID), presentUntil(deps.now?.() ?? new Date()))
+    .catch((err) => console.error(`presence: ${(err as Error).message}`));
   const [records, removing, kiff] = await Promise.all([
     deps.tafs.list(me.tenantID),
     deps.removals.list(me.tenantID),
@@ -2431,6 +2456,10 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const taf = await deps.tafs.get(tenant, task.taf);
   const name = taf?.name ?? task.taf;
   const { line, said } = coachLine(name, task, r);
+  // Its level (kiff/tafs#210): quiet while the owner is around, kept for "While you
+  // were away" otherwise. A paused run is a hold, which KIFF's alert interrupts for.
+  const at = deps.now?.() ?? new Date();
+  const level = ended ? levelOf("run_ended", !(await deps.slots.held(presenceKey(tenant)))) : undefined;
   const tafs = await deps.tafs.list(tenant);
   const setup = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
   let told = false;
@@ -2438,12 +2467,41 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
     told = await deps.agents.steerRun(tenant, setup.id, task.coachRun, line).then(() => true, () => false);
   }
   if (!told) {
-    const at = deps.now?.() ?? new Date();
     // The owner reads the taf and how it went; Coach reads the whole line.
-    await deps.coach.append(coachKeys.notes(tenant), { at: at.toISOString(), text: line, taf: name, said }, new Date(at.getTime() + TASK_KEPT_MS));
+    await deps.coach.append(coachKeys.notes(tenant), { at: at.toISOString(), text: line, taf: name, said, ...(level === "later" ? { away: true } : {}) },
+      new Date(at.getTime() + TASK_KEPT_MS));
   }
+  if (level === "quiet") await tellPhones(deps, tenant, endedNotification(name, r));
   if (ended) await deps.coach.remove(key);
   return { taken: true };
+}
+
+/** A Coach task's run ended, said quietly: no sound or banner. Only how it ended, never the taf's words. */
+function endedNotification(name: string, r: Run): Notification {
+  const body = r.status === "ERROR" ? "It failed. Open Coach mode to see why."
+    : r.status === "CANCELLED" ? "It was stopped."
+    : "It finished. Open Coach mode to read how it went.";
+  return {
+    kind: "alert",
+    payload: { aps: { alert: { title: name, body }, "thread-id": "coach", ...apsFor("quiet") }, open: "coach" },
+    collapseID: r.id.slice(0, 64),
+  };
+}
+
+/**
+ * Tells the phones of the account's people who answer holds, best effort: a
+ * phone Apple no longer knows is forgotten, and a failed push is only logged.
+ */
+async function tellPhones(deps: Deps, tenant: string, n: Notification): Promise<void> {
+  try {
+    const { devices } = await deps.push.get(tenant);
+    await Promise.all(devices.filter((d) => d.answers).map(async (d) => {
+      const r = await deps.apns.send(d, n).catch(() => "failed" as const);
+      if (r === "gone") await deps.push.removeDevice(tenant, d.token);
+    }));
+  } catch (err) {
+    console.error(`push: ${(err as Error).message}`);
+  }
 }
 
 /**
@@ -2500,11 +2558,13 @@ async function takeCoachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{
 }
 
 /** The lines about Coach's tasks it hasn't read, for the app to show in Coach's chat. */
-async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coach_lines?: Array<{ at: string; taf: string; said: string }> }> {
+async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coach_lines?: Array<{ at: string; taf: string; said: string; away?: true }> }> {
   if (taf.job !== SETUP_JOB || !deps.coach) return {};
-  const kept = (await deps.coach.get(coachKeys.notes(me.tenantID))) as Array<{ at?: string; taf?: string; said?: string }> | undefined;
-  const lines = (kept ?? []).filter((l): l is { at: string; taf: string; said: string } =>
-    typeof l.at === "string" && typeof l.taf === "string" && typeof l.said === "string").map(({ at, taf, said }) => ({ at, taf, said }));
+  const kept = (await deps.coach.get(coachKeys.notes(me.tenantID))) as Array<{ at?: string; taf?: string; said?: string; away?: boolean }> | undefined;
+  // Away: kept while the owner was away, so the app gathers it into "While you were away" (kiff/tafs#210).
+  const lines = (kept ?? []).filter((l): l is { at: string; taf: string; said: string; away?: boolean } =>
+    typeof l.at === "string" && typeof l.taf === "string" && typeof l.said === "string")
+    .map(({ at, taf, said, away }) => ({ at, taf, said, ...(away === true ? { away: true as const } : {}) }));
   return lines.length ? { coach_lines: lines } : {};
 }
 

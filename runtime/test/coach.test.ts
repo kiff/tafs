@@ -32,11 +32,14 @@ function world() {
   ]);
   agents.calls.length = 0;
   let jti = 0;
+  /** What was pushed to the account's one phone. */
+  const pushed: Array<{ token: string; payload: Record<string, unknown> }> = [];
+  const phone = { token: "a".repeat(64), environment: "production" as const, subject: "u_ana", answers: true, at: "" };
   const deps: Deps = {
     agents: agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs, names: memoryNames(), slots: memorySlots(), claims: memoryClaims(),
     removals: memoryRemovals(), archived: memoryArchived(),
-    push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
-    apns: { send: async () => "sent" as const },
+    push: { get: async () => ({ devices: [phone], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
+    apns: { send: async (d, n) => { pushed.push({ token: d.token, payload: n.payload }); return "sent" as const; } },
     forward: async () => undefined,
     coach, permitKeys: async (kid) => { if (kid !== "k1") throw new Error("unknown"); return publicKey; },
     kiffBase: ISSUER, now: () => new Date("2026-10-16T12:00:00Z"),
@@ -74,7 +77,7 @@ function world() {
     const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: { host: HOST, ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) }, deps);
     return { status: r.statusCode, body: r.body ? JSON.parse(r.body) : undefined };
   };
-  return { agents, tafs, coach, deps, permit, rpc, tool, send };
+  return { agents, tafs, coach, deps, permit, rpc, tool, send, pushed };
 }
 
 describe("Coach's tools (kiff/tafs#206)", () => {
@@ -195,7 +198,12 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
     const ref = w.agents.notified.get(task.json.run)!.ref;
     Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
+    // The owner has tafs open: told quietly, and the line isn't kept for later (kiff/tafs#210).
+    (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
     await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "ERROR", ref });
+    expect(w.pushed).toEqual([{ token: "a".repeat(64), payload: {
+      aps: { alert: { title: "Refunds", body: "It failed. Open Coach mode to see why." }, "thread-id": "coach", "interruption-level": "passive" }, open: "coach",
+    } }]);
     const before = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana");
     expect(before.body.coach_lines).toEqual([{ at: "2026-10-16T12:00:00.000Z", taf: "Refunds", said: "It failed: Stripe said no." }]);
     await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana");
@@ -204,6 +212,29 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const after = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana");
     expect(after.body.coach_lines).toBeUndefined();
     expect(after.body.messages.at(-1)).toMatchObject({ from: "owner", text: "How did it go?" });
+  });
+
+  it("a run that ends while the owner is away pushes nothing, and its line waits for \"While you were away\" (kiff/tafs#210)", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: "Refunded order 42." });
+    await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref });
+    expect(w.pushed).toEqual([]);
+    const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
+    expect(lines).toEqual([{ at: "2026-10-16T12:00:00.000Z", taf: "Refunds", said: "Refunded order 42.", away: true }]);
+  });
+
+  it("a paused task's run is a hold: KIFF's alert interrupts, so tafs cloud pushes nothing for it", async () => {
+    const w = world();
+    (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, {
+      status: "PAUSED", requirements: [{ call_id: "c1", tool: "stripe_refund", input: {}, operation: "op", expires: "2026-10-16T13:00:00Z" }],
+    });
+    await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "PAUSED", ref });
+    expect(w.pushed).toEqual([]);
   });
 
   it("a message that doesn't start leaves Coach's lines for the next one", async () => {

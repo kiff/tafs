@@ -65,7 +65,7 @@ Version 0.1. A working iPhone app with two modes.
 - Held calls come from KIFF (`/v1/me/card-exceptions`), with amounts in the unit
   KIFF declares. Approve once or refuse them on the phone: each answer is signed
   with KIFF's `kiff.answer.v1` message, and KIFF accepts it only with that
-  signature (kiff/kiff-cloud#1218). Revoke a Card from its taf.
+  signature. Revoke a Card from its taf.
 
 **Sample data**
 - Five sample tafs (the jobs above) and a morning of work, saved on the phone.
@@ -78,7 +78,7 @@ Version 0.1. A working iPhone app with two modes.
 - The first held call counts down as a Live Activity on the lock screen and in
   the Dynamic Island; each new one posts a notification. For now the app finds
   held calls when it is open. Push alerts while it is closed are next: KIFF's
-  side is done (kiff/kiff-cloud#1234), tafs cloud's receiver and Apple push are
+  side is done, tafs cloud's receiver and Apple push are
   not built yet.
 - The Record shows everything, newest first.
 

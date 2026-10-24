@@ -229,7 +229,7 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(model.versionErrors[id]?.contains("changed since it was shown") ?? false)
     }
 
-    /// The Card a version brings reads now → after (kiff-cloud#1287).
+    /// The Card a version brings reads now → after.
     func testAVersionsCardReadsNowAndAfter() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
         StubProtocol.responses["GET /v1/me/agent-drafts/d_02"] = (200, #"{"id":"d_02","agent_id":"rae-k3f9","status":"draft","version":"v7","cards":[{"revises":"m_refund","current":{"grants":[{"action":"create_refund","per_action_max":[{"quantity":"sum(amount)","max":500,"unit":"EUR","scale":2}]}]},"grants":[{"action":"create_refund","per_action_max":[{"quantity":"sum(amount)","max":2000,"unit":"EUR","scale":2}]}]},{"grants":[{"action":"retrieve_charge"}]}]}"#)

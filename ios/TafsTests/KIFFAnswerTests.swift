@@ -1,8 +1,7 @@
 import XCTest
 @testable import Tafs
 
-/// Amounts in the unit KIFF declares, in the shape `/v1/me/card-exceptions` returns
-/// (kiff-cloud apps/api/internal/handlers/mandate_exceptions_units_test.go).
+/// Amounts in the unit KIFF declares, in the shape `/v1/me/card-exceptions` returns.
 @MainActor
 final class KIFFUnitsTests: XCTestCase {
     private func exception(_ extra: String, breach: String = #""quantity":"sum(amount_cents)""#) throws -> KIFFClient.CardException {

@@ -162,7 +162,7 @@ final class UsageTests: XCTestCase {
         let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" })
         XCTAssertNil(model.countedTasks(for: rae.id), "nothing until usage is read")
 
-        // kiff-cloud#1334's contract: by_agent carries its own free, tasks filter by agent, and
+        // KIFF's usage contract: by_agent carries its own free, tasks filter by agent, and
         // each task names its tool as the Record does.
         StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read.replacingOccurrences(
             of: #"{"agent":"taf-refunds-x7k3","counted":9}"#,
@@ -181,7 +181,7 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(UsageView.toolName(.init(record: "tc-2", agent: "rae-k3f9", tool: "refund_order", at: Date())), "Refund order")
     }
 
-    /// The live read, as KIFF answered the eval account on 22 Oct (kiff-cloud#1337 deployed at
+    /// The live read, as KIFF answered the eval account on 22 Oct (deployed at
     /// ebc04927), trimmed to three tafs and one task: it decodes whole, including KIFF's
     /// microsecond times and an empty tool_title.
     func testTheLiveReadDecodes() throws {
