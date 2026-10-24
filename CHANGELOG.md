@@ -50,6 +50,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Tables in a chat are drawn as tables (#211): a header, a line between rows,
+  amounts aligned on the right, and a wide table scrolls sideways. VoiceOver reads
+  each row with its column names. Before, a table showed as text with its pipes.
 - Words show once while an answer streams (#214): when the chat reloads mid-answer
   (a taf read what you wrote meanwhile, or Setup's conversation after a step), the
   words it already recorded no longer show a second time as the live answer.
