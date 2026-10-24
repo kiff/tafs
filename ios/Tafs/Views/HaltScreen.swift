@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import AppIntents
+#endif
 
 /// A halt of one taf or, with none, of every taf: its own screen,
 /// opened from a row. Halting is one tap, no Face ID: it only takes authority away. It reads
@@ -22,6 +25,13 @@ struct HaltScreen: View {
                         .scaledFont(15).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                #if os(iOS)
+                // Siri's own tip, so turning it on isn't a question asked in an emergency
+                // (kiff/tafs#236, item 28).
+                if tafID == nil, h.state == .running {
+                    SiriTipView(intent: HaltAllTafsIntent())
+                }
+                #endif
                 if h.state != .running {
                     Panel {
                         Eyebrow(text: "Who holds the halt")

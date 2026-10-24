@@ -217,6 +217,12 @@ final class DictationTests: XCTestCase {
                        ["es-ES", "fr-CA", "de-DE", "en-GB"])
         XCTAssertEqual(Dictation.Language.ordered(supported: ["fr-FR"], preferred: ["es-CO", "en-US"]).map(\.id), ["fr-FR"])
         XCTAssertEqual(Dictation.Language.ordered(supported: [], preferred: ["es-CO"]), [])
+        // The owner's own: their keyboards first, then the device's languages; only those, so
+        // the switch goes EN, ES, FR, not every language the device has (kiff/tafs#236, item 23).
+        XCTAssertEqual(Dictation.Language.owners(supported: supported, keyboards: ["es-ES", "fr-FR"], preferred: ["en-US"]).map(\.id),
+                       ["es-ES", "fr-FR", "en-US"])
+        XCTAssertEqual(Dictation.Language.owners(supported: ["de-DE"], keyboards: ["es-ES"], preferred: ["en-US"]).map(\.id), ["de-DE"],
+                       "none of theirs on the device: every language it has")
         XCTAssertEqual(Dictation.Language(id: "fr-FR").label, "FR")
         XCTAssertEqual(Dictation.Language(id: "fr-FR").name, "Français")
         XCTAssertEqual(Dictation.Language(id: "es-MX").name, "Español")

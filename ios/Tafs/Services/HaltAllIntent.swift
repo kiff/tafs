@@ -30,13 +30,20 @@ struct HaltAllTafsIntent: AppIntent {
 @available(iOS 17.0, *)
 extension HaltAllTafsIntent: ForegroundContinuableIntent {}
 
-/// Siri's phrases for it. Resume isn't one: it stays in the app, with Face ID.
+/// Siri's phrases for it. Resume isn't one: it stays in the app, with Face ID. Each names
+/// the app, as Siri requires; "Stop" and "Pause" are heard where "halt" often isn't, and
+/// the app answers to other spoken names too ("my agents", Info.plist's
+/// INAlternativeAppNames), in English, Spanish and French (kiff/tafs#236, item 28).
 struct TafsShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: HaltAllTafsIntent(), phrases: [
+            "Stop my \(.applicationName)",
+            "Stop all \(.applicationName)",
+            "Stop \(.applicationName)",
+            "Pause my \(.applicationName)",
+            "Pause \(.applicationName)",
             "Halt my \(.applicationName)",
             "Halt all \(.applicationName)",
-            "Stop my \(.applicationName)",
         ])
     }
 }

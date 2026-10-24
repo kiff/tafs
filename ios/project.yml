@@ -58,6 +58,14 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: bot.tafs.app
             CFBundleURLSchemes: [tafs]
+        # Names Siri hears for the app besides "tafs", which it often mishears, so "Stop my
+        # agents" reaches Halt all (kiff/tafs#236, item 28).
+        INAlternativeAppNames:
+          - INAlternativeAppName: taffs
+          - INAlternativeAppName: agents
+          - INAlternativeAppName: my agents
+          - INAlternativeAppName: mis agentes
+          - INAlternativeAppName: mes agents
     # Push: Xcode's builds use Apple's sandbox, TestFlight and the App Store production.
     entitlements:
       path: Tafs/Tafs.entitlements

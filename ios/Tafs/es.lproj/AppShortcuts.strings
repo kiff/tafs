@@ -1,0 +1,8 @@
+/* Siri's phrases for Halt all, in Spanish (kiff/tafs#236, item 28). */
+"Stop my ${applicationName}" = "Detén mis ${applicationName}";
+"Stop all ${applicationName}" = "Detén todos mis ${applicationName}";
+"Stop ${applicationName}" = "Para ${applicationName}";
+"Pause my ${applicationName}" = "Pausa mis ${applicationName}";
+"Pause ${applicationName}" = "Pausa ${applicationName}";
+"Halt my ${applicationName}" = "Frena mis ${applicationName}";
+"Halt all ${applicationName}" = "Frena todos mis ${applicationName}";
