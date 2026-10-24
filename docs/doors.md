@@ -28,6 +28,11 @@ deployment offers a door; WhatsApp is offered only once it's set up.
   to anyone else is the taf's own action, through KIFF, under its Card, like any
   other tool call.
 - Every reply says it comes from an AI assistant.
+- Anyone on the account who can read the taf's chat can read its doors and knocks,
+  strangers' text included, as with the chat. Only someone who manages Cards turns
+  doors on or off, pairs senders and answers knocks.
+- A message delivered twice starts nothing twice, per sender; a thread goes on in its
+  own sender's chat only.
 
 ## Limits
 

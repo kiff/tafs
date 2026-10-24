@@ -164,7 +164,8 @@ export async function arrive(a: Arrival, ctx: DoorsContext): Promise<Outcome> {
   const sent = Date.parse(a.at);
   if (Number.isFinite(sent) && ctx.now.getTime() - sent > DOOR.staleHours * 3600_000) return "stale";
 
-  const seen = doorKeys.seen(tenant, hash(a.route, a.id));
+  // Once per sender: a message id is the sender's to choose, so someone else's can't spend it.
+  const seen = doorKeys.seen(tenant, hash(a.route, a.from, a.id));
   if (!(await store.create(seen, 1, addDays(ctx.now, DOOR.seenDays)))) return "seen";
   let started = false;
   try {
@@ -196,7 +197,8 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   if (a.attachments) notes.push(`It had ${a.attachments} attachment${a.attachments === 1 ? "" : "s"}; only its text was read.`);
   if (wasCut) notes.push(`It was cut at ${DOOR.maxChars.toLocaleString("en")} characters.`);
   const input = doorMessage(app, a, text, notes);
-  const threadKey = doorKeys.thread(tenant, taf.id, door.id, hash(a.threadKey));
+  // A thread is its sender's: the root is the sender's to write, so another's root never opens their chat.
+  const threadKey = doorKeys.thread(tenant, taf.id, door.id, hash(a.from, a.threadKey));
   const prior = (await store.get(threadKey)) as { session?: string } | undefined;
   const ai = (await store.get(doorKeys.bound(tenant))) as AIBound | undefined;
   const ref = newRef(tenant);

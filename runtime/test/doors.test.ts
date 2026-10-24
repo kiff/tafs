@@ -333,6 +333,29 @@ describe("the email door", () => {
     expect(w.outbox).toHaveLength(1);
   });
 
+  it("a display name holding an address doesn't pass for that sender", async () => {
+    const w = world();
+    await emailDoor(w);
+    // DMARC passed for the domain at the end, which is the sender's, not the owner's.
+    expect((await emailHook(w, mail(w, { from: '"<ana@acme.example>" <x@evil.example>' }))).body.outcome).toBe("knock");
+    const knock = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0];
+    expect(knock.from).toBe("x@evil.example");
+    expect(w.agents.runs).toHaveLength(0);
+  });
+
+  it("another sender's message id or thread is never theirs to spend or join", async () => {
+    const w = world();
+    await emailDoor(w);
+    await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/email/keys`, { token: "ana", body: { id: "maya@acme.example" } });
+    // A stranger sends first with the owner's coming message id: the owner's still runs.
+    await emailHook(w, mail(w, { from: "Bo <bo@else.example>", messageID: "<owner-1@mail.acme.example>" }));
+    expect((await emailHook(w, mail(w, { messageID: "<owner-1@mail.acme.example>" }))).body.outcome).toBe("run");
+    const owners = w.agents.runs[0]!;
+    // Maya reuses the owner's thread root: she gets a chat of her own.
+    expect((await emailHook(w, mail(w, { from: "Maya <maya@acme.example>", messageID: "<maya-1@mail.acme.example>", references: "<owner-1@mail.acme.example>" }))).body.outcome).toBe("run");
+    expect(w.agents.runs[0]!.session).not.toBe(owners.session);
+  });
+
   it("a re-delivered email is ignored", async () => {
     const w = world();
     await emailDoor(w);

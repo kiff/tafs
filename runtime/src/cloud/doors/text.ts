@@ -80,9 +80,15 @@ export function cut(text: string): { text: string; cut: boolean } {
   return { text: out, cut: was };
 }
 
-/** An email address from "Name <a@b>" or "a@b", lowercase; "" when there is none. */
+/**
+ * An email address from "Name <a@b>" or "a@b", lowercase; "" when there is none.
+ * The angle-address is the last <…>: a display name can hold one too
+ * ("<owner@co>" <x@evil>), and the mailbox is the one at the end, whose domain
+ * the sender check checked.
+ */
 export function address(from: string): string {
-  const m = from.match(/<([^<>\s]+@[^<>\s]+)>/) ?? from.match(/([^\s<>"]+@[^\s<>"]+)/);
+  const angles = [...from.matchAll(/<([^<>\s]+@[^<>\s]+)>/g)];
+  const m = angles.at(-1) ?? from.match(/([^\s<>"]+@[^\s<>"]+)/);
   return (m?.[1] ?? "").toLowerCase();
 }
 
