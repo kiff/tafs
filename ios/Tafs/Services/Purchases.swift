@@ -114,6 +114,12 @@ final class Purchases: ObservableObject {
         listening = nil
     }
 
+    /// Shows these products as the App Store's, for the screenshots of the purchase screens:
+    /// a simulator has no App Store to read prices from.
+    func showSample(_ list: [StoreProduct]) {
+        for p in list { products[p.id] = p }
+    }
+
     /// Reads the products' names and prices from the App Store.
     func load(_ ids: [String]) async {
         let missing = ids.filter { products[$0] == nil }

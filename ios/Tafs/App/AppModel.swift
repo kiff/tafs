@@ -704,6 +704,10 @@ final class AppModel: ObservableObject {
         mode = .sample
         await loadSample()
         save()
+        if Screenshots.purchases {
+            // The purchase screens at the App Store's prices (the sample's usage has the store).
+            purchases.showSample(Screenshots.products)
+        }
     }
 
     // MARK: Starting a taf
@@ -1262,7 +1266,9 @@ final class AppModel: ObservableObject {
             period: .init(start: now.addingTimeInterval(-2 * 86_400), end: now.addingTimeInterval(5 * 86_400)),
             tasks: .init(counted: 14, included: 25, packs: 0, left: 11, byAgent: [], free: free),
             actions: .init(counted: 0, included: 500),
-            trial: .init(endsAt: now.addingTimeInterval(5 * 86_400), daysLeft: 5, tasksLeft: 11, actionsLeft: 500))
+            trial: .init(endsAt: now.addingTimeInterval(5 * 86_400), daysLeft: 5, tasksLeft: 11, actionsLeft: 500),
+            // The purchase screens' screenshots, as an admin sees them.
+            canAddTasks: Screenshots.purchases ? true : nil, store: Screenshots.purchases ? Screenshots.store : nil)
     }
 
     func refreshHalt(_ tafID: UUID?) async {
@@ -3567,8 +3573,31 @@ enum Tab: Hashable { case tafs, needsYou, record }
 /// without asking for notifications.
 enum Screenshots {
     static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
-    /// `-screen taf` opens a taf's page; `-screen new` the new-taf flow.
+    /// `-screen taf` opens a taf's page; `-screen new` the new-taf flow; `-screen solo` and
+    /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
+    /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
+    static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
+
+    /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
+    /// purchase screens' screenshots.
+    static let packs: [(id: String, name: String, tasks: Int, price: String)] = [
+        ("pico", "Pico", 12, "€4.99"), ("vonk", "Vonk", 30, "€9.99"), ("rayo", "Rayo", 70, "€19.99"),
+        ("forte", "Forte", 200, "€49.99"), ("maxi", "Maxi", 450, "€99.99"),
+    ]
+    /// Whether this run's screenshot is a purchase screen.
+    static var purchases: Bool { enabled && (screen == "solo" || screen == "add-tasks") }
+    static let soloProduct = "bot.tafs.solo.monthly"
+    static var store: KIFFClient.Usage.Store {
+        let shown = packs.filter { pack == nil || $0.id == pack }
+        return .init(appAccountToken: UUID(), soloProduct: soloProduct, packs: shown.map {
+            .init(id: $0.id, name: $0.name, line: "\($0.name) · \($0.tasks) tasks", tasks: $0.tasks, months: 12, appleProduct: "bot.tafs.pack.\($0.id)")
+        })
+    }
+    static var products: [StoreProduct] {
+        packs.map { StoreProduct(id: "bot.tafs.pack.\($0.id)", displayName: $0.name, displayPrice: $0.price) } +
+            [StoreProduct(id: soloProduct, displayName: "Solo", displayPrice: "€8.99", subscription: .init(period: "month", freeTrial: "1 week"))]
+    }
     static var tab: Tab {
         switch UserDefaults.standard.string(forKey: "tab") {
         case "needs-you": return .needsYou

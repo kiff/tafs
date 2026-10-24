@@ -154,6 +154,12 @@ jobs:
           shoot 5-taf -screenshots YES -tab tafs -screen taf
           shoot 6-new-taf -screenshots YES -tab tafs -screen new
           shoot 7-chat -screenshots YES -tab tafs -screen chat
+          # Each product's purchase screen, for its review screenshot in App Store Connect:
+          # Solo, and the add-tasks screen with one pack at a time.
+          shoot iap-solo -screenshots YES -screen solo
+          for pack in pico vonk rayo forte maxi; do
+            shoot "iap-pack-$pack" -screenshots YES -screen add-tasks -pack "$pack"
+          done
           # The iPad (kiff/tafs#85): the sidebar beside the open taf. The largest iPad,
           # whose portrait width still fits the taf's second column.
           xcrun simctl shutdown "$DEVICE_ID" || true
@@ -323,7 +329,7 @@ jobs:
           TESTERS: ${{ secrets.BETA_TESTERS }}
           BETA_CONTACT: ${{ secrets.BETA_CONTACT }}
           BETA_FEEDBACK_EMAIL: ${{ secrets.BETA_FEEDBACK_EMAIL }}
-        run: ruby ios/scripts/asc-beta.rb
+        run: WHAT_TO_TEST="$(cat ios/WhatToTest.txt)" ruby ios/scripts/asc-beta.rb
 
       - name: Remove the key and the keychain
         if: always()

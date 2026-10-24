@@ -64,6 +64,22 @@ class AscBetaTest < Minitest::Test
     refute_includes out, "example.com", "no email in the log"
   end
 
+  def test_sets_what_to_test_on_the_build
+    asc = FakeASC.new
+    out = run_with(asc, ENV_OK.merge("WHAT_TO_TEST" => "Try the packs.\n"))
+    made = asc.index("post", "/v1/betaBuildLocalizations")
+    refute_nil made
+    assert_equal({ locale: "en-US", whatsNew: "Try the packs." }, asc.calls[made][2][:data][:attributes])
+    assert made < asc.index("post", "/v1/betaAppReviewSubmissions"), "set before review reads it"
+    assert_includes out, "what to test set"
+    # Already there: changed in place.
+    asc = FakeASC.new
+    asc.on("get", "/v1/builds/b7/betaBuildLocalizations", 200, { "data" => [{ "id" => "bl1", "attributes" => { "locale" => "en-US" } }] })
+    run_with(asc, ENV_OK.merge("WHAT_TO_TEST" => "Again."))
+    refute_nil asc.index("patch", "/v1/betaBuildLocalizations/bl1")
+    assert_nil asc.index("post", "/v1/betaBuildLocalizations")
+  end
+
   def test_a_build_already_in_review_is_fine
     asc = FakeASC.new
     asc.on("post", "/v1/betaAppReviewSubmissions", 409, { "errors" => [{ "code" => "ENTITY_ERROR", "detail" => "already submitted" }] })
