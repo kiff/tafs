@@ -193,7 +193,7 @@ export interface Switching {
 }
 
 /**
- * An agent's halt, or its account's, as kiff/agents keeps it (kiff/kiff-cloud#1061): while
+ * An agent's halt, or its account's, as kiff/agents keeps it: while
  * halted nothing of it runs, and nothing from before the halt ever does. `own` and `tenant` say
  * which halt holds. A halt answers how many runs it cancelled.
  */
@@ -474,7 +474,7 @@ export class Agents {
     await this.call("DELETE", tenant, ["agents", agent, "memories", { text: name }]).catch(notFound);
   }
 
-  // Halts (kiff/kiff-cloud#1061). No agent is the account itself.
+  // Halts. No agent is the account itself.
 
   /** Halts the agent, or with none the whole account; its active runs are cancelled. */
   halt(tenant: string, agent?: string): Promise<AgentsHalt> {

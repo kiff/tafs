@@ -1,7 +1,7 @@
 import XCTest
 @testable import Tafs
 
-/// A halt (kiff/kiff-cloud#1061): one tap and no Face ID halts a taf, or all of them, through
+/// A halt: one tap and no Face ID halts a taf, or all of them, through
 /// tafs cloud; it reads Halted only once kiff/agents, KIFF and planque all hold it. Resuming
 /// asks for Face ID, is signed to KIFF first, and lets tafs cloud run it again only after.
 @MainActor

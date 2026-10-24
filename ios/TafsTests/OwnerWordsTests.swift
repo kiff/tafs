@@ -9,7 +9,7 @@ final class OwnerWordsTests: XCTestCase {
     }
 
     /// The owner's iPad test: "create_refund: at most 10000 sum(amount) each" while the chat
-    /// said €100. With the units KIFF now gives (kiff-cloud #1274), the lines say €100.00, and
+    /// said €100. With the units KIFF now gives, the lines say €100.00, and
     /// each action reads by its title, never its name (kiff/tafs#138, items 52, 53).
     func testADraftsLinesSayTheAmountsInTheirUnit() throws {
         let d = try draft(#"""

@@ -648,7 +648,7 @@ async function alerts(event: HTTPEvent, method: string, me: KIFFIdentity, deps: 
 }
 
 /**
- * A halt (kiff/kiff-cloud#1061) of one taf or, with none, of the whole account. POST halts it in
+ * A halt of one taf or, with none, of the whole account. POST halts it in
  * KIFF and in kiff/agents together: one tap, no signature, since it only takes authority away.
  * DELETE resumes kiff/agents only once KIFF says it runs again: the phone resumes it in KIFF
  * itself, signed with Face ID, so nothing here resumes what the owner didn't. GET reads both.
@@ -906,7 +906,7 @@ async function setupOf(me: KIFFIdentity, deps: Deps): Promise<Taf | undefined> {
 /**
  * Starts the account's Setup, the agent that connects tools in the setup
  * chat (kiff/agents#91), once. Its key comes from a draft the phone
- * submitted with no Cards (no_tools, kiff-cloud#1254): tafs cloud claims it
+ * submitted with no Cards (no_tools): tafs cloud claims it
  * itself, so the key never reaches the phone, as for a taf.
  */
 async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {

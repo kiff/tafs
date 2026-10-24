@@ -24,7 +24,7 @@ interface Account {
   revisions?: Record<string, number>;
   /** The restores and redrafts asked of KIFF, in order, as their bodies or draft ids. */
   restored?: unknown[]; redrafted?: string[];
-  /** KIFF's halts (kiff/kiff-cloud#1061), by agent, "" for the account; `status` makes KIFF answer that instead. */
+  /** KIFF's halts, by agent, "" for the account; `status` makes KIFF answer that instead. */
   halts?: Record<string, { state: string; kiff_ack?: boolean; planque_ack?: boolean; halted_at?: string }>; haltStatus?: number;
   /** Whether a halt KIFF takes is acknowledged by its gateway and planque at once. */
   acksAtOnce?: boolean;
@@ -1273,7 +1273,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
   });
 });
 
-// kiff/kiff-cloud#1061: a halt, of one taf or of the whole account.
+// A halt, of one taf or of the whole account.
 describe("halting", () => {
   it("halts a taf in KIFF and kiff/agents in one tap, and reads halted only once all of them hold it", async () => {
     const w = world();

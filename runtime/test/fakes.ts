@@ -273,7 +273,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     async getSchedule(tenant, id) {
       return schedules.get(k(tenant, id));
     },
-    // Halts (kiff/kiff-cloud#1061), as kiff/agents keeps them: by agent, "" for the account.
+    // Halts, as kiff/agents keeps them: by agent, "" for the account.
     async halt(tenant, agent) {
       calls.push(`halt ${agent ?? "all"}`);
       failing("halt");

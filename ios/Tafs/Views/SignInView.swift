@@ -164,7 +164,7 @@ struct AccountView: View {
             }
             Section {
                 // A Card's day ends at midnight here, and every time the owner reads is in it
-                // (kiff/tafs#96, #206 6.11); set from the device as a signed setup call (kiff-cloud #1278).
+                // (kiff/tafs#96, #206 6.11); set from the device as a signed setup call.
                 LabeledContent("Time zone", value: zone)
                 if zone != TimeZone.current.identifier {
                     Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") {

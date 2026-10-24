@@ -214,7 +214,7 @@ struct TafDetailView: View {
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
         ConnectionsPanel(tafID: taf.id)
-        // Halting is a job of its own too (kiff/kiff-cloud#1061): its row opens its screen.
+        // Halting is a job of its own too: its row opens its screen.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked {
             Panel { HaltRow(tafID: taf.id) }
         }
@@ -598,7 +598,7 @@ struct VersionCardSheet: View {
 }
 
 /// A trial as it goes: each call the version made, with what KIFF decided. No call was sent,
-/// reads included (kiff-cloud#1285): a read had no data, and the version went on without it.
+/// reads included: a read had no data, and the version went on without it.
 struct TrialView: View {
     let trial: AppModel.VersionTrial
 

@@ -4,7 +4,8 @@ For AI assistants working on tafs. Read this first.
 
 - tafs is its own product. It uses KIFF the way any customer does: the public API
   (`api.kiff.dev`) and the gateway (`mcp.kiff.dev`). Never a back door into
-  kiff-cloud. If tafs needs something KIFF lacks, open an issue on kiff/kiff-cloud.
+  KIFF. If tafs needs something KIFF lacks, write it down in docs/needs-from-kiff.md
+  or a tafs issue; KIFF's side is tracked privately.
 - The phone never decides. In production KIFF decides every action; `CardCheck`
   only drives the sample mode and explains decisions offline.
 - An approval counts only when KIFF verifies its signature against the device's

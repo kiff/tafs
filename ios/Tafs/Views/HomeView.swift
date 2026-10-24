@@ -60,7 +60,7 @@ struct HomeView: View {
                 }
 
                 if model.mode == .kiff, !model.cloudTafs.isEmpty {
-                    // Every taf at once, from its own screen (kiff/kiff-cloud#1061).
+                    // Every taf at once, from its own screen.
                     Panel { HaltRow(tafID: nil) }
                 }
 
