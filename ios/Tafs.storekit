@@ -1,0 +1,127 @@
+{
+  "identifier": "8C1D2A5E",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "6740000001",
+      "localizations": [
+        {
+          "description": "12 tasks for your tafs. They last 12 months.",
+          "displayName": "Pico · 12 tasks",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "bot.tafs.pack.pico",
+      "referenceName": "Pico",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "9.99",
+      "familyShareable": false,
+      "internalID": "6740000002",
+      "localizations": [
+        {
+          "description": "30 tasks for your tafs. They last 12 months.",
+          "displayName": "Vonk · 30 tasks",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "bot.tafs.pack.vonk",
+      "referenceName": "Vonk",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "19.99",
+      "familyShareable": false,
+      "internalID": "6740000003",
+      "localizations": [
+        {
+          "description": "70 tasks for your tafs. They last 12 months.",
+          "displayName": "Rayo · 70 tasks",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "bot.tafs.pack.rayo",
+      "referenceName": "Rayo",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "49.99",
+      "familyShareable": false,
+      "internalID": "6740000004",
+      "localizations": [
+        {
+          "description": "200 tasks for your tafs. They last 12 months.",
+          "displayName": "Forte · 200 tasks",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "bot.tafs.pack.forte",
+      "referenceName": "Forte",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "99.99",
+      "familyShareable": false,
+      "internalID": "6740000005",
+      "localizations": [
+        {
+          "description": "450 tasks for your tafs. They last 12 months.",
+          "displayName": "Maxi · 450 tasks",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "bot.tafs.pack.maxi",
+      "referenceName": "Maxi",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [
+    {
+      "id": "21500001",
+      "localizations": [],
+      "name": "tafs",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "10.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "6740000100",
+          "introductoryOffer": {
+            "internalID": "6740000101",
+            "numberOfPeriods": 1,
+            "paymentMode": "free",
+            "subscriptionPeriod": "P1W"
+          },
+          "localizations": [
+            {
+              "description": "Tafs and KIFF for one person, with tasks included each month.",
+              "displayName": "Solo",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "bot.tafs.solo.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Solo",
+          "subscriptionGroupID": "21500001",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

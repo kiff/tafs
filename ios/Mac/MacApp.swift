@@ -18,7 +18,7 @@ struct TafsMacApp: App {
                 .preferredColorScheme(.light)
                 .accentColor(Theme.amber)
                 .frame(minWidth: 760, minHeight: 500)
-                .task { await model.restore() }
+                .task { model.purchases.start(); await model.restore() }
         }
         // ⌘, and the sidebar's Settings: the account, sign out, and what tafs is.
         Settings {

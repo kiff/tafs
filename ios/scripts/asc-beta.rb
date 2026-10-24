@@ -10,6 +10,7 @@
 #   TESTERS                                   "email[:First:Last], …" to invite (secret BETA_TESTERS)
 #   BETA_CONTACT                              "First:Last:phone:email", for Beta App Review (secret)
 #   BETA_FEEDBACK_EMAIL                       where testers' feedback goes (secret)
+#   WHAT_TO_TEST                              this build's "What to Test" (ios/WhatToTest.txt)
 # This repository is public: no email or account detail is written here.
 #   ruby asc-beta.rb
 #
@@ -91,6 +92,20 @@ module AscBeta
       wait.(30)
     end
     raise Failure, "build #{number} wasn't processed in 30 minutes" unless build && build.dig("attributes", "processingState") == "VALID"
+
+    # What to test in this build, for testers and Beta App Review.
+    what = env["WHAT_TO_TEST"].to_s.strip
+    unless what.empty?
+      locs = api.("get", "/v1/builds/#{build["id"]}/betaBuildLocalizations")[1]["data"]
+      loc = (locs.is_a?(Array) ? locs : []).find { |l| l.dig("attributes", "locale") == "en-US" }
+      if loc
+        api.("patch", "/v1/betaBuildLocalizations/#{loc["id"]}", { data: { type: "betaBuildLocalizations", id: loc["id"], attributes: { whatsNew: what } } })
+      else
+        api.("post", "/v1/betaBuildLocalizations", { data: { type: "betaBuildLocalizations", attributes: { locale: "en-US", whatsNew: what },
+          relationships: { build: { data: { type: "builds", id: build["id"] } } } } })
+      end
+      out.puts "build #{number}: what to test set"
+    end
 
     api.("post", "/v1/betaGroups/#{group["id"]}/relationships/builds", { data: [{ type: "builds", id: build["id"] }] })
     out.puts "build #{number} added to #{GROUP}"

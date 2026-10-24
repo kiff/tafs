@@ -5,6 +5,8 @@ struct HomeView: View {
     @Binding var tab: Tab
     @State private var showingNew = false
     @State private var showingSettings = false
+    @State private var showingAddTasks = false
+    @State private var showingSolo = false
     @State private var openingFirst = false
 
     var body: some View {
@@ -121,6 +123,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
         .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
+        // The purchase screens, for their screenshots (Screenshots.screen).
+        .sheet(isPresented: $showingAddTasks) { AddTasksView().environmentObject(model) }
+        .sheet(isPresented: $showingSolo) { NavStack { SoloView() }.environmentObject(model) }
         .navigationDestination(isPresented: $openingFirst) {
             if let id = model.tafs.first(where: { $0.name == "Refunds" })?.id ?? model.tafs.first?.id {
                 TafDetailView(tafID: id)
@@ -132,6 +137,8 @@ struct HomeView: View {
             switch Screenshots.screen {
             case "taf", "chat": openingFirst = true
             case "new": showingNew = true
+            case "add-tasks": showingAddTasks = true
+            case "solo": showingSolo = true
             default: break
             }
         }

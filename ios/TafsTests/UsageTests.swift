@@ -1,14 +1,13 @@
 import XCTest
 @testable import Tafs
 
-/// Usage in the app (kiff/tafs#184), against KIFF's usage read as proposed on
-/// kiff/kiff-cloud#1316: both meters, what wasn't counted, the ceiling and the trial. Counts
-/// only, with no purchase and no call to action (App Store Review Guideline 3.1.1).
+/// Usage in the app (kiff/tafs#184), against KIFF's usage read: both meters, the tasks the
+/// period has and what's left, what wasn't counted, and the trial.
 @MainActor
 final class UsageTests: XCTestCase {
     static let read = #"""
     {"plan":"trial","period":{"start":"2026-10-20T09:12:00Z","end":"2026-10-27T09:12:00Z"},
-     "tasks":{"counted":14,"included":25,"ceiling":25,"ceiling_reached":false,
+     "tasks":{"counted":14,"included":25,"packs":0,"left":11,"ceiling":25,"ceiling_reached":false,
               "by_agent":[{"agent":"taf-refunds-x7k3","counted":9},{"agent":"taf-chargebacks-p2q8","counted":5}],
               "free":{"refused":3,"held_refused":1,"halted":0,"failed":2,"invalid":0,"retry":1,"read":120,"trial":4,"setup_read":6}},
      "actions":{"counted":40,"included":500,
@@ -27,17 +26,18 @@ final class UsageTests: XCTestCase {
         let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
         XCTAssertEqual(u.plan, "trial")
         XCTAssertEqual(u.tasks.counted, 14)
-        XCTAssertEqual(u.tasks.ceiling, 25)
+        XCTAssertEqual(u.tasks.total, 25)
+        XCTAssertEqual(u.tasks.left, 11)
         XCTAssertEqual(u.tasks.byAgent?.map(\.agent), ["taf-refunds-x7k3", "taf-chargebacks-p2q8"])
         XCTAssertEqual(u.trial?.tasksLeft, 11)
-        XCTAssertNil(u.actions.ceiling, "paid KIFF actions never stop")
+        XCTAssertNil(u.actions.left, "paid KIFF actions never stop")
         // Only the reasons with a count, in the order they matter.
         XCTAssertEqual(u.tasks.free?.lines.map(\.0), ["Refused by KIFF", "Held, then refused", "Failed at the tool", "Retries", "Reads",
                                                       "Trials of a new version", "Coach and Setup"])
         // A reason KIFF leaves out counted nothing, and a paid plan has no trial.
         let paid = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(#"""
         {"plan":"solo","period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"},
-         "tasks":{"counted":3,"included":20,"ceiling":40,"ceiling_reached":false,"free":{"read":7}},
+         "tasks":{"counted":3,"included":20,"packs":20,"left":37,"free":{"read":7}},
          "actions":{"counted":0,"included":500},"trial":null}
         """#.utf8))
         XCTAssertEqual(paid.tasks.free?.lines.map(\.0), ["Reads"])
@@ -45,25 +45,23 @@ final class UsageTests: XCTestCase {
         XCTAssertNil(paid.actions.free)
     }
 
-    func testItSaysWhereThingsStandWithoutSelling() throws {
+    func testItSaysWhereThingsStand() throws {
         var u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
         XCTAssertEqual(UsageView.notice(u), "Your trial: 5 days and 11 tasks left.")
+        XCTAssertEqual(UsageView.leftLine(u), "11 tasks left")
         u.trial = .init(endsAt: Date(), daysLeft: 0, tasksLeft: 11, actionsLeft: 460)
         XCTAssertEqual(UsageView.notice(u), "Your trial has ended.")
-        u.tasks.ceilingReached = true
-        XCTAssertEqual(UsageView.notice(u), "Your trial's tasks are used. Your tafs are paused.")
+        u.tasks.left = 0
+        XCTAssertEqual(UsageView.notice(u), "Your trial's tasks are used. Your tafs are paused until tasks are added.")
         let paid = KIFFClient.Usage(plan: "solo", period: u.period,
-                                    tasks: .init(counted: 40, included: 20, ceiling: 40, ceilingReached: true),
+                                    tasks: .init(counted: 90, included: 20, packs: 70, left: 0),
                                     actions: u.actions, trial: nil)
-        XCTAssertEqual(UsageView.notice(paid), "This month's ceiling is reached. Your tafs are paused until the month ends or the ceiling is raised.")
-        XCTAssertNil(UsageView.notice(KIFFClient.Usage(plan: "solo", period: u.period, tasks: .init(counted: 3, included: 20, ceiling: 20),
-                                                       actions: u.actions, trial: nil)))
-        // No purchase and no call to action (3.1.1): no price, no "Upgrade", nothing to buy.
-        for text in [UsageView.notice(u), UsageView.notice(paid), UsageView.planName("solo")].compactMap({ $0 }) {
-            for word in ["€", "$", "Upgrade", "upgrade", "buy", "Buy", "price", "subscribe"] {
-                XCTAssertFalse(text.contains(word), "\(text) says \(word)")
-            }
-        }
+        XCTAssertEqual(UsageView.notice(paid), "This period's tasks are used. Your tafs are paused until tasks are added or the next period starts.")
+        XCTAssertEqual(UsageView.count(paid.tasks.counted, of: paid.tasks.total, "tasks"), "90 of 90 tasks")
+        let some = KIFFClient.Usage(plan: "solo", period: u.period, tasks: .init(counted: 30, included: 20, packs: 70, left: 60),
+                                    actions: u.actions, trial: nil)
+        XCTAssertNil(UsageView.notice(some))
+        XCTAssertEqual(UsageView.leftLine(some), "60 tasks left · 20 included, 70 from packs")
     }
 
     /// Coach's and Setup's calls read under either name KIFF gives them, `setup_read` now and
@@ -111,18 +109,19 @@ final class UsageTests: XCTestCase {
         XCTAssertTrue(model.countedTasks.isEmpty)
     }
 
-    /// Our own accounts (internal) and Company have no limit: KIFF sends included 0 and
-    /// ceiling 0, which reads as the count alone, and there's no ceiling to set.
+    /// Our own accounts (internal) and Company have no limit: KIFF sends included 0 and no
+    /// tasks left, which reads as the count alone.
     func testNoLimitReadsAsTheCountAlone() throws {
         let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(#"""
         {"plan":"internal","seats":0,"period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"},
-         "tasks":{"counted":472,"included":0,"ceiling":0,"ceiling_reached":false,"by_agent":[],"free":{}},
+         "tasks":{"counted":472,"included":0,"packs":0,"left":null,"by_agent":[],"free":{}},
          "actions":{"counted":909,"included":0,"free":{}},"trial":null,"ai":{"go_ons":0}}
         """#.utf8))
         XCTAssertEqual(UsageView.count(u.tasks.counted, of: u.tasks.included, "tasks"), "472 tasks")
         XCTAssertEqual(UsageView.count(u.actions.counted, of: u.actions.included, "actions"), "909 actions")
         XCTAssertEqual(UsageView.count(14, of: 25, "tasks"), "14 of 25 tasks")
-        XCTAssertEqual(u.tasks.ceiling, 0, "no ceiling row: there's nothing to set")
+        XCTAssertNil(u.tasks.left, "no limit")
+        XCTAssertNil(UsageView.leftLine(u))
         XCTAssertNil(UsageView.notice(u))
     }
 

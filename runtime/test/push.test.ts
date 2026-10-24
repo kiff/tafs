@@ -9,7 +9,7 @@ import { type Device, type Notification, type PushStore, signedByKIFF } from "..
 const NOW = new Date("2026-10-15T09:00:00Z");
 const T = Math.floor(NOW.getTime() / 1000);
 const SECRET = "whsec_" + "a".repeat(43);
-const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage", "holds.answer"] };
+const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage", "holds.answer", "billing.manage"] };
 const VIEWER = { ...ME, subject: "u_vic", capabilities: ["read"] };
 const TOKEN_A = "a".repeat(64);
 const TOKEN_B = "b".repeat(64);
@@ -127,7 +127,7 @@ function account() {
   const push = memoryPush();
   push.secrets.set("t_acme", [SECRET]);
   push.devices.set("t_acme", [
-    { token: TOKEN_A, environment: "production", subject: "u_ana", answers: true, at: "" },
+    { token: TOKEN_A, environment: "production", subject: "u_ana", answers: true, addsTasks: true, at: "" },
     { token: TOKEN_B, environment: "sandbox", subject: "u_bo", answers: true, at: "" },
     { token: TOKEN_C, environment: "production", subject: "u_vic", answers: false, at: "" },
   ]);
@@ -364,6 +364,44 @@ describe("KIFF's alerts", () => {
     expect((await alert(blocked, push, { apns })).body).toEqual({ ignored: "blocked" });
     expect(apns.sent).toHaveLength(2);
   });
+
+  it("tells only the phones of people who may add tasks of a member's request, once, and never hands it to kiff/agents", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const forward = fakeForward();
+    const slots = memorySlots();
+    const request = JSON.stringify({
+      schema_version: "1", type: "kiff.pack_request", tenant_id: "t_acme", action: "tafs.pack_request", entity_id: "pr_1",
+      entity_type: "pack_request", outcome: "pack_requested", reasons: ["rayo", "open"], decided_at: "2026-10-15T09:00:00Z", event_id: "evt_req",
+    });
+    expect((await alert(request, push, { apns, forward, slots })).body).toEqual({ sent: 1 });
+    expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_A]);
+    expect(apns.sent[0]!.n).toMatchObject({ kind: "alert", payload: { open: "usage", request_id: "pr_1" } });
+    expect(forward.tries).toBe(0);
+    expect((await alert(request, push, { apns, forward, slots })).body).toEqual({ duplicate: true });
+    expect(apns.sent).toHaveLength(1);
+  });
+
+  it("tells only the member who asked when their request is answered, and nobody when it was withdrawn", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const answer = (event: string, request: Record<string, unknown>) => JSON.stringify({
+      schema_version: "1", type: "kiff.pack_request", tenant_id: "t_acme", action: "tafs.pack_request", entity_id: "pr_1",
+      entity_type: "pack_request", outcome: "pack_request_answered", reasons: ["rayo", String(request.status)], decided_at: "2026-10-15T09:00:00Z",
+      event_id: event, request: { id: "pr_1", pack: "rayo", asked_by: "u_bo", ...request },
+    });
+    expect((await alert(answer("evt_ok", { status: "approved" }), push, { apns })).body).toEqual({ sent: 1 });
+    expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_B]);
+    expect(apns.sent[0]!.n).toMatchObject({ kind: "alert", payload: { aps: { alert: { body: "Your admin added Rayo." } }, open: "usage", request_id: "pr_1" } });
+    expect((await alert(answer("evt_no", { status: "declined", note: "  Next\nmonth " }), push, { apns })).body).toEqual({ sent: 1 });
+    expect(apns.sent[1]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined: Next month" } } } });
+    expect((await alert(answer("evt_bare", { status: "declined" }), push, { apns })).body).toEqual({ sent: 1 });
+    expect(apns.sent[2]!.n).toMatchObject({ payload: { aps: { alert: { body: "Your admin declined your request for more tasks." } } } });
+    expect((await alert(answer("evt_gone", { status: "withdrawn" }), push, { apns })).body).toEqual({ ignored: "pack_request_answered: withdrawn" });
+    expect(apns.sent).toHaveLength(3);
+    // An answer that doesn't say who asked tells nobody.
+    expect((await alert(answer("evt_who", { status: "approved", asked_by: "" }), push, { apns })).status).toBe(400);
+  });
 });
 
 describe("KIFF's alert target without a phone (kiff/tafs#206)", () => {
@@ -400,6 +438,8 @@ describe("a phone signing up for alerts", () => {
     expect(accounts.size).toBe(0);
     expect((await register("viewer", { device_token: TOKEN_B, environment: "production" }, push)).body).toEqual({ device: true, answers: false, alerts: false });
     expect((await register("ana", { device_token: TOKEN_A.toUpperCase(), environment: "sandbox", alert_target: target }, push)).body).toEqual({ device: true, answers: true, alerts: true });
+    // Someone who may add tasks hears of members' requests; a viewer doesn't.
+    expect(push.devices.get("t_acme")!.map((d) => d.addsTasks)).toEqual([false, true]);
     expect(push.secrets.get("t_acme")).toEqual([SECRET]);
     // kiff/agents checks the same alerts with the same secret, under the account's tenant.
     expect(accounts.get("t_acme")).toEqual({ tenant: "t_acme", secret: SECRET });

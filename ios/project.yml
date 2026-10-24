@@ -166,6 +166,10 @@ schemes:
       targets:
         Tafs: all
         TafsTests: [test]
+    # Run from Xcode, the App Store's products are this file's: Solo and the five packs,
+    # with the same product ids as App Store Connect.
+    run:
+      storeKitConfiguration: Tafs.storekit
     test:
       targets: [TafsTests]
   TafsMac:

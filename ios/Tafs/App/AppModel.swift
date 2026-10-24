@@ -37,12 +37,16 @@ final class AppModel: ObservableObject {
     @Published private(set) var kiffAccount: KIFFClient.Account?
     /// Why the account's time zone didn't change, when it didn't.
     @Published private(set) var timeZoneError: String?
-    /// The account's usage this billing period (kiff-cloud#1316), once read.
+    /// The account's usage this billing period, once read.
     @Published private(set) var usage: KIFFClient.Usage?
     /// The period's counted tasks, newest first: the first page.
     @Published private(set) var countedTasks: [KIFFClient.CountedTask] = []
-    /// Why usage couldn't be read, or the ceiling didn't change.
+    /// Why usage couldn't be read.
     @Published private(set) var usageError: String?
+    /// Buying Solo and task packs through the App Store.
+    let purchases: Purchases
+    /// What happened to the last purchase, request or answer, when there's something to say.
+    @Published private(set) var tasksMessage: String?
     /// Each taf's counted tasks this period, newest first: the first page (kiff-cloud#1334).
     @Published private(set) var tafTasks: [UUID: [KIFFClient.CountedTask]] = [:]
     /// The period's AI use from chats and Setup (kiff/tafs#193), from tafs cloud; nil until read.
@@ -139,7 +143,9 @@ final class AppModel: ObservableObject {
          vendorSignIn: VendorSigningIn = VendorSignIn(),
          store: SampleStore? = nil,
          remembered: UserDefaults? = nil,
+         purchases: Purchases? = nil,
          clock: @escaping () -> Date = Date.init) {
+        self.purchases = purchases ?? Purchases()
         self.ownerName = ownerName
         self.signer = signer
         self.kiff = kiff
@@ -149,6 +155,12 @@ final class AppModel: ObservableObject {
         self.store = store
         self.remembered = remembered
         self.clock = clock
+        // Each purchase goes to KIFF for this account before the App Store is told it's done.
+        self.purchases.record = { [weak self] signed, requestID in
+            guard let self, self.mode == .kiff else { throw KIFFClient.KIFFError.unauthorized }
+            try await self.kiff.recordPurchase(signedTransaction: signed, requestID: requestID)
+        }
+        self.purchases.recorded = { [weak self] in await self?.refreshUsage() }
         // The device's id, read when a signature needs it and it isn't known (kiff/planque#12).
         self.planque.deviceLoader = { [weak self] in
             guard let self, self.mode == .kiff, self.sessionHasKey else { return nil }
@@ -177,6 +189,8 @@ final class AppModel: ObservableObject {
         mode = .kiff
         await refresh()
         await syncPush()
+        // A purchase KIFF didn't record before the app closed goes now.
+        await purchases.sendUnfinished()
     }
 
     // MARK: Reading
@@ -293,7 +307,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         planque.deviceID = nil
         accountGeneration += 1
         tafs = []; otherAgents = []; held = []; record = []; decided = [:]
@@ -306,6 +320,7 @@ final class AppModel: ObservableObject {
         await Task { [self] in
             await refresh()
             await syncPush()
+            await purchases.sendUnfinished()
         }.value
     }
 
@@ -330,7 +345,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupQueued = nil; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
         accountGeneration += 1
@@ -355,9 +370,17 @@ final class AppModel: ObservableObject {
     /// split view selects it and clears this.
     @Published var requestedTaf: UUID?
 
+    /// Usage, asked for by a tapped alert (a member's request for tasks, kiff/tafs#215): the
+    /// root view shows it on its own screen and clears this.
+    @Published var usageRequested = false
+
     /// Opens where a tapped alert points.
     func open(_ destination: String) {
-        if destination == "needs-you" { requestedTab = .needsYou }
+        switch destination {
+        case "needs-you": requestedTab = .needsYou
+        case "usage": usageRequested = true
+        default: break
+        }
     }
 
     static let alertHandoffAccount = "kiff.alert-handoff"
@@ -681,6 +704,12 @@ final class AppModel: ObservableObject {
         mode = .sample
         await loadSample()
         save()
+        if Screenshots.purchases {
+            // The purchase screens at the App Store's prices: the sample's usage, which has the
+            // store, is otherwise read only when Usage opens.
+            purchases.showSample(Screenshots.products)
+            await refreshUsage()
+        }
     }
 
     // MARK: Starting a taf
@@ -1089,11 +1118,108 @@ final class AppModel: ObservableObject {
                 let ai = try? await cloud.aiUse()
                 guard gen == accountGeneration else { return }
                 usage = read; countedTasks = page?.tasks ?? []; usageError = nil; aiUse = ai
+                if let store = read.store { await purchases.load([store.soloProduct] + store.packs.map(\.appleProduct)) }
             } catch {
                 guard gen == accountGeneration else { return }
                 usageError = "Usage couldn't be read: \(error.localizedDescription)"
             }
         }
+    }
+
+    // MARK: Tasks and plans
+
+    /// Buys Solo through the App Store, for this account.
+    func subscribeSolo() async {
+        guard let store = usage?.store else { return }
+        await buy(store.soloProduct, request: nil)
+    }
+
+    /// Buys a pack through the App Store; with a member's request, it answers it.
+    func buyPack(_ pack: KIFFClient.Usage.Store.Pack, answering request: KIFFClient.PackRequest? = nil) async {
+        await buy(pack.appleProduct, request: request)
+    }
+
+    private func buy(_ product: String, request: KIFFClient.PackRequest?) async {
+        tasksMessage = nil
+        guard mode == .kiff, let token = usage?.store?.appAccountToken else {
+            tasksMessage = "Only the account's admin adds tasks."
+            return
+        }
+        switch await purchases.buy(product, accountToken: token, requestID: request?.id) {
+        case .done: tasksMessage = nil
+        case .cancelled: break
+        case .pending: tasksMessage = "The purchase is waiting for approval. Your tasks are added once it's done."
+        case .notRecorded: tasksMessage = "Bought. KIFF hasn't added it yet: tafs tries again when it opens."
+        case .notAdded(let why), .needsSupport(let why): tasksMessage = why
+        case .failed(let why): tasksMessage = "The purchase didn't go through: \(why)"
+        }
+    }
+
+    /// Brings back this Apple account's purchases, and sends each to KIFF.
+    func restorePurchases() async {
+        tasksMessage = nil
+        guard mode == .kiff else { return }
+        switch await purchases.restore() {
+        case .done: tasksMessage = "Purchases restored."
+        case .notRecorded: tasksMessage = "Restored. KIFF hasn't added everything yet: tafs tries again when it opens."
+        case .notAdded(let why), .needsSupport(let why): tasksMessage = why
+        case .failed(let why): tasksMessage = "Purchases couldn't be restored: \(why)"
+        default: break
+        }
+        await refreshUsage()
+    }
+
+    /// Asks the account's admins for a pack.
+    func askForPack(_ pack: KIFFClient.Usage.Store.Pack, reason: String) async -> Bool {
+        tasksMessage = nil
+        guard mode == .kiff else { return false }
+        do {
+            _ = try await kiff.askForPack(pack.id, reason: reason.trimmingCharacters(in: .whitespacesAndNewlines))
+            await refreshUsage()
+            return true
+        } catch {
+            tasksMessage = "The request didn't go: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    /// Takes back this person's request.
+    func withdrawRequest(_ request: KIFFClient.PackRequest) async {
+        tasksMessage = nil
+        guard mode == .kiff else { return }
+        do {
+            _ = try await kiff.withdrawRequest(request.id)
+        } catch {
+            tasksMessage = "The request wasn't withdrawn: \(error.localizedDescription)"
+        }
+        await refreshUsage()
+    }
+
+    /// Declines a member's request, with a note: the admin's answer, behind Face ID.
+    func declineRequest(_ request: KIFFClient.PackRequest, note: String) async -> Bool {
+        tasksMessage = nil
+        guard mode == .kiff, let tenant = kiffTenant else { return false }
+        guard sessionHasKey else {
+            tasksMessage = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            return false
+        }
+        let gen = accountGeneration
+        do { _ = try await signer.sign(Data("tafs.decline-request.v1|\(tenant)|\(request.id)".utf8), reason: "Decline the request") } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            _ = try await kiff.declineRequest(request.id, note: note.trimmingCharacters(in: .whitespacesAndNewlines))
+        } catch {
+            guard gen == accountGeneration else { return false }
+            tasksMessage = "The request wasn't declined: \(error.localizedDescription)"
+            await refreshUsage()
+            return false
+        }
+        await refreshUsage()
+        return true
     }
 
     /// The KIFF agent a taf acts as: what KIFF's usage counts it by.
@@ -1140,9 +1266,11 @@ final class AppModel: ObservableObject {
         return KIFFClient.Usage(
             plan: "trial",
             period: .init(start: now.addingTimeInterval(-2 * 86_400), end: now.addingTimeInterval(5 * 86_400)),
-            tasks: .init(counted: 14, included: 25, ceiling: 25, ceilingReached: false, byAgent: [], free: free),
+            tasks: .init(counted: 14, included: 25, packs: 0, left: 11, byAgent: [], free: free),
             actions: .init(counted: 0, included: 500),
-            trial: .init(endsAt: now.addingTimeInterval(5 * 86_400), daysLeft: 5, tasksLeft: 11, actionsLeft: 500))
+            trial: .init(endsAt: now.addingTimeInterval(5 * 86_400), daysLeft: 5, tasksLeft: 11, actionsLeft: 500),
+            // The purchase screens' screenshots, as an admin sees them.
+            canAddTasks: Screenshots.purchases ? true : nil, store: Screenshots.purchases ? Screenshots.store : nil)
     }
 
     func refreshHalt(_ tafID: UUID?) async {
@@ -3448,8 +3576,31 @@ enum Tab: Hashable { case tafs, needsYou, record }
 /// without asking for notifications.
 enum Screenshots {
     static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
-    /// `-screen taf` opens a taf's page; `-screen new` the new-taf flow.
+    /// `-screen taf` opens a taf's page; `-screen new` the new-taf flow; `-screen solo` and
+    /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
+    /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
+    static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
+
+    /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
+    /// purchase screens' screenshots.
+    static let packs: [(id: String, name: String, tasks: Int, price: String)] = [
+        ("pico", "Pico", 12, "€4.99"), ("vonk", "Vonk", 30, "€9.99"), ("rayo", "Rayo", 70, "€19.99"),
+        ("forte", "Forte", 200, "€49.99"), ("maxi", "Maxi", 450, "€99.99"),
+    ]
+    /// Whether this run's screenshot is a purchase screen.
+    static var purchases: Bool { enabled && (screen == "solo" || screen == "add-tasks") }
+    static let soloProduct = "bot.tafs.solo.monthly"
+    static var store: KIFFClient.Usage.Store {
+        let shown = packs.filter { pack == nil || $0.id == pack }
+        return .init(appAccountToken: UUID(), soloProduct: soloProduct, packs: shown.map {
+            .init(id: $0.id, name: $0.name, line: "\($0.name) · \($0.tasks) tasks", tasks: $0.tasks, months: 12, appleProduct: "bot.tafs.pack.\($0.id)")
+        })
+    }
+    static var products: [StoreProduct] {
+        packs.map { StoreProduct(id: "bot.tafs.pack.\($0.id)", displayName: $0.name, displayPrice: $0.price) } +
+            [StoreProduct(id: soloProduct, displayName: "Solo", displayPrice: "€10.99", subscription: .init(period: "month", freeTrial: "1 week"))]
+    }
     static var tab: Tab {
         switch UserDefaults.standard.string(forKey: "tab") {
         case "needs-you": return .needsYou

@@ -4,7 +4,7 @@ import { aiFor, type AIView, base, periodName, planOf, refusedForAI, view as aiV
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Run, type RunStreamEvent, type Schedule, type Session, type VersionState } from "./agents.js";
 import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
-import { alertTarget, MAX_DEVICES, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, MAX_DEVICES, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
@@ -476,7 +476,7 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const signature = header(event, "kiff-signature");
   const raw = rawBody(event);
   const now = deps.now?.() ?? new Date();
-  let parsed: { tenant_id?: unknown; event_id?: unknown };
+  let parsed: { tenant_id?: unknown; event_id?: unknown; outcome?: unknown };
   try { parsed = JSON.parse(raw) as typeof parsed; } catch { throw new HTTPError(400, "send KIFF's alert as JSON"); }
   const tenant = str(parsed.tenant_id);
   const { secrets } = tenant ? await deps.push.get(tenant) : { secrets: [] as string[] };
@@ -487,6 +487,18 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (!signer) throw new HTTPError(401, "not signed by KIFF");
 
   let handedOn = true;
+  // A member's request for more tasks is the phones' alone: no run waits on it.
+  if (str(parsed.outcome) === PACK_REQUESTED) {
+    return receiveAlert(signature, raw, {
+      push: deps.push,
+      apns: deps.apns,
+      claim: (key, until) => deps.slots.claim(key, until),
+      held: (key) => deps.slots.held(key),
+      keep: (key, until) => deps.slots.keep(key, until),
+      release: (key) => deps.slots.release(key),
+      now,
+    });
+  }
   try {
     await deps.accounts.put(tenant, tenant, signer);
     const ready = await deps.forward(signature, raw);
@@ -569,6 +581,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
   if (method === "POST" && parts.length === 2) {
     const r = registration(parseBody(event));
     const answers = me.capabilities.includes("holds.answer");
+    const addsTasks = me.capabilities.includes("billing.manage");
     if (r.target && !answers) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     const at = (deps.now?.() ?? new Date()).toISOString();
     const { devices, secrets } = await deps.push.get(me.tenantID);
@@ -580,7 +593,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     // handed over now or, for a phone that registered before, the one kept.
     const newest = r.target?.secret ?? secrets[0];
     if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
-    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, at });
+    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, addsTasks, at });
     return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0 };
   }
   if (method === "DELETE" && parts.length === 3) {

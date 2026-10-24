@@ -18,6 +18,23 @@ version headings refer to releases, not merely to merged pull requests.
   your plan's monthly price in AI use each period. Past it, your tafs ask before
   going on, and again at each further full bound; AI use is never billed. tafs
   cloud sends the bound with each chat and gains `GET /v1/usage/ai`.
+- Task packs: when your tafs' tasks run out, add a pack (Pico, Vonk, Rayo, Forte
+  or Maxi) in the app. A pack's tasks last 12 months; your plan's tasks are used
+  first each period, then packs, oldest first. Usage shows the tasks the period
+  has, what's used and what's left, the packs you hold, and one line on who bills
+  your plan, with Manage when Apple does.
+- Solo in the app, through the App Store: a monthly subscription that starts
+  with a free week, for an account with no plan billed elsewhere. Every offer
+  shows its terms. Restore purchases brings back what this Apple account bought.
+- Ask an admin: someone who can't add tasks asks for a pack, with a reason, and
+  sees it waiting until an admin approves (buys the pack) or declines it with a
+  note; they can withdraw it. tafs cloud tells the phones of people who may add
+  tasks, and only theirs.
+
+### Removed
+
+- The monthly ceiling row on Usage: tasks past what the plan includes come from
+  packs.
 
 ### Changed
 

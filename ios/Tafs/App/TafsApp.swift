@@ -27,6 +27,8 @@ struct TafsApp: App {
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
                     push.onOpen = { [weak model] destination in model?.open(destination) }
+                    // From launch: renewals, refunds and purchases made elsewhere reach KIFF.
+                    model.purchases.start()
                     await model.restore()
                     PushDelegate.registerIfAllowed()
                 }
@@ -116,6 +118,14 @@ struct RootView: View {
         }
         .onOpenURL { url in
             if url.host == "needs-you" { tab = .needsYou }
+        }
+        // A tapped request for tasks: Usage, where it's answered, on its own screen (kiff/tafs#215).
+        .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {
+            NavigationStack {
+                UsageView()
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.usageRequested = false } } }
+            }
+            .environmentObject(model)
         }
         .onChange(of: model.requestedTab) { requested in showRequestedTab(requested) }
         .onAppear { showRequestedTab(model.requestedTab) }
