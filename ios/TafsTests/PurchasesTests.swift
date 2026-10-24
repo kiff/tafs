@@ -234,6 +234,44 @@ final class PurchasesTests: XCTestCase {
         XCTAssertEqual(model.tasksMessage, "Test purchases don't add tasks to this account.")
     }
 
+    /// Another tafs account's purchase on this Apple ID: finished here, nothing added, and
+    /// said so, never "tries again".
+    func testAnotherAccountsPurchaseIsFinished() async throws {
+        let log = StoreLog()
+        let (model, store, _) = await signedIn(log)
+        StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (403,
+            #"{"error":"not_this_account","message":"This purchase belongs to another account."}"#)
+        store.bought = store.purchaseNamed(9)
+        await model.buyPack(try XCTUnwrap(model.usage?.store?.packs.first))
+        XCTAssertEqual(log.lines, ["finish 9"])
+        XCTAssertEqual(model.tasksMessage, Purchases.anotherAccount)
+    }
+
+    /// A plan billed elsewhere: paid, but KIFF can't add it. Kept unfinished for support,
+    /// and the person is told to contact support, never "tries again".
+    func testAPurchaseBilledElsewhereGoesToSupport() async throws {
+        let log = StoreLog()
+        let (model, store, _) = await signedIn(log)
+        StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (409,
+            #"{"error":"billed_elsewhere","message":"This account's plan is billed elsewhere."}"#)
+        store.bought = store.purchaseNamed(10)
+        await model.buyPack(try XCTUnwrap(model.usage?.store?.packs.first))
+        XCTAssertEqual(log.lines, [])
+        XCTAssertEqual(model.tasksMessage, Purchases.contactSupport)
+        XCTAssertFalse(model.tasksMessage?.contains("tries again") ?? true)
+    }
+
+    /// A product KIFF doesn't sell: paid, kept unfinished for support, and said so.
+    func testAnUnknownProductGoesToSupport() async throws {
+        let log = StoreLog()
+        let (model, store, _) = await signedIn(log)
+        StubProtocol.responses["POST /v1/me/billing/apple/transactions"] = (422, #"{"error":"unknown_product"}"#)
+        store.bought = store.purchaseNamed(11)
+        await model.buyPack(try XCTUnwrap(model.usage?.store?.packs.first))
+        XCTAssertEqual(log.lines, [])
+        XCTAssertEqual(model.tasksMessage, Purchases.contactSupport)
+    }
+
     /// Declining is the admin's answer, signed behind Face ID; asking and withdrawing are a
     /// member's, unsigned.
     func testDecliningIsSignedAndAskingIsNot() async throws {

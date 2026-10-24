@@ -46,6 +46,9 @@ enum PurchaseOutcome: Equatable {
     /// KIFF refused it for good, such as a test purchase on a real account: finished,
     /// with nothing added. The text is what the person reads.
     case notAdded(String)
+    /// KIFF can't add it, and a retry won't change that, though the person paid: kept
+    /// unfinished for support to sort out. The text is what the person reads.
+    case needsSupport(String)
     /// The App Store couldn't sell it.
     case failed(String)
 }
@@ -137,7 +140,10 @@ final class Purchases: ObservableObject {
             var outcome = PurchaseOutcome.done
             for p in try await front.restore() {
                 switch await deliver(p, requestID: nil) {
-                case .notRecorded(let why): outcome = .notRecorded(why)
+                case .needsSupport(let why): outcome = .needsSupport(why)
+                case .notRecorded(let why):
+                    if case .needsSupport = outcome { break }
+                    outcome = .notRecorded(why)
                 case .notAdded(let why) where outcome == .done: outcome = .notAdded(why)
                 default: break
                 }
@@ -158,6 +164,15 @@ final class Purchases: ObservableObject {
             // ones: KIFF adds nothing, now or on a retry, so it's finished.
             await p.finish()
             return .notAdded(Self.testPurchase)
+        } catch KIFFClient.KIFFError.server(403, "not_this_account", _) {
+            // Another tafs account's purchase on this Apple ID: that account gets it from the
+            // App Store's own notice, so this phone finishes it.
+            await p.finish()
+            return .notAdded(Self.anotherAccount)
+        } catch KIFFClient.KIFFError.server(let status, let code, _)
+                    where (status == 409 && code == "billed_elsewhere") || (status == 422 && code == "unknown_product") {
+            // Paid for, but KIFF can't add it, and a retry won't change that: kept for support.
+            return .needsSupport(Self.contactSupport)
         } catch {
             return .notRecorded(error.localizedDescription)
         }
@@ -168,6 +183,10 @@ final class Purchases: ObservableObject {
 
     /// What the person reads when KIFF refused a test purchase.
     static let testPurchase = "Test purchases don't add tasks to this account."
+    /// What the person reads when the purchase is another tafs account's.
+    static let anotherAccount = "This purchase belongs to another tafs account on this Apple ID, so nothing was added here."
+    /// What the person reads when KIFF can't add what they paid for.
+    static let contactSupport = "KIFF can't add this purchase to this account. You paid for it, so contact support at hello@kiff.dev and we'll sort it out."
 
     /// Opens the App Store's page for this Apple account's subscriptions.
     static func manageSubscriptions() async {
