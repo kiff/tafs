@@ -569,13 +569,32 @@ describe("the home list", () => {
       aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d", unit: "EUR", scale: 2 }, { quantity: "sum(amount)", limit: 900000, window: "30d", unit: "EUR", scale: 2 }],
       limits: [
         { quantity: "sum(amount)", window: "30d", limit: 900000, used: 400000, status: "ok", unit: "EUR", scale: 2 },
-        { quantity: "sum(amount)", window: "1d", limit: 60000, used: 21200, status: "ok", unit: "EUR", scale: 2 },
+        { quantity: "sum(amount)", window: "1d", limit: 60000, used: 21200, status: "ok", unit: "EUR", scale: 2,
+          base_limit: 50000, extra_room: 10000, room_window_end: "2026-10-25T23:00:00Z" },
       ],
     }, { ...demoCard, id: "card_old_api", subject: "rae", grants: [{ action: "pay_invoice" }], aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d" }] }];
     const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
     expect(card.rules[0]).toMatchObject({ window: "day", per_window: { minor: 60000, unit: "EUR", scale: 2 }, count_per_window: null });
+    // The extra room as KIFF says it, apart from the Card's own 500.00, with when it ends (the 755 retest).
+    expect(card.rules[0]).toMatchObject({ extra_room: { minor: 10000, unit: "EUR", scale: 2 }, base_limit: { minor: 50000, unit: "EUR", scale: 2 }, room_window_end: "2026-10-25T23:00:00Z" });
+    expect(card.cards[0].total).toMatchObject({ limit: { minor: 60000, unit: "EUR", scale: 2 }, extra_room: { minor: 10000, unit: "EUR", scale: 2 },
+      base_limit: { minor: 50000, unit: "EUR", scale: 2 }, room_window_end: "2026-10-25T23:00:00Z" });
+    expect(card.cards[1].total.extra_room).toBeUndefined();
     expect(card.used).toEqual({ stripe_refund: { minor: 21200, unit: "EUR", scale: 2 } });
     expect(card.usage_unknown).toEqual(["pay_invoice"]);
+  });
+
+  it("never works out extra room: a ceiling over the Card's limit with no extra_room from KIFF is none", async () => {
+    const w = world();
+    w.account.mandates = [{
+      ...raeCard,
+      aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d", unit: "EUR", scale: 2 }],
+      limits: [{ quantity: "sum(amount)", window: "1d", limit: 60000, used: 21200, status: "ok", unit: "EUR", scale: 2 }],
+    }];
+    const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
+    expect(card.rules[0].extra_room).toBeUndefined();
+    expect(card.rules[0].base_limit).toBeUndefined();
+    expect(card.cards[0].total.extra_room).toBeUndefined();
   });
 
   it("fails rather than list tafs without their Cards, and a sign-in KIFF refuses is a 401", async () => {

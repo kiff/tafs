@@ -50,6 +50,36 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- From the device retest of build 755, on an iPad and an iPhone:
+  - The tafs list puts the taf waiting on you first, then the one used most
+    recently.
+  - Alerts are offered once, right after signing in, with a short screen that
+    says why, so the first held call reaches you. Needs you still offers them.
+  - A sent message moves to the top as soon as you send it, not once the answer
+    has rendered. A chat opens at its latest message.
+  - An answered hold sits where you answered it: after the taf's "waiting for
+    your approval", before what it did next.
+  - Stop takes effect at once in the app, and leaves no "Stopped" line.
+  - A "Not sent" kept because you wrote too many messages too fast goes once a
+    later message goes through.
+  - The Card shows its own total and the extra room apart, as KIFF says them
+    ("300 US$ a day · +30 US$ extra room until 00:00"), not one sum. tafs
+    cloud's home list may carry KIFF's `extra_room`, `base_limit` and
+    `room_window_end` on a rule and on a Card's total.
+  - A hold's receipt reads "held for you by the Card" while it waits, not
+    "allowed by the Card".
+  - Usage on the Card updates as the taf works, not only once Usage is opened.
+  - Needs you reads again when a hold's alert comes in before KIFF lists it.
+  - Ending a trial goes back to the taf with a cross-fade, and "This taf is
+    gone" no longer flashes. Starting a trial beside the sidebar selects it there.
+  - Usage, Versions and Halt open wherever their panel is tapped.
+  - Forget asks first, and says it can't be undone.
+  - Do it on a knock says why it wasn't sent in its own sheet.
+  - The ring of a taf with an open door runs along the avatar's edge.
+  - Coach makes the new version a card hands over, even when the card has the
+    same id as one from an earlier conversation. Before, it showed the earlier
+    version and made none.
+  - Coach says when extra room ends: when that total resets.
 - Coach knows holds, tasks and packs, and halting (#218): why a call is held or
   refused and what the owner can do about it, what counts as a task and what
   happens when tasks run out, and what a halt stops. It no longer says a refused

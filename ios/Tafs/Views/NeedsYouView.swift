@@ -272,3 +272,37 @@ struct AlertsCard: View {
         }
     }
 }
+
+/// Alerts offered up front, right after signing in (the 755 retest): why, in a few words,
+/// then iOS's own question. Not now keeps tafs usable; Needs you offers it again.
+struct AlertsOfferSheet: View {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Image(systemName: "bell.badge").scaledFont(40, weight: .semibold).foregroundColor(Theme.amber)
+                .accessibilityHidden(true)
+            Text("Know the moment a taf needs you").scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
+            Text("When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this \(ThisDevice.kind) and its lock screen, even with tafs closed.")
+                .scaledFont(16).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            Text("iOS asks next. Confirming with \(Biometry.name) sets them up for your account.")
+                .scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
+            if let error = model.lastError, !model.turningOnAlerts {
+                Text(error).scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
+                Task { if await model.turnOnAlerts() { model.answerAlertsOffer() } }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(model.turningOnAlerts)
+            Button("Not now") { model.answerAlertsOffer() }
+                .scaledFont(15).foregroundColor(Theme.soft)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .disabled(model.turningOnAlerts)
+        }
+        .padding(24)
+        .background(Theme.background.ignoresSafeArea())
+        .interactiveDismissDisabled(model.turningOnAlerts)
+    }
+}

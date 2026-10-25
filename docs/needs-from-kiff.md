@@ -58,3 +58,13 @@ So a Card shows "$212.00 of $2,000.00 today" without a statement call per Card.
 
 Covered by the draft claim in item 3. `POST /v1/tafs` still takes an
 `agent_key` for a taf started by hand.
+
+## 6. A held call's result names the limit it went over — open
+
+Tracked on KIFF's side, privately. When the gateway holds a call, the text the
+taf reads says only that the call is outside its Card. The taf then tells the
+owner it can't say which limit was hit, while the app shows "40 US$ would go
+over the 250 US$ total" for the same hold (the 755 device retest). The held
+result's text, or its `dev.kiff/call` meta, should name the limit in the same
+words the owner sees: one call's limit, or a total kept across calls with what's
+left of it.

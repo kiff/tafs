@@ -1073,14 +1073,14 @@ struct SetupComponentView: View {
             if let note = c.taf?.note, !note.isEmpty {
                 Text(note).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
-            if let n = model.improvedVersions[c.id], let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent) {
+            if let n = model.improvedVersions[model.improvementKey(c)], let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent) {
                 NavigationLink {
                     VersionsScreen(tafID: tafID)
                 } label: {
                     Text("See version \(n)").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PrimaryButtonStyle())
-            } else if let error = model.improveErrors[c.id] {
+            } else if let error = model.improveErrors[model.improvementKey(c)] {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                 Button("Try again") { Task { await model.makeImprovedVersion(c) } }
                     .buttonStyle(OutlineButtonStyle())

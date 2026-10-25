@@ -9,6 +9,8 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
     var onToken: (@MainActor (Data) -> Void)?
     /// A held call changed elsewhere: reload what needs the owner.
     var onHeldChanged: (@MainActor () async -> Void)?
+    /// A hold's alert showed with tafs open: reload until Needs you has that hold.
+    var onHoldAlert: (@MainActor (String) async -> Void)?
     /// Opens a screen ("needs-you"). A tap that launched the app waits here until it is set.
     var onOpen: (@MainActor (String) -> Void)? {
         didSet { if let onOpen, let waiting = pendingOpen { pendingOpen = nil; onOpen(waiting) } }
@@ -72,7 +74,12 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
         let content = notification.request.content
         completionHandler(content.categoryIdentifier == AlertAnswers.haltCategory || content.interruptionLevel == .passive
                           ? [.list] : [.banner, .list, .sound])
-        Task { @MainActor in await self.onHeldChanged?() }
+        let hold = content.userInfo["hold_id"] as? String
+        Task { @MainActor in
+            // The alert can come before KIFF's list of held calls has the hold: Needs you then
+            // said "Nothing is waiting" under it (the 755 retest). It reads again until it's there.
+            if let hold, let onHoldAlert = self.onHoldAlert { await onHoldAlert(hold) } else { await self.onHeldChanged?() }
+        }
     }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {

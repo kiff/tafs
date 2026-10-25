@@ -89,7 +89,7 @@ struct OpenTrialLink<Label: View>: View {
     @ViewBuilder var label: () -> Label
 
     var body: some View {
-        if sidebarSelects {
+        if sidebarSelects || model.sidebarShown {
             Button { model.requestedTaf = chatID } label: { label() }
         } else {
             NavigationLink { TrialScreen(chatID: chatID, tafID: tafID) } label: { label() }
@@ -112,7 +112,7 @@ struct TrialScreen: View {
     /// The trial ended (Install or Go back): back to its taf, never a screen saying it's gone
     /// (kiff/tafs#253). Beside a sidebar, the taf's row is selected.
     private func ended() {
-        if sidebarSelects { model.requestedTaf = tafID } else { dismiss() }
+        if sidebarSelects || model.sidebarShown { model.requestedTaf = tafID } else { dismiss() }
     }
 
     var body: some View {
@@ -123,7 +123,7 @@ struct TrialScreen: View {
                 if model.chatItems(chatID).isEmpty { guide(trial, name: taf.name) }
                 TafChatView(tafID: chatID)
             } else {
-                Text("This trial has ended.").foregroundColor(Theme.dim).frame(maxWidth: .infinity, maxHeight: .infinity)
+                LateNote(text: "This trial has ended.")
             }
         }
         .screenBackground()
@@ -188,5 +188,23 @@ struct TrialScreen: View {
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
         .background(Theme.amber.opacity(0.08))
+    }
+}
+
+/// A screen whose taf or trial just went (it ended, or was removed): nothing for a moment,
+/// while the app goes back to the taf, then a note that fades in only if it's still there
+/// (the 755 retest: "This taf is gone" flashed on every Go back and Install).
+struct LateNote: View {
+    let text: String
+    @State private var shown = false
+
+    var body: some View {
+        Text(text).foregroundColor(Theme.dim)
+            .opacity(shown ? 1 : 0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .task {
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+                withMotion(.easeIn(duration: 0.3)) { shown = true }
+            }
     }
 }

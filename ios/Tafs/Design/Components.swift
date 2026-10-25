@@ -141,6 +141,30 @@ struct Panel<Content: View>: View {
     }
 }
 
+/// A panel that opens a screen: the whole panel takes the tap, its padding too, not only its
+/// words and caret (the 755 retest), with the caret every row that opens something has.
+struct PanelLink<Destination: View, Label: View>: View {
+    @ViewBuilder var destination: () -> Destination
+    @ViewBuilder var label: () -> Label
+
+    var body: some View {
+        NavigationLink {
+            destination()
+        } label: {
+            Panel {
+                HStack(spacing: 12) {
+                    label()
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                        .accessibilityHidden(true)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 extension View {
     func screenBackground() -> some View {
         background(Theme.background.ignoresSafeArea())
@@ -187,6 +211,12 @@ extension Date {
         f.dateFormat = "HH:mm"
         f.timeZone = AccountTime.zone
         return f.string(from: self)
+    }
+
+    /// When something ends, in the account's zone: the time alone today, with its date on a
+    /// later day, as the chat's timestamps are ("00:00", "1 Nov 2026, 00:00").
+    var endsWords: String {
+        AccountTime.calendar.isDateInToday(self) ? shortTime : shown(date: .abbreviated, time: .shortened)
     }
 
     /// `shortTime`, with the account zone's short name when it isn't this device's.

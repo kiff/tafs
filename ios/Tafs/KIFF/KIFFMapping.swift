@@ -104,7 +104,8 @@ enum KIFFMapping {
         func rule(_ r: TafsCloud.HomeTaf.Rule) -> CardRule {
             CardRule(action: r.action, label: r.label, perAction: amount(r.perAction), perWindow: amount(r.perWindow),
                      countPerWindow: r.countPerWindow, window: Window(rawValue: r.window) ?? .day,
-                     outside: r.outside == "refuse" ? .refuse : .hold)
+                     outside: r.outside == "refuse" ? .refuse : .hold, extraRoom: amount(r.extraRoom),
+                     baseLimit: amount(r.baseLimit), roomEnds: r.roomWindowEnd)
         }
         let rules = h.card.rules.map(rule)
         let count = h.card.ids.count
@@ -130,8 +131,10 @@ enum KIFFMapping {
         taf.kiffCards = h.card.cards?.map { c in
             TafCard(id: c.id, title: c.title, environment: c.environment, live: c.live, active: c.active, expires: c.expires,
                     rules: c.rules.map(rule),
-                    total: c.total.flatMap { t in amount(t.limit).map { CardTotal(limit: $0, used: amount(t.used), window: Window(rawValue: t.window) ?? .day) } },
-                    calls: c.calls.map { CardTotal(limit: $0.limit, used: $0.used, window: Window(rawValue: $0.window) ?? .day) })
+                    total: c.total.flatMap { t in amount(t.limit).map { CardTotal(limit: $0, used: amount(t.used), window: Window(rawValue: t.window) ?? .day,
+                                                                                          extra: amount(t.extraRoom), base: amount(t.baseLimit), roomEnds: t.roomWindowEnd) } },
+                    calls: c.calls.map { CardTotal(limit: $0.limit, used: $0.used, window: Window(rawValue: $0.window) ?? .day,
+                                                   extra: $0.extraRoom, base: $0.baseLimit, roomEnds: $0.roomWindowEnd) })
         }
         taf.doors = h.doors
         taf.used = h.card.used.compactMapValues { amount($0) }

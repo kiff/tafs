@@ -140,25 +140,35 @@ private struct HoldRow: View {
 struct HaltRow: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID?
+    /// In a panel of its own, which takes the tap all over, padding too (the 755 retest).
+    var framed = false
 
     var body: some View {
-        let h = model.haltState(tafID)
         NavigationLink { HaltScreen(tafID: tafID) } label: {
-            HStack(spacing: 12) {
-                Image(systemName: h.state == .running ? "hand.raised" : "hand.raised.fill")
-                    .scaledFont(16, weight: .semibold).foregroundColor(Theme.no)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(tafID == nil ? "Halt all" : "Halt").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                    Text(h.state == .running ? "Stop it until you resume" : HaltScreen.headline(h))
-                        .scaledFont(13).foregroundColor(h.state == .running ? Theme.dim : Theme.no)
-                }
-                Spacer()
-                Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+            if framed {
+                Panel { row }.contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            } else {
+                row
             }
-            // The whole row opens it, not only its words and caret (kiff/tafs#236, item 12).
-            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .task(id: tafID) { await model.refreshHalt(tafID) }
+    }
+
+    private var row: some View {
+        let h = model.haltState(tafID)
+        return HStack(spacing: 12) {
+            Image(systemName: h.state == .running ? "hand.raised" : "hand.raised.fill")
+                .scaledFont(16, weight: .semibold).foregroundColor(Theme.no)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tafID == nil ? "Halt all" : "Halt").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text(h.state == .running ? "Stop it until you resume" : HaltScreen.headline(h))
+                    .scaledFont(13).foregroundColor(h.state == .running ? Theme.dim : Theme.no)
+            }
+            Spacer()
+            Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+        }
+        // The whole row opens it, not only its words and caret (kiff/tafs#236, item 12).
+        .contentShape(Rectangle())
     }
 }

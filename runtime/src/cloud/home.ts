@@ -26,6 +26,14 @@ export interface Rule {
   per_action: Money | null;
   /** The Card's total for the window, with the room it has now. */
   per_window: Money | null;
+  /**
+   * Of per_window, the extra room given on a held call (kiff/tafs#211, 6.13), as KIFF says
+   * it, with the Card's own limit and when the room ends; absent without any. The app shows
+   * the Card's own total and this apart, not one sum (the 755 retest).
+   */
+  extra_room?: Money;
+  base_limit?: Money;
+  room_window_end?: string;
   count_per_window: number | null;
   window: "day" | "week" | "month";
 }
@@ -53,6 +61,10 @@ export interface Total<T> {
   limit: T;
   used: T | null;
   window: Rule["window"];
+  /** Of limit, the extra room KIFF says is active, the Card's own limit, and when the room ends; absent without any. */
+  extra_room?: T;
+  base_limit?: T;
+  room_window_end?: string;
 }
 
 /** One KIFF Card, drawn as its own Card. */
@@ -92,7 +104,15 @@ export interface Mandate {
   title?: string | null;
   grants?: { action: string; title?: string | null; per_action_max?: { quantity: string; max: number; unit?: string | null; scale?: number | null }[] | null }[] | null;
   aggregates?: { quantity: string; limit: number; window: string; unit?: string | null; scale?: number | null }[] | null;
-  limits?: { quantity: string; window?: string | null; limit: number; used?: number | null; status?: string | null; unit?: string | null; scale?: number | null }[] | null;
+  limits?: {
+    quantity: string; window?: string | null; limit: number; used?: number | null; status?: string | null; unit?: string | null; scale?: number | null;
+    /** The Card's own limit, without extra room; limit is the ceiling now. */
+    base_limit?: number | null;
+    /** The extra room active now, given on a held call. */
+    extra_room?: number | null;
+    /** When the window the room counts in ends, and the room with it. */
+    room_window_end?: string | null;
+  }[] | null;
   active: boolean;
   valid_until?: string | null;
   revoked_at?: string | null;
@@ -166,6 +186,16 @@ function shownTotal(m: Mandate) {
 }
 
 /**
+ * The extra room on a total, as KIFF's Card read says it (extra_room, base_limit,
+ * room_window_end): passed through, never worked out here. Nothing without any, or from
+ * a KIFF that doesn't say.
+ */
+function room(line: NonNullable<Mandate["limits"]>[number] | undefined): { extra: number; base: number; ends?: string } | undefined {
+  if (line?.status !== "ok" || !line.extra_room || line.extra_room <= 0 || typeof line.base_limit !== "number") return undefined;
+  return { extra: line.extra_room, base: line.base_limit, ...(line.room_window_end ? { ends: line.room_window_end } : {}) };
+}
+
+/**
  * A Card's lines: one per grant, with its limit for one call. A Card's totals
  * cover all its grants, so the first line shows one of each: the first summed
  * total, at the ceiling it has now (extra room included), and the first count.
@@ -189,6 +219,13 @@ export function rules(m: Mandate): Rule[] {
     const { total, line } = shown;
     const ceiling = line?.status === "ok" ? line.limit : total.limit;
     first.per_window = money(ceiling, line?.unit ?? total.unit, line?.scale ?? total.scale);
+    const r = room(line);
+    if (r) {
+      const unit = line?.unit ?? total.unit, scale = line?.scale ?? total.scale;
+      first.extra_room = money(r.extra, unit, scale);
+      first.base_limit = money(r.base, unit, scale);
+      if (r.ends) first.room_window_end = r.ends;
+    }
     first.window = window(total.window);
   } else if (count) {
     first.window = window(count.window);
@@ -217,6 +254,12 @@ export function cardView(m: Mandate): CardView {
       used: ok && typeof line?.used === "number" ? money(line.used, unit, scale) : null,
       window: window(agg.window),
     };
+    const r = room(line);
+    if (r) {
+      total.extra_room = money(r.extra, unit, scale);
+      total.base_limit = money(r.base, unit, scale);
+      if (r.ends) total.room_window_end = r.ends;
+    }
   }
   let calls: CardView["calls"] = null;
   const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity));
@@ -224,6 +267,12 @@ export function cardView(m: Mandate): CardView {
     const line = (m.limits ?? []).find((l) => l.quantity === count.quantity && l.window === count.window);
     const ok = line?.status === "ok";
     calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, window: window(count.window) };
+    const r = room(line);
+    if (r) {
+      calls.extra_room = r.extra;
+      calls.base_limit = r.base;
+      if (r.ends) calls.room_window_end = r.ends;
+    }
   }
   const environment = (m.environment ?? "").trim();
   return {

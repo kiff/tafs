@@ -133,6 +133,26 @@ final class AppModel: ObservableObject {
     /// closed; nil until tafs cloud has said.
     @Published private(set) var alertsReady: Bool?
     @Published private(set) var turningOnAlerts = false
+    /// The owner answered the offer of alerts made right after signing in, here: it isn't
+    /// made again (Needs you still offers them).
+    @Published private(set) var alertsOffered = false
+    static let alertsOfferedKey = "tafs.alerts.offered"
+
+    /// Alerts are offered up front, once, right after signing in, before the owner gives a taf
+    /// work (the 755 retest): on the iPhone the first held call came with no alert, because
+    /// alerts were offered only in Needs you, afterwards.
+    var offerAlertsUpFront: Bool {
+        // Not yet known (nil) counts as off: a phone that never allowed notifications has no
+        // push token, so tafs cloud is never asked. Once the tafs are in, not mid-sign-in.
+        mode == .kiff && listLoaded && sessionHasKey && canAnswerHolds != false && (alertsReady == false || (alertsReady == nil && pushToken == nil)) && !alertsOffered
+            && remembered?.bool(forKey: Self.alertsOfferedKey) != true
+    }
+
+    /// The owner turned alerts on from the offer, or said not now.
+    func answerAlertsOffer() {
+        alertsOffered = true
+        remembered?.set(true, forKey: Self.alertsOfferedKey)
+    }
     /// Asks iOS for a push token; the app delegate hands it to `pushTokenArrived`.
     var requestPushToken: (@MainActor () -> Void)?
     /// Asks the owner to allow notifications. Returns whether they are allowed.
@@ -225,6 +245,27 @@ final class AppModel: ObservableObject {
     }
     func entries(for tafID: UUID) -> [RecordEntry] { record.filter { $0.tafID == tafID } }
     func heldCalls(for tafID: UUID) -> [HeldCall] { held.filter { $0.tafID == tafID } }
+
+    /// The tafs as listed: one waiting on the owner first, then the one used or at work most
+    /// recently (its latest call, or the latest message in its chat), so the taf the owner just
+    /// worked with is at the top, not somewhere they have to scroll to (the 755 retest).
+    /// Tafs with nothing yet keep tafs cloud's order, after the rest.
+    var listedTafs: [Taf] { Self.byRecent(tafs, record: record, held: held, chats: chats) }
+
+    nonisolated static func byRecent(_ tafs: [Taf], record: [RecordEntry], held: [HeldCall],
+                                     chats: [UUID: [TafsCloud.ChatMessage]]) -> [Taf] {
+        var latest: [UUID: Date] = [:]
+        for e in record { latest[e.tafID] = max(latest[e.tafID] ?? .distantPast, e.at) }
+        for (id, messages) in chats { if let at = messages.last?.at { latest[id] = max(latest[id] ?? .distantPast, at) } }
+        let waiting = Set(held.map(\.tafID))
+        return tafs.enumerated().sorted { a, b in
+            let wa = waiting.contains(a.element.id), wb = waiting.contains(b.element.id)
+            if wa != wb { return wa }
+            let la = latest[a.element.id] ?? .distantPast, lb = latest[b.element.id] ?? .distantPast
+            return la != lb ? la > lb : a.offset < b.offset
+        }.map(\.element)
+    }
+
     var workingCount: Int { tafs.filter { $0.state == .working }.count }
 
     // MARK: Signing in with KIFF
@@ -460,6 +501,11 @@ final class AppModel: ObservableObject {
     /// A taf to select in the iPad's sidebar, asked for by "See it on…" (kiff/tafs#96); the
     /// split view selects it and clears this.
     @Published var requestedTaf: UUID?
+    /// The iPad's sidebar is on screen: opening a trial, or ending one, selects its row there.
+    /// Kept here as well as in the environment, which a sheet's or a pushed screen's work
+    /// didn't always see: Start trying pushed the trial beside a sidebar still showing the
+    /// taf (the 755 retest).
+    var sidebarShown = false
 
     /// Usage, asked for by a tapped alert (a member's request for tasks, kiff/tafs#215): the
     /// root view shows it on its own screen and clears this.
@@ -696,6 +742,21 @@ final class AppModel: ObservableObject {
     private func accountIfUnknown() async -> KIFFClient.Account? {
         guard kiffAccount == nil else { return nil }
         return try? await kiff.me()
+    }
+
+    /// How long to wait between reads for a hold an alert announced. Tests shorten it.
+    var holdAlertRetry: [UInt64] = [1_500_000_000, 4_000_000_000]
+
+    /// A hold's alert showed with tafs open: KIFF is read, and read again a little later while
+    /// its list of held calls doesn't have the hold yet, so Needs you never says nothing waits
+    /// under an alert that says something does (the 755 retest).
+    func refreshUntilHeld(_ hold: String) async {
+        await refresh()
+        for wait in holdAlertRetry {
+            guard mode == .kiff, !held.contains(where: { $0.kiffID == hold }) else { return }
+            try? await Task.sleep(nanoseconds: wait)
+            await refresh()
+        }
     }
 
     func refresh() async {
@@ -2189,6 +2250,8 @@ final class AppModel: ObservableObject {
             chatErrors[tafID] = nil
             // A run seen at work here is over now: what it did reaches the Card and the record.
             if chatStates[tafID]?.working != nil, thread.working == nil { Task { await refresh() } }
+            // A stopped session that tafs cloud no longer has at work is done with.
+            if let stopped = chatStates[tafID]?.stopped, thread.working != stopped { chatStates[tafID]?.stopped = nil }
             chatStates[tafID, default: ChatState()].working = thread.working
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
@@ -2247,6 +2310,7 @@ final class AppModel: ObservableObject {
                 chatStates[tafID]?.live = LiveAnswer(started: clock())
                 chatStreamWorks = true
                 chatStreams[tafID] = Task { await self.followChatStream(events, tafID: tafID, text: text, gen: gen) }
+                clearBusyUnsent(tafID)
                 return .sent
             }
             if trialChats[tafID] != nil {
@@ -2256,13 +2320,14 @@ final class AppModel: ObservableObject {
             }
             guard current() else { return .notTried }
             chatStates[tafID, default: ChatState()].awaiting = clock()
+            clearBusyUnsent(tafID)
             await loadChat(tafID)
             return .sent
         } catch let e as TafsCloud.CloudError where e.status == 429 {
             guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0 == pending }
             chatSent[tafID]?.removeAll { $0 == pending }
-            keepUnsent(text, tafID, why: "That's a lot of messages in a few minutes. Give \(c.name) a moment, then try again.")
+            keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
             return .kept
         } catch {
             guard current() else { return .notTried }
@@ -2303,6 +2368,9 @@ final class AppModel: ObservableObject {
         /// Each held call's key (`heldKey`) by KIFF's decision id, once KIFF was read: the call
         /// stays placed after the owner answers it and it's no longer held.
         var heldKeys: [String: String] = [:]
+        /// The session the owner stopped: tafs cloud may still say it's at work until the run
+        /// reaches its next step, but here it's over at once (the 755 retest).
+        var stopped: String?
     }
     @Published private(set) var chatStates: [UUID: ChatState] = [:]
     /// Whether a taf's chat has streamed here: its answers then show as written.
@@ -2316,11 +2384,24 @@ final class AppModel: ObservableObject {
     func chatThinking(_ tafID: UUID) -> Bool {
         guard mode == .kiff else { return awaitingReply(tafID) }
         let s = chatState(tafID)
-        return s.working != nil || s.awaiting != nil || s.live != nil
+        let working = s.working.flatMap { $0 == s.stopped ? nil : $0 }
+        return working != nil || s.awaiting != nil || s.live != nil
     }
 
-    private func keepUnsent(_ text: String, _ tafID: UUID, why: String) {
-        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock()))
+    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false) {
+        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy))
+    }
+
+    /// Why a message wasn't sent when the owner wrote too many too fast: the runtime's limit
+    /// of 10 in 10 minutes for each person (kiff/agents#220).
+    static func busyWords(_ name: String) -> String {
+        "That's a lot of messages in a few minutes. Give \(name) a moment, then try again."
+    }
+
+    /// A message went through: one kept only because the owner wrote too fast is over too
+    /// (the 755 retest), so its warning doesn't stay under everything that follows.
+    private func clearBusyUnsent(_ tafID: UUID) {
+        chatStates[tafID]?.unsent.removeAll(where: \.busy)
     }
 
     /// The wait ends once tafs cloud says the taf is at work, once it answered after the
@@ -2376,7 +2457,9 @@ final class AppModel: ObservableObject {
                 }
             }
         } catch {}
-        guard gen == accountGeneration else { return }
+        // Stopped by the owner: Stop has cleared the answer and reloads the thread itself, and a
+        // reload from a cancelled task would only fail as "cancelled".
+        guard gen == accountGeneration, !Task.isCancelled else { return }
         // Nothing is at work once the stream is over, whatever comes next (kiff/tafs#206 6.6).
         chatStates[tafID]?.live?.activity = nil
         // The run is over or paused on a held call (kiff/tafs#102): KIFF is read at once, so the
@@ -2444,9 +2527,10 @@ final class AppModel: ObservableObject {
                     let held = chatState(tafID).steering.flatMap { $0.run == run ? $0.untaken : nil } ?? []
                     chatStates[tafID, default: ChatState()].steering = TafsCloud.Steering(
                         run: run, status: status, untaken: held + [TafsCloud.Steering.Message(text: text, at: clock())])
+                    clearBusyUnsent(tafID)
                     return true
                 } catch let e as TafsCloud.CloudError where e.status == 429 {
-                    keepUnsent(text, tafID, why: "That's a lot of messages in a few minutes. Give \(c.name) a moment, then try again.")
+                    keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
                     return true
                 } catch {
                     // Ended meanwhile (409), or not reached: it waits, and goes once the taf is done.
@@ -2543,7 +2627,14 @@ final class AppModel: ObservableObject {
         chatStates[tafID, default: ChatState()].awaiting = nil
         do {
             try await cloud.stop(c.id, session: session)
+            // Stopped at once, as the owner sees it (the 755 retest): the answer being written
+            // goes, and the chat is ready for the next message. The run itself ends at its
+            // next step, and nothing it would have done after that is done.
             chatStates[tafID]?.ended = .stopped
+            chatStates[tafID]?.stopped = session
+            chatStreams[tafID]?.cancel()
+            chatStreams[tafID] = nil
+            chatStates[tafID]?.live = nil
         } catch {
             chatErrors[tafID] = "\(c.name) didn't stop: \(error.localizedDescription)"
         }
@@ -2573,9 +2664,10 @@ final class AppModel: ObservableObject {
             switch self {
             case .message(let m): return m.at
             case .held(let h): return h.heldAt
-            // Where its held card was: when the call was made, not when it was answered, so an
-            // answered card stays above the taf's message (kiff/tafs#138, 21 Oct).
-            case .outcome(let e): return e.madeAt ?? e.at
+            // When the owner answered it: after the taf's "waiting for your approval" and before
+            // what it did next, so the chat reads in the order it happened (the 755 retest).
+            // Without the answer's time, where its held card was: when the call was made.
+            case .outcome(let e): return e.answer?.at ?? e.madeAt ?? e.at
             case .streaming(_, let m): return m.at
             }
         }
@@ -2626,7 +2718,8 @@ final class AppModel: ObservableObject {
         func key(_ item: ChatItem) -> String? {
             switch item {
             case .held(let h): return heldKey(h)
-            case .outcome(let e): return e.id.uuidString
+            // An answered call goes where it was answered, by time, not where it was held.
+            case .outcome(let e): return e.answer?.at == nil ? e.id.uuidString : nil
             default: return nil
             }
         }
@@ -3242,6 +3335,8 @@ final class AppModel: ObservableObject {
         let text: String
         let why: String
         let at: Date
+        /// Not sent only because the owner wrote too many too fast.
+        var busy = false
     }
     @Published private(set) var setupUnsent: [UnsentMessage] = []
     /// What the owner is typing to Coach, not sent yet (kiff/tafs#245, item 3): kept here, not in the
@@ -4052,7 +4147,8 @@ final class AppModel: ObservableObject {
         for c in setupThread.components.map(\.component) where c.type == .result {
             // An improvement makes the taf's next version, never a new taf (kiff/tafs#107).
             if c.taf?.improves != nil {
-                if improvedVersions[c.id] == nil, !makingVersions.contains(c.id), improveErrors[c.id] == nil {
+                let key = improvementKey(c)
+                if improvedVersions[key] == nil, !makingVersions.contains(key), improveErrors[key] == nil {
                     Task { await makeImprovedVersion(c) }
                 }
                 continue
@@ -4077,36 +4173,44 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// The version each improvement result made, by the result's id, and those being made
+    /// The version each improvement result made, by `improvementKey`, and those being made
     /// or that failed (with why).
     @Published private(set) var improvedVersions: [String: Int] = [:]
     @Published private(set) var makingVersions: Set<String> = []
     @Published private(set) var improveErrors: [String: String] = [:]
+
+    /// An improvement result, by its card and what it carries (its draft, else its note). The
+    /// card's id is Setup's to pick and comes back in another conversation ("result"): keyed by
+    /// the id alone, a new conversation's card showed the version an earlier one made, and
+    /// its own was never made (the 755 retest: "See version 2" when 2 was already live).
+    func improvementKey(_ component: SetupComponent) -> String {
+        let taf = component.taf
+        let what = taf?.draft ?? SHA256.hash(data: Data((taf?.note ?? "").utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
+        return "\(component.id)|\(what)"
+    }
 
     /// Makes the version an improvement result hands over, once: tafs cloud builds it from
     /// Setup's words and keeps one per result, so a repeat gives the same version. Nothing
     /// goes live: the owner tries it and switches from the taf's Versions.
     func makeImprovedVersion(_ component: SetupComponent) async {
         guard mode == .kiff, let taf = component.taf, let named = taf.improves else { return }
+        let key = improvementKey(component)
         // The taf it improves, by its tafs id, or by its agent's when Coach changed a taf it
         // set up or found in this conversation (kiff/tafs#247).
         let improves = cloudTafs.values.contains(where: { $0.id == named }) ? named : (cloudTafs[named]?.id ?? cloudTafs[taf.agent]?.id ?? named)
-        guard !makingVersions.contains(component.id) else { return }
-        makingVersions.insert(component.id)
-        defer { makingVersions.remove(component.id) }
-        improveErrors[component.id] = nil
+        guard !makingVersions.contains(key) else { return }
+        makingVersions.insert(key)
+        defer { makingVersions.remove(key) }
+        improveErrors[key] = nil
         let gen = accountGeneration
-        // The result, by its card and what it carries: a later result with the same id is
-        // another version.
-        let what = taf.draft ?? SHA256.hash(data: Data((taf.note ?? "").utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
         do {
-            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: "\(component.id)|\(what)", agent: taf.agent, tryWith: taf.`try`)
+            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: key, agent: taf.agent, tryWith: taf.`try`)
             guard gen == accountGeneration else { return }
-            improvedVersions[component.id] = n
+            improvedVersions[key] = n
             if let tafID = self.taf(forAgent: taf.agent) { await loadVersions(tafID) }
         } catch {
             guard gen == accountGeneration else { return }
-            improveErrors[component.id] = "\(taf.name)'s new version isn't ready: \(error.localizedDescription)"
+            improveErrors[key] = "\(taf.name)'s new version isn't ready: \(error.localizedDescription)"
         }
     }
 
