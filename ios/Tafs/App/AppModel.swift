@@ -314,7 +314,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         planque.deviceID = nil
@@ -353,7 +353,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
@@ -3147,6 +3147,10 @@ final class AppModel: ObservableObject {
         let at: Date
     }
     @Published private(set) var setupUnsent: [UnsentMessage] = []
+    /// What the owner is typing to Coach, not sent yet (kiff/tafs#245, item 3): kept here, not in the
+    /// chat's view, so closing Coach mode, opening it again or switching tabs keeps it, as a
+    /// taf's chat does. Only Send or the owner clears it; a new account starts empty.
+    @Published var setupDraft = ""
     /// What the owner wrote while Setup works: sent once it's done (kiff/tafs#58).
     @Published private(set) var setupQueued: String?
     /// How Setup's last run ended, when the owner should know: they stopped it, or it
