@@ -13,7 +13,6 @@ struct SetupChatView: View {
     var improving: UUID? = nil
     /// Whether this screen has opened its improvement: once, not each time it appears.
     @State private var openedImprovement = false
-    @State private var draft = ""
     @FocusState private var typing: Bool
     /// When the chat opened: Setup's messages after it are revealed as they arrive.
     @State private var openedAt = Date()
@@ -517,10 +516,10 @@ struct SetupChatView: View {
     }
 
     private var composer: some View {
-        let empty = draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let empty = model.setupDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let thinking = model.setupThinking
         return HStack(alignment: .bottom, spacing: 10) {
-            ChatField(title: thinking ? "Write the next message" : "Ask anything about your tafs", text: $draft)
+            ChatField(title: thinking ? "Write the next message" : "Ask anything about your tafs", text: $model.setupDraft)
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -529,7 +528,7 @@ struct SetupChatView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             #if os(iOS)
             // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
-            MicButton(dictation: model.dictation, text: $draft)
+            MicButton(dictation: model.dictation, text: $model.setupDraft)
             #endif
             if thinking && empty {
                 // While Setup works, Send is Stop: its run is cancelled.
@@ -573,15 +572,15 @@ struct SetupChatView: View {
         // A card that comes to wait once the thread loads takes the keyboard down,
         // unless the owner has started writing.
         .onChange(of: model.setupWaiting?.id) { id in
-            if id != nil, draft.isEmpty { typing = false }
+            if id != nil, model.setupDraft.isEmpty { typing = false }
         }
     }
 
     private func send() {
         // Sending stops dictating: what was heard goes with it, as it stands in the box.
         model.dictation.stop()
-        let text = draft
-        draft = ""
+        let text = model.setupDraft
+        model.setupDraft = ""
         // A sent message goes to the top of the view and stays (kiff/tafs#138), even while
         // Setup works: the message waits there, and the answer fills the space below.
         pinNext = true
@@ -592,7 +591,7 @@ struct SetupChatView: View {
         // The keyboard goes down once it's sent (kiff/tafs#138): the answer gets the screen.
         typing = false
         Haptics.tap()
-        Task { if !(await model.submitSetup(text)), draft.isEmpty { draft = text } }
+        Task { if !(await model.submitSetup(text)), model.setupDraft.isEmpty { model.setupDraft = text } }
     }
 }
 

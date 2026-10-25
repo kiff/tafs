@@ -314,7 +314,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         planque.deviceID = nil
@@ -353,7 +353,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
@@ -3061,15 +3061,21 @@ final class AppModel: ObservableObject {
             guard let signInURL = approved.signInURL else {
                 // planque already holds the sign-in (contract 5): approving the tools Setup
                 // chose from the vendor's list connected them, with no second sign-in.
-                await refreshConnections()
-                guard gen == accountGeneration else { return nil }
-                if approved.status == "connected", let done = grants.first(where: { $0.id == grant.id && $0.connected }) {
-                    return done
+                guard approved.status == "connected" else {
+                    await refreshConnections()
+                    lastError = "The connection came back \(approved.status) with no sign-in link. Nothing was connected."
+                    return nil
                 }
-                lastError = approved.status == "connected"
-                    ? "\(grant.vendor) is connected, but the app couldn't read it back yet."
-                    : "The connection came back \(approved.status) with no sign-in link. Nothing was connected."
-                return nil
+                // planque said connected: that's the answer (kiff/tafs#245). The list is read
+                // again for the card, a few times while planque's own read catches up; the
+                // approval counts as done either way, and is never asked for twice.
+                for wait in [0, 0.5, 1.5] as [Double] {
+                    if wait > 0 { try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
+                    await refreshConnections()
+                    guard gen == accountGeneration else { return nil }
+                    if let done = grants.first(where: { $0.id == grant.id && $0.connected }) { return done }
+                }
+                return grant.marked(connected: true)
             }
             vendorSignedIn = true
             let back = try await vendorSignIn.signIn(at: signInURL)
@@ -3141,6 +3147,10 @@ final class AppModel: ObservableObject {
         let at: Date
     }
     @Published private(set) var setupUnsent: [UnsentMessage] = []
+    /// What the owner is typing to Coach, not sent yet (kiff/tafs#245, item 3): kept here, not in the
+    /// chat's view, so closing Coach mode, opening it again or switching tabs keeps it, as a
+    /// taf's chat does. Only Send or the owner clears it; a new account starts empty.
+    @Published var setupDraft = ""
     /// What the owner wrote while Setup works: sent once it's done (kiff/tafs#58).
     @Published private(set) var setupQueued: String?
     /// How Setup's last run ended, when the owner should know: they stopped it, or it

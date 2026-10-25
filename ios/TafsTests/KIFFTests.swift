@@ -222,3 +222,20 @@ final class KIFFTests: XCTestCase {
         XCTAssertEqual(taf.cloudTaf?.worksFromChat, true)
     }
 }
+
+/// Each signed request carries its own time (kiff/tafs#245): two in the same second were the
+/// same message, and planque or KIFF refused the second as already made.
+final class SigningTimeTests: XCTestCase {
+    func testTwoRequestsInTheSameMillisecondGetDifferentTimes() {
+        let now = Date(timeIntervalSince1970: 2_000_000_000.123)
+        let a = SigningTime.next(now: now)
+        let b = SigningTime.next(now: now)
+        XCTAssertNotEqual(a, b)
+        XCTAssertLessThan(a, b, "later, so the order is kept")
+    }
+
+    func testItIsRFC3339WithMilliseconds() {
+        let t = SigningTime.next(now: Date(timeIntervalSince1970: 2_100_000_000.5))
+        XCTAssertNotNil(t.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"#, options: .regularExpression), t)
+    }
+}
