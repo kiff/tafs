@@ -823,10 +823,10 @@ final class TafsCloud {
     /// Stores the taf's next version as Setup drafted it (kiff/tafs#107), once per result
     /// (`from`): nothing goes live. Returns its number. `agent` is the result's: tafs cloud
     /// refuses an improvement of another taf's agent.
-    func createVersion(_ id: String, note: String, notes: String?, draft: String?, from: String, agent: String? = nil) async throws -> Int {
-        struct Body: Encodable { let note: String; let notes: String?; let draft: String?; let from: String; let agent: String? }
+    func createVersion(_ id: String, note: String, notes: String?, draft: String?, from: String, agent: String? = nil, tryWith: String? = nil) async throws -> Int {
+        struct Body: Encodable { let note: String; let notes: String?; let draft: String?; let from: String; let agent: String?; let `try`: String? }
         struct Response: Decodable { let version: Int }
-        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions", body: Body(note: note, notes: notes, draft: draft, from: from, agent: agent))
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions", body: Body(note: note, notes: notes, draft: draft, from: from, agent: agent, try: tryWith))
         return r.version
     }
 
@@ -870,11 +870,19 @@ final class TafsCloud {
         let n: Int
         /// The KIFF draft trying as its Card.
         let draft: String
-        /// Its chat; nil until its first message.
+        /// Its chat, opened with the trial.
         let session: String?
         let started: Date
         /// When the owner last wrote in it: unused for 7 days, it ends.
         let used: Date
+        /// Its guidance, as tafs cloud words it (kiff/tafs#247): a badge ("Trial"), a title
+        /// ("Trying version 2"), what the version changes, the task to try it with, and
+        /// when it ends unused. Absent from an older tafs cloud.
+        var label: String? = nil
+        var title: String? = nil
+        var changed: String? = nil
+        var `try`: String? = nil
+        var ends: Date? = nil
     }
 
     /// What a version keeps of a trial once it ended: when, how, and KIFF's counts.

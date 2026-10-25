@@ -377,6 +377,8 @@ struct VersionsPanel: View {
     @State private var reading: TafsCloud.Version?
     /// The version whose trial the owner is about to start.
     @State private var starting: TafsCloud.Version?
+    /// The trial just started: its chat opens (kiff/tafs#247).
+    @State private var opened: UUID?
 
     /// Install this version: the switch begins, with the Card draft tafs cloud prepared (its own,
     /// drafted again, or a restore when going back), which is read first, now → after
@@ -425,7 +427,10 @@ struct VersionsPanel: View {
             await model.loadTrial(tafID)
         }
         .sheet(item: $reading) { v in VersionCardSheet(version: v, tafID: tafID) }
-        .sheet(item: $starting) { v in TrialStartSheet(version: v, tafID: tafID) }
+        .sheet(item: $starting) { v in TrialStartSheet(version: v, tafID: tafID) { opened = $0 } }
+        .navigationDestination(isPresented: Binding(get: { opened != nil }, set: { if !$0 { opened = nil } })) {
+            if let chat = opened { TrialScreen(chatID: chat, tafID: tafID) }
+        }
         // Terms that changed between the screen and the tap open again, to read anew.
         .onChange(of: model.changedVersionCards[tafID]) { changed in
             if changed != nil, reading == nil, let v = model.versions[tafID]?.first(where: { model.switchDraft($0, of: tafID) == changed?.id }) { reading = v }

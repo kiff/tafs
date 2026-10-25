@@ -1867,11 +1867,19 @@ final class AppModel: ObservableObject {
     func tafOfTrialChat(_ id: UUID) -> UUID? { trialChats[id] }
 
     /// A trial's chat drawn as its taf, named as the menu names it: "Refunds · Trying v2".
+    /// A request the app itself dropped (the screen went away): nothing to tell the owner.
+    static func cancelled(_ error: Error) -> Bool {
+        error is CancellationError || (error as? URLError)?.code == .cancelled
+    }
+
     private func trialTaf(_ id: UUID) -> Taf? {
         guard let tafID = trialChats[id], let trial = openTrials[tafID],
               var taf = tafs.first(where: { $0.id == tafID }) else { return nil }
         taf.id = id
-        taf.name = "\(taf.name) · Trying v\(trial.n)"
+        taf.name = "\(taf.name) · v\(trial.n)"
+        taf.badge = trial.label ?? "Trial"
+        taf.now = [trial.title ?? "Trying version \(trial.n)", trial.ends.map { "ends \($0.shown(date: .abbreviated, time: .omitted)) if unused" }]
+            .compactMap { $0 }.joined(separator: " · ")
         return taf
     }
 
@@ -1885,7 +1893,7 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             setTrial(open, of: tafID)
         } catch {
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, !Self.cancelled(error) else { return }
             trialErrors[tafID] = "The trial couldn't be read: \(error.localizedDescription)"
         }
     }
@@ -2025,7 +2033,15 @@ final class AppModel: ObservableObject {
         defer { trialBusy.remove(tafID) }
         trialErrors[tafID] = nil
         let gen = accountGeneration
-        do { _ = try await cloud.endTrial(c.id) } catch {
+        guard let tenant = kiffTenant, let open = openTrials[tafID] else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            try await kiff.endTrial(draft: open.draft)
+            _ = try await cloud.endTrial(c.id)
+        } catch {
             guard gen == accountGeneration else { return false }
             trialErrors[tafID] = "The trial didn't end: \(error.localizedDescription)"
             return false
@@ -3964,7 +3980,10 @@ final class AppModel: ObservableObject {
     /// Setup's words and keeps one per result, so a repeat gives the same version. Nothing
     /// goes live: the owner tries it and switches from the taf's Versions.
     func makeImprovedVersion(_ component: SetupComponent) async {
-        guard mode == .kiff, let taf = component.taf, let improves = taf.improves else { return }
+        guard mode == .kiff, let taf = component.taf, let named = taf.improves else { return }
+        // The taf it improves, by its tafs id, or by its agent's when Coach changed a taf it
+        // set up or found in this conversation (kiff/tafs#247).
+        let improves = cloudTafs.values.contains(where: { $0.id == named }) ? named : (cloudTafs[named]?.id ?? cloudTafs[taf.agent]?.id ?? named)
         guard !makingVersions.contains(component.id) else { return }
         makingVersions.insert(component.id)
         defer { makingVersions.remove(component.id) }
@@ -3974,7 +3993,7 @@ final class AppModel: ObservableObject {
         // another version.
         let what = taf.draft ?? SHA256.hash(data: Data((taf.note ?? "").utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
         do {
-            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: "\(component.id)|\(what)", agent: taf.agent)
+            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: "\(component.id)|\(what)", agent: taf.agent, tryWith: taf.`try`)
             guard gen == accountGeneration else { return }
             improvedVersions[component.id] = n
             if let tafID = self.taf(forAgent: taf.agent) { await loadVersions(tafID) }

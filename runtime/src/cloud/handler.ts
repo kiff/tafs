@@ -211,6 +211,11 @@ export interface Taf {
    * hands it over.
    */
   versionsFrom?: Record<string, number>;
+  /**
+   * The task to try each version with, as Setup suggested it in the owner's
+   * words (kiff/tafs#247), by version: shown in the version's trial.
+   */
+  tries?: Record<string, string>;
 }
 
 export interface Tafs {
@@ -1426,7 +1431,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
 async function trialRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
   const sub = parts.length === 5 ? parts[4] : parts.length === 4 ? "" : undefined;
-  if (sub === "" && method === "GET") return { trial: (await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id))) ?? null };
+  if (sub === "" && method === "GET") return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id)), deps) };
   if (sub === undefined) throw new HTTPError(404, "not found");
   if (sub === "conversation" && method === "GET") {
     const open = await openTrialOf(me, taf, deps);
@@ -1450,7 +1455,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await draftInfo(token, draft, deps.fetch, deps.kiffBase);
     if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(404, "no such draft for this taf");
     if (d.status !== "trying") throw new HTTPError(409, "start trying this version's Card in KIFF first");
-    return { trial: await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft)) };
+    return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft)), deps) };
   }
   if (sub === "messages" && method === "POST") {
     const text = chatText(event);
@@ -1481,6 +1486,28 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
 }
 
 /** The taf's open trial, or 404. */
+/** How long a trial lasts unused before kiff/agents ends it (kiff/tafs#173). */
+const TRIAL_IDLE_MS = 7 * 24 * 3600_000;
+
+/**
+ * A trial as the app shows it (kiff/tafs#247): kiff/agents' trial, with the
+ * words that guide the owner through it, so the app renders them as sent:
+ * its badge (label) and title, what the version changes, the task to try it
+ * with, and when it ends unused.
+ */
+export function trialView(t: Trial, taf: Taf, note: string | undefined): Trial & { label: string; title: string; changed?: string; try?: string; ends: string } {
+  const tryWith = taf.tries?.[String(t.n)];
+  const ends = new Date(Date.parse(t.used) + TRIAL_IDLE_MS).toISOString();
+  return { ...t, label: "Trial", title: `Trying version ${t.n}`, ...(note ? { changed: note } : {}), ...(tryWith ? { try: tryWith } : {}), ends };
+}
+
+/** The trial of a taf as the app shows it, or null: one read of its versions for the note. */
+async function trialFor(me: KIFFIdentity, taf: Taf, t: Trial | undefined, deps: Deps) {
+  if (!t) return null;
+  const note = (await deps.agents.versions(me.tenantID, taf.id).catch(() => undefined))?.versions.find((v) => v.n === t.n)?.note;
+  return trialView(t, taf, note);
+}
+
 async function openTrialOf(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Trial> {
   const open = await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id));
   if (!open) throw new HTTPError(404, "this taf has no open trial");
@@ -1508,6 +1535,8 @@ async function trialDraftFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, versi
 
 /** Most characters a version's note and its instructions from the owner may have. */
 const VERSION_NOTE = 2000;
+/** The longest task to try a version with. */
+const VERSION_TRY = 500;
 const VERSION_NOTES = 4000;
 
 /**
@@ -1526,6 +1555,9 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   const notes = body.notes === undefined || body.notes === null ? undefined : str(body.notes).trim();
   if (notes !== undefined && notes.length > VERSION_NOTES) throw new HTTPError(400, `the instructions are at most ${VERSION_NOTES} characters`);
   const draft = str(body.draft).trim() || undefined;
+  // What to try it with (kiff/tafs#247): kept for its trial.
+  const tryWith = body.try === undefined || body.try === null ? undefined : str(body.try).trim() || undefined;
+  if (tryWith !== undefined && tryWith.length > VERSION_TRY) throw new HTTPError(400, `what to try is at most ${VERSION_TRY} characters`);
   // The result's agent, when the app sends it: an improvement of another taf
   // never becomes this one's version, with a draft or without.
   const agent = str(body.agent).trim();
@@ -1549,13 +1581,14 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   // The version live now records its Cards first, so going back to it brings them back.
   await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", ...(draft ? { draft } : {}) }));
-  if (from) {
-    // Kept so the same result hands over this version again. A record that
-    // changed meanwhile is read again once.
-    for (let tries = 0; tries < 2; tries++) {
-      const cur = tries === 0 ? taf : await deps.tafs.get(me.tenantID, taf.id);
+  if (from || tryWith) {
+    // Kept so the same result hands over this version again, with what to
+    // try it with. A record that changed meanwhile is read again once.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const cur = attempt === 0 ? taf : await deps.tafs.get(me.tenantID, taf.id);
       if (!cur) break;
-      if (await deps.tafs.putIf(me.tenantID, { ...cur, versionsFrom: { ...cur.versionsFrom, [from]: n } }, cur)) break;
+      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}) };
+      if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
     }
   }
   return { version: n };
@@ -2269,7 +2302,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
   // Each taf's open trial, its own entry in the app's menu (kiff/tafs#173). One that can't
   // be read leaves that entry out, never the list.
-  const trials = await Promise.all(tafs.map((t) => deps.agents.openedTrial(me.tenantID, t.id).catch(() => undefined)));
+  const trials = await Promise.all(tafs.map((t) => deps.agents.openedTrial(me.tenantID, t.id).then((tr) => trialFor(me, t, tr, deps)).catch(() => null)));
   // A halted taf reads halted everywhere (kiff/tafs#236, item 13): kiff/agents holds it, on
   // its own or with its account. A read that fails leaves its state as the rest says.
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
@@ -2287,7 +2320,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.
-  const ours = new Set(records.map((t) => t.kiffAgent).filter(Boolean));
+  // A taf's trial acts in KIFF as its own agent, "<agent>~trial" (kiff/tafs#247):
+  // it shows as the taf's trial, never as another agent.
+  const ours = new Set(records.flatMap((t) => t.kiffAgent ? [t.kiffAgent, `${t.kiffAgent}~trial`] : []));
   const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a)).sort();
   const others = agents.map((agent) => {
     const card = summary(cards.get(agent) ?? []);

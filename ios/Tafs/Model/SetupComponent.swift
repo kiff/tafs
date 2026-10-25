@@ -47,6 +47,9 @@ struct SetupComponent: Decodable, Equatable {
         var improves: String?
         /// What changed, in the owner's language (an improvement).
         var note: String?
+        /// The task to try the new version with, in the owner's words (kiff/tafs#247): its
+        /// trial shows it.
+        var `try`: String?
         /// The taf's full new instructions from the owner; nil keeps them (an improvement).
         var notes: String?
         /// Its tools can't find its work by themselves (kiff/tafs#138): it works from its chat.

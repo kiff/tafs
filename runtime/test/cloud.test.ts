@@ -503,7 +503,9 @@ describe("the home list", () => {
     const w = world();
     await w.tafs.put("t_acme", { id: NEW, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-14T09:00:00Z" });
     await w.tafs.put("t_acme", { id: NEW2, name: "Old", job: "refunds", kiffAgent: "old", nameClaim: "c2", created: "2026-10-13T09:00:00Z", removing: true });
-    w.account.mandates = [raeCard, demoCard, { ...demoCard, id: "card_setup", subject: "setup-acme" }, { ...demoCard, id: "card_old", subject: "old" }];
+    w.account.mandates = [raeCard, demoCard, { ...demoCard, id: "card_setup", subject: "setup-acme" }, { ...demoCard, id: "card_old", subject: "old" },
+      // Rae's trial acts in KIFF as its own agent (kiff/tafs#247): it's Rae's trial, not another agent.
+      { ...demoCard, id: "card_trial", subject: "rae~trial" }];
     const r = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
     expect(r.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
     expect(r.others).toEqual([{
@@ -1176,6 +1178,13 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(other.body.version).toBe((first.body.version as number) + 1);
   });
 
+  it("keeps the task to try a version with, for its trial (kiff/tafs#247)", async () => {
+    const w = twoVersions();
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Asks first", from: "sess9/v3", try: "Refund $10 of ch_1" } });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.tries).toEqual({ [String(r.body.version)]: "Refund $10 of ch_1" });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Long", try: "x".repeat(501) } })).status).toBe(400);
+  });
+
   it("names only a waiting draft of this taf's own agent", async () => {
     const w = twoVersions();
     w.account.drafts = { drf_other: { status: "draft", agent_id: "someone-else" }, drf_done: { status: "confirmed", agent_id: "rae" } };
@@ -1400,6 +1409,31 @@ describe("trying a version (kiff/tafs#173)", () => {
     const retry = await call(w, "POST", `/v1/tafs/${RAE}/trial/install`, { token: "ana" });
     expect(retry).toMatchObject({ status: 200, body: { live: 2, ended: { why: "installed" } } });
     expect(w.agents.calls.filter((c) => c.startsWith("switchVersion")).length).toBe(switches);
+  });
+
+  it("goes back once the phone has ended the trial in KIFF, signed, and reads its counts (kiff/tafs#247)", async () => {
+    const w = trying();
+    w.account.drafts!.drf_v2 = { status: "trying", agent_id: "rae" };
+    w.account.trials = { drf_v2: { status: "trying", calls: 2, held: 1, refused: 0 } };
+    await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_v2" } });
+    // The phone ended it in KIFF: tafs cloud only reads it, and keeps the counts on version 2.
+    w.account.trials.drf_v2 = { status: "ended", ended_by: "back", calls: 2, held: 1, refused: 0 };
+    const back = await call(w, "DELETE", `/v1/tafs/${RAE}/trial`, { token: "ana" });
+    expect(back).toMatchObject({ status: 200, body: { ended: { why: "back", calls: 2, held: 1 } } });
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial`, { token: "ana" })).body.trial).toBeNull();
+  });
+
+  it("guides the trial: its label, what the version changes, what to try, and when it ends (kiff/tafs#247)", async () => {
+    const w = trying();
+    w.account.drafts!.drf_v2 = { status: "trying", agent_id: "rae" };
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, tries: { "2": "Refund $10 of ch_1 and first say how much was paid" } });
+    const opened = (await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_v2" } })).body.trial;
+    const ends = new Date(Date.parse(opened.used) + 7 * 24 * 3600_000).toISOString();
+    const want = { n: 2, label: "Trial", title: "Trying version 2", changed: "Reads a charge before refunding it", try: "Refund $10 of ch_1 and first say how much was paid", ends };
+    expect(opened).toMatchObject(want);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial`, { token: "ana" })).body.trial).toMatchObject(want);
+    const home = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
+    expect(home.tafs.find((t: { id: string }) => t.id === RAE).trial).toMatchObject(want);
   });
 
   it("refuses another taf's draft, a viewer, and what isn't there", async () => {

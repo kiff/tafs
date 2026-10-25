@@ -178,6 +178,10 @@ export async function trialOf(token: string, draftID: string, doFetch: Fetch = f
  */
 export async function endTrialIn(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<TrialCounts> {
   const path = `/v1/me/agent-drafts/${encodeURIComponent(draftID)}/trial`;
+  // The phone ends it first, signed, as KIFF asks of a phone's session (kiff/tafs#247):
+  // then it's read here, ended, with its counts.
+  const read = await trialOf(token, draftID, doFetch, base);
+  if (read?.status === "ended") return read;
   try {
     return trialFrom(await ask(token, "DELETE", path, undefined, doFetch, base));
   } catch (err) {

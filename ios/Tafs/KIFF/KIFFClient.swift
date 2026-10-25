@@ -60,7 +60,9 @@ final class KIFFClient {
         if parts.count == 6 && path.hasPrefix("/v1/me/pack-requests/") && parts[5] == "decline" && !parts[4].isEmpty { return true }
         // Resuming a halted agent, or the whole account: it gives authority back.
         if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
-        return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
+        // Confirming a draft, and ending its trial (kiff/tafs#247): KIFF takes both from a
+        // phone only signed.
+        return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && (parts[5] == "confirm" || parts[5] == "trial") && !parts[4].isEmpty
     }
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
@@ -786,6 +788,15 @@ final class KIFFClient {
         try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version, "as": "trial"])
     }
 
+    /// Go back (kiff/tafs#247): KIFF ends the draft's trial, so its Cards stop at once. A
+    /// signed setup call: it takes authority away, so it needs no Face ID. A trial that had
+    /// ended already answers 404 or 409, which counts as ended.
+    func endTrial(draft id: String) async throws {
+        do {
+            let _: Empty = try await send("DELETE", "/v1/me/agent-drafts/\(escaped(id))/trial")
+        } catch KIFFError.server(let status, _, _) where status == 404 || status == 409 {}
+    }
+
     // MARK: Coach's tools (kiff/tafs#206)
 
     /// Coach's tools on tafs cloud's MCP server, each its own connection in KIFF; the reads
@@ -974,7 +985,7 @@ final class KIFFClient {
         }
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
         let signed = base == nil ? Self.signsSetup(path) : (base == gatewayURL && path == "/v1/connections")
-        if method == "POST" || method == "PUT", signed, let setupSigner, let tenant {
+        if method == "POST" || method == "PUT" || method == "DELETE", signed, let setupSigner, let tenant {
             let signedAt = ISO8601DateFormatter().string(from: Date())
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
             let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)
