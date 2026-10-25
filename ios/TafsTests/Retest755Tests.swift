@@ -35,13 +35,13 @@ final class Retest755Tests: XCTestCase {
         let rule = CardRule(action: "refund", label: "Refunds", perAction: usd(5000), perWindow: usd(33000), window: .day,
                             extraRoom: usd(3000), baseLimit: usd(30000), roomEnds: ends)
         XCTAssertEqual(rule.ownTotal, usd(30000))
-        XCTAssertEqual(rule.summary, "≤ \(usd(5000).formatted) each · \(usd(30000).formatted) a day · +\(usd(3000).formatted) extra room until \(ends.shortTime)")
+        XCTAssertEqual(rule.summary, "≤ \(usd(5000).formatted) each · \(usd(30000).formatted) a day · +\(usd(3000).formatted) extra room until \(ends.endsWords)")
         XCTAssertEqual(rule.left(used: usd(28000)), "\(usd(5000).formatted) left today", "what's left counts the extra room")
 
         let card = TafCard(id: "c", title: "Refunds", rules: [rule],
                            total: CardTotal(limit: usd(33000), used: usd(28000), window: .day, extra: usd(3000), base: usd(30000), roomEnds: ends))
         XCTAssertEqual(card.hero?.figure, usd(5000).formatted)
-        XCTAssertEqual(card.hero?.words, "left today of \(usd(30000).formatted) + \(usd(3000).formatted) extra room until \(ends.shortTime)")
+        XCTAssertEqual(card.hero?.words, "left today of \(usd(30000).formatted) + \(usd(3000).formatted) extra room until \(ends.endsWords)")
 
         // Nothing is worked out: no word of extra room unless KIFF gives its own limit with it.
         let plain = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000))
@@ -49,6 +49,17 @@ final class Retest755Tests: XCTestCase {
         let half = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000), extraRoom: usd(3000))
         XCTAssertEqual(half.ownTotal, usd(33000))
         XCTAssertNil(half.roomWords)
+    }
+
+    /// A week's or a month's room ends days later: "until 00:00" read as tonight. It says the
+    /// date then, and only the time when it ends today.
+    func testExtraRoomEndingAnotherDaySaysTheDate() {
+        let later = Date().addingTimeInterval(3 * 24 * 3600)
+        let week = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000), window: .week,
+                            extraRoom: usd(3000), baseLimit: usd(30000), roomEnds: later)
+        XCTAssertEqual(week.roomWords, "+\(usd(3000).formatted) extra room until \(later.shown(date: .abbreviated, time: .shortened))")
+        let tonight = AccountTime.calendar.date(bySettingHour: 23, minute: 59, second: 0, of: Date())!
+        XCTAssertEqual(tonight.endsWords, tonight.shortTime)
     }
 
     /// tafs cloud passes KIFF's extra room on; an older one doesn't, and the Card reads as before.
@@ -75,7 +86,7 @@ final class Retest755Tests: XCTestCase {
         XCTAssertEqual(rae.card.rules.first?.baseLimit, usd(30000))
         XCTAssertEqual(rae.card.rules.first?.roomEnds, ends)
         XCTAssertEqual(rae.kiffCards?.first?.total?.base, usd(30000))
-        XCTAssertEqual(rae.kiffCards?.first?.hero?.words, "left today of \(usd(30000).formatted) + \(usd(3000).formatted) extra room until \(ends.shortTime)")
+        XCTAssertEqual(rae.kiffCards?.first?.hero?.words, "left today of \(usd(30000).formatted) + \(usd(3000).formatted) extra room until \(ends.endsWords)")
     }
 
     /// An answered hold read as if the approval came first: its line sat above the taf's

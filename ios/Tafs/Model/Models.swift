@@ -120,10 +120,11 @@ struct CardRule: Identifiable, Hashable, Codable {
         extraRoom != nil ? (baseLimit ?? perWindow) : perWindow
     }
 
-    /// "+30 US$ extra room until 00:00", when KIFF says there is some.
+    /// "+30 US$ extra room until 00:00", when KIFF says there is some: with its date when the
+    /// room ends on a later day, as a week's or a month's does.
     var roomWords: String? {
         guard let extraRoom, baseLimit != nil else { return nil }
-        return "+\(extraRoom.formatted) extra room " + (roomEnds.map { "until \($0.shortTime)" } ?? window.current)
+        return "+\(extraRoom.formatted) extra room " + (roomEnds.map { "until \($0.endsWords)" } ?? window.current)
     }
 
     /// What's left of its total this window ("€800 left today"), given what it has used,
@@ -190,7 +191,7 @@ struct TafCard: Identifiable, Hashable, Codable {
                 // The Card's own total and the extra room apart, as KIFF says them (the 755 retest):
                 // "of 300 US$ + 30 US$ extra room until 00:00".
                 if let extra = t.extra, let own = t.base {
-                    let until = t.roomEnds.map { " until \($0.shortTime)" } ?? ""
+                    let until = t.roomEnds.map { " until \($0.endsWords)" } ?? ""
                     return (left.formatted, "left \(t.window.current) of \(own.formatted) + \(extra.formatted) extra room\(until)")
                 }
                 return (left.formatted, "left \(t.window.current) of \(t.limit.formatted)")

@@ -213,6 +213,12 @@ extension Date {
         return f.string(from: self)
     }
 
+    /// When something ends, in the account's zone: the time alone today, with its date on a
+    /// later day, as the chat's timestamps are ("00:00", "1 Nov 2026, 00:00").
+    var endsWords: String {
+        AccountTime.calendar.isDateInToday(self) ? shortTime : shown(date: .abbreviated, time: .shortened)
+    }
+
     /// `shortTime`, with the account zone's short name when it isn't this device's.
     var zonedShortTime: String { shortTime + AccountTime.label(at: self) }
 
