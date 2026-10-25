@@ -276,6 +276,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       failing("startRun");
       if (!agents.has(k(tenant, agent))) throw gone();
       fairUse(tenant, ai);
+      // A run grant names its person, as kiff/agents resolves it with KIFF: here "krg_<subject>".
+      if (at.grant) at = { ...at, requester: { kind: "member", id: at.grant.replace(/^krg_/, "") } };
       const { session, opened } = place(tenant, agent, at);
       const run = newRun(tenant, agent, session, "owner", input);
       if (at.requester) run.requester = { ...at.requester };

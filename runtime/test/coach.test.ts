@@ -47,12 +47,12 @@ function world() {
     fetch: (async (url: string) => url.endsWith("/v1/me") ? new Response(JSON.stringify(ME)) : new Response("{}", { status: 404 })) as unknown as typeof fetch,
   };
   /** KIFF's permit for exactly this call, from `sub`. */
-  const permit = (tool: string, args: Record<string, unknown>, sub = "agent_coach", tenant = T) => {
+  const permit = (tool: string, args: Record<string, unknown>, sub = "agent_coach", tenant = T, act?: string) => {
     const enc = (v: unknown) => Buffer.from(JSON.stringify(v)).toString("base64url");
     const iat = Math.floor(Date.parse("2026-10-16T12:00:00Z") / 1000);
     const h = enc({ alg: "Ed25519", typ: "kiff-permit+jwt", kid: "k1" });
     const c = enc({
-      iss: ISSUER, aud: AUD, sub, iat, exp: iat + 60, jti: `jti_${++jti}`,
+      iss: ISSUER, aud: AUD, sub, iat, exp: iat + 60, jti: `jti_${++jti}`, ...(act ? { act: { sub: act } } : {}),
       authorization_details: [{ type: "https://kiff.dev/permits/tool-call", tenant, tool, args_sha256: sha256(args), op: args[OP_ARG] }],
     });
     return `${h}.${c}.${sign(null, Buffer.from(`${h}.${c}`), privateKey).toString("base64url")}`;
@@ -68,9 +68,9 @@ function world() {
     return JSON.parse(r.body) as { result?: { content?: Array<{ text: string }>; isError?: boolean; tools?: Array<{ name: string; inputSchema: { required: string[] } }> } };
   };
   /** A tool call as KIFF forwards it: its operation id in the arguments, and the permit for exactly them. */
-  const tool = async (name: string, args: Record<string, unknown>, opts: { op?: string; sub?: string; tenant?: string; token?: string } = {}) => {
+  const tool = async (name: string, args: Record<string, unknown>, opts: { op?: string; sub?: string; tenant?: string; token?: string; act?: string } = {}) => {
     const full = { ...args, [OP_ARG]: opts.op ?? `op_${name}_${++id}` };
-    const r = await rpc("tools/call", { name, arguments: full }, opts.token ?? permit(name, full, opts.sub, opts.tenant));
+    const r = await rpc("tools/call", { name, arguments: full }, opts.token ?? permit(name, full, opts.sub, opts.tenant, opts.act));
     const text = r.result?.content?.[0]?.text ?? "";
     return { isError: r.result?.isError === true, text, json: (() => { try { return JSON.parse(text); } catch { return undefined; } })() };
   };
@@ -177,6 +177,41 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(runs.map((r) => r.requester?.kind)).toEqual(["agent", "agent", "agent"]);
     expect(runs[1]!.session).toBe(runs[0]!.session);
     expect(runs[2]!.session).not.toBe(runs[0]!.session);
+  });
+
+  it("in a person's chat, does only what KIFF says they may, and hands tasks over as theirs", async () => {
+    const w = world();
+    // KIFF's answers, by person: Ana uses Refunds, Max oversees it, Bo has nothing.
+    const may: Record<string, Record<string, unknown>> = {
+      u_ana: { use: true, oversee: false, manage: false, grant: "krg_u_ana" },
+      u_max: { use: false, oversee: true, manage: false },
+      u_bo: { use: false, oversee: false, manage: false },
+    };
+    const asked: Array<Record<string, unknown>> = [];
+    const me = w.deps.fetch!;
+    w.deps.fetch = (async (url: string, init?: RequestInit) => {
+      if (!url.endsWith("/v1/coach/act")) return me(url, init);
+      const body = JSON.parse(String(init?.body)) as { permit: string; agent?: string };
+      asked.push(body);
+      const act = JSON.parse(Buffer.from(body.permit.split(".")[1]!, "base64url").toString()).act.sub as string;
+      return new Response(JSON.stringify(body.agent ? may[act] : { agents: { agent_rae: may[act] } }));
+    }) as unknown as typeof fetch;
+
+    // Ana's task is hers: her own chat with the taf, under her grant.
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    expect(task.isError).toBe(false);
+    const run = w.agents.runs.find((r) => r.id === task.json.run)!;
+    expect(run.requester).toEqual({ kind: "member", id: "u_ana" });
+    expect(asked[0]).toMatchObject({ agent: "agent_rae", permit: expect.any(String) });
+    // Bo may not use it: nothing starts, and he lists no tafs.
+    const bo = await w.tool("taf_task", { taf: RAE, text: "Refund order 43" }, { act: "u_bo" });
+    expect(bo).toMatchObject({ isError: true, text: expect.stringContaining("isn't shared with them") });
+    expect((await w.tool("tafs_state", {}, { act: "u_bo" })).json.tafs).toEqual([]);
+    // Bo can't stop Ana's run; Max, who oversees, can.
+    expect(await w.tool("run_stop", { taf: RAE, run: run.id }, { act: "u_bo" })).toMatchObject({ isError: true, text: expect.stringContaining("isn't theirs to stop") });
+    expect((await w.tool("run_stop", { taf: RAE, run: run.id }, { act: "u_max" })).json).toMatchObject({ status: "CANCELLED" });
+    // Changing versions takes manage, which no one here has.
+    expect(await w.tool("version_try", { taf: RAE, n: 2 }, { act: "u_max" })).toMatchObject({ isError: true, text: expect.stringContaining("people who manage it") });
   });
 
   it("steers and stops a run a person started in the app, as tafs cloud itself", async () => {
