@@ -1750,7 +1750,7 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
   if (!run) throw new HTTPError(400, "name the run to write to");
   const text = chatText(event);
   try {
-    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text);
+    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text, member(me));
     return { run: out.id, status: out.status };
   } catch (err) {
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, "the run has ended: send it as a new message");
@@ -2518,7 +2518,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     const running = str(args.run).trim();
     if (running) {
       try {
-        const out = await deps.agents.steerRun(call.tenant, taf.id, running, text);
+        const out = await deps.agents.steerRun(call.tenant, taf.id, running, text, member(me));
         return { taf: taf.name, run: out.id, status: out.status, sent: "to the run at work, read at its next step" };
       } catch (err) {
         if (err instanceof AgentsError && err.status === 409) throw new ToolRefusal("that run has ended: hand the task over again without run");

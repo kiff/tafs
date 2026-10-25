@@ -331,6 +331,13 @@ describe("steer", () => {
     expect(w.agents.runs.find((x) => x.id === chat.id)?.steering?.map((m) => m.text)).toEqual(["only the €20 one"]);
   });
 
+  it("never writes to another person's run", async () => {
+    const w = world();
+    const bos = await w.agents.api.startRun("t_acme", RAE, "Work the queue", { requester: { kind: "member", id: "u_bo" } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: bos.id, text: "stop that" } })).status).toBe(404);
+    expect(w.agents.runs.find((x) => x.id === bos.id)?.steering).toBeUndefined();
+  });
+
   it("says a run that ended is over, so the app sends it as a new message", async () => {
     const w = world();
     const chat = await w.agents.api.startRun("t_acme", RAE, "hi");

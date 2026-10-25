@@ -497,9 +497,11 @@ export class Agents {
   /**
    * Steers a run that hasn't ended (kiff/agents#102): the owner's message, taken at
    * the run's next checkpoint. A run that ended, or was asked to stop, is 409.
+   * With `requester`, only their own run, counted toward their flood guard (429);
+   * without, tafs cloud itself writes.
    */
-  steerRun(tenant: string, agent: string, run: string, text: string): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text });
+  steerRun(tenant: string, agent: string, run: string, text: string, requester?: Requester): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}) });
   }
 
   /**

@@ -393,11 +393,12 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!r) throw gone();
       return r;
     },
-    async steerRun(tenant, agent, id, text) {
+    async steerRun(tenant, agent, id, text, requester) {
       calls.push(`steerRun ${agent} ${id}`);
       failing("steerRun");
       const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
-      if (!r) throw gone();
+      // Another person's run is not found; tafs cloud itself (no requester) may write to any.
+      if (!r || (requester && r.requester && (r.requester.kind !== requester.kind || r.requester.id !== requester.id))) throw gone();
       if (r.status !== "PENDING" && r.status !== "RUNNING" && r.status !== "PAUSED") throw new AgentsError(409, "the run has ended, or was asked to stop");
       r.steering = [...(r.steering ?? []), { text, at: now().toISOString() }];
       return r;
