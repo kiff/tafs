@@ -230,7 +230,9 @@ struct SetupChatView: View {
                     if !thinking { ended }
                     if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() }.id("queued") }
                     // Room under a pinned message, so it can sit at the top while the answer is short.
-                    if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
+                    // A whole screen under a pinned message, so a short one reaches the top at once,
+                    // not once the answer has grown below it (kiff/tafs#243).
+                    if pinned != nil { Color.clear.frame(height: max(0, viewport)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
                         .onAppear {
                             // A pinned message stays at the top: seeing the bottom under it doesn't make

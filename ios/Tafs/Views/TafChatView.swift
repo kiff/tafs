@@ -33,20 +33,42 @@ struct TafChatView: View {
     /// there, so the same words sent again never pin the older copy (kiff/tafs#138, item 34).
     @State private var sentBefore: Set<String> = []
     @State private var viewport: CGFloat = 600
+    /// The height of what's under the thread: an error, the field, the dictation bar.
+    @State private var footHeight: CGFloat = 60
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
 
     var body: some View {
         VStack(spacing: 0) {
             thread
-            if let error = model.chatErrors[tafID] {
-                Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
-                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
+            VStack(spacing: 0) {
+                if let error = model.chatErrors[tafID] {
+                    Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
+                }
+                composer
+                #if os(iOS)
+                DictationBar(dictation: model.dictation)
+                #endif
             }
-            composer
-            #if os(iOS)
-            DictationBar(dictation: model.dictation)
-            #endif
+            .background(GeometryReader { g in
+                Color.clear.onAppear { footHeight = g.size.height }.onChange(of: g.size.height) { footHeight = $0 }
+            })
         }
         .task(id: tafID) { await model.followChat(tafID) }
+    }
+
+    /// Room at the thread's foot for ✦ Coach mode, which floats over the screen's lower right
+    /// (kiff/tafs#243): the newest line stops above it. None while the button is hidden: the
+    /// keyboard is up, or Coach mode is open.
+    private var coachRoom: CGFloat {
+        #if os(iOS)
+        guard model.signedIn, model.mode == .kiff, !model.coachOpen, !typing else { return 0 }
+        return max(0, CoachButton.clearance(wide: sizeClass == .regular) - footHeight)
+        #else
+        return 0
+        #endif
     }
 
     private var thread: some View {
@@ -129,7 +151,9 @@ struct TafChatView: View {
                         QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
                             .id("queued")
                     }
-                    if pinned != nil { Color.clear.frame(height: max(0, viewport * 0.7)) }
+                    // A whole screen under a pinned message, so a short one reaches the top at once,
+                    // not once the answer has grown below it (kiff/tafs#243).
+                    if pinned != nil { Color.clear.frame(height: max(0, viewport)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
                         .onAppear {
                             // A pinned message stays at the top: seeing the bottom under it doesn't make
@@ -148,6 +172,7 @@ struct TafChatView: View {
                 .frame(maxWidth: .infinity)
             }
             .dismissesKeyboardInteractively()
+            .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: coachRoom) }
             .background(GeometryReader { g in
                 Color.clear.onAppear { viewport = g.size.height }.onChange(of: g.size.height) { viewport = $0 }
             })
