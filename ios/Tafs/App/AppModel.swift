@@ -2392,7 +2392,7 @@ final class AppModel: ObservableObject {
         chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy))
     }
 
-    /// Why a message wasn't sent when the owner wrote too many too fast: tafs cloud's limit
+    /// Why a message wasn't sent when the owner wrote too many too fast: the runtime's limit
     /// of 10 in 10 minutes for each person (kiff/agents#220).
     static func busyWords(_ name: String) -> String {
         "That's a lot of messages in a few minutes. Give \(name) a moment, then try again."

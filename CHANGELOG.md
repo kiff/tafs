@@ -62,9 +62,10 @@ version headings refer to releases, not merely to merged pull requests.
   - Stop takes effect at once in the app, and leaves no "Stopped" line.
   - A "Not sent" kept because you wrote too many messages too fast goes once a
     later message goes through.
-  - The Card shows its own total and today's extra room apart ("300 US$ a day ·
-    +30 US$ extra room today"), not one sum. tafs cloud's home list may carry
-    `extra_room` on a rule and on a Card's total.
+  - The Card shows its own total and the extra room apart, as KIFF says them
+    ("300 US$ a day · +30 US$ extra room until 00:00"), not one sum. tafs
+    cloud's home list may carry KIFF's `extra_room`, `base_limit` and
+    `room_window_end` on a rule and on a Card's total.
   - A hold's receipt reads "held for you by the Card" while it waits, not
     "allowed by the Card".
   - Usage on the Card updates as the taf works, not only once Usage is opened.

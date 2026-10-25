@@ -29,41 +29,53 @@ final class Retest755Tests: XCTestCase {
     }
 
     /// The Card read "330 US$ a day" for 300 a day and 30 of extra room for today: the owner
-    /// took it for an error. Its own total and the extra room read apart.
+    /// took it for an error. Its own total and the extra room read apart, as KIFF says them.
     func testTheCardsOwnTotalAndExtraRoomReadApart() {
-        let rule = CardRule(action: "refund", label: "Refunds", perAction: usd(5000), perWindow: usd(33000), window: .day, extraRoom: usd(3000))
+        let ends = Date(timeIntervalSince1970: 1_792_969_200)
+        let rule = CardRule(action: "refund", label: "Refunds", perAction: usd(5000), perWindow: usd(33000), window: .day,
+                            extraRoom: usd(3000), baseLimit: usd(30000), roomEnds: ends)
         XCTAssertEqual(rule.ownTotal, usd(30000))
-        XCTAssertEqual(rule.summary, "≤ \(usd(5000).formatted) each · \(usd(30000).formatted) a day · +\(usd(3000).formatted) extra room today")
+        XCTAssertEqual(rule.summary, "≤ \(usd(5000).formatted) each · \(usd(30000).formatted) a day · +\(usd(3000).formatted) extra room until \(ends.shortTime)")
         XCTAssertEqual(rule.left(used: usd(28000)), "\(usd(5000).formatted) left today", "what's left counts the extra room")
 
-        let card = TafCard(id: "c", title: "Refunds", rules: [rule], total: CardTotal(limit: usd(33000), used: usd(28000), window: .day, extra: usd(3000)))
+        let card = TafCard(id: "c", title: "Refunds", rules: [rule],
+                           total: CardTotal(limit: usd(33000), used: usd(28000), window: .day, extra: usd(3000), base: usd(30000), roomEnds: ends))
         XCTAssertEqual(card.hero?.figure, usd(5000).formatted)
-        XCTAssertEqual(card.hero?.words, "left today of \(usd(30000).formatted) + \(usd(3000).formatted) extra room")
+        XCTAssertEqual(card.hero?.words, "left today of \(usd(30000).formatted) + \(usd(3000).formatted) extra room until \(ends.shortTime)")
 
-        let plain = CardRule(action: "refund", label: "Refunds", perWindow: usd(30000))
-        XCTAssertEqual(plain.summary, "\(usd(30000).formatted) a day", "no extra room, no word of it")
+        // Nothing is worked out: no word of extra room unless KIFF gives its own limit with it.
+        let plain = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000))
+        XCTAssertEqual(plain.summary, "\(usd(33000).formatted) a day")
+        let half = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000), extraRoom: usd(3000))
+        XCTAssertEqual(half.ownTotal, usd(33000))
+        XCTAssertNil(half.roomWords)
     }
 
-    /// tafs cloud sends the extra room apart; an older one doesn't, and the Card reads as before.
-    func testTheExtraRoomComesFromTafsCloud() throws {
+    /// tafs cloud passes KIFF's extra room on; an older one doesn't, and the Card reads as before.
+    func testTheExtraRoomComesFromKIFFThroughTafsCloud() throws {
         let json = #"""
         {"tafs":[{"id":"taf-1","name":"Rae","job":"refunds","kiff_agent":"rae","status":"active","next_run":null,"last_run":null,
           "color":3,"state":"working","waiting":0,
           "card":{"ids":["live"],"active":true,"expires":null,"tools":["Refund a payment"],
             "rules":[{"action":"refund","label":"Refund a payment","outside":"hold","per_action":{"minor":5000,"unit":"USD","scale":2},
                       "per_window":{"minor":33000,"unit":"USD","scale":2},"extra_room":{"minor":3000,"unit":"USD","scale":2},
+                      "base_limit":{"minor":30000,"unit":"USD","scale":2},"room_window_end":"2026-10-25T23:00:00Z",
                       "count_per_window":null,"window":"day"}],
             "used":{},"usage_unknown":[],
             "cards":[{"id":"live","title":"Refund a payment","environment":"","live":true,"active":true,"expires":null,"rules":[],
                "total":{"limit":{"minor":33000,"unit":"USD","scale":2},"used":{"minor":28000,"unit":"USD","scale":2},"window":"day",
-                        "extra_room":{"minor":3000,"unit":"USD","scale":2}},"calls":null}]}}],
+                        "extra_room":{"minor":3000,"unit":"USD","scale":2},"base_limit":{"minor":30000,"unit":"USD","scale":2},
+                        "room_window_end":"2026-10-25T23:00:00Z"},"calls":null}]}}],
          "others":[],"removing":[]}
         """#
         let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(json.utf8))
         let rae = KIFFMapping.taf(home.tafs[0], id: UUID(), owner: "You")
+        let ends = Date(timeIntervalSince1970: 1_792_969_200)
         XCTAssertEqual(rae.card.rules.first?.extraRoom, usd(3000))
-        XCTAssertEqual(rae.kiffCards?.first?.total?.extra, usd(3000))
-        XCTAssertEqual(rae.kiffCards?.first?.hero?.words, "left today of \(usd(30000).formatted) + \(usd(3000).formatted) extra room")
+        XCTAssertEqual(rae.card.rules.first?.baseLimit, usd(30000))
+        XCTAssertEqual(rae.card.rules.first?.roomEnds, ends)
+        XCTAssertEqual(rae.kiffCards?.first?.total?.base, usd(30000))
+        XCTAssertEqual(rae.kiffCards?.first?.hero?.words, "left today of \(usd(30000).formatted) + \(usd(3000).formatted) extra room until \(ends.shortTime)")
     }
 
     /// An answered hold read as if the approval came first: its line sat above the taf's
