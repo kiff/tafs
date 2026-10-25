@@ -138,6 +138,13 @@ describe("kiff/agents client", () => {
     await expect(agents.deleteAgent("t_acme", "taf1")).resolves.toBeUndefined();
   });
 
+  it("ends a trial with its counts alone, whatever else KIFF's trial carries", async () => {
+    const { agents, sent } = server(() => new Response(JSON.stringify({ ended: { why: "installed" } }), { status: 200 }));
+    const fromKIFF = { status: "ended", endedBy: "install", calls: 2, held: 1, refused: 0 };
+    await agents.endTrial("t1", "payouts", "installed", fromKIFF);
+    expect(JSON.parse(sent[0]!.body!)).toEqual({ why: "installed", calls: 2, held: 1, refused: 0 });
+  });
+
   it("is only ever called over https", () => {
     expect(() => new Agents({ url: "http://abc123.lambda-url.eu-west-1.on.aws", region: "eu-west-1", credentials: async () => CREDS })).toThrow(/https/);
   });

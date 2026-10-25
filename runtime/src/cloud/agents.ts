@@ -389,7 +389,9 @@ export class Agents {
 
   /** Ends the trial with KIFF's counts: its chat is deleted, and its version keeps one line. */
   async endTrial(tenant: string, id: string, why: "installed" | "back", counts: { calls: number; held: number; refused: number }): Promise<TrialSummary> {
-    return (await this.call<{ ended: TrialSummary }>("DELETE", tenant, ["agents", id, "trial"], { why, ...counts })).ended;
+    // Only the counts: KIFF's trial also carries its status, which kiff/agents refuses.
+    const { calls, held, refused } = counts;
+    return (await this.call<{ ended: TrialSummary }>("DELETE", tenant, ["agents", id, "trial"], { why, calls, held, refused })).ended;
   }
 
   /** The agent's definition; undefined when the tenant has none of that id. */
