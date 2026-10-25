@@ -1,11 +1,14 @@
-import { AgentsError, type AIBound, type Notify, type AgentDefinition, type AgentVersion, type Note, type Run, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AIBound, type Notify, type AgentDefinition, type AgentVersion, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
 import type { CoachStore } from "../src/cloud/coach.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
 /**
  * kiff/agents in memory, per tenant, as its server behaves where tafs cloud
  * relies on it: a run starts in the session named or a new one (a chat for
- * the owner's runs, a run session for a schedule's), schedules start runs of
+ * the owner's runs, a run session for a schedule's), a requester's new session
+ * is theirs and their live chat is their latest one active in the last 30
+ * minutes and not archived, each requester has 10 messages in 10 minutes,
+ * schedules start runs of
  * their agent, removing an agent removes everything kept for it, and
  * anything outside the tenant is 404. `fail` makes the next call of a
  * method throw.
@@ -44,9 +47,32 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   };
   const openSession = (tenant: string, agent: string, kind: Session["kind"]) => {
     const at = now().toISOString();
-    const s = { tenant, id: `sess${++n}`, agent, kind, started: at, updated: at };
+    const s: Session & { tenant: string } = { tenant, id: `sess${++n}`, agent, kind, started: at, updated: at };
     sessions.unshift(s);
     return s;
+  };
+  /** Where a requester's run goes, as kiff/agents decides it: the session, its owner's, and whether it opened it. */
+  const place = (tenant: string, agent: string, at: RunAt): { session: string; opened: boolean } => {
+    const owner = at.requester ? `${at.requester.kind}:${at.requester.id}` : "";
+    // A door's senders have their door's own daily caps in tafs cloud.
+    if (at.requester?.kind === "member") {
+      const since = now().getTime() - 10 * 60_000;
+      const sent = runs.filter((r) => r.tenant === tenant && r.agent === agent && r.requester && `${r.requester.kind}:${r.requester.id}` === owner && Date.parse(r.created) > since);
+      if (sent.length >= 10) throw new AgentsError(429, "that's 10 messages in 10 minutes; wait a little before writing again");
+    }
+    if (at.session) {
+      const found = sessions.find((x) => x.tenant === tenant && x.id === at.session);
+      if (!found || found.agent !== agent || (found.owner && found.owner !== owner)) throw gone();
+      return { session: found.id, opened: false };
+    }
+    if (at.live && owner) {
+      const latest = sessions.filter((x) => x.tenant === tenant && x.agent === agent && x.owner === owner && x.kind === "chat")
+        .sort((a, b) => b.updated.localeCompare(a.updated))[0];
+      if (latest && !latest.archived && now().getTime() - Date.parse(latest.updated) < 30 * 60_000) return { session: latest.id, opened: false };
+    }
+    const opened = openSession(tenant, agent, "chat");
+    if (owner) opened.owner = owner;
+    return { session: opened.id, opened: true };
   };
   const newRun = (tenant: string, agent: string, session: string, trigger: string, input: string, source?: string): Run & { tenant: string } => {
     const at = now().toISOString();
@@ -244,40 +270,31 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       }
       notes.delete(k(tenant, id));
     },
-    async startRun(tenant, agent, input, session, ai, notify) {
-      calls.push(`startRun ${agent} ${session ?? "new"}`);
+    async startRun(tenant, agent, input, at = {}, ai, notify) {
+      calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}`);
       failing("startRun");
       if (!agents.has(k(tenant, agent))) throw gone();
       fairUse(tenant, ai);
-      let s = session;
-      if (s) {
-        const found = sessions.find((x) => x.tenant === tenant && x.id === s);
-        if (!found || found.agent !== agent) throw gone();
-      } else {
-        s = openSession(tenant, agent, "chat").id;
-      }
-      const run = newRun(tenant, agent, s, "owner", input);
+      const { session, opened } = place(tenant, agent, at);
+      const run = newRun(tenant, agent, session, "owner", input);
+      if (at.requester) run.requester = { ...at.requester };
       if (notify) notified.set(run.id, notify);
-      return run;
+      // The run as stored, so a test that changes it changes kiff/agents' copy.
+      return Object.assign(run, { new_session: opened });
     },
     /**
      * A foreground run's stream: the run, then `streamed` (what the test says the
      * agent does), then its end. `failing("streamRun")` refuses before it begins.
      */
-    async *streamRun(tenant, agent, input, session, ai) {
-      calls.push(`streamRun ${agent} ${session ?? "new"}`);
+    async *streamRun(tenant, agent, input, at = {}, ai) {
+      calls.push(`streamRun ${agent} ${at.session ?? (at.live ? "live" : "new")}`);
       failing("streamRun");
       if (!agents.has(k(tenant, agent))) throw gone();
       fairUse(tenant, ai);
-      let s = session;
-      if (s) {
-        const found = sessions.find((x) => x.tenant === tenant && x.id === s);
-        if (!found || found.agent !== agent) throw gone();
-      } else {
-        s = openSession(tenant, agent, "chat").id;
-      }
-      const r = newRun(tenant, agent, s, "owner", input);
-      yield { event: "run", data: r };
+      const { session, opened } = place(tenant, agent, at);
+      const r = newRun(tenant, agent, session, "owner", input);
+      if (at.requester) r.requester = { ...at.requester };
+      yield { event: "run", data: { ...r, new_session: opened } };
       for (const e of streamed) {
         if (e instanceof Error) throw e;
         yield e;
@@ -285,15 +302,23 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       (r as { status: string }).status = "COMPLETED";
       yield { event: "end", data: { ...r, stop: "answered" } };
     },
-    async sessions(tenant, agent, limit = 20) {
+    async sessions(tenant, agent, limit = 20, owner) {
       failing("sessions");
-      return sessions.filter((s) => s.tenant === tenant && s.agent === agent)
+      return sessions.filter((s) => s.tenant === tenant && s.agent === agent && (!owner || !s.owner || s.owner === owner))
         .sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, limit);
     },
-    async session(tenant, id) {
+    async session(tenant, id, owner) {
       const s = sessions.find((x) => x.tenant === tenant && x.id === id);
-      if (!s) throw gone();
+      if (!s || (owner && s.owner && s.owner !== owner)) throw gone();
       return { session: s, events: events.get(id) ?? [] };
+    },
+    async archive(tenant, id, archived, owner) {
+      calls.push(`${archived ? "archive" : "unarchive"} ${id}`);
+      failing("archive");
+      const s = sessions.find((x) => x.tenant === tenant && x.id === id);
+      if (!s || (owner && s.owner && s.owner !== owner)) throw gone();
+      s.archived = archived;
+      return { ...s };
     },
     async memories(tenant, agent) {
       if (!agents.has(k(tenant, agent))) throw gone();
@@ -512,13 +537,13 @@ export function memorySlots(): Slots & { taken: Set<string> } {
 }
 
 /** Archived chats, by tenant and taf (kiff/tafs#82). */
-export function memoryArchived(): Archived & { held: Map<string, Set<string>> } {
+/** Archives tafs cloud kept before kiff/agents did; `add` is a test's, for one kept then. */
+export function memoryArchived(): Archived & { held: Map<string, Set<string>>; add(t: string, taf: string, session: string): Promise<void> } {
   const held = new Map<string, Set<string>>();
   return {
     held,
     async list(t, taf) { return [...(held.get(`${t}#${taf}`) ?? [])]; },
     async add(t, taf, session) { held.set(`${t}#${taf}`, new Set([...(held.get(`${t}#${taf}`) ?? []), session])); },
-    async unarchive(t, taf, session) { held.get(`${t}#${taf}`)?.delete(session); },
     async remove(t, taf) { held.delete(`${t}#${taf}`); },
   };
 }

@@ -212,14 +212,16 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   await store.put(doorKeys.reply(tenant, ref), reply, addDays(ctx.now, DOOR.replyDays));
   await update<{ refs: string[] }>(store, doorKeys.pending(tenant, taf.id),
     (read) => ({ refs: [ref, ...(read?.refs ?? [])].slice(0, 50) }), addDays(ctx.now, DOOR.replyDays));
+  // The sender asks: their sessions are theirs in kiff/agents, never a member's or another sender's.
+  const requester = { kind: "door" as const, id: hash(door.id, a.from) };
   let run: Run;
   try {
     try {
-      run = await ctx.agents.startRun(tenant, taf.id, input, prior?.session, ai?.period ? ai : undefined, notify);
+      run = await ctx.agents.startRun(tenant, taf.id, input, { session: prior?.session, requester }, ai?.period ? ai : undefined, notify);
     } catch (err) {
       // The thread's chat is gone or busy: a new chat takes the message.
-      if (!(prior?.session && err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw err;
-      run = await ctx.agents.startRun(tenant, taf.id, input, undefined, ai?.period ? ai : undefined, notify);
+      if (!(prior?.session && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429)) throw err;
+      run = await ctx.agents.startRun(tenant, taf.id, input, { requester }, ai?.period ? ai : undefined, notify);
     }
   } catch (err) {
     await forgetReply(ctx, tenant, taf.id, ref).catch(() => undefined);

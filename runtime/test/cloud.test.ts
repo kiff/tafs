@@ -590,7 +590,7 @@ describe("the home list", () => {
 describe("removing a taf", () => {
   it("removes it from kiff/agents, then its key, then frees its name", async () => {
     const w = world();
-    await w.archived.add("t_acme", RAE, "sess_x", new Date("2026-11-16T12:00:00Z"));
+    await w.archived.add("t_acme", RAE, "sess_x");
     const r = await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "ana" });
     expect(r.status).toBe(200);
     expect(r.body).toEqual({ taf: RAE, name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });

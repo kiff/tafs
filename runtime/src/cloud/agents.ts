@@ -156,6 +156,10 @@ export interface Run {
   cancel_requested?: boolean;
   /** What the owner wrote to the run while it went (kiff/agents#102), each marked once the run took it. */
   steering?: Array<{ text: string; at: string; taken?: boolean }>;
+  /** Who asked for it; none for a job's run. */
+  requester?: Requester;
+  /** The run opened its session: a requester's live chat had gone quiet, or none was asked for. */
+  new_session?: boolean;
   created: string;
   updated: string;
 }
@@ -255,6 +259,35 @@ export interface Session {
   started: string;
   updated: string;
   expires?: string;
+  /** Whose thread it is, as "member:<subject>" or "door:<id>"; none for a job's, or one from before owners. */
+  owner?: string;
+  /** Its owner put it away: it leaves their list, and a live message starts a new chat. */
+  archived?: boolean;
+}
+
+/** Who asks for a run: a member of the account, by their KIFF subject, or a door's sender. */
+export interface Requester {
+  kind: "member" | "door";
+  id: string;
+}
+
+/**
+ * Where a run goes: the named session, else the requester's live chat when `live`
+ * (kiff/agents picks it), else a new session, the requester's.
+ */
+export interface RunAt {
+  session?: string;
+  requester?: Requester;
+  live?: boolean;
+}
+
+/** A run's start body for where it goes. */
+function runAt(at: RunAt): Record<string, unknown> {
+  return {
+    ...(at.session ? { session_id: at.session } : {}),
+    ...(at.requester ? { requester: at.requester } : {}),
+    ...(at.live && !at.session ? { chat: "live" } : {}),
+  };
 }
 
 export interface SessionEvent {
@@ -417,12 +450,13 @@ export class Agents {
   // Runs.
 
   /**
-   * Starts a run of the agent in the background: in `session` when given, else in a new one.
+   * Starts a run of the agent in the background, where `at` says.
    * With `ai`, a chat counted toward the period's AI fair use, refused (409) past its bound.
+   * A requester past their flood guard is 429.
    */
-  startRun(tenant: string, agent: string, input: string, session?: string, ai?: AIBound, notify?: Notify): Promise<Run> {
+  startRun(tenant: string, agent: string, input: string, at: RunAt = {}, ai?: AIBound, notify?: Notify): Promise<Run> {
     return this.call("POST", tenant, ["agents", agent, "runs"], {
-      input, ...(session ? { session_id: session } : {}), ...(ai ? { ai } : {}), ...(notify ? { notify } : {}), background: true,
+      input, ...runAt(at), ...(ai ? { ai } : {}), ...(notify ? { notify } : {}), background: true,
     });
   }
 
@@ -441,8 +475,8 @@ export class Agents {
    * A refusal before the stream begins throws, as `startRun` does. The run is
    * kiff/agents' invocation's, not this reader's: stopping reading stops none of it.
    */
-  async *streamRun(tenant: string, agent: string, input: string, session?: string, ai?: AIBound): AsyncGenerator<RunStreamEvent> {
-    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...(session ? { session_id: session } : {}), ...(ai ? { ai } : {}) }, undefined, "text/event-stream");
+  async *streamRun(tenant: string, agent: string, input: string, at: RunAt = {}, ai?: AIBound): AsyncGenerator<RunStreamEvent> {
+    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...runAt(at), ...(ai ? { ai } : {}) }, undefined, "text/event-stream");
     if (!res.ok) throw await failure(res);
     if (!res.body) throw new AgentsError(502, "kiff/agents answered with no stream");
     yield* readEvents(res.body);
@@ -503,15 +537,21 @@ export class Agents {
 
   // Sessions and memory.
 
-  /** The agent's sessions, newest first. */
-  async sessions(tenant: string, agent: string, limit = 20): Promise<Session[]> {
-    const out = await this.call<{ sessions: Session[] }>("GET", tenant, ["sessions"], undefined, { agent_id: agent, limit: String(limit) });
+  /** The agent's sessions, newest first: with `owner`, only theirs and those with no owner. */
+  async sessions(tenant: string, agent: string, limit = 20, owner?: string): Promise<Session[]> {
+    const out = await this.call<{ sessions: Session[] }>("GET", tenant, ["sessions"], undefined, { agent_id: agent, limit: String(limit), ...(owner ? { owner } : {}) });
     return out.sessions;
   }
 
   /** A session and its events still kept, in order. */
-  session(tenant: string, id: string): Promise<{ session: Session; events: SessionEvent[] }> {
-    return this.call("GET", tenant, ["sessions", id]);
+  session(tenant: string, id: string, owner?: string): Promise<{ session: Session; events: SessionEvent[] }> {
+    return this.call("GET", tenant, ["sessions", id], undefined, owner ? { owner } : undefined);
+  }
+
+  /** Archives a session, or puts it back: with `owner`, only one that is theirs or has no owner. */
+  async archive(tenant: string, id: string, archived: boolean, owner?: string): Promise<Session> {
+    const out = await this.call<{ session: Session }>("POST", tenant, ["sessions", id, archived ? "archive" : "unarchive"], undefined, owner ? { owner } : undefined);
+    return out.session;
   }
 
   async memories(tenant: string, agent: string): Promise<Note[]> {

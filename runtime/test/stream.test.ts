@@ -79,7 +79,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     // What tools were given and what they answered never reaches the phone.
     expect(r.raw).not.toContain("grt_secret");
     expect(r.raw).not.toContain("acct_123");
-    expect(w.agents.calls).toEqual(["streamRun " + RAE + " new"]);
+    expect(w.agents.calls).toEqual(["streamRun " + RAE + " live"]);
   });
 
   it("says each step in a few words, naming the vendor once its grant is known, never the arguments (kiff/tafs#214)", async () => {
@@ -119,16 +119,17 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.raw).not.toContain("op_1");
   });
 
-  it("goes on in a live chat, or takes a new one when kiff/agents refuses it", async () => {
+  it("goes on in the person's live chat, as kiff/agents picks it, or a new one they ask for", async () => {
     const w = world();
     const first = await stream(w, PATH, { token: "ana", body: { text: "hi" } });
     const session = first.events[0]!.data.session;
+    expect(first.events[0]!.data).toMatchObject({ new_session: true });
     const again = await stream(w, PATH, { token: "ana", body: { text: "and then?" } });
     expect(again.events[0]!.data).toEqual({ session, new_session: false, run: expect.any(String) });
-    w.agents.fail.set("streamRun", new AgentsError(409, "the chat is busy"));
-    const busy = await stream(w, PATH, { token: "ana", body: { text: "one more" } });
-    expect(busy.status).toBe(200);
-    expect(busy.events[0]!.data).toMatchObject({ new_session: true });
+    const fresh = await stream(w, PATH, { token: "ana", body: { text: "another thing", new_chat: true } });
+    expect(fresh.events[0]!.data).toMatchObject({ new_session: true });
+    expect(fresh.events[0]!.data.session).not.toBe(session);
+    expect(w.agents.runs.every((r) => r.requester?.kind === "member" && r.requester.id === "u_ana")).toBe(true);
   });
 
   it("checks what messages checks, before any run", async () => {

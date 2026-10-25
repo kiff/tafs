@@ -7,6 +7,8 @@ const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities
 const VIEWER = { ...ME, capabilities: ["read"] };
 const APPROVER = { ...ME, subject: "u_bo", capabilities: ["read", "holds.answer"] };
 const NOW = new Date("2026-10-16T12:00:00Z");
+/** Ana as kiff/agents knows her: the requester of her runs, and her chats' owner. */
+const ANA = { requester: { kind: "member" as const, id: "u_ana" } };
 const minutesAgo = (m: number) => new Date(NOW.getTime() - m * 60_000).toISOString();
 const RAE = "taf-aaaa0000000000000000";
 const MAX = "taf-bbbb0000000000000000";
@@ -155,44 +157,52 @@ describe("messages", () => {
   it("goes into the latest chat while it was active in the last 30 minutes", async () => {
     const w = world();
     w.at(new Date(minutesAgo(20)));
-    const chat = await w.agents.api.startRun("t_acme", RAE, "Hello");
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Hello", ANA);
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "And order 9?" } });
     expect(r.body).toEqual({ session: chat.session, new_session: false });
+    expect(w.agents.runs[0]!.requester).toEqual(ANA.requester);
   });
 
   it("starts a new chat when the latest is older, even after a newer job run", async () => {
     const w = world();
     w.at(new Date(minutesAgo(45)));
-    await w.agents.api.startRun("t_acme", RAE, "Hello");
+    await w.agents.api.startRun("t_acme", RAE, "Hello", ANA);
     await jobRun(w, new Date(minutesAgo(5)), "Refunded 1 order.");
     w.agents.calls.length = 0;
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "What did you just do?" } });
     expect(r.body.new_session).toBe(true);
-    expect(w.agents.calls).toEqual([`startRun ${RAE} new`]);
+    expect(w.agents.calls).toEqual([`startRun ${RAE} live`]);
   });
 
-  it("starts a new chat when the live one refuses the message", async () => {
+  it("never goes on in another person's chat, nor opens one by its id", async () => {
     const w = world();
     w.at(new Date(minutesAgo(5)));
-    const chat = await w.agents.api.startRun("t_acme", RAE, "Hello");
-    w.agents.fail.set("startRun", new AgentsError(409, "a run of this session is going"));
+    const bos = await w.agents.api.startRun("t_acme", RAE, "Bo's question", { requester: { kind: "member", id: "u_bo" } });
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Still there?" } });
     expect(r.body.new_session).toBe(true);
-    expect(r.body.session).not.toBe(chat.session);
+    expect(r.body.session).not.toBe(bos.session);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi", session: bos.session } })).status).toBe(404);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${bos.session}`, { token: "ana" })).status).toBe(404);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${bos.session}/archive`, { token: "ana" })).status).toBe(404);
+    const listed = await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" });
+    expect(listed.body.chats.map((c: { session: string }) => c.session)).toEqual([r.body.session]);
+    const thread = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(thread.body.messages.map((m: { text: string }) => m.text)).not.toContain("Bo's question");
   });
 
-  it("refuses an eleventh message in ten minutes, however many chats they start", async () => {
+  it("passes on kiff/agents' refusal of an eleventh message in ten minutes, however many chats they start", async () => {
     const w = world();
-    for (let i = 0; i < CHAT.floodMessages; i++) {
+    for (let i = 0; i < 10; i++) {
       expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: `m${i}` } })).status).toBe(200);
     }
-    const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "one more" } });
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "one more", new_chat: true } });
     expect(r.status).toBe(429);
+    expect(r.body.error).toMatch(/10 messages in 10 minutes/);
   });
 
   it("says the runtime didn't answer when kiff/agents is down", async () => {
     const w = world();
-    w.agents.fail.set("sessions", new Error("connect ETIMEDOUT"));
+    w.agents.fail.set("startRun", new Error("connect ETIMEDOUT"));
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" } });
     expect(r.status).toBe(502);
     expect(r.body.error).not.toContain("ETIMEDOUT");
@@ -296,7 +306,7 @@ describe("stop", () => {
 });
 
 describe("steer", () => {
-  it("writes to the run at work, which reads it at its next step; the flood guard counts it", async () => {
+  it("writes to the run at work, which reads it at its next step", async () => {
     const w = world();
     const chat = await w.agents.api.startRun("t_acme", RAE, "Work the queue");
     w.agents.calls.length = 0;
@@ -305,10 +315,6 @@ describe("steer", () => {
     expect(r.body).toEqual({ run: chat.id, status: "PENDING" });
     expect(w.agents.calls).toEqual([`steerRun ${RAE} ${chat.id}`]);
     expect(w.agents.runs.find((x) => x.id === chat.id)?.steering?.map((m) => m.text)).toEqual(["only the €20 one"]);
-    for (let n = 1; n < CHAT.floodMessages; n++) {
-      await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: chat.id, text: `more ${n}` } });
-    }
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: chat.id, text: "one too many" } })).status).toBe(429);
   });
 
   it("says a run that ended is over, so the app sends it as a new message", async () => {
@@ -395,7 +401,7 @@ describe("chats (kiff/tafs#73)", () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 3600_000));
     const run = await w.agents.api.startRun("t_acme", RAE, "[approval connect-stripe] declined");
-    await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe for refunds", run.session);
+    await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe for refunds", { session: run.session });
     const r = await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" });
     expect(r.body.chats.map((c: { title: string }) => c.title)).toEqual(["Connect my Stripe for refunds"]);
     expect(chatTitle(["[confirm which] live", "[sign_in vendor] not now", "Refunds, please"])).toBe("Refunds, please");
@@ -417,7 +423,7 @@ describe("chats (kiff/tafs#73)", () => {
     const r = await call(w, "POST", `/v1/tafs/${RAE}/chats/${live.session}/archive`, { token: "ana" });
     expect(r.status).toBe(200);
     expect(r.body).toEqual({ session: live.session, archived: true });
-    expect(w.archived.held.get(`t_acme#${RAE}`)).toEqual(new Set([live.session]));
+    expect(w.agents.calls).toContain(`archive ${live.session}`);
 
     const listed = await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" });
     expect(listed.body.chats.map((c: { session: string }) => c.session)).toEqual([old.session]);
@@ -457,7 +463,27 @@ describe("chats (kiff/tafs#73)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${theirs.session}/archive`, { token: "ana" })).status).toBe(404);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${job.session}/archive`, { token: "ana" })).status).toBe(404);
     expect((await call(w, "POST", `/v1/tafs/${MAX}/chats/${theirs.session}/archive`, { token: "ana" })).status).toBe(404);
+    expect(w.agents.calls.filter((c) => c.startsWith("archive"))).toEqual([]);
+  });
+
+  it("moves the chats archived before kiff/agents kept archives there, once", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const old = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe");
+    const kept = await w.agents.api.startRun("t_acme", RAE, "Answer customer questions");
+    await w.archived.add("t_acme", RAE, old.session);
+    await w.archived.add("t_acme", RAE, "sess_gone"); // kiff/agents deleted it already
+    const listed = await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" });
+    expect(listed.body.chats.map((c: { session: string }) => c.session)).toEqual([kept.session]);
+    expect(w.agents.calls.filter((c) => c.startsWith("archive"))).toEqual([`archive ${old.session}`, "archive sess_gone"]);
     expect(w.archived.held.size).toBe(0);
+    await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(w.agents.calls.filter((c) => c.startsWith("archive"))).toHaveLength(2);
+    // kiff/agents down: the archive is kept, to move next time.
+    await w.archived.add("t_acme", RAE, kept.session);
+    w.agents.fail.set("archive", new Error("down"));
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).status).toBe(502);
+    expect(w.archived.held.size).toBe(1);
   });
 
   it("lists what the taf's calls through KIFF acted on, from the runs' call_refs, only its own", async () => {
