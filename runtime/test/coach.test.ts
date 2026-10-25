@@ -168,6 +168,14 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(await w.tool("taf_pause", { taf: "nobody", action: "pause" })).toMatchObject({ isError: true, text: expect.stringContaining("no taf") });
   });
 
+  it("steers and stops a run a person started in the app, as tafs cloud itself", async () => {
+    const w = world();
+    const ana = { requester: { kind: "member" as const, id: "u_ana" } };
+    const run = await w.agents.api.startRun(T, RAE, "Work the queue", ana);
+    expect((await w.tool("taf_task", { taf: RAE, text: "only the €20 one", run: run.id })).json).toMatchObject({ run: run.id });
+    expect((await w.tool("run_stop", { taf: RAE, run: run.id })).json).toMatchObject({ status: "CANCELLED" });
+  });
+
   it("version_try starts a trial announced back; version_install only says where the owner's install stands", async () => {
     const w = world();
     const t = await w.tool("version_try", { taf: RAE, n: 2 });

@@ -2523,14 +2523,17 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     const running = str(args.run).trim();
     if (running) {
       try {
-        const out = await deps.agents.steerRun(call.tenant, taf.id, running, text, member(me));
+        // Coach doesn't know yet whose conversation it is in, so it writes as tafs cloud
+        // itself: any run of the taf, the way it could before runs had requesters.
+        const out = await deps.agents.steerRun(call.tenant, taf.id, running, text);
         return { taf: taf.name, run: out.id, status: out.status, sent: "to the run at work, read at its next step" };
       } catch (err) {
         if (err instanceof AgentsError && err.status === 409) throw new ToolRefusal("that run has ended: hand the task over again without run");
         throw agentsFailure(err);
       }
     }
-    // The person who asked Coach asks the taf: the task goes in their chat with it.
+    // Coach asks the taf, in its own chat with it: Coach's identity is its agent, as it
+    // doesn't know yet whose conversation it runs in.
     const at: RunAt = { requester: member(me), live: args.chat !== "new" };
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, at, undefined, notify));
@@ -2539,7 +2542,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   }
   if (name === "run_stop") {
     try {
-      const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim(), member(me));
+      // As steering: tafs cloud itself stops it, whoever asked for the run.
+      const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim());
       return { taf: taf.name, run: out.id, status: out.status, withdrawn: "its held calls, in KIFF; nothing more is sent" };
     } catch (err) {
       if (err instanceof AgentsError && err.status === 409) return { taf: taf.name, stopped: false, why: "the run had already ended" };
