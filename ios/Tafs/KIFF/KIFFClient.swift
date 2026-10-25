@@ -986,7 +986,7 @@ final class KIFFClient {
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
         let signed = base == nil ? Self.signsSetup(path) : (base == gatewayURL && path == "/v1/connections")
         if method == "POST" || method == "PUT" || method == "DELETE", signed, let setupSigner, let tenant {
-            let signedAt = ISO8601DateFormatter().string(from: Date())
+            let signedAt = SigningTime.next()
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
             let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)
             request.setValue("t=\(signedAt),v1=\(try setupSigner(message))", forHTTPHeaderField: "KIFF-Device-Signature")

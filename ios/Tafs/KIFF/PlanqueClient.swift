@@ -133,7 +133,17 @@ final class PlanqueClient {
         /// host (kiff/planque#17). Shown as it is.
         let vendorName: String?
         var vendor: String { vendorName ?? request.server }
-        var connected: Bool { status == "connected" }
+        var connected: Bool { status == "connected" || connectedNow }
+        /// planque answered connected to this phone's approval, before its list says so
+        /// (kiff/tafs#245): never decoded, only set by `marked(connected:)`.
+        var connectedNow = false
+
+        /// This grant as planque's answer to an approval left it.
+        func marked(connected: Bool) -> Grant {
+            var g = self
+            g.connectedNow = connected
+            return g
+        }
         /// Connected first (contract 5): signed in, and planque listed the vendor's tools for
         /// Setup to choose from. Nothing is in KIFF yet.
         var listed: Bool { status == "listed" }
@@ -244,7 +254,7 @@ final class PlanqueClient {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = body
         }
-        let signedAt = ISO8601DateFormatter().string(from: Date())
+        let signedAt = SigningTime.next()
         // Signed as planque reads it: the path and query as sent, percent-encoded.
         let uri: String
         if #available(macOS 13, iOS 16, *) {

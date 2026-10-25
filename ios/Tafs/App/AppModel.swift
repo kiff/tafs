@@ -3061,15 +3061,21 @@ final class AppModel: ObservableObject {
             guard let signInURL = approved.signInURL else {
                 // planque already holds the sign-in (contract 5): approving the tools Setup
                 // chose from the vendor's list connected them, with no second sign-in.
-                await refreshConnections()
-                guard gen == accountGeneration else { return nil }
-                if approved.status == "connected", let done = grants.first(where: { $0.id == grant.id && $0.connected }) {
-                    return done
+                guard approved.status == "connected" else {
+                    await refreshConnections()
+                    lastError = "The connection came back \(approved.status) with no sign-in link. Nothing was connected."
+                    return nil
                 }
-                lastError = approved.status == "connected"
-                    ? "\(grant.vendor) is connected, but the app couldn't read it back yet."
-                    : "The connection came back \(approved.status) with no sign-in link. Nothing was connected."
-                return nil
+                // planque said connected: that's the answer (kiff/tafs#245). The list is read
+                // again for the card, a few times while planque's own read catches up; the
+                // approval counts as done either way, and is never asked for twice.
+                for wait in [0, 0.5, 1.5] as [Double] {
+                    if wait > 0 { try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
+                    await refreshConnections()
+                    guard gen == accountGeneration else { return nil }
+                    if let done = grants.first(where: { $0.id == grant.id && $0.connected }) { return done }
+                }
+                return grant.marked(connected: true)
             }
             vendorSignedIn = true
             let back = try await vendorSignIn.signIn(at: signInURL)
