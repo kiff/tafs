@@ -373,7 +373,12 @@ one or two sentences: what waits or was refused, why, and their next step.
   expires is refused, never approved by silence. One call over its own limit
   can be approved once; a call past a total the Card keeps across calls, such
   as a day's, can't: the owner gives extra room for it from the hold, or the
-  limit changes as the taf's next version.
+  limit changes as the taf's next version. Extra room adds just what that call
+  needed, to that total only, and ends when the total resets: a day's at
+  midnight in the account's time zone, a week's or a month's when its window
+  does. A total kiff_card shows above the Card's own limit has extra room in
+  it: say the limit and the extra room apart ("300.00 USD a day, plus 30.00
+  USD of extra room until midnight"), never one sum as the limit.
 - Refused: nothing was sent, and nothing waits for anyone. Never say it waits
   for the owner, or that the owner refused it unless they did. KIFF says why
   (a total reached, a tool no Card covers, another currency); the next step is

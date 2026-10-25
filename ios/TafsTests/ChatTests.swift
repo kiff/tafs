@@ -158,6 +158,44 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
     }
 
+    /// The 755 retest: after Not sent for writing too fast, the warning stayed under every
+    /// message that went through after it. A message that goes through takes it away.
+    func testAWarningForWritingTooFastGoesOnceAMessageGoesThrough() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (429, #"{"error":"too many"}"#)
+        await model.sendChat("12", to: id)
+        XCTAssertEqual(model.chatState(id).unsent.first?.busy, true)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (500, #"{"error":"down"}"#)
+        await model.sendChat("other", to: id)
+        XCTAssertEqual(model.chatState(id).unsent.count, 2, "one not sent for another reason stays, and so does the first")
+
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        await model.sendChat("Do what it asks", to: id)
+        XCTAssertEqual(model.chatState(id).unsent.map(\.text), ["other"], "only the one kept for writing too fast goes")
+    }
+
+    /// The 755 retest: Stop took a while, the taf still at work until its run reached its
+    /// next step. Here it's over at once, though tafs cloud still says it's at work, and the
+    /// chat is ready for the next message.
+    func testStopIsAtOnceThoughTafsCloudStillHasItAtWork() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"working":{"session":"sesn_9","run":"r1"}}"#)
+        await model.loadChat(id)
+        XCTAssertTrue(model.chatThinking(id))
+        StubProtocol.responses["POST /v1/tafs/depl_1/stop"] = (200, #"{"stopped":true}"#)
+        await model.stopChat(id)
+        XCTAssertFalse(model.chatThinking(id), "stopped as the owner sees it")
+        XCTAssertEqual(model.chatState(id).ended, .stopped)
+
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"working":null}"#)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatState(id).stopped, "done with once tafs cloud says so")
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"working":{"session":"sesn_10","run":"r2"}}"#)
+        await model.loadChat(id)
+        XCTAssertTrue(model.chatThinking(id), "a new run is at work")
+    }
+
     /// The owner's message stays on screen while the taf answers, though tafs cloud's thread
     /// doesn't have it yet: a reload mid-answer took it away, so only the dots showed
     /// (kiff/tafs#138, item 48). Once the thread has it, it shows once.

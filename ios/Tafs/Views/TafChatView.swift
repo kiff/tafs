@@ -79,93 +79,98 @@ struct TafChatView: View {
         let waiting = model.chatWaiting(tafID)
         return ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    if items.isEmpty && state.unsent.isEmpty {
-                        Text("Ask \(taf?.name ?? "it") what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.")
-                            .scaledFont(14).foregroundColor(Theme.dim)
-                            .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 30)
-                    }
-                    ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
-                        // A time between parts of the thread that are far apart, not on every line.
-                        if i == 0 || item.at.timeIntervalSince(items[i - 1].at) >= 3600 {
-                            Text(AccountTime.calendar.isDateInToday(item.at) ? item.at.shortTime : item.at.shown(date: .abbreviated, time: .shortened))
-                                .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                                .frame(maxWidth: .infinity).padding(.top, 6)
+                VStack(spacing: 0) {
+                    LazyVStack(alignment: .leading, spacing: 12) {
+                        if items.isEmpty && state.unsent.isEmpty {
+                            Text("Ask \(taf?.name ?? "it") what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.")
+                                .scaledFont(14).foregroundColor(Theme.dim)
+                                .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 30)
                         }
-                        Group {
-                            switch item {
-                            case .message(let m):
-                                ChatBubble(message: m, taf: taf, fullWidth: m.from == .taf)
-                            case .held(let call):
-                                HeldCallCard(call: call)
-                                    .onAppear { heldInView.insert(call.id) }
-                                    .onDisappear { heldInView.remove(call.id) }
-                            case .outcome(let entry):
-                                OutcomeLine(text: Self.outcomeText(entry), tone: Self.outcomeTone(entry.kind), mark: Self.outcomeMark(entry.kind))
-                            case .streaming(_, let m):
-                                ChatBubble(message: m, taf: taf, fullWidth: true)
-                            }
-                        }
-                        .id(item.id)
-                    }
-                    ForEach(state.unsent) { unsent in
-                        UnsentBubble(message: unsent, words: unsent.text, busy: model.chatSending.contains(tafID),
-                                     retry: { await model.retryChat(unsent, to: tafID) },
-                                     discard: { model.discardUnsentChat(unsent, from: tafID) },
-                                     taf: (tafID, taf?.name ?? "This taf"))
-                            .id(unsent.id)
-                    }
-                    // The answer streaming now is in the items, in the order it came (kiff/tafs#206):
-                    // the dots show only while nothing is being written.
-                    if thinking, state.live?.text.isEmpty ?? true {
-                        TypingBubble(taf: taf, fullWidth: true).id("thinking")
-                    }
-                    if let activity = state.live?.activity {
-                        HStack(spacing: 8) {
-                            ProgressView().controlSize(.mini).tint(Theme.dim)
-                            Text(activity).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
-                        }
-                        .accessibilityElement(children: .combine)
-                    }
-                    // Written to the run while it goes, not read yet, as kiff/agents says (#64).
-                    if let steering = state.steering, !steering.over {
-                        ForEach(Array(steering.untaken.enumerated()), id: \.offset) { i, m in
-                            VStack(alignment: .trailing, spacing: 4) {
-                                ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
-                                    .opacity(0.8)
-                                Text("\(taf?.name ?? "It") reads this " + (steering.status == "PAUSED" ? "when it carries on" : "at its next step"))
+                        ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
+                            // A time between parts of the thread that are far apart, not on every line.
+                            if i == 0 || item.at.timeIntervalSince(items[i - 1].at) >= 3600 {
+                                Text(AccountTime.calendar.isDateInToday(item.at) ? item.at.shortTime : item.at.shown(date: .abbreviated, time: .shortened))
                                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                                    .frame(maxWidth: .infinity).padding(.top, 6)
                             }
-                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            Group {
+                                switch item {
+                                case .message(let m):
+                                    ChatBubble(message: m, taf: taf, fullWidth: m.from == .taf)
+                                case .held(let call):
+                                    HeldCallCard(call: call)
+                                        .onAppear { heldInView.insert(call.id) }
+                                        .onDisappear { heldInView.remove(call.id) }
+                                case .outcome(let entry):
+                                    OutcomeLine(text: Self.outcomeText(entry), tone: Self.outcomeTone(entry.kind), mark: Self.outcomeMark(entry.kind))
+                                case .streaming(_, let m):
+                                    ChatBubble(message: m, taf: taf, fullWidth: true)
+                                }
+                            }
+                            .id(item.id)
+                        }
+                        ForEach(state.unsent) { unsent in
+                            UnsentBubble(message: unsent, words: unsent.text, busy: model.chatSending.contains(tafID),
+                                         retry: { await model.retryChat(unsent, to: tafID) },
+                                         discard: { model.discardUnsentChat(unsent, from: tafID) },
+                                         taf: (tafID, taf?.name ?? "This taf"))
+                                .id(unsent.id.uuidString)
+                        }
+                        // The answer streaming now is in the items, in the order it came (kiff/tafs#206):
+                        // the dots show only while nothing is being written.
+                        if thinking, state.live?.text.isEmpty ?? true {
+                            TypingBubble(taf: taf, fullWidth: true).id("thinking")
+                        }
+                        if let activity = state.live?.activity {
+                            HStack(spacing: 8) {
+                                ProgressView().controlSize(.mini).tint(Theme.dim)
+                                Text(activity).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                            }
                             .accessibilityElement(children: .combine)
-                            .id("steer|\(i)")
                         }
+                        // Written to the run while it goes, not read yet, as kiff/agents says (#64).
+                        if let steering = state.steering, !steering.over {
+                            ForEach(Array(steering.untaken.enumerated()), id: \.offset) { i, m in
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, text: m.text, session: "steered"), taf: nil)
+                                        .opacity(0.8)
+                                    Text("\(taf?.name ?? "It") reads this " + (steering.status == "PAUSED" ? "when it carries on" : "at its next step"))
+                                        .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                                .accessibilityElement(children: .combine)
+                                .id("steer|\(i)")
+                            }
+                        }
+                        if !thinking { ended(taf) }
+                        // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
+                        if model.mode == .kiff, !model.doorsOffered.isEmpty, let cloudID = model.cloudTaf(for: tafID)?.id {
+                            ChatKnocks(taf: taf, cloud: model.cloud, cloudID: cloudID, refresh: items.count)
+                                .id(cloudID)
+                        }
+                        if let queued = state.queued {
+                            QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
+                                .id("queued")
+                        }
+                        Color.clear.frame(height: 1).id(Self.bottom)
+                            .onAppear {
+                                // A pinned message stays at the top: seeing the bottom under it doesn't make
+                                // the thread follow what arrives (kiff/tafs#206).
+                                atBottom = true
+                                if pinned == nil { following = true }
+                                unseen = false
+                            }
+                            .onDisappear { atBottom = false }
                     }
-                    if !thinking { ended(taf) }
-                    // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
-                    if model.mode == .kiff, !model.doorsOffered.isEmpty, let cloudID = model.cloudTaf(for: tafID)?.id {
-                        ChatKnocks(taf: taf, cloud: model.cloud, cloudID: cloudID, refresh: items.count)
-                            .id(cloudID)
-                    }
-                    if let queued = state.queued {
-                        QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
-                            .id("queued")
-                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.bottom, pinned == nil ? 12 : 0)
                     // A whole screen under a pinned message, so a short one reaches the top at once,
-                    // not once the answer has grown below it (kiff/tafs#243).
+                    // not once the answer has grown below it (kiff/tafs#243). Outside the lazy rows:
+                    // a lazy row's height is only estimated until it's drawn, so the scroll stopped
+                    // short of the top until the answer filled the space (the 755 retest).
                     if pinned != nil { Color.clear.frame(height: max(0, viewport)) }
-                    Color.clear.frame(height: 1).id(Self.bottom)
-                        .onAppear {
-                            // A pinned message stays at the top: seeing the bottom under it doesn't make
-                            // the thread follow what arrives (kiff/tafs#206).
-                            atBottom = true
-                            if pinned == nil { following = true }
-                            unseen = false
-                        }
-                        .onDisappear { atBottom = false }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
                 // A readable column on a wide screen (kiff/tafs#102): the owner's words and the
                 // taf's sit together, not at the screen's far edges.
                 .frame(maxWidth: Self.readable)
@@ -233,6 +238,10 @@ struct TafChatView: View {
                 land(proxy, items: ids, waiting: waiting)
                 follow(proxy)
             }
+            // Sending puts the keyboard down, and the screen grows as the pin scrolls: the pinned
+            // message is put back at the top once it has (the 755 retest).
+            .onChange(of: viewport) { _ in repin(proxy) }
+            .onChange(of: coachRoom) { _ in repin(proxy) }
             .onChange(of: thinking) { _ in follow(proxy) }
             .onChange(of: state.live) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: state.queued) { _ in pinBubble(proxy) }
@@ -244,7 +253,7 @@ struct TafChatView: View {
                     pinText = nil
                     pinned = last.id.uuidString
                     touched = false
-                    proxy.pinToTop(last.id, animated: true) { touched }
+                    proxy.pinToTop(last.id.uuidString, animated: true) { touched }
                     return
                 }
                 follow(proxy)
@@ -275,6 +284,12 @@ struct TafChatView: View {
         proxy.pinToTop(id, animated: true) { touched }
     }
 
+    /// The pinned message back at the top, unless the owner has scrolled since.
+    private func repin(_ proxy: ScrollViewProxy) {
+        guard let pinned, !touched else { return }
+        proxy.pinToTop(pinned, animated: false) { touched }
+    }
+
     private func follow(_ proxy: ScrollViewProxy) {
         guard following, pinned == nil else { return }
         withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
@@ -295,20 +310,18 @@ struct TafChatView: View {
     /// It lands now and again once they're laid out, unless the owner has scrolled meanwhile.
     private func landAgain(_ proxy: ScrollViewProxy, _ target: String, _ anchor: UnitPoint) {
         proxy.scrollTo(target, anchor: anchor)
-        for delay in [0.05, 0.3] {
+        // A long thread's rows are laid out over several passes: it lands again as they are,
+        // so it opens at the latest and not part-way up (the 755 retest).
+        for delay in [0.05, 0.3, 0.6, 1.0] {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 if !touched { proxy.scrollTo(target, anchor: anchor) }
             }
         }
     }
 
-    /// How the last run ended, when the owner should know: they stopped it, or it
-    /// failed part-way, with Retry.
+    /// How the last run ended, when the owner should know: it failed part-way, with Retry.
     @ViewBuilder private func ended(_ taf: Taf?) -> some View {
         switch model.chatState(tafID).ended {
-        case .stopped?:
-            Label("Stopped", systemImage: "stop.circle")
-                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         case .failed?:
             HStack(spacing: 10) {
                 Text("\(taf?.name ?? "The taf") stopped part-way, before it finished.")
@@ -321,7 +334,8 @@ struct TafChatView: View {
             .padding(12)
             .background(Theme.no.opacity(0.10))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        case nil:
+        // Stopped needs no line: the chat is simply ready again (the owner's call, 755 retest).
+        case .stopped?, nil:
             EmptyView()
         }
     }
@@ -557,7 +571,7 @@ extension ScrollViewProxy {
             } else {
                 self.scrollTo(id, anchor: .top)
             }
-            for delay in [0.1, 0.35] {
+            for delay in [0.1, 0.35, 0.7] {
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                     if !touched() { self.scrollTo(id, anchor: .top) }
                 }

@@ -115,10 +115,12 @@ final class TafsCloud {
             let perWindow: Amount?
             let countPerWindow: Int?
             let window: String
+            /// Of perWindow, the extra room given on a held call until the window resets.
+            var extraRoom: Amount?
 
             enum CodingKeys: String, CodingKey {
                 case action, label, outside, window
-                case perAction = "per_action", perWindow = "per_window", countPerWindow = "count_per_window"
+                case perAction = "per_action", perWindow = "per_window", countPerWindow = "count_per_window", extraRoom = "extra_room"
             }
         }
 
@@ -128,6 +130,10 @@ final class TafsCloud {
             let limit: Value
             let used: Value?
             let window: String
+            /// Of limit, the extra room given until the window resets (the 755 retest).
+            var extraRoom: Value?
+
+            enum CodingKeys: String, CodingKey { case limit, used, window, extraRoom = "extra_room" }
         }
 
         /// One KIFF Card on its own (kiff/tafs#211).

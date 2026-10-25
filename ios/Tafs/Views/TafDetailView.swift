@@ -107,7 +107,7 @@ struct TafDetailView: View {
                 Text(removal ?? "")
             }
         } else {
-            Text("This taf is gone.").foregroundColor(Theme.dim).screenBackground()
+            LateNote(text: "This taf is gone.").screenBackground()
         }
     }
 
@@ -247,30 +247,26 @@ struct TafDetailView: View {
         ConnectionsPanel(tafID: taf.id)
         // Halting is a job of its own too: its row opens its screen.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked {
-            Panel { HaltRow(tafID: taf.id) }
+            HaltRow(tafID: taf.id, framed: true)
         }
         // Its usage is the account's Usage, opened from a row with this taf's count (kiff/tafs#184).
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
-            Panel {
-                NavigationLink { TafUsageView(tafID: taf.id).environmentObject(model) } label: {
-                    HStack {
-                        Label("Usage", systemImage: "chart.bar").scaledFont(15, weight: .semibold)
-                        Spacer()
-                        if let n = model.countedTasks(for: taf.id) {
-                            Text(UsageView.tafCount(n)).scaledFont(14).foregroundColor(Theme.soft)
-                        }
-                    }
+            PanelLink { TafUsageView(tafID: taf.id).environmentObject(model) } label: {
+                Label("Usage", systemImage: "chart.bar").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                Spacer()
+                if let n = model.countedTasks(for: taf.id) {
+                    Text(UsageView.tafCount(n)).scaledFont(14).foregroundColor(Theme.soft)
                 }
             }
-            .task { if model.usage == nil { await model.refreshUsage() } }
+            // Read again whenever its record grows, not only the first time: its count was a
+            // task behind until Usage was opened (the 755 retest).
+            .task(id: model.entries(for: taf.id).count) { await model.refreshUsage() }
         }
         // Its versions are a job of their own: their own screen, not another section here.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
-            Panel {
-                NavigationLink { VersionsScreen(tafID: taf.id) } label: {
-                    Label("Versions", systemImage: "square.stack.3d.up")
-                        .scaledFont(15, weight: .semibold)
-                }
+            PanelLink { VersionsScreen(tafID: taf.id) } label: {
+                Label("Versions", systemImage: "square.stack.3d.up")
+                    .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
             }
         }
         if taf.state != .revoked {
@@ -431,7 +427,7 @@ struct VersionsPanel: View {
         // Started: its chat opens; beside a sidebar, by selecting its row (kiff/tafs#253).
         .sheet(item: $starting) { v in
             TrialStartSheet(version: v, tafID: tafID) { chat in
-                if sidebarSelects { model.requestedTaf = chat } else { opened = chat }
+                if sidebarSelects || model.sidebarShown { model.requestedTaf = chat } else { opened = chat }
             }
         }
         .navigationDestination(isPresented: Binding(get: { opened != nil }, set: { if !$0 { opened = nil } })) {
@@ -664,6 +660,8 @@ struct DraftCardsView: View {
 struct MemoryPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
+    /// The note waiting for the owner's yes: forgetting can't be undone (the 755 retest).
+    @State private var forgetting: TafsCloud.Note?
 
     var body: some View {
         Panel {
@@ -681,7 +679,7 @@ struct MemoryPanel: View {
                             Text("\(note.title) · \(note.updatedAt.shortTime)").scaledFont(12).foregroundColor(Theme.soft)
                         }
                         Spacer(minLength: 0)
-                        Button("Forget") { Task { await model.forget(note, from: tafID) } }
+                        Button("Forget") { forgetting = note }
                             .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.soft)
                             .frame(minHeight: 44)
@@ -698,6 +696,13 @@ struct MemoryPanel: View {
             }
         }
         .task(id: tafID) { await model.loadMemory(tafID) }
+        .confirmationDialog("Forget this note?", isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }),
+                            titleVisibility: .visible, presenting: forgetting) { note in
+            Button("Forget", role: .destructive) { Task { _ = await model.forget(note, from: tafID) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { note in
+            Text("\u{201C}\(note.content)\u{201D}\n\nIt can't be undone: the taf stops working with it from its next run or chat. Other notes stay.")
+        }
     }
 }
 

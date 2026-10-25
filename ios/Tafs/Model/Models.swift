@@ -108,6 +108,17 @@ struct CardRule: Identifiable, Hashable, Codable {
     var outside: Outside = .hold
     /// Answers the owner may give besides approve and refuse, when held.
     var nextSteps: [String] = []
+    /// Of perWindow, the extra room given on a held call until the window resets: shown apart
+    /// from the Card's own total, not added into it (the 755 retest).
+    var extraRoom: Money?
+
+    /// The Card's own total for its window, without the extra room in it.
+    var ownTotal: Money? {
+        guard let perWindow else { return nil }
+        guard let extraRoom, extraRoom.currency == perWindow.currency, extraRoom.scale == perWindow.scale,
+              extraRoom.minor < perWindow.minor else { return perWindow }
+        return Money(minor: perWindow.minor - extraRoom.minor, currency: perWindow.currency, scale: perWindow.scale)
+    }
 
     /// What's left of its total this window ("€800 left today"), given what it has used,
     /// when both are in the same unit; nil otherwise.
@@ -123,7 +134,8 @@ struct CardRule: Identifiable, Hashable, Codable {
         var parts: [String] = []
         if let perAction { parts.append("≤ \(perAction.formatted) each") }
         // A bare total and a count read apart (kiff/tafs#94): "10 in total a day · 20 calls a day".
-        if let perWindow { parts.append(perWindow.hasUnit ? "\(perWindow.formatted) \(window.label)" : "\(perWindow.formatted) in total \(window.label)") }
+        if let own = ownTotal { parts.append(own.hasUnit ? "\(own.formatted) \(window.label)" : "\(own.formatted) in total \(window.label)") }
+        if let extraRoom, ownTotal != perWindow { parts.append("+\(extraRoom.formatted) extra room \(window.current)") }
         if let countPerWindow { parts.append("\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label)") }
         return parts.joined(separator: " · ")
     }
@@ -135,6 +147,8 @@ struct CardTotal<Value: Hashable & Codable & Sendable>: Hashable, Codable, Senda
     var limit: Value
     var used: Value?
     var window: Window
+    /// Of limit, the extra room given until the window resets; nil without any.
+    var extra: Value? = nil
 }
 
 /// One KIFF Card, drawn on its own (kiff/tafs#211): a taf can hold several, each with its
@@ -164,6 +178,11 @@ struct TafCard: Identifiable, Hashable, Codable {
         if let t = total {
             if let used = t.used, used.currency == t.limit.currency, used.scale == t.limit.scale {
                 let left = Money(minor: max(0, t.limit.minor - used.minor), currency: t.limit.currency, scale: t.limit.scale)
+                // The Card's own total and today's extra room apart (the 755 retest): "of 300 US$ + 30 US$ extra room".
+                if let extra = t.extra, extra.currency == t.limit.currency, extra.scale == t.limit.scale, extra.minor > 0, extra.minor < t.limit.minor {
+                    let own = Money(minor: t.limit.minor - extra.minor, currency: t.limit.currency, scale: t.limit.scale)
+                    return (left.formatted, "left \(t.window.current) of \(own.formatted) + \(extra.formatted) extra room")
+                }
                 return (left.formatted, "left \(t.window.current) of \(t.limit.formatted)")
             }
             return (t.limit.formatted, "\(t.window.label) · use unavailable")

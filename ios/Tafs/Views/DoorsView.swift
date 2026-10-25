@@ -595,7 +595,14 @@ struct DoItSheet: View {
                 .padding(6)
                 .background(Theme.panel)
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line))
-            Button("Send to \(taf?.name ?? "your taf")") {
+            // Why it wasn't sent, here where the owner is, not on the screen behind the sheet
+            // (the 755 retest).
+            if let error = doors.error {
+                Label(error, systemImage: "exclamationmark.circle.fill")
+                    .scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.no)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Button(doors.busy ? "Sending…" : "Send to \(taf?.name ?? "your taf")") {
                 Task {
                     await doors.answer(knock, "do", say: say.trimmingCharacters(in: .whitespacesAndNewlines))
                     if doors.error == nil { dismiss() }
@@ -608,6 +615,7 @@ struct DoItSheet: View {
         }
         .padding(20)
         .screenBackground()
+        .onAppear { doors.error = nil }
     }
 }
 
@@ -677,11 +685,12 @@ struct DoorRim: View {
         let open = lights.filter { $0.open }
         if !open.isEmpty {
             let tint = lights.contains { $0.knocks > 0 } ? Theme.amber : open.allSatisfy { $0.resting } ? Theme.dim : color
-            RoundedRectangle(cornerRadius: size * 0.3 + 4, style: .continuous)
-                .trim(from: 0, to: min(0.12 * Double(open.count) + 0.1, 0.6))
+            // The arc travels along the rounded edge itself, not a rotated copy of it: turning
+            // a rounded square swept its corners out past the avatar's, which read as broken
+            // (the 755 retest).
+            PerimeterArc(cornerRadius: size * 0.3 + 4, phase: spin ? 1 : 0, length: min(0.12 * Double(open.count) + 0.1, 0.6))
                 .stroke(tint, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 .frame(width: size + 8, height: size + 8)
-                .rotationEffect(.degrees(spin ? 360 : 0))
                 .onAppear {
                     guard !reduceMotion else { return }
                     withMotion(.linear(duration: 4.5).repeatForever(autoreverses: false)) { spin = true }
@@ -689,5 +698,29 @@ struct DoorRim: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
+    }
+}
+
+/// A stretch of a rounded rectangle's edge, `length` of its perimeter long, starting `phase`
+/// of the way round: animating `phase` moves it along the edge, past the start and on.
+struct PerimeterArc: Shape {
+    let cornerRadius: CGFloat
+    var phase: Double
+    let length: Double
+
+    var animatableData: Double {
+        get { phase }
+        set { phase = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let edge = Path(roundedRect: rect, cornerRadius: cornerRadius, style: .continuous)
+        let from = phase - phase.rounded(.down)
+        let to = from + length
+        guard to > 1 else { return edge.trimmedPath(from: from, to: to) }
+        // Over the start: the end of the edge, then its beginning.
+        var arc = edge.trimmedPath(from: from, to: 1)
+        arc.addPath(edge.trimmedPath(from: 0, to: to - 1))
+        return arc
     }
 }

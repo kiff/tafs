@@ -141,6 +141,30 @@ struct Panel<Content: View>: View {
     }
 }
 
+/// A panel that opens a screen: the whole panel takes the tap, its padding too, not only its
+/// words and caret (the 755 retest), with the caret every row that opens something has.
+struct PanelLink<Destination: View, Label: View>: View {
+    @ViewBuilder var destination: () -> Destination
+    @ViewBuilder var label: () -> Label
+
+    var body: some View {
+        NavigationLink {
+            destination()
+        } label: {
+            Panel {
+                HStack(spacing: 12) {
+                    label()
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                        .accessibilityHidden(true)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 extension View {
     func screenBackground() -> some View {
         background(Theme.background.ignoresSafeArea())

@@ -68,10 +68,13 @@ struct HomeSplitView: View {
             .environment(\.sidebarSelects, true)
         }
         .navigationSplitViewStyle(.balanced)
+        .onAppear { model.sidebarShown = true }
+        .onDisappear { model.sidebarShown = false }
         // "See it on…" in Setup selects the taf it made (kiff/tafs#96).
         .onChange(of: model.requestedTaf) { id in
             guard let id else { return }
-            selection = .taf(id)
+            // A cross-fade, as iOS moves between a list's items, not a cut (the 755 retest).
+            withMotion(.easeInOut(duration: 0.25)) { selection = .taf(id) }
             model.requestedTaf = nil
         }
         .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
@@ -131,7 +134,7 @@ struct HomeSplitView: View {
                 } header: { Eyebrow(text: "Needs you", color: Theme.amber) }
             }
             Section {
-                ForEach(model.tafs) { taf in
+                ForEach(model.listedTafs) { taf in
                     NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
                     // Its open trial, its own entry under it (kiff/tafs#173).
                     if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {

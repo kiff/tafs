@@ -26,6 +26,12 @@ export interface Rule {
   per_action: Money | null;
   /** The Card's total for the window, with the room it has now. */
   per_window: Money | null;
+  /**
+   * Of per_window, the extra room given today on a held call (kiff/tafs#211, 6.13), which
+   * goes when the window's total resets; absent without any. The app shows the Card's own
+   * total and this apart, not one sum (the 755 retest).
+   */
+  extra_room?: Money;
   count_per_window: number | null;
   window: "day" | "week" | "month";
 }
@@ -53,6 +59,8 @@ export interface Total<T> {
   limit: T;
   used: T | null;
   window: Rule["window"];
+  /** Of limit, the extra room given until the window's total resets; absent without any. */
+  extra_room?: T;
 }
 
 /** One KIFF Card, drawn as its own Card. */
@@ -166,6 +174,14 @@ function shownTotal(m: Mandate) {
 }
 
 /**
+ * The extra room on a total: KIFF's ceiling now over the Card's own limit, which is
+ * what extra room given on a held call adds until the window resets. Zero is none.
+ */
+function extraRoom(limit: number, line: { limit: number; status?: string | null } | undefined): number {
+  return line?.status === "ok" && line.limit > limit ? line.limit - limit : 0;
+}
+
+/**
  * A Card's lines: one per grant, with its limit for one call. A Card's totals
  * cover all its grants, so the first line shows one of each: the first summed
  * total, at the ceiling it has now (extra room included), and the first count.
@@ -189,6 +205,8 @@ export function rules(m: Mandate): Rule[] {
     const { total, line } = shown;
     const ceiling = line?.status === "ok" ? line.limit : total.limit;
     first.per_window = money(ceiling, line?.unit ?? total.unit, line?.scale ?? total.scale);
+    const extra = extraRoom(total.limit, line);
+    if (extra > 0) first.extra_room = money(extra, line?.unit ?? total.unit, line?.scale ?? total.scale);
     first.window = window(total.window);
   } else if (count) {
     first.window = window(count.window);
@@ -217,6 +235,8 @@ export function cardView(m: Mandate): CardView {
       used: ok && typeof line?.used === "number" ? money(line.used, unit, scale) : null,
       window: window(agg.window),
     };
+    const extra = extraRoom(agg.limit, line);
+    if (extra > 0) total.extra_room = money(extra, unit, scale);
   }
   let calls: CardView["calls"] = null;
   const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity));
@@ -224,6 +244,8 @@ export function cardView(m: Mandate): CardView {
     const line = (m.limits ?? []).find((l) => l.quantity === count.quantity && l.window === count.window);
     const ok = line?.status === "ok";
     calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, window: window(count.window) };
+    const extra = extraRoom(count.limit, line);
+    if (extra > 0) calls.extra_room = extra;
   }
   const environment = (m.environment ?? "").trim();
   return {

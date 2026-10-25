@@ -228,7 +228,7 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
         let c = try improvement(#"{"type":"result","id":"v2","text":"Ready as version 2.","taf":{"agent":"rae-k3f9","name":"Rae","job":"refunds","improves":"depl_1","note":"Asks before refunds over 50 EUR.","notes":"Ask first.","draft":"d_02"}}"#)
         await model.makeImprovedVersion(c)
-        XCTAssertEqual(model.improvedVersions["v2"], 2, model.improveErrors["v2"] ?? "")
+        XCTAssertEqual(model.improvedVersions[model.improvementKey(c)], 2, model.improveErrors[model.improvementKey(c)] ?? "")
         let posted = try XCTUnwrap(sent("POST", "/v1/tafs/depl_1/versions").first)
         let body = try XCTUnwrap(try JSONSerialization.jsonObject(with: posted.httpBody ?? Data()) as? [String: String])
         XCTAssertEqual(body["note"], "Asks before refunds over 50 EUR.")
@@ -247,8 +247,27 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/depl_1/versions"] = (409, #"{"error":"that draft isn't this taf's"}"#)
         let c = try improvement(#"{"type":"result","id":"v2","text":"x","taf":{"agent":"rae-k3f9","name":"Rae","job":"refunds","improves":"depl_1","note":"x","draft":"d_09"}}"#)
         await model.makeImprovedVersion(c)
-        XCTAssertNil(model.improvedVersions["v2"])
-        XCTAssertTrue(model.improveErrors["v2"]?.contains("isn't this taf's") ?? false)
+        XCTAssertNil(model.improvedVersions[model.improvementKey(c)])
+        XCTAssertTrue(model.improveErrors[model.improvementKey(c)]?.contains("isn't this taf's") ?? false)
+    }
+
+    /// The 755 retest: Coach's card in a new conversation had the id an earlier one had. It
+    /// showed the earlier version and its own was never made. A card with the same id and
+    /// another draft makes its own version.
+    func testACardWithAnEarlierCardsIDMakesItsOwnVersion() async throws {
+        let (model, _) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions"] = (200, #"{"version":2}"#)
+        let earlier = try improvement(#"{"type":"result","id":"result","text":"x","taf":{"agent":"rae-k3f9","name":"Rae","job":"refunds","improves":"depl_1","note":"Looks up first.","draft":"d_02"}}"#)
+        await model.makeImprovedVersion(earlier)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions"] = (200, #"{"version":3}"#)
+        let later = try improvement(#"{"type":"result","id":"result","text":"x","taf":{"agent":"rae-k3f9","name":"Rae","job":"refunds","improves":"depl_1","note":"300 a day.","draft":"d_03"}}"#)
+        XCTAssertNotEqual(model.improvementKey(earlier), model.improvementKey(later))
+        XCTAssertNil(model.improvedVersions[model.improvementKey(later)], "not the earlier card's version")
+        await model.makeImprovedVersion(later)
+        XCTAssertEqual(model.improvedVersions[model.improvementKey(earlier)], 2)
+        XCTAssertEqual(model.improvedVersions[model.improvementKey(later)], 3)
+        XCTAssertEqual(sent("POST", "/v1/tafs/depl_1/versions").count, 2)
     }
 
     /// A Card reads as unchanged only when KIFF says its full terms are kept (kiff/tafs#138):

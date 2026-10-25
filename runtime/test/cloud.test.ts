@@ -574,6 +574,10 @@ describe("the home list", () => {
     }, { ...demoCard, id: "card_old_api", subject: "rae", grants: [{ action: "pay_invoice" }], aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d" }] }];
     const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
     expect(card.rules[0]).toMatchObject({ window: "day", per_window: { minor: 60000, unit: "EUR", scale: 2 }, count_per_window: null });
+    // The extra room apart from the Card's own 500.00, so the app needn't show one sum (the 755 retest).
+    expect(card.rules[0].extra_room).toEqual({ minor: 10000, unit: "EUR", scale: 2 });
+    expect(card.cards[0].total).toMatchObject({ limit: { minor: 60000, unit: "EUR", scale: 2 }, extra_room: { minor: 10000, unit: "EUR", scale: 2 } });
+    expect(card.cards[1].total.extra_room).toBeUndefined();
     expect(card.used).toEqual({ stripe_refund: { minor: 21200, unit: "EUR", scale: 2 } });
     expect(card.usage_unknown).toEqual(["pay_invoice"]);
   });

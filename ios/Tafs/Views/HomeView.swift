@@ -21,7 +21,7 @@ struct HomeView: View {
                 }
 
                 VStack(spacing: 10) {
-                    ForEach(model.tafs) { taf in
+                    ForEach(model.listedTafs) { taf in
                         NavigationLink(value: taf.id) { TafRow(taf: taf) }
                             .buttonStyle(.plain)
                         // Its open trial, its own entry under it (kiff/tafs#173).
@@ -66,7 +66,7 @@ struct HomeView: View {
 
                 if model.mode == .kiff, !model.cloudTafs.isEmpty {
                     // Every taf at once, from its own screen.
-                    Panel { HaltRow(tafID: nil) }
+                    HaltRow(tafID: nil, framed: true)
                 }
 
                 ForEach(model.unfinishedRemovals) { r in

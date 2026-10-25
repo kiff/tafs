@@ -28,6 +28,7 @@ struct TafsApp: App {
                     model.askNotificationPermission = { await PushDelegate.askPermission() }
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
+                    push.onHoldAlert = { [weak model] hold in await model?.refreshUntilHeld(hold) }
                     push.onOpen = { [weak model] destination in model?.open(destination) }
                     Routes.shared.onOpen = { [weak model] destination in model?.open(destination) }
                     // From launch: renewals, refunds and purchases made elsewhere reach KIFF.
@@ -49,6 +50,9 @@ struct RootView: View {
     /// The keyboard is up: ✦ keeps off it (kiff/tafs#138).
     @State private var keyboardUp = false
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
+    /// A few seconds after the tafs are in: a phone with alerts on has said so by then, so the
+    /// offer of alerts never flashes up on it.
+    @State private var settled = false
     /// The window's size as the screens were last laid out, and a count that lays them out
     /// again: an iPad turned while tafs was away can come back laid out for the old
     /// orientation, with the sidebar's foot and ✦ placed for it (kiff/tafs#138, item 47).
@@ -123,6 +127,18 @@ struct RootView: View {
         }
         .onOpenURL { url in
             if url.host == "needs-you" { tab = .needsYou }
+        }
+        // Alerts, offered once right after signing in, before any taf needs the owner (the 755 retest).
+        .task(id: model.listLoaded) {
+            settled = false
+            guard model.listLoaded else { return }
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            settled = !Task.isCancelled
+        }
+        .sheet(isPresented: Binding(get: { settled && model.offerAlertsUpFront && !model.coachOpen },
+                                    set: { if !$0, model.offerAlertsUpFront { model.answerAlertsOffer() } })) {
+            AlertsOfferSheet().environmentObject(model)
+                .presentationDetents([.medium, .large])
         }
         // A tapped request for tasks: Usage, where it's answered, on its own screen (kiff/tafs#215).
         .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {

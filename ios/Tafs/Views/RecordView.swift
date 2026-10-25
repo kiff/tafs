@@ -564,7 +564,12 @@ struct ReceiptView: View {
         if let answer = entry.answer {
             return answer.decision == "refused" ? "held → refused by \(entry.answerer)" : "held → approved once by \(entry.answerer)"
         }
-        return entry.kind == .refused ? "refused by the Card" : "allowed by the Card"
+        switch entry.kind {
+        case .refused: return "refused by the Card"
+        // Still waiting: the Card held it, it didn't allow it (the 755 retest).
+        case .held: return "held for you by the Card"
+        default: return entry.ownerApproved == true ? "held → approved by you" : "allowed by the Card"
+        }
     }
 
     private var decidedBy: String {
