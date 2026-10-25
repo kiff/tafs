@@ -64,7 +64,7 @@ function expectedSignature(s: Sent): string {
 describe("kiff/agents client", () => {
   it("signs each request with tafs cloud's role, the tenant header included", async () => {
     const { agents, sent } = server();
-    await agents.startRun("t_acme", "taf1", "What's waiting?", "s1");
+    await agents.startRun("t_acme", "taf1", "What's waiting?", { session: "s1" });
     const s = sent[0]!;
     const auth = s.headers.authorization ?? "";
     expect(auth).toMatch(/^AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE\/20261016\/eu-west-1\/lambda\/aws4_request, /);
@@ -87,15 +87,29 @@ describe("kiff/agents client", () => {
     expect(sent[1]!.url.pathname).toBe("/agents/taf1/memories/customer%20prefs%2Facme");
   });
 
-  it("starts runs in the background, in the session given", async () => {
+  it("starts runs in the background: in the session given, the requester's live chat, or a new one", async () => {
     const { agents, sent } = server(() => new Response(JSON.stringify({ id: "r1", status: "PENDING" }), { status: 202 }));
-    const run = await agents.startRun("t_acme", "taf1", "Hello", "s1");
+    const ana = { kind: "member" as const, id: "u_ana" };
+    const run = await agents.startRun("t_acme", "taf1", "Hello", { session: "s1", requester: ana });
     expect(run.id).toBe("r1");
     expect(sent[0]!.method).toBe("POST");
     expect(sent[0]!.url.pathname).toBe("/agents/taf1/runs");
-    expect(JSON.parse(sent[0]!.body ?? "")).toEqual({ input: "Hello", session_id: "s1", background: true });
+    expect(JSON.parse(sent[0]!.body ?? "")).toEqual({ input: "Hello", session_id: "s1", requester: ana, background: true });
+    await agents.startRun("t_acme", "taf1", "Hello", { requester: ana, live: true });
+    expect(JSON.parse(sent[1]!.body ?? "")).toEqual({ input: "Hello", requester: ana, chat: "live", background: true });
     await agents.startRun("t_acme", "taf1", "Hello");
-    expect(JSON.parse(sent[1]!.body ?? "")).toEqual({ input: "Hello", background: true });
+    expect(JSON.parse(sent[2]!.body ?? "")).toEqual({ input: "Hello", background: true });
+  });
+
+  it("reads and archives a person's sessions as theirs", async () => {
+    const { agents, sent } = server((s) => new Response(JSON.stringify(s.method === "GET" ? { sessions: [] } : { session: { id: "s1" } }), { status: 200 }));
+    await agents.sessions("t_acme", "taf1", 5, "member:u_ana");
+    await agents.archive("t_acme", "s1", true, "member:u_ana");
+    await agents.archive("t_acme", "s1", false, "member:u_ana");
+    expect(sent[0]!.url.searchParams.get("owner")).toBe("member:u_ana");
+    expect(sent.slice(1).map((s) => `${s.method} ${s.url.pathname} ${s.url.searchParams.get("owner")}`)).toEqual([
+      "POST /sessions/s1/archive member:u_ana", "POST /sessions/s1/unarchive member:u_ana",
+    ]);
   });
 
   it("sends back only what a schedule can be written with, so a read schedule round-trips", async () => {

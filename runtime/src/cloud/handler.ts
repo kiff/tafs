@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
-import { aiFor, type AIView, base, periodName, planOf, refusedForAI, view as aiView } from "./aiuse.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Run, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
@@ -94,7 +94,7 @@ export interface HTTPResult {
 
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
-  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "memories" | "forget" |
+  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -123,7 +123,7 @@ export interface Deps {
   apns: Sender;
   /** Removals begun and not finished, so the app can finish them after a refresh. */
   removals: Removals;
-  /** The chats each taf's owner archived (kiff/tafs#82). */
+  /** The chats each taf's owner archived before kiff/agents kept archives, to move there. */
   archived: Archived;
   /**
    * What tafs cloud keeps for an account beyond its tafs (its phones, alert
@@ -279,17 +279,13 @@ export interface Removals {
 }
 
 /**
- * The chats a taf's owner archived (kiff/tafs#82), kept by tafs cloud: kiff/agents
- * keeps the chat itself, and has no say in what the owner's list shows.
+ * The chats a taf's owner archived while tafs cloud kept archives (kiff/tafs#82).
+ * kiff/agents keeps them now, per person: each is moved there once, then forgotten.
  */
 export interface Archived {
-  /** The taf's archived chats' sessions. */
+  /** The taf's archived chats' sessions, as tafs cloud kept them. */
   list(tenant: string, tafID: string): Promise<string[]>;
-  /** Archives one, kept until `until`: past when kiff/agents deletes the chat itself. */
-  add(tenant: string, tafID: string, session: string, until: Date): Promise<void>;
-  /** Puts one back in the owner's list (kiff/tafs#97). */
-  unarchive(tenant: string, tafID: string, session: string): Promise<void>;
-  /** Forgets the taf's archive, on its removal. */
+  /** Forgets the taf's archive: moved, or the taf removed. */
   remove(tenant: string, tafID: string): Promise<void>;
 }
 
@@ -314,12 +310,6 @@ export const CHAT = {
   /** Chats listed to reopen, and how much of each one's first message names it. */
   chatsListed: 20,
   chatTitle: 80,
-  /** A chat active this recently takes the message instead of a new one. */
-  liveMinutes: 30,
-  /** How long an archive is kept: past the 30 days kiff/agents keeps a chat (docs/data.md). */
-  archiveDays: 31,
-  floodMessages: 10,
-  floodMinutes: 10,
 } as const;
 
 /** Memory limits: the owner's first note, and how many notes the app is shown. */
@@ -1212,12 +1202,20 @@ async function callRefs(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{
  * the job's instruction, shown as such.
  */
 async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
-  const all = only ? [only] : await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
-  // A chat the owner archived is hidden from the thread too (kiff/tafs#82); one they open is shown.
-  const archived = only ? new Set<string>() : new Set(await deps.archived.list(me.tenantID, taf.id));
+  if (!only) await moveArchived(me, taf, deps);
+  // The person's own sessions (with the job's runs and those from before owners), read by
+  // owner so other people's chats never use up the scan; and the door senders' chats, which
+  // the thread shows until KIFF answers who oversees whose work. A chat the owner archived
+  // is hidden from the thread too (kiff/tafs#82); one they open is shown.
+  const [own, all] = only ? [[only], []] : await Promise.all([
+    agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me))),
+    agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)),
+  ]);
+  const chats = [...own.filter((s) => s.kind === "chat"), ...all.filter((s) => s.kind === "chat" && s.owner?.startsWith("door:"))]
+    .filter((s) => !s.archived).sort((a, b) => b.updated.localeCompare(a.updated));
   const picked = only ? [only] : [
-    ...all.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
-    ...all.filter((s) => s.kind === "chat" && !archived.has(s.id)).slice(0, CHAT.chatsInThread),
+    ...own.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
+    ...chats.slice(0, CHAT.chatsInThread),
   ];
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
@@ -1320,22 +1318,10 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
 }
 
 async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<unknown> {
-  await claimChatSlot(me, taf, deps);
-  const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
+  const [at, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
-  if (live) {
-    try {
-      const run = await deps.agents.startRun(me.tenantID, taf.id, text, live, ai);
-      return { session: run.session, new_session: false };
-    } catch (err) {
-      // Past AI fair use, a new chat is refused too: the owner says go on first.
-      if (refusedForAI(err)) throw new HTTPError(409, (err as Error).message);
-      // Refused, for example a chat that is gone or busy: a new one takes the message.
-      if (!(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw err;
-    }
-  }
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text, undefined, ai));
-  return { session: run.session, new_session: true };
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text, at, ai));
+  return { session: run.session, new_session: newSession(at, run) };
 }
 
 /**
@@ -1752,16 +1738,15 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   const card = summary(byHolder(kiff.mandates, kiff.held).cards.get(taf.kiffAgent) ?? []);
   const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
     heldCards(kiff.mandates, taf.kiffAgent));
-  await claimChatSlot(me, setup, deps);
   const ai = await aiBound(event, deps);
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, undefined, ai));
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, { requester: member(me) }, ai));
   return { setup: setup.id, session: run.session, new_session: true };
 }
 
 /**
  * The owner writes to a run that is at work (kiff/tafs#64): kiff/agents keeps the
  * message on the run, and the run reads it at its next step, before its next turn
- * (kiff/agents#102). The flood guard counts it as a message. A run that has ended,
+ * (kiff/agents#102). A run that has ended,
  * or was asked to stop, is 409: the app sends the message as a new one. The run must
  * be this taf's: kiff/agents answers another agent's as not found.
  */
@@ -1769,9 +1754,8 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
   const run = str(parseBody(event).run).trim();
   if (!run) throw new HTTPError(400, "name the run to write to");
   const text = chatText(event);
-  await claimChatSlot(me, taf, deps);
   try {
-    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text);
+    const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text, member(me));
     return { run: out.id, status: out.status };
   } catch (err) {
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, "the run has ended: send it as a new message");
@@ -1806,44 +1790,42 @@ function chatText(event: HTTPEvent): string {
   return text;
 }
 
-/**
- * The flood guard: one of 10 slots per taf and 10-minute window, claimed with a
- * conditional write, so it holds however many chats the messages start and
- * whatever the thread shows. A window is fixed, so at most 20 can straddle two.
- */
-async function claimChatSlot(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<void> {
-  const now = (deps.now?.() ?? new Date()).getTime();
-  const windowMs = CHAT.floodMinutes * 60_000;
-  const bucket = Math.floor(now / windowMs);
-  const expires = new Date((bucket + 2) * windowMs);
-  let slot = false;
-  for (let n = 0; n < CHAT.floodMessages && !slot; n++) {
-    slot = await deps.slots.claim(`rate#${me.tenantID}#${taf.id}#${bucket}#${n}`, expires);
-  }
-  if (!slot) {
-    throw new HTTPError(429, `that's ${CHAT.floodMessages} messages in ${CHAT.floodMinutes} minutes; wait a little before writing again`);
-  }
+/** The person as the requester of their runs: their chats are theirs in kiff/agents. */
+function member(me: KIFFIdentity): Requester {
+  return { kind: "member", id: me.subject };
+}
+
+/** The person as a session's owner, as kiff/agents writes it. */
+function ownerKey(me: KIFFIdentity): string {
+  return `member:${me.subject}`;
 }
 
 /**
  * The chat a message goes into (kiff/tafs#73): a new one when the owner asked
- * for it (new_chat), the one they reopened (session, one of this taf's chats),
- * else the live one.
+ * for it (new_chat), the one they reopened (session, one of their chats with
+ * this taf), else their live one, which kiff/agents picks. kiff/agents keeps
+ * each person's flood guard too: past it, the message is 429.
  */
-async function chatFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
+async function chatAt(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<RunAt> {
   const body = parseBody(event);
-  if (body.new_chat === true) return undefined;
+  if (body.new_chat === true) return { requester: member(me) };
   const chosen = str(body.session).trim();
-  if (chosen) return (await ownChat(me, taf, chosen, deps)).id;
-  return liveChat(me, taf, deps);
+  if (chosen) return { session: (await ownChat(me, taf, chosen, deps)).id, requester: member(me) };
+  return { requester: member(me), live: true };
 }
 
-/** One of the taf's chats, by its id: another taf's, a job run's or none is 404. */
+/** Whether the run opened its chat: a reopened chat never, a new one always, a live one as kiff/agents says. */
+function newSession(at: RunAt, run: Run): boolean {
+  if (at.session) return false;
+  return at.live ? run.new_session === true : true;
+}
+
+/** One of the person's chats with the taf, by its id: another taf's, a job run's, another person's or none is 404. */
 async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind: "chat" | "trial" = "chat"): Promise<Session> {
   if (!id) throw new HTTPError(404, "no such chat");
   let read: Awaited<ReturnType<Deps["agents"]["session"]>>;
   try {
-    read = await deps.agents.session(me.tenantID, id);
+    read = await deps.agents.session(me.tenantID, id, ownerKey(me));
   } catch (err) {
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no such chat");
     throw agentsFailure(err);
@@ -1858,11 +1840,9 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
  * ones are left out, or, with `archivedOnly`, are the only ones (kiff/tafs#97).
  */
 async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string }>> {
-  const [all, archived] = await Promise.all([
-    agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)),
-    deps.archived.list(me.tenantID, taf.id).then((ids) => new Set(ids)),
-  ]);
-  const listed = all.filter((s) => s.kind === "chat" && archived.has(s.id) === archivedOnly).slice(0, CHAT.chatsListed);
+  await moveArchived(me, taf, deps);
+  const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
+  const listed = all.filter((s) => s.kind === "chat" && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   return listed.flatMap((s, i) => {
     const text = chatTitle((read[i]?.events ?? []).filter((e) => e.kind === "owner_message").map((e) => {
@@ -1894,35 +1874,41 @@ export function chatTitle(ownerMessages: string[]): string {
 }
 
 /**
- * The owner archives one of the taf's chats (kiff/tafs#82): it leaves their list and
- * the thread, and a message no longer goes on in it as the live chat. It isn't
- * deleted: kiff/agents keeps it its 30 days, and the owner can still open it by its id.
+ * The person archives one of their chats with the taf (kiff/tafs#82): it leaves their
+ * list and the thread, and a message no longer goes on in it as the live chat. It isn't
+ * deleted: kiff/agents keeps it its 30 days, and they can still open it by its id.
  */
 async function archive(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<unknown> {
   const chat = await ownChat(me, taf, session, deps);
-  const until = new Date((deps.now?.() ?? new Date()).getTime() + CHAT.archiveDays * 24 * 3600_000);
-  await deps.archived.add(me.tenantID, taf.id, chat.id, until);
+  await agentsCall(() => deps.agents.archive(me.tenantID, chat.id, true, ownerKey(me)));
   return { session: chat.id, archived: true };
 }
 
 /**
- * The owner puts an archived chat back in their list (kiff/tafs#97). It goes back in the
+ * The person puts an archived chat back in their list (kiff/tafs#97). It goes back in the
  * thread too; the live chat stays the newest one.
  */
 async function unarchive(me: KIFFIdentity, taf: Taf, session: string, deps: Deps): Promise<unknown> {
   const chat = await ownChat(me, taf, session, deps);
-  await deps.archived.unarchive(me.tenantID, taf.id, chat.id);
+  await agentsCall(() => deps.agents.archive(me.tenantID, chat.id, false, ownerKey(me)));
   return { session: chat.id, archived: false };
 }
 
-/** The taf's latest chat when it was active in the last 30 minutes and isn't archived: the message goes on in it. */
-async function liveChat(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
-  const now = (deps.now?.() ?? new Date()).getTime();
-  const sessions = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
-  const latest = sessions.find((s) => s.kind === "chat");
-  // An archived chat is put away (kiff/tafs#82): the next message starts a new one.
-  if (latest && (await deps.archived.list(me.tenantID, taf.id)).includes(latest.id)) return undefined;
-  return latest && now - Date.parse(latest.updated) < CHAT.liveMinutes * 60_000 ? latest.id : undefined;
+/**
+ * Moves the taf's chats archived while tafs cloud kept archives to kiff/agents, once:
+ * a chat already gone is skipped. Kept until each has moved, so a failure tries again.
+ */
+async function moveArchived(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<void> {
+  const ids = await deps.archived.list(me.tenantID, taf.id);
+  if (ids.length === 0) return;
+  for (const id of ids) {
+    try {
+      await deps.agents.archive(me.tenantID, id, true);
+    } catch (err) {
+      if (!(err instanceof AgentsError && err.status === 404)) await agentsCall(() => Promise.reject(err));
+    }
+  }
+  await deps.archived.remove(me.tenantID, taf.id);
 }
 
 /** A response streamed as server-sent events (kiff/tafs#60): its status and headers, then its events. */
@@ -1966,35 +1952,23 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     const lines = await takeCoachLines(me, taf, deps);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
-    let newSession: boolean;
+    let at: RunAt;
     try {
       const text = lines.text(owner);
-      await claimChatSlot(me, taf, deps);
-      const [live, ai] = await Promise.all([chatFor(event, me, taf, deps), aiBound(event, deps)]);
-      if (live) {
-        try {
-          run = deps.agents.streamRun(me.tenantID, taf.id, text, live, ai);
-          first = await run.next();
-        } catch (err) {
-          if (refusedForAI(err) || !(err instanceof AgentsError && err.status >= 400 && err.status < 500)) throw agentsFailure(err);
-          run = undefined;
-        }
-      }
-      newSession = !run;
-      if (!run) {
-        try {
-          run = deps.agents.streamRun(me.tenantID, taf.id, text, undefined, ai);
-          first = await run.next();
-        } catch (err) {
-          throw agentsFailure(err);
-        }
+      const [chosen, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
+      at = chosen;
+      try {
+        run = deps.agents.streamRun(me.tenantID, taf.id, text, at, ai);
+        first = await run.next();
+      } catch (err) {
+        throw agentsFailure(err);
       }
     } catch (err) {
       // The message didn't start: Coach reads its lines with the next one.
       await lines.putBack();
       throw err;
     }
-    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, newSession) };
+    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, at) };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
     if (status === 500) console.error(err);
@@ -2053,13 +2027,13 @@ async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string 
 }
 
 /** kiff/agents' run stream, trimmed to what the phone shows. */
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, newSession: boolean): AsyncGenerator<string> {
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt): AsyncGenerator<string> {
   const steps = new Steps();
   const out = (e: RunStreamEvent): string | undefined => {
     const d = (e.data ?? {}) as Record<string, unknown>;
     switch (e.event) {
       case "run":
-        return sse("session", { session: d.session, new_session: newSession, run: d.id });
+        return sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id });
       case "delta":
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
         if (d.kind === "tool_call" && typeof d.tool === "string") {
@@ -2111,12 +2085,13 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
 async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   const session = str(parseBody(event).session).trim();
   if (!session) throw new HTTPError(400, "name the session to stop");
-  const read = await agentsCall(() => deps.agents.session(me.tenantID, session));
+  // Only the person's own, or one with no owner (a job's): never another person's run.
+  const read = await agentsCall(() => deps.agents.session(me.tenantID, session, ownerKey(me)));
   if (read.session.agent !== taf.id) throw new HTTPError(404, "no such session");
   const run = read.events.at(-1)?.run;
   if (!run) return { stopped: false };
   try {
-    const out = await deps.agents.cancelRun(me.tenantID, taf.id, run);
+    const out = await deps.agents.cancelRun(me.tenantID, taf.id, run, member(me));
     return { stopped: true, run: out.id, status: out.status };
   } catch (err) {
     // Already over: nothing is left to stop.
@@ -2222,19 +2197,26 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
   return out;
 }
 
-/** A note the taf keeps. Its name is its id. *//** A note the taf keeps. Its name is its id. */
+/**
+ * A note the taf keeps: shared, read in every conversation, or the person's own, from
+ * their conversations. A shared note's id is its name; the person's own is "@" and its
+ * name, as no shared note's name starts with "@".
+ */
 export interface Note {
   id: string;
   path: string;
   content: string;
   updated_at: string;
+  scope: "shared" | "mine";
 }
 
-/** The taf's newest notes, newest first. */
+/** The taf's newest notes the person reads, newest first: the shared ones and their own, never another person's. */
 async function notes(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Note[]> {
-  const all = await agentsCall(() => deps.agents.memories(me.tenantID, taf.id));
+  const all = await agentsCall(() => deps.agents.memories(me.tenantID, taf.id, ownerKey(me)));
   return all
-    .map((n) => ({ id: n.name, path: n.name, content: n.text, updated_at: iso(n.updated) }))
+    .map((n): Note => n.scope
+      ? { id: `@${n.name}`, path: n.name, content: n.text, updated_at: iso(n.updated), scope: "mine" }
+      : { id: n.name, path: n.name, content: n.text, updated_at: iso(n.updated), scope: "shared" })
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, MEMORY.shown);
 }
@@ -2244,7 +2226,11 @@ async function forget(me: KIFFIdentity, taf: Taf, escapedName: string, deps: Dep
   let name: string;
   try { name = decodeURIComponent(escapedName); } catch { throw new HTTPError(404, "no such note"); }
   if (!name) throw new HTTPError(404, "no such note");
-  await agentsCall(() => deps.agents.forget(me.tenantID, taf.id, name));
+  // The person's own note, by "@" and its name; else the shared one of that name.
+  const mine = name.startsWith("@");
+  const note = mine ? name.slice(1) : name;
+  if (!note) throw new HTTPError(404, "no such note");
+  await agentsCall(() => deps.agents.forget(me.tenantID, taf.id, note, mine ? ownerKey(me) : undefined));
   return { forgotten: name };
 }
 
@@ -2534,26 +2520,26 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   if (name === "taf_task") {
     const text = str(args.text).trim();
     if (!text || text.length > CHAT.maxText) throw new ToolRefusal(`write the task in 1 to ${CHAT.maxText} characters`);
-    await claimChatSlot(me, taf, deps);
     const running = str(args.run).trim();
     if (running) {
       try {
-        const out = await deps.agents.steerRun(call.tenant, taf.id, running, text);
+        const out = await deps.agents.steerRun(call.tenant, taf.id, running, text, member(me));
         return { taf: taf.name, run: out.id, status: out.status, sent: "to the run at work, read at its next step" };
       } catch (err) {
         if (err instanceof AgentsError && err.status === 409) throw new ToolRefusal("that run has ended: hand the task over again without run");
         throw agentsFailure(err);
       }
     }
-    const session = args.chat === "new" ? undefined : await liveChat(me, taf, deps);
+    // The person who asked Coach asks the taf: the task goes in their chat with it.
+    const at: RunAt = { requester: member(me), live: args.chat !== "new" };
     const notify = call.notify();
-    const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, session, undefined, notify));
+    const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, at, undefined, notify));
     await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120) }, deps);
     return { taf: taf.name, run: run.id, chat: run.session, status: run.status, result: "comes back to you when the run ends: don't poll" };
   }
   if (name === "run_stop") {
     try {
-      const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim());
+      const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim(), member(me));
       return { taf: taf.name, run: out.id, status: out.status, withdrawn: "its held calls, in KIFF; nothing more is sent" };
     } catch (err) {
       if (err instanceof AgentsError && err.status === 409) return { taf: taf.name, stopped: false, why: "the run had already ended" };

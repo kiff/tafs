@@ -106,7 +106,7 @@ describe("chats under AI fair use", () => {
     expect(r.status).toBe(409);
     expect(r.body.error).toMatch(/^ai_fair_use/);
     // The live chat was refused; no new chat was tried for it.
-    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([`startRun ${RAE} ${first.body.session}`]);
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([`startRun ${RAE} live`]);
   });
 
   it("refuses a streamed chat past the bound with 409, and doesn't retry it in a new chat", async () => {
@@ -119,7 +119,7 @@ describe("chats under AI fair use", () => {
     let body = "";
     for await (const s of r.body) body += s;
     expect(JSON.parse(body).error).toMatch(/^ai_fair_use/);
-    expect(w.agents.calls.filter((c) => c.startsWith("streamRun"))).toEqual([`streamRun ${RAE} ${first.body.session}`]);
+    expect(w.agents.calls.filter((c) => c.startsWith("streamRun"))).toEqual([`streamRun ${RAE} live`]);
   });
 
   it("lets the owner go on after a go on, up to the next bound", async () => {

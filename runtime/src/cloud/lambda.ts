@@ -356,29 +356,14 @@ const removals: Removals = {
 };
 
 /**
- * The chats each taf's owner archived (kiff/tafs#82), in one item per taf
- * (archived#tenant#taf): a string set of sessions. Each archive moves its ttl
- * past when kiff/agents deletes the chats, so the item goes once they have.
+ * The chats each taf's owner archived while tafs cloud kept archives (kiff/tafs#82),
+ * in one item per taf (archived#tenant#taf): a string set of sessions, to move to
+ * kiff/agents. Its ttl takes it past when kiff/agents deletes the chats.
  */
 const archived: Archived = {
   async list(tenant, tafID) {
     const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } }, ConsistentRead: true }));
     return out.Item?.chats?.SS ?? [];
-  },
-  async add(tenant, tafID, session, until) {
-    await dynamo.send(new UpdateItemCommand({
-      TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } },
-      UpdateExpression: "ADD chats :s SET #ttl = :ttl",
-      ExpressionAttributeNames: { "#ttl": "ttl" },
-      ExpressionAttributeValues: { ":s": { SS: [session] }, ":ttl": { N: String(Math.floor(until.getTime() / 1000)) } },
-    }));
-  },
-  async unarchive(tenant, tafID, session) {
-    await dynamo.send(new UpdateItemCommand({
-      TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } },
-      UpdateExpression: "DELETE chats :s",
-      ExpressionAttributeValues: { ":s": { SS: [session] } },
-    }));
   },
   async remove(tenant, tafID) {
     await dynamo.send(new DeleteItemCommand({ TableName: TABLE, Key: { id: { S: `archived#${tenant}#${tafID}` } } }));

@@ -1,6 +1,7 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { OP_ARG, TOOLS } from "../src/cloud/coach.js";
+import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -243,13 +244,11 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const ref = w.agents.notified.get(task.json.run)!.ref;
     Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
     await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "ERROR", ref });
-    // Every slot in this window taken: the owner's message is refused.
-    const bucket = Math.floor(Date.parse("2026-10-16T12:00:00Z") / (CHAT.floodMinutes * 60_000));
-    for (let n = 0; n < CHAT.floodMessages; n++) (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`rate#${T}#${SETUP}#${bucket}#${n}`);
+    // Past the person's flood guard in kiff/agents: the owner's message is refused.
+    w.agents.fail.set("startRun", new AgentsError(429, "that's 10 messages in 10 minutes; wait a little before writing again"));
     expect((await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana")).status).toBe(429);
     expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
     // kiff/agents failing keeps them too.
-    (w.deps.slots as ReturnType<typeof memorySlots>).taken.clear();
     w.agents.fail.set("startRun", new Error("kiff/agents is down"));
     expect((await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana")).status).toBe(502);
     expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
