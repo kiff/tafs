@@ -77,10 +77,12 @@ final class KIFFClient {
     }
 
     /// Whether KIFF takes `method` on `path` only signed by the approval key, once the
-    /// session has one (kiff/tafs#233): confirming a draft, plain or as a trial (issuing a
-    /// Card), and resuming a halt. Ending a trial takes authority away: the current key.
+    /// session has one (kiff/tafs#233): submitting a draft (from a phone it is confirmed at
+    /// once, so it issues Cards: Coach's, and Setup's with none), confirming one, plain or as
+    /// a trial, and resuming a halt. Ending a trial takes authority away: the current key.
     static func grantsAuthority(_ method: String, _ path: String) -> Bool {
         guard method == "POST" else { return false }
+        if path == "/v1/me/agent-drafts" { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
         if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
