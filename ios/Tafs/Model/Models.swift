@@ -266,6 +266,9 @@ struct Taf: Identifiable, Hashable, Codable {
     var kiffCards: [TafCard]?
     /// Its doors, as its avatar's rim shows them; nil when it has none, or before doors.
     var doors: [DoorLight]? = nil
+    /// A short word beside its name, as tafs cloud sends it: "Trial" for an open trial's
+    /// entry (kiff/tafs#247); nil for a taf.
+    var badge: String? = nil
 
     var initial: String { String(name.prefix(1)).uppercased() }
 

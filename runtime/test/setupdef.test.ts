@@ -176,7 +176,13 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("check that its tools cover the whole job: find the work, check an item, act on it, and say what it did");
     expect(flat).not.toContain("the fewest tools");
     // Improving a taf: from its context, the change made as its next version (kiff/tafs#107).
-    expect(flat).toContain('A conversation that starts with "[improve taf <id>]" improves that taf; it doesn\'t set up a new one');
+    expect(flat).toContain('A conversation that starts with "[improve taf <id>]" improves that taf;');
+    expect(flat).toContain("It doesn't set up a new one, unless the owner asks for a new taf");
+    // A change to a taf set up here, or one the owner names, is made here (kiff/tafs#247),
+    // and the new version comes with the task to try it with.
+    expect(flat).toContain("so does a change the owner asks for to a taf you set up in this conversation, or one they name: change it here, never send them elsewhere");
+    expect(flat).toContain("improves: the taf's id from the first line, else its agent id");
+    expect(flat).toContain("try: one task to try it with that uses the change, in the owner's words");
     expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
     expect(flat).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
     // A change that can add or replace asks which (kiff/tafs#236, item 31).

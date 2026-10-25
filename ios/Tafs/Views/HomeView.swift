@@ -202,7 +202,14 @@ struct TafRow: View {
             HStack(spacing: 12) {
                 TafAvatar(taf: taf)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                    HStack(spacing: 6) {
+                        Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                        if let badge = taf.badge {
+                        Text(badge).scaledFont(11, weight: .bold).foregroundColor(.white)
+                            .padding(.horizontal, 7).padding(.vertical, 2)
+                            .background(Theme.amber).clipShape(Capsule())
+                    }
+                    }
                     Text(taf.now).scaledFont(13).foregroundColor(Theme.dim).oneLineUnlessLarge()
                 }
                 Spacer(minLength: 8)

@@ -160,7 +160,14 @@ struct HomeSplitView: View {
         HStack(spacing: 12) {
             TafAvatar(taf: taf, size: 34)
             VStack(alignment: .leading, spacing: 2) {
-                Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
+                HStack(spacing: 6) {
+                    Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
+                    if let badge = taf.badge {
+                    Text(badge).scaledFont(11, weight: .bold).foregroundColor(.white)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Theme.amber).clipShape(Capsule())
+                    }
+                }
                 Text(taf.now).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim).oneLineUnlessLarge()
             }
         }

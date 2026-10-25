@@ -7,6 +7,8 @@ struct TrialStartSheet: View {
     @Environment(\.dismiss) private var dismiss
     let version: TafsCloud.Version
     let tafID: UUID
+    /// Started: its chat, which opens next (kiff/tafs#247).
+    var onStarted: (UUID) -> Void = { _ in }
     @State private var draft: KIFFClient.AgentDraft?
     @State private var loaded = false
 
@@ -50,9 +52,11 @@ struct TrialStartSheet: View {
                     Button(model.trialBusy.contains(tafID) ? "Starting…" : "Start trying") {
                         guard let shown = draft?.version else { return }
                         Task {
-                            // Started: it opens from Versions, the taf's header and the menu.
-                            if await model.startTrying(version, of: tafID, shownDraft: shown) != nil {
+                            // Started: its chat opens at once (kiff/tafs#247); later it opens from
+                            // Versions, the taf's header and the menu.
+                            if let chat = await model.startTrying(version, of: tafID, shownDraft: shown) {
                                 dismiss()
+                                onStarted(chat)
                             } else if let changed = model.changedVersionCards[tafID], changed.id == draft?.id {
                                 // Changed since it was shown: the new terms, to read again.
                                 draft = changed
@@ -90,6 +94,8 @@ struct TrialScreen: View {
         VStack(spacing: 0) {
             if let trial = model.openTrials[tafID], let taf = model.taf(tafID) {
                 bar(trial, name: taf.name)
+                // Before its first message, what this trial is and what to try (kiff/tafs#247).
+                if model.chatItems(chatID).isEmpty { guide(trial, name: taf.name) }
                 TafChatView(tafID: chatID)
                     .confirmationDialog("Go back to the live version?", isPresented: $confirmBack, titleVisibility: .visible) {
                         Button("Go back", role: .destructive) { Task { if await model.goBackFromTrial(tafID) { dismiss() } } }
@@ -109,6 +115,28 @@ struct TrialScreen: View {
         .navigationTitle(model.taf(chatID)?.name ?? "Trial")
         .inlineTitle()
         .task(id: tafID) { await model.loadTrial(tafID) }
+    }
+
+    /// What the trial is, in tafs cloud's words: what the version changes, the task to try
+    /// it with, that the live taf keeps working, and when the trial ends.
+    private func guide(_ trial: TafsCloud.OpenTrial, name: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let changed = trial.changed {
+                Text("What's new: \(changed)").scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            }
+            if let tryWith = trial.`try` {
+                Text("Try it with: \(tryWith)").scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Give it a task that uses the change, as you would the live \(name).")
+                    .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            }
+            Text(["\(name) keeps working as it is. What this version does is real, under its own Card.",
+                  trial.ends.map { "The trial ends \($0.shown(date: .abbreviated, time: .omitted)) if you don't use it." },
+                  "Install makes it the live version; Go back ends the trial."].compactMap { $0 }.joined(separator: " "))
+                .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func bar(_ trial: TafsCloud.OpenTrial, name: String) -> some View {
