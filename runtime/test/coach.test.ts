@@ -168,13 +168,15 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(await w.tool("taf_pause", { taf: "nobody", action: "pause" })).toMatchObject({ isError: true, text: expect.stringContaining("no taf") });
   });
 
-  it("hands a task over as no person's, in a chat of its own", async () => {
+  it("hands a task over as Coach itself, in Coach's own chat with the taf", async () => {
     const w = world();
     const first = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
-    const second = await w.tool("taf_task", { taf: RAE, text: "Refund order 43", chat: "live" });
-    const runs = [first.json.run, second.json.run].map((id) => w.agents.runs.find((r) => r.id === id)!);
-    expect(runs.map((r) => r.requester)).toEqual([undefined, undefined]);
-    expect(runs[0]!.session).not.toBe(runs[1]!.session);
+    const second = await w.tool("taf_task", { taf: RAE, text: "Refund order 43" });
+    const fresh = await w.tool("taf_task", { taf: RAE, text: "Refund order 44", chat: "new" });
+    const runs = [first.json.run, second.json.run, fresh.json.run].map((id) => w.agents.runs.find((r) => r.id === id)!);
+    expect(runs.map((r) => r.requester?.kind)).toEqual(["agent", "agent", "agent"]);
+    expect(runs[1]!.session).toBe(runs[0]!.session);
+    expect(runs[2]!.session).not.toBe(runs[0]!.session);
   });
 
   it("steers and stops a run a person started in the app, as tafs cloud itself", async () => {

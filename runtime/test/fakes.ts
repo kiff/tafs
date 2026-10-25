@@ -54,8 +54,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   /** Where a requester's run goes, as kiff/agents decides it: the session, its owner's, and whether it opened it. */
   const place = (tenant: string, agent: string, at: RunAt): { session: string; opened: boolean } => {
     const owner = at.requester ? `${at.requester.kind}:${at.requester.id}` : "";
-    // A door's senders have their door's own daily caps in tafs cloud.
-    if (at.requester?.kind === "member") {
+    // A door's senders have their door's own daily caps in tafs cloud; a person and an
+    // agent asking on its own have the flood guard.
+    if (at.requester && at.requester.kind !== "door") {
       const since = now().getTime() - 10 * 60_000;
       const sent = runs.filter((r) => r.tenant === tenant && r.agent === agent && r.requester && `${r.requester.kind}:${r.requester.id}` === owner && Date.parse(r.created) > since);
       if (sent.length >= 10) throw new AgentsError(429, "that's 10 messages in 10 minutes; wait a little before writing again");
