@@ -1203,14 +1203,19 @@ async function callRefs(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{
  */
 async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
   if (!only) await moveArchived(me, taf, deps);
-  const all = only ? [only] : await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
-  // A chat the owner archived is hidden from the thread too (kiff/tafs#82); one they open is shown.
-  // Another member's chat isn't theirs to see: kiff/agents keeps it apart (until KIFF answers who
-  // oversees whose work, the thread shows the job's runs, door senders' chats and the person's own).
-  const mine = ownerKey(me);
+  // The person's own sessions (with the job's runs and those from before owners), read by
+  // owner so other people's chats never use up the scan; and the door senders' chats, which
+  // the thread shows until KIFF answers who oversees whose work. A chat the owner archived
+  // is hidden from the thread too (kiff/tafs#82); one they open is shown.
+  const [own, all] = only ? [[only], []] : await Promise.all([
+    agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me))),
+    agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)),
+  ]);
+  const chats = [...own.filter((s) => s.kind === "chat"), ...all.filter((s) => s.kind === "chat" && s.owner?.startsWith("door:"))]
+    .filter((s) => !s.archived).sort((a, b) => b.updated.localeCompare(a.updated));
   const picked = only ? [only] : [
-    ...all.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
-    ...all.filter((s) => s.kind === "chat" && !s.archived && (!s.owner || s.owner === mine || s.owner.startsWith("door:"))).slice(0, CHAT.chatsInThread),
+    ...own.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
+    ...chats.slice(0, CHAT.chatsInThread),
   ];
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
@@ -2192,7 +2197,7 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
   return out;
 }
 
-/** A note the taf keeps. Its name is its id. *//**
+/**
  * A note the taf keeps: shared, read in every conversation, or the person's own, from
  * their conversations. A shared note's id is its name; the person's own is "@" and its
  * name, as no shared note's name starts with "@".

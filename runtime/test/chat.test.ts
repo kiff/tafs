@@ -190,6 +190,18 @@ describe("messages", () => {
     expect(thread.body.messages.map((m: { text: string }) => m.text)).not.toContain("Bo's question");
   });
 
+  it("shows the person's own chat in the thread however many other people chat with the taf", async () => {
+    const w = world();
+    w.at(new Date(minutesAgo(120)));
+    await w.agents.api.startRun("t_acme", RAE, "Ana's question", ANA);
+    for (let i = 0; i < CHAT.sessionsScanned + 5; i++) {
+      w.at(new Date(minutesAgo(100 - i)));
+      await w.agents.api.startRun("t_acme", RAE, `others ${i}`, { requester: { kind: "member", id: `u_${i}` } });
+    }
+    const thread = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(thread.body.messages.map((m: { text: string }) => m.text)).toEqual(["Ana's question"]);
+  });
+
   it("passes on kiff/agents' refusal of an eleventh message in ten minutes, however many chats they start", async () => {
     const w = world();
     for (let i = 0; i < 10; i++) {
