@@ -3,7 +3,8 @@ import SwiftUI
 /// The account's usage this period (kiff/tafs#184): its own screen, opened from Settings. The
 /// tasks the period has (what the plan includes, and packs) and what's left, who bills the
 /// plan, adding tasks or asking an admin for them, what the tafs did that counted, and what
-/// wasn't counted and why.
+/// wasn't counted and why. Titled as the account's, with each number saying whose it is, so
+/// it reads at a glance with no text explaining it (kiff/tafs#249).
 struct UsageView: View {
     @EnvironmentObject private var model: AppModel
     /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
@@ -41,8 +42,6 @@ struct UsageView: View {
                                     Text(Self.packLeft(p)).scaledFont(14).foregroundColor(Theme.soft)
                                 }
                             }
-                            Text(Self.packOrder).scaledFont(13).foregroundColor(Theme.dim)
-                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     if let ai = model.aiUse, let used = ai.usedPct {
@@ -64,21 +63,22 @@ struct UsageView: View {
                         Panel {
                             Eyebrow(text: "By taf")
                             ForEach(by, id: \.agent) { a in
-                                CountRow(label: model.tafName(forAgent: a.agent), count: a.counted)
+                                CountRow(label: model.tafName(forAgent: a.agent), value: "\(a.counted)")
                             }
                         }
                     }
                     if let free = u.tasks.free, !free.lines.isEmpty {
                         Panel {
                             Eyebrow(text: "Not counted")
-                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, count: line.1) }
+                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, value: "\(line.1)") }
                         }
                     }
-                    Panel {
-                        Eyebrow(text: "Your own agents in KIFF")
-                        Text(Self.count(u.actions.counted, of: u.actions.included, "actions")).scaledFont(15).foregroundColor(Theme.ink)
-                        Text("Actions your own agents take through KIFF, apart from the tafs.")
-                            .scaledFont(13).foregroundColor(Theme.dim)
+                    // Agents that aren't tafs, named as the home list names them; only when they
+                    // counted something (kiff/tafs#249).
+                    if let others = Self.othersLine(u) {
+                        Panel {
+                            CountRow(label: "Other agents with Cards", value: others)
+                        }
                     }
                     if !model.countedTasks.isEmpty {
                         Panel {
@@ -89,14 +89,19 @@ struct UsageView: View {
                 } else if let why = model.usageError {
                     Panel { Text(why).scaledFont(14).foregroundColor(Theme.no) }
                 } else {
-                    ProgressView()
+                    // Loading draws the screen at its full width, never a narrow strip (kiff/tafs#249).
+                    Panel {
+                        Eyebrow(text: Self.allTafs)
+                        ProgressView().frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
         .screenBackground()
-        .navigationTitle("Usage")
+        .navigationTitle(Self.title)
         .inlineTitle()
         .task { await model.refreshUsage(); read = true }
         .refreshable { await model.refreshUsage() }
@@ -107,7 +112,7 @@ struct UsageView: View {
 
     private func tasksPanel(_ u: KIFFClient.Usage) -> some View {
         Panel {
-            Eyebrow(text: Self.planName(u.plan))
+            Eyebrow(text: Self.whose(u))
             Text(Self.count(u.tasks.counted, of: u.tasks.left == nil ? 0 : u.tasks.total, "tasks")).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             if u.tasks.left != nil, u.tasks.total > 0 {
                 Meter(fraction: Double(u.tasks.counted) / Double(u.tasks.total),
@@ -116,9 +121,7 @@ struct UsageView: View {
             if let left = Self.leftLine(u) {
                 Text(left).scaledFont(15, weight: .semibold).foregroundColor(u.tasks.usedUp ? Theme.no : Theme.ink)
             }
-            Text("\(Self.taskMeaning) This period ends \(u.period.end.shown(date: .abbreviated, time: .omitted)).")
-                .scaledFont(13).foregroundColor(Theme.soft)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(Self.periodEnds(u.period.end)).scaledFont(13).foregroundColor(Theme.soft)
         }
     }
 
@@ -267,8 +270,6 @@ struct UsageView: View {
         "\(p.tasksLeft) of \(p.tasks) left, until \(p.expiresAt.shown(date: .abbreviated, time: .omitted))"
     }
 
-    static let packOrder = "Your plan's tasks are used first each period, then packs, oldest first."
-
     /// "65 tasks left"; nil where tasks have no limit.
     static func leftLine(_ u: KIFFClient.Usage) -> String? {
         guard let left = u.tasks.left else { return nil }
@@ -279,11 +280,35 @@ struct UsageView: View {
 
     /// A taf's counted tasks this period, for its page's Usage row.
     static func tafCount(_ n: Int) -> String {
-        n == 1 ? "1 task this period" : "\(n) tasks this period"
+        "\(tasks(n)) this period"
     }
 
-    /// What a task is: counted means done, as /pricing says it.
-    static let taskMeaning = "A task is an action a taf took that KIFF allowed, sent, and that worked. Reads, refusals, failures and lost answers aren't counted."
+    /// "1 task", "8 tasks".
+    static func tasks(_ n: Int) -> String {
+        n == 1 ? "1 task" : "\(n) tasks"
+    }
+
+    /// The account's screen is the account's, apart from a taf's own (kiff/tafs#249).
+    static let title = "Account usage"
+
+    /// Whose the account's numbers are: every taf's together.
+    static let allTafs = "All tafs"
+
+    /// "All tafs · Trial": whose the count is, and the plan where it has a name to show.
+    static func whose(_ u: KIFFClient.Usage) -> String {
+        planName(u.plan).map { "\(allTafs) · \($0)" } ?? allTafs
+    }
+
+    /// "This period ends 22 Nov 2026."
+    static func periodEnds(_ end: Date) -> String {
+        "This period ends \(end.shown(date: .abbreviated, time: .omitted))."
+    }
+
+    /// What agents that aren't tafs did through KIFF ("3 actions", "3 of 500 actions"); nil
+    /// when they did nothing, so an empty line never asks the owner what 0 means.
+    static func othersLine(_ u: KIFFClient.Usage) -> String? {
+        u.actions.counted > 0 ? count(u.actions.counted, of: u.actions.included, "actions") : nil
+    }
 
     /// A counted task's tool as the Record names it: KIFF's title, else its name in words.
     static func toolName(_ t: KIFFClient.CountedTask) -> String {
@@ -303,13 +328,15 @@ struct UsageView: View {
         included > 0 ? "\(counted) of \(included) \(unit)" : "\(counted) \(unit)"
     }
 
-    static func planName(_ plan: String) -> String {
+    /// The plan's name as the owner bought it; nil for one that isn't sold (our own
+    /// accounts' "internal"), which has no name to show (kiff/tafs#249).
+    static func planName(_ plan: String) -> String? {
         switch plan {
         case "trial": return "Trial"
         case "solo": return "Solo"
         case "team": return "Team"
         case "company": return "Company"
-        default: return plan.capitalized
+        default: return nil
         }
     }
 
@@ -352,26 +379,31 @@ struct CountedTaskRow: View {
 
 /// One taf's usage this period (kiff/tafs#184): its own screen, from a row on its page. What it
 /// counted, what it didn't and why, and its counted tasks; the account's Usage is one tap away.
+/// Titled with the taf's name, and the row to the account's carries all tafs' count, so its
+/// own count never reads as the account's (kiff/tafs#249).
 struct TafUsageView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     /// Read on this screen: an earlier read isn't shown as now (kiff/tafs#206 5.1).
     @State private var read = false
 
+    private var name: String { model.taf(tafID)?.name ?? "This taf" }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if read, let mine = model.tafUsage(for: tafID) {
                     Panel {
-                        Eyebrow(text: model.taf(tafID)?.name ?? "This taf")
-                        Text(UsageView.tafCount(mine.counted)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                        Text(UsageView.taskMeaning).scaledFont(13).foregroundColor(Theme.soft)
-                            .fixedSize(horizontal: false, vertical: true)
+                        Eyebrow(text: name)
+                        Text(UsageView.tasks(mine.counted)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                        if let end = model.usage?.period.end {
+                            Text(UsageView.periodEnds(end)).scaledFont(13).foregroundColor(Theme.soft)
+                        }
                     }
                     if let free = mine.free, !free.lines.isEmpty {
                         Panel {
                             Eyebrow(text: "Not counted")
-                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, count: line.1) }
+                            ForEach(free.lines, id: \.0) { line in CountRow(label: line.0, value: "\(line.1)") }
                         }
                     }
                     if let tasks = model.tafTasks[tafID], !tasks.isEmpty {
@@ -383,8 +415,11 @@ struct TafUsageView: View {
                     NavigationLink(destination: UsageView().environmentObject(model)) {
                         Panel {
                             HStack {
-                                Text("The account's usage").scaledFont(15).foregroundColor(Theme.ink)
+                                Text(UsageView.allTafs).scaledFont(15).foregroundColor(Theme.ink)
                                 Spacer()
+                                if let all = model.usage?.tasks.counted {
+                                    Text(UsageView.tasks(all)).scaledFont(15).foregroundColor(Theme.soft)
+                                }
                                 Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
                             }
                         }
@@ -393,14 +428,18 @@ struct TafUsageView: View {
                 } else if let why = model.usageError {
                     Panel { Text(why).scaledFont(14).foregroundColor(Theme.no) }
                 } else {
-                    ProgressView()
+                    Panel {
+                        Eyebrow(text: name)
+                        ProgressView().frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
         .screenBackground()
-        .navigationTitle("Usage")
+        .navigationTitle(name)
         .inlineTitle()
         .task { await model.refreshUsage(); await model.refreshTafUsage(tafID); read = true }
         .refreshable { await model.refreshUsage(); await model.refreshTafUsage(tafID) }
@@ -409,13 +448,13 @@ struct TafUsageView: View {
 
 private struct CountRow: View {
     let label: String
-    let count: Int
+    let value: String
 
     var body: some View {
         HStack {
             Text(label).scaledFont(14).foregroundColor(Theme.ink)
             Spacer()
-            Text("\(count)").scaledFont(14).foregroundColor(Theme.soft)
+            Text(value).scaledFont(14).foregroundColor(Theme.soft)
         }
     }
 }

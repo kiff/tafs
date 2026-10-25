@@ -6,6 +6,6 @@ What to test in this build:
 
 3. A taf's Card, from any conversation. In Coach, ask what one of your tafs may do. Coach reads that taf's Card itself, says which Card covers live actions and which only test mode, and never sends you elsewhere to look.
 
-4. Packs and Solo, with test purchases. In Settings, open Usage, then Add tasks, and buy a pack; on the trial, subscribe to Solo. Purchases in TestFlight are test purchases: on a test account they add tasks; on any other account the app finishes the purchase, adds nothing, and says "Test purchases don't add tasks to this account."
+4. Packs and Solo, with test purchases. In Settings, open Account usage, then Add tasks, and buy a pack; on the trial, subscribe to Solo. Purchases in TestFlight are test purchases: on a test account they add tasks; on any other account the app finishes the purchase, adds nothing, and says "Test purchases don't add tasks to this account."
 
-5. Asking an admin. As a member who can't add tasks, ask for a pack with a reason. As the admin, you're alerted: open Usage and approve it by buying the pack, or decline it with a note. The member is told the answer.
+5. Asking an admin. As a member who can't add tasks, ask for a pack with a reason. As the admin, you're alerted: open Account usage and approve it by buying the pack, or decline it with a note. The member is told the answer.

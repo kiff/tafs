@@ -123,6 +123,27 @@ final class UsageTests: XCTestCase {
         XCTAssertNil(u.tasks.left, "no limit")
         XCTAssertNil(UsageView.leftLine(u))
         XCTAssertNil(UsageView.notice(u))
+        // A plan that isn't sold has no name to show: the count is all tafs' (kiff/tafs#249).
+        XCTAssertNil(UsageView.planName(u.plan))
+        XCTAssertEqual(UsageView.whose(u), "All tafs")
+        XCTAssertEqual(UsageView.othersLine(u), "909 actions")
+    }
+
+    /// Usage reads at a glance (kiff/tafs#249): the account's screen is the account's, each
+    /// count says whose it is, and other agents show only once they did something.
+    func testEachCountSaysWhoseItIs() throws {
+        let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
+        XCTAssertEqual(UsageView.title, "Account usage")
+        XCTAssertEqual(UsageView.whose(u), "All tafs · Trial")
+        XCTAssertEqual(UsageView.planName("solo"), "Solo")
+        let none = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(#"""
+        {"plan":"internal","seats":0,"period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"},
+         "tasks":{"counted":8,"included":0,"packs":0,"left":null,"by_agent":[],"free":{}},
+         "actions":{"counted":0,"included":0,"free":{}},"trial":null,"ai":{"go_ons":0}}
+        """#.utf8))
+        XCTAssertNil(UsageView.othersLine(none), "no line asks what 0 means")
+        XCTAssertEqual(UsageView.tasks(1), "1 task")
+        XCTAssertEqual(UsageView.tasks(8), "8 tasks")
     }
 
     /// A trial that hasn't started (no checkout yet) decodes, and says so without selling.
@@ -136,9 +157,7 @@ final class UsageTests: XCTestCase {
 
     // MARK: The follow-up on #184
 
-    func testATaskCountsWhenItWorkedAndToolsReadAsWords() {
-        XCTAssertTrue(UsageView.taskMeaning.contains("allowed, sent, and that worked"))
-        XCTAssertTrue(UsageView.taskMeaning.contains("lost answers"))
+    func testToolsReadAsWordsAndATafCountsItsPeriod() {
         XCTAssertEqual(UsageView.toolWords("refund_order"), "Refund order")
         XCTAssertEqual(UsageView.tafCount(1), "1 task this period")
         XCTAssertEqual(UsageView.tafCount(9), "9 tasks this period")

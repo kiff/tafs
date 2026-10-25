@@ -102,7 +102,7 @@ struct SettingsView: View {
                     }
                     // What the tafs used this period, the plan's tasks and the trial (kiff/tafs#184).
                     if model.mode != .signedOut {
-                        NavigationLink("Usage", destination: UsageView().environmentObject(model))
+                        NavigationLink(UsageView.title, destination: UsageView().environmentObject(model))
                     }
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }
