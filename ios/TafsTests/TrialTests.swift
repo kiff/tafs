@@ -65,7 +65,10 @@ final class TrialTests: XCTestCase {
         XCTAssertEqual(body(sent("PUT", "/v1/tafs/depl_1/trial").first)["draft"] as? String, "d_02")
         XCTAssertEqual(model.openTrials[id]?.n, 2)
         XCTAssertEqual(model.tafOfTrialChat(chatID), id)
-        XCTAssertEqual(model.taf(chatID)?.name, "Rae · Trying v2")
+        // Labelled from what tafs cloud sends, with its own fallback (kiff/tafs#247).
+        XCTAssertEqual(model.taf(chatID)?.name, "Rae · v2")
+        XCTAssertEqual(model.taf(chatID)?.badge, "Trial")
+        XCTAssertEqual(model.taf(chatID)?.now.hasPrefix("Trying version 2"), true)
         XCTAssertNil(model.kiff.setupSigner)
     }
 
@@ -114,19 +117,35 @@ final class TrialTests: XCTestCase {
         XCTAssertNil(model.chats[id], "the taf's own chat is untouched")
     }
 
-    /// Go back: no Face ID, the trial ends, and its entry and chat leave the app.
+    /// Go back: no Face ID; the phone ends the trial's Card in KIFF itself, signed, then
+    /// tafs cloud records it (kiff/tafs#247), and its entry and chat leave the app.
     func testGoingBackEndsTheTrialWithoutFaceID() async throws {
         let signer = RecordingSigner()
         let (model, id) = await kiffModel(signer: signer, trial: Self.openTrial)
         let chat = try XCTUnwrap(model.trialChat(of: id))
+        StubProtocol.responses["DELETE /v1/me/agent-drafts/d_02/trial"] = (200, #"{"status":"ended","calls":3,"held":1,"refused":0}"#)
         StubProtocol.responses["DELETE /v1/tafs/depl_1/trial"] = (200, #"{"ended":\#(Self.ended)}"#)
 
         let done = await model.goBackFromTrial(id)
         XCTAssertTrue(done, model.trialErrors[id] ?? "")
-        XCTAssertTrue(signer.signed.isEmpty)
+        XCTAssertTrue(signer.reusedUnlock.isEmpty, "no Face ID was asked")
+        let end = try XCTUnwrap(sent("DELETE", "/v1/me/agent-drafts/d_02/trial").first, "the phone ends it in KIFF")
+        XCTAssertNotNil(end.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertEqual(sent("DELETE", "/v1/tafs/depl_1/trial").count, 1)
+        XCTAssertNil(model.kiff.setupSigner)
         XCTAssertNil(model.openTrials[id])
         XCTAssertNil(model.trialChat(of: id))
         XCTAssertNil(model.taf(chat))
+    }
+
+    /// A trial KIFF had ended already (404 or 409) still goes back: tafs cloud records it.
+    func testGoingBackFromATrialKIFFEndedAlreadyStillEndsIt() async throws {
+        let (model, id) = await kiffModel(signer: RecordingSigner(), trial: Self.openTrial)
+        StubProtocol.responses["DELETE /v1/me/agent-drafts/d_02/trial"] = (409, #"{"error":"not trying"}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/trial"] = (200, #"{"ended":\#(Self.ended)}"#)
+        let done = await model.goBackFromTrial(id)
+        XCTAssertTrue(done, model.trialErrors[id] ?? "")
+        XCTAssertNil(model.openTrials[id])
     }
 
     /// Install: one Face ID confirms the trial's Card live, then tafs cloud makes it live.
