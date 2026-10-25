@@ -180,6 +180,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       return { run: { ...run }, trial: { ...t } };
     },
     async endTrial(tenant, id, why, counts) {
+      failing("endTrial");
       calls.push(`endTrial ${id} ${why} ${counts.calls}/${counts.held}/${counts.refused}`);
       const t = trials.get(k(tenant, id));
       if (!t) throw new AgentsError(404, "this agent has no open trial");

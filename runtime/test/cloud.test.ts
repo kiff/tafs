@@ -1384,6 +1384,24 @@ describe("trying a version (kiff/tafs#173)", () => {
     expect((await call(w, "GET", `/v1/tafs/${RAE}/trial`, { token: "ana" })).body.trial).toBeNull();
   });
 
+  it("finishes an install whose version went live but whose trial didn't end, without going live again", async () => {
+    const w = trying();
+    w.account.drafts!.drf_v2 = { status: "trying", agent_id: "rae" };
+    w.account.trials = { drf_v2: { status: "trying", calls: 1, held: 0, refused: 0 } };
+    await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_v2" } });
+    w.account.drafts!.drf_v2 = { status: "confirmed", agent_id: "rae" };
+    w.account.trials.drf_v2 = { status: "ended", ended_by: "install", calls: 1, held: 0, refused: 0 };
+    // The first install made version 2 live, then ending the trial failed.
+    w.agents.fail.set("endTrial", new Error("timeout"));
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/trial/install`, { token: "ana" })).status).not.toBe(200);
+    expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(2);
+    w.agents.fail.delete("endTrial");
+    const switches = w.agents.calls.filter((c) => c.startsWith("switchVersion")).length;
+    const retry = await call(w, "POST", `/v1/tafs/${RAE}/trial/install`, { token: "ana" });
+    expect(retry).toMatchObject({ status: 200, body: { live: 2, ended: { why: "installed" } } });
+    expect(w.agents.calls.filter((c) => c.startsWith("switchVersion")).length).toBe(switches);
+  });
+
   it("refuses another taf's draft, a viewer, and what isn't there", async () => {
     const w = trying();
     expect((await call(w, "PUT", `/v1/tafs/${RAE}/trial`, { token: "ana", body: { n: 2, draft: "drf_max" } })).status).toBe(404);

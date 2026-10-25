@@ -1962,7 +1962,9 @@ final class AppModel: ObservableObject {
             // for a trial.
             guard confirmed.status == "trying" else {
                 guard gen == accountGeneration else { return nil }
-                trialErrors[tafID] = "KIFF didn't start a trial for this version (it answered \(confirmed.status)). Nothing runs under it."
+                trialErrors[tafID] = confirmed.status == "confirmed"
+                    ? "KIFF didn't start a trial: it issued these Cards as the taf's own. Check its Card tab, or install the version you had."
+                    : "KIFF didn't start a trial for this version (it answered \(confirmed.status)). Nothing runs under it."
                 await loadVersions(tafID)
                 return nil
             }

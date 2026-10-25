@@ -186,7 +186,7 @@ export interface Trial {
   n: number;
   /** The KIFF draft trying as its Card. */
   draft: string;
-  /** Its chat; absent until its first message. */
+  /** Its chat, which kiff/agents opens with the trial (kiff/agents#215). */
   session?: string;
   started: string;
   /** When the owner last wrote in it: unused for 7 days, it ends. */
@@ -197,7 +197,7 @@ export interface Trial {
 export interface TrialSummary {
   started: string;
   ended: string;
-  why: "installed" | "back" | "idle" | "replaced";
+  why: "installed" | "back" | "idle";
   calls: number;
   held: number;
   refused: number;

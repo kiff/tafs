@@ -1462,7 +1462,9 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     // The phone confirmed the trial's draft live in KIFF: the version goes live
     // under it, and KIFF ended the trial with it.
     if (!(await draftConfirmed(token, open.draft, deps.fetch, deps.kiffBase))) throw new HTTPError(409, "confirm this version's Card first");
-    await goLive(event, me, taf, open.n, deps);
+    // A retry after the version went live but the trial didn't end only ends the trial.
+    const live = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.live)?.n;
+    if (live !== open.n) await goLive(event, me, taf, open.n, deps);
     const counts = (await trialOf(token, open.draft, deps.fetch, deps.kiffBase)) ?? { calls: 0, held: 0, refused: 0 };
     const ended = await agentsCall(() => deps.agents.endTrial(me.tenantID, taf.id, "installed", counts));
     return { live: open.n, ended };
