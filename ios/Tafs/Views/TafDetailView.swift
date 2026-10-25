@@ -149,7 +149,7 @@ struct TafDetailView: View {
                         .scaledFont(13, weight: .semibold)
                 }
                 if let trial = model.openTrials[taf.id], let chat = model.trialChat(of: taf.id) {
-                    NavigationLink { TrialScreen(chatID: chat, tafID: taf.id) } label: {
+                    OpenTrialLink(chatID: chat, tafID: taf.id) {
                         Text("Trying v\(trial.n) · Resume").scaledFont(13, weight: .semibold).foregroundColor(Theme.amber)
                     }
                 }
@@ -379,6 +379,7 @@ struct VersionsPanel: View {
     @State private var starting: TafsCloud.Version?
     /// The trial just started: its chat opens (kiff/tafs#247).
     @State private var opened: UUID?
+    @Environment(\.sidebarSelects) private var sidebarSelects
 
     /// Install this version: the switch begins, with the Card draft tafs cloud prepared (its own,
     /// drafted again, or a restore when going back), which is read first, now → after
@@ -427,7 +428,12 @@ struct VersionsPanel: View {
             await model.loadTrial(tafID)
         }
         .sheet(item: $reading) { v in VersionCardSheet(version: v, tafID: tafID) }
-        .sheet(item: $starting) { v in TrialStartSheet(version: v, tafID: tafID) { opened = $0 } }
+        // Started: its chat opens; beside a sidebar, by selecting its row (kiff/tafs#253).
+        .sheet(item: $starting) { v in
+            TrialStartSheet(version: v, tafID: tafID) { chat in
+                if sidebarSelects { model.requestedTaf = chat } else { opened = chat }
+            }
+        }
         .navigationDestination(isPresented: Binding(get: { opened != nil }, set: { if !$0 { opened = nil } })) {
             if let chat = opened { TrialScreen(chatID: chat, tafID: tafID) }
         }
@@ -465,7 +471,7 @@ struct VersionsPanel: View {
             HStack(spacing: 8) {
                 if !v.live {
                     if trial?.n == v.n, let chat = model.trialChat(of: tafID) {
-                        NavigationLink { TrialScreen(chatID: chat, tafID: tafID) } label: {
+                        OpenTrialLink(chatID: chat, tafID: tafID) {
                             Text("Resume the trial")
                         }
                         .buttonStyle(OutlineButtonStyle())

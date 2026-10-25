@@ -15,6 +15,16 @@ struct TafsTab: View {
     }
 }
 
+/// Whether a sidebar beside this screen shows what's open (kiff/tafs#253): opening a taf or
+/// a trial then selects its row, rather than pushing a screen the sidebar doesn't show.
+private struct SidebarSelectsKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    var sidebarSelects: Bool {
+        get { self[SidebarSelectsKey.self] }
+        set { self[SidebarSelectsKey.self] = newValue }
+    }
+}
+
 /// What the sidebar opens beside it.
 enum HomeSelection: Hashable {
     case taf(UUID)
@@ -55,6 +65,7 @@ struct HomeSplitView: View {
             }
             // A new selection starts its own stack: nothing pushed for the last one stays.
             .id(selection)
+            .environment(\.sidebarSelects, true)
         }
         .navigationSplitViewStyle(.balanced)
         // "See it on…" in Setup selects the taf it made (kiff/tafs#96).

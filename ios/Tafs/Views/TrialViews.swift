@@ -79,6 +79,24 @@ struct TrialStartSheet: View {
     }
 }
 
+/// Opens a taf's trial (kiff/tafs#253): beside a sidebar, by selecting the trial's row, so
+/// the sidebar always shows what's open; on a phone, by pushing its screen.
+struct OpenTrialLink<Label: View>: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.sidebarSelects) private var sidebarSelects
+    let chatID: UUID
+    let tafID: UUID
+    @ViewBuilder var label: () -> Label
+
+    var body: some View {
+        if sidebarSelects {
+            Button { model.requestedTaf = chatID } label: { label() }
+        } else {
+            NavigationLink { TrialScreen(chatID: chatID, tafID: tafID) } label: { label() }
+        }
+    }
+}
+
 /// A trial, open like a taf (kiff/tafs#173): the version's chat under a bar that says it
 /// isn't live, with Go back and Install. The chat is the taf's chat view, on the trial's
 /// own chat: one universal chat.
@@ -89,6 +107,13 @@ struct TrialScreen: View {
     let tafID: UUID
     @State private var confirmBack = false
     @State private var confirmInstall = false
+    @Environment(\.sidebarSelects) private var sidebarSelects
+
+    /// The trial ended (Install or Go back): back to its taf, never a screen saying it's gone
+    /// (kiff/tafs#253). Beside a sidebar, the taf's row is selected.
+    private func ended() {
+        if sidebarSelects { model.requestedTaf = tafID } else { dismiss() }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -97,16 +122,6 @@ struct TrialScreen: View {
                 // Before its first message, what this trial is and what to try (kiff/tafs#247).
                 if model.chatItems(chatID).isEmpty { guide(trial, name: taf.name) }
                 TafChatView(tafID: chatID)
-                    .confirmationDialog("Go back to the live version?", isPresented: $confirmBack, titleVisibility: .visible) {
-                        Button("Go back", role: .destructive) { Task { if await model.goBackFromTrial(tafID) { dismiss() } } }
-                    } message: {
-                        Text("Version \(trial.n)'s trial Card stops at once, and this chat is deleted. \(taf.name) keeps working as it is.")
-                    }
-                    .confirmationDialog("Install version \(trial.n)?", isPresented: $confirmInstall, titleVisibility: .visible) {
-                        Button("Install with Face ID") { Task { if await model.installTrial(tafID) { dismiss() } } }
-                    } message: {
-                        Text("Version \(trial.n) becomes the live version, with its Card. This chat is deleted.")
-                    }
             } else {
                 Text("This trial has ended.").foregroundColor(Theme.dim).frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -153,9 +168,19 @@ struct TrialScreen: View {
                 Button("Go back") { confirmBack = true }
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
                     .disabled(busy)
+                    .confirmationDialog("Go back to the live version?", isPresented: $confirmBack, titleVisibility: .visible) {
+                        Button("Go back", role: .destructive) { Task { if await model.goBackFromTrial(tafID) { ended() } } }
+                    } message: {
+                        Text("Version \(trial.n)'s trial Card stops at once, and this chat is deleted. \(name) keeps working as it is.")
+                    }
                 Button(busy ? "Working…" : "Install") { confirmInstall = true }
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(busy)
+                    .confirmationDialog("Install version \(trial.n)?", isPresented: $confirmInstall, titleVisibility: .visible) {
+                        Button("Install with Face ID") { Task { if await model.installTrial(tafID) { ended() } } }
+                    } message: {
+                        Text("Version \(trial.n) becomes the live version, with its Card. This chat is deleted.")
+                    }
             }
             if let error = model.trialErrors[tafID] {
                 Text(error).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
