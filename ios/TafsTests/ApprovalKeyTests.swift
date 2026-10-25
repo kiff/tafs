@@ -1,0 +1,207 @@
+import XCTest
+@testable import Tafs
+
+/// A signer with both keys, as a phone holds them (kiff/tafs#233): what each key signed,
+/// and whether it asked for Face ID first.
+@MainActor
+final class TwoKeySigner: ApprovalSigning {
+    /// Signed by the current key: after Face ID (`prompted`), or under a confirmed step.
+    var current: [String] = []
+    var currentPrompted: [String] = []
+    /// Signed by the approval key: after Face ID (`prompted`), or under a confirmed step.
+    var approval: [String] = []
+    var approvalPrompted: [String] = []
+
+    var publicKeyDER: Data { Data([0x30, 0x59, 0x01]) }
+    var approvalPublicKeyDER: Data { Data([0x30, 0x59, 0x02]) }
+
+    func sign(_ message: Data, reason: String) async throws -> String {
+        currentPrompted.append(String(decoding: message, as: UTF8.self))
+        return "current"
+    }
+
+    func signConfirmed(_ message: Data) throws -> String {
+        current.append(String(decoding: message, as: UTF8.self))
+        return "current"
+    }
+
+    func signApproval(_ message: Data, reason: String) async throws -> String {
+        approvalPrompted.append(String(decoding: message, as: UTF8.self))
+        return "approval"
+    }
+
+    func signApprovalConfirmed(_ message: Data) throws -> String {
+        approval.append(String(decoding: message, as: UTF8.self))
+        return "approval"
+    }
+}
+
+/// The approval key (kiff/tafs#233): what grants authority is signed by a key whose own
+/// access control requires Face ID, once KIFF holds it for the session; everything else
+/// stays on the current key.
+@MainActor
+final class ApprovalKeyTests: XCTestCase {
+    override func tearDown() {
+        Keychain.delete(AppModel.tokenAccount)
+        Keychain.delete(AppModel.tenantAccount)
+        Keychain.delete(AppModel.keyedAccount)
+        Keychain.delete(AppModel.approvalKeyedAccount)
+        super.tearDown()
+    }
+
+    private static let heldJSON = """
+    {"exceptions":[{"id":"ce_1","proposal_id":"p1","subject":"rae-k3f9","action":"refund_order","entity_id":"ord_4502",
+      "status":"held","breaches":[{"mandate_id":"m1","outcome":"per_action_exceeded","quantity":"sum(amount_cents)","limit":15000}],
+      "parameters":{"amount_cents":48000},"created_at":"2026-10-14T10:41:00Z","expires_at":"2099-10-14T10:51:00Z",
+      "accounting_version":2}]}
+    """
+
+    /// Signed in with `registration` as KIFF's answer to the approval key.
+    private func signedIn(_ signer: TwoKeySigner, registration: (Int, String) = (200, #"{"fingerprint":"ab12 cd34 ef56 7890"}"#),
+                          held: String = #"{"exceptions":[]}"#) async -> AppModel {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: signer,
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, held)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
+        StubProtocol.responses["POST /v1/me/device/approval-key"] = registration
+        await model.useSession("kiff_dev_x", tenant: "t_01")
+        return model
+    }
+
+    private func sent(_ method: String, _ path: String) -> [URLRequest] {
+        StubProtocol.sent.filter { $0.httpMethod == method && $0.url?.path == path }
+    }
+
+    func testASessionRegistersItsApprovalKeyOnceSignedByTheCurrentKey() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer)
+        XCTAssertTrue(model.sessionHasApprovalKey)
+        let register = try XCTUnwrap(sent("POST", "/v1/me/device/approval-key").first)
+        let body = try JSONDecoder().decode([String: String].self, from: try XCTUnwrap(register.httpBody))
+        XCTAssertEqual(body, ["public_key": Data([0x30, 0x59, 0x02]).base64EncodedString()])
+        XCTAssertTrue(register.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=current") == true,
+                      "the current key vouches for it, without Face ID")
+        XCTAssertTrue(signer.currentPrompted.isEmpty && signer.approvalPrompted.isEmpty, "registering asks for no Face ID")
+        XCTAssertEqual(Keychain.load(AppModel.approvalKeyedAccount), "1")
+
+        // The next launch knows it: nothing is registered again.
+        StubProtocol.sent = []
+        await model.resumeSession("kiff_dev_x", tenant: "t_01", keyed: true)
+        XCTAssertTrue(model.sessionHasApprovalKey)
+        XCTAssertTrue(sent("POST", "/v1/me/device/approval-key").isEmpty)
+    }
+
+    func testASessionThatHasOneAlreadyUsesIt() async {
+        // 409: the key went with the sign-in, or an earlier launch registered it.
+        let model = await signedIn(TwoKeySigner(), registration: (409, #"{"error":"approval_key_exists"}"#))
+        XCTAssertTrue(model.sessionHasApprovalKey)
+    }
+
+    func testAKIFFWithoutTheRouteKeepsTheCurrentKeyAndTriesAgainNextLaunch() async {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, registration: (404, #"{"error":"not found"}"#))
+        XCTAssertFalse(model.sessionHasApprovalKey)
+        XCTAssertNil(model.kiff.approvalSigner)
+
+        StubProtocol.responses["POST /v1/me/device/approval-key"] = (200, #"{"fingerprint":"ab12 cd34 ef56 7890"}"#)
+        await model.resumeSession("kiff_dev_x", tenant: "t_01", keyed: true)
+        XCTAssertTrue(model.sessionHasApprovalKey)
+    }
+
+    func testApprovingIsSignedByTheApprovalKeyAndRefusingByTheCurrentKey() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, held: Self.heldJSON)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/reject"] = (200, #"{"id":"ce_1"}"#)
+        let call = try XCTUnwrap(model.held.first)
+
+        await model.answer(call, with: .approveOnce)
+        XCTAssertEqual(signer.approvalPrompted.count, 1, model.lastError ?? "")
+        XCTAssertTrue(signer.approvalPrompted[0].hasPrefix("kiff.answer.v1\nt_01\nce_1\napprove-once"), signer.approvalPrompted[0])
+        XCTAssertTrue(signer.currentPrompted.isEmpty, "the current key signs no approval")
+        let approve = try XCTUnwrap(sent("POST", "/v1/me/card-exceptions/ce_1/approve-once").first)
+        XCTAssertTrue(String(decoding: approve.httpBody ?? Data(), as: UTF8.self).contains(#""value":"approval""#))
+
+        // A refusal takes authority away: the current key, as before.
+        let again = await signedIn(signer, held: Self.heldJSON)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/reject"] = (200, #"{"id":"ce_1"}"#)
+        let refused = try XCTUnwrap(again.held.first)
+        signer.approvalPrompted = []
+        await again.answer(refused, with: .refuse)
+        XCTAssertEqual(signer.currentPrompted.count, 1, again.lastError ?? "")
+        XCTAssertTrue(signer.approvalPrompted.isEmpty)
+    }
+
+    func testWithoutTheApprovalKeyApprovingStaysOnTheCurrentKey() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, registration: (404, #"{"error":"not found"}"#), held: Self.heldJSON)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (200, #"{"id":"ce_1"}"#)
+        await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce)
+        XCTAssertEqual(signer.currentPrompted.count, 1, model.lastError ?? "")
+        XCTAssertTrue(signer.approvalPrompted.isEmpty, "KIFF doesn't hold the approval key: it couldn't check it")
+    }
+
+    func testResumingIsSignedByTheApprovalKeyAndHaltingIsNot() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer)
+        let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" }?.id)
+        StubProtocol.responses["POST /v1/tafs/depl_1/halt"] = (200, #"{"halt":{"state":"halted","halted_at":"2026-10-21T23:00:00Z","runtime":true,"kiff":true,"planque":true,"account":false,"stopped":0}}"#)
+        await model.halt(rae)
+        XCTAssertTrue(signer.approval.isEmpty && signer.approvalPrompted.isEmpty, "a halt grants nothing")
+
+        StubProtocol.responses["POST /v1/agents/rae-k3f9/resume"] = (200, #"{"state":"running"}"#)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1/halt"] = (200, #"{"halt":{"state":"running","halted_at":"2026-10-21T23:00:00Z","runtime":false,"kiff":false,"planque":false,"account":false,"stopped":0}}"#)
+        let resumed = await model.resumeHalt(rae)
+        XCTAssertTrue(resumed, model.lastError ?? "")
+        let resume = try XCTUnwrap(sent("POST", "/v1/agents/rae-k3f9/resume").first)
+        XCTAssertTrue(resume.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=approval") == true,
+                      "the same header, signed by the approval key: KIFF picks the key by route")
+        XCTAssertEqual(signer.approval.count, 1)
+        XCTAssertTrue(signer.approval[0].hasPrefix("kiff.request.v1\nt_01\nPOST\n/v1/agents/rae-k3f9/resume"), signer.approval[0])
+    }
+
+    func testWhatGrantsAuthority() {
+        XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/me/agent-drafts/drf_1/confirm"), "issuing a Card, or starting a trial")
+        XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/resume"))
+        XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/agents/rae-k3f9/resume"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("DELETE", "/v1/me/agent-drafts/drf_1/trial"), "ending a trial takes authority away")
+        XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/me/agent-drafts"), "Setup's draft grants nothing until confirmed")
+        XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/agents/rae-k3f9/halt"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/me/pack-requests/pr_1/decline"))
+        XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/me/agent-drafts//confirm"))
+    }
+
+    func testSignInSendsBothKeys() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer)
+        StubProtocol.responses["POST /v1/auth/device/start"] = (200, #"{"device_code":"dc","user_code":"ABCD-EFGH","verification_uri":"https://app.test/auth/device","verification_uri_complete":"https://app.test/auth/device?code=ABCD-EFGH","expires_in":600,"interval":5}"#)
+        _ = try await model.startSignIn()
+        let body = try JSONDecoder().decode([String: String].self, from: try XCTUnwrap(sent("POST", "/v1/auth/device/start").last?.httpBody))
+        XCTAssertEqual(body["public_key"], Data([0x30, 0x59, 0x01]).base64EncodedString())
+        XCTAssertEqual(body["approval_public_key"], Data([0x30, 0x59, 0x02]).base64EncodedString())
+    }
+
+    func testSigningOutForgetsIt() async {
+        let model = await signedIn(TwoKeySigner())
+        XCTAssertTrue(model.sessionHasApprovalKey)
+        await model.signOut()
+        XCTAssertFalse(model.sessionHasApprovalKey)
+        XCTAssertNil(model.kiff.approvalSigner)
+        XCTAssertNil(Keychain.load(AppModel.approvalKeyedAccount))
+    }
+
+    func testSignersWithOneKeySignEverythingWithIt() async throws {
+        let signer = StubSigner()
+        XCTAssertTrue(signer.approvalPublicKeyDER.isEmpty)
+        let signed = try await signer.signApproval(Data("x".utf8), reason: "test")
+        XCTAssertEqual(signed, "stub-signature")
+    }
+}

@@ -44,6 +44,10 @@ final class KIFFClient {
     /// Signs a setup call for a phone session bound to its key: set
     /// while a start the owner confirmed with Face ID runs, nil otherwise.
     var setupSigner: (@MainActor (Data) throws -> String)?
+    /// Signs, with the approval key, a call that grants authority (`grantsAuthority`), for
+    /// a session that registered one (kiff/tafs#233); nil otherwise, and the setup signer
+    /// signs it as before.
+    var approvalSigner: (@MainActor (Data) throws -> String)?
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
     /// starts a taf, the alert target that tells tafs cloud when a call is held, the connector
     /// key planque keeps, the account's time zone, deleting the account (kiff/tafs#185), and
@@ -63,6 +67,16 @@ final class KIFFClient {
         // Confirming a draft, and ending its trial (kiff/tafs#247): KIFF takes both from a
         // phone only signed.
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && (parts[5] == "confirm" || parts[5] == "trial") && !parts[4].isEmpty
+    }
+
+    /// Whether KIFF takes `method` on `path` only signed by the approval key, once the
+    /// session has one (kiff/tafs#233): confirming a draft, plain or as a trial (issuing a
+    /// Card), and resuming a halt. Ending a trial takes authority away: the current key.
+    static func grantsAuthority(_ method: String, _ path: String) -> Bool {
+        guard method == "POST" else { return false }
+        let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
+        return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
     }
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
@@ -114,13 +128,23 @@ final class KIFFClient {
 
     /// Starts signing in. `publicKey` (SPKI DER) is the phone's signing key: KIFF shows its
     /// fingerprint when the owner approves in their browser, and binds it to this session.
-    func startDeviceSignIn(publicKey: Data? = nil, deviceName: String? = nil, platform: String? = nil) async throws -> DeviceStart {
+    /// `approvalPublicKey` is the key that signs what grants authority (kiff/tafs#233).
+    func startDeviceSignIn(publicKey: Data? = nil, approvalPublicKey: Data? = nil, deviceName: String? = nil, platform: String? = nil) async throws -> DeviceStart {
         var body: [String: String] = [:]
         if let publicKey { body["public_key"] = publicKey.base64EncodedString() }
+        if let approvalPublicKey { body["approval_public_key"] = approvalPublicKey.base64EncodedString() }
         if let deviceName { body["device_name"] = deviceName }
         // KIFF's device list names the platform: ios, ipados, macos.
         if let platform { body["platform"] = platform }
         return try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
+    }
+
+    /// Registers the approval key for a session that signed in without one (kiff/tafs#233),
+    /// signed by the current key with `signer`. KIFF takes it once per session; a session
+    /// that has one answers 409, and replacing it means signing in again.
+    func registerApprovalKey(_ publicKey: Data, signer: @escaping @MainActor (Data) throws -> String) async throws {
+        let _: Empty = try await send("POST", "/v1/me/device/approval-key", body: ["public_key": publicKey.base64EncodedString()],
+                                      signedBy: signer)
     }
 
     /// One poll. Throws `.authorizationPending` until the person approves.
@@ -969,7 +993,9 @@ final class KIFFClient {
         try await send(method, path, body: Optional<[String: String]>.none, base: base, authorized: authorized)
     }
 
-    private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true) async throws -> T {
+    /// `signedBy` signs this one request, whatever `setupSigner` holds.
+    private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true,
+                                                   signedBy: (@MainActor (Data) throws -> String)? = nil) async throws -> T {
         guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: "Bad path") }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -984,12 +1010,18 @@ final class KIFFClient {
             request.httpBody = try JSONEncoder().encode(body)
         }
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
-        let signed = base == nil ? Self.signsSetup(path) : (base == gatewayURL && path == "/v1/connections")
-        if method == "POST" || method == "PUT" || method == "DELETE", signed, let setupSigner, let tenant {
+        let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key") : (base == gatewayURL && path == "/v1/connections")
+        // What grants authority is signed by the approval key, once the session has one,
+        // within a step the owner confirmed; KIFF picks the key by route, so the header is
+        // the same (kiff/tafs#233).
+        let signer = signedBy ?? setupSigner.map { current in
+            base == nil && Self.grantsAuthority(method, path) ? (approvalSigner ?? current) : current
+        }
+        if method == "POST" || method == "PUT" || method == "DELETE", signed, let signer, let tenant {
             let signedAt = SigningTime.next()
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
             let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)
-            request.setValue("t=\(signedAt),v1=\(try setupSigner(message))", forHTTPHeaderField: "KIFF-Device-Signature")
+            request.setValue("t=\(signedAt),v1=\(try signer(message))", forHTTPHeaderField: "KIFF-Device-Signature")
         }
         if authorized {
             guard let token else { throw KIFFError.unauthorized }

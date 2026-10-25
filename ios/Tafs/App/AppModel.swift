@@ -105,6 +105,9 @@ final class AppModel: ObservableObject {
     /// Whether this phone's KIFF session holds its signing key. A session from before
     /// the phone sent its key cannot answer: sign in again.
     var sessionHasKey = false
+    /// Whether KIFF holds this phone's approval key for the session (kiff/tafs#233): then
+    /// what grants authority is signed by it, under Face ID the key itself checks.
+    private(set) var sessionHasApprovalKey = false
     private let signer: ApprovalSigning
     private let store: SampleStore?
     private let clock: () -> Date
@@ -190,9 +193,16 @@ final class AppModel: ObservableObject {
         cloud.token = token
         kiffTenant = tenant
         sessionHasKey = keyed
+        if keyed, Keychain.load(Self.approvalKeyedAccount) == "1", !signer.approvalPublicKeyDER.isEmpty {
+            useApprovalKey()
+        } else {
+            forgetApprovalKey()
+        }
         showRememberedList()
         mode = .kiff
         await refresh()
+        // A session from before the approval key registers it once (kiff/tafs#233).
+        await registerApprovalKey()
         await syncPush()
         // A purchase KIFF didn't record before the app closed goes now.
         await purchases.sendUnfinished()
@@ -218,6 +228,7 @@ final class AppModel: ObservableObject {
     static let tokenAccount = "kiff.session"
     static let tenantAccount = "kiff.tenant"
     static let keyedAccount = "kiff.session-keyed"
+    static let approvalKeyedAccount = "kiff.session-approval-keyed"
 
     /// Starts signing in with this phone's signing key, so KIFF accepts its answers
     /// only with that key's signature. A connection iOS dropped while the app was away
@@ -230,7 +241,10 @@ final class AppModel: ObservableObject {
                 // A Mac without a Secure Enclave holds no key (kiff/tafs#85): it signs in
                 // without one, and KIFF takes a platform only with a key.
                 let key = signer.publicKeyDER
-                return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key, deviceName: "tafs on \(ThisDevice.kind)",
+                let approvalKey = signer.approvalPublicKeyDER
+                return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key,
+                                                        approvalPublicKey: key.isEmpty || approvalKey.isEmpty ? nil : approvalKey,
+                                                        deviceName: "tafs on \(ThisDevice.kind)",
                                                         platform: key.isEmpty ? nil : ThisDevice.platform)
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
@@ -302,6 +316,8 @@ final class AppModel: ObservableObject {
         }
         kiffTenant = tenant
         sessionHasKey = tenant != nil
+        Keychain.delete(Self.approvalKeyedAccount)
+        forgetApprovalKey()
         kiff.token = token
         cloud.token = token
         holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
@@ -328,9 +344,46 @@ final class AppModel: ObservableObject {
         // ("No tafs yet") until the owner pulled to refresh.
         await Task { [self] in
             await refresh()
+            await registerApprovalKey()
             await syncPush()
             await purchases.sendUnfinished()
         }.value
+    }
+
+    /// Makes sure KIFF holds this phone's approval key for the session (kiff/tafs#233): sent
+    /// at sign-in, or, for a session from before, registered once, signed by the current key.
+    /// It counts only once KIFF says so: registered now, or the session has one already
+    /// (409). A KIFF without the route yet (404), or a failure, leaves the current key
+    /// signing everything, as before, and the next launch tries again.
+    func registerApprovalKey() async {
+        guard mode == .kiff, sessionHasKey, !sessionHasApprovalKey, let tenant = kiffTenant else { return }
+        let key = signer.approvalPublicKeyDER
+        guard !key.isEmpty else { return }
+        let gen = accountGeneration
+        let signer = self.signer
+        kiff.tenant = tenant
+        do {
+            try await kiff.registerApprovalKey(key, signer: { try signer.signConfirmed($0) })
+        } catch KIFFClient.KIFFError.server(let status, _, _) where status == 409 {
+            // The session has one: the key sent at sign-in.
+        } catch {
+            return
+        }
+        guard gen == accountGeneration else { return }
+        Keychain.save("1", for: Self.approvalKeyedAccount)
+        useApprovalKey()
+    }
+
+    /// From now on, what grants authority is signed by the approval key.
+    private func useApprovalKey() {
+        sessionHasApprovalKey = true
+        let signer = self.signer
+        kiff.approvalSigner = { try signer.signApprovalConfirmed($0) }
+    }
+
+    private func forgetApprovalKey() {
+        sessionHasApprovalKey = false
+        kiff.approvalSigner = nil
     }
 
     func signOut() async {
@@ -339,6 +392,8 @@ final class AppModel: ObservableObject {
         Keychain.delete(Self.tokenAccount)
         Keychain.delete(Self.tenantAccount)
         Keychain.delete(Self.keyedAccount)
+        Keychain.delete(Self.approvalKeyedAccount)
+        forgetApprovalKey()
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]; halts = [:]
@@ -1004,7 +1059,14 @@ final class AppModel: ObservableObject {
                 let message = KIFFClient.answerMessage(tenant: tenant, exceptionID: kiffID,
                                                        answer: Self.kiffAnswer(answer),
                                                        nextStep: nextStep, accountingVersion: version, signedAt: signedAt)
-                signature = confirmed ? try signer.signConfirmed(message) : try await signer.sign(message, reason: reason)
+                // Approving, or raising a Card, grants authority: the approval key signs it,
+                // under the Face ID it checks itself, once KIFF holds it (kiff/tafs#233).
+                let grants = sessionHasApprovalKey && (answer == .approveOnce || answer == .extraRoom)
+                if grants {
+                    signature = confirmed ? try signer.signApprovalConfirmed(message) : try await signer.signApproval(message, reason: reason)
+                } else {
+                    signature = confirmed ? try signer.signConfirmed(message) : try await signer.sign(message, reason: reason)
+                }
                 signed = KIFFClient.AnswerSignature(signedAt: signedAt, value: signature)
             } else {
                 signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)

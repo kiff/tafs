@@ -74,7 +74,8 @@ Version 0.1. A working iPhone app with two modes.
   are samples, not a model.
 
 **Both**
-- Every answer is signed on the phone (Secure Enclave and Face ID on a device).
+- Every answer is signed on the phone (Secure Enclave and Face ID on a device). What
+  grants authority is signed by a second key whose own access control requires Face ID.
 - The first held call counts down as a Live Activity on the lock screen and in
   the Dynamic Island; each new one posts a notification. For now the app finds
   held calls when it is open. Push alerts while it is closed are next: KIFF's
