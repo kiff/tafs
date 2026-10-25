@@ -176,6 +176,31 @@ export interface AgentVersion {
   draft?: string;
   /** The KIFF Cards it ran under, each at its revision when it went live (kiff/agents#142). */
   cards?: CardRevision[];
+  /** Its trials that ended, oldest first (kiff/tafs#173). */
+  trials?: TrialSummary[];
+}
+
+/** An agent's open trial of version n (kiff/tafs#173). */
+export interface Trial {
+  id: string;
+  n: number;
+  /** The KIFF draft trying as its Card. */
+  draft: string;
+  /** Its chat, which kiff/agents opens with the trial (kiff/agents#215). */
+  session?: string;
+  started: string;
+  /** When the owner last wrote in it: unused for 7 days, it ends. */
+  used: string;
+}
+
+/** What a version keeps of an ended trial. */
+export interface TrialSummary {
+  started: string;
+  ended: string;
+  why: "installed" | "back" | "idle";
+  calls: number;
+  held: number;
+  refused: number;
 }
 
 /** One KIFF Card at one revision. */
@@ -225,7 +250,8 @@ export interface TrialWrite {
 export interface Session {
   id: string;
   agent: string;
-  kind: "run" | "chat";
+  /** A trial's is "trial" (kiff/tafs#107, #173), apart from the taf's runs and chats. */
+  kind: "run" | "chat" | "trial";
   started: string;
   updated: string;
   expires?: string;
@@ -342,6 +368,28 @@ export class Agents {
   /** A trial so far: the run, and what KIFF decided for each write. */
   async trial(tenant: string, id: string, run: string): Promise<{ run: Run; writes: TrialWrite[] }> {
     return this.call("GET", tenant, ["agents", id, "trials", run]);
+  }
+
+  // The open trial (kiff/tafs#173): one chat with a version, under its trial Card.
+
+  /** Opens the trial of version n under `draft`, the KIFF draft trying as its Card. 409 while another is open. */
+  async openTrial(tenant: string, id: string, n: number, draft: string): Promise<Trial> {
+    return (await this.call<{ trial: Trial }>("PUT", tenant, ["agents", id, "trial"], { n, draft })).trial;
+  }
+
+  /** The agent's open trial; undefined when it has none. */
+  async openedTrial(tenant: string, id: string): Promise<Trial | undefined> {
+    return (await this.call<{ trial: Trial }>("GET", tenant, ["agents", id, "trial"]).catch(notFound))?.trial;
+  }
+
+  /** One message to the trial: a turn of version n in the trial's chat, in the background. */
+  async trialMessage(tenant: string, id: string, input: string): Promise<{ run: Run; trial: Trial }> {
+    return this.call("POST", tenant, ["agents", id, "trial", "messages"], { input });
+  }
+
+  /** Ends the trial with KIFF's counts: its chat is deleted, and its version keeps one line. */
+  async endTrial(tenant: string, id: string, why: "installed" | "back", counts: { calls: number; held: number; refused: number }): Promise<TrialSummary> {
+    return (await this.call<{ ended: TrialSummary }>("DELETE", tenant, ["agents", id, "trial"], { why, ...counts })).ended;
   }
 
   /** The agent's definition; undefined when the tenant has none of that id. */

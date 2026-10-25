@@ -779,6 +779,13 @@ final class KIFFClient {
         try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version])
     }
 
+    /// Confirms a version's draft as a **trial** (kiff/tafs#173): KIFF issues its Cards as
+    /// trial Cards of their own, with their own counters, and the live Cards stay as they
+    /// are. The draft's status becomes "trying". A signed setup call, as any confirm.
+    func confirmDraftAsTrial(id: String, version: String) async throws -> AgentDraft {
+        try await send("POST", "/v1/me/agent-drafts/\(escaped(id))/confirm", body: ["version": version, "as": "trial"])
+    }
+
     // MARK: Coach's tools (kiff/tafs#206)
 
     /// Coach's tools on tafs cloud's MCP server, each its own connection in KIFF; the reads

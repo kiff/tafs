@@ -143,6 +143,51 @@ export async function redraft(token: string, draftID: string, doFetch: Fetch = f
   return (await ask<{ id: string }>(token, "POST", `/v1/me/agent-drafts/${encodeURIComponent(draftID)}/redraft`, {}, doFetch, base)).id;
 }
 
+/** What KIFF counted of a trial's calls (kiff/tafs#173): kept once the trial ends. */
+export interface TrialCounts {
+  calls: number;
+  held: number;
+  refused: number;
+}
+
+/** A trial as KIFF keeps it: still trying, or ended, with its calls' counts. */
+export interface KIFFTrial extends TrialCounts {
+  status: "trying" | "ended";
+  endedBy?: string;
+}
+
+function trialFrom(t: { status?: string; ended_by?: string; calls?: number; held?: number; refused?: number }): KIFFTrial {
+  return { status: t.status === "trying" ? "trying" : "ended", ...(t.ended_by ? { endedBy: t.ended_by } : {}),
+    calls: t.calls ?? 0, held: t.held ?? 0, refused: t.refused ?? 0 };
+}
+
+/** The trial of a draft (kiff/tafs#173), read with the owner's session; undefined when it was never tried. */
+export async function trialOf(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<KIFFTrial | undefined> {
+  try {
+    return trialFrom(await ask(token, "GET", `/v1/me/agent-drafts/${encodeURIComponent(draftID)}/trial`, undefined, doFetch, base));
+  } catch (err) {
+    if (err instanceof KIFFError && err.status === 404) return undefined;
+    throw err;
+  }
+}
+
+/**
+ * Go back (kiff/tafs#173): KIFF revokes the draft's trial Cards, refusing
+ * its later and held calls, and answers its final counts. A trial that had
+ * ended already is read instead, so asking again answers the same.
+ */
+export async function endTrialIn(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<TrialCounts> {
+  const path = `/v1/me/agent-drafts/${encodeURIComponent(draftID)}/trial`;
+  try {
+    return trialFrom(await ask(token, "DELETE", path, undefined, doFetch, base));
+  } catch (err) {
+    if (!(err instanceof KIFFError && (err.status === 404 || err.status === 409))) throw err;
+  }
+  const t = await trialOf(token, draftID, doFetch, base);
+  if (!t || t.status !== "ended") throw new KIFFError(409, "KIFF didn't end this trial");
+  return t;
+}
+
 /**
  * A halt as KIFF reports it: `halted` only once its gateway (`kiff_ack`)
  * and planque (`planque_ack`) both hold it, `halting` until then. While halted, KIFF refuses the
