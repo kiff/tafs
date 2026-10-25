@@ -29,7 +29,9 @@
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update both functions' code, nothing else.
 #
-# Everything is named tafs-*, in us-east-1, and touches nothing of KIFF's own.
+# Everything is named tafs-* and touches nothing of KIFF's own. The functions run in
+# us-east-1; their data (the table and the push key) is in DATA_REGION, eu-west-1,
+# since 25 Oct 2026. The push key is a Secrets Manager replica of us-east-1's.
 # Usage: infra/aws.sh path/to/lambda.zip
 #
 # Applied on 2026-10-14 step by step (each part checked before the next), not by
@@ -37,6 +39,7 @@
 set -euo pipefail
 
 REGION=us-east-1
+DATA_REGION=eu-west-1
 FN=tafs-cloud
 SECRET=tafs/anthropic-api-key
 APNS_SECRET=tafs/apns-key
@@ -54,6 +57,7 @@ DEPLOY_ROLE=tafs-github-deploy
 REPO_SUB=repo:kiff@2176846/tafs@1418264001
 ZIP=${1:?usage: infra/aws.sh lambda.zip}
 aws() { command aws --region "$REGION" "$@"; }
+data() { command aws --region "$DATA_REGION" "$@"; }
 
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 OIDC_ARN=arn:aws:iam::$ACCOUNT:oidc-provider/token.actions.githubusercontent.com
@@ -80,18 +84,25 @@ if ! APNS_SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$APNS_SEC
   echo "created secret $APNS_SECRET"
 fi
 
+# The push key, replicated to DATA_REGION, where the functions read it.
+aws secretsmanager replicate-secret-to-regions --secret-id "$APNS_SECRET" \
+  --add-replica-regions Region="$DATA_REGION" >/dev/null 2>&1 || true
+APNS_SECRET_ARN=$(data secretsmanager describe-secret --secret-id "$APNS_SECRET" --query ARN --output text)
+
 # Taf names, claimed with a conditional write so two requests can't both start one.
-if ! aws dynamodb describe-table --table-name "$TABLE" >/dev/null 2>&1; then
-  aws dynamodb create-table --table-name "$TABLE" --billing-mode PAY_PER_REQUEST \
+if ! data dynamodb describe-table --table-name "$TABLE" >/dev/null 2>&1; then
+  data dynamodb create-table --table-name "$TABLE" --billing-mode PAY_PER_REQUEST \
     --attribute-definitions AttributeName=id,AttributeType=S --key-schema AttributeName=id,KeyType=HASH \
-    --tags Key=project,Value=tafs >/dev/null
-  aws dynamodb wait table-exists --table-name "$TABLE"
-  echo "created table $TABLE"
+    --deletion-protection-enabled --tags Key=project,Value=tafs >/dev/null
+  data dynamodb wait table-exists --table-name "$TABLE"
+  echo "created table $TABLE in $DATA_REGION"
 fi
-# Old chat message slots expire on their own.
-aws dynamodb update-time-to-live --table-name "$TABLE" \
+# Old chat message slots expire on their own; the table can be restored to any point.
+data dynamodb update-time-to-live --table-name "$TABLE" \
   --time-to-live-specification Enabled=true,AttributeName=ttl >/dev/null 2>&1 || true
-TABLE_ARN=$(aws dynamodb describe-table --table-name "$TABLE" --query Table.TableArn --output text)
+data dynamodb update-continuous-backups --table-name "$TABLE" \
+  --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true >/dev/null
+TABLE_ARN=$(data dynamodb describe-table --table-name "$TABLE" --query Table.TableArn --output text)
 
 # The function's role.
 if ! aws iam get-role --role-name "$LAMBDA_ROLE" >/dev/null 2>&1; then
@@ -147,7 +158,7 @@ LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn -
 # The function.
 AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
 AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
-ENV="Variables={AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,NODE_OPTIONS=--enable-source-maps$DOORS_ENV}"
+ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,NODE_OPTIONS=--enable-source-maps$DOORS_ENV}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

@@ -91,8 +91,16 @@ function forward(signature: string, raw: string): Promise<ReadyRun | undefined> 
   return forwardAlert(fetch, need("AGENTS_ALERTS_URL"), signature, raw);
 }
 
+/**
+ * Where tafs cloud keeps its data: its table and its push key. DATA_REGION
+ * when set (eu-west-1), else this function's own region. It lets the data
+ * move to the EU before the functions do, so the URLs the app and the email
+ * door already call keep working meanwhile.
+ */
+const DATA_REGION = process.env.DATA_REGION || undefined;
+
 /** Taf names per account, claimed with a conditional write so only one request wins. */
-const dynamo = new DynamoDBClient({});
+const dynamo = new DynamoDBClient({ region: DATA_REGION });
 const names: Names = {
   async claim(tenant, name, owner) {
     try {
@@ -231,7 +239,7 @@ const apns = apnsSender({
   keyPEM: async () => {
     const id = process.env.APNS_SECRET_ID;
     if (!id) throw new Error("APNS_SECRET_ID is not set");
-    const out = await new SecretsManagerClient({}).send(new GetSecretValueCommand({ SecretId: id }));
+    const out = await new SecretsManagerClient({ region: DATA_REGION }).send(new GetSecretValueCommand({ SecretId: id }));
     return (out.SecretString ?? "").trim();
   },
   keyID: process.env.APNS_KEY_ID ?? "",
