@@ -11,6 +11,10 @@ cloud's functions (the phone's API, push) still run in `us-east-1`, reading and
 writing that data in `eu-west-1`; their logs stay in `us-east-1` until they move too.
 Anthropic only serves the model.
 
+The move: until 25 October 2026, tafs cloud's table was in `us-east-1`. It was copied
+to `eu-west-1` at the cutover, and the `us-east-1` table is deleted the same day, once
+the copy is checked, so nothing erased in `eu-west-1` stays behind in `us-east-1`.
+
 **Anthropic, from its documentation (checked 15 October 2026):**
 - kiff/agents calls the Messages API. It keeps no session at Anthropic: each model
   turn is a request, and Anthropic keeps requests 30 days by default, with its
