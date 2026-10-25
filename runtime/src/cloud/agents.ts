@@ -265,9 +265,9 @@ export interface Session {
   archived?: boolean;
 }
 
-/** Who asks for a run: a member of the account, by their KIFF subject, or a door's sender. */
+/** Who asks for a run: a member of the account, by their KIFF subject, a door's sender, or an agent asking on its own. */
 export interface Requester {
-  kind: "member" | "door";
+  kind: "member" | "door" | "agent";
   id: string;
 }
 

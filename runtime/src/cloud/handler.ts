@@ -2532,9 +2532,9 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         throw agentsFailure(err);
       }
     }
-    // Coach asks the taf, in its own chat with it: Coach's identity is its agent, as it
-    // doesn't know yet whose conversation it runs in.
-    const at: RunAt = { requester: member(me), live: args.chat !== "new" };
+    // Coach doesn't know yet whose conversation it runs in, so it asks as itself, an
+    // agent: its tasks go on in its own chat with the taf, which no person lists.
+    const at: RunAt = { requester: { kind: "agent", id: me.subject }, live: args.chat !== "new" };
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, at, undefined, notify));
     await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120) }, deps);
