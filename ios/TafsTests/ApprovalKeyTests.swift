@@ -96,9 +96,21 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(register.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=current") == true,
                       "the current key vouches for it, without Face ID")
         XCTAssertTrue(signer.currentPrompted.isEmpty && signer.approvalPrompted.isEmpty, "registering asks for no Face ID")
-        XCTAssertEqual(Keychain.load(AppModel.approvalKeyedAccount), KIFFClient.fingerprint(Self.ours), "it keeps which key KIFF holds")
+    }
 
-        // The next launch knows it: nothing is registered again.
+    /// Whether this test host keeps Keychain items: an unsigned test bundle on CI's
+    /// Simulator can't, and the app's Keychain reads come back empty there.
+    private var keychainKeeps: Bool {
+        Keychain.save("x", for: "tafs.test-probe")
+        defer { Keychain.delete("tafs.test-probe") }
+        return Keychain.load("tafs.test-probe") == "x"
+    }
+
+    func testTheNextLaunchUsesTheRegisteredKeyWithoutRegisteringAgain() async throws {
+        try XCTSkipUnless(keychainKeeps, "this test host keeps no Keychain items")
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer)
+        XCTAssertEqual(Keychain.load(AppModel.approvalKeyedAccount), KIFFClient.fingerprint(Self.ours), "it keeps which key KIFF holds")
         StubProtocol.sent = []
         await model.resumeSession("kiff_dev_x", tenant: "t_01", keyed: true)
         XCTAssertTrue(model.sessionHasApprovalKey)
