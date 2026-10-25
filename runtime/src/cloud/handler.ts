@@ -2192,19 +2192,26 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
   return out;
 }
 
-/** A note the taf keeps. Its name is its id. *//** A note the taf keeps. Its name is its id. */
+/** A note the taf keeps. Its name is its id. *//**
+ * A note the taf keeps: shared, read in every conversation, or the person's own, from
+ * their conversations. A shared note's id is its name; the person's own is "@" and its
+ * name, as no shared note's name starts with "@".
+ */
 export interface Note {
   id: string;
   path: string;
   content: string;
   updated_at: string;
+  scope: "shared" | "mine";
 }
 
-/** The taf's newest notes, newest first. */
+/** The taf's newest notes the person reads, newest first: the shared ones and their own, never another person's. */
 async function notes(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Note[]> {
-  const all = await agentsCall(() => deps.agents.memories(me.tenantID, taf.id));
+  const all = await agentsCall(() => deps.agents.memories(me.tenantID, taf.id, ownerKey(me)));
   return all
-    .map((n) => ({ id: n.name, path: n.name, content: n.text, updated_at: iso(n.updated) }))
+    .map((n): Note => n.scope
+      ? { id: `@${n.name}`, path: n.name, content: n.text, updated_at: iso(n.updated), scope: "mine" }
+      : { id: n.name, path: n.name, content: n.text, updated_at: iso(n.updated), scope: "shared" })
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, MEMORY.shown);
 }
@@ -2214,7 +2221,11 @@ async function forget(me: KIFFIdentity, taf: Taf, escapedName: string, deps: Dep
   let name: string;
   try { name = decodeURIComponent(escapedName); } catch { throw new HTTPError(404, "no such note"); }
   if (!name) throw new HTTPError(404, "no such note");
-  await agentsCall(() => deps.agents.forget(me.tenantID, taf.id, name));
+  // The person's own note, by "@" and its name; else the shared one of that name.
+  const mine = name.startsWith("@");
+  const note = mine ? name.slice(1) : name;
+  if (!note) throw new HTTPError(404, "no such note");
+  await agentsCall(() => deps.agents.forget(me.tenantID, taf.id, note, mine ? ownerKey(me) : undefined));
   return { forgotten: name };
 }
 

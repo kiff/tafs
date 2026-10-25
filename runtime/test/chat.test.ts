@@ -218,9 +218,23 @@ describe("memory", () => {
     ]);
     const r = await call(w, "GET", `/v1/tafs/${RAE}/memory`, { token: "ana" });
     expect(r.body.notes).toEqual([
-      { id: "tone", path: "tone", content: "Short replies.", updated_at: "2026-10-16T09:00:00.000Z" },
-      { id: "acme", path: "acme", content: "Ask before refunding Acme.", updated_at: "2026-10-15T09:00:00.123Z" },
+      { id: "tone", path: "tone", content: "Short replies.", updated_at: "2026-10-16T09:00:00.000Z", scope: "shared" },
+      { id: "acme", path: "acme", content: "Ask before refunding Acme.", updated_at: "2026-10-15T09:00:00.123Z", scope: "shared" },
     ]);
+  });
+
+  it("shows the person the shared notes and their own, never another person's, and forgets their own apart", async () => {
+    const w = world();
+    w.agents.notes.set(`t_acme|${RAE}`, [
+      { agent: RAE, name: "tone", text: "Short replies.", updated: "2026-10-16T09:00:00Z" },
+      { agent: RAE, scope: "member:u_ana", name: "tone", text: "Ana likes bullet points.", updated: "2026-10-16T10:00:00Z" },
+      { agent: RAE, scope: "member:u_bo", name: "bo", text: "Bo's own.", updated: "2026-10-16T11:00:00Z" },
+    ]);
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/memory`, { token: "ana" });
+    expect(r.body.notes.map((n: { id: string; scope: string }) => [n.id, n.scope])).toEqual([["@tone", "mine"], ["tone", "shared"]]);
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/memory/%40tone`, { token: "ana" })).body).toEqual({ forgotten: "@tone" });
+    expect(w.agents.calls).toContain(`forget ${RAE} member:u_ana tone`);
+    expect(w.agents.notes.get(`t_acme|${RAE}`)!.map((n) => n.text)).toEqual(["Short replies.", "Bo's own."]);
   });
 
   it("shows the newest notes when there are more than it shows", async () => {

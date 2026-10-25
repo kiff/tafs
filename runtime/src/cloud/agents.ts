@@ -305,6 +305,8 @@ export interface SessionEvent {
 
 export interface Note {
   agent: string;
+  /** Whose note it is: none for a shared one, read by every run; else a requester's, as "member:<subject>". */
+  scope?: string;
   name: string;
   text: string;
   updated: string;
@@ -554,14 +556,16 @@ export class Agents {
     return out.session;
   }
 
-  async memories(tenant: string, agent: string): Promise<Note[]> {
-    return (await this.call<{ memories: Note[] }>("GET", tenant, ["agents", agent, "memories"])).memories;
+  /** The agent's notes: with `owner`, the shared ones and that person's own; without, every note. */
+  async memories(tenant: string, agent: string, owner?: string): Promise<Note[]> {
+    return (await this.call<{ memories: Note[] }>("GET", tenant, ["agents", agent, "memories"], undefined, owner ? { owner } : undefined)).memories;
   }
 
   /** Forgets one note. Already gone counts as done. */
-  async forget(tenant: string, agent: string, name: string): Promise<void> {
+  /** Forgets a note: the shared one of that name, or with `scope`, that requester's own. */
+  async forget(tenant: string, agent: string, name: string, scope?: string): Promise<void> {
     if (!name || name === "." || name === "..") throw new AgentsError(404, "no such note");
-    await this.call("DELETE", tenant, ["agents", agent, "memories", { text: name }]).catch(notFound);
+    await this.call("DELETE", tenant, ["agents", agent, "memories", { text: name }], undefined, scope ? { scope } : undefined).catch(notFound);
   }
 
   // Halts. No agent is the account itself.

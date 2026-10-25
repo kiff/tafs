@@ -320,14 +320,14 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       s.archived = archived;
       return { ...s };
     },
-    async memories(tenant, agent) {
+    async memories(tenant, agent, owner) {
       if (!agents.has(k(tenant, agent))) throw gone();
-      return notes.get(k(tenant, agent)) ?? [];
+      return (notes.get(k(tenant, agent)) ?? []).filter((x) => !owner || !x.scope || x.scope === owner);
     },
-    async forget(tenant, agent, name) {
-      calls.push(`forget ${agent} ${name}`);
+    async forget(tenant, agent, name, scope) {
+      calls.push(`forget ${agent} ${scope ? `${scope} ` : ""}${name}`);
       if (!agents.has(k(tenant, agent))) throw gone();
-      notes.set(k(tenant, agent), (notes.get(k(tenant, agent)) ?? []).filter((x) => x.name !== name));
+      notes.set(k(tenant, agent), (notes.get(k(tenant, agent)) ?? []).filter((x) => !(x.name === name && (x.scope ?? "") === (scope ?? ""))));
     },
     async createSchedule(tenant, sc) {
       calls.push(`createSchedule ${sc.id} ${sc.cron} ${sc.time_zone ?? ""}`);
