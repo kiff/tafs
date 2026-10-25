@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, trialOf, whoIs } from "./kiff.js";
+import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, runGrant, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
@@ -1739,7 +1739,8 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
     heldCards(kiff.mandates, taf.kiffAgent));
   const ai = await aiBound(event, deps);
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, { requester: member(me) }, ai));
+  const at = await granted(event, setup.kiffAgent, { requester: member(me) }, deps);
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, at, ai));
   return { setup: setup.id, session: run.session, new_session: true };
 }
 
@@ -1808,10 +1809,22 @@ function ownerKey(me: KIFFIdentity): string {
  */
 async function chatAt(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<RunAt> {
   const body = parseBody(event);
-  if (body.new_chat === true) return { requester: member(me) };
+  if (body.new_chat === true) return granted(event, taf.kiffAgent, { requester: member(me) }, deps);
   const chosen = str(body.session).trim();
-  if (chosen) return { session: (await ownChat(me, taf, chosen, deps)).id, requester: member(me) };
-  return { requester: member(me), live: true };
+  if (chosen) return granted(event, taf.kiffAgent, { session: (await ownChat(me, taf, chosen, deps)).id, requester: member(me) }, deps);
+  return granted(event, taf.kiffAgent, { requester: member(me), live: true }, deps);
+}
+
+/**
+ * The person's run, with their run grant for the taf's KIFF agent: KIFF's word that
+ * it is theirs, which kiff/agents takes the requester from. KIFF saying they may not
+ * use it is 403. KIFF giving none otherwise leaves the run as asserted, as before.
+ */
+async function granted(event: HTTPEvent, agent: string, at: RunAt, deps: Deps): Promise<RunAt> {
+  if (!agent) return at;
+  const grant = await runGrant(bearer(event), agent, deps.fetch, deps.kiffBase);
+  if (grant === "no_access") throw new HTTPError(403, "this taf isn't shared with you: ask an admin to share it");
+  return grant ? { ...at, grant } : at;
 }
 
 /** Whether the run opened its chat: a reopened chat never, a new one always, a live one as kiff/agents says. */

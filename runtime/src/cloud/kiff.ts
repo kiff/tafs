@@ -227,3 +227,25 @@ function halt(h: Partial<KIFFHalt>): KIFFHalt {
   const state = h.state === "halted" || h.state === "halting" ? h.state : "running";
   return { state, ...(h.halted_at ? { halted_at: h.halted_at } : {}), kiff_ack: h.kiff_ack === true, planque_ack: h.planque_ack === true };
 }
+
+/**
+ * The person's run grant for an agent (POST /v1/me/run-grants): KIFF's signed word
+ * that they may use it, which their run carries so each of its calls, and any hold it
+ * opens, is theirs. `no_access` when KIFF says they may not use it; undefined when
+ * KIFF gave none for another reason (not yet able to, or down), and the run goes as
+ * before: kiff/agents refuses it once it requires grants.
+ */
+export async function runGrant(token: string, agent: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<string | "no_access" | undefined> {
+  let res: Response;
+  try {
+    res = await doFetch(`${base}/v1/me/run-grants`, {
+      method: "POST", headers: { authorization: `Bearer ${token}`, accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify({ agent }),
+    });
+  } catch {
+    return undefined;
+  }
+  const out = (await res.json().catch(() => ({}))) as { grant?: unknown; error?: unknown };
+  if (res.status === 403 && out.error === "no_access") return "no_access";
+  return res.ok && typeof out.grant === "string" && out.grant ? out.grant : undefined;
+}

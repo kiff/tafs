@@ -37,7 +37,7 @@ function world() {
 }
 type World = ReturnType<typeof world>;
 
-async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown } = {}) {
+async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; fetch?: typeof fetch } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
     requestContext: { http: { method } },
@@ -50,7 +50,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER, approver: APPROVER }),
+    fetch: opts.fetch ?? kiff({ ana: ME, viewer: VIEWER, approver: APPROVER }),
     now: () => NOW,
   });
   return { status: r.statusCode, body: JSON.parse(r.body) };
@@ -152,6 +152,31 @@ describe("messages", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: " " } })).status).toBe(400);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "x".repeat(2001) } })).status).toBe(400);
     expect(w.agents.calls).toEqual([]);
+  });
+
+  it("carries the person's run grant from KIFF, and stops when KIFF says the taf isn't theirs", async () => {
+    const w = world();
+    let answer: { status: number; body: object } = { status: 200, body: { grant: "krg_u_ana", subject: "u_ana", agent: "rae" } };
+    const asked: string[] = [];
+    const me = kiff({ ana: ME });
+    const fetchFor = (async (url: string, init?: RequestInit) => {
+      if (!url.endsWith("/v1/me/run-grants")) return me(url, init);
+      asked.push(String(init?.body));
+      return new Response(JSON.stringify(answer.body), { status: answer.status });
+    }) as typeof fetch;
+    // Ana's grant for Rae's KIFF agent goes on her run: kiff/agents takes her from it.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Refund 42" }, fetch: fetchFor })).status).toBe(200);
+    expect(asked).toEqual([JSON.stringify({ agent: "rae" })]);
+    expect(w.agents.runs.at(-1)!.requester).toEqual(ANA.requester);
+    // KIFF says the taf isn't shared with her: nothing starts.
+    answer = { status: 403, body: { error: "no_access", need: "use" } };
+    const runs = w.agents.runs.length;
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Refund 43", new_chat: true }, fetch: fetchFor });
+    expect(r.status).toBe(403);
+    expect(w.agents.runs.length).toBe(runs);
+    // KIFF gives none for another reason (not yet able to): the run goes as before.
+    answer = { status: 404, body: { error: "not found" } };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Refund 44", new_chat: true }, fetch: fetchFor })).status).toBe(200);
   });
 
   it("goes into the latest chat while it was active in the last 30 minutes", async () => {
