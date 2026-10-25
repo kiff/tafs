@@ -411,11 +411,12 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (r.status !== "PAUSED") throw new AgentsError(409, "the run isn't paused: read it");
       return r;
     },
-    async cancelRun(tenant, agent, id) {
+    async cancelRun(tenant, agent, id, requester) {
       calls.push(`cancelRun ${agent} ${id}`);
       failing("cancelRun");
       const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
-      if (!r) throw gone();
+      // Another person's run is not found; tafs cloud itself (no requester) may stop any.
+      if (!r || (requester && r.requester && (r.requester.kind !== requester.kind || r.requester.id !== requester.id))) throw gone();
       if (r.status !== "PENDING" && r.status !== "RUNNING" && r.status !== "PAUSED") throw new AgentsError(409, "the run is over");
       r.status = "CANCELLED";
       return r;

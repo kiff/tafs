@@ -2086,7 +2086,7 @@ async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): P
   const run = read.events.at(-1)?.run;
   if (!run) return { stopped: false };
   try {
-    const out = await deps.agents.cancelRun(me.tenantID, taf.id, run);
+    const out = await deps.agents.cancelRun(me.tenantID, taf.id, run, member(me));
     return { stopped: true, run: out.id, status: out.status };
   } catch (err) {
     // Already over: nothing is left to stop.
@@ -2534,7 +2534,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   }
   if (name === "run_stop") {
     try {
-      const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim());
+      const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim(), member(me));
       return { taf: taf.name, run: out.id, status: out.status, withdrawn: "its held calls, in KIFF; nothing more is sent" };
     } catch (err) {
       if (err instanceof AgentsError && err.status === 409) return { taf: taf.name, stopped: false, why: "the run had already ended" };

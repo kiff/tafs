@@ -336,6 +336,9 @@ describe("steer", () => {
     const bos = await w.agents.api.startRun("t_acme", RAE, "Work the queue", { requester: { kind: "member", id: "u_bo" } });
     expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: bos.id, text: "stop that" } })).status).toBe(404);
     expect(w.agents.runs.find((x) => x.id === bos.id)?.steering).toBeUndefined();
+    // Nor stops it: Bo's session isn't Ana's to read, and kiff/agents refuses his run to her.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/stop`, { token: "ana", body: { session: bos.session } })).status).toBe(404);
+    expect(w.agents.runs.find((x) => x.id === bos.id)?.status).toBe("PENDING");
   });
 
   it("says a run that ended is over, so the app sends it as a new message", async () => {

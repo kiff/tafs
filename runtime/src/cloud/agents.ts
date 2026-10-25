@@ -524,9 +524,12 @@ export class Agents {
     return this.call("POST", tenant, ["agents", agent, "holds", exception, "continue"], { background: true });
   }
 
-  /** Cancels a run; a paused one has its held calls withdrawn in KIFF first. */
-  cancelRun(tenant: string, agent: string, run: string): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs", run, "cancel"]);
+  /**
+   * Cancels a run; a paused one has its held calls withdrawn in KIFF first. With
+   * `requester`, only their own run; without, tafs cloud itself stops it.
+   */
+  cancelRun(tenant: string, agent: string, run: string, requester?: Requester): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "cancel"], requester ? { requester } : undefined);
   }
 
   /**
