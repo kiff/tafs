@@ -175,6 +175,19 @@ describe("KIFF's alerts", () => {
     });
   });
 
+  it("tells only the people KIFF names, never the one who asked, when it names them", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    // Ana asked for the refund: KIFF names Bo, who may answer it, and not Ana.
+    const r = await alert(held({ notify: ["u_bo"] }), push, { apns });
+    expect(r).toEqual({ status: 200, body: { sent: 1 } });
+    expect(apns.sent.map((s) => s.token)).toEqual([TOKEN_B]);
+    // Naming no one tells no one.
+    const none = await alert(held({ event_id: "evt_2", hold: { id: "hold_2", status: "pending" }, notify: [] }), push, { apns });
+    expect(none).toEqual({ status: 200, body: { sent: 0 } });
+    expect(apns.sent).toHaveLength(1);
+  });
+
   it("hands the alert to kiff/agents as KIFF signed it, so the held run goes on", async () => {
     const push = account();
     const forward = fakeForward();

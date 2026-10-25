@@ -121,6 +121,17 @@ interface AlertBody {
   hold?: { id?: unknown; expires_at?: unknown } | null;
   /** On a pack request's alerts: the request, who asked (their sign-in subject) and an admin's note. */
   request?: { id?: unknown; pack?: unknown; status?: unknown; asked_by?: unknown; note?: unknown } | null;
+  /**
+   * On a held call's alerts, when KIFF names them: the people to tell, by sign-in
+   * subject. KIFF leaves out whoever asked for the call, who may never answer it.
+   */
+  notify?: unknown;
+}
+
+/** The subjects KIFF names in an alert's notify, or undefined when it names none. */
+function named(notify: unknown): Set<string> | undefined {
+  if (!Array.isArray(notify)) return undefined;
+  return new Set(notify.filter((s): s is string => typeof s === "string" && s !== ""));
 }
 
 export interface AlertDeps {
@@ -178,8 +189,10 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
     const holdID = typeof body.hold?.id === "string" ? body.hold.id : "";
     if (!eventID || !holdID) throw new PushError(400, "an alert names its event and its held call");
     n = outcome === HELD ? heldNotification(body, holdID, deps.now) : answeredNotification(holdID);
-    // Only phones of people who may answer: "a taf needs you" is for them.
-    to = (d) => d.answers;
+    // The people KIFF names, when it names them: it decides who may answer, and
+    // leaves out whoever asked. Otherwise, as before, the phones of people who may answer.
+    const people = named(body.notify);
+    to = people ? (d) => people.has(d.subject) : (d) => d.answers;
   }
   const inFlight = new Date(deps.now.getTime() + IN_FLIGHT_SECONDS * 1000);
   const done = new Date(deps.now.getTime() + DEDUPE_HOURS * 3600_000);
