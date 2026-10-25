@@ -16,6 +16,11 @@ final class KIFFClient {
         case unauthorized
         /// reason is KIFF's machine-readable why, when it gives one ("card_revised").
         case server(status: Int, message: String, reason: String? = nil)
+        /// KIFF takes this act only signed by the session's approval key, and this phone
+        /// doesn't hold it (kiff/tafs#233): approving waits for a new sign-in.
+        case approvalKeyRequired
+        /// The session has an approval key already: KIFF's fingerprint of it.
+        case approvalKeyExists(fingerprint: String?)
 
         var errorDescription: String? {
             switch self {
@@ -24,6 +29,8 @@ final class KIFFClient {
             case .expired: return "The sign-in code expired. Start again."
             case .unauthorized: return "Signed out of KIFF. Sign in again."
             case .server(_, let message, _): return message
+            case .approvalKeyRequired: return KIFFClient.approvalKeyLost
+            case .approvalKeyExists: return "KIFF holds an approval key for this session already."
             }
         }
     }
@@ -44,6 +51,10 @@ final class KIFFClient {
     /// Signs a setup call for a phone session bound to its key: set
     /// while a start the owner confirmed with Face ID runs, nil otherwise.
     var setupSigner: (@MainActor (Data) throws -> String)?
+    /// Signs, with the approval key, a call that grants authority (`grantsAuthority`), for
+    /// a session that registered one (kiff/tafs#233); nil otherwise, and the setup signer
+    /// signs it as before.
+    var approvalSigner: (@MainActor (Data) throws -> String)?
     /// The calls KIFF takes from a phone's session only with its signature: the draft that
     /// starts a taf, the alert target that tells tafs cloud when a call is held, the connector
     /// key planque keeps, the account's time zone, deleting the account (kiff/tafs#185), and
@@ -63,6 +74,18 @@ final class KIFFClient {
         // Confirming a draft, and ending its trial (kiff/tafs#247): KIFF takes both from a
         // phone only signed.
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && (parts[5] == "confirm" || parts[5] == "trial") && !parts[4].isEmpty
+    }
+
+    /// Whether KIFF takes `method` on `path` only signed by the approval key, once the
+    /// session has one (kiff/tafs#233): submitting a draft (from a phone it is confirmed at
+    /// once, so it issues Cards: Coach's, and Setup's with none), confirming one, plain or as
+    /// a trial, and resuming a halt. Ending a trial takes authority away: the current key.
+    static func grantsAuthority(_ method: String, _ path: String) -> Bool {
+        guard method == "POST" else { return false }
+        if path == "/v1/me/agent-drafts" { return true }
+        let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
+        return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
     }
 
     init(baseURL: URL = URL(string: "https://api.kiff.dev")!,
@@ -114,14 +137,49 @@ final class KIFFClient {
 
     /// Starts signing in. `publicKey` (SPKI DER) is the phone's signing key: KIFF shows its
     /// fingerprint when the owner approves in their browser, and binds it to this session.
-    func startDeviceSignIn(publicKey: Data? = nil, deviceName: String? = nil, platform: String? = nil) async throws -> DeviceStart {
+    /// `approvalPublicKey` is the key that signs what grants authority (kiff/tafs#233).
+    func startDeviceSignIn(publicKey: Data? = nil, approvalPublicKey: Data? = nil, deviceName: String? = nil, platform: String? = nil) async throws -> DeviceStart {
         var body: [String: String] = [:]
         if let publicKey { body["public_key"] = publicKey.base64EncodedString() }
+        if let approvalPublicKey { body["approval_public_key"] = approvalPublicKey.base64EncodedString() }
         if let deviceName { body["device_name"] = deviceName }
         // KIFF's device list names the platform: ios, ipados, macos.
         if let platform { body["platform"] = platform }
         return try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
     }
+
+    /// What the person reads when this phone can't approve until they sign in again.
+    nonisolated static let approvalKeyLost = "Sign in with KIFF again to approve from this phone."
+
+    /// A key's fingerprint as KIFF shows it: the first 8 bytes of the SHA-256 of its SPKI
+    /// DER, in hex, in groups of four ("ab12 cd34 ef56 7890").
+    nonisolated static func fingerprint(_ der: Data) -> String {
+        let hex = SHA256.hash(data: der).prefix(8).map { String(format: "%02x", $0) }.joined()
+        return stride(from: 0, to: hex.count, by: 4).map { i in
+            String(hex[hex.index(hex.startIndex, offsetBy: i)..<hex.index(hex.startIndex, offsetBy: i + 4)])
+        }.joined(separator: " ")
+    }
+
+    /// Whether `fingerprint`, as KIFF wrote it, is `der`'s.
+    nonisolated static func sameKey(_ fingerprint: String?, _ der: Data) -> Bool {
+        guard let fingerprint else { return false }
+        return fingerprint.lowercased().filter(\.isHexDigit) == Self.fingerprint(der).filter(\.isHexDigit)
+    }
+
+    private struct Fingerprint: Decodable { let fingerprint: String? }
+
+    /// Registers the approval key for a session that signed in without one (kiff/tafs#233),
+    /// signed by the current key with `signer`, and answers KIFF's fingerprint of the key it
+    /// now holds. KIFF takes one per session: a session that has one throws
+    /// `approvalKeyExists` with its fingerprint, and replacing it means signing in again.
+    func registerApprovalKey(_ publicKey: Data, signer: @escaping @MainActor (Data) throws -> String) async throws -> String? {
+        let out: Fingerprint = try await send("POST", "/v1/me/device/approval-key", body: ["public_key": publicKey.base64EncodedString()],
+                                              signedBy: signer)
+        return out.fingerprint
+    }
+
+    /// Called when KIFF answers that an act needs the approval key this phone doesn't hold.
+    var approvalKeyRequired: (@MainActor () -> Void)?
 
     /// One poll. Throws `.authorizationPending` until the person approves.
     func pollDeviceToken(deviceCode: String) async throws -> DeviceToken {
@@ -969,7 +1027,9 @@ final class KIFFClient {
         try await send(method, path, body: Optional<[String: String]>.none, base: base, authorized: authorized)
     }
 
-    private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true) async throws -> T {
+    /// `signedBy` signs this one request, whatever `setupSigner` holds.
+    private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true,
+                                                   signedBy: (@MainActor (Data) throws -> String)? = nil) async throws -> T {
         guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: "Bad path") }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -984,12 +1044,18 @@ final class KIFFClient {
             request.httpBody = try JSONEncoder().encode(body)
         }
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
-        let signed = base == nil ? Self.signsSetup(path) : (base == gatewayURL && path == "/v1/connections")
-        if method == "POST" || method == "PUT" || method == "DELETE", signed, let setupSigner, let tenant {
+        let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key") : (base == gatewayURL && path == "/v1/connections")
+        // What grants authority is signed by the approval key, once the session has one,
+        // within a step the owner confirmed; KIFF picks the key by route, so the header is
+        // the same (kiff/tafs#233).
+        let signer = signedBy ?? setupSigner.map { current in
+            base == nil && Self.grantsAuthority(method, path) ? (approvalSigner ?? current) : current
+        }
+        if method == "POST" || method == "PUT" || method == "DELETE", signed, let signer, let tenant {
             let signedAt = SigningTime.next()
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
             let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)
-            request.setValue("t=\(signedAt),v1=\(try setupSigner(message))", forHTTPHeaderField: "KIFF-Device-Signature")
+            request.setValue("t=\(signedAt),v1=\(try signer(message))", forHTTPHeaderField: "KIFF-Device-Signature")
         }
         if authorized {
             guard let token else { throw KIFFError.unauthorized }
@@ -1001,6 +1067,13 @@ final class KIFFClient {
         if status == 401 { throw KIFFError.unauthorized }
         guard (200..<300).contains(status) else {
             let body = try? JSONDecoder().decode([String: String].self, from: data)
+            if status == 403, body?["error"] == "approval_key_required" || body?["reason"] == "approval_key_required" {
+                approvalKeyRequired?()
+                throw KIFFError.approvalKeyRequired
+            }
+            if status == 409, base == nil, path == "/v1/me/device/approval-key" {
+                throw KIFFError.approvalKeyExists(fingerprint: body?["fingerprint"])
+            }
             throw KIFFError.server(status: status, message: body?["error"] ?? "KIFF answered \(status)", reason: body?["reason"])
         }
         if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }
