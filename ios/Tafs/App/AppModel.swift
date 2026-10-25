@@ -108,6 +108,9 @@ final class AppModel: ObservableObject {
     /// Whether KIFF holds this phone's approval key for the session (kiff/tafs#233): then
     /// what grants authority is signed by it, under Face ID the key itself checks.
     private(set) var sessionHasApprovalKey = false
+    /// KIFF holds an approval key for the session that isn't this phone's (it changed after
+    /// registering, or another was registered): approving waits for a new sign-in.
+    private(set) var approvalKeyLost = false
     private let signer: ApprovalSigning
     private let store: SampleStore?
     private let clock: () -> Date
@@ -169,6 +172,8 @@ final class AppModel: ObservableObject {
             try await self.kiff.recordPurchase(signedTransaction: signed, requestID: requestID)
         }
         self.purchases.recorded = { [weak self] in await self?.refreshUsage() }
+        // KIFF wants the approval key this phone doesn't hold (kiff/tafs#233).
+        self.kiff.approvalKeyRequired = { [weak self] in self?.lostApprovalKey() }
         // The device's id, read when a signature needs it and it isn't known (kiff/planque#12).
         self.planque.deviceLoader = { [weak self] in
             guard let self, self.mode == .kiff, self.sessionHasKey else { return nil }
@@ -193,10 +198,13 @@ final class AppModel: ObservableObject {
         cloud.token = token
         kiffTenant = tenant
         sessionHasKey = keyed
-        if keyed, Keychain.load(Self.approvalKeyedAccount) == "1", !signer.approvalPublicKeyDER.isEmpty {
+        // The approval key counts only while it's the one KIFF registered: a key made anew
+        // since (the passcode turned off and on, the Keychain item lost) registers again,
+        // and KIFF's answer says whether it may.
+        forgetApprovalKey()
+        let key = signer.approvalPublicKeyDER
+        if keyed, !key.isEmpty, KIFFClient.sameKey(Keychain.load(Self.approvalKeyedAccount), key) {
             useApprovalKey()
-        } else {
-            forgetApprovalKey()
         }
         showRememberedList()
         mode = .kiff
@@ -356,34 +364,52 @@ final class AppModel: ObservableObject {
     /// (409). A KIFF without the route yet (404), or a failure, leaves the current key
     /// signing everything, as before, and the next launch tries again.
     func registerApprovalKey() async {
-        guard mode == .kiff, sessionHasKey, !sessionHasApprovalKey, let tenant = kiffTenant else { return }
+        guard mode == .kiff, sessionHasKey, !sessionHasApprovalKey, !approvalKeyLost, let tenant = kiffTenant else { return }
         let key = signer.approvalPublicKeyDER
         guard !key.isEmpty else { return }
         let gen = accountGeneration
         let signer = self.signer
         kiff.tenant = tenant
+        let held: String?
         do {
-            try await kiff.registerApprovalKey(key, signer: { try signer.signConfirmed($0) })
-        } catch KIFFClient.KIFFError.server(let status, _, _) where status == 409 {
-            // The session has one: the key sent at sign-in.
+            held = try await kiff.registerApprovalKey(key, signer: { try signer.signConfirmed($0) })
+        } catch KIFFClient.KIFFError.approvalKeyExists(let fingerprint) {
+            held = fingerprint // the key sent at sign-in, or another
         } catch {
             return
         }
         guard gen == accountGeneration else { return }
-        Keychain.save("1", for: Self.approvalKeyedAccount)
+        // KIFF's fingerprint says which key it holds: only ours lets this phone approve.
+        guard KIFFClient.sameKey(held, key) else {
+            Keychain.delete(Self.approvalKeyedAccount)
+            approvalKeyLost = true
+            return
+        }
+        Keychain.save(KIFFClient.fingerprint(key), for: Self.approvalKeyedAccount)
         useApprovalKey()
     }
 
     /// From now on, what grants authority is signed by the approval key.
     private func useApprovalKey() {
         sessionHasApprovalKey = true
+        approvalKeyLost = false
         let signer = self.signer
         kiff.approvalSigner = { try signer.signApprovalConfirmed($0) }
     }
 
     private func forgetApprovalKey() {
         sessionHasApprovalKey = false
+        approvalKeyLost = false
         kiff.approvalSigner = nil
+    }
+
+    /// KIFF answered that an act needs the approval key this phone doesn't hold: approving
+    /// waits for a new sign-in, and says so.
+    private func lostApprovalKey() {
+        sessionHasApprovalKey = false
+        approvalKeyLost = true
+        kiff.approvalSigner = nil
+        Keychain.delete(Self.approvalKeyedAccount)
     }
 
     func signOut() async {
@@ -1047,6 +1073,12 @@ final class AppModel: ObservableObject {
             save()
             return
         }
+        // Approving, or raising a Card, needs the approval key KIFF holds: without it, only a
+        // new sign-in lets this phone approve (kiff/tafs#233).
+        if approvalKeyLost, call.kiffID != nil, answer == .approveOnce || answer == .extraRoom {
+            lastError = KIFFClient.approvalKeyLost
+            return
+        }
         let reason = "Answer \(call.proposed.summary)"
         let signature: String
         var signed: KIFFClient.AnswerSignature?
@@ -1084,6 +1116,9 @@ final class AppModel: ObservableObject {
                 case .nextStep(let step): try await kiff.reject(kiffID, nextStep: step, signature: signed)
                 case .extraRoom: try await kiff.changeCard(kiffID, signature: signed)
                 }
+            } catch KIFFClient.KIFFError.approvalKeyRequired {
+                lastError = KIFFClient.approvalKeyLost
+                return
             } catch {
                 lastError = "KIFF didn't take the answer: \(error.localizedDescription)"
                 return

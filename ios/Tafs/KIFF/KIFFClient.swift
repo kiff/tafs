@@ -16,6 +16,11 @@ final class KIFFClient {
         case unauthorized
         /// reason is KIFF's machine-readable why, when it gives one ("card_revised").
         case server(status: Int, message: String, reason: String? = nil)
+        /// KIFF takes this act only signed by the session's approval key, and this phone
+        /// doesn't hold it (kiff/tafs#233): approving waits for a new sign-in.
+        case approvalKeyRequired
+        /// The session has an approval key already: KIFF's fingerprint of it.
+        case approvalKeyExists(fingerprint: String?)
 
         var errorDescription: String? {
             switch self {
@@ -24,6 +29,8 @@ final class KIFFClient {
             case .expired: return "The sign-in code expired. Start again."
             case .unauthorized: return "Signed out of KIFF. Sign in again."
             case .server(_, let message, _): return message
+            case .approvalKeyRequired: return KIFFClient.approvalKeyLost
+            case .approvalKeyExists: return "KIFF holds an approval key for this session already."
             }
         }
     }
@@ -139,13 +146,38 @@ final class KIFFClient {
         return try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
     }
 
-    /// Registers the approval key for a session that signed in without one (kiff/tafs#233),
-    /// signed by the current key with `signer`. KIFF takes it once per session; a session
-    /// that has one answers 409, and replacing it means signing in again.
-    func registerApprovalKey(_ publicKey: Data, signer: @escaping @MainActor (Data) throws -> String) async throws {
-        let _: Empty = try await send("POST", "/v1/me/device/approval-key", body: ["public_key": publicKey.base64EncodedString()],
-                                      signedBy: signer)
+    /// What the person reads when this phone can't approve until they sign in again.
+    nonisolated static let approvalKeyLost = "Sign in with KIFF again to approve from this phone."
+
+    /// A key's fingerprint as KIFF shows it: the first 8 bytes of the SHA-256 of its SPKI
+    /// DER, in hex, in groups of four ("ab12 cd34 ef56 7890").
+    nonisolated static func fingerprint(_ der: Data) -> String {
+        let hex = SHA256.hash(data: der).prefix(8).map { String(format: "%02x", $0) }.joined()
+        return stride(from: 0, to: hex.count, by: 4).map { i in
+            String(hex[hex.index(hex.startIndex, offsetBy: i)..<hex.index(hex.startIndex, offsetBy: i + 4)])
+        }.joined(separator: " ")
     }
+
+    /// Whether `fingerprint`, as KIFF wrote it, is `der`'s.
+    nonisolated static func sameKey(_ fingerprint: String?, _ der: Data) -> Bool {
+        guard let fingerprint else { return false }
+        return fingerprint.lowercased().filter(\.isHexDigit) == Self.fingerprint(der).filter(\.isHexDigit)
+    }
+
+    private struct Fingerprint: Decodable { let fingerprint: String? }
+
+    /// Registers the approval key for a session that signed in without one (kiff/tafs#233),
+    /// signed by the current key with `signer`, and answers KIFF's fingerprint of the key it
+    /// now holds. KIFF takes one per session: a session that has one throws
+    /// `approvalKeyExists` with its fingerprint, and replacing it means signing in again.
+    func registerApprovalKey(_ publicKey: Data, signer: @escaping @MainActor (Data) throws -> String) async throws -> String? {
+        let out: Fingerprint = try await send("POST", "/v1/me/device/approval-key", body: ["public_key": publicKey.base64EncodedString()],
+                                              signedBy: signer)
+        return out.fingerprint
+    }
+
+    /// Called when KIFF answers that an act needs the approval key this phone doesn't hold.
+    var approvalKeyRequired: (@MainActor () -> Void)?
 
     /// One poll. Throws `.authorizationPending` until the person approves.
     func pollDeviceToken(deviceCode: String) async throws -> DeviceToken {
@@ -1033,6 +1065,13 @@ final class KIFFClient {
         if status == 401 { throw KIFFError.unauthorized }
         guard (200..<300).contains(status) else {
             let body = try? JSONDecoder().decode([String: String].self, from: data)
+            if status == 403, body?["error"] == "approval_key_required" || body?["reason"] == "approval_key_required" {
+                approvalKeyRequired?()
+                throw KIFFError.approvalKeyRequired
+            }
+            if status == 409, base == nil, path == "/v1/me/device/approval-key" {
+                throw KIFFError.approvalKeyExists(fingerprint: body?["fingerprint"])
+            }
             throw KIFFError.server(status: status, message: body?["error"] ?? "KIFF answered \(status)", reason: body?["reason"])
         }
         if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }

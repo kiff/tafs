@@ -13,7 +13,9 @@ final class TwoKeySigner: ApprovalSigning {
     var approvalPrompted: [String] = []
 
     var publicKeyDER: Data { Data([0x30, 0x59, 0x01]) }
-    var approvalPublicKeyDER: Data { Data([0x30, 0x59, 0x02]) }
+    /// The approval key's public half: another one when the phone made a new key.
+    var approvalKey = Data([0x30, 0x59, 0x02])
+    var approvalPublicKeyDER: Data { approvalKey }
 
     func sign(_ message: Data, reason: String) async throws -> String {
         currentPrompted.append(String(decoding: message, as: UTF8.self))
@@ -56,8 +58,12 @@ final class ApprovalKeyTests: XCTestCase {
       "accounting_version":2}]}
     """
 
+    /// KIFF's answer naming the key it holds.
+    private static func holds(_ der: Data) -> String { #"{"fingerprint":""# + KIFFClient.fingerprint(der) + #""}"# }
+    private static let ours = Data([0x30, 0x59, 0x02])
+
     /// Signed in with `registration` as KIFF's answer to the approval key.
-    private func signedIn(_ signer: TwoKeySigner, registration: (Int, String) = (200, #"{"fingerprint":"ab12 cd34 ef56 7890"}"#),
+    private func signedIn(_ signer: TwoKeySigner, registration: (Int, String) = (200, holds(ours)),
                           held: String = #"{"exceptions":[]}"#) async -> AppModel {
         StubProtocol.responses = [:]
         StubProtocol.thenRespond = [:]
@@ -90,7 +96,7 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(register.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=current") == true,
                       "the current key vouches for it, without Face ID")
         XCTAssertTrue(signer.currentPrompted.isEmpty && signer.approvalPrompted.isEmpty, "registering asks for no Face ID")
-        XCTAssertEqual(Keychain.load(AppModel.approvalKeyedAccount), "1")
+        XCTAssertEqual(Keychain.load(AppModel.approvalKeyedAccount), KIFFClient.fingerprint(Self.ours), "it keeps which key KIFF holds")
 
         // The next launch knows it: nothing is registered again.
         StubProtocol.sent = []
@@ -101,8 +107,9 @@ final class ApprovalKeyTests: XCTestCase {
 
     func testASessionThatHasOneAlreadyUsesIt() async {
         // 409: the key went with the sign-in, or an earlier launch registered it.
-        let model = await signedIn(TwoKeySigner(), registration: (409, #"{"error":"approval_key_exists"}"#))
+        let model = await signedIn(TwoKeySigner(), registration: (409, #"{"error":"approval_key_exists","fingerprint":""# + KIFFClient.fingerprint(Self.ours) + #""}"#))
         XCTAssertTrue(model.sessionHasApprovalKey)
+        XCTAssertFalse(model.approvalKeyLost)
     }
 
     func testAKIFFWithoutTheRouteKeepsTheCurrentKeyAndTriesAgainNextLaunch() async {
@@ -111,7 +118,7 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertFalse(model.sessionHasApprovalKey)
         XCTAssertNil(model.kiff.approvalSigner)
 
-        StubProtocol.responses["POST /v1/me/device/approval-key"] = (200, #"{"fingerprint":"ab12 cd34 ef56 7890"}"#)
+        StubProtocol.responses["POST /v1/me/device/approval-key"] = (200, Self.holds(Self.ours))
         await model.resumeSession("kiff_dev_x", tenant: "t_01", keyed: true)
         XCTAssertTrue(model.sessionHasApprovalKey)
     }
@@ -196,6 +203,68 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertFalse(model.sessionHasApprovalKey)
         XCTAssertNil(model.kiff.approvalSigner)
         XCTAssertNil(Keychain.load(AppModel.approvalKeyedAccount))
+    }
+
+    /// The key KIFF holds isn't this phone's: approving waits for a new sign-in, and says so.
+    private func assertCantApprove(_ model: AppModel, _ signer: TwoKeySigner, file: StaticString = #filePath, line: UInt = #line) async throws {
+        XCTAssertTrue(model.approvalKeyLost, file: file, line: line)
+        XCTAssertFalse(model.sessionHasApprovalKey, file: file, line: line)
+        XCTAssertNil(model.kiff.approvalSigner, file: file, line: line)
+        signer.approvalPrompted = []
+        signer.currentPrompted = []
+        await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce)
+        XCTAssertEqual(model.lastError, "Sign in with KIFF again to approve from this phone.", file: file, line: line)
+        XCTAssertTrue(signer.approvalPrompted.isEmpty && signer.currentPrompted.isEmpty, "no Face ID for an answer KIFF would refuse", file: file, line: line)
+        XCTAssertTrue(sent("POST", "/v1/me/card-exceptions/ce_1/approve-once").isEmpty, file: file, line: line)
+    }
+
+    func testAKeyMadeAnewAfterRegisteringCantApproveUntilSignIn() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, held: Self.heldJSON)
+        XCTAssertTrue(model.sessionHasApprovalKey)
+
+        // The passcode went off and on: the phone has a new approval key, KIFF the old one.
+        signer.approvalKey = Data([0x30, 0x59, 0x03])
+        StubProtocol.responses["POST /v1/me/device/approval-key"] = (409, #"{"error":"approval_key_exists","fingerprint":""# + KIFFClient.fingerprint(Self.ours) + #""}"#)
+        await model.resumeSession("kiff_dev_x", tenant: "t_01", keyed: true)
+        try await assertCantApprove(model, signer)
+        // Refusing still works: it takes authority away, with the current key.
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/reject"] = (200, #"{"id":"ce_1"}"#)
+        await model.answer(try XCTUnwrap(model.held.first), with: .refuse)
+        XCTAssertEqual(sent("POST", "/v1/me/card-exceptions/ce_1/reject").count, 1, model.lastError ?? "")
+    }
+
+    func testA409WithAnotherKeyCantApproveUntilSignIn() async throws {
+        let signer = TwoKeySigner()
+        let other = Data([0x30, 0x59, 0x09])
+        let model = await signedIn(signer, registration: (409, #"{"error":"approval_key_exists","fingerprint":""# + KIFFClient.fingerprint(other) + #""}"#),
+                                   held: Self.heldJSON)
+        try await assertCantApprove(model, signer)
+        XCTAssertNil(Keychain.load(AppModel.approvalKeyedAccount))
+    }
+
+    func testKIFFAskingForTheApprovalKeySaysSignInAgain() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, held: Self.heldJSON)
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (403, #"{"error":"approval_key_required"}"#)
+        await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce)
+        XCTAssertEqual(model.lastError, "Sign in with KIFF again to approve from this phone.")
+        XCTAssertTrue(model.approvalKeyLost)
+        XCTAssertNil(model.kiff.approvalSigner)
+
+        // A new sign-in starts over: KIFF holds this phone's key again.
+        let again = await signedIn(signer)
+        XCTAssertTrue(again.sessionHasApprovalKey)
+        XCTAssertFalse(again.approvalKeyLost)
+    }
+
+    func testTheFingerprintIsKIFFs() {
+        let fp = KIFFClient.fingerprint(Data([0x30, 0x59, 0x02]))
+        XCTAssertEqual(fp.count, 19)
+        XCTAssertEqual(fp.split(separator: " ").count, 4)
+        XCTAssertTrue(KIFFClient.sameKey(fp.uppercased(), Data([0x30, 0x59, 0x02])))
+        XCTAssertFalse(KIFFClient.sameKey(fp, Data([0x30, 0x59, 0x03])))
+        XCTAssertFalse(KIFFClient.sameKey(nil, Data([0x30, 0x59, 0x02])))
     }
 
     func testSignersWithOneKeySignEverythingWithIt() async throws {
