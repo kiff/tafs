@@ -45,6 +45,18 @@ final class ChatTests: XCTestCase {
 
     // MARK: Sample mode
 
+    /// What the owner types to Coach is the model's, not the chat view's (kiff/tafs#251):
+    /// closing Coach mode, opening it again or starting another conversation keeps it. Only
+    /// Send or the owner clears it, and signing out leaves nothing of it.
+    func testCoachsDraftOutlivesItsViewUntilSignOut() async throws {
+        let (model, _) = await kiffModel()
+        model.setupDraft = "Change Refunds to ask before refunding"
+        model.newSetupChat()
+        XCTAssertEqual(model.setupDraft, "Change Refunds to ask before refunding")
+        await model.signOut()
+        XCTAssertEqual(model.setupDraft, "")
+    }
+
     func testASampleTafSaysHelloAndAnswers() async throws {
         let model = AppModel(signer: StubSigner())
         model.sampleReplyDelay = 0
