@@ -51,7 +51,7 @@ export const TOOLS: ToolDef[] = [
       taf: TAF,
       text: { type: "string", description: "The task or message, in the owner's words." },
       run: { type: "string", description: "A run at work: the text goes to it, read at its next step. Omit to start a new run." },
-      chat: { type: "string", enum: ["live", "new"], description: "Where a new run starts: the taf's live chat (default) or a new one." },
+      chat: { type: "string", enum: ["live", "new"], description: "Where a new run starts. Each task starts a chat of its own, whichever you choose." },
     },
     required: ["taf", "text"],
     description: "Hands a taf a task or a message. A new run answers at once with its id; its result comes back to you when it ends, so never poll. " +

@@ -168,6 +168,15 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(await w.tool("taf_pause", { taf: "nobody", action: "pause" })).toMatchObject({ isError: true, text: expect.stringContaining("no taf") });
   });
 
+  it("hands a task over as no person's, in a chat of its own", async () => {
+    const w = world();
+    const first = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    const second = await w.tool("taf_task", { taf: RAE, text: "Refund order 43", chat: "live" });
+    const runs = [first.json.run, second.json.run].map((id) => w.agents.runs.find((r) => r.id === id)!);
+    expect(runs.map((r) => r.requester)).toEqual([undefined, undefined]);
+    expect(runs[0]!.session).not.toBe(runs[1]!.session);
+  });
+
   it("steers and stops a run a person started in the app, as tafs cloud itself", async () => {
     const w = world();
     const ana = { requester: { kind: "member" as const, id: "u_ana" } };
