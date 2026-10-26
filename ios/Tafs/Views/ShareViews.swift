@@ -35,7 +35,7 @@ struct ShareLine: View {
         let names = shares.compactMap { s in
             s.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? s.subject.map { model.person($0)?.label ?? $0 }
         }
-        return names.isEmpty ? "Not shared: admins only" : "Shared with " + ListFormatter.localizedString(byJoining: names)
+        return names.isEmpty ? "Not shared" : "Shared with " + ListFormatter.localizedString(byJoining: names)
     }
 }
 
@@ -119,7 +119,7 @@ struct ShareTafSheet: View {
     @ViewBuilder private var whatItMeans: some View {
         Section {
             Text("STEP 2 OF 2").scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
-            Text(chosen.isEmpty ? "Only admins will see \(taf.name)" : "Who gets \(taf.name)").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
+            Text(chosen.isEmpty ? "\(taf.name) won't be shared" : "Who gets \(taf.name)").scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
         }
         .listRowBackground(Color.clear)
         Section {
@@ -168,19 +168,14 @@ struct ShareTafSheet: View {
         return names.isEmpty ? "No one yet" : names.joined(separator: ", ")
     }
 
-    /// What the change means, in the design's words: each person's own chats and notes,
-    /// who sees whose work, and who stops using it.
+    /// What the change means, as it holds today: each person's own chats and notes, which no
+    /// one else sees in the app, and who stops using it.
     static func consequences(taf: Taf, had: Set<KIFFClient.Share>, chosen: Set<KIFFClient.Share>, model: AppModel) -> [String] {
         var lines: [String] = []
-        if !chosen.isEmpty { lines.append("Each person gets their own chats and notes.") }
+        if !chosen.isEmpty { lines.append("Each person gets their own chats and notes. No one else sees them in the app.") }
         for share in chosen.sorted(by: { ($0.group ?? $0.subject ?? "") < ($1.group ?? $1.subject ?? "") }) {
             if let id = share.group, let group = model.groups.first(where: { $0.id == id }) {
-                let managers = group.managers.map { model.person($0.subject)?.label ?? $0.subject }
-                if managers.isEmpty {
-                    lines.append("\(group.name) uses \(taf.name). It has no manager, so only admins see its work.")
-                } else {
-                    lines.append("\(ListFormatter.localizedString(byJoining: managers)) \(managers.count == 1 ? "sees" : "see") \(group.name)'s work on \(taf.name).")
-                }
+                lines.append("\(group.name) uses \(taf.name): \(people(of: group, model)).")
             } else if let subject = share.subject {
                 lines.append("\(model.person(subject)?.label ?? subject) uses \(taf.name).")
             }
@@ -189,13 +184,11 @@ struct ShareTafSheet: View {
             let name = share.group.flatMap { g in model.groups.first { $0.id == g }?.name } ?? share.subject.map { model.person($0)?.label ?? $0 } ?? ""
             lines.append("\(name) stops using \(taf.name). Their chats stay theirs.")
         }
-        lines.append("Admins see all of \(taf.name)'s work. Each time someone reads another person's chat, KIFF records it.")
         return lines
     }
 }
 
-/// Today across the tafs this person uses or oversees (the signed-off Overview): what needs
-/// them, and a line per taf with who uses it, what it does now, its Card and its last result.
+/// Today across the account's tafs (the signed-off Overview): what needs them, and a line per taf with who uses it, what it does now, its Card and its last result.
 /// Each line opens the taf.
 struct OverviewView: View {
     @EnvironmentObject private var model: AppModel
@@ -208,12 +201,11 @@ struct OverviewView: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Overview").scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                    Text("Today, across the tafs you use or oversee").scaledFont(14).foregroundColor(Theme.dim)
+                    Text("Today, across your tafs").scaledFont(14).foregroundColor(Theme.dim)
                 }
                 if !model.held.isEmpty { needsYou }
                 tafsTable
-                Text("Each line opens the taf. You see the tafs shared with you; a manager sees their group's, an admin sees all.")
-                    .scaledFont(12).foregroundColor(Theme.dim)
+                Text("Each line opens the taf.").scaledFont(12).foregroundColor(Theme.dim)
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
@@ -295,7 +287,7 @@ struct OverviewView: View {
     /// "Support · 3 people", or who else it's shared with.
     private func usedBy(_ taf: Taf) -> String {
         guard let agent = model.kiffAgent(for: taf.id), let shares = shares[agent] else { return "" }
-        if shares.isEmpty { return "Not shared: admins only" }
+        if shares.isEmpty { return "Not shared" }
         var people = Set<String>()
         var names: [String] = []
         for s in shares {

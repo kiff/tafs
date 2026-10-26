@@ -101,23 +101,33 @@ struct PeopleGroupsView: View {
         }
         .accessibilityElement(children: .combine)
         .swipeActions {
-            if model.managesGroup(group) {
+            if mayRemove(member, from: group) {
                 Button("Remove", role: .destructive) {
                     Task { await model.changePeople("Remove \(person?.label ?? member.subject) from \(group.name)") { try await $0.removeGroupMember(group.id, subject: member.subject) } }
                 }
             }
         }
         .contextMenu {
-            if model.managesGroup(group) {
+            // Naming or changing a manager is for whoever manages people (KIFF's
+            // members.manage), not for the group's manager.
+            if model.canManagePeople {
                 let role = member.isManager ? "member" : "manager"
                 Button(member.isManager ? "Make a member" : "Make the manager") {
                     Task { await model.changePeople("Make \(person?.label ?? member.subject) a \(role) of \(group.name)") { try await $0.setGroupMember(group.id, subject: member.subject, role: role) } }
                 }
+            }
+            if mayRemove(member, from: group) {
                 Button("Remove from \(group.name)", role: .destructive) {
                     Task { await model.changePeople("Remove \(person?.label ?? member.subject) from \(group.name)") { try await $0.removeGroupMember(group.id, subject: member.subject) } }
                 }
             }
         }
+    }
+
+    /// A group's manager removes its members; removing a manager is for whoever manages
+    /// people, as KIFF allows.
+    private func mayRemove(_ member: KIFFClient.GroupMember, from group: KIFFClient.Group) -> Bool {
+        model.canManagePeople || (model.managesGroup(group) && !member.isManager)
     }
 
     /// "Uses Refunds and Invoices", or that it uses none yet.
@@ -204,16 +214,19 @@ struct AddToGroupSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    Toggle("As the group's manager", isOn: $asManager)
-                } footer: {
-                    Text("A manager sees the group's work on the tafs it uses, and adds or removes its people. Managing doesn't let them change a taf's Cards.")
+                // Naming a manager is for whoever manages people (KIFF's members.manage).
+                if model.canManagePeople {
+                    Section {
+                        Toggle("As the group's manager", isOn: $asManager)
+                    } footer: {
+                        Text("A manager adds and removes the group's members. Managing doesn't let them change a taf's Cards.")
+                    }
                 }
                 Section {
                     ForEach(outside) { person in
                         Button {
                             Task {
-                                let role = asManager ? "manager" : "member"
+                                let role = asManager && model.canManagePeople ? "manager" : "member"
                                 if await model.changePeople("Add \(person.label) to \(group.name)", { try await $0.setGroupMember(group.id, subject: person.subject, role: role) }) {
                                     dismiss()
                                 }
