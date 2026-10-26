@@ -112,6 +112,36 @@ describe("kiff/agents client", () => {
     ]);
   });
 
+  it("names the person on a person's content, or says the service acts, never neither nor both", async () => {
+    const { agents, sent } = server((s) => new Response(JSON.stringify({ id: "r1", sessions: [], session: { id: "s1" }, events: [], memories: [], runs: [] }), { status: 200 }));
+    const ana = { kind: "member" as const, id: "u_ana" };
+    await agents.sessions("t_acme", "taf1", 5, "member:u_ana");
+    await agents.session("t_acme", "s1", "member:u_ana");
+    await agents.memories("t_acme", "taf1", "member:u_ana");
+    await agents.startRun("t_acme", "taf1", "Hello", { requester: ana });
+    await agents.steerRun("t_acme", "taf1", "r1", "Also this", ana);
+    await agents.cancelRun("t_acme", "taf1", "r1", ana);
+    const person = sent.length;
+    await agents.sessions("t_acme", "taf1");
+    await agents.session("t_acme", "s1");
+    await agents.archive("t_acme", "s1", true);
+    await agents.memories("t_acme", "taf1");
+    await agents.startRun("t_acme", "taf1", "Work the queue.");
+    await agents.runs("t_acme", "taf1");
+    await agents.getRun("t_acme", "taf1", "r1");
+    await agents.steerRun("t_acme", "taf1", "r1", "Also this");
+    await agents.cancelRun("t_acme", "taf1", "r1");
+    await agents.continueRun("t_acme", "taf1", "r1");
+    await agents.continueHeld("t_acme", "taf1", "x1");
+    await agents.trial("t_acme", "taf1", "r1");
+    await agents.scheduleRuns("t_acme", "taf1");
+    for (const [i, s] of sent.entries()) {
+      const body = JSON.parse(s.body ?? "{}") as { requester?: unknown };
+      const named = s.url.searchParams.has("owner") || body.requester !== undefined;
+      expect([`${s.method} ${s.url.pathname}`, named, s.url.searchParams.get("as")]).toEqual([`${s.method} ${s.url.pathname}`, i < person, i < person ? null : "service"]);
+    }
+  });
+
   it("sends back only what a schedule can be written with, so a read schedule round-trips", async () => {
     const { agents, sent } = server((s) => new Response(s.body ?? "{}", { status: s.method === "POST" ? 201 : 200 }));
     const read = { tenant: "t_acme", id: "taf1", agent: "taf1", cron: "*/30 * * * *", time_zone: "Europe/Madrid", input: "Work the queue.", enabled: true, next: "2026-10-16T12:30:00Z" };

@@ -283,6 +283,18 @@ export interface RunAt {
   grant?: string;
 }
 
+/**
+ * How tafs cloud reads or writes a person's content in kiff/agents: with the person named,
+ * or, for what no person asked (a door's chat, Coach's checks, a job), as the service itself,
+ * by name. kiff/agents refuses a call that says neither, so a missing person never means everyone.
+ */
+const AS_SERVICE = { as: "service" } as const;
+
+/** The query that names the person, or says the service acts. */
+function as(owner?: string): Record<string, string> {
+  return owner ? { owner } : { ...AS_SERVICE };
+}
+
 /** A run's start body for where it goes. */
 function runAt(at: RunAt): Record<string, unknown> {
   return {
@@ -405,7 +417,7 @@ export class Agents {
 
   /** A trial so far: the run, and what KIFF decided for each write. */
   async trial(tenant: string, id: string, run: string): Promise<{ run: Run; writes: TrialWrite[] }> {
-    return this.call("GET", tenant, ["agents", id, "trials", run]);
+    return this.call("GET", tenant, ["agents", id, "trials", run], undefined, { ...AS_SERVICE });
   }
 
   // The open trial (kiff/tafs#173): one chat with a version, under its trial Card.
@@ -462,7 +474,7 @@ export class Agents {
   startRun(tenant: string, agent: string, input: string, at: RunAt = {}, ai?: AIBound, notify?: Notify): Promise<Run> {
     return this.call("POST", tenant, ["agents", agent, "runs"], {
       input, ...runAt(at), ...(ai ? { ai } : {}), ...(notify ? { notify } : {}), background: true,
-    });
+    }, at.requester || at.grant ? undefined : { ...AS_SERVICE });
   }
 
   /**
@@ -470,7 +482,7 @@ export class Agents {
    * the ones not ended: what it is doing and waiting on (kiff/tafs#206).
    */
   async runs(tenant: string, agent: string, active = false, limit = 20): Promise<Run[]> {
-    const out = await this.call<{ runs: Run[] }>("GET", tenant, ["agents", agent, "runs"], undefined, { limit: String(limit), ...(active ? { active: "true" } : {}) });
+    const out = await this.call<{ runs: Run[] }>("GET", tenant, ["agents", agent, "runs"], undefined, { limit: String(limit), ...(active ? { active: "true" } : {}), ...AS_SERVICE });
     return out.runs;
   }
 
@@ -481,7 +493,8 @@ export class Agents {
    * kiff/agents' invocation's, not this reader's: stopping reading stops none of it.
    */
   async *streamRun(tenant: string, agent: string, input: string, at: RunAt = {}, ai?: AIBound): AsyncGenerator<RunStreamEvent> {
-    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...runAt(at), ...(ai ? { ai } : {}) }, undefined, "text/event-stream");
+    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...runAt(at), ...(ai ? { ai } : {}) },
+      at.requester || at.grant ? undefined : { ...AS_SERVICE }, "text/event-stream");
     if (!res.ok) throw await failure(res);
     if (!res.body) throw new AgentsError(502, "kiff/agents answered with no stream");
     yield* readEvents(res.body);
@@ -493,8 +506,9 @@ export class Agents {
     return p.spent_micro_usd ?? 0;
   }
 
+  /** A run, read as the service: tafs cloud checks whose it is before showing what it said. */
   getRun(tenant: string, agent: string, run: string): Promise<Run> {
-    return this.call("GET", tenant, ["agents", agent, "runs", run]);
+    return this.call("GET", tenant, ["agents", agent, "runs", run], undefined, { ...AS_SERVICE });
   }
 
   /**
@@ -504,7 +518,7 @@ export class Agents {
    * without, tafs cloud itself writes.
    */
   steerRun(tenant: string, agent: string, run: string, text: string, requester?: Requester): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}) });
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}) }, requester ? undefined : { ...AS_SERVICE });
   }
 
   /**
@@ -513,7 +527,7 @@ export class Agents {
    * another continue has it.
    */
   continueRun(tenant: string, agent: string, run: string): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs", run, "continue"], { background: true });
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "continue"], { background: true }, { ...AS_SERVICE });
   }
 
   /**
@@ -524,7 +538,7 @@ export class Agents {
    * agent paused on that call.
    */
   continueHeld(tenant: string, agent: string, exception: string): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "holds", exception, "continue"], { background: true });
+    return this.call("POST", tenant, ["agents", agent, "holds", exception, "continue"], { background: true }, { ...AS_SERVICE });
   }
 
   /**
@@ -532,7 +546,7 @@ export class Agents {
    * `requester`, only their own run; without, tafs cloud itself stops it.
    */
   cancelRun(tenant: string, agent: string, run: string, requester?: Requester): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs", run, "cancel"], requester ? { requester } : undefined);
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "cancel"], requester ? { requester } : undefined, requester ? undefined : { ...AS_SERVICE });
   }
 
   /**
@@ -547,26 +561,26 @@ export class Agents {
 
   // Sessions and memory.
 
-  /** The agent's sessions, newest first: with `owner`, only theirs and those with no owner. */
+  /** The agent's sessions, newest first: with `owner`, theirs and the taf's jobs'; without, as the service. */
   async sessions(tenant: string, agent: string, limit = 20, owner?: string): Promise<Session[]> {
-    const out = await this.call<{ sessions: Session[] }>("GET", tenant, ["sessions"], undefined, { agent_id: agent, limit: String(limit), ...(owner ? { owner } : {}) });
+    const out = await this.call<{ sessions: Session[] }>("GET", tenant, ["sessions"], undefined, { agent_id: agent, limit: String(limit), ...as(owner) });
     return out.sessions;
   }
 
-  /** A session and its events still kept, in order. */
+  /** A session and its events still kept, in order: read as `owner`, or as the service. */
   session(tenant: string, id: string, owner?: string): Promise<{ session: Session; events: SessionEvent[] }> {
-    return this.call("GET", tenant, ["sessions", id], undefined, owner ? { owner } : undefined);
+    return this.call("GET", tenant, ["sessions", id], undefined, as(owner));
   }
 
   /** Archives a session, or puts it back: with `owner`, only one that is theirs. */
   async archive(tenant: string, id: string, archived: boolean, owner?: string): Promise<Session> {
-    const out = await this.call<{ session: Session }>("POST", tenant, ["sessions", id, archived ? "archive" : "unarchive"], undefined, owner ? { owner } : undefined);
+    const out = await this.call<{ session: Session }>("POST", tenant, ["sessions", id, archived ? "archive" : "unarchive"], undefined, as(owner));
     return out.session;
   }
 
-  /** The agent's notes: with `owner`, the shared ones and that person's own; without, every note. */
+  /** The agent's notes: with `owner`, the shared ones and that person's own; without, every note, as the service. */
   async memories(tenant: string, agent: string, owner?: string): Promise<Note[]> {
-    return (await this.call<{ memories: Note[] }>("GET", tenant, ["agents", agent, "memories"], undefined, owner ? { owner } : undefined)).memories;
+    return (await this.call<{ memories: Note[] }>("GET", tenant, ["agents", agent, "memories"], undefined, as(owner))).memories;
   }
 
   /** Forgets one note. Already gone counts as done. */
@@ -620,7 +634,7 @@ export class Agents {
 
   /** The runs the schedule started, newest first. */
   async scheduleRuns(tenant: string, id: string, limit = 20): Promise<Run[]> {
-    return (await this.call<{ runs: Run[] }>("GET", tenant, ["schedules", id, "runs"], undefined, { limit: String(limit) })).runs;
+    return (await this.call<{ runs: Run[] }>("GET", tenant, ["schedules", id, "runs"], undefined, { limit: String(limit), ...AS_SERVICE })).runs;
   }
 
   /**
