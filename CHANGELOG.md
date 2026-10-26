@@ -59,6 +59,9 @@ version headings refer to releases, not merely to merged pull requests.
   - Opening a taf with a call waiting lands at the latest when the call is near the
     end, instead of on blank space with the Needs you pill and the arrow.
   - People & groups' button reads "+ Group" on the iPad too.
+- The app no longer crashes on iPad while a chat or a sheet updates (build 793):
+  SwiftUI on iPadOS 27 builds some views on a background render thread, and the
+  app's runtime main-thread checks stopped it there.
 - From the device test of build 789, on an iPad:
   - The app no longer crashes a few seconds after launch: the offer to turn
     on alerts shows over the screen instead of in a sheet.
