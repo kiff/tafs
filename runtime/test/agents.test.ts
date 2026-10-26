@@ -121,6 +121,7 @@ describe("kiff/agents client", () => {
     await agents.startRun("t_acme", "taf1", "Hello", { requester: ana });
     await agents.steerRun("t_acme", "taf1", "r1", "Also this", ana);
     await agents.cancelRun("t_acme", "taf1", "r1", ana);
+    await agents.forget("t_acme", "taf1", "tone", "member:u_ana");
     const person = sent.length;
     await agents.sessions("t_acme", "taf1");
     await agents.session("t_acme", "s1");
@@ -135,6 +136,7 @@ describe("kiff/agents client", () => {
     await agents.continueHeld("t_acme", "taf1", "x1");
     await agents.trial("t_acme", "taf1", "r1");
     await agents.scheduleRuns("t_acme", "taf1");
+    await agents.forget("t_acme", "taf1", "tone");
     for (const [i, s] of sent.entries()) {
       const body = JSON.parse(s.body ?? "{}") as { requester?: unknown };
       const named = s.url.searchParams.has("owner") || body.requester !== undefined;
