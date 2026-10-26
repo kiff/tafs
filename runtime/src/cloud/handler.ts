@@ -8,7 +8,7 @@ import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError,
 import { setupDefinition } from "./setupdef.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { byHolder, freeColor, readKIFF, stateOf, summary } from "./home.js";
+import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -378,8 +378,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
 
   if (parts.length === 2 && method === "GET") {
-    const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB);
+    const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase)]);
     // Removed tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
+    // Only the tafs KIFF says the person may use or oversee are.
+    const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent));
     return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps))), removing: await deps.removals.list(me.tenantID) };
   }
   if (parts.length === 2 && method === "POST") {
@@ -2272,32 +2274,36 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule)
  * Card summary, then the account's other agents with Cards, the ones tafs
  * doesn't run (made through KIFF's API), listed apart. KIFF's Cards and held
  * calls are read with the owner's session; a KIFF that can't be read fails the
- * list rather than showing tafs without their Cards.
+ * list rather than showing tafs without their Cards. It lists only the agents KIFF
+ * says the person may use or oversee (GET /v1/me/access): tafs cloud decides nothing.
  */
 async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // The owner is around (kiff/tafs#210): what isn't urgent is pushed quietly, not kept for later.
   await deps.slots.keep(presenceKey(me.tenantID), presentUntil(deps.now?.() ?? new Date()))
     .catch((err) => console.error(`presence: ${(err as Error).message}`));
-  const [records, removing, kiff] = await Promise.all([
+  const [records, removing, kiff, access] = await Promise.all([
     deps.tafs.list(me.tenantID),
     deps.removals.list(me.tenantID),
     readKIFF(bearer(event), deps.fetch, deps.kiffBase),
+    readAccess(bearer(event), deps.fetch, deps.kiffBase),
   ]);
   const { cards, waiting } = byHolder(kiff.mandates, kiff.held);
-  const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB)
+  const all = records.filter((t) => !t.removing && t.job !== SETUP_JOB)
     .sort((a, b) => a.created.localeCompare(b.created) || a.id.localeCompare(b.id));
   // A taf keeps the colour it got at its start. One started before colours takes
   // the first nobody has, kept only if its record is still what was read here:
   // the list never writes back over a removal or an upgrade.
-  const taken = tafs.flatMap((t) => (t.color === undefined ? [] : [t.color]));
+  // Every taf's, shown or not, so none shares one when it's shared later.
+  const taken = all.flatMap((t) => (t.color === undefined ? [] : [t.color]));
   const colors = new Map<string, number>();
-  for (const t of tafs) {
+  for (const t of all) {
     if (t.color !== undefined) continue;
     const color = freeColor(taken);
     taken.push(color);
     colors.set(t.id, color);
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
+  const tafs = all.filter((t) => listable(access, t.kiffAgent));
   const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
   // Each taf's open trial, its own entry in the app's menu (kiff/tafs#173). One that can't
   // be read leaves that entry out, never the list.
@@ -2322,7 +2328,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // A taf's trial acts in KIFF as its own agent, "<agent>~trial" (kiff/tafs#247):
   // it shows as the taf's trial, never as another agent.
   const ours = new Set(records.flatMap((t) => t.kiffAgent ? [t.kiffAgent, `${t.kiffAgent}~trial`] : []));
-  const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a)).sort();
+  const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a) && listable(access, a)).sort();
   const others = agents.map((agent) => {
     const card = summary(cards.get(agent) ?? []);
     const held = waiting.get(agent) ?? 0;

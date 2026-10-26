@@ -111,11 +111,14 @@ function world() {
 }
 type World = ReturnType<typeof world>;
 
-function kiff(byToken: Record<string, object>) {
+function kiff(byToken: Record<string, object>, agentsOf: () => string[] = () => []) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     const me = byToken[token];
     if (String(url).endsWith("/v1/me/usage")) return new Response("{}", { status: 404 });
+    if (me && String(url).endsWith("/v1/me/access")) {
+      return new Response(JSON.stringify({ agents: Object.fromEntries(agentsOf().map((a) => [a, { use: true, oversee: false, manage: true }])) }), { status: 200 });
+    }
     return me ? new Response(JSON.stringify(me), { status: 200 }) : new Response("{}", { status: 401 });
   }) as typeof fetch;
 }
@@ -134,7 +137,7 @@ async function send(w: World, method: string, path: string, opts: { token?: stri
     push: { get: async () => ({ devices: w.devices, secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async (d, n) => { w.pushed.push({ token: d.token, payload: n.payload }); return "sent" as const; } },
     forward: async () => undefined,
-    fetch: kiff({ ana: OWNER, max: OTHER, viewer: VIEWER }),
+    fetch: kiff({ ana: OWNER, max: OTHER, viewer: VIEWER }, () => [...w.tafs.held.values()].map((t) => t.kiffAgent)),
     doors: { store: w.store, secrets: w.secrets, config: async () => w.config },
     events: eventLog(w.store),
     now: w.now,

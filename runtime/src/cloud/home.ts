@@ -127,10 +127,10 @@ export interface Held {
 /** The colours the app has for tafs (`Theme.tafColors`). */
 export const COLORS = 6;
 
-async function read<T>(path: string, token: string, doFetch: Fetch, base: string): Promise<T> {
+async function read<T>(path: string, token: string, doFetch: Fetch, base: string, what = "the Cards"): Promise<T> {
   const res = await doFetch(`${base}${path}`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
   if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
-  if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status} for the Cards`);
+  if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status} for ${what}`);
   return (await res.json()) as T;
 }
 
@@ -141,6 +141,29 @@ export async function readKIFF(token: string, doFetch: Fetch = fetch, base = KIF
     read<{ exceptions?: Held[] }>("/v1/me/card-exceptions?status=held", token, doFetch, base),
   ]);
   return { mandates: m.mandates ?? [], held: e.exceptions ?? [] };
+}
+
+/** What the person may do with an agent, as KIFF answers it. */
+export interface Access {
+  use: boolean;
+  oversee: boolean;
+  manage: boolean;
+}
+
+/**
+ * The person's answer for each of the account's agents (GET /v1/me/access), read with
+ * their session. An agent KIFF doesn't name gets no answer. A KIFF that can't be read
+ * fails, so the list never falls back to showing everything.
+ */
+export async function readAccess(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Map<string, Access>> {
+  const out = await read<{ agents?: Record<string, Partial<Access>> }>("/v1/me/access", token, doFetch, base, "what this person may use");
+  return new Map(Object.entries(out.agents ?? {}).map(([agent, a]) => [agent, { use: a.use === true, oversee: a.oversee === true, manage: a.manage === true }]));
+}
+
+/** Whether the list shows an agent: KIFF says the person may use it or oversee it. tafs cloud decides nothing. */
+export function listable(access: Map<string, Access>, agent: string): boolean {
+  const a = agent ? access.get(agent) : undefined;
+  return a !== undefined && (a.use || a.oversee);
 }
 
 const isSum = (quantity: string) => quantity.toLowerCase().startsWith("sum(");
