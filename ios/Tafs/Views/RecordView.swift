@@ -236,7 +236,11 @@ struct RecordRow: View {
         var parts: [String] = []
         if showTaf, let taf = model.taf(entry.tafID) { parts.append(taf.name) }
         if let on = entry.onText { parts.append(on) }
-        if entry.receipt != nil || entry.answer != nil {
+        if entry.kind == .held, !model.isWaiting(entry) {
+            // Held, and KIFF no longer holds it (the 789 retest: the row still said "waiting for
+            // you" after it expired). It may have expired, or been withdrawn when its run stopped.
+            parts += ["no longer waiting", "nothing sent"]
+        } else if entry.receipt != nil || entry.answer != nil {
             parts += [entry.decidedLine, entry.resultLine]
         } else {
             parts.append(entry.detail)

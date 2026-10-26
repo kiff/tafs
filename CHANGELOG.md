@@ -50,6 +50,22 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- From the device test of build 789, on an iPad:
+  - The app no longer crashes a few seconds after launch: the offer to turn
+    on alerts shows over the screen instead of in a sheet.
+  - The tafs list keeps its order while you look at it, and settles again when a taf
+    comes or goes or the app comes back.
+  - A held call's card comes after the taf's words that ask for it. When KIFF won't
+    take your answer, the card says why in words instead of KIFF's code: for a call you
+    asked for, someone else approves it and you can still refuse it; for other reasons
+    the buttons that can't work go. An expired hold says so at once, Needs you reads
+    KIFF again when it expires, and its Record row reads "no longer waiting · nothing
+    sent" instead of "waiting for you".
+  - A message you send goes to the top at once, and coming back from another app the
+    chat returns to it, or to its latest, instead of blank space.
+  - People & groups reads again while it's open, so someone who joins shows; its
+    button says "Group".
+  - Signing in shows the approval link, with a Copy button, to open in another browser.
 - From the device retest of build 755, on an iPad and an iPhone:
   - The tafs list puts the taf waiting on you first, then the one used most
     recently.

@@ -477,7 +477,7 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(model.chatState(id).ended, .stopped)
     }
 
-    /// A held call shows where it was held, between the messages around it, and is the
+    /// A held call shows after the taf's words that ask for it (the 789 retest), and is the
     /// one the chat says needs the owner (#64).
     func testAHeldCallShowsWhereItWasHeld() async throws {
         let (model, id) = await kiffModel()
@@ -499,14 +499,14 @@ final class ChatTests: XCTestCase {
         let asked = try XCTUnwrap(order.firstIndex(of: "m|" + messages[0].id))
         let card = try XCTUnwrap(order.firstIndex(of: "k|" + AppModel.heldKey(held)))
         let answer = try XCTUnwrap(order.firstIndex(of: "m|" + messages[1].id))
-        XCTAssertTrue(asked < card && card < answer, "between the owner's message and the taf's: \(order)")
+        // After the taf's words that ask for it, not above them (the 789 retest).
+        XCTAssertTrue(asked < answer && answer < card, "after the taf's words: \(order)")
         XCTAssertEqual(model.chatWaiting(id)?.id, held.id)
     }
 
-    /// A streamed answer only grows (kiff/tafs#206): its words up to a tool call stay as
-    /// they were written, the held call's card comes where the call was made, after them
-    /// and after the owner's message, and the words after it come below the card. Once
-    /// recorded, the card stays after the words it followed, whatever KIFF's clock says.
+    /// A streamed answer only grows (kiff/tafs#206): its words stay as they were written, and
+    /// the held call's card comes after the words of the turn that asks for it (the 789
+    /// retest), whatever KIFF's clock says.
     func testAStreamedAnswerOnlyGrowsAndItsHeldCallStaysWhereItWasMade() async throws {
         let (model, id) = await kiffModel()
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, """
@@ -552,7 +552,8 @@ final class ChatTests: XCTestCase {
         // The stub's messages are older than the send, so the copy shown on sending stays too:
         // the order of what tafs cloud recorded is what's checked.
         let order = model.chatItems(id).map(\.id).filter { !$0.hasPrefix("m|pending|") }
-        XCTAssertEqual(order, ["m|" + messages[0].id, "m|" + messages[1].id, "k|" + AppModel.heldKey(held), "m|" + messages[2].id])
+        // The card after the words that ask for it (the 789 retest), not between them.
+        XCTAssertEqual(order, ["m|" + messages[0].id, "m|" + messages[1].id, "m|" + messages[2].id, "k|" + AppModel.heldKey(held)])
     }
 
     /// A reload while the answer streams (the taf read what the owner wrote meanwhile)

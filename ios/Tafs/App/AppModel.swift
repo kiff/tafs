@@ -257,7 +257,25 @@ final class AppModel: ObservableObject {
     /// recently (its latest call, or the latest message in its chat), so the taf the owner just
     /// worked with is at the top, not somewhere they have to scroll to (the 755 retest).
     /// Tafs with nothing yet keep tafs cloud's order, after the rest.
-    var listedTafs: [Taf] { Self.byRecent(tafs, record: record, held: held, chats: chats) }
+    /// The order is settled when the list changes or the app comes back, not on every reload:
+    /// it moved while the owner looked at it (the 789 retest).
+    var listedTafs: [Taf] { Self.inOrder(tafs, listOrder, fallback: Self.byRecent(tafs, record: record, held: held, chats: chats)) }
+
+    /// The order the list was last settled in, by taf id.
+    @Published private(set) var listOrder: [UUID] = []
+
+    /// Settles the list's order now: when its tafs change, and when the app comes back.
+    func settleListOrder() {
+        listOrder = Self.byRecent(tafs, record: record, held: held, chats: chats).map(\.id)
+    }
+
+    /// tafs in a settled order; a taf the order doesn't know yet comes after, as `fallback` has it.
+    nonisolated static func inOrder(_ tafs: [Taf], _ order: [UUID], fallback: [Taf]) -> [Taf] {
+        guard !order.isEmpty else { return fallback }
+        let place = Dictionary(order.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
+        let known = tafs.filter { place[$0.id] != nil }.sorted { place[$0.id]! < place[$1.id]! }
+        return known + fallback.filter { place[$0.id] == nil }
+    }
 
     nonisolated static func byRecent(_ tafs: [Taf], record: [RecordEntry], held: [HeldCall],
                                      chats: [UUID: [TafsCloud.ChatMessage]]) -> [Taf] {
@@ -274,6 +292,52 @@ final class AppModel: ObservableObject {
     }
 
     var workingCount: Int { tafs.filter { $0.state == .working }.count }
+
+    /// Whether KIFF still holds this Record entry's call for an answer: a held call with its
+    /// proposal is in Needs you. Before KIFF's list is read, a held entry counts as waiting.
+    func isWaiting(_ entry: RecordEntry) -> Bool {
+        guard mode == .kiff, listLoaded else { return true }
+        return held.contains { call in
+            (call.proposalID ?? call.kiffID).map(KIFFMapping.recordID) == entry.id
+        }
+    }
+
+    /// Held calls KIFF said this person may not answer, by KIFF's reason: their card says so
+    /// instead of offering buttons that can't work (the 789 retest), and keeps Refuse when
+    /// only approving is refused.
+    @Published private(set) var unanswerable: [UUID: String] = [:]
+
+    /// Why KIFF didn't take an answer, in words, never its code (the 789 retest: "self_review").
+    nonisolated static func answerRefusedWords(_ error: Error) -> String {
+        if case KIFFClient.KIFFError.server(_, let message, let reason) = error,
+           let words = refusalWords(message) ?? reason.flatMap(refusalWords) {
+            return words
+        }
+        return "KIFF didn't take the answer: \(error.localizedDescription)"
+    }
+
+    /// KIFF's reason this person may never answer the call, which stays so: not a refusal
+    /// that a moment later could take ("hold_check_unavailable"), nor any other error.
+    nonisolated static func lastingRefusal(_ error: Error) -> String? {
+        guard case KIFFClient.KIFFError.server(_, let message, let reason) = error else { return nil }
+        return [message, reason].compactMap { $0 }.first { $0 != "hold_check_unavailable" && refusalWords($0) != nil }
+    }
+
+    /// KIFF refuses only this person's approval: they asked for the call, and a refusal
+    /// grants nothing, so they may still refuse it. Every other reason takes all the answers.
+    nonisolated static func refusesOnly(_ code: String) -> Bool { code == "self_review" }
+
+    /// KIFF's reasons a person may not answer a held call, in words.
+    nonisolated static func refusalWords(_ code: String) -> String? {
+        switch code {
+        case "self_review": return "You asked for this, so someone else on the account approves it. You can still refuse it."
+        case "separation_of_duties_role": return "Only an approver answers held calls on this account."
+        case "separation_of_duties_key": return "Held calls are answered by an approver signed in, not by a key."
+        case "card_changer": return "You changed the Card this was held against, so another approver answers it."
+        case "hold_check_unavailable": return "KIFF couldn't check who may answer just now. Try again."
+        default: return nil
+        }
+    }
 
     // MARK: Signing in with KIFF
 
@@ -392,7 +456,7 @@ final class AppModel: ObservableObject {
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; otherAgents = []; held = []; record = []; decided = [:]
+        tafs = []; listOrder = []; otherAgents = []; held = []; record = []; decided = [:]
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -562,7 +626,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        tafs = []; held = []; record = []; decided = [:]
+        tafs = []; listOrder = []; held = []; record = []; decided = [:]
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
         notifyHeld()
@@ -833,6 +897,20 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Reads KIFF again a moment after the next hold expires, so an expired hold leaves Needs
+    /// you, the chat and the lock screen then, not at the next refresh (the 789 retest).
+    private var expiryRead: Task<Void, Never>?
+    private func readAgainAtExpiry() {
+        expiryRead?.cancel()
+        guard mode == .kiff, let next = held.map(\.expiresAt).filter({ $0 > clock() }).min() else { return }
+        let wait = max(1, next.timeIntervalSince(clock()) + 2)
+        expiryRead = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            await self?.refresh()
+        }
+    }
+
     func refresh() async {
         guard mode == .kiff else { playNextDemoActions(); return }
         refreshing = true
@@ -913,12 +991,16 @@ final class AppModel: ObservableObject {
         cloudTafs = running
         unfinishedRemovals = home.removing
         doorsOffered = home.doorsOffered ?? []
+        let before = Set(tafs.map(\.id))
         tafs = home.tafs.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
+        if Set(tafs.map(\.id)) != before || listOrder.isEmpty { settleListOrder() }
         otherAgents = home.others.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
         // Each open trial is its own entry in the menu, under its taf (kiff/tafs#173).
         for t in home.tafs where t.id != nil { setTrial(t.trial, of: holderID(t.kiffAgent)) }
         let coach = coachWithTools
         held = exceptions.map { KIFFMapping.held($0, tafID: holderID($0.subject), coach: coach) }
+        unanswerable = unanswerable.filter { id, _ in held.contains { $0.id == id } }
+        readAgainAtExpiry()
         listLoaded = true
         listUnread = false
         rememberList()
@@ -1255,7 +1337,8 @@ final class AppModel: ObservableObject {
                 lastError = KIFFClient.approvalKeyLost
                 return
             } catch {
-                lastError = "KIFF didn't take the answer: \(error.localizedDescription)"
+                lastError = Self.answerRefusedWords(error)
+                if let code = Self.lastingRefusal(error) { unanswerable[call.id] = code }
                 return
             }
         }
@@ -2782,7 +2865,45 @@ final class AppModel: ObservableObject {
             a.element.at != b.element.at ? a.element.at < b.element.at : a.offset < b.offset
         }.map(\.element), anchors: state.anchors)
         if let live { timeline += streamingItems(live, held: held, tafID: tafID) }
-        return timeline
+        return Self.heldAfterItsWords(timeline)
+    }
+
+    /// A held call's card comes after the taf's words that ask for it (the 789 retest): the
+    /// call is held before the taf writes "waiting for your approval", so by time alone the card
+    /// sat right under the owner's message, above the words that explain it. It moves past
+    /// that turn's words only, those in the session of the words right after it. An answered
+    /// one already goes by when it was answered.
+    nonisolated static func heldAfterItsWords(_ items: [ChatItem]) -> [ChatItem] {
+        func isCard(_ item: ChatItem) -> Bool {
+            switch item {
+            case .held: return true
+            case .outcome(let e): return e.answer?.at == nil
+            default: return false
+            }
+        }
+        /// The session of the taf's words, nil for anything else.
+        func tafWords(_ item: ChatItem) -> String? {
+            switch item {
+            case .message(let m): return m.from == .taf && m.kind != .kickoff ? m.session : nil
+            case .streaming(_, let m): return m.session
+            default: return nil
+            }
+        }
+        var out = items
+        var i = 0
+        while i < out.count {
+            guard isCard(out[i]) else { i += 1; continue }
+            // Only past the words of the turn right after it: another run's (a scheduled
+            // one's) words, in another session, stay below the card.
+            let session = i + 1 < out.count ? tafWords(out[i + 1]) : nil
+            var j = i
+            while j + 1 < out.count, let next = tafWords(out[j + 1]), next == session {
+                out.swapAt(j, j + 1)
+                j += 1
+            }
+            i = j + 1
+        }
+        return out
     }
 
     /// Moves each held call, and what became of it, to just after the item it was made
