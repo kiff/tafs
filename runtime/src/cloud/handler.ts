@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, trialOf, whoIs } from "./kiff.js";
+import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, runGrant, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { setupDefinition } from "./setupdef.js";
@@ -1739,7 +1739,8 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
     heldCards(kiff.mandates, taf.kiffAgent));
   const ai = await aiBound(event, deps);
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, { requester: member(me) }, ai));
+  const at = await granted(event, setup.kiffAgent, { requester: member(me) }, deps);
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, input, at, ai));
   return { setup: setup.id, session: run.session, new_session: true };
 }
 
@@ -1808,10 +1809,22 @@ function ownerKey(me: KIFFIdentity): string {
  */
 async function chatAt(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<RunAt> {
   const body = parseBody(event);
-  if (body.new_chat === true) return { requester: member(me) };
+  if (body.new_chat === true) return granted(event, taf.kiffAgent, { requester: member(me) }, deps);
   const chosen = str(body.session).trim();
-  if (chosen) return { session: (await ownChat(me, taf, chosen, deps)).id, requester: member(me) };
-  return { requester: member(me), live: true };
+  if (chosen) return granted(event, taf.kiffAgent, { session: (await ownChat(me, taf, chosen, deps)).id, requester: member(me) }, deps);
+  return granted(event, taf.kiffAgent, { requester: member(me), live: true }, deps);
+}
+
+/**
+ * The person's run, with their run grant for the taf's KIFF agent: KIFF's word that
+ * it is theirs, which kiff/agents takes the requester from. KIFF saying they may not
+ * use it is 403. KIFF giving none otherwise leaves the run as asserted, as before.
+ */
+async function granted(event: HTTPEvent, agent: string, at: RunAt, deps: Deps): Promise<RunAt> {
+  if (!agent) return at;
+  const grant = await runGrant(bearer(event), agent, deps.fetch, deps.kiffBase);
+  if (grant === "no_access") throw new HTTPError(403, "this taf isn't shared with you: ask an admin to share it");
+  return grant ? { ...at, grant } : at;
 }
 
 /** Whether the run opened its chat: a reopened chat never, a new one always, a live one as kiff/agents says. */
@@ -2483,7 +2496,12 @@ export async function coachTool(name: string, args: Record<string, unknown>, cal
 async function coachToolOf(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
   const me = coachIdentity(call);
   if (name === "tafs_state") {
-    const tafs = (await deps.tafs.list(call.tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB);
+    let tafs = (await deps.tafs.list(call.tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB);
+    if (call.person) {
+      // In a person's chat, only the tafs KIFF says they may use or oversee.
+      const all = (await coachAct(call, undefined, deps)).agents ?? {};
+      tafs = tafs.filter((t) => all[t.kiffAgent]?.use || all[t.kiffAgent]?.oversee);
+    }
     return {
       tafs: await Promise.all(tafs.map(async (t) => {
         const [state, schedule, runs] = await Promise.all([
@@ -2508,9 +2526,13 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   }
   const taf = await coachTaf(call.tenant, args.taf, deps);
   const n = Number(args.n);
+  // In a person's chat, what KIFF says they may do with this taf; tafs cloud only applies it.
+  const may = call.person ? await coachAct(call, taf.kiffAgent, deps) : undefined;
+  const theirs = (r: Run) => r.requester?.kind === "member" && r.requester.id === call.person?.subject;
   if (name === "taf_run") {
     const runID = str(args.run).trim();
     const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, runID));
+    if (may && !may.oversee && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to read`);
     if (r.trigger === "trial") {
       const t = await agentsCall(() => deps.agents.trial(call.tenant, taf.id, runID));
       return { taf: taf.name, ...runSummary(t.run), writes: t.writes };
@@ -2522,6 +2544,10 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (!text || text.length > CHAT.maxText) throw new ToolRefusal(`write the task in 1 to ${CHAT.maxText} characters`);
     const running = str(args.run).trim();
     if (running) {
+      if (may) {
+        const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, running));
+        if (!may.oversee && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to write into`);
+      }
       try {
         // Coach doesn't know yet whose conversation it is in, so it writes as tafs cloud
         // itself: any run of the taf, the way it could before runs had requesters.
@@ -2534,13 +2560,25 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     }
     // Coach doesn't know yet whose conversation it runs in, so it asks as itself, an
     // agent: its tasks go on in its own chat with the taf, which no person lists.
-    const at: RunAt = { requester: { kind: "agent", id: me.subject }, live: args.chat !== "new" };
+    let at: RunAt = { requester: { kind: "agent", id: me.subject }, live: args.chat !== "new" };
+    if (may) {
+      // In a person's chat, the task is theirs: their own chat with the taf, under the
+      // grant KIFF gave for it.
+      if (!may.use) throw new ToolRefusal(`${taf.name} isn't shared with them: ask an admin to share it`);
+      // KIFF gives one grant per permit and taf: a retried call gets none.
+      if (!may.grant) throw new ToolRefusal("KIFF gave no grant for this call: try again");
+      at = { grant: may.grant, live: args.chat !== "new" };
+    }
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, at, undefined, notify));
     await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120) }, deps);
     return { taf: taf.name, run: run.id, chat: run.session, status: run.status, result: "comes back to you when the run ends: don't poll" };
   }
   if (name === "run_stop") {
+    if (may) {
+      const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, str(args.run).trim()));
+      if (!may.oversee && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to stop`);
+    }
     try {
       // As steering: tafs cloud itself stops it, whoever asked for the run.
       const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim());
@@ -2553,10 +2591,12 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   if (name === "taf_pause") {
     const on = args.action === "resume";
     if (!on && args.action !== "pause") throw new ToolRefusal("action is pause or resume");
+    if (may && !may.oversee && !may.manage) throw new ToolRefusal(`pausing ${taf.name} is for the people who oversee or manage it`);
     if (taf.unscheduled) throw new ToolRefusal(`${taf.name} works from its chat: it has no schedule to ${on ? "resume" : "pause"}`);
     const s = await agentsCall(() => deps.agents.switchSchedule(call.tenant, taf.id, on));
     return { taf: taf.name, schedule: on ? "on" : "paused", ...(s.next ? { next: iso(s.next) } : {}) };
   }
+  if (may && !may.manage) throw new ToolRefusal(`changing ${taf.name}'s version is for the people who manage it`);
   if (!Number.isInteger(n) || n < 1) throw new ToolRefusal("n is a version number, from tafs_state");
   const state = await agentsCall(() => deps.agents.versions(call.tenant, taf.id));
   const version = state.versions.find((v) => v.n === n);
@@ -2580,6 +2620,43 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     return { taf: taf.name, version: n, installed: false, say: `Open ${taf.name} in tafs to finish installing version ${n}.` };
   }
   throw new ToolRefusal(`there is no tool ${name}`);
+}
+
+/** What KIFF says a person may do with an agent; with use, their run grant for it. */
+interface CoachMay {
+  use: boolean;
+  oversee: boolean;
+  manage: boolean;
+  grant?: string;
+}
+
+/**
+ * Asks KIFF what the person in Coach's chat may do (POST /v1/coach/act): with an
+ * agent, for that agent, and their run grant for it when they may use it; without,
+ * for each of the account's agents. The permit KIFF signed for this call is the
+ * credential, so tafs cloud needs no key of its own. No answer is no.
+ */
+async function coachAct(call: CoachCall, agent: string | undefined, deps: Deps): Promise<CoachMay & { agents?: Record<string, CoachMay> }> {
+  const none = { use: false, oversee: false, manage: false };
+  if (!call.person) return none;
+  const doFetch = deps.fetch ?? fetch;
+  let res: Response;
+  try {
+    res = await doFetch(`${deps.kiffBase ?? KIFF_API}/v1/coach/act`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ permit: call.person.permit, ...(agent ? { agent } : {}) }),
+    });
+  } catch {
+    throw new ToolRefusal("KIFF couldn't say what they may do just now: try again in a moment");
+  }
+  if (!res.ok) throw new ToolRefusal("KIFF couldn't say what they may do just now: try again in a moment");
+  const body = await res.json().catch(() => undefined) as Partial<CoachMay> & { agents?: Record<string, Partial<CoachMay>> } | undefined;
+  if (!body) return none;
+  const one = (b: Partial<CoachMay> | undefined): CoachMay => ({
+    use: b?.use === true, oversee: b?.oversee === true, manage: b?.manage === true,
+    ...(typeof b?.grant === "string" && b.grant ? { grant: b.grant } : {}),
+  });
+  return { ...one(body), ...(body.agents ? { agents: Object.fromEntries(Object.entries(body.agents).map(([k, v]) => [k, one(v)])) } : {}) };
 }
 
 /** KIFF's published permit keys, fetched once per container. */

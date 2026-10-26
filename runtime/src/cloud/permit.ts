@@ -29,6 +29,8 @@ export interface Permit {
   op: string;
   issuedAt: Date;
   expires: Date;
+  /** The person the call is for, when KIFF names one (its `act.sub`): Coach acting in their chat. */
+  actor?: string;
 }
 
 export interface Want {
@@ -62,7 +64,7 @@ export async function verifyPermit(token: string | undefined, want: Want, keys: 
     throw new PermitError("the permit's signature does not verify with a key KIFF publishes");
   }
   const c = decode(c64) as {
-    iss?: string; aud?: unknown; sub?: string; iat?: number; exp?: number; jti?: string;
+    iss?: string; aud?: unknown; sub?: string; iat?: number; exp?: number; jti?: string; act?: { sub?: unknown };
     authorization_details?: { type?: string; tenant?: string; tool?: string; args_sha256?: string; op?: string }[];
   } | undefined;
   const d = c?.authorization_details;
@@ -81,7 +83,8 @@ export async function verifyPermit(token: string | undefined, want: Want, keys: 
   const iat = c.iat * 1000, exp = c.exp * 1000;
   if (exp < iat || exp - iat > LIFETIME_MS || iat > now.getTime() + TOLERANCE_MS) throw new PermitError("the permit's lifetime is not one this server accepts");
   if (now.getTime() >= exp + TOLERANCE_MS) throw new PermitError("the permit has expired");
-  return { id: c.jti, subject: c.sub, tenant: detail.tenant, tool: detail.tool, op: detail.op, issuedAt: new Date(iat), expires: new Date(exp) };
+  const actor = typeof c.act?.sub === "string" && c.act.sub !== "" ? c.act.sub : undefined;
+  return { id: c.jti, subject: c.sub, tenant: detail.tenant, tool: detail.tool, op: detail.op, issuedAt: new Date(iat), expires: new Date(exp), ...(actor ? { actor } : {}) };
 }
 
 function decode(part: string): unknown {

@@ -279,6 +279,8 @@ export interface RunAt {
   session?: string;
   requester?: Requester;
   live?: boolean;
+  /** The account's run grant for a member's run: kiff/agents takes the requester from it. */
+  grant?: string;
 }
 
 /** A run's start body for where it goes. */
@@ -287,6 +289,7 @@ function runAt(at: RunAt): Record<string, unknown> {
     ...(at.session ? { session_id: at.session } : {}),
     ...(at.requester ? { requester: at.requester } : {}),
     ...(at.live && !at.session ? { chat: "live" } : {}),
+    ...(at.grant ? { run_grant: at.grant } : {}),
   };
 }
 

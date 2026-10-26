@@ -93,6 +93,12 @@ export interface CoachCall {
   coach: string;
   /** Where kiff/agents announces a run Coach started, with a fresh ref. */
   notify: () => Notify;
+  /**
+   * The person whose chat with Coach this call is in, as KIFF signed it on the permit,
+   * and the permit itself, which asks KIFF what they may do with a taf. Absent: Coach
+   * acts as itself, as before.
+   */
+  person?: { subject: string; permit: string };
 }
 
 /** Runs one tool; throws ToolRefusal for an answer Coach should read as a refusal. */
@@ -251,6 +257,7 @@ async function call(name: unknown, rawArgs: unknown, token: string | undefined, 
   try {
     answer = text(await cfg.run(tool.name, toolArgs, {
       tenant: p.tenant, coach, notify: () => ({ url: cfg.notifyURL, ref: newRef(p.tenant) }),
+      ...(p.actor && token ? { person: { subject: p.actor, permit: token } } : {}),
     }));
   } catch (err) {
     if (!(err instanceof ToolRefusal)) {
