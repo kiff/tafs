@@ -155,6 +155,7 @@ jobs:
           shoot 5b-cards -screenshots YES -tab tafs -screen card
           shoot 6-new-taf -screenshots YES -tab tafs -screen new
           shoot 7-chat -screenshots YES -tab tafs -screen chat
+          shoot 8-doors -screenshots YES -tab tafs -screen doors
           # Each product's purchase screen, for its review screenshot in App Store Connect:
           # Solo, and the add-tasks screen with one pack at a time.
           shoot iap-solo -screenshots YES -screen solo
@@ -189,6 +190,7 @@ jobs:
           shoot ipad-narrow-needs-you -screenshots YES -tab needs-you -narrow YES
           shoot ipad-narrow-chat -screenshots YES -tab tafs -screen chat -narrow YES
           shoot ipad-2-taf -screenshots YES -tab tafs -screen taf
+          shoot ipad-8-doors -screenshots YES -tab tafs -screen doors
           shoot ipad-4-cards -screenshots YES -tab tafs -screen card
           ls -la "$RUNNER_TEMP/shots"
 
