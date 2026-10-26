@@ -50,6 +50,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Coming back to the app, a chat stays where you left it instead of showing blank space.
 - A chat whose task stopped at the taf's cost or step limit says so, and who can raise
   the limit, instead of staying on "…".
 - No one reads another person's chats: People's work, the notice that a chat can be read,

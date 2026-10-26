@@ -263,13 +263,14 @@ struct TafChatView: View {
                 follow(proxy)
             }
             .onAppear { land(proxy, items: items.map(\.id), waiting: waiting) }
-            // Back from another app: the screen is laid out again, and the space kept under a
-            // pinned message showed blank (the 789 retest). The message goes back to the top,
-            // or the chat to its latest.
+            // Back from another app (the 805 retest): re-pinning a sent message left the screen of
+            // space kept under it in view, blank, and landing at the latest lost the owner's place.
+            // The pin is over: its space goes, the message stays where it was, and nothing else
+            // moves.
             .onChange(of: scenePhase) { phase in
-                guard phase == .active else { return }
-                touched = false
-                if let pinned { proxy.pinToTop(pinned, animated: false) { touched } } else { landAgain(proxy, Self.bottom, .bottom) }
+                guard phase == .active, let p = pinned else { return }
+                pinned = nil
+                proxy.scrollTo(p, anchor: .top)
             }
         }
     }
