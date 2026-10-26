@@ -439,13 +439,13 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const { messages, components, sessions } = await conversation(me, taf, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(await coachLines(me, taf, deps)), ...(await openKnocks(me, taf, deps)) };
+    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(await openKnocks(me, taf, deps)) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const only = await ownChat(me, taf, parts[4] ?? "", deps);
     const { messages, components, sessions } = await conversation(me, taf, deps, only);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(await coachLines(me, taf, deps)) };
+    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -1269,7 +1269,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
  * them. `steering`: what the owner wrote to it that it hasn't read (#64).
  * Unknown (kiff/agents not answering) reads as neither.
  */
-async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string } | null; steering: Steering | null }> {
+async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string } | null; steering: Steering | null; capped?: Capped }> {
   const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
@@ -1283,10 +1283,20 @@ async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: De
     return {
       working: r.status === "PENDING" || r.status === "RUNNING" ? { session: latest.id, run } : null,
       steering: untaken.length ? { run, status: r.status, untaken } : null,
+      ...(r.stop === "cost_cap" || r.stop === "turn_cap" ? { capped: { run, stop: r.stop } } : {}),
     };
   } catch {
     return none;
   }
+}
+
+/**
+ * The latest run stopped at a cap of its own, with no words for it: the app says
+ * why, in the owner's language, and who can raise the limit.
+ */
+interface Capped {
+  run: string;
+  stop: "cost_cap" | "turn_cap";
 }
 
 /**
@@ -1427,7 +1437,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const only = await ownChat(me, taf, open.session, deps, "trial");
     const { messages, components, sessions } = await conversation(me, taf, deps, only);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering };
+    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
   }
   need(me, "cards.manage");
   const token = bearer(event);

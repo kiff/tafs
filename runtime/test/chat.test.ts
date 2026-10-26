@@ -118,6 +118,16 @@ describe("conversation", () => {
     expect(r.body.working).toBeNull();
   });
 
+  it("says when the latest run stopped at a cap, for the app to word", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund every charge this month", ANA);
+    Object.assign(w.agents.runs.find((r) => r.id === chat.id)!, { status: "COMPLETED", stop: "cost_cap" });
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.capped).toEqual({ run: chat.id, stop: "cost_cap" });
+    Object.assign(w.agents.runs.find((r) => r.id === chat.id)!, { stop: "answered" });
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" })).body.capped).toBeUndefined();
+  });
+
   it("says what the owner wrote to the latest run that it hasn't read, while it goes and once it's over", async () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 60_000));
