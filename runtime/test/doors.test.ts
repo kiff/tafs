@@ -100,7 +100,10 @@ function world() {
     whatsapp: { client: whatsapp, appID: "123", appSecret: WA_SECRET, configID: "456", verifyToken: "verify-me", region: "DE" },
     secretsPrefix: "tafs-doors/",
   };
-  const devices: Device[] = [{ token: "phone1", environment: "production", subject: "u_ana", answers: true, at: NOW.toISOString() }];
+  const devices: Device[] = [
+    { token: "phone1", environment: "production", subject: "u_ana", answers: true, manages: true, at: NOW.toISOString() },
+    { token: "phone2", environment: "production", subject: "u_vi", answers: false, at: NOW.toISOString() },
+  ];
   const pushed: Array<{ token: string; payload: Record<string, unknown> }> = [];
   return {
     agents, tafs, store, secrets, inbox, outbox, waSent, config, pushed, devices,
@@ -117,7 +120,9 @@ function kiff(byToken: Record<string, object>, agentsOf: () => string[] = () => 
     const me = byToken[token];
     if (String(url).endsWith("/v1/me/usage")) return new Response("{}", { status: 404 });
     if (me && String(url).endsWith("/v1/me/access")) {
-      return new Response(JSON.stringify({ agents: Object.fromEntries(agentsOf().map((a) => [a, { use: true, oversee: false, manage: true }])) }), { status: 200 });
+      // Who may manage Cards manages every taf here; a viewer only uses them.
+      const manage = (me as { capabilities: string[] }).capabilities.includes("cards.manage");
+      return new Response(JSON.stringify({ agents: Object.fromEntries(agentsOf().map((a) => [a, { use: true, oversee: false, manage }])) }), { status: 200 });
     }
     return me ? new Response(JSON.stringify(me), { status: 200 }) : new Response("{}", { status: 401 });
   }) as typeof fetch;
@@ -231,6 +236,11 @@ describe("the email door", () => {
     expect(asked.text.startsWith("Please refund order 4471")).toBe(true);
     expect(answered).toMatchObject({ from: "taf", door: { app: "email", reply: "sent" } });
 
+    // Someone who only uses the taf sees none of it.
+    const viewer = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "viewer" });
+    expect(viewer.status).toBe(200);
+    expect(viewer.body.messages).toEqual([]);
+
     // A late note for the same run sends nothing again.
     await send(w, "POST", "/v1/runs/ended", { body: { run: run.id, agent: REFUNDS, status: "COMPLETED", ref: w.agents.notified.get(run.id)!.ref } });
     expect(w.outbox).toHaveLength(1);
@@ -253,10 +263,14 @@ describe("the email door", () => {
     expect(r.body.outcome).toBe("knock");
     expect(w.agents.runs).toHaveLength(0);
     expect(w.outbox).toHaveLength(0);
-    expect(w.pushed).toHaveLength(1);
+    // Only the phones of people who manage hear who wrote.
+    expect(w.pushed.map((p) => p.token)).toEqual(["phone1"]);
     expect((w.pushed[0]!.payload.aps as { alert: { body: string } }).alert.body).toBe("Ana Lima wrote by email. Nothing was done.");
     const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
     expect(chat.body.knocks).toEqual([expect.objectContaining({ from: "ana@northwind.example", name: "Ana Lima", proof: "pass", text: "Refund my order 4471 now.", state: "open" })]);
+    // Someone who only uses the taf isn't shown who wrote or what.
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "viewer" })).body.knocks).toBeUndefined();
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "viewer" })).body.knocks).toEqual([]);
   });
 
   it("a spoofed From counts as unpaired, and its sender can't be paired from it", async () => {
@@ -515,6 +529,10 @@ describe("knocks and keys", () => {
     const events = (await send(w, "GET", "/v1/events", { token: "ana" })).body.events;
     expect(JSON.stringify(events)).not.toContain("@acme.example");
     expect(events.filter((e: { from?: string }) => e.from === "Maya")).toHaveLength(2);
+    // Someone who only uses the taf sees what happened, not who wrote.
+    const seen = (await send(w, "GET", "/v1/events", { token: "viewer" })).body.events;
+    expect(seen).toHaveLength(events.length);
+    expect(seen.some((e: { from?: string }) => e.from !== undefined)).toBe(false);
   });
 
   it("only someone who manages Cards can open a door, pair, or answer a knock", async () => {

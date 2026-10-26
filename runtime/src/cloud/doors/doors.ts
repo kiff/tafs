@@ -273,11 +273,11 @@ async function countDropped(ctx: DoorsContext, tenant: string, taf: Taf, door: D
   }
 }
 
-/** One alert to the account's phones; a failure is logged, never in the way. */
+/** One alert to the phones of the people who manage Cards; a failure is logged, never in the way. */
 async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, body: string, knock: string): Promise<void> {
   try {
     const { devices } = await ctx.push.get(tenant);
-    await Promise.all(devices.map((d: Device) => ctx.apns.send(d, {
+    await Promise.all(devices.filter((d: Device) => d.manages === true).map((d: Device) => ctx.apns.send(d, {
       kind: "alert",
       payload: { aps: { alert: { title: taf.name, body }, sound: "default" }, door_knock: { taf: taf.id, knock } },
       collapseID: knock.slice(0, 64),

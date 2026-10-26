@@ -15,7 +15,7 @@ import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
-import { type EventLog, logEvent } from "./events.js";
+import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -356,7 +356,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   // Halts, resumes and door events, newest first, for Activity (kiff/tafs#236, items 15 and 19).
   if (parts[1] === "events" && parts.length === 2 && method === "GET") {
     const me = await person(event, deps);
-    return { events: deps.events ? await deps.events.list(me.tenantID) : [] };
+    return { events: deps.events ? await doorEventsFor(event, me, await deps.events.list(me.tenantID), deps) : [] };
   }
   if (parts[1] === "account" && parts.length === 3 && parts[2] === "delete" && method === "POST") return deleteAccount(await person(event, deps), deps);
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
@@ -437,9 +437,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "conversation") {
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
-    const { messages, components, sessions } = await conversation(me, taf, deps);
+    const doors = await managesTaf(event, me, taf, deps);
+    const { messages, components, sessions } = await conversation(me, taf, deps, undefined, doors);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(await openKnocks(me, taf, deps)) };
+    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const only = await ownChat(me, taf, parts[4] ?? "", deps);
@@ -616,6 +617,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     const r = registration(parseBody(event));
     const answers = me.capabilities.includes("holds.answer");
     const addsTasks = me.capabilities.includes("billing.manage");
+    const manages = me.capabilities.includes("cards.manage");
     if (r.target && !answers) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     const at = (deps.now?.() ?? new Date()).toISOString();
     const { devices, secrets } = await deps.push.get(me.tenantID);
@@ -627,7 +629,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     // handed over now or, for a phone that registered before, the one kept.
     const newest = r.target?.secret ?? secrets[0];
     if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
-    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, addsTasks, at });
+    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, addsTasks, manages, at });
     return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0 };
   }
   if (method === "DELETE" && parts.length === 3) {
@@ -1204,15 +1206,15 @@ async function callRefs(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{
  * kept: the owner's messages and the taf's. A run's first owner message is
  * the job's instruction, shown as such.
  */
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
-  // owner so other people's chats never use up the scan; and the door senders' chats, which
-  // the thread shows until KIFF answers who oversees whose work. A chat the owner archived
+  // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
+  // chats, which only the people who manage the taf see. A chat the owner archived
   // is hidden from the thread too (kiff/tafs#82); one they open is shown.
   const [own, all] = only ? [[only], []] : await Promise.all([
     agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me))),
-    agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)),
+    doors ? agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)) : Promise.resolve([]),
   ]);
   const chats = [...own.filter((s) => s.kind === "chat"), ...all.filter((s) => s.kind === "chat" && s.owner?.startsWith("door:"))]
     .filter((s) => !s.archived).sort((a, b) => b.updated.localeCompare(a.updated));
@@ -1811,6 +1813,32 @@ function chatText(event: HTTPEvent): string {
 /** The person as the requester of their runs: their chats are theirs in kiff/agents. */
 function member(me: KIFFIdentity): Requester {
   return { kind: "member", id: me.subject };
+}
+
+/**
+ * Whether the person manages the taf, as KIFF answers it (GET /v1/me/access): only they
+ * see its doors' conversations and knocks. A taf with no KIFF agent goes by the account
+ * role; a KIFF that can't be read shows none.
+ */
+async function managesTaf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<boolean> {
+  if (!taf.kiffAgent) return me.capabilities.includes("cards.manage");
+  const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined);
+  return access?.get(taf.kiffAgent)?.manage === true;
+}
+
+/** Account events as the person sees them: who wrote to a door only for the tafs they manage. */
+async function doorEventsFor(event: HTTPEvent, me: KIFFIdentity, events: AccountEvent[], deps: Deps): Promise<AccountEvent[]> {
+  if (!events.some((e) => e.from !== undefined)) return events;
+  const [tafs, access] = await Promise.all([
+    deps.tafs.list(me.tenantID),
+    readAccess(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined),
+  ]);
+  const agentOf = new Map(tafs.map((t) => [t.id, t.kiffAgent]));
+  const manages = (taf?: string) => {
+    const agent = taf ? agentOf.get(taf) : undefined;
+    return agent ? access?.get(agent)?.manage === true : me.capabilities.includes("cards.manage");
+  };
+  return events.map((e) => (e.from === undefined || manages(e.taf) ? e : (({ from: _, ...rest }) => rest)(e)));
 }
 
 /** Who a session is read as: the person, except a door's chat, which the thread shows as tafs cloud. */
@@ -2894,7 +2922,9 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   if (parts.length === 4 && method === "GET") {
     // The bound the owner's session can read now, kept for the door's runs.
     await keepBound(ctx.doors, me.tenantID, await aiBound(event, deps).catch(() => undefined), ctx.now);
-    return listDoors(ctx, owner, taf);
+    const list = await listDoors(ctx, owner, taf);
+    // Who wrote and what: only for the people who manage the taf.
+    return await managesTaf(event, me, taf, deps) ? list : { ...list, knocks: [] };
   }
   need(me, "cards.manage");
   const body = parseBody(event);

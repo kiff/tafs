@@ -183,7 +183,7 @@ const push: PushStore = {
       const m = v.M ?? {};
       const env = m.environment?.S;
       return env === "sandbox" || env === "production"
-        ? [{ token, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, at: m.at?.S ?? "" }]
+        ? [{ token, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, manages: m.manages?.BOOL === true, at: m.at?.S ?? "" }]
         : [];
     });
     const secrets = Object.values(out.Item?.secrets?.M ?? {})
@@ -194,7 +194,7 @@ const push: PushStore = {
     return { devices, secrets };
   },
   async addDevice(tenant, d) {
-    await setEntry(tenant, "devices", d.token, { environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, at: { S: d.at } });
+    await setEntry(tenant, "devices", d.token, { environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, manages: { BOOL: d.manages === true }, at: { S: d.at } });
   },
   async removeDevice(tenant, token) {
     await dynamo.send(new UpdateItemCommand({
