@@ -635,7 +635,6 @@ final class TafsCloud {
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(MessageBody(text, target))
-        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
@@ -1065,6 +1064,7 @@ final class TafsCloud {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
         }
+        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
