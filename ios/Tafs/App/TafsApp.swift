@@ -137,8 +137,9 @@ struct RootView: View {
         }
         .sheet(isPresented: Binding(get: { settled && model.offerAlertsUpFront && !model.coachOpen },
                                     set: { if !$0, model.offerAlertsUpFront { model.answerAlertsOffer() } })) {
+            // Full height, as every other sheet: sizing a medium sheet lays its content out
+            // off the main thread, and this closure is the main actor's, which crashed 772 at launch.
             AlertsOfferSheet().environmentObject(model)
-                .presentationDetents([.medium, .large])
         }
         // A tapped request for tasks: Usage, where it's answered, on its own screen (kiff/tafs#215).
         .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {
