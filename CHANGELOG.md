@@ -50,6 +50,13 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- From the device test of build 793, on an iPad:
+  - A held call's card waits in the chat for the taf's words that explain it, at
+    most 45 seconds, instead of showing alone under your message first. Needs you
+    and the alert still show it at once.
+  - Opening a taf with a call waiting lands at the latest when the call is near the
+    end, instead of on blank space with the Needs you pill and the arrow.
+  - People & groups' button reads "+ Group" on the iPad too.
 - From the device test of build 789, on an iPad:
   - The app no longer crashes a few seconds after launch: the offer to turn
     on alerts shows over the screen instead of in a sheet.
