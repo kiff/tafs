@@ -104,6 +104,10 @@ struct SettingsView: View {
                     if model.mode != .signedOut {
                         NavigationLink(UsageView.title, destination: UsageView().environmentObject(model))
                     }
+                    // The account's groups and who is in each.
+                    if model.mode == .kiff {
+                        NavigationLink(PeopleGroupsView.title, destination: PeopleGroupsView().environmentObject(model))
+                    }
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }
                     }

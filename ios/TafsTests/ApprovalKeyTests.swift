@@ -187,6 +187,43 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(signer.approval[0].hasPrefix("kiff.request.v1\nt_01\nPOST\n/v1/agents/rae-k3f9/resume"), signer.approval[0])
     }
 
+    /// Sharing a taf gives people its use: signed by the approval key, under one Face ID for
+    /// the whole share. Taking a share away, and a group's changes, are the current key's.
+    func testSharingIsSignedByTheApprovalKeyAndUnsharingIsNot() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer)
+        StubProtocol.responses["POST /v1/agents/rae-k3f9/grants"] = (200, #"{"group":"grp_support"}"#)
+        StubProtocol.responses["DELETE /v1/agents/rae-k3f9/grants?subject=user_bo"] = (204, "")
+        StubProtocol.responses["PUT /v1/groups/grp_support/members/user_ana"] = (200, #"{"subject":"user_ana","role":"member"}"#)
+        StubProtocol.responses["GET /v1/groups"] = (200, #"{"groups":[{"id":"grp_support","name":"Support","members":[{"subject":"user_ana","role":"member"}],"agents":["rae-k3f9"]}]}"#)
+        StubProtocol.responses["GET /v1/tenant/members"] = (200, #"{"members":[{"subject":"user_ana","role":"approver","status":"active","email":"ana@acme.test","you":true}]}"#)
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":["grp_support"]}},"checked_at":"2026-10-26T01:00:00Z"}"#)
+
+        let shared = await model.changePeople("Share Rae") { kiff in
+            try await kiff.share(agent: "rae-k3f9", with: .init(group: "grp_support"))
+            try await kiff.unshare(agent: "rae-k3f9", from: .init(subject: "user_bo"))
+        }
+        XCTAssertTrue(shared, model.peopleError ?? "")
+        XCTAssertEqual(signer.currentPrompted.count, 1, "one Face ID for the whole share")
+        let share = try XCTUnwrap(sent("POST", "/v1/agents/rae-k3f9/grants").first)
+        XCTAssertTrue(share.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=approval") == true, "sharing grants use")
+        let unshare = try XCTUnwrap(sent("DELETE", "/v1/agents/rae-k3f9/grants").first)
+        XCTAssertEqual(unshare.url?.query, "subject=user_bo")
+        XCTAssertTrue(unshare.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=current") == true, "unsharing takes use away")
+        XCTAssertTrue(signer.current.contains { $0.hasPrefix("kiff.request.v1\nt_01\nDELETE\n/v1/agents/rae-k3f9/grants?subject=user_bo") },
+                      "the query is signed with the path")
+
+        let added = await model.changePeople("Add ana@acme.test to Support") { try await $0.setGroupMember("grp_support", subject: "user_ana", role: "member") }
+        XCTAssertTrue(added, model.peopleError ?? "")
+        let put = try XCTUnwrap(sent("PUT", "/v1/groups/grp_support/members/user_ana").first)
+        XCTAssertTrue(put.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=current") == true)
+        // What KIFF says, read again after the change.
+        XCTAssertEqual(model.groups.map(\.name), ["Support"])
+        XCTAssertEqual(model.me?.label, "ana@acme.test")
+        XCTAssertEqual(model.access["rae-k3f9"]?.oversee, true)
+        XCTAssertEqual(model.tafName(agent: "rae-k3f9"), "Rae")
+    }
+
     func testWhatGrantsAuthority() {
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/me/agent-drafts/drf_1/confirm"), "issuing a Card, or starting a trial")
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/resume"))
@@ -197,6 +234,20 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/agents/rae-k3f9/halt"))
         XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/me/pack-requests/pr_1/decline"))
         XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/me/agent-drafts//confirm"))
+        XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/agents/rae-k3f9/grants"), "sharing a taf gives its use")
+        XCTAssertFalse(KIFFClient.grantsAuthority("DELETE", "/v1/agents/rae-k3f9/grants?group=grp_1"), "unsharing takes it away")
+        XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/groups"))
+    }
+
+    /// Groups and sharing are each the person's act behind Face ID, as KIFF asks of a phone.
+    func testGroupsAndSharingAreSigned() {
+        for path in ["/v1/groups", "/v1/groups/grp_1", "/v1/groups/grp_1/members/user_ana",
+                     "/v1/agents/rae-k3f9/grants", "/v1/agents/rae-k3f9/grants?subject=user_bo"] {
+            XCTAssertTrue(KIFFClient.signsSetup(path), path)
+        }
+        for path in ["/v1/groups/", "/v1/groups/grp_1/people", "/v1/agents//grants", "/v1/me/access", "/v1/tenant/members"] {
+            XCTAssertFalse(KIFFClient.signsSetup(path), path)
+        }
     }
 
     func testSignInSendsBothKeys() async throws {

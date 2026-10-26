@@ -32,6 +32,8 @@ enum HomeSelection: Hashable {
     case held(UUID, taf: UUID)
     /// Every taf's halt, as the phone's home has it.
     case haltAll
+    /// Today across the tafs this person uses or oversees.
+    case overview
 }
 
 /// The sidebar (Theme.raised): Coach mode, where tafs are made and changed, the calls
@@ -52,6 +54,8 @@ struct HomeSplitView: View {
                     if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
                 case .haltAll?:
                     HaltScreen(tafID: nil)
+                case .overview?:
+                    OverviewView { open in withMotion(.easeInOut(duration: 0.25)) { selection = open } }
                 case nil:
                     VStack(spacing: 12) {
                         Mascot(size: 72)
@@ -85,7 +89,7 @@ struct HomeSplitView: View {
             if let selected = selection {
                 switch selected {
                 case .taf(let id), .held(_, let id): if model.taf(id) != nil { return }
-                case .haltAll: return
+                case .haltAll, .overview: return
                 }
             }
             let screenshot = Screenshots.enabled ? model.tafs.first(where: { $0.name == "Refunds" })?.id : nil
@@ -116,6 +120,12 @@ struct HomeSplitView: View {
                     // first in the sidebar.
                     Button { model.openCoach() } label: {
                         Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
+                    }
+                    // Today across the tafs, one line each.
+                    if !model.tafs.isEmpty {
+                        NavigationLink(value: HomeSelection.overview) {
+                            Label("Overview", systemImage: "square.grid.2x2").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                        }
                     }
                     // Every taf at once, from its own screen, as on the phone's home.
                     // The owner looked for it here (kiff/tafs#138).
