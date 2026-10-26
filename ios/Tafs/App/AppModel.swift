@@ -303,7 +303,8 @@ final class AppModel: ObservableObject {
     }
 
     /// Held calls KIFF said this person may not answer, by KIFF's reason: their card says so
-    /// instead of offering buttons that can't work (the 789 retest).
+    /// instead of offering buttons that can't work (the 789 retest), and keeps Refuse when
+    /// only approving is refused.
     @Published private(set) var unanswerable: [UUID: String] = [:]
 
     /// Why KIFF didn't take an answer, in words, never its code (the 789 retest: "self_review").
@@ -322,10 +323,14 @@ final class AppModel: ObservableObject {
         return [message, reason].compactMap { $0 }.first { $0 != "hold_check_unavailable" && refusalWords($0) != nil }
     }
 
+    /// KIFF refuses only this person's approval: they asked for the call, and a refusal
+    /// grants nothing, so they may still refuse it. Every other reason takes all the answers.
+    nonisolated static func refusesOnly(_ code: String) -> Bool { code == "self_review" }
+
     /// KIFF's reasons a person may not answer a held call, in words.
     nonisolated static func refusalWords(_ code: String) -> String? {
         switch code {
-        case "self_review": return "You asked for this, so someone else on the account answers it."
+        case "self_review": return "You asked for this, so someone else on the account approves it. You can still refuse it."
         case "separation_of_duties_role": return "Only an approver answers held calls on this account."
         case "separation_of_duties_key": return "Held calls are answered by an approver signed in, not by a key."
         case "card_changer": return "You changed the Card this was held against, so another approver answers it."
@@ -2865,8 +2870,9 @@ final class AppModel: ObservableObject {
 
     /// A held call's card comes after the taf's words that ask for it (the 789 retest): the
     /// call is held before the taf writes "waiting for your approval", so by time alone the card
-    /// sat right under the owner's message, above the words that explain it. An answered one
-    /// already goes by when it was answered.
+    /// sat right under the owner's message, above the words that explain it. It moves past
+    /// that turn's words only, those in the session of the words right after it. An answered
+    /// one already goes by when it was answered.
     nonisolated static func heldAfterItsWords(_ items: [ChatItem]) -> [ChatItem] {
         func isCard(_ item: ChatItem) -> Bool {
             switch item {
@@ -2875,19 +2881,23 @@ final class AppModel: ObservableObject {
             default: return false
             }
         }
-        func isTafWords(_ item: ChatItem) -> Bool {
+        /// The session of the taf's words, nil for anything else.
+        func tafWords(_ item: ChatItem) -> String? {
             switch item {
-            case .message(let m): return m.from == .taf && m.kind != .kickoff
-            case .streaming: return true
-            default: return false
+            case .message(let m): return m.from == .taf && m.kind != .kickoff ? m.session : nil
+            case .streaming(_, let m): return m.session
+            default: return nil
             }
         }
         var out = items
         var i = 0
         while i < out.count {
             guard isCard(out[i]) else { i += 1; continue }
+            // Only past the words of the turn right after it: another run's (a scheduled
+            // one's) words, in another session, stay below the card.
+            let session = i + 1 < out.count ? tafWords(out[i + 1]) : nil
             var j = i
-            while j + 1 < out.count, isTafWords(out[j + 1]) {
+            while j + 1 < out.count, let next = tafWords(out[j + 1]), next == session {
                 out.swapAt(j, j + 1)
                 j += 1
             }

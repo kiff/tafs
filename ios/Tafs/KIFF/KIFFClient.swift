@@ -333,17 +333,8 @@ final class KIFFClient {
             case timeZone = "time_zone", capabilities
         }
 
-        /// The account as the owner knows it: its name, else its slug. A slug that is only
-        /// KIFF's id for a person's own account ("user_3Gz…") reads as their email instead.
-        var name: String {
-            if let name = displayName, !name.isEmpty { return name }
-            if Self.isRawID(slug), let email, !email.isEmpty { return email }
-            return slug
-        }
-
-        static func isRawID(_ slug: String) -> Bool {
-            ["user_", "org_"].contains { slug.hasPrefix($0) } && !slug.contains(where: \.isWhitespace)
-        }
+        /// The account as the owner knows it: its name, else its slug.
+        var name: String { displayName.flatMap { $0.isEmpty ? nil : $0 } ?? slug }
     }
 
     func me() async throws -> Account {

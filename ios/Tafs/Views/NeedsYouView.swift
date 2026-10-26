@@ -73,9 +73,22 @@ struct HeldCallCard: View {
     @Environment(\.openURL) private var openURL
 
     /// Approve, extra room, next steps and Refuse, while the call can still be answered.
-    @ViewBuilder private var answers: some View {
+    /// refuseOnly: KIFF takes this person's refusal but not their approval (they asked for
+    /// the call): Refuse and the next steps stay, approving and extra room go.
+    @ViewBuilder private func answers(refuseOnly: Bool) -> some View {
         if model.canAnswer(call) {
-            if call.approvableOnce {
+            if refuseOnly {
+                if !call.approvableOnce {
+                    Button {
+                        model.improveTaf(call.tafID)
+                        model.coachOpen = true
+                    } label: {
+                        Label("Change the limit in Coach mode", systemImage: "sparkle")
+                    }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(sending)
+                }
+            } else if call.approvableOnce {
                 Button {
                     if call.install != nil { install() } else { send(.approveOnce) }
                 } label: {
@@ -193,11 +206,17 @@ struct HeldCallCard: View {
                 if context.date >= call.expiresAt {
                     Text("Expired. Nobody answered in time, so KIFF refused it and nothing was sent.")
                         .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                } else if let code = model.unanswerable[call.id] {
+                } else if let code = model.unanswerable[call.id], !AppModel.refusesOnly(code) {
                     Text(AppModel.refusalWords(code) ?? "KIFF doesn't take your answer to this one.")
                         .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 } else {
-                    VStack(alignment: .leading, spacing: 12) { answers }
+                    VStack(alignment: .leading, spacing: 12) {
+                        // They asked for it: someone else approves, and they can still refuse it.
+                        if let code = model.unanswerable[call.id], let words = AppModel.refusalWords(code) {
+                            Text(words).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                        }
+                        answers(refuseOnly: model.unanswerable[call.id].map(AppModel.refusesOnly) ?? false)
+                    }
                 }
             }
         }

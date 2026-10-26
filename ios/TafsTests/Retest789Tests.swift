@@ -28,7 +28,7 @@ final class Retest789Tests: XCTestCase {
         let t = Date(timeIntervalSince1970: 1_000)
         let asked = TafsCloud.ChatMessage(at: t, from: .owner, text: "Refund $60 on T-3103", session: "s")
         let looked = TafsCloud.ChatMessage(at: t.addingTimeInterval(5), from: .taf, text: "It was paid $100.", session: "s")
-        let waiting = TafsCloud.ChatMessage(at: t.addingTimeInterval(9), from: .taf, text: "Waiting for your approval.", session: "s2")
+        let waiting = TafsCloud.ChatMessage(at: t.addingTimeInterval(9), from: .taf, text: "Waiting for your approval.", session: "s")
         let next = TafsCloud.ChatMessage(at: t.addingTimeInterval(60), from: .owner, text: "ok", session: "s")
         let call = HeldCall(tafID: UUID(), proposed: ProposedAction(action: "refund", summary: "Refund"), reason: "Over",
                             heldAt: t.addingTimeInterval(4), expiresAt: t.addingTimeInterval(600))
@@ -36,6 +36,11 @@ final class Retest789Tests: XCTestCase {
         XCTAssertEqual(AppModel.heldAfterItsWords(items).map(\.id),
                        [asked, looked, waiting].map { AppModel.ChatItem.message($0).id } + [AppModel.ChatItem.held(call).id, AppModel.ChatItem.message(next).id],
                        "after the taf's words, before the owner's next message")
+
+        // A later run's words, in another session, stay below it.
+        let scheduled = TafsCloud.ChatMessage(at: t.addingTimeInterval(30), from: .taf, text: "Daily check: nothing new.", session: "s3")
+        XCTAssertEqual(AppModel.heldAfterItsWords([.message(asked), .held(call), .message(looked), .message(scheduled)]).map(\.id),
+                       [asked, looked].map { AppModel.ChatItem.message($0).id } + [AppModel.ChatItem.held(call).id, AppModel.ChatItem.message(scheduled).id])
 
         // The words still streaming in go above it too.
         let streaming = AppModel.ChatItem.streaming(id: "live|0", waiting)
@@ -50,11 +55,15 @@ final class Retest789Tests: XCTestCase {
     }
 
     /// Approving or refusing read "KIFF didn't take the answer: self_review". KIFF's reasons
-    /// read as words, and only those that stay so take the card's buttons away.
+    /// read as words, and only those that stay so change the card. The person who asked may
+    /// still refuse: only approving goes.
     func testKIFFsRefusalsReadAsWords() {
         let selfReview = KIFFClient.KIFFError.server(status: 403, message: "self_review")
-        XCTAssertEqual(AppModel.answerRefusedWords(selfReview), "You asked for this, so someone else on the account answers it.")
+        XCTAssertEqual(AppModel.answerRefusedWords(selfReview), "You asked for this, so someone else on the account approves it. You can still refuse it.")
         XCTAssertEqual(AppModel.lastingRefusal(selfReview), "self_review")
+        XCTAssertTrue(AppModel.refusesOnly("self_review"))
+        XCTAssertFalse(AppModel.refusesOnly("card_changer"))
+        XCTAssertFalse(AppModel.refusesOnly("separation_of_duties_role"))
         XCTAssertEqual(AppModel.lastingRefusal(KIFFClient.KIFFError.server(status: 403, message: "Forbidden", reason: "card_changer")), "card_changer")
 
         let later = KIFFClient.KIFFError.server(status: 503, message: "hold_check_unavailable")
@@ -67,19 +76,15 @@ final class Retest789Tests: XCTestCase {
         XCTAssertNil(AppModel.lastingRefusal(URLError(.notConnectedToInternet)))
     }
 
-    /// Settings and People & groups named the account "user_3GzdltyJNNvxxy8nNQJudOwgzl9".
-    /// A person's own account without a name reads as their email.
-    func testAnAccountWithoutANameReadsAsTheEmail() throws {
+    /// Settings and People & groups named the account by KIFF's id. KIFF names it now: the
+    /// app shows the name KIFF gives, else the slug.
+    func testTheAccountReadsAsKIFFNamesIt() throws {
         func account(_ json: String) throws -> KIFFClient.Account {
             try KIFFClient.decoder.decode(KIFFClient.Account.self, from: Data(json.utf8))
         }
-        let own = try account(#"{"tenant_id":"t1","tenant_slug":"user_3GzdltyJNNvxxy8nNQJudOwgzl9","email":"owner@example.com"}"#)
-        XCTAssertEqual(own.name, "owner@example.com")
-        let named = try account(#"{"tenant_id":"t1","tenant_slug":"user_3Gz","tenant_display_name":"Acme","email":"owner@example.com"}"#)
-        XCTAssertEqual(named.name, "Acme")
-        let slug = try account(#"{"tenant_id":"t2","tenant_slug":"acme","email":"owner@example.com"}"#)
-        XCTAssertEqual(slug.name, "acme")
-        let noEmail = try account(#"{"tenant_id":"t1","tenant_slug":"user_3Gz"}"#)
-        XCTAssertEqual(noEmail.name, "user_3Gz")
+        let named = try account(#"{"tenant_id":"t1","tenant_slug":"user-3a9f","tenant_display_name":"owner@example.com","email":"viewer@example.com"}"#)
+        XCTAssertEqual(named.name, "owner@example.com", "KIFF's name, never the viewer's email")
+        let unnamed = try account(#"{"tenant_id":"t2","tenant_slug":"acme","tenant_display_name":""}"#)
+        XCTAssertEqual(unnamed.name, "acme")
     }
 }
