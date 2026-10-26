@@ -566,6 +566,9 @@ describe("chats (kiff/tafs#73)", () => {
     list.push({ session: job.session, run: job.id, seq: list.length + 1, time: minutesAgo(59), kind: "agent_message", body: { invocation: "tc-x", value: "no" } });
     const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
     w.agents.events.set(theirs.session, [{ session: theirs.session, run: theirs.id, seq: 1, time: minutesAgo(1), kind: "call_ref", body: { invocation: "tc-99", value: "pi_other" } }]);
+    // Another person's chat on the same account: theirs alone.
+    const viewers = await w.agents.api.startRun("t_acme", RAE, "Refund order 9", { requester: { kind: "member", id: "u_viewer" } });
+    w.agents.events.get(viewers.session)!.push({ session: viewers.session, run: viewers.id, seq: 9, time: minutesAgo(2), kind: "call_ref", body: { invocation: "tc-77", value: "pi_viewers" } });
     const r = await call(w, "GET", `/v1/tafs/${RAE}/calls`, { token: "ana" });
     expect(r.status).toBe(200);
     expect(r.body.calls).toEqual([{ invocation: "tc-88", value: "pi_9", at: minutesAgo(59) }]);

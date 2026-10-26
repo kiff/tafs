@@ -44,7 +44,17 @@ function world() {
     forward: async () => undefined,
     coach, permitKeys: async (kid) => { if (kid !== "k1") throw new Error("unknown"); return publicKey; },
     kiffBase: ISSUER, now: () => new Date("2026-10-16T12:00:00Z"),
-    fetch: (async (url: string) => url.endsWith("/v1/me") ? new Response(JSON.stringify(ME)) : new Response("{}", { status: 404 })) as unknown as typeof fetch,
+    fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/v1/me")) return new Response(JSON.stringify(ME));
+      if (url.endsWith("/v1/coach/act")) {
+        // By default the person uses and manages Refunds, with a run grant for it.
+        const body = JSON.parse(String(init?.body)) as { permit: string; agent?: string };
+        const act = JSON.parse(Buffer.from(body.permit.split(".")[1]!, "base64url").toString()).act.sub as string;
+        const may = { use: true, oversee: false, manage: true, grant: `krg_${act}` };
+        return new Response(JSON.stringify(body.agent ? may : { agents: { agent_rae: may } }));
+      }
+      return new Response("{}", { status: 404 });
+    }) as unknown as typeof fetch,
   };
   /** KIFF's permit for exactly this call, from `sub`. */
   const permit = (tool: string, args: Record<string, unknown>, sub = "agent_coach", tenant = T, act?: string) => {
@@ -123,6 +133,18 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(other.result?.isError).toBe(true);
   });
 
+  it("answers a retried operation only in the chat that asked it", async () => {
+    const w = world();
+    const args = { taf: RAE, text: "Refund order 42", [OP_ARG]: "op_mine" };
+    const first = await w.rpc("tools/call", { name: "taf_task", arguments: args }, w.permit("taf_task", args, "agent_coach", T, "u_ana"));
+    expect(first.result?.isError).toBeFalsy();
+    const again = await w.rpc("tools/call", { name: "taf_task", arguments: args }, w.permit("taf_task", args, "agent_coach", T, "u_ana"));
+    expect(again.result).toEqual(first.result);
+    // The same operation from another person's Coach chat isn't given Ana's answer.
+    const other = await w.rpc("tools/call", { name: "taf_task", arguments: args }, w.permit("taf_task", args, "agent_coach", T, "u_bo"));
+    expect(other.result).not.toEqual(first.result);
+  });
+
   it("tafs_state shows each taf, its KIFF agent, versions and schedule, and what its open runs wait on, and never Setup or Cards", async () => {
     const w = world();
     const run = await w.agents.api.startRun(T, RAE, "Refund order 42");
@@ -154,7 +176,8 @@ describe("Coach's tools (kiff/tafs#206)", () => {
 
   it("taf_task with a run steers it; one that ended is refused in words", async () => {
     const w = world();
-    const run = await w.agents.api.startRun(T, RAE, "go");
+    // Coach's own task: it may write into it.
+    const run = await w.agents.api.startRun(T, RAE, "go", { requester: { kind: "agent", id: "agent_coach" } });
     expect((await w.tool("taf_task", { taf: RAE, text: "Skip order 7", run: run.id })).json).toMatchObject({ run: run.id });
     w.agents.runs.find((x) => x.id === run.id)!.status = "COMPLETED";
     expect(await w.tool("taf_task", { taf: RAE, text: "And 8", run: run.id })).toMatchObject({ isError: true, text: expect.stringContaining("ended") });
@@ -218,12 +241,32 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(await w.tool("version_try", { taf: RAE, n: 2 }, { act: "u_max" })).toMatchObject({ isError: true, text: expect.stringContaining("people who manage it") });
   });
 
-  it("steers and stops a run a person started in the app, as tafs cloud itself", async () => {
+  it("steers a run a person started in the app from their own Coach chat, never from anyone else's", async () => {
     const w = world();
     const ana = { requester: { kind: "member" as const, id: "u_ana" } };
     const run = await w.agents.api.startRun(T, RAE, "Work the queue", ana);
-    expect((await w.tool("taf_task", { taf: RAE, text: "only the €20 one", run: run.id })).json).toMatchObject({ run: run.id });
+    expect((await w.tool("taf_task", { taf: RAE, text: "only the €20 one", run: run.id }, { act: "u_ana" })).json).toMatchObject({ run: run.id });
+    expect(await w.tool("taf_task", { taf: RAE, text: "and the €30 one", run: run.id }, { act: "u_bo" })).toMatchObject({ isError: true, text: expect.stringContaining("isn't theirs to write into") });
+    expect(await w.tool("taf_task", { taf: RAE, text: "and the €40 one", run: run.id })).toMatchObject({ isError: true, text: expect.stringContaining("isn't theirs to write into") });
     expect((await w.tool("run_stop", { taf: RAE, run: run.id })).json).toMatchObject({ status: "CANCELLED" });
+  });
+
+  it("tafs_state shows another person's runs by how they stand only, never what they said or used", async () => {
+    const w = world();
+    const bo = await w.agents.api.startRun(T, RAE, "Refund order 7 for Ivo", { requester: { kind: "member", id: "u_bo" } });
+    Object.assign(w.agents.runs.find((r) => r.id === bo.id)!, {
+      status: "PAUSED", output: "Ivo's card ends 4242",
+      requirements: [{ call_id: "c1", tool: "stripe_refund", input: { customer: "ivo@example.com" }, operation: "op", exception: "exc_1", expires: "2026-10-16T13:00:00Z" }],
+    });
+    const mine = await w.agents.api.startRun(T, RAE, "Refund order 8", { requester: { kind: "member", id: "u_ana" } });
+    Object.assign(w.agents.runs.find((r) => r.id === mine.id)!, { status: "PAUSED", output: "Order 8 is 20 EUR" });
+    const r = await w.tool("tafs_state", {}, { act: "u_ana" });
+    const runs = r.json.tafs[0].open_runs as Array<Record<string, unknown>>;
+    const theirs = runs.find((x) => x.run === bo.id)!;
+    expect(Object.keys(theirs).sort()).toEqual(["run", "started", "status", "trigger", "updated"]);
+    expect(JSON.stringify(r.json)).not.toContain("ivo@example.com");
+    expect(JSON.stringify(r.json)).not.toContain("4242");
+    expect(runs.find((x) => x.run === mine.id)).toMatchObject({ answer: "Order 8 is 20 EUR" });
   });
 
   it("version_try starts a trial announced back; version_install only says where the owner's install stands", async () => {
@@ -239,22 +282,26 @@ describe("Coach's tools (kiff/tafs#206)", () => {
 
   it("a task's end reaches Coach's run at work, read back from kiff/agents; an unknown ref is dropped", async () => {
     const w = world();
-    const coachRun = await w.agents.api.startRun(T, SETUP, "Have Refunds refund order 42");
+    const coachRun = await w.agents.api.startRun(T, SETUP, "Have Refunds refund order 42", { requester: { kind: "member", id: "u_ana" } });
     w.agents.runs.find((r) => r.id === coachRun.id)!.status = "RUNNING";
-    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    // Another person's Coach run at work too: it never hears of Ana's task.
+    const boRun = await w.agents.api.startRun(T, SETUP, "Something else", { requester: { kind: "member", id: "u_bo" } });
+    w.agents.runs.find((r) => r.id === boRun.id)!.status = "RUNNING";
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
     const ref = w.agents.notified.get(task.json.run)!.ref;
     Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: "Refunded order 42. It was 30 EUR. Nothing else was due." });
     expect((await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref: "bm8.unknown" })).body).toEqual({ taken: false });
     expect((await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref })).body).toEqual({ taken: true });
     const steered = w.agents.runs.find((r) => r.id === coachRun.id)!.steering!;
     expect(steered.at(-1)!.text).toBe(`[taf Refunds run ${task.json.run} ended: Refund order 42] It finished. answer: "Refunded order 42. It was 30 EUR."`);
+    expect(w.agents.runs.find((r) => r.id === boRun.id)!.steering ?? []).toEqual([]);
     // Once ended, the ref is spent.
     expect((await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref })).body).toEqual({ taken: false });
   });
 
   it("with Coach's run over, the line waits for its next turn, shown in its chat meanwhile and never in the owner's words", async () => {
     const w = world();
-    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
     const ref = w.agents.notified.get(task.json.run)!.ref;
     Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
     // The owner has tafs open: told quietly, and the line isn't kept for later (kiff/tafs#210).
@@ -275,13 +322,15 @@ describe("Coach's tools (kiff/tafs#206)", () => {
 
   it("a run that ends while the owner is away pushes nothing, and its line waits for \"While you were away\" (kiff/tafs#210)", async () => {
     const w = world();
-    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
     const ref = w.agents.notified.get(task.json.run)!.ref;
     Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: "Refunded order 42." });
     await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref });
     expect(w.pushed).toEqual([]);
     const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
     expect(lines).toEqual([{ at: "2026-10-16T12:00:00.000Z", taf: "Refunds", said: "Refunded order 42.", away: true }]);
+    // How it went is Ana's alone: kept under her, never for the whole account.
+    expect([...w.coach.held.keys()].filter((k) => k.includes("#coach-notes"))).toEqual([`${T}#coach-notes#u_ana`]);
   });
 
   it("a paused task's run is a hold: KIFF's alert interrupts, so tafs cloud pushes nothing for it", async () => {
@@ -298,7 +347,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
 
   it("a message that doesn't start leaves Coach's lines for the next one", async () => {
     const w = world();
-    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
     const ref = w.agents.notified.get(task.json.run)!.ref;
     Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
     await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "ERROR", ref });
@@ -325,7 +374,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
 
   it("a paused task tells Coach it waits for the owner, and keeps its ref for the end", async () => {
     const w = world();
-    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" });
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
     const ref = w.agents.notified.get(task.json.run)!.ref;
     Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, {
       status: "PAUSED", requirements: [{ call_id: "c1", tool: "stripe_refund", input: {}, operation: "op", expires: "2026-10-16T13:00:00Z" }],

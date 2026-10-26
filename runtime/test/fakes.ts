@@ -45,8 +45,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     const err = fail.get(method);
     if (err) { fail.delete(method); throw err; }
   };
-  /** As kiff/agents decides it: a chat is only its owner's; any other session with no owner (a job's, a trial's) is the taf's. */
-  const ownedBy = (s: Session, owner: string) => s.owner === owner || (!s.owner && s.kind !== "chat");
+  /** As kiff/agents decides it: a session is its owner's; one with no owner is the taf's only when it's a job's or a trial's, never otherwise. */
+  const ownedBy = (s: Session, owner: string) => s.owner === owner || (!s.owner && (s.kind === "run" || s.kind === "trial"));
   const openSession = (tenant: string, agent: string, kind: Session["kind"]) => {
     const at = now().toISOString();
     const s: Session & { tenant: string } = { tenant, id: `sess${++n}`, agent, kind, started: at, updated: at };

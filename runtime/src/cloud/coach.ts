@@ -132,9 +132,11 @@ export const TASK_KEPT_MS = 7 * 24 * 3600_000;
 
 export const keys = {
   jti: (tenant: string, jti: string) => `${tenant}#coach-jti#${jti}`,
-  op: (tenant: string, op: string) => `${tenant}#coach-op#${op}`,
+  /** An operation's answer, kept for the person whose Coach chat asked it (none: Coach itself). */
+  op: (tenant: string, op: string, person?: string) => `${tenant}#coach-op2#${person ?? ""}#${op}`,
   task: (tenant: string, ref: string) => `${tenant}#coach-task#${ref}`,
-  notes: (tenant: string) => `${tenant}#coach-notes`,
+  /** How a person's Coach tasks went, for that person's Coach only. */
+  notes: (tenant: string, person: string) => `${tenant}#coach-notes#${person}`,
 };
 
 /** A task's ref: the account, so the note finds its record, and a value no one guesses. */
@@ -244,7 +246,8 @@ async function call(name: unknown, rawArgs: unknown, token: string | undefined, 
   if (a[OP_ARG] !== p.op) return refused(`the permit's operation is not this call's ${OP_ARG}`);
   const coach = await cfg.coachOf(p.tenant);
   if (!coach || coach !== p.subject) return refused("only the account's Coach may use these tools");
-  const opKey = keys.op(p.tenant, p.op);
+  // Kept per person: a retry gets the answer only in the chat that asked for it.
+  const opKey = keys.op(p.tenant, p.op, p.actor);
   const kept = await cfg.store.get(opKey);
   if (kept !== undefined) return kept;
   if (!(await cfg.store.once(keys.jti(p.tenant, p.id), new Date(now.getTime() + JTI_KEPT_MS)))) return refused("this permit was used already");
@@ -283,6 +286,8 @@ export interface Task {
   /** What it was, in a few words, for the line Coach reads. */
   what: string;
   trial?: boolean;
+  /** The person whose Coach chat handed it over: only they hear how it went. */
+  person?: string;
 }
 
 /** kiff/agents' note: a run with a Notify paused or ended. */

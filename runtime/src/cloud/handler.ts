@@ -1184,8 +1184,9 @@ export interface ThreadMessage {
  * from it, and checks it against KIFF's signed hash. Nothing else of a call is kept.
  */
 async function callRefs(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{ invocation: string; value: string; at: string }>> {
-  const sessions = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned));
-  const read = await Promise.all(sessions.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
+  // The person's own sessions only (and the taf's jobs, which are everyone's who use it).
+  const sessions = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
+  const read = await Promise.all(sessions.map((s) => deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined)));
   const out: Array<{ invocation: string; value: string; at: string }> = [];
   for (const r of read) {
     for (const e of r?.events ?? []) {
@@ -1363,6 +1364,8 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     return cancelSwitch(event, me, taf, deps);
   }
   if (action === "trials" && parts.length === 5 && method === "GET") {
+    // A trial is tried by the people who manage the taf; its chat and results are theirs.
+    need(me, "cards.manage");
     return agentsCall(() => deps.agents.trial(me.tenantID, taf.id, rawN ?? ""));
   }
   const n = Number(rawN);
@@ -1432,6 +1435,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
   if (sub === "" && method === "GET") return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id)), deps) };
   if (sub === undefined) throw new HTTPError(404, "not found");
   if (sub === "conversation" && method === "GET") {
+    need(me, "cards.manage");
     const open = await openTrialOf(me, taf, deps);
     if (!open.session) return { messages: [], components: [], working: false, steering: [] };
     const only = await ownChat(me, taf, open.session, deps, "trial");
@@ -2477,6 +2481,11 @@ function waitsOn(r: Run) {
   }));
 }
 
+/** What anyone who may see a taf learns of a run that isn't theirs: when and how it stands, nothing it said or used. */
+function runMeta(r: Run) {
+  return { run: r.id, status: r.status, trigger: r.trigger, started: iso(r.created), updated: iso(r.updated) };
+}
+
 function runSummary(r: Run) {
   return {
     run: r.id, status: r.status, trigger: r.trigger, started: iso(r.created), updated: iso(r.updated),
@@ -2492,12 +2501,13 @@ async function keepTask(call: CoachCall, notify: Notify, task: Task, deps: Deps)
   await deps.coach.put(coachKeys.task(call.tenant, notify.ref), task, new Date(at + TASK_KEPT_MS));
 }
 
-/** Coach's run at work now, if any: the one making this call. */
+/** The person's own Coach run at work now, if any: the one making this call. Never another person's. */
 async function coachRun(call: CoachCall, deps: Deps): Promise<string | undefined> {
+  if (!call.person) return undefined;
   const setup = (await deps.tafs.list(call.tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
   if (!setup) return undefined;
   const runs = await deps.agents.runs(call.tenant, setup.id, true, 5).catch(() => []);
-  return runs.find((r) => r.status === "RUNNING")?.id;
+  return runs.find((r) => r.status === "RUNNING" && r.requester?.kind === "member" && r.requester.id === call.person?.subject)?.id;
 }
 
 export async function coachTool(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
@@ -2511,12 +2521,22 @@ export async function coachTool(name: string, args: Record<string, unknown>, cal
 
 async function coachToolOf(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
   const me = coachIdentity(call);
+  // A run is the person's own when they asked for it in this chat; without a person,
+  // Coach's own tasks only. Never another person's, whatever else they may do.
+  const theirs = (r: Run) => call.person
+    ? r.requester?.kind === "member" && r.requester.id === call.person.subject
+    : r.requester?.kind === "agent" && r.requester.id === me.subject;
+  // What a run said and used is readable by its own person, and a taf's job (no requester,
+  // no trial) by anyone who may use the taf: its reports are everyone's.
+  const readable = (r: Run, use: boolean) => theirs(r) || (use && !r.requester && r.trigger !== "trial");
   if (name === "tafs_state") {
     let tafs = (await deps.tafs.list(call.tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB);
+    let all: Record<string, { use?: boolean; oversee?: boolean }> | undefined;
     if (call.person) {
       // In a person's chat, only the tafs KIFF says they may use or oversee.
-      const all = (await coachAct(call, undefined, deps)).agents ?? {};
-      tafs = tafs.filter((t) => all[t.kiffAgent]?.use || all[t.kiffAgent]?.oversee);
+      all = (await coachAct(call, undefined, deps)).agents ?? {};
+      const may = all;
+      tafs = tafs.filter((t) => may[t.kiffAgent]?.use || may[t.kiffAgent]?.oversee);
     }
     return {
       tafs: await Promise.all(tafs.map(async (t) => {
@@ -2534,7 +2554,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
           live_version: live?.n ?? null,
           versions: state.versions.map((v) => ({ n: v.n, note: v.note, live: v.live, created: iso(v.created) })),
           ...(state.switching ? { switching: { to: state.switching.n, waiting_for: state.switching.draft ? "the owner to confirm its Card in tafs" : "its runs to stop" } } : {}),
-          open_runs: runs.map(runSummary),
+          // Another person's runs show only how they stand, never what they said or used.
+          open_runs: runs.map((r) => readable(r, all ? all[t.kiffAgent]?.use === true : true) ? runSummary(r) : runMeta(r)),
         };
       })),
       cards: "Each taf's Cards aren't here: read them with kiff_card {agent: its kiff_agent}.",
@@ -2544,12 +2565,11 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   const n = Number(args.n);
   // In a person's chat, what KIFF says they may do with this taf; tafs cloud only applies it.
   const may = call.person ? await coachAct(call, taf.kiffAgent, deps) : undefined;
-  const theirs = (r: Run) => r.requester?.kind === "member" && r.requester.id === call.person?.subject;
   if (name === "taf_run") {
     const runID = str(args.run).trim();
     const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, runID));
     // Reading a run is reading a conversation: only one's own, whatever oversee says.
-    if (may && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to read`);
+    if (!readable(r, may ? may.use : true) || (may && !may.use)) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to read`);
     if (r.trigger === "trial") {
       const t = await agentsCall(() => deps.agents.trial(call.tenant, taf.id, runID));
       return { taf: taf.name, ...runSummary(t.run), writes: t.writes };
@@ -2561,10 +2581,9 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (!text || text.length > CHAT.maxText) throw new ToolRefusal(`write the task in 1 to ${CHAT.maxText} characters`);
     const running = str(args.run).trim();
     if (running) {
-      if (may) {
-        const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, running));
-        if (!(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to write into`);
-      }
+      // Writing into a run is writing into a conversation: only one's own.
+      const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, running));
+      if (!theirs(r) || (may && !may.use)) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to write into`);
       try {
         // Coach doesn't know yet whose conversation it is in, so it writes as tafs cloud
         // itself: any run of the taf, the way it could before runs had requesters.
@@ -2588,7 +2607,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     }
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, at, undefined, notify));
-    await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120) }, deps);
+    await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120), person: call.person?.subject }, deps);
     return { taf: taf.name, run: run.id, chat: run.session, status: run.status, result: "comes back to you when the run ends: don't poll" };
   }
   if (name === "run_stop") {
@@ -2624,7 +2643,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (!input || input.length > CHAT.maxText) throw new ToolRefusal(`give the trial 1 to ${CHAT.maxText} characters to work on`);
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startTrial(call.tenant, taf.id, n, input, notify));
-    await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: `a trial of version ${n}`, trial: true }, deps);
+    await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: `a trial of version ${n}`, trial: true, person: call.person?.subject }, deps);
     return { taf: taf.name, trial: run.id, status: run.status, result: "comes back to you when the trial ends: don't poll" };
   }
   if (name === "version_install") {
@@ -2733,9 +2752,10 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (setup && task.coachRun) {
     told = await deps.agents.steerRun(tenant, setup.id, task.coachRun, line).then(() => true, () => false);
   }
-  if (!told) {
-    // The owner reads the taf and how it went; Coach reads the whole line.
-    await deps.coach.append(coachKeys.notes(tenant), { at: at.toISOString(), text: line, taf: name, said, ...(level === "later" ? { away: true } : {}) },
+  if (!told && task.person) {
+    // The person reads the taf and how it went; their Coach reads the whole line. A task
+    // with no person behind it is told to no one's Coach.
+    await deps.coach.append(coachKeys.notes(tenant, task.person), { at: at.toISOString(), text: line, taf: name, said, ...(level === "later" ? { away: true } : {}) },
       new Date(at.getTime() + TASK_KEPT_MS));
   }
   if (level === "quiet") await tellPhones(deps, tenant, endedNotification(name, r));
@@ -2810,7 +2830,7 @@ function twoSentences(text: string): string {
 async function takeCoachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ text: (owner: string) => string; putBack: () => Promise<void> }> {
   if (taf.job !== SETUP_JOB || !deps.coach) return { text: (owner) => owner, putBack: async () => {} };
   const store = deps.coach;
-  const key = coachKeys.notes(me.tenantID);
+  const key = coachKeys.notes(me.tenantID, me.subject);
   const taken = await store.take(key);
   const said = (taken as Array<{ text?: unknown }>).map((l) => l?.text).filter((t): t is string => typeof t === "string");
   return {
@@ -2827,7 +2847,7 @@ async function takeCoachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{
 /** The lines about Coach's tasks it hasn't read, for the app to show in Coach's chat. */
 async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coach_lines?: Array<{ at: string; taf: string; said: string; away?: true }> }> {
   if (taf.job !== SETUP_JOB || !deps.coach) return {};
-  const kept = (await deps.coach.get(coachKeys.notes(me.tenantID))) as Array<{ at?: string; taf?: string; said?: string; away?: boolean }> | undefined;
+  const kept = (await deps.coach.get(coachKeys.notes(me.tenantID, me.subject))) as Array<{ at?: string; taf?: string; said?: string; away?: boolean }> | undefined;
   // Away: kept while the owner was away, so the app gathers it into "While you were away" (kiff/tafs#210).
   const lines = (kept ?? []).filter((l): l is { at: string; taf: string; said: string; away?: boolean } =>
     typeof l.at === "string" && typeof l.taf === "string" && typeof l.said === "string")
