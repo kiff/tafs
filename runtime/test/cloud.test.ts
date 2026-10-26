@@ -1101,6 +1101,8 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     w.agents.trialWrites.set(run.id, [{ tool: "create_refund_k3f9", title: "Create refund", arguments: { amount: 3000 }, decision: "allowed" }]);
     const read = await call(w, "GET", `/v1/tafs/${RAE}/trials/${run.id}`, { token: "ana" });
     expect(read.body.writes).toEqual([{ tool: "create_refund_k3f9", title: "Create refund", arguments: { amount: 3000 }, decision: "allowed" }]);
+    // A trial is the people who manage the taf's: no one else reads it.
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trials/${run.id}`, { token: "viewer" })).status).toBe(403);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/9/trial`, { token: "ana", body: {} })).status).toBe(404);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/trial`, { token: "viewer", body: {} })).status).toBe(403);
   });
@@ -1418,10 +1420,14 @@ describe("trying a version (kiff/tafs#173)", () => {
     // Its messages go to the trial, in one chat of its own.
     const first = await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "ana", body: { text: "Refund ch_1." } });
     const second = await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "ana", body: { text: "And ch_2." } });
+    // The trial is Ana's: another person who manages the taf doesn't go on in it, or read it.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "owner", body: { text: "And ch_3." } })).status).toBe(404);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial/conversation`, { token: "owner" })).status).toBe(404);
     expect(first.status).toBe(200);
     expect(second.body.session).toBe(first.body.session);
     const chat = await call(w, "GET", `/v1/tafs/${RAE}/trial/conversation`, { token: "ana" });
     expect((chat.body.messages as Array<{ text: string }>).map((m) => m.text)).toEqual(["Refund ch_1.", "And ch_2."]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial/conversation`, { token: "viewer" })).status).toBe(403);
     // The taf's own thread doesn't show the trial's chat.
     const thread = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
     expect((thread.body.messages as Array<{ text: string }>).map((m) => m.text)).not.toContain("Refund ch_1.");

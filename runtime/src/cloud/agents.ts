@@ -410,9 +410,9 @@ export class Agents {
 
   // The open trial (kiff/tafs#173): one chat with a version, under its trial Card.
 
-  /** Opens the trial of version n under `draft`, the KIFF draft trying as its Card. 409 while another is open. */
-  async openTrial(tenant: string, id: string, n: number, draft: string): Promise<Trial> {
-    return (await this.call<{ trial: Trial }>("PUT", tenant, ["agents", id, "trial"], { n, draft })).trial;
+  /** Opens the trial of version n under `draft`, the KIFF draft trying as its Card, as `requester`'s own. 409 while another is open. */
+  async openTrial(tenant: string, id: string, n: number, draft: string, requester?: Requester): Promise<Trial> {
+    return (await this.call<{ trial: Trial }>("PUT", tenant, ["agents", id, "trial"], { n, draft, ...(requester ? { requester } : {}) })).trial;
   }
 
   /** The agent's open trial; undefined when it has none. */
@@ -420,9 +420,9 @@ export class Agents {
     return (await this.call<{ trial: Trial }>("GET", tenant, ["agents", id, "trial"]).catch(notFound))?.trial;
   }
 
-  /** One message to the trial: a turn of version n in the trial's chat, in the background. */
-  async trialMessage(tenant: string, id: string, input: string): Promise<{ run: Run; trial: Trial }> {
-    return this.call("POST", tenant, ["agents", id, "trial", "messages"], { input });
+  /** One message to the trial, from `requester`: a turn of version n in the trial's chat, in the background. */
+  async trialMessage(tenant: string, id: string, input: string, requester?: Requester): Promise<{ run: Run; trial: Trial }> {
+    return this.call("POST", tenant, ["agents", id, "trial", "messages"], { input, ...(requester ? { requester } : {}) });
   }
 
   /** Ends the trial with KIFF's counts: its chat is deleted, and its version keeps one line. */
