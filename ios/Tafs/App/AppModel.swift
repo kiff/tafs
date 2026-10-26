@@ -911,6 +911,21 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Draws the chat again once a held card's wait for the taf's words is over
+    /// (`heldWaitsForWords`), so it shows then even if no words came.
+    private var heldShowing: Task<Void, Never>?
+    private func showHeldAfterWaiting() {
+        heldShowing?.cancel()
+        let now = clock()
+        guard let next = held.map({ $0.heldAt.addingTimeInterval(Self.heldWaitsForWords) }).filter({ $0 > now }).min() else { return }
+        let wait = next.timeIntervalSince(now) + 0.5
+        heldShowing = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.objectWillChange.send()
+        }
+    }
+
     func refresh() async {
         guard mode == .kiff else { playNextDemoActions(); return }
         refreshing = true
@@ -1001,6 +1016,7 @@ final class AppModel: ObservableObject {
         held = exceptions.map { KIFFMapping.held($0, tafID: holderID($0.subject), coach: coach) }
         unanswerable = unanswerable.filter { id, _ in held.contains { $0.id == id } }
         readAgainAtExpiry()
+        showHeldAfterWaiting()
         listLoaded = true
         listUnread = false
         rememberList()
@@ -2865,7 +2881,31 @@ final class AppModel: ObservableObject {
             a.element.at != b.element.at ? a.element.at < b.element.at : a.offset < b.offset
         }.map(\.element), anchors: state.anchors)
         if let live { timeline += streamingItems(live, held: held, tafID: tafID) }
-        return Self.heldAfterItsWords(timeline)
+        return Self.withheldUntilWords(Self.heldAfterItsWords(timeline), now: clock())
+    }
+
+    /// How long a held call's card waits in the chat for the taf's words that explain it (the
+    /// 793 retest): KIFF's list brought the card at once, under the owner's message with no
+    /// words, and the words came about 30 s later. Needs you and the alert show it at once.
+    nonisolated static let heldWaitsForWords: TimeInterval = 45
+
+    /// The chat without the held calls still waiting for the taf's words: one made after the
+    /// owner's last message, while the taf has written nothing since that message, for at
+    /// most `wait` after it was held. Then it shows, words or not.
+    nonisolated static func withheldUntilWords(_ items: [ChatItem], now: Date, wait: TimeInterval = heldWaitsForWords) -> [ChatItem] {
+        guard let owner = items.lastIndex(where: { if case .message(let m) = $0 { return m.from == .owner }; return false }) else { return items }
+        let said = items[(owner + 1)...].contains { item in
+            switch item {
+            case .message(let m): return m.from == .taf && m.kind != .kickoff
+            case .streaming: return true
+            default: return false
+            }
+        }
+        guard !said else { return items }
+        return items.enumerated().filter { i, item in
+            guard i > owner, case .held(let call) = item else { return true }
+            return now.timeIntervalSince(call.heldAt) >= wait
+        }.map(\.element)
     }
 
     /// A held call's card comes after the taf's words that ask for it (the 789 retest): the

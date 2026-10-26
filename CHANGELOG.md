@@ -50,6 +50,15 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- No one reads another person's chats: People's work, the notice that a chat can be read,
+  and Settings → Who read my work are gone. Your chats with a shared taf are yours alone.
+- From the device test of build 793, on an iPad:
+  - A held call's card waits in the chat for the taf's words that explain it, at
+    most 45 seconds, instead of showing alone under your message first. Needs you
+    and the alert still show it at once.
+  - Opening a taf with a call waiting lands at the latest when the call is near the
+    end, instead of on blank space with the Needs you pill and the arrow.
+  - People & groups' button reads "+ Group" on the iPad too.
 - The app no longer crashes on iPad while a chat or a sheet updates (build 793):
   SwiftUI on iPadOS 27 builds some views on a background render thread, and the
   app's runtime main-thread checks stopped it there.

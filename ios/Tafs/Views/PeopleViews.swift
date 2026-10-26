@@ -51,8 +51,9 @@ struct PeopleGroupsView: View {
         .toolbar {
             if model.canManagePeople {
                 ToolbarItem(placement: .primaryAction) {
-                    // "+" alone didn't say it makes a group.
-                    Button { naming = GroupNaming(group: nil) } label: { Label("Group", systemImage: "plus").labelStyle(.titleAndIcon) }
+                    // "+" alone didn't say it makes a group, and iPadOS draws a toolbar Label as its
+                    // icon only (the 793 retest): the button is words.
+                    Button { naming = GroupNaming(group: nil) } label: { Text("+ Group") }
                         .accessibilityLabel("New group")
                 }
             }

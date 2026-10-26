@@ -48,10 +48,6 @@ struct TafChatView: View {
                     Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
                 }
-                #if os(iOS)
-                // On a shared taf: who can read this chat, and that the person sees each time.
-                ReadNotice(tafID: tafID).padding(.horizontal, 16).padding(.bottom, 4)
-                #endif
                 composer
                 #if os(iOS)
                 DictationBar(dictation: model.dictation)
@@ -81,7 +77,10 @@ struct TafChatView: View {
         let items = model.chatItems(tafID)
         let state = model.chatState(tafID)
         let thinking = model.chatThinking(tafID)
-        let waiting = model.chatWaiting(tafID)
+        // The held call waiting, when its card is in the chat: one still waiting for the taf's
+        // words isn't, and landing on or jumping to a card that isn't there showed blank space
+        // (the 793 retest).
+        let waiting = model.chatWaiting(tafID).flatMap { w in items.contains { $0.id == "k|" + AppModel.heldKey(w) } ? w : nil }
         return ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
@@ -313,8 +312,13 @@ struct TafChatView: View {
         // Only once the thread is in: landing on an empty chat would count as landed.
         guard !landed, !items.isEmpty else { return }
         landed = true
-        if waiting != nil { following = false }
-        let (target, anchor): (String, UnitPoint) = waiting.map { ("k|" + AppModel.heldKey($0), .center) } ?? (Self.bottom, .bottom)
+        // A card among the last few items is in view at the latest: it lands there, at the bottom,
+        // which the lazy rows reach reliably. Centring a card near the end landed on rows not
+        // laid out yet, blank, with the Needs you pill and the arrow over them (the 793 retest).
+        let card = waiting.map { "k|" + AppModel.heldKey($0) }
+        let nearEnd = card.flatMap { c in items.lastIndex(of: c) }.map { items.count - $0 <= 3 } ?? true
+        if card != nil, !nearEnd { following = false }
+        let (target, anchor): (String, UnitPoint) = nearEnd ? (Self.bottom, .bottom) : (card ?? Self.bottom, .center)
         landAgain(proxy, target, anchor)
     }
 
