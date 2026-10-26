@@ -2564,7 +2564,9 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (may) {
       // In a person's chat, the task is theirs: their own chat with the taf, under the
       // grant KIFF gave for it.
-      if (!may.use || !may.grant) throw new ToolRefusal(`${taf.name} isn't shared with them: ask an admin to share it`);
+      if (!may.use) throw new ToolRefusal(`${taf.name} isn't shared with them: ask an admin to share it`);
+      // KIFF gives one grant per permit and taf: a retried call gets none.
+      if (!may.grant) throw new ToolRefusal("KIFF gave no grant for this call: try again");
       at = { grant: may.grant, live: args.chat !== "new" };
     }
     const notify = call.notify();
