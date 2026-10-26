@@ -1827,6 +1827,12 @@ function member(me: KIFFIdentity): Requester {
  * see its doors' conversations and knocks. A taf with no KIFF agent goes by the account
  * role; a KIFF that can't be read shows none.
  */
+async function managesTaf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<boolean> {
+  if (!taf.kiffAgent) return me.capabilities.includes("cards.manage");
+  const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined);
+  return access?.get(taf.kiffAgent)?.manage === true;
+}
+
 /**
  * Refuses a change to a taf the person doesn't manage: their role must manage Cards, and
  * KIFF must say they manage this taf (RFC 050 decision 11: an editor, only the tafs they made).
@@ -1834,12 +1840,6 @@ function member(me: KIFFIdentity): Requester {
 async function needTaf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<void> {
   need(me, "cards.manage");
   if (!(await managesTaf(event, me, taf, deps))) throw new HTTPError(403, "you can change only the tafs you manage: an editor, the ones they made");
-}
-
-async function managesTaf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<boolean> {
-  if (!taf.kiffAgent) return me.capabilities.includes("cards.manage");
-  const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined);
-  return access?.get(taf.kiffAgent)?.manage === true;
 }
 
 /** Account events as the person sees them: who wrote to a door only for the tafs they manage. */
