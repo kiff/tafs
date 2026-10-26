@@ -78,7 +78,7 @@ struct HeldCallCard: View {
     @ViewBuilder private func answers(refuseOnly: Bool) -> some View {
         if model.canAnswer(call) {
             if refuseOnly {
-                if !call.approvableOnce {
+                if !call.approvableOnce, model.mayUseCoach {
                     Button {
                         model.improveTaf(call.tafID)
                         model.coachOpen = true
@@ -117,14 +117,16 @@ struct HeldCallCard: View {
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(sending)
                 }
-                Button {
-                    model.improveTaf(call.tafID)
-                    model.coachOpen = true
-                } label: {
-                    Label("Change the limit in Coach mode", systemImage: "sparkle")
+                if model.mayUseCoach {
+                    Button {
+                        model.improveTaf(call.tafID)
+                        model.coachOpen = true
+                    } label: {
+                        Label("Change the limit in Coach mode", systemImage: "sparkle")
+                    }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(sending)
                 }
-                .buttonStyle(OutlineButtonStyle())
-                .disabled(sending)
             }
 
             HStack(spacing: 8) {

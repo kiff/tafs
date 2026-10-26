@@ -11,9 +11,12 @@ struct DoorsView: View {
     @State private var pairing: TafsCloud.Door?
     @State private var confirmRemove: TafsCloud.Door?
     @State private var copied = false
+    /// Whether this person manages the taf: only then are its doors' controls shown.
+    let manages: Bool
 
-    init(taf: Taf, cloud: TafsCloud, cloudID: String) {
+    init(taf: Taf, cloud: TafsCloud, cloudID: String, manages: Bool = true) {
         self.taf = taf
+        self.manages = manages
         _doors = StateObject(wrappedValue: DoorsModel(cloud: cloud, tafID: cloudID))
     }
 
@@ -29,7 +32,10 @@ struct DoorsView: View {
                 Text(hint).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     .frame(maxWidth: .infinity)
             }
-            if let door { panel(door) } else { addPanel }
+            if let door { panel(door) } else if manages { addPanel } else {
+                Text("\(taf.name) has no door yet. Someone who manages it can add one.")
+                    .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            }
             let waiting = doors.openKnocks.filter { !$0.isLine }
             if !waiting.isEmpty {
                 Panel(stroke: Theme.amber.opacity(0.45)) {
@@ -61,6 +67,7 @@ struct DoorsView: View {
     }
 
     private func press() {
+        guard manages else { return }
         guard let door else { adding = true; return }
         Haptics.tap()
         Task { await doors.setOpen(door, !door.open) }
@@ -89,8 +96,10 @@ struct DoorsView: View {
                             .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
                     }
                     Spacer()
-                    Toggle("Open", isOn: Binding(get: { door.open }, set: { on in Task { await doors.setOpen(door, on) } }))
-                        .labelsHidden().tint(Theme.ok).disabled(doors.busy)
+                    if manages {
+                        Toggle("Open", isOn: Binding(get: { door.open }, set: { on in Task { await doors.setOpen(door, on) } }))
+                            .labelsHidden().tint(Theme.ok).disabled(doors.busy)
+                    }
                 }
                 Text(door.address).scaledFont(15, weight: .medium, design: .monospaced).foregroundColor(Theme.ink).textSelection(.enabled)
                 if door.kind == "email" {
@@ -124,7 +133,7 @@ struct DoorsView: View {
                                 }
                             }
                             Spacer()
-                            if !key.auto {
+                            if !key.auto, manages {
                                 Button("Unpair") { Task { await doors.unpair(door, key) } }
                                     .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
                             }
@@ -132,13 +141,17 @@ struct DoorsView: View {
                     }
                     Text("\(door.how). A message counts as theirs only when that holds; anyone else knocks.")
                         .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                    Button("Pair someone") { pairing = door }.buttonStyle(OutlineButtonStyle())
+                    if manages {
+                        Button("Pair someone") { pairing = door }.buttonStyle(OutlineButtonStyle())
+                    }
                 } else {
                     Text("\(door.how), so no one here can give \(taf.name) work. Everything that comes through knocks.")
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 }
-                Button("Remove door", role: .destructive) { confirmRemove = door }
-                    .scaledFont(14, weight: .medium)
+                if manages {
+                    Button("Remove door", role: .destructive) { confirmRemove = door }
+                        .scaledFont(14, weight: .medium)
+                }
             }
         }
     }

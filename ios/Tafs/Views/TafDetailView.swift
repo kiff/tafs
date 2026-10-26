@@ -66,7 +66,7 @@ struct TafDetailView: View {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
                                 if section == 3, hasDoors(taf), let cloudID = model.cloudTaf(for: taf.id)?.id ?? (Screenshots.enabled ? "sample" : nil) {
-                                    DoorsView(taf: taf, cloud: model.cloud, cloudID: cloudID)
+                                    DoorsView(taf: taf, cloud: model.cloud, cloudID: cloudID, manages: model.manages(taf.id))
                                 } else if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)
@@ -147,7 +147,7 @@ struct TafDetailView: View {
     /// open trial, to resume.
     @ViewBuilder
     private func versionLine(_ taf: Taf) -> some View {
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
             HStack(spacing: 10) {
                 NavigationLink { VersionsScreen(tafID: taf.id) } label: {
                     let live = model.versions[taf.id]?.first(where: \.live)?.n
@@ -252,7 +252,7 @@ struct TafDetailView: View {
         }
         ConnectionsPanel(tafID: taf.id)
         // Halting is a job of its own too: its row opens its screen.
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked {
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked, model.manages(taf.id) {
             HaltRow(tafID: taf.id, framed: true)
         }
         // Its usage is the account's Usage, opened from a row with this taf's count (kiff/tafs#184).
@@ -269,13 +269,13 @@ struct TafDetailView: View {
             .task(id: model.entries(for: taf.id).count) { await model.refreshUsage() }
         }
         // Its versions are a job of their own: their own screen, not another section here.
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
             PanelLink { VersionsScreen(tafID: taf.id) } label: {
                 Label("Versions", systemImage: "square.stack.3d.up")
                     .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
             }
         }
-        if taf.state != .revoked {
+        if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {
             HStack(spacing: 8) {
                 if model.mode == .sample {
                     Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
@@ -285,7 +285,7 @@ struct TafDetailView: View {
                     .buttonStyle(OutlineButtonStyle(color: Theme.no))
             }
         }
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
             Button("Remove for good") { confirmRemove = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
         }

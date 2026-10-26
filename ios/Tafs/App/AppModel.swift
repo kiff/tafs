@@ -1268,6 +1268,25 @@ final class AppModel: ObservableObject {
     /// a hold is offered only to them. A KIFF that doesn't say leaves it to KIFF to decide.
     var canManageCards: Bool { Self.managesCards(kiffAccount?.capabilities) }
 
+    /// Whether this person manages the taf, as KIFF says for it: its Card, versions, doors,
+    /// halting it and removing it. Without KIFF's answer for it yet, the account's role says.
+    /// The app shows only what they can do (the 805 retest: a Viewer saw Halt, Versions,
+    /// Revoke and the doors' controls, each refused only once tapped).
+    func manages(_ tafID: UUID) -> Bool {
+        Self.manages(kiffAgent(for: tafID).flatMap { access[$0] }, capabilities: kiffAccount?.capabilities)
+    }
+
+    nonisolated static func manages(_ access: KIFFClient.Access?, capabilities: [String]?) -> Bool {
+        access?.manage ?? managesCards(capabilities)
+    }
+
+    /// Whether this person may use Coach: as KIFF answers for Setup, an account admin by default.
+    var mayUseCoach: Bool { Self.mayUseCoach(setup: access[Self.setupAgent], capabilities: kiffAccount?.capabilities) }
+
+    nonisolated static func mayUseCoach(setup: KIFFClient.Access?, capabilities: [String]?) -> Bool {
+        setup?.use ?? (capabilities?.contains("members.manage") ?? false)
+    }
+
     nonisolated static func managesCards(_ capabilities: [String]?) -> Bool {
         capabilities.map { $0.contains("cards.manage") } ?? true
     }
