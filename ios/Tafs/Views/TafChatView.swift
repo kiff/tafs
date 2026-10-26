@@ -353,7 +353,15 @@ struct TafChatView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         // Stopped needs no line: the chat is simply ready again (the owner's call, 755 retest).
         case .stopped?, nil:
-            EmptyView()
+            // Stopped at its own cap, with no words: the chat says why (the 793 retest).
+            if let stop = model.chatState(tafID).capped, let words = AppModel.capWords(stop, taf: taf?.name ?? "The taf") {
+                Text(words)
+                    .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(12)
+                    .background(Theme.amber.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
         }
     }
 

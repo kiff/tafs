@@ -395,6 +395,34 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(model.chatState(id).unsent.isEmpty)
     }
 
+    /// A run that stopped at its own cap writes nothing for it: the chat says why, never
+    /// "…" (the 793 retest), and a run at work again clears it.
+    func testARunStoppedAtItsCapSaysSo() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"capped":{"run":"r7","stop":"cost_cap"}}
+        """)
+        await model.loadChat(id)
+        XCTAssertEqual(model.chatState(id).capped, "cost_cap")
+        XCTAssertEqual(AppModel.capWords("cost_cap", taf: "Rae"),
+                       "Rae stopped: this task would cost more than its limit for one task. Ask for something narrower, or someone who manages Rae can raise the limit.")
+        XCTAssertNotNil(AppModel.capWords("turn_cap", taf: "Rae"))
+        XCTAssertNil(AppModel.capWords("answered", taf: "Rae"))
+
+        // A cap the app can't read leaves the thread loading.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"capped":{"stop":7}}
+        """)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatErrors[id])
+
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"working":{"session":"sesn_9","run":"r8"}}
+        """)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatState(id).capped, "a run at work is past it")
+    }
+
     /// A run the owner stopped, or one no stream here saw end (the app reopened), keeps
     /// what it didn't read as not sent, with Retry: the owner decides.
     func testWhatAStoppedRunDidntReadIsNotSent() async throws {
