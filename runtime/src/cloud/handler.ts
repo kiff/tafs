@@ -2538,7 +2538,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   if (name === "taf_run") {
     const runID = str(args.run).trim();
     const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, runID));
-    if (may && !may.oversee && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to read`);
+    // Reading a run is reading a conversation: only one's own, whatever oversee says.
+    if (may && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to read`);
     if (r.trigger === "trial") {
       const t = await agentsCall(() => deps.agents.trial(call.tenant, taf.id, runID));
       return { taf: taf.name, ...runSummary(t.run), writes: t.writes };
@@ -2552,7 +2553,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (running) {
       if (may) {
         const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, running));
-        if (!may.oversee && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to write into`);
+        if (!(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to write into`);
       }
       try {
         // Coach doesn't know yet whose conversation it is in, so it writes as tafs cloud

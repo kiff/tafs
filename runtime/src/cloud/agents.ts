@@ -558,7 +558,7 @@ export class Agents {
     return this.call("GET", tenant, ["sessions", id], undefined, owner ? { owner } : undefined);
   }
 
-  /** Archives a session, or puts it back: with `owner`, only one that is theirs or has no owner. */
+  /** Archives a session, or puts it back: with `owner`, only one that is theirs. */
   async archive(tenant: string, id: string, archived: boolean, owner?: string): Promise<Session> {
     const out = await this.call<{ session: Session }>("POST", tenant, ["sessions", id, archived ? "archive" : "unarchive"], undefined, owner ? { owner } : undefined);
     return out.session;
