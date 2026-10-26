@@ -30,16 +30,21 @@
 #                              main: update both functions' code, nothing else.
 #
 # Everything is named tafs-* and touches nothing of KIFF's own. The functions run in
-# us-east-1; their data (the table and the push key) is in DATA_REGION, eu-west-1,
-# since 25 Oct 2026. The push key is a Secrets Manager replica of us-east-1's.
+# eu-west-1 since 26 Oct 2026, with their data (the table and the push key), which
+# moved on 25 Oct. The push key is a Secrets Manager replica of us-east-1's. The app
+# reaches tafs-cloud at TAFS_PUBLIC_URL (CloudFront, made by hand like planque's:
+# an ACM certificate in us-east-1, DNS in Vercel) and tafs-cloud-stream at its own
+# function URL. The us-east-1 pair stays, on the same code (the deploy workflow
+# updates both), until older app builds stop calling it; then it's deleted.
 # Usage: infra/aws.sh path/to/lambda.zip
 #
 # Applied on 2026-10-14 step by step (each part checked before the next), not by
 # running this file; it records what exists and can repair it.
 set -euo pipefail
 
-REGION=us-east-1
+REGION=eu-west-1
 DATA_REGION=eu-west-1
+TAFS_PUBLIC_URL=https://cloud.tafs.kiff.dev
 FN=tafs-cloud
 SECRET=tafs/anthropic-api-key
 APNS_SECRET=tafs/apns-key
@@ -158,7 +163,7 @@ LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn -
 # The function.
 AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
 AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
-ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,NODE_OPTIONS=--enable-source-maps$DOORS_ENV}"
+ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

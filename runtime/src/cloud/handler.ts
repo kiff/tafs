@@ -149,6 +149,12 @@ export interface Deps {
   events?: EventLog;
   fetch?: Fetch;
   kiffBase?: string;
+  /**
+   * tafs cloud's own address as its callers name it, e.g. https://cloud.tafs.kiff.dev.
+   * Behind CloudFront the request's host is the function's, so Coach's MCP audience
+   * and the run notices use this. Unset: the request's host.
+   */
+  publicURL?: string;
   now?: () => Date;
   /** Waits, between a switch's tries while what blocks it stops (tests pass one that doesn't). */
   sleep?: (ms: number) => Promise<void>;
@@ -2735,19 +2741,20 @@ let kiffPermitKeys: PermitKeys | undefined;
 /**
  * POST /v1/mcp: Coach's tools, reached only through KIFF's gateway, each call
  * with KIFF's permit (coach.ts). The audience is this server as the
- * connection names it: its own host, which a function URL can't be called
- * under any other.
+ * connection names it: its public address when set, else its own host, which
+ * a function URL can't be called under any other.
  */
 async function mcpRoute(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   const host = event.headers?.host ?? event.headers?.Host;
-  if (!deps.coach || !host || event.requestContext.http.method.toUpperCase() !== "POST") throw new HTTPError(404, "not found");
+  const self = deps.publicURL ?? (host ? `https://${host}` : "");
+  if (!deps.coach || !self || event.requestContext.http.method.toUpperCase() !== "POST") throw new HTTPError(404, "not found");
   const issuer = deps.kiffBase ?? KIFF_API;
   kiffPermitKeys ??= publishedKeys(`${issuer}/.well-known/kiff-permit-keys.json`, deps.fetch);
   const headers: Record<string, string | undefined> = {};
   for (const [k, v] of Object.entries(event.headers ?? {})) headers[k.toLowerCase()] = v;
   const r = await serveMCP(rawBody(event), headers, {
-    audience: `https://${host}/v1/mcp`, issuer, keys: deps.permitKeys ?? kiffPermitKeys, store: deps.coach,
-    coachOf: (tenant) => coachOf(tenant, deps), notifyURL: `https://${host}/v1/runs/ended`,
+    audience: `${self}/v1/mcp`, issuer, keys: deps.permitKeys ?? kiffPermitKeys, store: deps.coach,
+    coachOf: (tenant) => coachOf(tenant, deps), notifyURL: `${self}/v1/runs/ended`,
     run: (name, args, call) => coachTool(name, args, call, deps),
     now: deps.now ?? (() => new Date()), log: (msg, err) => console.error(`${msg}:`, err),
   });

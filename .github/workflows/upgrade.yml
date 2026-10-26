@@ -62,7 +62,7 @@ jobs:
         with:
           # The account id stays out of this public repository.
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
-          aws-region: us-east-1
+          aws-region: eu-west-1
       - name: Upgrade the definitions
         env:
           DRY_RUN: ${{ inputs.dry_run }}
