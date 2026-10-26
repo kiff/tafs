@@ -207,6 +207,10 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const bo = await w.tool("taf_task", { taf: RAE, text: "Refund order 43" }, { act: "u_bo" });
     expect(bo).toMatchObject({ isError: true, text: expect.stringContaining("isn't shared with them") });
     expect((await w.tool("tafs_state", {}, { act: "u_bo" })).json.tafs).toEqual([]);
+    // Max oversees it, but no one reads or writes into another person's run: only stops it.
+    expect(await w.tool("taf_run", { taf: RAE, run: run.id }, { act: "u_max" })).toMatchObject({ isError: true, text: expect.stringContaining("isn't theirs to read") });
+    expect(await w.tool("taf_task", { taf: RAE, text: "and refund 43 too", run: run.id }, { act: "u_max" })).toMatchObject({ isError: true, text: expect.stringContaining("isn't theirs to write into") });
+    expect((await w.tool("taf_run", { taf: RAE, run: run.id }, { act: "u_ana" })).isError).toBe(false);
     // Bo can't stop Ana's run; Max, who oversees, can.
     expect(await w.tool("run_stop", { taf: RAE, run: run.id }, { act: "u_bo" })).toMatchObject({ isError: true, text: expect.stringContaining("isn't theirs to stop") });
     expect((await w.tool("run_stop", { taf: RAE, run: run.id }, { act: "u_max" })).json).toMatchObject({ status: "CANCELLED" });

@@ -20,9 +20,6 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const aiSent: Array<AIBound | undefined> = [];
   /** Where each run asked to be announced (kiff/tafs#206), by run. */
   const notified = new Map<string, Notify>();
-  /** Read grants kiff/agents would resolve, by grant: who reads whose sessions, and which one ("" for the list). */
-  const readGrants = new Map<string, { reader: string; owner: string; session: string }>();
-  const noOversight = () => new AgentsError(403, "no_access");
   const fairUse = (tenant: string, ai: AIBound | undefined) => {
     aiSent.push(ai);
     if (ai && ai.bound_micro_usd > 0 && (spent.get(`${tenant} ${ai.period}`) ?? 0) >= ai.bound_micro_usd) {
@@ -48,6 +45,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     const err = fail.get(method);
     if (err) { fail.delete(method); throw err; }
   };
+  /** As kiff/agents decides it: a chat is only its owner's; any other session with no owner (a job's, a trial's) is the taf's. */
+  const ownedBy = (s: Session, owner: string) => s.owner === owner || (!s.owner && s.kind !== "chat");
   const openSession = (tenant: string, agent: string, kind: Session["kind"]) => {
     const at = now().toISOString();
     const s: Session & { tenant: string } = { tenant, id: `sess${++n}`, agent, kind, started: at, updated: at };
@@ -66,7 +65,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     }
     if (at.session) {
       const found = sessions.find((x) => x.tenant === tenant && x.id === at.session);
-      if (!found || found.agent !== agent || (found.owner && found.owner !== owner)) throw gone();
+      if (!found || found.agent !== agent || !ownedBy(found, owner)) throw gone();
       return { session: found.id, opened: false };
     }
     if (at.live && owner) {
@@ -310,34 +309,19 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     },
     async sessions(tenant, agent, limit = 20, owner) {
       failing("sessions");
-      return sessions.filter((s) => s.tenant === tenant && s.agent === agent && (!owner || !s.owner || s.owner === owner))
+      return sessions.filter((s) => s.tenant === tenant && s.agent === agent && (!owner || ownedBy(s, owner)))
         .sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, limit);
-    },
-    async readSessions(tenant, agent, limit, read) {
-      calls.push(`read sessions ${agent} ${read.owner} by ${read.reader}`);
-      const g = readGrants.get(read.grant);
-      if (!g || `member:${g.owner}` !== read.owner || g.session !== "" || `member:${g.reader}` !== read.reader) throw noOversight();
-      return sessions.filter((s) => s.tenant === tenant && s.agent === agent && (!s.owner || s.owner === read.owner))
-        .sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, limit);
-    },
-    async readSession(tenant, id, read) {
-      calls.push(`read session ${id} ${read.owner} by ${read.reader}`);
-      const s = sessions.find((x) => x.tenant === tenant && x.id === id);
-      if (!s || (s.owner && s.owner !== read.owner)) throw gone();
-      const g = readGrants.get(read.grant);
-      if (!g || `member:${g.owner}` !== read.owner || g.session !== id || `member:${g.reader}` !== read.reader) throw noOversight();
-      return { session: s, events: events.get(id) ?? [] };
     },
     async session(tenant, id, owner) {
       const s = sessions.find((x) => x.tenant === tenant && x.id === id);
-      if (!s || (owner && s.owner && s.owner !== owner)) throw gone();
+      if (!s || (owner && !ownedBy(s, owner))) throw gone();
       return { session: s, events: events.get(id) ?? [] };
     },
     async archive(tenant, id, archived, owner) {
       calls.push(`${archived ? "archive" : "unarchive"} ${id}`);
       failing("archive");
       const s = sessions.find((x) => x.tenant === tenant && x.id === id);
-      if (!s || (owner && s.owner && s.owner !== owner)) throw gone();
+      if (!s || (owner && s.owner !== owner)) throw gone();
       s.archived = archived;
       return { ...s };
     },
@@ -466,7 +450,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, spent, aiSent, notified, readGrants, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, halts, trials };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, halts, trials };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

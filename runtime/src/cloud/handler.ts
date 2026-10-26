@@ -35,8 +35,6 @@ import { type EventLog, logEvent } from "./events.js";
  *   GET  /v1/tafs/{id}/conversation/{session}  one chat of it (kiff/tafs#73)
  *   GET  /v1/tafs/{id}/chats            the taf's chats, newest first, each by what the owner asked (kiff/tafs#73, #82)
  *   POST /v1/tafs/{id}/chats/{session}/archive  hide a chat from the list and the thread (kiff/tafs#82)
- *   GET  /v1/tafs/{id}/people/{subject}/chats  another person's chats with the taf, their times only, with KIFF's read grant (Kiff-Read-Grant)
- *   GET  /v1/tafs/{id}/people/{subject}/conversation/{session}  one of them, read only, with a read grant naming it
  *   GET  /v1/tafs/{id}/chats/archived   the chats the owner archived, to find and reopen one (kiff/tafs#97)
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
  *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
@@ -96,7 +94,7 @@ export interface HTTPResult {
 
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
-  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "readSessions" | "readSession" | "archive" | "memories" | "forget" |
+  "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -413,7 +411,6 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const taf = await owned(me, parts[2] ?? "", deps);
   const action = parts[3];
   if (action === "doors") return doorRoute(event, method, parts, me, taf, deps);
-  if (action === "people") return peopleRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && action === "halt") return haltRoute(event, method, me, taf, deps);
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume" || action === "run") && taf.unscheduled) {
     throw new HTTPError(409, `${taf.name} works from its chat: it has no schedule to ${action === "run" ? "run" : action}. Tell it what to do there`);
@@ -1801,51 +1798,6 @@ function member(me: KIFFIdentity): Requester {
   return { kind: "member", id: me.subject };
 }
 
-/**
- * Another person's chats with the taf, read with a read grant: KIFF recorded the read and
- * signed the grant for this person, and kiff/agents resolves it before serving anything,
- * so tafs cloud never reads anyone else's chats on its own. The list has each chat's times,
- * not its title, which is the person's own words: opening a chat takes a grant naming it.
- * A chat comes back read only, without steering lines or a door's knocks.
- */
-async function peopleRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
-  const subject = parts[4] ?? "";
-  const chatsRoute = parts.length === 6 && parts[5] === "chats";
-  const chatRoute = parts.length === 7 && parts[5] === "conversation";
-  if (method !== "GET" || (!chatsRoute && !chatRoute)) throw new HTTPError(404, "not found");
-  const grant = header(event, "kiff-read-grant").trim();
-  if (!grant) throw new HTTPError(400, "reading another person's chats takes KIFF's read grant (Kiff-Read-Grant)");
-  if (!READER_ID.test(subject)) throw new HTTPError(400, "the person is a KIFF subject");
-  if (subject === me.subject) throw new HTTPError(400, "your own chats are at /chats");
-  const read = { owner: `member:${subject}`, reader: ownerKey(me), grant };
-  // kiff/agents' refusal of the grant, as the app reads it.
-  const refused = (err: unknown): never => {
-    if (err instanceof HTTPError && err.status === 403) throw new HTTPError(403, "no_access", { need: "oversee" });
-    throw err;
-  };
-  if (chatsRoute) {
-    const all = await agentsCall(() => deps.agents.readSessions(me.tenantID, taf.id, CHAT.sessionsScanned, read)).catch(refused);
-    const chats = all.filter((s) => s.kind === "chat" && s.owner === read.owner).slice(0, CHAT.chatsListed);
-    return { person: subject, chats: chats.map((s) => ({ session: s.id, started: iso(s.started), updated: iso(s.updated) })) };
-  }
-  const { session, events } = await agentsCall(() => deps.agents.readSession(me.tenantID, parts[6] ?? "", read)).catch(refused);
-  if (session.kind !== "chat" || session.owner !== read.owner || session.agent !== taf.id) throw new HTTPError(404, "not found");
-  const messages: ThreadMessage[] = [];
-  for (const e of events) {
-    if (e.kind !== "owner_message" && e.kind !== "agent_message" && e.kind !== "report") continue;
-    const text = typeof (e.body as { text?: unknown })?.text === "string" ? ((e.body as { text: string }).text).trim() : "";
-    if (!text) continue;
-    messages.push(e.kind === "owner_message"
-      ? { at: iso(e.time), from: "owner", kind: "message", text: ownerWords(text), session: session.id }
-      : { at: iso(e.time), from: "taf", kind: "message", text, session: session.id });
-  }
-  messages.sort((a, b) => a.at.localeCompare(b.at));
-  return { person: subject, session: session.id, read_only: true, messages: messages.slice(-CHAT.maxThread) };
-}
-
-/** A KIFF subject as a path segment: letters, digits and _ . - only. */
-const READER_ID = /^[A-Za-z0-9_.-]{1,128}$/;
-
 /** The person as a session's owner, as kiff/agents writes it. */
 function ownerKey(me: KIFFIdentity): string {
   return `member:${me.subject}`;
@@ -2586,7 +2538,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   if (name === "taf_run") {
     const runID = str(args.run).trim();
     const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, runID));
-    if (may && !may.oversee && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to read`);
+    // Reading a run is reading a conversation: only one's own, whatever oversee says.
+    if (may && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to read`);
     if (r.trigger === "trial") {
       const t = await agentsCall(() => deps.agents.trial(call.tenant, taf.id, runID));
       return { taf: taf.name, ...runSummary(t.run), writes: t.writes };
@@ -2600,7 +2553,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (running) {
       if (may) {
         const r = await agentsCall(() => deps.agents.getRun(call.tenant, taf.id, running));
-        if (!may.oversee && !(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to write into`);
+        if (!(may.use && theirs(r))) throw new ToolRefusal(`that run of ${taf.name} isn't theirs to write into`);
       }
       try {
         // Coach doesn't know yet whose conversation it is in, so it writes as tafs cloud
