@@ -1123,6 +1123,60 @@ final class KIFFClient {
         return answer.agents
     }
 
+    // MARK: Reading another person's work
+
+    /// Why someone reads another person's work, as KIFF records it.
+    enum ReadPurpose: String, CaseIterable, Codable, Identifiable {
+        case followUp = "follow_up", fix, concern
+        var id: String { rawValue }
+        var words: String {
+            switch self {
+            case .followUp: return "Follow up the work"
+            case .fix: return "Fix a problem"
+            case .concern: return "Look into a concern"
+            }
+        }
+    }
+
+    /// One read of someone's work, as KIFF recorded it.
+    struct Read: Decodable, Identifiable, Equatable {
+        let id: String
+        let reader: String
+        let owner: String
+        let agent: String
+        var session: String? = nil
+        let purpose: String
+        var note: String? = nil
+        let at: Date
+
+        var purposeWords: String { ReadPurpose(rawValue: purpose)?.words ?? purpose }
+    }
+
+    /// KIFF's read grant: it checked this person may read the owner's work and recorded the
+    /// read, with its purpose, before giving it. Without a session it lists their chats only.
+    struct ReadGrant: Decodable, Equatable {
+        let grant: String
+        let expiresAt: Date
+        enum CodingKeys: String, CodingKey { case grant, expiresAt = "expires_at" }
+    }
+
+    func requestRead(agent: String, owner: String, session: String? = nil, purpose: ReadPurpose, note: String? = nil) async throws -> ReadGrant {
+        struct Body: Encodable {
+            let agent: String, owner: String, purpose: String
+            var session: String? = nil
+            var note: String? = nil
+        }
+        return try await send("POST", "/v1/oversight/reads",
+                              body: Body(agent: agent, owner: owner, purpose: purpose.rawValue, session: session, note: note))
+    }
+
+    /// Who read this person's work, when and why, newest first.
+    func myReads() async throws -> [Read] {
+        struct List: Decodable { let reads: [Read] }
+        let list: List = try await send("GET", "/v1/me/oversight-reads")
+        return list.reads
+    }
+
     // MARK: Transport
 
     private struct Empty: Decodable {}

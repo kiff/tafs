@@ -559,6 +559,30 @@ final class TafsCloud {
         return r.chats
     }
 
+    /// The header carrying KIFF's read grant: its word that this person may read another
+    /// person's work, recorded by KIFF before it gave it.
+    static let readGrantHeader = "Kiff-Read-Grant"
+
+    /// Another person's chats with the taf, by their times only, with KIFF's read grant for
+    /// their list.
+    func peopleChats(_ id: String, person: String, grant: String) async throws -> [Chat] {
+        // Times only: a chat's title is the person's own first words, which a list read
+        // doesn't show.
+        struct Item: Decodable { let session: String; let started: Date; let updated: Date }
+        struct Response: Decodable { let chats: [Item] }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/people/\(escaped(person))/chats",
+                                         headers: [Self.readGrantHeader: grant])
+        return r.chats.map { Chat(session: $0.session, started: $0.started, updated: $0.updated, title: "") }
+    }
+
+    /// One of another person's chats, read only, with KIFF's read grant naming it.
+    func personConversation(_ id: String, person: String, session: String, grant: String) async throws -> [ChatMessage] {
+        struct Response: Decodable { let messages: [ChatMessage] }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/people/\(escaped(person))/conversation/\(escaped(session))",
+                                         headers: [Self.readGrantHeader: grant])
+        return r.messages
+    }
+
     /// Archives one of the taf's chats (kiff/tafs#82): tafs cloud leaves it out of `chats`
     /// and the thread from then on. It isn't deleted.
     func archiveChat(_ id: String, session: String) async throws {
@@ -1029,11 +1053,11 @@ final class TafsCloud {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
 
-    func send<T: Decodable>(_ method: String, _ path: String) async throws -> T {
-        try await send(method, path, body: Optional<[String: String]>.none)
+    func send<T: Decodable>(_ method: String, _ path: String, headers: [String: String] = [:]) async throws -> T {
+        try await send(method, path, body: Optional<[String: String]>.none, headers: headers)
     }
 
-    func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?) async throws -> T {
+    func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, headers: [String: String] = [:]) async throws -> T {
         guard let url = URL(string: path, relativeTo: baseURL) else { throw CloudError(status: 0, message: "Bad path") }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -1043,6 +1067,7 @@ final class TafsCloud {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONEncoder().encode(body)
         }
+        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
