@@ -224,6 +224,36 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertEqual(model.tafName(agent: "rae-k3f9"), "Rae")
     }
 
+    /// Reading another person's work asks KIFF first, with why: unsigned, as it grants
+    /// nothing to act. tafs cloud gets only KIFF's grant, in a header, never in the URL.
+    func testReadingAnothersWorkAsksKIFFFirst() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer)
+        StubProtocol.responses["POST /v1/oversight/reads"] = (200, #"{"grant":"krd_1","expires_at":"2026-10-26T04:10:00Z","read":{"id":"rd_1","reader":"ada","owner":"user_luis","agent":"rae-k3f9","purpose":"fix","at":"2026-10-26T04:00:00Z"}}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/people/user_luis/chats"] = (200, #"{"chats":[{"session":"s1","started":"2026-10-26T03:00:00Z","updated":"2026-10-26T03:10:00Z","title":"Bulk refunds"}]}"#)
+        StubProtocol.responses["GET /v1/me/oversight-reads"] = (200, #"{"reads":[{"id":"rd_1","reader":"ada","owner":"user_luis","agent":"rae-k3f9","purpose":"fix","note":"the refund failed","at":"2026-10-26T04:00:00Z"}]}"#)
+
+        let grant = try await model.kiff.requestRead(agent: "rae-k3f9", owner: "user_luis", purpose: .fix, note: "the refund failed")
+        XCTAssertEqual(grant.grant, "krd_1")
+        let ask = try XCTUnwrap(sent("POST", "/v1/oversight/reads").first)
+        XCTAssertNil(ask.value(forHTTPHeaderField: "KIFF-Device-Signature"), "a read grants nothing to act")
+        let body = try XCTUnwrap(ask.httpBody)
+        let sentBody = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(sentBody["purpose"] as? String, "fix")
+        XCTAssertEqual(sentBody["owner"] as? String, "user_luis")
+        XCTAssertNil(sentBody["session"], "a list read names no chat")
+
+        let chats = try await model.cloud.peopleChats("depl_1", person: "user_luis", grant: grant.grant)
+        XCTAssertEqual(chats.map(\.title), ["Bulk refunds"])
+        let list = try XCTUnwrap(sent("GET", "/v1/tafs/depl_1/people/user_luis/chats").first)
+        XCTAssertEqual(list.value(forHTTPHeaderField: "Kiff-Read-Grant"), "krd_1")
+        XCTAssertNil(list.url?.query, "the grant stays out of the URL")
+
+        let reads = try await model.kiff.myReads()
+        XCTAssertEqual(reads.first?.purposeWords, "Fix a problem")
+        XCTAssertEqual(reads.first?.note, "the refund failed")
+    }
+
     func testWhatGrantsAuthority() {
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/me/agent-drafts/drf_1/confirm"), "issuing a Card, or starting a trial")
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/resume"))
