@@ -584,10 +584,10 @@ export class Agents {
   }
 
   /** Forgets one note. Already gone counts as done. */
-  /** Forgets a note: the shared one of that name, or with `scope`, that requester's own. */
+  /** Forgets a note: with `scope`, that requester's own, as them; without, the shared one of that name, as the service. */
   async forget(tenant: string, agent: string, name: string, scope?: string): Promise<void> {
     if (!name || name === "." || name === "..") throw new AgentsError(404, "no such note");
-    await this.call("DELETE", tenant, ["agents", agent, "memories", { text: name }], undefined, scope ? { scope } : undefined).catch(notFound);
+    await this.call("DELETE", tenant, ["agents", agent, "memories", { text: name }], undefined, scope ? { scope, owner: scope } : { ...AS_SERVICE }).catch(notFound);
   }
 
   // Halts. No agent is the account itself.
