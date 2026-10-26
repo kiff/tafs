@@ -409,12 +409,25 @@ final class ChatTests: XCTestCase {
         XCTAssertNotNil(AppModel.capWords("turn_cap", taf: "Rae"))
         XCTAssertNil(AppModel.capWords("answered", taf: "Rae"))
 
-        // A cap the app can't read leaves the thread loading.
+        // A cap the app can't read leaves the thread loading, and shows nothing.
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
         {"messages":[],"capped":{"stop":7}}
         """)
         await model.loadChat(id)
         XCTAssertNil(model.chatErrors[id])
+        XCTAssertNil(model.chatState(id).capped)
+
+        // The latest run answered since, unseen here: the thread has no cap, and nor does the chat.
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[],"capped":{"run":"r7","stop":"cost_cap"}}
+        """)
+        await model.loadChat(id)
+        XCTAssertEqual(model.chatState(id).capped, "cost_cap")
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[]}
+        """)
+        await model.loadChat(id)
+        XCTAssertNil(model.chatState(id).capped, "an answered run leaves no stale line")
 
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
         {"messages":[],"working":{"session":"sesn_9","run":"r8"}}

@@ -2428,10 +2428,9 @@ final class AppModel: ObservableObject {
             chatStates[tafID, default: ChatState()].working = thread.working
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
-            // tafs cloud says when the latest run stopped at a cap; a run at work is past it. Sending
-            // clears it too.
-            if let capped = thread.capped, thread.working == nil { chatStates[tafID]?.capped = capped.stop }
-            else if thread.working != nil { chatStates[tafID]?.capped = nil }
+            // The thread is the source: tafs cloud says when the latest run stopped at a cap, and a
+            // run at work, or one that answered since, is past it.
+            chatStates[tafID]?.capped = thread.working == nil ? thread.capped?.stop : nil
             settleChatAwaiting(tafID)
             settleSteering(tafID)
         case .failure(let error):
