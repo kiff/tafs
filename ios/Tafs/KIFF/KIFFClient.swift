@@ -68,6 +68,15 @@ final class KIFFClient {
     static func signsSetup(_ path: String) -> Bool {
         if signedSetupPaths.contains(path) { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        // Groups and sharing: each change is the person's act behind Face ID.
+        // A group, renamed or deleted (/v1/groups/{id}), or its people
+        // (/v1/groups/{id}/members/{subject}); who a taf is shared with
+        // (/v1/agents/{id}/grants, with ?group= or ?subject= on a removal).
+        if path == "/v1/groups" { return true }
+        if path.hasPrefix("/v1/groups/") && (parts.count == 4 || (parts.count == 6 && parts[4] == "members")) && !parts[3].isEmpty { return true }
+        let bare = path.split(separator: "?", maxSplits: 1).first.map(String.init) ?? path
+        let bareParts = bare.split(separator: "/", omittingEmptySubsequences: false)
+        if bareParts.count == 5 && bare.hasPrefix("/v1/agents/") && bareParts[4] == "grants" && !bareParts[3].isEmpty { return true }
         if parts.count == 6 && path.hasPrefix("/v1/me/pack-requests/") && parts[5] == "decline" && !parts[4].isEmpty { return true }
         // Resuming a halted agent, or the whole account: it gives authority back.
         if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
@@ -84,6 +93,8 @@ final class KIFFClient {
         guard method == "POST" else { return false }
         if path == "/v1/me/agent-drafts" { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        // Sharing a taf gives people its use. Taking it away is the current key.
+        if parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "grants" && !parts[3].isEmpty { return true }
         if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
         return parts.count == 6 && path.hasPrefix("/v1/me/agent-drafts/") && parts[5] == "confirm" && !parts[4].isEmpty
     }
@@ -1004,9 +1015,121 @@ final class KIFFClient {
         let _: Empty = try await send("POST", "/v1/me/delete", body: [String: String]())
     }
 
+    // MARK: Groups and sharing
+
+    /// A group of the account's people: its manager sees the group's work on the tafs it
+    /// uses; its members use them. Everyone is the group KIFF made of the account's people
+    /// when groups arrived, so no one lost a taf.
+    struct Group: Decodable, Identifiable, Equatable, Hashable {
+        let id: String
+        let name: String
+        var everyone: Bool? = nil
+        var members: [GroupMember] = []
+        /// The KIFF agents the group is shared.
+        var agents: [String] = []
+
+        var managers: [GroupMember] { members.filter(\.isManager) }
+    }
+
+    struct GroupMember: Codable, Equatable, Hashable {
+        let subject: String
+        /// manager or member.
+        let role: String
+        var isManager: Bool { role == "manager" }
+    }
+
+    /// One of the account's people, as KIFF lists them. KIFF names them by email.
+    struct Person: Decodable, Identifiable, Equatable, Hashable {
+        let subject: String
+        let role: String
+        let status: String
+        var email: String? = nil
+        var you: Bool? = nil
+        var id: String { subject }
+        var active: Bool { status == "active" }
+        /// What the app shows: their email, else KIFF's id for them.
+        var label: String { email.flatMap { $0.isEmpty ? nil : $0 } ?? subject }
+    }
+
+    /// Who a taf is shared with: a group, or one person.
+    struct Share: Codable, Equatable, Hashable {
+        var group: String? = nil
+        var subject: String? = nil
+    }
+
+    /// What a person may do with a taf, as KIFF answers it: use it, see everyone's work with
+    /// it, change it.
+    struct Access: Decodable, Equatable {
+        var use = false
+        var oversee = false
+        var manage = false
+        var groups: [String]? = nil
+    }
+
+    func groups() async throws -> [Group] {
+        struct List: Decodable { let groups: [Group] }
+        let list: List = try await send("GET", "/v1/groups")
+        return list.groups
+    }
+
+    func people() async throws -> [Person] {
+        struct List: Decodable { let members: [Person] }
+        let list: List = try await send("GET", "/v1/tenant/members")
+        return list.members
+    }
+
+    @discardableResult
+    func createGroup(name: String) async throws -> Group {
+        try await send("POST", "/v1/groups", body: ["name": name])
+    }
+
+    func renameGroup(_ id: String, to name: String) async throws {
+        let _: Empty = try await send("PATCH", "/v1/groups/\(escaped(id))", body: ["name": name])
+    }
+
+    func deleteGroup(_ id: String) async throws {
+        let _: Empty = try await send("DELETE", "/v1/groups/\(escaped(id))", body: [String: String]())
+    }
+
+    /// Adds someone to a group, or changes their role in it: manager or member.
+    func setGroupMember(_ group: String, subject: String, role: String) async throws {
+        let _: Empty = try await send("PUT", "/v1/groups/\(escaped(group))/members/\(escaped(subject))", body: ["role": role])
+    }
+
+    func removeGroupMember(_ group: String, subject: String) async throws {
+        let _: Empty = try await send("DELETE", "/v1/groups/\(escaped(group))/members/\(escaped(subject))", body: [String: String]())
+    }
+
+    /// Who a taf's KIFF agent is shared with.
+    func shares(agent: String) async throws -> [Share] {
+        struct List: Decodable { let grants: [Share] }
+        let list: List = try await send("GET", "/v1/agents/\(escaped(agent))/grants")
+        return list.grants
+    }
+
+    func share(agent: String, with share: Share) async throws {
+        let _: Empty = try await send("POST", "/v1/agents/\(escaped(agent))/grants", body: share)
+    }
+
+    func unshare(agent: String, from share: Share) async throws {
+        let query = share.group.map { "group=\(escapedQuery($0))" } ?? share.subject.map { "subject=\(escapedQuery($0))" } ?? ""
+        let _: Empty = try await send("DELETE", "/v1/agents/\(escaped(agent))/grants?\(query)", body: [String: String]())
+    }
+
+    /// What this person may do with each of the account's agents, by KIFF agent.
+    func myAccess() async throws -> [String: Access] {
+        struct Answer: Decodable { let agents: [String: Access] }
+        let answer: Answer = try await send("GET", "/v1/me/access")
+        return answer.agents
+    }
+
     // MARK: Transport
 
     private struct Empty: Decodable {}
+
+    private func escapedQuery(_ s: String) -> String {
+        s.addingPercentEncoding(withAllowedCharacters: .alphanumerics.union(CharacterSet(charactersIn: "-._~"))) ?? s
+    }
 
     private func escaped(_ s: String) -> String {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
@@ -1051,7 +1174,7 @@ final class KIFFClient {
         let signer = signedBy ?? setupSigner.map { current in
             base == nil && Self.grantsAuthority(method, path) ? (approvalSigner ?? current) : current
         }
-        if method == "POST" || method == "PUT" || method == "DELETE", signed, let signer, let tenant {
+        if ["POST", "PUT", "PATCH", "DELETE"].contains(method), signed, let signer, let tenant {
             let signedAt = SigningTime.next()
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
             let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)

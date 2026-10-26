@@ -48,6 +48,13 @@ final class AppModel: ObservableObject {
     @Published private(set) var countedTasks: [KIFFClient.CountedTask] = []
     /// Why usage couldn't be read.
     @Published private(set) var usageError: String?
+    /// The account's groups, its people and what KIFF says this person may do with each taf,
+    /// once read: the app shows what KIFF says and decides nothing itself.
+    @Published private(set) var groups: [KIFFClient.Group] = []
+    @Published private(set) var people: [KIFFClient.Person] = []
+    @Published private(set) var access: [String: KIFFClient.Access] = [:]
+    /// Why they couldn't be read, or a change didn't go through.
+    @Published private(set) var peopleError: String?
     /// Buying Solo and task packs through the App Store.
     let purchases: Purchases
     /// What happened to the last purchase, request or answer, when there's something to say.
@@ -382,6 +389,7 @@ final class AppModel: ObservableObject {
         setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
+        groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
         tafs = []; otherAgents = []; held = []; record = []; decided = [:]
@@ -453,6 +461,71 @@ final class AppModel: ObservableObject {
         Keychain.delete(Self.approvalKeyedAccount)
     }
 
+    // MARK: People, groups and sharing
+
+    /// Whether this person may make and change groups (KIFF's members.manage).
+    var canManagePeople: Bool { kiffAccount?.capabilities?.contains("members.manage") ?? false }
+
+    /// This person, as KIFF lists the account's people.
+    var me: KIFFClient.Person? { people.first { $0.you == true } }
+
+    /// Whether this person may change a group's people: members.manage, or its manager.
+    func managesGroup(_ group: KIFFClient.Group) -> Bool {
+        canManagePeople || group.members.contains { $0.subject == me?.subject && $0.isManager }
+    }
+
+    func person(_ subject: String) -> KIFFClient.Person? { people.first { $0.subject == subject } }
+
+    /// The taf a KIFF agent is, by its name; nil for an agent the app doesn't list.
+    func tafName(agent: String) -> String? {
+        holderIDs[agent].flatMap { taf($0)?.name }
+    }
+
+    /// Reads the account's groups, its people and this person's access to each taf.
+    func refreshPeople() async {
+        guard mode == .kiff else { groups = []; people = []; access = [:]; return }
+        let gen = accountGeneration
+        do {
+            async let g = kiff.groups()
+            async let p = kiff.people()
+            async let a = kiff.myAccess()
+            let (groups, people, access) = try await (g, p, a)
+            guard gen == accountGeneration else { return }
+            self.groups = groups.sorted { ($0.everyone == true ? 0 : 1, $0.name.lowercased()) < ($1.everyone == true ? 0 : 1, $1.name.lowercased()) }
+            self.people = people.filter(\.active).sorted { $0.label.lowercased() < $1.label.lowercased() }
+            self.access = access
+            peopleError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            peopleError = "People and groups couldn't be read: \(error.localizedDescription)"
+        }
+    }
+
+    /// Makes one change to groups or sharing, behind Face ID as KIFF asks of a phone, then
+    /// reads them again. `what` is said at the prompt. False when it didn't go through.
+    @discardableResult
+    func changePeople(_ what: String, _ change: @MainActor (KIFFClient) async throws -> Void) async -> Bool {
+        guard mode == .kiff, let tenant = kiffTenant else { return false }
+        let gen = accountGeneration
+        peopleError = nil
+        do { _ = try await signer.sign(Data("tafs.people.v1|\(tenant)|\(what)".utf8), reason: what) } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            try await change(kiff)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            peopleError = "\(what) didn't go through: \(error.localizedDescription)"
+            await refreshPeople()
+            return false
+        }
+        await refreshPeople()
+        return true
+    }
+
     func signOut() async {
         if mode == .kiff, let pushToken { try? await cloud.unregisterPush(deviceToken: pushToken) }
         if mode == .kiff { try? await kiff.signOut() }
@@ -478,6 +551,7 @@ final class AppModel: ObservableObject {
         setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
+        groups = []; people = []; access = [:]; peopleError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
         accountGeneration += 1

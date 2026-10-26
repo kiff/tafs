@@ -131,6 +131,10 @@ struct TafDetailView: View {
                 Text(taf.tools.isEmpty ? "No tools yet" : taf.tools.joined(separator: " · "))
                     .scaledFont(13).foregroundColor(Theme.dim)
                 versionLine(taf)
+                #if os(iOS)
+                // Who it's shared with, and Share.
+                ShareLine(tafID: taf.id)
+                #endif
             }
             Spacer()
             StateChip(state: taf.state)
