@@ -128,8 +128,6 @@ struct SettingsView: View {
                     // The account's groups and who is in each.
                     if model.mode == .kiff {
                         NavigationLink(PeopleGroupsView.title, destination: PeopleGroupsView().environmentObject(model))
-                        // Each time someone read this person's work, and why.
-                        NavigationLink(WhoReadMyWorkView.title, destination: WhoReadMyWorkView().environmentObject(model))
                     }
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }

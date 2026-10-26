@@ -48,10 +48,6 @@ struct TafChatView: View {
                     Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
                 }
-                #if os(iOS)
-                // On a shared taf: who can read this chat, and that the person sees each time.
-                ReadNotice(tafID: tafID).padding(.horizontal, 16).padding(.bottom, 4)
-                #endif
                 composer
                 #if os(iOS)
                 DictationBar(dictation: model.dictation)

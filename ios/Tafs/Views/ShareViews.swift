@@ -20,11 +20,6 @@ struct ShareLine: View {
                 if model.access[agent]?.manage == true {
                     Button("Share") { sharing = true }.scaledFont(13, weight: .semibold)
                 }
-                // Someone who oversees it reads people's work with it, through KIFF.
-                if model.access[agent]?.oversee == true, shares?.isEmpty == false {
-                    NavigationLink("People's work") { PeoplesWorkView(taf: taf, agent: agent).environmentObject(model) }
-                        .scaledFont(13, weight: .semibold)
-                }
             }
             .task(id: model.groups) { shares = try? await model.kiff.shares(agent: agent) }
             .task { if model.groups.isEmpty && model.people.isEmpty { await model.refreshPeople() } }

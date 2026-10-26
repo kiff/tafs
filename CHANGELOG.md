@@ -50,6 +50,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- No one reads another person's chats: People's work, the notice that a chat can be read,
+  and Settings → Who read my work are gone. Your chats with a shared taf are yours alone.
 - From the device test of build 793, on an iPad:
   - A held call's card waits in the chat for the taf's words that explain it, at
     most 45 seconds, instead of showing alone under your message first. Needs you
