@@ -230,7 +230,7 @@ final class ApprovalKeyTests: XCTestCase {
         let signer = TwoKeySigner()
         let model = await signedIn(signer)
         StubProtocol.responses["POST /v1/oversight/reads"] = (200, #"{"grant":"krd_1","expires_at":"2026-10-26T04:10:00Z","read":{"id":"rd_1","reader":"ada","owner":"user_luis","agent":"rae-k3f9","purpose":"fix","at":"2026-10-26T04:00:00Z"}}"#)
-        StubProtocol.responses["GET /v1/tafs/depl_1/people/user_luis/chats"] = (200, #"{"chats":[{"session":"s1","started":"2026-10-26T03:00:00Z","updated":"2026-10-26T03:10:00Z","title":"Bulk refunds"}]}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/people/user_luis/chats"] = (200, #"{"person":"user_luis","chats":[{"session":"s1","started":"2026-10-26T03:00:00Z","updated":"2026-10-26T03:10:00Z"}]}"#)
         StubProtocol.responses["GET /v1/me/oversight-reads"] = (200, #"{"reads":[{"id":"rd_1","reader":"ada","owner":"user_luis","agent":"rae-k3f9","purpose":"fix","note":"the refund failed","at":"2026-10-26T04:00:00Z"}]}"#)
 
         let grant = try await model.kiff.requestRead(agent: "rae-k3f9", owner: "user_luis", purpose: .fix, note: "the refund failed")
@@ -244,7 +244,7 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertNil(sentBody["session"], "a list read names no chat")
 
         let chats = try await model.cloud.peopleChats("depl_1", person: "user_luis", grant: grant.grant)
-        XCTAssertEqual(chats.map(\.title), ["Bulk refunds"])
+        XCTAssertEqual(chats.map(\.session), ["s1"], "times only: no title in a list read")
         let list = try XCTUnwrap(sent("GET", "/v1/tafs/depl_1/people/user_luis/chats").first)
         XCTAssertEqual(list.value(forHTTPHeaderField: "Kiff-Read-Grant"), "krd_1")
         XCTAssertNil(list.url?.query, "the grant stays out of the URL")

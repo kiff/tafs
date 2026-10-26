@@ -566,10 +566,13 @@ final class TafsCloud {
     /// Another person's chats with the taf, titles and times only, with KIFF's read grant
     /// for their list.
     func peopleChats(_ id: String, person: String, grant: String) async throws -> [Chat] {
-        struct Response: Decodable { let chats: [Chat] }
+        // Times only: a chat's title is the person's own first words, which a list read
+        // doesn't show.
+        struct Item: Decodable { let session: String; let started: Date; let updated: Date }
+        struct Response: Decodable { let chats: [Item] }
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/people/\(escaped(person))/chats",
                                          headers: [Self.readGrantHeader: grant])
-        return r.chats
+        return r.chats.map { Chat(session: $0.session, started: $0.started, updated: $0.updated, title: "") }
     }
 
     /// One of another person's chats, read only, with KIFF's read grant naming it.

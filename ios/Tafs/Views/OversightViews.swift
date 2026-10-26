@@ -280,8 +280,8 @@ struct PersonChatsView: View {
                     Button { open(chat) } label: {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(chat.title.isEmpty ? "A chat" : chat.title).scaledFont(15).foregroundColor(Theme.ink).oneLineUnlessLarge()
-                                Text(chat.updated.zonedShortTime).scaledFont(12).foregroundColor(Theme.dim)
+                                Text("Chat started \(chat.started.zonedShortTime)").scaledFont(15).foregroundColor(Theme.ink).oneLineUnlessLarge()
+                                Text("Last message \(chat.updated.zonedShortTime)").scaledFont(12).foregroundColor(Theme.dim)
                             }
                             Spacer()
                             if reading == chat.session { ProgressView() }
@@ -346,7 +346,7 @@ struct PersonChatView: View {
             .padding(16)
         }
         .screenBackground()
-        .navigationTitle(chat.chat.title.isEmpty ? personLabel : chat.chat.title)
+        .navigationTitle(personLabel)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
