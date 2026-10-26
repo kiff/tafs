@@ -4,7 +4,7 @@
 
 **They taf. You kiff.**
 
-tafs is an iPhone app where a business hands jobs to AI agents, called tafs, and
+tafs is an iPhone and iPad app where a business hands jobs to AI agents, called tafs, and
 gives each one a Card: the limits it works inside. Inside the Card a taf acts and
 leaves a receipt. Outside it, the taf waits for the owner's answer on their phone.
 Revoked, no new action goes through.
@@ -47,7 +47,7 @@ them do.
 
 ## Status
 
-Version 0.1. A working iPhone app with two modes.
+Version 0.1. A working iPhone and iPad app with two modes.
 
 **Signed in with KIFF**
 - Sign in with KIFF's device flow: the phone shows a code and sends its signing
@@ -77,20 +77,17 @@ Version 0.1. A working iPhone app with two modes.
 - Every answer is signed on the phone (Secure Enclave and Face ID on a device). What
   grants authority is signed by a second key whose own access control requires Face ID.
 - The first held call counts down as a Live Activity on the lock screen and in
-  the Dynamic Island; each new one posts a notification. For now the app finds
-  held calls when it is open. Push alerts while it is closed are next: KIFF's
-  side is done, tafs cloud's receiver and Apple push are
-  not built yet.
+  the Dynamic Island. Each new held call also arrives as a push notification, which
+  says a taf needs you and names the tool, never an amount or request detail
+  ([docs/data.md](docs/data.md)).
 - The Record shows everything, newest first.
 
 What tafs still needs from KIFF is in [docs/needs-from-kiff.md](docs/needs-from-kiff.md).
 Where tafs data lives, for how long, and who deletes it: [docs/data.md](docs/data.md).
 
-**Where it's going.** Today tafs has five fixed jobs. Next, a builder agent
-designs each taf by conversation, each taf is its own agent holding one or more
-Cards, and only its critical tool goes through KIFF. First comes an eval suite
-that measures how good a taf is, so every step after it has to keep the score
-([#26](https://github.com/kiff/tafs/issues/26)).
+**Coach.** A new taf starts in Coach mode: you say the job, Coach drafts the taf
+and its Card, and you confirm with Face ID or Touch ID. Each taf is its own agent
+holding one or more Cards.
 
 ## The runtime
 
