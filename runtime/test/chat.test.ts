@@ -6,6 +6,8 @@ import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, m
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
 const APPROVER = { ...ME, subject: "u_bo", capabilities: ["read", "holds.answer"] };
+/** An editor Rae is shared with, who didn't make it: KIFF says they use it, not manage it. */
+const EDITOR = { ...ME, subject: "u_cy", capabilities: ["read", "cards.manage"] };
 const NOW = new Date("2026-10-16T12:00:00Z");
 /** Ana as kiff/agents knows her: the requester of her runs, and her chats' owner. */
 const ANA = { requester: { kind: "member" as const, id: "u_ana" } };
@@ -14,9 +16,14 @@ const RAE = "taf-aaaa0000000000000000";
 const MAX = "taf-bbbb0000000000000000";
 
 function kiff(byToken: Record<string, object>) {
-  return (async (_url: string, init?: RequestInit) => {
+  return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
-    const me = byToken[token];
+    const me = byToken[token] as { capabilities?: string[] } | undefined;
+    if (me && String(url).endsWith("/v1/me/access")) {
+      // Everyone here uses Rae; whoever may manage Cards manages it (Ana made it).
+      const manage = me.capabilities?.includes("cards.manage") === true && token !== "editor";
+      return new Response(JSON.stringify({ agents: { rae: { use: true, oversee: false, manage } } }), { status: 200 });
+    }
     return me ? new Response(JSON.stringify(me), { status: 200 }) : new Response("{}", { status: 401 });
   }) as typeof fetch;
 }
@@ -50,7 +57,7 @@ async function call(w: World, method: string, path: string, opts: { token?: stri
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: opts.fetch ?? kiff({ ana: ME, viewer: VIEWER, approver: APPROVER }),
+    fetch: opts.fetch ?? kiff({ ana: ME, viewer: VIEWER, approver: APPROVER, editor: EDITOR }),
     now: () => NOW,
   });
   return { status: r.statusCode, body: JSON.parse(r.body) };
@@ -155,13 +162,32 @@ describe("conversation", () => {
   });
 });
 
-describe("messages", () => {
-  it("needs the right to manage Cards, and 1 to 2000 characters", async () => {
+describe("changing a taf", () => {
+  it("takes managing that taf in KIFF's answer: an editor changes only the tafs they made, and chats with the rest", async () => {
     const w = world();
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "viewer", body: { text: "hi" } })).status).toBe(403);
+    for (const [method, path, body] of [
+      ["POST", `/v1/tafs/${RAE}/pause`, undefined],
+      ["POST", `/v1/tafs/${RAE}/versions`, { instructions: "x" }],
+      ["DELETE", `/v1/tafs/${RAE}/memory/tone`, undefined],
+      ["DELETE", `/v1/tafs/${RAE}`, undefined],
+    ] as const) {
+      const r = await call(w, method, path, { token: "editor", ...(body ? { body } : {}) });
+      expect([path, r.status]).toEqual([path, 403]);
+    }
+    expect(w.agents.calls).toEqual([]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(200);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "editor", body: { text: "hi" } })).status).toBe(200);
+  });
+});
+
+describe("messages", () => {
+  it("takes 1 to 2000 characters, from anyone the taf is shared with, whatever their role", async () => {
+    const w = world();
     expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: " " } })).status).toBe(400);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "x".repeat(2001) } })).status).toBe(400);
     expect(w.agents.calls).toEqual([]);
+    // A viewer chats too: KIFF's run grant, not their role, says whether the taf is theirs to use.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "viewer", body: { text: "hi" } })).status).toBe(200);
   });
 
   it("carries the person's run grant from KIFF, and stops when KIFF says the taf isn't theirs", async () => {
@@ -397,11 +423,11 @@ describe("steer", () => {
     expect(r.body.error).toContain("send it as a new message");
   });
 
-  it("needs the right to manage Cards, a run, a message, and one of this taf's runs", async () => {
+  it("needs a run, a message, and one of this taf's runs; it is part of a person's chat, whatever their role", async () => {
     const w = world();
     const mine = await w.agents.api.startRun("t_acme", RAE, "hi", ANA);
     const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "viewer", body: { run: mine.id, text: "x" } })).status).toBe(403);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "viewer", body: { run: mine.id, text: "x" } })).status).toBe(200);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { text: "x" } })).status).toBe(400);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: mine.id, text: " " } })).status).toBe(400);
     expect((await call(w, "POST", `/v1/tafs/${RAE}/steer`, { token: "ana", body: { run: theirs.id, text: "x" } })).status).toBe(404);
@@ -490,8 +516,8 @@ describe("chats (kiff/tafs#73)", () => {
     const live = await w.agents.api.startRun("t_acme", RAE, "Answer customer questions", ANA);
     (w.agents.runs.find((x) => x.id === live.id) as { status: string }).status = "COMPLETED";
 
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${live.session}/archive`, { token: "viewer" })).status).toBe(403);
-    const r = await call(w, "POST", `/v1/tafs/${RAE}/chats/${live.session}/archive`, { token: "ana" });
+    // A person's own chat is theirs to archive, whatever their role.
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/chats/${live.session}/archive`, { token: "viewer" });
     expect(r.status).toBe(200);
     expect(r.body).toEqual({ session: live.session, archived: true });
     expect(w.agents.calls).toContain(`archive ${live.session}`);
@@ -520,8 +546,7 @@ describe("chats (kiff/tafs#73)", () => {
     expect(archived.body.chats.map((c: { session: string; title: string }) => [c.session, c.title])).toEqual([[old.session, "Connect my Stripe"]]);
     expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.chats).toEqual([]);
 
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/chats/${old.session}/unarchive`, { token: "viewer" })).status).toBe(403);
-    const back = await call(w, "POST", `/v1/tafs/${RAE}/chats/${old.session}/unarchive`, { token: "ana" });
+    const back = await call(w, "POST", `/v1/tafs/${RAE}/chats/${old.session}/unarchive`, { token: "viewer" });
     expect(back.body).toEqual({ session: old.session, archived: false });
     expect((await call(w, "GET", `/v1/tafs/${RAE}/chats`, { token: "ana" })).body.chats.map((c: { session: string }) => c.session)).toEqual([old.session]);
     expect((await call(w, "GET", `/v1/tafs/${RAE}/chats/archived`, { token: "ana" })).body.chats).toEqual([]);

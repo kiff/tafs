@@ -135,7 +135,6 @@ describe("a message streamed (kiff/tafs#60)", () => {
   it("checks what messages checks, before any run", async () => {
     const w = world();
     expect((await stream(w, PATH, { body: { text: "hi" } })).status).toBe(401);
-    expect((await stream(w, PATH, { token: "viewer", body: { text: "hi" } })).status).toBe(403);
     expect((await stream(w, `/v1/tafs/${MAX}/messages/stream`, { token: "ana", body: { text: "hi" } })).status).toBe(404);
     expect((await stream(w, PATH, { token: "ana", body: { text: " " } })).status).toBe(400);
     expect((await stream(w, `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" } })).status).toBe(404);
