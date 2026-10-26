@@ -50,6 +50,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- The app no longer crashes on iPad while a chat or a sheet updates (build 793):
+  SwiftUI on iPadOS 27 builds some views on a background render thread, and the
+  app's runtime main-thread checks stopped it there.
 - From the device test of build 789, on an iPad:
   - The app no longer crashes a few seconds after launch: the offer to turn
     on alerts shows over the screen instead of in a sheet.
