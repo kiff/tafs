@@ -1420,6 +1420,9 @@ describe("trying a version (kiff/tafs#173)", () => {
     // Its messages go to the trial, in one chat of its own.
     const first = await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "ana", body: { text: "Refund ch_1." } });
     const second = await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "ana", body: { text: "And ch_2." } });
+    // The trial is Ana's: another person who manages the taf doesn't go on in it, or read it.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/trial/messages`, { token: "owner", body: { text: "And ch_3." } })).status).toBe(404);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/trial/conversation`, { token: "owner" })).status).toBe(404);
     expect(first.status).toBe(200);
     expect(second.body.session).toBe(first.body.session);
     const chat = await call(w, "GET", `/v1/tafs/${RAE}/trial/conversation`, { token: "ana" });

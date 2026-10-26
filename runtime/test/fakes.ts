@@ -47,9 +47,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   };
   /** As kiff/agents decides it: a session is its owner's; one with no owner is the taf's only when it's a job's or a trial's, never otherwise. */
   const ownedBy = (s: Session, owner: string) => s.owner === owner || (!s.owner && (s.kind === "run" || s.kind === "trial"));
-  const openSession = (tenant: string, agent: string, kind: Session["kind"]) => {
+  const openSession = (tenant: string, agent: string, kind: Session["kind"], owner?: string) => {
     const at = now().toISOString();
-    const s: Session & { tenant: string } = { tenant, id: `sess${++n}`, agent, kind, started: at, updated: at };
+    const s: Session & { tenant: string } = { tenant, id: `sess${++n}`, agent, kind, started: at, updated: at, ...(owner ? { owner } : {}) };
     sessions.unshift(s);
     return s;
   };
@@ -184,7 +184,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (notify) notified.set(run.id, notify);
       return run;
     },
-    async openTrial(tenant, id, version, draft) {
+    async openTrial(tenant, id, version, draft, requester) {
       calls.push(`openTrial ${id} ${version} ${draft}`);
       if (!(versions.get(k(tenant, id)) ?? []).some((v) => v.n === version)) throw gone();
       const open = trials.get(k(tenant, id));
@@ -192,7 +192,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (open) return { ...open };
       const at = now().toISOString();
       // kiff/agents chooses the trial's chat when it opens (kiff/agents#215).
-      const t: Trial = { id: `tr${++n}`, n: version, draft, session: openSession(tenant, id, "trial").id, started: at, used: at };
+      // A trial a person opens is theirs (kiff/agents' OpenOwned).
+      const owner = requester ? `${requester.kind}:${requester.id}` : undefined;
+      const t: Trial = { id: `tr${++n}`, n: version, draft, session: openSession(tenant, id, "trial", owner).id, started: at, used: at };
       trials.set(k(tenant, id), t);
       return { ...t };
     },
@@ -200,10 +202,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const t = trials.get(k(tenant, id));
       return t && { ...t };
     },
-    async trialMessage(tenant, id, input) {
+    async trialMessage(tenant, id, input, requester) {
       calls.push(`trialMessage ${id}`);
       const t = trials.get(k(tenant, id));
       if (!t) throw new AgentsError(404, "this agent has no open trial");
+      // Only its owner goes on in a trial's chat (kiff/agents' ContinuedBy).
+      const s = sessions.find((x) => x.id === t.session);
+      if (s?.owner && s.owner !== (requester ? `${requester.kind}:${requester.id}` : "")) throw gone();
       const run = newRun(tenant, id, t.session!, "trial", input);
       t.used = now().toISOString();
       return { run: { ...run }, trial: { ...t } };

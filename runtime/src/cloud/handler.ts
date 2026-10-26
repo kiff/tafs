@@ -1220,7 +1220,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     ...own.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
     ...chats.slice(0, CHAT.chatsInThread),
   ];
-  const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
+  // Read as the person: their own and the jobs'. A door's chat is read as its own owner says.
+  const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s)).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
   const components: ThreadComponent[] = [];
   /** Runs a door's message started, by run: their answers go back through it. */
@@ -1275,7 +1276,7 @@ async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: De
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
   try {
-    const read = await deps.agents.session(me.tenantID, latest.id);
+    const read = await deps.agents.session(me.tenantID, latest.id, readerOf(me, latest));
     const run = read.events.at(-1)?.run;
     if (!run) return none;
     const r = await deps.agents.getRun(me.tenantID, taf.id, run);
@@ -1457,11 +1458,11 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await draftInfo(token, draft, deps.fetch, deps.kiffBase);
     if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(404, "no such draft for this taf");
     if (d.status !== "trying") throw new HTTPError(409, "start trying this version's Card in KIFF first");
-    return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft)), deps) };
+    return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft, member(me))), deps) };
   }
   if (sub === "messages" && method === "POST") {
     const text = chatText(event);
-    const { run, trial } = await agentsCall(() => deps.agents.trialMessage(me.tenantID, taf.id, text));
+    const { run, trial } = await agentsCall(() => deps.agents.trialMessage(me.tenantID, taf.id, text, member(me)));
     return { session: run.session, run: run.id, trial };
   }
   if (sub === "install" && method === "POST") {
@@ -1812,6 +1813,11 @@ function member(me: KIFFIdentity): Requester {
   return { kind: "member", id: me.subject };
 }
 
+/** Who a session is read as: the person, except a door's chat, which the thread shows as tafs cloud. */
+function readerOf(me: KIFFIdentity, s: Session): string | undefined {
+  return s.owner?.startsWith("door:") ? undefined : ownerKey(me);
+}
+
 /** The person as a session's owner, as kiff/agents writes it. */
 function ownerKey(me: KIFFIdentity): string {
   return `member:${me.subject}`;
@@ -1872,7 +1878,7 @@ async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = fals
   await moveArchived(me, taf, deps);
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
   const listed = all.filter((s) => s.kind === "chat" && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
-  const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id).catch(() => undefined)));
+  const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined)));
   return listed.flatMap((s, i) => {
     const text = chatTitle((read[i]?.events ?? []).filter((e) => e.kind === "owner_message").map((e) => {
       const t = (e.body as { text?: unknown })?.text;
