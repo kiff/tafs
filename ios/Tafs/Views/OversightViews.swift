@@ -3,20 +3,20 @@ import SwiftUI
 // The iPhone's and iPad's: the Mac app reads Cards and answers holds.
 #if os(iOS)
 
-/// The notice on a shared taf's chat: who can read it, and that the person sees each time.
-/// Tapping it opens who read their work.
+/// The notice on a taf's chat wherever someone else can read it: an account admin can read
+/// any member's work, and a manager their group's. Tapping it opens who read their work.
 struct ReadNotice: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     @State private var showing = false
 
     var body: some View {
-        if model.mode == .kiff, let agent = model.kiffAgent(for: tafID), model.access[agent]?.groups?.isEmpty == false {
+        if model.mode == .kiff, let agent = model.kiffAgent(for: tafID),
+           let text = Self.text(access: model.access[agent], agent: agent, groups: model.groups, people: model.people.count, me: model.me?.subject) {
             Button { showing = true } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "eye").scaledFont(12)
-                    Text("Your manager and account admins can read this chat. You can see each time they do.")
-                        .scaledFont(12).multilineTextAlignment(.leading)
+                    Text(text).scaledFont(12).multilineTextAlignment(.leading)
                 }
                 .foregroundColor(Theme.dim)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -32,6 +32,20 @@ struct ReadNotice: View {
                 .environmentObject(model)
             }
         }
+    }
+
+    /// What the notice says, or nil where no one else can read the chat: an account of one
+    /// person, or a taf this person doesn't use. "Your manager" only when a group of theirs
+    /// the taf is shared with has a manager other than them; account admins always can.
+    static func text(access: KIFFClient.Access?, agent: String, groups: [KIFFClient.Group], people: Int, me: String?) -> String? {
+        guard people > 1, access?.use == true else { return nil }
+        let managed = groups.contains { g in
+            g.agents.contains(agent) && g.members.contains { $0.subject == me }
+                && g.members.contains { $0.isManager && $0.subject != me }
+        }
+        return managed
+            ? "Your manager and account admins can read this chat. You can see each time they do."
+            : "Account admins can read this chat. You can see each time they do."
     }
 }
 
@@ -254,8 +268,9 @@ struct ReadPurposeSheet: View {
     }
 }
 
-/// One person's chats with a taf, titles and times: opening one asks KIFF again, for that
-/// chat, with the same purpose.
+/// One person's chats with a taf, by their times: opening one asks KIFF again, for that
+/// chat, with the same purpose. The list's own grant may lapse (10 minutes) while it's
+/// open; nothing here needs it again, since each chat opened asks KIFF for its own.
 struct PersonChatsView: View {
     @EnvironmentObject private var model: AppModel
     let taf: Taf

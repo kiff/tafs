@@ -563,8 +563,8 @@ final class TafsCloud {
     /// person's work, recorded by KIFF before it gave it.
     static let readGrantHeader = "Kiff-Read-Grant"
 
-    /// Another person's chats with the taf, titles and times only, with KIFF's read grant
-    /// for their list.
+    /// Another person's chats with the taf, by their times only, with KIFF's read grant for
+    /// their list.
     func peopleChats(_ id: String, person: String, grant: String) async throws -> [Chat] {
         // Times only: a chat's title is the person's own first words, which a list read
         // doesn't show.

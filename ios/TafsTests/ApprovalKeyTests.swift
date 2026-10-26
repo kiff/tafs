@@ -254,6 +254,24 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertEqual(reads.first?.note, "the refund failed")
     }
 
+    /// The notice shows wherever someone else can read the chat, worded by who can: an admin
+    /// reads anyone's, a manager their group's. A taf shared with someone directly still has it.
+    func testTheReadNoticeShowsWhereverAReadIsPossible() {
+        let use = KIFFClient.Access(use: true, oversee: false, manage: false, groups: [])
+        let support = KIFFClient.Group(id: "grp_support", name: "Support",
+                                       members: [.init(subject: "maria", role: "manager"), .init(subject: "ana", role: "member")], agents: ["rae"])
+        let unmanaged = KIFFClient.Group(id: "grp_ops", name: "Ops", members: [.init(subject: "ana", role: "member")], agents: ["rae"])
+        let manager = "Your manager and account admins can read this chat. You can see each time they do."
+        let admins = "Account admins can read this chat. You can see each time they do."
+        XCTAssertEqual(ReadNotice.text(access: use, agent: "rae", groups: [support], people: 3, me: "ana"), manager)
+        XCTAssertEqual(ReadNotice.text(access: use, agent: "rae", groups: [], people: 3, me: "ana"), admins, "shared with her directly")
+        XCTAssertEqual(ReadNotice.text(access: use, agent: "rae", groups: [unmanaged], people: 3, me: "ana"), admins, "a group with no manager")
+        XCTAssertEqual(ReadNotice.text(access: use, agent: "rae", groups: [support], people: 3, me: "maria"), admins, "she manages it herself")
+        XCTAssertEqual(ReadNotice.text(access: use, agent: "rae", groups: [support], people: 3, me: "admin"), admins, "an admin outside the group")
+        XCTAssertNil(ReadNotice.text(access: use, agent: "rae", groups: [], people: 1, me: "ana"), "no one else on the account")
+        XCTAssertNil(ReadNotice.text(access: nil, agent: "rae", groups: [support], people: 3, me: "ana"), "a taf she doesn't use")
+    }
+
     func testWhatGrantsAuthority() {
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/me/agent-drafts/drf_1/confirm"), "issuing a Card, or starting a trial")
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/resume"))
