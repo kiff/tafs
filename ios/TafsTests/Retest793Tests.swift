@@ -41,11 +41,11 @@ final class Retest793Tests: XCTestCase {
 final class Retest805Tests: XCTestCase {
     func testOnlyWhatTheRoleAllowsIsShown() {
         let viewer = ["read"], editor = ["read", "cards.manage"], admin = ["read", "cards.manage", "members.manage"]
-        // A taf: KIFF's answer for it decides; without one, the account's role.
-        XCTAssertFalse(AppModel.manages(KIFFClient.Access(use: true), capabilities: admin), "KIFF's answer wins")
-        XCTAssertTrue(AppModel.manages(KIFFClient.Access(use: true, manage: true), capabilities: viewer))
-        XCTAssertFalse(AppModel.manages(nil, capabilities: viewer))
-        XCTAssertTrue(AppModel.manages(nil, capabilities: editor))
+        // A taf: KIFF's answer for it decides, and without one nothing is shown, whatever the role:
+        // an Editor manages only the tafs they made.
+        XCTAssertFalse(AppModel.manages(KIFFClient.Access(use: true)))
+        XCTAssertTrue(AppModel.manages(KIFFClient.Access(use: true, manage: true)))
+        XCTAssertFalse(AppModel.manages(nil), "not read yet, or failed")
         // Coach: KIFF's answer for Setup; without one, an admin.
         XCTAssertFalse(AppModel.mayUseCoach(setup: nil, capabilities: viewer))
         XCTAssertFalse(AppModel.mayUseCoach(setup: nil, capabilities: editor))
