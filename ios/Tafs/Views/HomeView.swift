@@ -64,7 +64,7 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                 }
 
-                if model.mode == .kiff, !model.cloudTafs.isEmpty {
+                if model.mode == .kiff, !model.cloudTafs.isEmpty, model.canManageCards {
                     // Every taf at once, from its own screen.
                     HaltRow(tafID: nil, framed: true)
                 }

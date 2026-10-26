@@ -50,6 +50,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- You see only what your role lets you do: halting, versions, revoking or removing a taf,
+  its doors' controls and Coach are hidden unless you may use them, instead of failing
+  once tapped (or after Touch ID).
 - Coming back to the app, a chat stays where you left it instead of showing blank space.
 - A chat whose task stopped at the taf's cost or step limit says so, and who can raise
   the limit, instead of staying on "…".

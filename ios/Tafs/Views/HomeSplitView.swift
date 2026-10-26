@@ -118,8 +118,10 @@ struct HomeSplitView: View {
                 Section {
                     // Coach mode (kiff/tafs#138): where tafs are made, connected and changed,
                     // first in the sidebar.
-                    Button { model.openCoach() } label: {
-                        Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
+                    if model.mayUseCoach {
+                        Button { model.openCoach() } label: {
+                            Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
+                        }
                     }
                     // Today across the tafs, one line each.
                     if !model.tafs.isEmpty {
@@ -129,7 +131,7 @@ struct HomeSplitView: View {
                     }
                     // Every taf at once, from its own screen, as on the phone's home.
                     // The owner looked for it here (kiff/tafs#138).
-                    if !model.cloudTafs.isEmpty {
+                    if !model.cloudTafs.isEmpty, model.canManageCards {
                         NavigationLink(value: HomeSelection.haltAll) { haltAllRow }
                     }
                 }

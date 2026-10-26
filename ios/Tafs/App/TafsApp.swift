@@ -60,7 +60,9 @@ struct RootView: View {
     @State private var layoutEpoch = 0
 
     /// Coach mode works with the owner's KIFF account, once signed in.
-    private var coachAvailable: Bool { model.signedIn && model.mode == .kiff }
+    /// Coach only for those who may use it: it was shown to a Viewer, who got no_access, or
+    /// Touch ID and then a refusal (the 805 retest).
+    private var coachAvailable: Bool { model.signedIn && model.mode == .kiff && model.mayUseCoach }
 
     private func showRequestedTab(_ requested: Tab?) {
         guard let requested else { return }

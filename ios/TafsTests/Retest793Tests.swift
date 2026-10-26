@@ -35,3 +35,22 @@ final class Retest793Tests: XCTestCase {
         XCTAssertEqual(AppModel.withheldUntilWords(before, now: t.addingTimeInterval(10)).map(\.id), before.map(\.id))
     }
 }
+
+/// What the owner's device test of TestFlight 805 found: a Viewer saw actions their role can't
+/// take, each refused only once tapped.
+final class Retest805Tests: XCTestCase {
+    func testOnlyWhatTheRoleAllowsIsShown() {
+        let viewer = ["read"], editor = ["read", "cards.manage"], admin = ["read", "cards.manage", "members.manage"]
+        // A taf: KIFF's answer for it decides, and without one nothing is shown, whatever the role:
+        // an Editor manages only the tafs they made.
+        XCTAssertFalse(AppModel.manages(KIFFClient.Access(use: true)))
+        XCTAssertTrue(AppModel.manages(KIFFClient.Access(use: true, manage: true)))
+        XCTAssertFalse(AppModel.manages(nil), "not read yet, or failed")
+        // Coach: KIFF's answer for Setup; without one, an admin.
+        XCTAssertFalse(AppModel.mayUseCoach(setup: nil, capabilities: viewer))
+        XCTAssertFalse(AppModel.mayUseCoach(setup: nil, capabilities: editor))
+        XCTAssertTrue(AppModel.mayUseCoach(setup: nil, capabilities: admin))
+        XCTAssertTrue(AppModel.mayUseCoach(setup: KIFFClient.Access(use: true), capabilities: viewer), "shared with them")
+        XCTAssertFalse(AppModel.mayUseCoach(setup: KIFFClient.Access(use: false), capabilities: admin))
+    }
+}
