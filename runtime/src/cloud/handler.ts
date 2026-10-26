@@ -402,7 +402,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       if (err instanceof HTTPError && err.status === 404) return undefined;
       throw err;
     });
-    if (taf) return remove(taf, me, deps);
+    if (taf) {
+      await needTaf(event, me, taf, deps);
+      return remove(taf, me, deps);
+    }
     // The record goes only once every other step is done, so a removal left
     // without it lacks only its own entry: finishing is clearing that. Only a
     // kiff/agents taf's: a removal begun on Managed Agents (a depl_ id) still
@@ -422,12 +425,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     throw new HTTPError(409, `${taf.name} works from its chat: it has no schedule to ${action === "run" ? "run" : action}. Tell it what to do there`);
   }
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume")) {
-    need(me, "cards.manage");
+    await needTaf(event, me, taf, deps);
     const s = await agentsCall(() => deps.agents.switchSchedule(me.tenantID, taf.id, action === "resume"));
     return { taf: await view(taf, me, deps, s) };
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
-    need(me, "cards.manage");
+    await needTaf(event, me, taf, deps);
     const run = await agentsCall(() => deps.agents.trigger(me.tenantID, taf.id));
     return { session: run.session };
   }
@@ -461,11 +464,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { chats: await chats(me, taf, deps, true) };
   }
   if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "archive") {
-    need(me, "cards.manage");
     return archive(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 6 && method === "POST" && action === "chats" && parts[5] === "unarchive") {
-    need(me, "cards.manage");
     return unarchive(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "stop") {
@@ -473,7 +474,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return stop(event, me, taf, deps);
   }
   if (parts.length === 4 && method === "POST" && action === "steer") {
-    need(me, "cards.manage");
+    // Steering is part of a person's chat: kiff/agents takes it only for their own run.
     return steer(event, me, taf, deps);
   }
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "continue") {
@@ -481,13 +482,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return goOn(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
-    need(me, "cards.manage");
     return message(event, me, taf, deps);
   }
   if (action === "versions" || action === "trials" || action === "switching") return versionRoute(event, method, parts, me, taf, deps);
   if (action === "trial") return trialRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && method === "POST" && action === "improve") {
-    need(me, "cards.manage");
+    await needTaf(event, me, taf, deps);
     return improve(event, me, taf, deps);
   }
   if (parts.length === 4 && method === "GET" && action === "memory") {
@@ -497,7 +497,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { calls: await callRefs(me, taf, deps) };
   }
   if (parts.length === 5 && method === "DELETE" && action === "memory") {
-    need(me, "cards.manage");
+    // A person forgets their own notes ("@name"); a shared note is the taf's, so it takes managing it.
+    if (!(parts[4] ?? "").startsWith("%40") && !(parts[4] ?? "").startsWith("@")) await needTaf(event, me, taf, deps);
     return forget(me, taf, parts[4] ?? "", deps);
   }
   throw new HTTPError(404, "not found");
@@ -1365,21 +1366,21 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     return { versions: state.versions, ...(state.switching ? { switching: state.switching } : {}) };
   }
   if (action === "versions" && parts.length === 4 && method === "POST") {
-    need(me, "cards.manage");
+    await needTaf(event, me, taf, deps);
     return createVersion(event, me, taf, deps);
   }
   if (action === "switching" && parts.length === 4 && method === "DELETE") {
-    need(me, "cards.manage");
+    await needTaf(event, me, taf, deps);
     return cancelSwitch(event, me, taf, deps);
   }
   if (action === "trials" && parts.length === 5 && method === "GET") {
     // A trial is tried by the people who manage the taf; its chat and results are theirs.
-    need(me, "cards.manage");
+    await needTaf(event, me, taf, deps);
     return agentsCall(() => deps.agents.trial(me.tenantID, taf.id, rawN ?? ""));
   }
   const n = Number(rawN);
   if (action !== "versions" || parts.length !== 6 || method !== "POST" || !Number.isInteger(n) || n < 1) throw new HTTPError(404, "not found");
-  need(me, "cards.manage");
+  await needTaf(event, me, taf, deps);
   const version = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.n === n);
   if (!version) throw new HTTPError(404, "no such version");
   if (sub === "trial") {
@@ -1444,7 +1445,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
   if (sub === "" && method === "GET") return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openedTrial(me.tenantID, taf.id)), deps) };
   if (sub === undefined) throw new HTTPError(404, "not found");
   if (sub === "conversation" && method === "GET") {
-    need(me, "cards.manage");
+    await needTaf(event, me, taf, deps);
     const open = await openTrialOf(me, taf, deps);
     if (!open.session) return { messages: [], components: [], working: false, steering: [] };
     const only = await ownChat(me, taf, open.session, deps, "trial");
@@ -1452,7 +1453,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
   }
-  need(me, "cards.manage");
+  await needTaf(event, me, taf, deps);
   const token = bearer(event);
   if (sub === "" && method === "PUT") {
     const body = parseBody(event);
@@ -1826,6 +1827,15 @@ function member(me: KIFFIdentity): Requester {
  * see its doors' conversations and knocks. A taf with no KIFF agent goes by the account
  * role; a KIFF that can't be read shows none.
  */
+/**
+ * Refuses a change to a taf the person doesn't manage: their role must manage Cards, and
+ * KIFF must say they manage this taf (RFC 050 decision 11: an editor, only the tafs they made).
+ */
+async function needTaf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<void> {
+  need(me, "cards.manage");
+  if (!(await managesTaf(event, me, taf, deps))) throw new HTTPError(403, "you can change only the tafs you manage: an editor, the ones they made");
+}
+
 async function managesTaf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<boolean> {
   if (!taf.kiffAgent) return me.capabilities.includes("cards.manage");
   const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined);
@@ -2016,7 +2026,6 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     }
     const me = await person(event, deps);
     const taf = await owned(me, parts[2] ?? "", deps);
-    need(me, "cards.manage");
     const owner = chatText(event);
     const lines = await takeCoachLines(me, taf, deps);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
@@ -2933,7 +2942,7 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
     // Who wrote and what: only for the people who manage the taf.
     return await managesTaf(event, me, taf, deps) ? list : { ...list, knocks: [] };
   }
-  need(me, "cards.manage");
+  await needTaf(event, me, taf, deps);
   const body = parseBody(event);
   if (parts.length === 4 && method === "POST") return addDoor(ctx, owner, taf, body);
   if (parts.length === 6 && method === "POST" && a === "knocks") return answerKnock(ctx, owner, taf, b ?? "", body);
