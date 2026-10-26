@@ -4,7 +4,7 @@ struct TafDetailView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     /// 0 chat, 1 activity, 2 card, 3 doors. Chat first: talking to a taf is the main thing.
-    @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2 : 0
+    @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2 : Screenshots.screen == "doors" ? 3 : 0
     @State private var confirmRevoke = false
     @State private var confirmRemove = false
     /// What removing it did, shown once it's done.
@@ -65,7 +65,7 @@ struct TafDetailView: View {
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
-                                if section == 3, hasDoors(taf), let cloudID = model.cloudTaf(for: taf.id)?.id {
+                                if section == 3, hasDoors(taf), let cloudID = model.cloudTaf(for: taf.id)?.id ?? (Screenshots.enabled ? "sample" : nil) {
                                     DoorsView(taf: taf, cloud: model.cloud, cloudID: cloudID)
                                 } else if section == 2 { card(taf) } else { activity(taf) }
                             }
@@ -114,7 +114,9 @@ struct TafDetailView: View {
     /// Doors are tafs cloud's, and only where it offers one (docs/doors.md): a taf it runs,
     /// signed in to KIFF. The sample has none.
     private func hasDoors(_ taf: Taf) -> Bool {
-        model.mode == .kiff && !model.doorsOffered.isEmpty && model.cloudTaf(for: taf.id) != nil
+        // The docs' screenshot shows the sample's email door (DoorsModel.sample).
+        if Screenshots.enabled && Screenshots.screen == "doors" { return true }
+        return model.mode == .kiff && !model.doorsOffered.isEmpty && model.cloudTaf(for: taf.id) != nil
     }
 
     /// The Card in front of the stack: the one tapped, else the first, the live one.
