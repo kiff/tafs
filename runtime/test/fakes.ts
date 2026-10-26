@@ -47,6 +47,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   };
   /** As kiff/agents decides it: a session is its owner's; one with no owner is the taf's only when it's a job's or a trial's, never otherwise. */
   const ownedBy = (s: Session, owner: string) => s.owner === owner || (!s.owner && (s.kind === "run" || s.kind === "trial"));
+  /** Going on in a session, as kiff/agents decides it (ContinuedBy): its owner exactly; one with no owner, only a caller naming no one. */
+  const continuedBy = (s: Session, owner: string) => (s.owner ?? "") === owner;
   const openSession = (tenant: string, agent: string, kind: Session["kind"], owner?: string) => {
     const at = now().toISOString();
     const s: Session & { tenant: string } = { tenant, id: `sess${++n}`, agent, kind, started: at, updated: at, ...(owner ? { owner } : {}) };
@@ -65,7 +67,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     }
     if (at.session) {
       const found = sessions.find((x) => x.tenant === tenant && x.id === at.session);
-      if (!found || found.agent !== agent || !ownedBy(found, owner)) throw gone();
+      if (!found || found.agent !== agent || !continuedBy(found, owner)) throw gone();
       return { session: found.id, opened: false };
     }
     if (at.live && owner) {
