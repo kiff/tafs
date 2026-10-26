@@ -174,6 +174,24 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect([...w.coach.held.keys()].some((k) => k.startsWith(`${T}#coach-task#`))).toBe(true);
   });
 
+  it("answers under its public address when it has one, whatever host the request reached", async () => {
+    const w = world();
+    const behind = { ...w.deps, publicURL: `https://${HOST}` };
+    const event = (args: Record<string, unknown>) => ({
+      rawPath: "/v1/mcp", requestContext: { http: { method: "POST" } },
+      headers: { host: "abc.lambda-url.eu-west-1.on.aws", "KIFF-Permit": w.permit("taf_task", args) },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "taf_task", arguments: args } }),
+    });
+    const args = { taf: "refunds", text: "Refund order 42", chat: "new", [OP_ARG]: "op_public" };
+    const r = JSON.parse((await handle(event(args), behind)).body) as { result: { isError?: boolean; content: Array<{ text: string }> } };
+    expect(r.result.isError).not.toBe(true);
+    const run = JSON.parse(r.result.content[0]!.text).run as string;
+    expect(w.agents.notified.get(run)?.url).toBe(`https://${HOST}/v1/runs/ended`);
+    // Without it, a permit for the public address doesn't fit the function's own host.
+    const direct = JSON.parse((await handle(event({ ...args, [OP_ARG]: "op_direct" }), w.deps)).body) as { result: { isError?: boolean } };
+    expect(direct.result.isError).toBe(true);
+  });
+
   it("taf_task with a run steers it; one that ended is refused in words", async () => {
     const w = world();
     // Coach's own task: it may write into it.

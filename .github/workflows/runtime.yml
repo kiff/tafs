@@ -57,7 +57,11 @@ jobs:
       - name: Deploy tafs cloud
         run: |
           # Both functions run the same code: tafs-cloud, and tafs-cloud-stream (#60).
-          for fn in tafs-cloud tafs-cloud-stream; do
-            aws lambda update-function-code --function-name "$fn" --zip-file fileb://lambda.zip >/dev/null
-            aws lambda wait function-updated-v2 --function-name "$fn"
+          # They run in eu-west-1. The us-east-1 pair stays up, on the same code,
+          # for app builds that still call it, until it sees no traffic.
+          for region in eu-west-1 us-east-1; do
+            for fn in tafs-cloud tafs-cloud-stream; do
+              aws --region "$region" lambda update-function-code --function-name "$fn" --zip-file fileb://lambda.zip >/dev/null
+              aws --region "$region" lambda wait function-updated-v2 --function-name "$fn"
+            done
           done

@@ -76,8 +76,9 @@ final class TafsCloud {
     var token: String?
     private let session: URLSession
 
-    static let defaultURL = URL(string: "https://qvjurway3eczrk7pqorfuy7z5y0vuztq.lambda-url.us-east-1.on.aws")!
-    static let defaultStreamURL = URL(string: "https://y3mbk66eybe3mmu5loval6asle0kjygr.lambda-url.us-east-1.on.aws")!
+    static let defaultURL = URL(string: "https://cloud.tafs.kiff.dev")!
+    /// Straight to the function, in eu-west-1: a run streams for minutes, longer than a CDN waits between bytes.
+    static let defaultStreamURL = URL(string: "https://ghjfunc5ppretjo22bl5izlnya0zrocm.lambda-url.eu-west-1.on.aws")!
 
     init(baseURL: URL = TafsCloud.defaultURL, streamURL: URL? = nil, token: String? = nil, session: URLSession = .shared) {
         self.baseURL = baseURL

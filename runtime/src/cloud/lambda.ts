@@ -587,8 +587,11 @@ const events = eventLog(doorStore);
 /** Doors run only where the deployment says where it is: its runs must be able to announce they ended. */
 const doors: DoorsDeps | undefined = process.env.DOORS_PUBLIC_URL ? { store: doorStore, secrets: doorSecrets, config: readDoorsConfig } : undefined;
 
+/** tafs cloud's own address behind CloudFront (TAFS_PUBLIC_URL); unset, each request's host. */
+const publicURL = (process.env.TAFS_PUBLIC_URL ?? "").replace(/\/+$/, "");
+
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach, events, ...(doors ? { doors } : {}) };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach, events, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
 }
 
 /**
