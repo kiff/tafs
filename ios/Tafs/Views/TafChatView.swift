@@ -35,6 +35,7 @@ struct TafChatView: View {
     @State private var viewport: CGFloat = 600
     /// The height of what's under the thread: an error, the field, the dictation bar.
     @State private var footHeight: CGFloat = 60
+    @Environment(\.scenePhase) private var scenePhase
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
@@ -263,6 +264,14 @@ struct TafChatView: View {
                 follow(proxy)
             }
             .onAppear { land(proxy, items: items.map(\.id), waiting: waiting) }
+            // Back from another app: the screen is laid out again, and the space kept under a
+            // pinned message showed blank (the 789 retest). The message goes back to the top,
+            // or the chat to its latest.
+            .onChange(of: scenePhase) { phase in
+                guard phase == .active else { return }
+                touched = false
+                if let pinned { proxy.pinToTop(pinned, animated: false) { touched } } else { landAgain(proxy, Self.bottom, .bottom) }
+            }
         }
     }
 
@@ -409,6 +418,10 @@ struct TafChatView: View {
         // and a card with it, fill the space below without the view moving, even while the
         // taf is still at work.
         pinNext = true
+        // The earlier message's pin goes now: the keyboard going down re-pins, and it scrolled
+        // back to the earlier message instead of up to this one (the 789 retest).
+        pinned = nil
+        touched = false
         // As the model keeps it: trimmed (review on #154).
         pinText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         sentBefore = Set(model.chatItems(tafID).map(\.id))

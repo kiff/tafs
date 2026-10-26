@@ -51,12 +51,20 @@ struct PeopleGroupsView: View {
         .toolbar {
             if model.canManagePeople {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { naming = GroupNaming(group: nil) } label: { Label("New group", systemImage: "plus") }
+                    // "+" alone didn't say it makes a group.
+                    Button { naming = GroupNaming(group: nil) } label: { Label("Group", systemImage: "plus").labelStyle(.titleAndIcon) }
+                        .accessibilityLabel("New group")
                 }
             }
         }
         .refreshable { await model.refreshPeople() }
-        .task { await model.refreshPeople(); loaded = true }
+        // Read again while it's open, so someone who joins shows without leaving the screen.
+        .task {
+            while !Task.isCancelled {
+                await model.refreshPeople(); loaded = true
+                try? await Task.sleep(nanoseconds: 20_000_000_000)
+            }
+        }
         .sheet(item: $naming) { n in GroupNameSheet(naming: n).environmentObject(model) }
         .sheet(item: $adding) { g in AddToGroupSheet(group: g).environmentObject(model) }
         .confirmationDialog("Delete \(deleting?.name ?? "this group")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),

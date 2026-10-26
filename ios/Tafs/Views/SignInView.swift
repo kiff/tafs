@@ -11,6 +11,7 @@ struct SignInView: View {
     @State private var start: KIFFClient.DeviceStart?
     @State private var problem: String?
     @State private var task: Task<Void, Never>?
+    @State private var copied = false
 
     var body: some View {
         NavigationStack {
@@ -33,6 +34,25 @@ struct SignInView: View {
                         if let url = URL(string: start.verificationURIComplete) { openURL(url) }
                     }
                     .buttonStyle(PrimaryButtonStyle())
+                    // To approve in another browser, where they're signed in to KIFF.
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Or open this link in another browser:").scaledFont(13).foregroundColor(Theme.dim)
+                        HStack(spacing: 8) {
+                            Text(start.verificationURIComplete)
+                                .scaledFont(13, design: .monospaced).foregroundColor(Theme.soft)
+                                .lineLimit(2).truncationMode(.middle)
+                                .textSelection(.enabled)
+                            Spacer(minLength: 0)
+                            Button {
+                                Clipboard.copy(start.verificationURIComplete)
+                                copied = true
+                            } label: {
+                                Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
+                                    .labelStyle(.titleAndIcon).scaledFont(13, weight: .semibold)
+                            }
+                            .buttonStyle(.borderless).tint(Theme.amber)
+                        }
+                    }
                     HStack(spacing: 10) {
                         ProgressView().tint(Theme.amber)
                         Text("Waiting for your approval…").scaledFont(14).foregroundColor(Theme.soft)
@@ -68,6 +88,7 @@ struct SignInView: View {
     private func begin() {
         problem = nil
         start = nil
+        copied = false
         task?.cancel()
         task = Task {
             do {
@@ -161,7 +182,7 @@ struct AccountView: View {
         List {
             Section {
                 LabeledContent("KIFF account", value: account.name)
-                if account.displayName.map({ !$0.isEmpty && $0 != account.slug }) ?? false {
+                if account.name != account.slug {
                     LabeledContent("Account id", value: account.slug)
                 }
                 if let email = account.email, !email.isEmpty {

@@ -38,7 +38,7 @@ struct TafsApp: App {
                 }
         }
         .onChange(of: scenePhase) { phase in
-            if phase == .active, model.mode == .kiff { Task { await model.refresh() } }
+            if phase == .active, model.mode == .kiff { Task { await model.refresh(); model.settleListOrder() } }
         }
     }
 }
@@ -135,11 +135,22 @@ struct RootView: View {
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             settled = !Task.isCancelled
         }
-        .sheet(isPresented: Binding(get: { settled && model.offerAlertsUpFront && !model.coachOpen },
-                                    set: { if !$0, model.offerAlertsUpFront { model.answerAlertsOffer() } })) {
-            // Full height, as every other sheet: sizing a medium sheet lays its content out
-            // off the main thread, and this closure is the main actor's, which crashed 772 at launch.
-            AlertsOfferSheet().environmentObject(model)
+        // Not a sheet (the 789 retest): a sheet's content is built lazily, and SwiftUI built this one on
+        // its async render thread at launch on iPad, where the main actor's check trapped. 772 and 789
+        // crashed there, with and without detents. An overlay is part of the screen itself.
+        .overlay {
+            if settled && model.offerAlertsUpFront && !model.coachOpen {
+                ZStack {
+                    Color.black.opacity(0.35).ignoresSafeArea()
+                        .onTapGesture { if !model.turningOnAlerts { model.answerAlertsOffer() } }
+                    AlertsOfferSheet()
+                        .frame(maxWidth: 520)
+                        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                        .shadow(color: .black.opacity(0.2), radius: 24, y: 8)
+                        .padding(16)
+                }
+                .transition(.opacity)
+            }
         }
         // A tapped request for tasks: Usage, where it's answered, on its own screen (kiff/tafs#215).
         .sheet(isPresented: Binding(get: { model.signedIn && model.usageRequested }, set: { model.usageRequested = $0 })) {

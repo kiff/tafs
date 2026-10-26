@@ -72,6 +72,71 @@ struct HeldCallCard: View {
     @State private var installing: AppModel.CoachInstall?
     @Environment(\.openURL) private var openURL
 
+    /// Approve, extra room, next steps and Refuse, while the call can still be answered.
+    @ViewBuilder private var answers: some View {
+        if model.canAnswer(call) {
+            if call.approvableOnce {
+                Button {
+                    if call.install != nil { install() } else { send(.approveOnce) }
+                } label: {
+                    Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(sending)
+            } else {
+                // Over a total the Card keeps across calls: approving once can't pass it
+                // (kiff/tafs#138, item 49). Extra room can, for this call, until that total
+                // resets (kiff/tafs#211, 6.13); a lasting change is Coach's.
+                Text(model.canManageCards
+                     ? "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was."
+                     : "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it.")
+                    .scaledFont(13).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let refused = HeldCallCard.refusedLine(model.refusedToday(call.tafID)) {
+                    Text(refused)
+                        .scaledFont(13).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if model.canManageCards {
+                    Button { send(.extraRoom) } label: {
+                        Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(sending)
+                }
+                Button {
+                    model.improveTaf(call.tafID)
+                    model.coachOpen = true
+                } label: {
+                    Label("Change the limit in Coach mode", systemImage: "sparkle")
+                }
+                .buttonStyle(OutlineButtonStyle())
+                .disabled(sending)
+            }
+
+            HStack(spacing: 8) {
+                ForEach(call.nextSteps, id: \.self) { step in
+                    Button(step) { send(.nextStep(step)) }
+                        .buttonStyle(OutlineButtonStyle())
+                }
+                Button("Refuse") { send(.refuse) }
+                    .buttonStyle(OutlineButtonStyle(color: Theme.no))
+            }
+            .disabled(sending)
+        } else {
+            Text("Answering from the phone arrives once KIFF checks the phone's signature. Until then, answer in KIFF.")
+                .scaledFont(13).foregroundColor(Theme.soft)
+            if let page = model.answerPage(for: call) {
+                Button {
+                    openURL(page)
+                } label: {
+                    Label("Answer in KIFF", systemImage: "arrow.up.right.square")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+            }
+        }
+    }
+
     var body: some View {
         let taf = model.taf(call.tafID)
         Panel(stroke: Theme.amber.opacity(0.4)) {
@@ -122,65 +187,17 @@ struct HeldCallCard: View {
                 }
             }
 
-            if model.canAnswer(call) {
-                if call.approvableOnce {
-                    Button {
-                        if call.install != nil { install() } else { send(.approveOnce) }
-                    } label: {
-                        Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(sending)
+            // Expired, or KIFF says this person may not answer it: words, not buttons that can't
+            // work (the 789 retest).
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                if context.date >= call.expiresAt {
+                    Text("Expired. Nobody answered in time, so KIFF refused it and nothing was sent.")
+                        .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                } else if let code = model.unanswerable[call.id] {
+                    Text(AppModel.refusalWords(code) ?? "KIFF doesn't take your answer to this one.")
+                        .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 } else {
-                    // Over a total the Card keeps across calls: approving once can't pass it
-                    // (kiff/tafs#138, item 49). Extra room can, for this call, until that total
-                    // resets (kiff/tafs#211, 6.13); a lasting change is Coach's.
-                    Text(model.canManageCards
-                         ? "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was."
-                         : "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it.")
-                        .scaledFont(13).foregroundColor(Theme.soft)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if let refused = HeldCallCard.refusedLine(model.refusedToday(call.tafID)) {
-                        Text(refused)
-                            .scaledFont(13).foregroundColor(Theme.soft)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    if model.canManageCards {
-                        Button { send(.extraRoom) } label: {
-                            Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
-                        }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(sending)
-                    }
-                    Button {
-                        model.improveTaf(call.tafID)
-                        model.coachOpen = true
-                    } label: {
-                        Label("Change the limit in Coach mode", systemImage: "sparkle")
-                    }
-                    .buttonStyle(OutlineButtonStyle())
-                    .disabled(sending)
-                }
-
-                HStack(spacing: 8) {
-                    ForEach(call.nextSteps, id: \.self) { step in
-                        Button(step) { send(.nextStep(step)) }
-                            .buttonStyle(OutlineButtonStyle())
-                    }
-                    Button("Refuse") { send(.refuse) }
-                        .buttonStyle(OutlineButtonStyle(color: Theme.no))
-                }
-                .disabled(sending)
-            } else {
-                Text("Answering from the phone arrives once KIFF checks the phone's signature. Until then, answer in KIFF.")
-                    .scaledFont(13).foregroundColor(Theme.soft)
-                if let page = model.answerPage(for: call) {
-                    Button {
-                        openURL(page)
-                    } label: {
-                        Label("Answer in KIFF", systemImage: "arrow.up.right.square")
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
+                    VStack(alignment: .leading, spacing: 12) { answers }
                 }
             }
         }
@@ -273,7 +290,7 @@ struct AlertsCard: View {
     }
 }
 
-/// Alerts offered up front, right after signing in (the 755 retest): why, in a few words,
+/// Alerts offered up front, right after signing in (the 755 retest), over the screen: why, in a few words,
 /// then iOS's own question. Not now keeps tafs usable; Needs you offers it again.
 struct AlertsOfferSheet: View {
     @EnvironmentObject private var model: AppModel
@@ -290,7 +307,6 @@ struct AlertsOfferSheet: View {
             if let error = model.lastError, !model.turningOnAlerts {
                 Text(error).scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 0)
             Button(model.turningOnAlerts ? "Turning on…" : "Turn on alerts") {
                 Task { if await model.turnOnAlerts() { model.answerAlertsOffer() } }
             }
@@ -302,7 +318,6 @@ struct AlertsOfferSheet: View {
                 .disabled(model.turningOnAlerts)
         }
         .padding(24)
-        .background(Theme.background.ignoresSafeArea())
-        .interactiveDismissDisabled(model.turningOnAlerts)
+        .background(Theme.background)
     }
 }
