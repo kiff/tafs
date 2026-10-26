@@ -152,10 +152,10 @@ extension DoorsModel {
     static let sample = TafsCloud.Doors(
         doors: [TafsCloud.Door(id: "door_sample", app: "email", kind: "email", label: "Email", open: true,
                                address: "refunds@tafs.example", proof: "proven",
-                               how: "It checks the sender's server signed the message.",
+                               how: "It checks the sender's server signed the message",
                                keys: [.init(id: "you@company.example", name: "You", auto: true), .init(id: "ana@company.example", name: "Ana")],
                                today: 3, limit: 20, resting: false, othersToday: 1, othersLimit: 10)],
-        apps: [TafsCloud.DoorApp(id: "email", label: "Email", kind: "email", proof: "proven", how: "It checks the sender's server signed the message.")],
+        apps: [TafsCloud.DoorApp(id: "email", label: "Email", kind: "email", proof: "proven", how: "It checks the sender's server signed the message")],
         knocks: [TafsCloud.Knock(id: "knock_sample", door: "door_sample", app: "email", from: "mara@customer.example", name: "Mara",
                                  proof: "pass", subject: "Refund request", text: "Hi, I'd like $15 back on order T-3001.",
                                  at: Date().addingTimeInterval(-600))])
