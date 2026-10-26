@@ -32,12 +32,23 @@ interface Account {
   halts?: Record<string, { state: string; kiff_ack?: boolean; planque_ack?: boolean; halted_at?: string }>; haltStatus?: number;
   /** Whether a halt KIFF takes is acknowledged by its gateway and planque at once. */
   acksAtOnce?: boolean;
+  /** The person's answer per agent (GET /v1/me/access); by default they may use every agent there is. */
+  access?: Record<string, { use: boolean; oversee: boolean; manage: boolean }>; accessStatus?: number;
 }
 
-/** KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and held calls. */
-function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }) {
+/**
+ * KIFF's /v1/me, answering per bearer token, its draft claims, and the account's Cards and
+ * held calls. `agentsOf` names the account's agents, for the person's access to each.
+ */
+function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }, agentsOf: () => string[] = () => []) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
+    if (url.endsWith("/v1/me/access")) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.accessStatus) return new Response(JSON.stringify({ error: "down" }), { status: account.accessStatus });
+      const everyone = Object.fromEntries(agentsOf().map((a) => [a, { use: true, oversee: false, manage: true }]));
+      return new Response(JSON.stringify({ agents: account.access ?? everyone, checked_at: "2026-10-16T12:00:00Z" }), { status: 200 });
+    }
     if (url.includes("/v1/me/activity")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
       // KIFF narrows to one agent with ?actor=.
@@ -177,7 +188,8 @@ function depsOf(w: World): Deps {
     apns: { send: async (d, n) => { w.pushed.push({ token: d.token, n }); return "sent" as const; } },
     forward: async () => undefined,
     sleep: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account),
+    fetch: kiff({ ana: ME, viewer: VIEWER, owner: OWNER, key_rae: AGENT_KEY, key_other: { ...AGENT_KEY, tenant_id: "t_other" }, key_unbound: { ...AGENT_KEY, agent_id: "" }, key_setup: { ...AGENT_KEY, agent_id: "setup-acme", capabilities: [] } }, w.drafts, w.claimed, w.account,
+      () => [...[...w.tafs.held.values()].map((t) => t.kiffAgent), ...w.account.mandates.map((m) => m.subject), ...w.account.held.map((h) => h.subject)]),
     newID: () => w.newIDs.shift() ?? "taf-ffffffffffffffffffff",
     events: {
       add: async (_tenant, e, now) => { w.events.unshift({ at: (now ?? new Date()).toISOString(), ...e }); },
@@ -525,6 +537,41 @@ describe("the home list", () => {
     const r = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
     // Bo was made first and sorts first, but doesn't take Rae's colour.
     expect(r.tafs.map((t: { name: string; color: number }) => [t.name, t.color])).toEqual([["Bo", 0], ["Rae", 2]]);
+  });
+
+  it("lists only what KIFF says the person may use or oversee, in the list and on the home screen", async () => {
+    const w = world();
+    await w.tafs.put("t_acme", { id: NEW, name: "Bo", job: "refunds", kiffAgent: "bo", nameClaim: "c", created: "2026-10-16T09:00:00Z" });
+    await w.tafs.put("t_acme", { id: NEW2, name: "Vi", job: "refunds", kiffAgent: "vi", nameClaim: "c2", created: "2026-10-17T09:00:00Z" });
+    w.account.mandates = [raeCard, demoCard, { ...demoCard, id: "card_ops", subject: "ops-bot" }];
+    const no = { use: false, oversee: false, manage: true };
+    // Rae is shared with her, Vi's group is hers to oversee; Bo, and the ops agent, are someone else's.
+    w.account.access = { rae: { ...no, use: true }, bo: no, vi: { ...no, oversee: true }, "support-demo": { ...no, use: true }, "ops-bot": no };
+    const home = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
+    expect(home.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae", "Vi"]);
+    expect(home.others.map((a: { name: string }) => a.name)).toEqual(["support-demo"]);
+    const list = (await call(w, "GET", "/v1/tafs", { token: "ana" })).body;
+    expect(list.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae", "Vi"]);
+    // An agent KIFF doesn't name isn't listed either.
+    delete w.account.access.vi;
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
+  });
+
+  it("gives a taf the person can't see its colour too, so sharing it later changes no one's", async () => {
+    const w = world();
+    await w.tafs.put("t_acme", { id: NEW, name: "Bo", job: "refunds", kiffAgent: "bo", nameClaim: "c", created: "2026-10-01T09:00:00Z" });
+    w.account.access = { rae: { use: true, oversee: false, manage: false }, bo: { use: false, oversee: false, manage: false } };
+    const r = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
+    // Bo sorts first and takes the first colour, though only Rae is listed.
+    expect(r.tafs.map((t: { name: string; color: number }) => [t.name, t.color])).toEqual([["Rae", 1]]);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.color).toBe(0);
+  });
+
+  it("fails rather than list everything when KIFF's answer can't be read", async () => {
+    const w = world();
+    w.account.accessStatus = 503;
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).status).toBe(502);
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).status).toBe(502);
   });
 
   it("gives a new taf its colour at its start: the first no other taf has", async () => {
