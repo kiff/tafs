@@ -32,6 +32,8 @@ export interface Device {
   answers: boolean;
   /** Whether that person may add tasks (billing.manage): only their phones hear of a member's request. */
   addsTasks?: boolean;
+  /** Whether that person may manage Cards (cards.manage): only their phones hear who wrote to a door. */
+  manages?: boolean;
   at: string;
 }
 
