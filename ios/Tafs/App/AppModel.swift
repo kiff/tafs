@@ -2428,6 +2428,9 @@ final class AppModel: ObservableObject {
             chatStates[tafID, default: ChatState()].working = thread.working
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
+            // The thread is the source: tafs cloud says when the latest run stopped at a cap, and a
+            // run at work, or one that answered since, is past it.
+            chatStates[tafID]?.capped = thread.working == nil ? thread.capped?.stop : nil
             settleChatAwaiting(tafID)
             settleSteering(tafID)
         case .failure(let error):
@@ -2473,6 +2476,7 @@ final class AppModel: ObservableObject {
             return .notTried
         }
         chatStates[tafID, default: ChatState()].ended = nil
+        chatStates[tafID]?.capped = nil
         do {
             // Streamed, so the taf's words show as it writes them (#64); sent plainly
             // when the stream can't open.
@@ -2544,6 +2548,9 @@ final class AppModel: ObservableObject {
         /// The session the owner stopped: tafs cloud may still say it's at work until the run
         /// reaches its next step, but here it's over at once (the 755 retest).
         var stopped: String?
+        /// The latest run stopped at its cost or turn cap (`cost_cap`, `turn_cap`): the run
+        /// writes nothing for it, so the chat says why (the 793 retest: it showed "…").
+        var capped: String?
     }
     @Published private(set) var chatStates: [UUID: ChatState] = [:]
     /// Whether a taf's chat has streamed here: its answers then show as written.
@@ -2622,9 +2629,10 @@ final class AppModel: ObservableObject {
                             self.chatStates[tafID]?.heldKeys[exception] = Self.heldKey(call)
                         }
                     }
-                case .end(let status, _):
+                case .end(let status, let stop):
                     ended = status
                     chatStates[tafID]?.live?.activity = nil
+                    if Self.capStops.contains(stop) { chatStates[tafID]?.capped = stop }
                 case .component, .broken:
                     break
                 }
@@ -2783,6 +2791,18 @@ final class AppModel: ObservableObject {
 
     func discardUnsentChat(_ message: UnsentMessage, from tafID: UUID) {
         chatStates[tafID]?.unsent.removeAll { $0.id == message.id }
+    }
+
+    /// The stops at a cap of the run's own: it ends with no words for it.
+    nonisolated static let capStops: Set<String> = ["cost_cap", "turn_cap"]
+
+    /// What the chat says when its latest run stopped at a cap, never "…" (the 793 retest).
+    nonisolated static func capWords(_ stop: String, taf: String) -> String? {
+        switch stop {
+        case "cost_cap": return "\(taf) stopped: this task would cost more than its limit for one task. Ask for something narrower, or someone who manages \(taf) can raise the limit."
+        case "turn_cap": return "\(taf) stopped: this task took more steps than its limit for one task. Ask for something narrower."
+        default: return nil
+        }
     }
 
     /// Retry on a run that failed part-way: its message is sent again.

@@ -50,6 +50,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- A chat whose task stopped at the taf's cost or step limit says so, and who can raise
+  the limit, instead of staying on "…".
 - No one reads another person's chats: People's work, the notice that a chat can be read,
   and Settings → Who read my work are gone. Your chats with a shared taf are yours alone.
 - From the device test of build 793, on an iPad:

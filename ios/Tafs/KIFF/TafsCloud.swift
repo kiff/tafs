@@ -432,6 +432,15 @@ final class TafsCloud {
         var workingRun: String? = nil
         /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says.
         var steering: Steering? = nil
+        /// The latest run stopped at a cap of its own (`cost_cap` or `turn_cap`), with no
+        /// words for it: the app says why.
+        var capped: Capped? = nil
+    }
+
+    /// A run that stopped at its cost or turn cap, as tafs cloud reports it.
+    struct Capped: Decodable, Equatable {
+        let run: String
+        let stop: String
     }
 
     /// What the owner wrote to a run that it hasn't read (kiff/agents#102): while the run
@@ -478,9 +487,15 @@ final class TafsCloud {
             let steering: Steering?
             init(from decoder: Decoder) throws { steering = try? Steering(from: decoder) }
         }
-        struct Response: Decodable { let messages: [ChatMessage]; let working: Working?; let steering: Lenient? }
+        /// A cap the app can't read is left out too.
+        struct LenientCap: Decodable {
+            let capped: Capped?
+            init(from decoder: Decoder) throws { capped = try? Capped(from: decoder) }
+        }
+        struct Response: Decodable { let messages: [ChatMessage]; let working: Working?; let steering: Lenient?; let capped: LenientCap? }
         let r: Response = try await send("GET", path)
-        return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering)
+        return Thread(messages: r.messages, working: r.working?.session, workingRun: r.working?.run, steering: r.steering?.steering,
+                      capped: r.capped?.capped)
     }
 
     /// Writes to the run at work (kiff/tafs#64): it reads the message at its next step.
