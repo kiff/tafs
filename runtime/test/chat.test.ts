@@ -599,53 +599,14 @@ describe("chats (kiff/tafs#73)", () => {
   });
 });
 
-describe("reading a colleague's chats", () => {
-  /** Bo's chat with Rae, and Ana's own: Ana reads Bo's only with KIFF's read grant. */
-  async function colleagues() {
+describe("another person's chats", () => {
+  it("are never read: there is no route to them", async () => {
     const w = world();
-    w.at(new Date(NOW.getTime() - 3600_000));
     const bos = await w.agents.api.startRun("t_acme", RAE, "Refund order 7 for Ivo", { requester: { kind: "member", id: "u_bo" } });
-    w.agents.say(bos, "Refunded order 7.");
-    await w.agents.api.startRun("t_acme", RAE, "Ana's own question", { requester: { kind: "member", id: "u_ana" } });
-    w.agents.readGrants.set("krd_list", { reader: "u_ana", owner: "u_bo", session: "" });
-    w.agents.readGrants.set("krd_chat", { reader: "u_ana", owner: "u_bo", session: bos.session });
-    return { w, bos };
-  }
-  const read = (grant: string) => ({ token: "ana", headers: { "Kiff-Read-Grant": grant } });
-
-  it("lists their chats with the list's grant: times only, never their words", async () => {
-    const { w, bos } = await colleagues();
-    const r = await call(w, "GET", `/v1/tafs/${RAE}/people/u_bo/chats`, read("krd_list"));
-    expect(r.status).toBe(200);
-    expect(r.body).toEqual({ person: "u_bo", chats: [{ session: bos.session, started: expect.any(String), updated: expect.any(String) }] });
-    expect(JSON.stringify(r.body)).not.toContain("Ivo");
-    // kiff/agents is told who reads, so the grant serves only the person KIFF granted it to.
-    expect(w.agents.calls).toContain(`read sessions ${RAE} member:u_bo by member:u_ana`);
-  });
-
-  it("opens one chat with a grant naming it, read only", async () => {
-    const { w, bos } = await colleagues();
-    const r = await call(w, "GET", `/v1/tafs/${RAE}/people/u_bo/conversation/${bos.session}`, read("krd_chat"));
-    expect(r.status).toBe(200);
-    expect(r.body.read_only).toBe(true);
-    expect(r.body.messages.map((m: { from: string; text: string }) => [m.from, m.text])).toEqual([["owner", "Refund order 7 for Ivo"], ["taf", "Refunded order 7."]]);
-    expect(r.body.working).toBeUndefined();
-    expect(r.body.steering).toBeUndefined();
-  });
-
-  it("forwards kiff/agents' refusal, and never reads without a grant", async () => {
-    const { w, bos } = await colleagues();
-    // The list's grant opens no chat, a chat's grant lists nothing, and an unknown one reads nothing.
-    for (const [path, grant] of [[`conversation/${bos.session}`, "krd_list"], ["chats", "krd_chat"], ["chats", "krd_forged"]] as const) {
-      const r = await call(w, "GET", `/v1/tafs/${RAE}/people/u_bo/${path}`, read(grant));
-      expect([path, grant, r.status, r.body]).toEqual([path, grant, 403, { error: "no_access", need: "oversee" }]);
+    for (const path of ["people/u_bo/chats", `people/u_bo/conversation/${bos.session}`]) {
+      const r = await call(w, "GET", `/v1/tafs/${RAE}/${path}`, { token: "ana", headers: { "Kiff-Read-Grant": "krd_any" } });
+      expect([path, r.status]).toEqual([path, 404]);
     }
-    const none = await call(w, "GET", `/v1/tafs/${RAE}/people/u_bo/chats`, { token: "ana" });
-    expect(none.status).toBe(400);
-    expect(w.agents.calls.filter((c) => c.startsWith("read ")).length).toBe(3);
-    // One's own chats are at /chats; a bad subject, or anything but a read, isn't a route.
-    expect((await call(w, "GET", `/v1/tafs/${RAE}/people/u_ana/chats`, read("krd_list"))).status).toBe(400);
-    expect((await call(w, "GET", `/v1/tafs/${RAE}/people/a%2Fb/chats`, read("krd_list"))).status).toBe(400);
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/people/u_bo/chats`, read("krd_list"))).status).toBe(404);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${bos.session}`, { token: "ana" })).status).toBe(404);
   });
 });

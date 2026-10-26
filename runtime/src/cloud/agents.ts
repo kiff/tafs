@@ -265,16 +265,6 @@ export interface Session {
   archived?: boolean;
 }
 
-/** The header that carries a read grant to kiff/agents: kept out of the URL, so out of its logs. */
-const READ_GRANT = "kiff-read-grant";
-
-/** Whose sessions a read grant reads (`member:<subject>`), who reads them, and the grant KIFF signed. */
-export interface ReadAs {
-  owner: string;
-  reader: string;
-  grant: string;
-}
-
 /** Who asks for a run: a member of the account, by their KIFF subject, a door's sender, or an agent asking on its own. */
 export interface Requester {
   kind: "member" | "door" | "agent";
@@ -566,22 +556,6 @@ export class Agents {
   /** A session and its events still kept, in order. */
   session(tenant: string, id: string, owner?: string): Promise<{ session: Session; events: SessionEvent[] }> {
     return this.call("GET", tenant, ["sessions", id], undefined, owner ? { owner } : undefined);
-  }
-
-  /**
-   * Another person's sessions with the agent, newest first, as a read grant
-   * KIFF recorded allows: kiff/agents resolves it, and lists `read.owner`'s
-   * sessions only when the grant is that reader's, for that list.
-   */
-  async readSessions(tenant: string, agent: string, limit: number, read: ReadAs): Promise<Session[]> {
-    const out = await this.call<{ sessions: Session[] }>("GET", tenant, ["sessions"], undefined,
-      { agent_id: agent, limit: String(limit), owner: read.owner, reader: read.reader }, { [READ_GRANT]: read.grant });
-    return out.sessions;
-  }
-
-  /** One of another person's sessions, as a read grant naming it allows. */
-  readSession(tenant: string, id: string, read: ReadAs): Promise<{ session: Session; events: SessionEvent[] }> {
-    return this.call("GET", tenant, ["sessions", id], undefined, { owner: read.owner, reader: read.reader }, { [READ_GRANT]: read.grant });
   }
 
   /** Archives a session, or puts it back: with `owner`, only one that is theirs or has no owner. */
