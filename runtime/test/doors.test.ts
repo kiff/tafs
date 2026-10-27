@@ -246,6 +246,22 @@ describe("the email door", () => {
     expect(w.outbox).toHaveLength(1);
   });
 
+  it("never sends what the taf thought: a door's run isn't streamed, and its reply is its answer only (kiff/tafs#285)", async () => {
+    const w = world();
+    await emailDoor(w);
+    // What a streamed run would show while it thinks: a door's run never reads it.
+    w.agents.streamed.push({ event: "delta", data: { kind: "thinking", text: "The sender seems upset; check the order first." } });
+    const r = await emailHook(w, mail(w, { messageID: "<m9@mail.acme.example>" }));
+    expect(r.body).toEqual({ outcome: "run" });
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    expect(run.requester?.kind).toBe("door");
+    await finish(w, run, "Refunded the duplicate $180 on order 4471.");
+    expect(w.agents.calls.some((c) => c.startsWith("streamRun"))).toBe(false);
+    expect(w.outbox).toHaveLength(1);
+    expect(w.outbox[0]!.text).toContain("Refunded the duplicate $180");
+    expect(w.outbox[0]!.text).not.toContain("check the order first");
+  });
+
   it("a reply in the same thread goes on in the same chat", async () => {
     const w = world();
     await emailDoor(w);
