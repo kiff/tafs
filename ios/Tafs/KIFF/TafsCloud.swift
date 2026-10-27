@@ -684,7 +684,6 @@ final class TafsCloud {
         let _: Response = try await send("POST", "/v1/tafs/\(escaped(id))/chats/\(escaped(session))/unarchive")
     }
 
-    /// What a streamed message's run does, as tafs cloud relays it (#60).
     /// A call a run made that acted and went through (kiff/agents#249).
     struct DoneCall: Equatable {
         let tool: String
@@ -694,6 +693,7 @@ final class TafsCloud {
         var invocation: String? = nil
     }
 
+    /// What a streamed message's run does, as tafs cloud relays it (#60).
     enum StreamEvent: Equatable {
         /// The chat the message went into, first, and the run that answers it.
         case session(String, newSession: Bool, run: String? = nil)
