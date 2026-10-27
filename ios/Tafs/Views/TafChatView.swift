@@ -447,7 +447,7 @@ struct TafChatView: View {
             } else {
                 // While the taf works, what's written goes to its run, which reads it at its
                 // next step; or, behind a queued message, waits for it to be done.
-                Button(action: send) {
+                Button { send() } label: {
                     Image(systemName: "arrow.up")
                         .scaledFont(16, weight: .bold)
                         .foregroundColor(.white)
