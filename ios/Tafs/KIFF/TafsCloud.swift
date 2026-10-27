@@ -484,12 +484,15 @@ final class TafsCloud {
         struct Step: Decodable, Equatable {
             let tool: String
             var error = false
-            init(tool: String, error: Bool = false) { self.tool = tool; self.error = error }
-            enum CodingKeys: String, CodingKey { case tool, error }
+            /// Refused back unmade, an act sent beside a read: not a failure.
+            var notMade = false
+            init(tool: String, error: Bool = false, notMade: Bool = false) { self.tool = tool; self.error = error; self.notMade = notMade }
+            enum CodingKeys: String, CodingKey { case tool, error, notMade = "not_made" }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 tool = try c.decode(String.self, forKey: .tool)
                 error = (try? c.decodeIfPresent(Bool.self, forKey: .error)) ?? false
+                notMade = (try? c.decodeIfPresent(Bool.self, forKey: .notMade)) ?? false
             }
         }
         let ms: Int
@@ -691,7 +694,8 @@ final class TafsCloud {
         /// cloud says ("Checking your Stripe connection…"): never what it was given. `call`
         /// is the call's id, which its `step` names when it ends (kiff/tafs#285).
         case activity(String, step: String? = nil, call: String? = nil)
-        /// How a call ended: "done" or "error" (kiff/tafs#285). A held call is `held`.
+        /// How a call ended: "done", "error" or "not_made", refused back unmade beside a read
+        /// (kiff/tafs#285). A held call is `held`.
         case step(call: String, status: String)
         /// More of the summary of what the taf is thinking (kiff/tafs#285).
         case thinking(String)
