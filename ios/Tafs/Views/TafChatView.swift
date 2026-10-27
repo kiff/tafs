@@ -596,6 +596,7 @@ struct ChatBubble: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 2)
                 .textSelection(.enabled)
+                .accessibilityIdentifier("taf-message")
         } else {
             HStack(alignment: .bottom, spacing: 8) {
                 if let taf { TafAvatar(taf: taf, size: 28) } else { Mascot(size: 28) }
@@ -607,6 +608,7 @@ struct ChatBubble: View {
                     .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Theme.line))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .textSelection(.enabled)
+                    .accessibilityIdentifier("taf-message")
                 Spacer(minLength: 48)
             }
         }

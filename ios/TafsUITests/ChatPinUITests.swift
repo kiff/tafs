@@ -2,7 +2,8 @@ import XCTest
 
 /// The owner's 845 test, pinned so it can't come back: a sent message goes to the top of the
 /// chat at once and stays there while the taf thinks, works and answers; the work block sits
-/// under it with the answer below, and it folds in place to "Worked for" when the run ends.
+/// under it with the answer below, and it folds in place to "Worked for" when the run ends;
+/// when the thread's stored copy then replaces the message shown, nothing moves (the 859 test).
 /// The sample taf streams its answer as a real one does, so this runs with no server; it is
 /// slowed so each part lasts longer than a slow simulator takes to look.
 final class ChatPinUITests: XCTestCase {
@@ -54,6 +55,18 @@ final class ChatPinUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(summary.frame.minY, sent.frame.maxY - 1, "Worked for is under the message")
         XCTAssertLessThan(abs(summary.frame.minY - workAt), 24, "it folded in place, without moving")
         XCTAssertLessThan(fromTop(), atTop, "the message is still at the top: \(seen())")
+
+        // After the run: the thread's stored copy took the place of the message shown while it
+        // worked, under another id, as tafs cloud's reload does. The chat stays where it was,
+        // the message and the answer on screen, never scrolled past the end, blank (859).
+        let sentAt = sent.frame.minY, summaryAt = summary.frame.minY
+        RunLoop.current.run(until: Date().addingTimeInterval(4))
+        let reply = app.descendants(matching: .any).matching(identifier: "taf-message").allElementsBoundByIndex.last
+        XCTAssertTrue(sent.exists && thread.frame.intersects(sent.frame) && sent.isHittable, "the sent message is on screen after the run: \(seen())")
+        XCTAssertLessThan(abs(sent.frame.minY - sentAt), 2, "the sent message stayed where it was: \(seen())")
+        XCTAssertLessThan(abs(summary.frame.minY - summaryAt), 2, "Worked for stayed where it was")
+        XCTAssertTrue(reply.map { $0.exists && thread.frame.intersects($0.frame) && $0.frame.minY >= summary.frame.maxY - 1 } ?? false,
+                      "the answer is on screen, under Worked for: \(seen())")
 
         // Back from another app: the chat shows its messages, not a blank screen (845, item 3).
         XCUIDevice.shared.press(.home)

@@ -708,6 +708,39 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(opened, ["r1"], "an ended run isn't picked up again")
     }
 
+    /// A run picked back up after the owner approved its held call (the 859 test): the stream
+    /// replays what it did before the hold, then marks where it went on. Only what it does
+    /// after shows as its work; the steps before are the first answer's.
+    func testARunPickedUpAfterAHoldShowsOnlyWhatItDoesAfter() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"Refund T-5005","session":"sesn_9"},
+                     {"at":"2026-10-14T09:01:22Z","from":"taf","kind":"message","text":"The refund waits for you.","session":"sesn_9",
+                      "work":{"ms":22000,"steps":[{"tool":"list_charges"}]}}],
+         "working":{"session":"sesn_9","run":"r1"}}
+        """)
+        var continuation: AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation?
+        model.resumeOpener = { _, _ in AsyncThrowingStream { continuation = $0 } }
+        await model.loadChat(id)
+        await model.resumeChat(id)
+        let stream = try XCTUnwrap(continuation)
+        stream.yield(.activity("list_charges", call: "c1"))
+        stream.yield(.step(call: "c1", status: "done"))
+        stream.yield(.said)
+        stream.yield(.activity("create_refund", call: "c2"))
+        stream.yield(.held(exception: "exc_1", invocation: "tc-1"))
+        stream.yield(.step(call: "c2", status: "done"))
+        stream.yield(.part)
+        stream.yield(.activity("get_charge", call: "c3"))
+        for _ in 0..<2000 where model.chatState(id).live?.steps.last?.call != "c3" { try await Task.sleep(nanoseconds: 1_000_000) }
+        let live = try XCTUnwrap(model.chatState(id).live)
+        XCTAssertEqual(live.steps.map(\.call), ["c3"], "only what it does after the hold")
+        XCTAssertEqual(live.parts, [], "the held call before it keeps its place in the thread")
+        XCTAssertEqual(TafsCloud.streamEvent("part", data: Data(#"{"at":"2026-10-14T09:05:02Z"}"#.utf8)), .part)
+        stream.finish()
+        await model.chatStreams[id]?.value
+    }
+
     /// Recorded words hide live ones only for the live session, from about when it started.
     func testOnlyThisAnswersRecordedWordsHideItsLiveOnes() {
         let start = Date(timeIntervalSince1970: 1_800_000_000)

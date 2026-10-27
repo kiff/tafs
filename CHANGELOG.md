@@ -11,7 +11,11 @@ version headings refer to releases, not merely to merged pull requests.
   cloud's copy takes the place of the one shown while it worked. If the message is gone, the
   chat goes to the latest rather than blank. A step the stream sends again keeps its status,
   so a finished step never shows as pending. On iPad, the app opens on the first taf in the
-  list, selected, until the owner picks another.
+  list, selected, until the owner picks another, and a tap on the open taf counts as a pick.
+- Chat (the 859 test): a run that paused on a held call and went on once the owner answered
+  shows its work in parts. The answer written before the hold keeps what was done before it,
+  and the time it took, not the time spent waiting for the owner. The work after the approval
+  shows on its own, and the steps from before aren't listed again as new.
 - Chat (the 845 test): a sent message goes to the top at once and stays there while the taf
   thinks, works and answers. The work block sits under it, with the answer streaming below,
   and folds in place to "Worked for" when the run ends; a run's work shows once, on its

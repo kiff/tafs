@@ -101,8 +101,7 @@ struct HomeSplitView: View {
                 case .haltAll, .overview: return
                 }
             }
-            let screenshot = Screenshots.enabled ? model.tafs.first(where: { $0.name == "Refunds" })?.id : nil
-            opened = (screenshot ?? model.listedTafs.first?.id).map { .taf($0) }
+            opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled)
             chosen = false
             selection = opened
         }
@@ -121,6 +120,14 @@ struct HomeSplitView: View {
             Image(systemName: h.state == .running ? "hand.raised" : "hand.raised.fill").foregroundColor(Theme.no)
         }
         .task { await model.refreshHalt(nil) }
+    }
+
+    /// The taf the app opens on by itself: the first in the list as it stands, which puts the
+    /// one a call waits on first, then the one used last (the 859 test). CI's screenshots open
+    /// Refunds, as on the phone.
+    static func opening(_ listed: [Taf], screenshot: Bool) -> HomeSelection? {
+        let refunds = screenshot ? listed.first(where: { $0.name == "Refunds" })?.id : nil
+        return (refunds ?? listed.first?.id).map { .taf($0) }
     }
 
     private var sidebar: some View {
@@ -159,6 +166,9 @@ struct HomeSplitView: View {
             Section {
                 ForEach(model.listedTafs) { taf in
                     NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
+                        // A tap on the taf already open is a choice too: the list settling
+                        // later doesn't take the owner away from it.
+                        .simultaneousGesture(TapGesture().onEnded { chosen = true })
                     // Its open trial, its own entry under it (kiff/tafs#173).
                     if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
                         NavigationLink(value: HomeSelection.taf(chat)) { tafRow(trying) }

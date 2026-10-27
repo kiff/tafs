@@ -2519,6 +2519,11 @@ final class AppModel: ObservableObject {
             let ms = Int(clock().timeIntervalSince(started) * 1000)
             var answer = sampleMessage(.taf, reply)
             if beat > 0 { answer.work = TafsCloud.Work(ms: ms, steps: [.init(tool: "memory")]) }
+            // The message shown while it worked gives way to the thread's stored copy, under
+            // another id, as tafs cloud's reload does at a run's end (the 859 test's blank chat).
+            if let i = chats[tafID]?.firstIndex(of: pending) {
+                chats[tafID]?[i] = TafsCloud.ChatMessage(at: pending.at, from: .owner, text: text, session: "sample", attachments: files)
+            }
             chats[tafID, default: []].append(answer)
             chatStates[tafID]?.live = nil
             return .sent
@@ -2802,6 +2807,10 @@ final class AppModel: ObservableObject {
                 case .said:
                     // A run picked back up wrote a message: the thread has it.
                     await loadChat(tafID)
+                case .part:
+                    // It went on after the owner answered a held call: what it did before shows
+                    // with the answer it wrote then, not again here as new (the 859 test).
+                    chatStates[tafID]?.live?.newPart()
                 case .held(let exception, let invocation):
                     chatStates[tafID]?.live?.ended(nil, .held)
                     chatStates[tafID]?.live?.parts.append(.held(exception: exception, invocation: invocation))
@@ -4274,6 +4283,12 @@ final class AppModel: ObservableObject {
             steps.append(LiveStep(call: call, tool: tool, words: words))
         }
 
+        /// A run went on after a pause: its answer so far is the thread's, with its work, and
+        /// what follows starts afresh.
+        mutating func newPart() {
+            text = ""; parts = []; steps = []; activity = nil; thinking = ""
+        }
+
         /// A call ended: the step it began, or the latest still running when the stream
         /// didn't say which (a held call).
         mutating func ended(_ call: String?, _ status: LiveStep.Status) {
@@ -4356,7 +4371,7 @@ final class AppModel: ObservableObject {
                     setupLive?.text = ""
                 case .step(let call, let status):
                     setupLive?.ended(call, status == "error" ? .error : .done)
-                case .component, .said:
+                case .component, .said, .part:
                     await loadSetupThread()
                     setupLive?.text = ""
                 case .end(let status, _):
