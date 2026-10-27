@@ -7,6 +7,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- Usage: after an account moves from Solo in the App Store to Team, which KIFF bills,
+  the usage screen says Solo still renews with Apple on its date, with a Cancel Solo
+  button that opens Apple's own subscriptions page. The usage read's `billing` may
+  carry `apple_solo_until`.
 - Chat: while a taf or Coach works, the chat shows the step in progress, one line
   of what it's thinking (once it has thought for a few seconds, changing at a pace
   you can read), and the steps done under it. A step tried again shows once, with
