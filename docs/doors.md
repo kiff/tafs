@@ -10,7 +10,9 @@ deployment offers a door; WhatsApp is offered only once it's set up.
 
 - **Anyone can knock. Only keys give work. Only you say yes to what's held.**
 - A **key** is a sender the owner paired with a door. The owner's own sign-in email
-  is paired with an email door from the start.
+  is paired with an email door from the start. In the list of keys, **You** marks only
+  the key that is the signed-in person's own email; anyone else's key shows its name or
+  address.
 - A key counts only when the door proves the message is theirs:
   - **email**: the receiving server's sender check passes (DMARC, or DKIM signed by
     the From domain, with DMARC not failing), and From names one mailbox. A spoofed
@@ -28,7 +30,7 @@ deployment offers a door; WhatsApp is offered only once it's set up.
   to anyone else is the taf's own action, through KIFF, under its Card, like any
   other tool call.
 - Every reply says it comes from an AI assistant.
-- Only the people who manage the taf see its door conversations, the knocks waiting
+- Only the people who manage the taf see its **Doors** tab, its door conversations, the knocks waiting
   for an answer, and who wrote in Activity, strangers' text included. Someone who only
   uses the taf sees their own chats, and Activity without the sender. A knock's alert
   goes to the phones of people who manage Cards. Only someone who manages Cards turns

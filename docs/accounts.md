@@ -50,6 +50,16 @@ oversee, and shows controls only where they manage the taf. An editor manages on
 tafs they made, which the role alone can't say, so tafs cloud asks KIFF for that taf
 (`needTaf`). Only someone who manages a taf sees its doors' conversations and knocks.
 
+The app offers only what the person's capabilities allow (`AppModel.allows`): no answer
+buttons on a held call without `holds.answer` ([approvals.md](approvals.md#answering)),
+and no **Delete account** without `account.delete`. An account from before roles, which
+KIFF sends with no capabilities, keeps everything.
+
+**Which account:** the account's name is always in sight: beside Settings on an iPad and
+beside the mascot on an iPhone (`AppModel.accountLabel`). Someone on more than one
+account uses **Switch account…** in Settings, which goes through KIFF's sign-in, where
+each account is listed.
+
 Chats are each person's own. Nobody else on the account reads them, not an admin and not
 the account's owner.
 
@@ -121,7 +131,8 @@ ends at the account's midnight. When the device's zone differs, the app offers i
 
 ## Deleting the account
 
-**Delete account** is in Settings → the account, set apart from everyday actions
+**Delete account** is shown only to someone whose role has `account.delete`. It is in
+Settings → the account, set apart from everyday actions
 (`DeleteAccountView`, App Store Review Guideline 5.1.1(v)). It says what goes, then,
 behind Face ID:
 
