@@ -298,6 +298,9 @@ struct SetupChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
+                // The thread as it is now: the captured `items` can be the body's before the
+                // change, without the message just sent (the 845 test, as in TafChatView).
+                let items = textBeforeCards(model.setupThread.items)
                 if let p = pinned, p.hasPrefix("m|"), !ids.contains(p), let words = pinnedWords,
                    let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
                     pinned = copy

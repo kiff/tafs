@@ -249,6 +249,10 @@ struct TafChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
+                // The thread as it is now, from the model: the `items` this closure captured can
+                // be the body's before the change, without the message just sent, so the pin
+                // waited for the next change, the answer, and landed at the run's end (the 845 test).
+                let items = model.chatItems(tafID)
                 if let p = pinned, p.hasPrefix("m|"), !ids.contains(p), let words = pinnedWords,
                    let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
                     pinned = copy
