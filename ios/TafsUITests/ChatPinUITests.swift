@@ -20,7 +20,14 @@ final class ChatPinUITests: XCTestCase {
         let field = app.descendants(matching: .any)["chat-field"]
         XCTAssertTrue(field.waitForExistence(timeout: 30), "the chat's field")
         let words = "Which refunds went out this morning?"
-        field.tap()
+        // The field takes the keyboard a moment after the tap on a slow simulator: wait for it,
+        // tapping again if it didn't, so typing never starts before it can.
+        XCTAssertTrue(within(10) {
+            if (field.value(forKey: "hasKeyboardFocus") as? Bool) == true { return true }
+            field.tap()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+            return (field.value(forKey: "hasKeyboardFocus") as? Bool) == true
+        }, "the chat's field has the keyboard")
         field.typeText(words)
         app.buttons["chat-send"].tap()
 
