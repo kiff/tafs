@@ -326,6 +326,9 @@ final class SetupTests: XCTestCase {
         XCTAssertNil(e("step", "{}"))
         XCTAssertEqual(e("component", #"{"component":{}}"#), .component)
         XCTAssertEqual(e("end", #"{"status":"COMPLETED","stop":"answered"}"#), .end(status: "COMPLETED", stop: "answered"))
+        // A failed run says what went through before it stopped (kiff/agents#249).
+        XCTAssertEqual(e("end", #"{"status":"ERROR","stop":"","done":[{"tool":"create_refund","resource":"ch_1"},{"tool":"send_email"},{}]}"#),
+                       .end(status: "ERROR", stop: "", done: [.init(tool: "create_refund", resource: "ch_1"), .init(tool: "send_email", resource: nil)]))
         XCTAssertEqual(e("error", #"{"error":"x"}"#), .broken)
         XCTAssertNil(e("delta", #"{"kind":"tool_result"}"#))
         XCTAssertEqual(AppModel.activityWords("kiff_draft"), "Preparing the Card…")

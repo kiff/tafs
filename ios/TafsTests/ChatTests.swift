@@ -518,6 +518,32 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(model.chatState(id).ended, .stopped)
     }
 
+    /// A run that fails after a call went through says so, with what it acted on, from the
+    /// run's own record (kiff/agents#249); one that did nothing says only that it stopped.
+    /// Retry clears it.
+    func testARunThatFailsSaysWhatWentThrough() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        var done: [TafsCloud.DoneCall] = [.init(tool: "create_refund", resource: "ch_3001")]
+        model.streamOpener = { _, _ in
+            let calls = done
+            return AsyncThrowingStream { c in
+                c.yield(.session("sesn_9", newSession: false))
+                c.yield(.end(status: "ERROR", stop: "", done: calls))
+                c.finish()
+            }
+        }
+        await model.sendChat("Refund T-3001", to: id)
+        await model.chatStreams[id]?.value
+        XCTAssertEqual(model.failedWords(id, taf: "Refunds"), "Refunds stopped part-way, after this went through: create refund on ch_3001.")
+        done = []
+        await model.retryChatRun(id)
+        await model.chatStreams[id]?.value
+        XCTAssertEqual(model.failedWords(id, taf: "Refunds"), "Refunds stopped part-way, before it finished.")
+        XCTAssertEqual(AppModel.failedWords(taf: "Refunds", done: [("create refund", "ch_1"), ("send email", nil)]),
+                       "Refunds stopped part-way, after these went through: create refund on ch_1; send email.")
+    }
+
     /// A held call shows after the taf's words that ask for it (the 789 retest), and is the
     /// one the chat says needs the owner (#64).
     func testAHeldCallShowsWhereItWasHeld() async throws {

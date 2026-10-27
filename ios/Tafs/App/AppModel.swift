@@ -2573,6 +2573,7 @@ final class AppModel: ObservableObject {
             return .notTried
         }
         chatStates[tafID, default: ChatState()].ended = nil
+        chatStates[tafID]?.wentThrough = []
         chatStates[tafID]?.capped = nil
         do {
             // Streamed, so the taf's words show as it writes them (#64); sent plainly
@@ -2743,6 +2744,8 @@ final class AppModel: ObservableObject {
         var unsent: [UnsentMessage] = []
         var queued: String?
         var ended: RunEnd?
+        /// What the failed run did before it stopped (kiff/agents#249), said with Retry.
+        var wentThrough: [TafsCloud.DoneCall] = []
         /// The run at work, as tafs cloud says, for writing to it.
         var workingRun: String?
         /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says
@@ -2813,6 +2816,7 @@ final class AppModel: ObservableObject {
     /// starts again. A stream that drops leaves the thread to show the rest.
     private func followChatStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, tafID: UUID, text: String, gen: Int) async {
         var ended: String?
+        var didBefore: [TafsCloud.DoneCall] = []
         do {
             for try await e in events {
                 guard gen == accountGeneration else { return }
@@ -2859,8 +2863,9 @@ final class AppModel: ObservableObject {
                             self.chatStates[tafID]?.heldKeys[exception] = Self.heldKey(call)
                         }
                     }
-                case .end(let status, let stop):
+                case .end(let status, let stop, let done):
                     ended = status
+                    didBefore = done
                     chatStates[tafID]?.live?.activity = nil
                     if Self.capStops.contains(stop) { chatStates[tafID]?.capped = stop }
                 case .component, .broken:
@@ -2880,7 +2885,10 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return }
         // The run is over (or paused on a held call): the taf is no longer at work.
         if ended != nil { chatStates[tafID]?.awaiting = nil }
-        if ended == "ERROR" { chatStates[tafID]?.ended = .failed(retry: text) }
+        if ended == "ERROR" {
+            chatStates[tafID]?.ended = .failed(retry: text)
+            chatStates[tafID]?.wentThrough = didBefore
+        }
         if ended == "CANCELLED" { chatStates[tafID]?.ended = .stopped }
         // A run that answered or failed never reads what it didn't take: it goes next.
         // One the owner stopped keeps it, not sent, for them to decide.
@@ -3036,6 +3044,19 @@ final class AppModel: ObservableObject {
         case "turn_cap": return "\(taf) stopped: this task took more steps than its limit for one task. Ask for something narrower."
         default: return nil
         }
+    }
+
+    /// What a run that failed part-way says (kiff/agents#249): that it stopped, and each
+    /// call that went through before it did, from the run's own record, never its words.
+    func failedWords(_ tafID: UUID, taf: String) -> String {
+        Self.failedWords(taf: taf, done: chatState(tafID).wentThrough.map { (toolTitle($0.tool) ?? KIFFMapping.toolWords($0.tool), $0.resource) })
+    }
+
+    nonisolated static func failedWords(taf: String, done: [(words: String, resource: String?)]) -> String {
+        guard !done.isEmpty else { return "\(taf) stopped part-way, before it finished." }
+        let calls = done.map { c in c.resource.map { "\(c.words) on \($0)" } ?? c.words }
+        let these = calls.count == 1 ? "this went through" : "these went through"
+        return "\(taf) stopped part-way, after \(these): \(calls.joined(separator: "; "))."
     }
 
     /// Retry on a run that failed part-way: its message is sent again.
@@ -4412,7 +4433,7 @@ final class AppModel: ObservableObject {
                 case .component, .said, .part:
                     await loadSetupThread()
                     setupLive?.text = ""
-                case .end(let status, _):
+                case .end(let status, _, _):
                     ended = status
                 case .held:
                     setupLive?.ended(nil, .held)
