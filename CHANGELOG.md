@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Launch (the 870 test): the taf used last leads the list from the first frame, and the iPad
+  opens on it. The list's order is settled once KIFF's record is read, and kept with the
+  remembered list, so the app no longer opens on the first taf made and then jumps.
 - Chat (the 859 test): when a run ends, the view stays on the pinned message, even as tafs
   cloud's copy takes the place of the one shown while it worked. If the message is gone, the
   chat goes to the latest rather than blank. A step the stream sends again keeps its status,
