@@ -14,13 +14,25 @@ struct ShareLine: View {
 
     var body: some View {
         if model.mode == .kiff, let agent = model.kiffAgent(for: tafID), let taf = model.taf(tafID) {
-            HStack(spacing: 8) {
-                Image(systemName: "person.2").scaledFont(12).foregroundColor(Theme.dim)
-                Text(Self.sharedWith(shares, model)).scaledFont(13).foregroundColor(Theme.dim).oneLineUnlessLarge()
+            // The system's share mark, large enough to find, with who uses the taf beside it
+            // (the 870 test: the small "Share" link went unseen).
+            HStack(spacing: 10) {
                 if model.access[agent]?.manage == true {
-                    Button("Share") { sharing = true }.scaledFont(13, weight: .semibold)
+                    Button { sharing = true } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                            .scaledFont(15, weight: .semibold)
+                            .padding(.horizontal, 12).padding(.vertical, 7)
+                            .background(Theme.panel)
+                            .overlay(Capsule().stroke(Theme.line))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(Theme.ink)
+                    .accessibilityIdentifier("share-taf")
                 }
+                Text(Self.sharedWith(shares, model)).scaledFont(14).foregroundColor(Theme.soft).oneLineUnlessLarge()
             }
+            .padding(.top, 2)
             .task(id: model.groups) { shares = try? await model.kiff.shares(agent: agent) }
             .task { if model.groups.isEmpty && model.people.isEmpty { await model.refreshPeople() } }
             .sheet(isPresented: $sharing, onDismiss: { Task { shares = try? await model.kiff.shares(agent: agent) } }) {

@@ -20,15 +20,15 @@ struct HomeView: View {
                         .buttonStyle(.plain)
                 }
 
+                // Theirs, then the ones shared with them (kiff/tafs#306).
+                let sections = model.tafSections
                 VStack(spacing: 10) {
-                    ForEach(model.listedTafs) { taf in
-                        NavigationLink(value: taf.id) { TafRow(taf: taf) }
-                            .buttonStyle(.plain)
-                        // Its open trial, its own entry under it (kiff/tafs#173).
-                        if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
-                            NavigationLink(value: chat) { TafRow(taf: trying) }
-                                .buttonStyle(.plain)
-                        }
+                    ForEach(sections.own) { taf in tafLinks(taf) }
+                }
+                if !sections.shared.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(text: "Shared with you")
+                        ForEach(sections.shared) { taf in tafLinks(taf) }
                     }
                 }
 
@@ -154,6 +154,16 @@ struct HomeView: View {
             case "solo": showingSolo = true
             default: break
             }
+        }
+    }
+
+    /// A taf in the list, and its open trial under it (kiff/tafs#173).
+    @ViewBuilder private func tafLinks(_ taf: Taf) -> some View {
+        NavigationLink(value: taf.id) { TafRow(taf: taf) }
+            .buttonStyle(.plain)
+        if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
+            NavigationLink(value: chat) { TafRow(taf: trying) }
+                .buttonStyle(.plain)
         }
     }
 

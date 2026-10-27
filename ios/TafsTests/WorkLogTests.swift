@@ -40,6 +40,23 @@ final class WorkLogTests: XCTestCase {
         XCTAssertEqual(AppModel.LiveStep.Status(stream: "done"), .done)
     }
 
+    /// Coach's folded work reads in Coach's words, past the prefix a run records a tool
+    /// under, and leaves out what it showed (the 870 test: "Asking KIFF to run planque").
+    func testCoachsWorkReadsInItsWords() {
+        XCTAssertEqual(AppModel.activityWords("planque"), "Working on the connection…")
+        XCTAssertEqual(AppModel.activityWords("kiff__kiff_draft"), "Preparing the Card…")
+        XCTAssertEqual(AppModel.activityWords("tafs__taf_task"), "Handing the taf its task…")
+        XCTAssertNil(AppModel.activityWords("show"), "what Coach shows draws in the chat, not as a step")
+    }
+
+    /// The list sets apart the tafs shared with this person (kiff/tafs#306): KIFF says use
+    /// without manage. One with no answer yet stays theirs, so it doesn't move twice.
+    func testATafSharedWithYouIsUseWithoutManage() {
+        XCTAssertTrue(AppModel.sharedWithMe(KIFFClient.Access(use: true)))
+        XCTAssertFalse(AppModel.sharedWithMe(KIFFClient.Access(use: true, manage: true)))
+        XCTAssertFalse(AppModel.sharedWithMe(nil))
+    }
+
     /// One readable line of the thinking: the latest sentence, plain, not a list or code.
     func testTheThinkingLineIsOneCalmSentence() {
         XCTAssertEqual(WorkLog.thinkingLine("The customer asks for a refund. The order is **paid** in full."),

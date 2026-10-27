@@ -302,7 +302,9 @@ struct ConnectionsPanel: View {
 
     var body: some View {
         let connections = model.connections(for: tafID)
-        if model.mode == .kiff {
+        // Nothing to show, nothing drawn: someone who only uses the taf sees no connections,
+        // and an empty box read as something broken (the 870 test).
+        if model.mode == .kiff, !connections.isEmpty {
             Panel {
                 Eyebrow(text: "Connections")
                 ForEach(connections) { grant in
@@ -805,7 +807,7 @@ struct TafCardFace: View {
     static func spoken(_ card: TafCard, issuedBy: String, revoked: Bool) -> String {
         var parts: [String] = []
         if let hero = card.hero { parts.append("\(hero.figure) \(hero.words)") }
-        parts.append("\(card.title), \(card.environmentLabel)")
+        parts.append([card.title, card.environmentLabel].compactMap { $0 }.joined(separator: ", "))
         parts += card.facts
         if card.rules.isEmpty { parts.append("No actions yet") }
         parts.append("Issued by \(issuedBy)")
@@ -819,7 +821,7 @@ struct TafCardFace: View {
             HStack(spacing: 8) {
                 Text(card.title).scaledFont(12, weight: .semibold, design: .monospaced).oneLineUnlessLarge()
                 Spacer(minLength: 4)
-                EnvironmentPill(text: card.environmentLabel)
+                if let environment = card.environmentLabel { EnvironmentPill(text: environment) }
             }
             Spacer(minLength: 0)
             if let hero = card.hero {
@@ -888,9 +890,11 @@ struct CardBar: View {
         .accessibilityHint("Shows the Cards")
     }
 
-    /// "Refunds · Live · 3 Cards": the Card's name, its environment, and the others.
+    /// "Refunds · 3 Cards": the Card's name, its environment when it isn't production, and the
+    /// others.
     private var details: String {
-        var parts = [card.title, card.live ? "Live" : card.environment.capitalized]
+        var parts = [card.title]
+        if let environment = card.environmentLabel { parts.append(environment.capitalized) }
         if count > 1 { parts.append("\(count) Cards") }
         return parts.joined(separator: " · ")
     }
@@ -921,7 +925,7 @@ struct CardLines: View {
     }
 }
 
-/// LIVE, or the environment a Card is scoped to.
+/// The environment a Card is scoped to, when it isn't production.
 struct EnvironmentPill: View {
     let text: String
     var body: some View {
@@ -961,7 +965,7 @@ struct CardStack: View {
                         if let left = card.leftLine {
                             Text(left).scaledFont(12, weight: .bold).monospacedDigit().oneLineUnlessLarge()
                         }
-                        EnvironmentPill(text: card.environmentLabel)
+                        if let environment = card.environmentLabel { EnvironmentPill(text: environment) }
                     }
                     .foregroundColor(.white)
                     .padding(.horizontal, 16).padding(.top, 9)
@@ -971,7 +975,7 @@ struct CardStack: View {
                     .shadow(color: .black.opacity(0.12), radius: 3, y: -1)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(card.title), \(card.environmentLabel)\(card.leftLine.map { ", \($0)" } ?? ""). Show this Card")
+                .accessibilityLabel("\([card.title, card.environmentLabel].compactMap { $0 }.joined(separator: ", "))\(card.leftLine.map { ", \($0)" } ?? ""). Show this Card")
             }
             if let shown {
                 TafCardFace(card: shown, issuedBy: issuedBy, color: color, revoked: revoked)

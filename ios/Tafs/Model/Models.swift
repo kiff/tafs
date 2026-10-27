@@ -180,7 +180,10 @@ struct TafCard: Identifiable, Hashable, Codable {
     var calls: CardTotal<Int>?
 
     /// The pill on the face: LIVE, or the environment it's scoped to ("TEST").
-    var environmentLabel: String { live ? "LIVE" : environment.uppercased() }
+    /// The environment a Card is scoped to, when it isn't every one or production: nothing for
+    /// a Card that acts for real, since "Live" read as live money beside a test-mode connection
+    /// (the 870 test).
+    var environmentLabel: String? { live || environment.isEmpty ? nil : environment.uppercased() }
 
     /// The face's big figure and the words under it: what's left of the money total, else of
     /// the calls. Use KIFF couldn't read shows the limit alone, never as zero left or used.

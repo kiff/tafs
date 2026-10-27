@@ -176,7 +176,17 @@ struct SetupChatView: View {
                 // a pinned message landed short and a return from another app showed blank rows.
                 VStack(alignment: .leading, spacing: 12) {
                     if items.isEmpty && !thinking && model.setupUnsent.isEmpty { starts }
+                    // The answer streaming now starts at the first item it recorded: its work block
+                    // goes just before it, under what started it, so it folds in place to "Worked
+                    // for" when the answer ends, as in a taf's chat (the 870 test).
+                    let firstOfRun = model.setupLive == nil ? nil : items.firstIndex { item in
+                        if case .message(let m) = item, m.from == .owner { return false }
+                        return !model.setupLiveBefore.contains(item.id)
+                    }
                     ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
+                        if i == firstOfRun, let live = model.setupLive {
+                            LiveWork(live: live).id("work")
+                        }
                         // A time between parts of the thread that are far apart, not on every line.
                         if let gap = gapTime(items, i) {
                             Text(gap).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
@@ -191,7 +201,7 @@ struct SetupChatView: View {
                             case .message(let m):
                                 // Streamed answers show as written; only without a stream are they revealed.
                                 VStack(alignment: .leading, spacing: 6) {
-                                    if let work = m.work { WorkSummary(work: work) }
+                                    if let work = m.work { WorkSummary(work: work, coach: true) }
                                     RevealingBubble(message: m, reveal: revealing(m), revealed: $revealed, grown: $grown)
                                 }
                             case .component(let c):
@@ -228,7 +238,7 @@ struct SetupChatView: View {
                     // block under the owner's message, with the answer streaming below it (the 845
                     // test); the dots while nothing streams yet.
                     if let live = model.setupLive {
-                        LiveWork(live: live).id("work")
+                        if firstOfRun == nil { LiveWork(live: live).id("work") }
                     } else if thinking {
                         TypingBubble(taf: nil, fullWidth: true).id("thinking")
                     }
@@ -343,6 +353,16 @@ struct SetupChatView: View {
             .onChange(of: thinking) { _ in follow(proxy) }
             .onChange(of: grown) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: model.setupLive) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
+            // A card's answer starts Coach's next answer: the card goes to the top and stays,
+            // with the work and the answer under it, as a typed message does (the 870 test).
+            .onChange(of: model.setupAnsweredCard) { card in
+                guard let card, items.contains(where: { $0.id == "c|" + card }) else { return }
+                pinned = "c|" + card
+                pinText = nil
+                following = false
+                touched = false
+                proxy.pinToTop("c|" + card, animated: true) { touched }
+            }
             .onChange(of: model.setupQueued) { queued in
                 // Waiting behind Setup's answer: its bubble goes to the top at once.
                 if pinNext, let text = pinText, let queued, SetupThread.matchesSent(queued, text) {

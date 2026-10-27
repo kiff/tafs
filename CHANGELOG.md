@@ -7,6 +7,15 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Coach mode (the 870 test) works like a taf's chat. The card you answered goes to the top
+  and stays, with Coach's work and answer under it. The work block sits under what started
+  it and folds in place, each answer lists only its own steps, and folded steps read in
+  Coach's words, not "Asking KIFF to run planque".
+- A taf's page (the 870 test): Share uses the system's share mark, larger, beside who uses
+  the taf. A Card that acts for real no longer says "Live", which read as live money beside
+  a test-mode connection; a Card scoped to another environment still names it. Someone
+  with no connections no longer sees an empty Connections box.
+- The tafs list sets apart the tafs shared with you, under "Shared with you" (#306).
 - Chat (#249): a run that fails after a call went through names what went through and
   how much moved, for example "Refunds stopped part-way, after this went through: create
   refund on ch_3001, US$5.", from the run's own record and KIFF's Record. Before, it only
