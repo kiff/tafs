@@ -2512,12 +2512,12 @@ final class AppModel: ObservableObject {
             }
             chatStates[tafID, default: ChatState()].live = LiveAnswer(started: started)
             if beat > 0 {
-                for line in ["Looking at what I did this morning, ", "so the answer names each one."] {
+                for line in ["Looking at what I did lately, ", "so the answer names each one."] {
                     guard await wait() else { return .notTried }
                     chatStates[tafID]?.live?.thinking += line
                 }
                 guard await wait() else { return .notTried }
-                chatStates[tafID]?.live?.began("list_charges", words: tafActivityWords("list_charges"), call: "sample-1")
+                chatStates[tafID]?.live?.began("memory", words: tafActivityWords("memory"), call: "sample-1")
                 guard await wait() else { return .notTried }
                 chatStates[tafID]?.live?.ended("sample-1", .done)
                 for word in reply.split(separator: " ", omittingEmptySubsequences: false) {
@@ -2531,7 +2531,7 @@ final class AppModel: ObservableObject {
             guard current(), mode == .sample else { return .notTried }
             let ms = Int(clock().timeIntervalSince(started) * 1000)
             var answer = sampleMessage(.taf, reply)
-            if beat > 0 { answer.work = TafsCloud.Work(ms: ms, steps: [.init(tool: "list_charges")]) }
+            if beat > 0 { answer.work = TafsCloud.Work(ms: ms, steps: [.init(tool: "memory")]) }
             chats[tafID, default: []].append(answer)
             chatStates[tafID]?.live = nil
             return .sent
