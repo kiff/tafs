@@ -687,6 +687,8 @@ final class TafsCloud {
         let tool: String
         /// What it acted on (a payment's id), when KIFF named it.
         let resource: String?
+        /// KIFF's key for the call, its Record line's: where the amount it moved is read.
+        var invocation: String? = nil
     }
 
     enum StreamEvent: Equatable {
@@ -800,7 +802,7 @@ final class TafsCloud {
         case "component": return .component
         case "end":
             let done = (o["done"] as? [[String: Any]] ?? []).compactMap { c in
-                (c["tool"] as? String).map { DoneCall(tool: $0, resource: c["resource"] as? String) }
+                (c["tool"] as? String).map { DoneCall(tool: $0, resource: c["resource"] as? String, invocation: c["invocation"] as? String) }
             }
             return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "", done: done)
         case "error": return .broken

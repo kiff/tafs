@@ -3047,14 +3047,21 @@ final class AppModel: ObservableObject {
     }
 
     /// What a run that failed part-way says (kiff/agents#249): that it stopped, and each
-    /// call that went through before it did, from the run's own record, never its words.
+    /// call that went through before it did, from the run's own record, never its words,
+    /// with the amount KIFF recorded for it once its Record line is read.
     func failedWords(_ tafID: UUID, taf: String) -> String {
-        Self.failedWords(taf: taf, done: chatState(tafID).wentThrough.map { (toolTitle($0.tool) ?? KIFFMapping.toolWords($0.tool), $0.resource) })
+        Self.failedWords(taf: taf, done: chatState(tafID).wentThrough.map { c in
+            let line = c.invocation.flatMap(recordEntry(forCall:))
+            return (toolTitle(c.tool) ?? KIFFMapping.toolWords(c.tool), c.resource, line?.amountText)
+        })
     }
 
-    nonisolated static func failedWords(taf: String, done: [(words: String, resource: String?)]) -> String {
+    nonisolated static func failedWords(taf: String, done: [(words: String, resource: String?, amount: String?)]) -> String {
         guard !done.isEmpty else { return "\(taf) stopped part-way, before it finished." }
-        let calls = done.map { c in c.resource.map { "\(c.words) on \($0)" } ?? c.words }
+        let calls = done.map { c in
+            let on = c.resource.map { "\(c.words) on \($0)" } ?? c.words
+            return c.amount.map { "\(on), \($0)" } ?? on
+        }
         let these = calls.count == 1 ? "this went through" : "these went through"
         return "\(taf) stopped part-way, after \(these): \(calls.joined(separator: "; "))."
     }

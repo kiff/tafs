@@ -183,7 +183,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream`, "")).status).toBe(401);
   });
 
-  it("says what a failed run did before it stopped, by tool and what it acted on, never the input (kiff/agents#249)", async () => {
+  it("says what a failed run did before it stopped, by tool, what it acted on and KIFF's key, never the input (kiff/agents#249)", async () => {
     const w = world();
     const started = await stream(w, PATH, { token: "ana", body: { text: "Refund T-3001" } });
     expect(started.events.at(-1)!.data).toEqual({ status: "COMPLETED", stop: "answered" }); // a run that answered says nothing of it
@@ -197,10 +197,9 @@ describe("a message streamed (kiff/tafs#60)", () => {
       ],
     });
     const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
-    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [{ tool: "create_refund", resource: "ch_3001" }, { tool: "send_email" }] } });
+    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [{ tool: "create_refund", resource: "ch_3001", invocation: "tc-1" }, { tool: "send_email" }] } });
     expect(r.raw).not.toContain("ch_secret");
     expect(r.raw).not.toContain("secret words");
-    expect(r.raw).not.toContain("tc-1");
   });
 
   it("marks where a resumed run went on after a held call the owner answered (the 859 test)", async () => {

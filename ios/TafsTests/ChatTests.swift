@@ -519,12 +519,16 @@ final class ChatTests: XCTestCase {
     }
 
     /// A run that fails after a call went through says so, with what it acted on, from the
-    /// run's own record (kiff/agents#249); one that did nothing says only that it stopped.
-    /// Retry clears it.
+    /// run's own record, and how much moved, from KIFF's Record line for that call
+    /// (kiff/agents#249); one that did nothing says only that it stopped. Retry clears it.
     func testARunThatFailsSaysWhatWentThrough() async throws {
         let (model, id) = await kiffModel()
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
-        var done: [TafsCloud.DoneCall] = [.init(tool: "create_refund", resource: "ch_3001")]
+        StubProtocol.responses["GET /v1/me/activity?limit=100"] = (200, #"""
+        {"calls":[{"proposal_id":"p1","action_name":"create_refund","actor_id":"rae-k3f9","outcome":"allowed","held":false,
+          "tool_outcome":{"status":"done"},"created_at":"2026-10-27T21:00:00Z","amount":{"value":"5.00","unit":"USD"},"entity_id":"tc-1"}]}
+        """#)
+        var done: [TafsCloud.DoneCall] = [.init(tool: "create_refund", resource: "ch_3001", invocation: "tc-1")]
         model.streamOpener = { _, _ in
             let calls = done
             return AsyncThrowingStream { c in
@@ -535,13 +539,14 @@ final class ChatTests: XCTestCase {
         }
         await model.sendChat("Refund T-3001", to: id)
         await model.chatStreams[id]?.value
-        XCTAssertEqual(model.failedWords(id, taf: "Refunds"), "Refunds stopped part-way, after this went through: create refund on ch_3001.")
+        let moved = try XCTUnwrap(model.recordEntry(forCall: "tc-1")?.amountText, "KIFF's Record line, read once the run ended")
+        XCTAssertEqual(model.failedWords(id, taf: "Refunds"), "Refunds stopped part-way, after this went through: create refund on ch_3001, \(moved).")
         done = []
         await model.retryChatRun(id)
         await model.chatStreams[id]?.value
         XCTAssertEqual(model.failedWords(id, taf: "Refunds"), "Refunds stopped part-way, before it finished.")
-        XCTAssertEqual(AppModel.failedWords(taf: "Refunds", done: [("create refund", "ch_1"), ("send email", nil)]),
-                       "Refunds stopped part-way, after these went through: create refund on ch_1; send email.")
+        XCTAssertEqual(AppModel.failedWords(taf: "Refunds", done: [("create refund", "ch_1", "US$5"), ("send email", nil, nil)]),
+                       "Refunds stopped part-way, after these went through: create refund on ch_1, US$5; send email.")
     }
 
     /// A held call shows after the taf's words that ask for it (the 789 retest), and is the
