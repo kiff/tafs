@@ -86,9 +86,10 @@ enum FilePrep {
     }
 
     /// A file from Files, as it is: refused when it can't be attached or is over its limit.
-    /// A photo in a format the model can't read (HEIC) is made a JPEG.
+    /// Every image is made a JPEG as a photo is, so it carries no more than one does: no
+    /// location or other metadata, whatever its format.
     static func file(name: String, data: Data, type: UTType) throws -> PreparedFile {
-        if type.conforms(to: .image), mediaType(type) == nil || data.count > (limits[mediaType(type) ?? ""] ?? 0) {
+        if type.conforms(to: .image) {
             return try photo(data, name: name)
         }
         guard let mt = mediaType(type) else {
@@ -141,16 +142,20 @@ enum FilePrep {
                             thumbnail: scaled(image, to: 160).jpegData(compressionQuality: 0.7))
     }
 
-    /// The image with its long edge at most `edge` points' worth of pixels.
+    /// The image redrawn with its long edge at most `edge` points' worth of pixels, on white:
+    /// always drawn again, so only its pixels are kept, and a transparent PNG isn't black as a JPEG.
     static func scaled(_ image: UIImage, to edge: CGFloat) -> UIImage {
         let size = CGSize(width: image.size.width * image.scale, height: image.size.height * image.scale)
         let long = max(size.width, size.height)
-        guard long > edge, long > 0 else { return image }
-        let ratio = edge / long
-        let target = CGSize(width: (size.width * ratio).rounded(), height: (size.height * ratio).rounded())
+        guard long > 0 else { return image }
+        let ratio = min(1, edge / long)
+        let target = CGSize(width: max(1, (size.width * ratio).rounded()), height: max(1, (size.height * ratio).rounded()))
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = 1
-        return UIGraphicsImageRenderer(size: target, format: format).image { _ in
+        format.opaque = true
+        return UIGraphicsImageRenderer(size: target, format: format).image { ctx in
+            UIColor.white.setFill()
+            ctx.fill(CGRect(origin: .zero, size: target))
             image.draw(in: CGRect(origin: .zero, size: target))
         }
     }

@@ -537,8 +537,9 @@ struct SetupChatView: View {
         let uploading = model.filesUploading(key)
         let empty = model.setupDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !ready
         let thinking = model.setupThinking
-        // Files go with a message of their own, once Setup is done and they're all up (kiff/tafs#209).
-        let held = ready && (thinking || uploading)
+        // Files go with a message of their own, once Setup is done; and nothing goes while a file
+        // is still going up, so a message never leaves one behind (kiff/tafs#209).
+        let held = model.holdsSend(key, thinking: thinking)
         return VStack(spacing: 0) {
         FileTray(key: key)
         HStack(alignment: .bottom, spacing: 10) {

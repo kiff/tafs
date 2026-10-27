@@ -1,4 +1,6 @@
 import XCTest
+import ImageIO
+import UIKit
 import UniformTypeIdentifiers
 @testable import Tafs
 
@@ -142,6 +144,75 @@ final class AttachmentsTests: XCTestCase {
         XCTAssertTrue(model.chatState(id).unsent.isEmpty, "not kept as not sent: the composer has it")
         XCTAssertFalse(model.chats[id]?.contains { $0.session == "pending" } ?? false)
         XCTAssertNotNil(model.chatErrors[id], "a line under the thread says why")
+    }
+
+    /// Send waits while a file is going up, words or not: a message never goes without a file
+    /// just attached (the review on #287). Ready files wait while the taf works; words alone don't.
+    func testSendWaitsWhileAFileIsGoingUp() async throws {
+        let (model, id) = try await kiffModel()
+        let key = id.uuidString
+        XCTAssertFalse(model.holdsSend(key, thinking: false), "nothing attached")
+        XCTAssertFalse(model.holdsSend(key, thinking: true), "words alone go to the run at work")
+
+        StubProtocol.holdOnce = "PUT /put/att_1"
+        let upload = Task { await model.attach(Self.file(), to: key) }
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
+        XCTAssertTrue(model.filesUploading(key))
+        XCTAssertTrue(model.holdsSend(key, thinking: false), "text and a file going up: Send waits")
+        XCTAssertTrue(model.takeFiles(key).isEmpty, "nothing ready to take")
+        XCTAssertEqual(model.files(key).count, 1, "the file going up stays in the tray")
+
+        StubProtocol.release.signal()
+        await upload.value
+        XCTAssertFalse(model.holdsSend(key, thinking: false), "all up: Send goes")
+        XCTAssertTrue(model.holdsSend(key, thinking: true), "ready files wait for the taf to be done")
+    }
+
+    /// An image from Files goes as a photo does: a JPEG drawn again, with no metadata (location
+    /// included) and white where it was transparent.
+    func testAnImageFromFilesIsSentAsAPhoto() throws {
+        // A 32×32 PNG, its lower half transparent, with a GPS location in its metadata.
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32), format: {
+            let f = UIGraphicsImageRendererFormat.default(); f.scale = 1; f.opaque = false; return f
+        }()).image { ctx in
+            UIColor.red.setFill(); ctx.fill(CGRect(x: 0, y: 0, width: 32, height: 16))
+        }
+        let png = NSMutableData()
+        let dest = try XCTUnwrap(CGImageDestinationCreateWithData(png, UTType.png.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(dest, try XCTUnwrap(image.cgImage),
+                                   [kCGImagePropertyGPSDictionary: [kCGImagePropertyGPSLatitude: 59.43, kCGImagePropertyGPSLongitude: 24.75]] as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(dest))
+        let source = CGImageSourceCreateWithData(png as CFData, nil)!
+        let before = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        XCTAssertNotNil(before?[kCGImagePropertyGPSDictionary], "the PNG carries a location")
+
+        let sent = try FilePrep.file(name: "map.png", data: png as Data, type: .png)
+        XCTAssertEqual(sent.mediaType, "image/jpeg")
+        XCTAssertEqual(sent.name, "map.jpg")
+        let out = try XCTUnwrap(CGImageSourceCreateWithData(sent.data as CFData, nil))
+        let after = CGImageSourceCopyPropertiesAtIndex(out, 0, nil) as? [CFString: Any]
+        XCTAssertNil(after?[kCGImagePropertyGPSDictionary], "no location goes")
+        XCTAssertNil(after?[kCGImagePropertyExifDictionary].flatMap { ($0 as? [CFString: Any])?[kCGImagePropertyExifDateTimeOriginal] })
+        // The transparent half is white, not black: its bottom-left pixel (Core Graphics counts up
+        // from the bottom), a JPEG block away from the red.
+        let decoded = try XCTUnwrap(UIImage(data: sent.data)?.cgImage)
+        var pixel = [UInt8](repeating: 0, count: 4)
+        let ctx = CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.draw(decoded, in: CGRect(x: 0, y: 0, width: 32, height: 32))
+        XCTAssertGreaterThan(Int(pixel[0]) + Int(pixel[1]) + Int(pixel[2]), 600, "white where it was transparent: \(pixel)")
+    }
+
+    /// A file opened full size is a copy on the phone: it goes on sign-out.
+    func testOpenedFilesGoOnSignOut() async throws {
+        let (model, _) = try await kiffModel()
+        let dir = AppModel.openedFiles.appendingPathComponent("att_x", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try Data("hi".utf8).write(to: dir.appendingPathComponent("policy.txt"))
+        await model.signOut()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: AppModel.openedFiles.path))
     }
 
     /// Where nothing can be attached, nothing is: a sample taf has no tafs cloud to take files.

@@ -410,8 +410,9 @@ struct TafChatView: View {
         let uploading = model.filesUploading(key)
         let empty = draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !ready
         let thinking = model.chatThinking(tafID) && model.mode == .kiff
-        // Files go with a message of their own, once the taf is done and they're all up (kiff/tafs#209).
-        let held = ready && (thinking || uploading)
+        // Files go with a message of their own, once the taf is done; and nothing goes while a file
+        // is still going up, so a message never leaves one behind (kiff/tafs#209).
+        let held = model.holdsSend(key, thinking: thinking)
         let name = model.taf(tafID)?.name ?? "your taf"
         return VStack(spacing: 0) {
         FileTray(key: key)
@@ -476,12 +477,14 @@ struct TafChatView: View {
 
     /// A sent message's menu (kiff/tafs#285): send it again, change it first, or copy it.
     @ViewBuilder private func askAgain(_ text: String) -> some View {
-        Button { draft = text; send() } label: { Label("Send again", systemImage: "arrow.clockwise") }
+        // Its words only: files picked for the next message stay in the tray (kiff/tafs#209).
+        Button { draft = text; send(files: false) } label: { Label("Send again", systemImage: "arrow.clockwise") }
         Button { draft = text; typing = true } label: { Label("Edit and send", systemImage: "pencil") }
         Button { Clipboard.copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
     }
 
-    private func send() {
+    /// Sends what's in the box; with `files`, the tray's ready files go with it.
+    private func send(files withFiles: Bool = true) {
         // Sending stops dictating: what was heard goes with it, as it stands in the box.
         model.dictation.stop()
         let text = draft
@@ -503,7 +506,7 @@ struct TafChatView: View {
         // reverses #102): the reply and its card get the screen.
         typing = false
         let key = tafID.uuidString
-        let files = model.takeFiles(key)
+        let files = withFiles ? model.takeFiles(key) : []
         Task {
             if !(await model.submitChat(text, to: tafID, files: files.compactMap(\.ref))) {
                 if draft.isEmpty { draft = text }

@@ -451,7 +451,7 @@ final class AppModel: ObservableObject {
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
-        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]
+        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
@@ -613,7 +613,7 @@ final class AppModel: ObservableObject {
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
-        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]
+        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
@@ -2655,6 +2655,13 @@ final class AppModel: ObservableObject {
         files(key).contains { $0.state == .uploading }
     }
 
+    /// Whether Send waits: while any file is still going up, words or not, so a message never
+    /// goes without a file just attached; and while files are ready but the taf (or Coach) is
+    /// at work, since files go with a message of their own, never into a run.
+    func holdsSend(_ key: String, thinking: Bool) -> Bool {
+        filesUploading(key) || (thinking && files(key).contains { $0.ref != nil })
+    }
+
     /// The chat's ready files, taken for the message being sent. Ones that failed stay in the tray.
     func takeFiles(_ key: String) -> [PendingFile] {
         let ready = files(key).filter { $0.ref != nil }
@@ -2669,6 +2676,14 @@ final class AppModel: ObservableObject {
         chatFiles[key] = taken + files(key)
     }
 
+    /// Where files opened full size are copied: removed on sign-out and on an account switch,
+    /// so nothing a person attached stays on the phone after them (docs/data.md).
+    static let openedFiles = FileManager.default.temporaryDirectory.appendingPathComponent("attachments", isDirectory: true)
+
+    static func removeOpenedFiles() {
+        try? FileManager.default.removeItem(at: openedFiles)
+    }
+
     /// A file the person attached, downloaded to open full size: a temporary copy under its
     /// own name, removed by the system. Nil when it couldn't be read; the notice says why.
     func openFile(_ ref: TafsCloud.AttachmentRef, in key: String) async -> URL? {
@@ -2676,7 +2691,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let target else { return nil }
         do {
             let data = try await cloud.attachment(target, file: ref.id)
-            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("attachments/\(ref.id)", isDirectory: true)
+            let dir = Self.openedFiles.appendingPathComponent(ref.id, isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             let url = dir.appendingPathComponent((ref.name as NSString).lastPathComponent)
             try data.write(to: url, options: .atomic)

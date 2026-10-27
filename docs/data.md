@@ -68,6 +68,7 @@ the copy is checked, so nothing erased in `eu-west-1` stays behind in `us-east-1
 | The phone's signing key | Secure Enclave (a software key in the Simulator) | The phone | The P-256 key that signs answers. Never leaves the phone | Until the app is deleted | iOS |
 | The phone's approval key | Secure Enclave, usable only after Face ID or the passcode (a software key in the Simulator) | The phone | The P-256 key that signs what grants authority: Approve, issuing a Card (submitting or confirming a draft), starting a trial, Resume. Its public half is registered with KIFF once per session. Never leaves the phone | Until the app is deleted | iOS |
 | Sample data | The app's Application Support, `sample.json` | The phone | Sample tafs, held calls and the record. Sample mode only; nothing from KIFF | Until sign-out from sample mode | The app |
+| A file opened full size (#209) | The app's temporary folder, `tmp/attachments` | The phone | A copy of a file the person attached, downloaded when they open it in Quick Look | Until sign-out or an account switch, or sooner when iOS clears the folder | The app on sign-out and account switch; iOS |
 
 ## What goes where
 
