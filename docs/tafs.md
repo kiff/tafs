@@ -112,15 +112,17 @@ answers, only for the same account: the taf used last leads it from the first fr
   Calls the vendor refused today still count against the Card's totals, and are listed.
   Below them: its connections ([coach.md](coach.md#connections)), Halt, its Usage, its
   Versions, Revoke and Remove for good.
-- **Doors** (where the taf has them): [doors.md](doors.md).
+- **Doors** (where the taf has them, and only for someone who manages it): [doors.md](doors.md).
 
 On a wide screen in landscape, a second column beside the chat or activity shows what
 waits for the owner and the Cards. Otherwise one line above shows the front Card and
 opens the Card tab.
 
 What the person can do on the page follows KIFF's access answer for that taf
-(`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke or
-door controls.
+(`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
+Doors tab, or line saying who it's shared with. On its Cards, "Issued by" names who
+issued them to someone who manages the taf, and the account's name to someone who only
+uses it (`AppModel.issuer`).
 
 ## Runs and reports
 

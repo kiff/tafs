@@ -28,6 +28,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- Accounts (the 870 test, kiff/tafs#294): a person who uses a shared taf is offered only what
+  their role allows. No Approve or Refuse without the right to answer held calls (a line says
+  who answers instead), no Delete account without that right, and no Doors tab or share line
+  on a taf they don't manage. "You" marks only their own door key, and the Card says the
+  account issued it. The account's name shows next to Settings, and Settings has Switch account.
 - Usage: after an account moves from Solo in the App Store to Team, which KIFF bills,
   the usage screen says Solo still renews with Apple on its date, with a Cancel Solo
   button that opens Apple's own subscriptions page. The usage read's `billing` may

@@ -242,10 +242,17 @@ struct HomeSplitView: View {
                     .buttonStyle(PrimaryButtonStyle())
             }
             Button { showingSettings = true } label: {
-                Label("Settings", systemImage: "gearshape").scaledFont(14).foregroundColor(Theme.soft)
-                    .frame(maxWidth: .infinity, minHeight: 36)
+                VStack(spacing: 2) {
+                    Label("Settings", systemImage: "gearshape").scaledFont(14).foregroundColor(Theme.soft)
+                    // The account this is, always in sight (the 870 test).
+                    if let account = model.accountLabel {
+                        Text(account).scaledFont(12).foregroundColor(Theme.dim).lineLimit(1)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 36)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(model.accountLabel.map { "Settings, in \($0)" } ?? "Settings")
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(Theme.raised)

@@ -41,6 +41,11 @@ Over a total, approving once can't pass it, and the card says so. Someone who ma
 Coach also gets "Change the limit in Coach mode", which opens Coach on that taf
 ([coach.md](coach.md#improving-a-taf)).
 
+Only someone whose role answers held calls (`holds.answer`) gets the buttons. Anyone else
+on the account who sees the hold sees the card with no Approve or Refuse, and a line
+saying someone who approves on the account answers it (`AppModel.mayAnswerHolds`). If
+KIFF still refuses an answer for the role (`role_forbidden`), the card says so in words.
+
 Coach's own held call to install a version is answered by installing it from its card:
 the version goes live, then Coach hears.
 

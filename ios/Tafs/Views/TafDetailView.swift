@@ -66,7 +66,7 @@ struct TafDetailView: View {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
                                 if section == 3, hasDoors(taf), let cloudID = model.cloudTaf(for: taf.id)?.id ?? (Screenshots.enabled ? "sample" : nil) {
-                                    DoorsView(taf: taf, cloud: model.cloud, cloudID: cloudID, manages: model.manages(taf.id))
+                                    DoorsView(taf: taf, cloud: model.cloud, cloudID: cloudID, manages: model.manages(taf.id), myEmail: model.kiffAccount?.email)
                                 } else if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)
@@ -116,7 +116,8 @@ struct TafDetailView: View {
     private func hasDoors(_ taf: Taf) -> Bool {
         // The docs' screenshot shows the sample's email door (DoorsModel.sample).
         if Screenshots.enabled && Screenshots.screen == "doors" { return true }
-        return model.mode == .kiff && !model.doorsOffered.isEmpty && model.cloudTaf(for: taf.id) != nil
+        // Doors are the taf's manager's: who may give it work and from where (the 870 test).
+        return model.mode == .kiff && !model.doorsOffered.isEmpty && model.cloudTaf(for: taf.id) != nil && model.manages(taf.id)
     }
 
     /// The Card in front of the stack: the one tapped, else the first, the live one.
@@ -134,8 +135,8 @@ struct TafDetailView: View {
                     .scaledFont(13).foregroundColor(Theme.dim)
                 versionLine(taf)
                 #if os(iOS)
-                // Who it's shared with, and Share.
-                ShareLine(tafID: taf.id)
+                // Who it's shared with, and Share: the taf's manager's to see (the 870 test).
+                if model.manages(taf.id) { ShareLine(tafID: taf.id) }
                 #endif
             }
             Spacer()
@@ -228,7 +229,7 @@ struct TafDetailView: View {
             }
             let cards = taf.shownCards
             Eyebrow(text: cards.count == 1 ? "Card" : "Cards")
-            CardStack(cards: cards, issuedBy: taf.card.issuedBy, color: Theme.tafColor(taf.colorIndex),
+            CardStack(cards: cards, issuedBy: model.issuer(of: taf), color: Theme.tafColor(taf.colorIndex),
                       revoked: taf.card.revoked, front: $frontCard)
             Button(cards.count == 1 ? "All of the Card" : "All of the Cards") { section = 2 }
                 .buttonStyle(OutlineButtonStyle())
@@ -239,7 +240,7 @@ struct TafDetailView: View {
     private func card(_ taf: Taf) -> some View {
         let cards = taf.shownCards
         let shown = cards.first(where: { $0.id == frontCard }) ?? cards.first
-        CardStack(cards: cards, issuedBy: taf.card.issuedBy, color: Theme.tafColor(taf.colorIndex),
+        CardStack(cards: cards, issuedBy: model.issuer(of: taf), color: Theme.tafColor(taf.colorIndex),
                   revoked: taf.card.revoked, front: $frontCard)
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.

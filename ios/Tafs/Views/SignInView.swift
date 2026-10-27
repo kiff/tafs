@@ -132,6 +132,10 @@ struct SettingsView: View {
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }
                     }
+                    // Another account this person is on: KIFF's sign-in page lists each one (the 870 test).
+                    if model.mode == .kiff {
+                        Button("Switch account…") { signingIn = true }
+                    }
                     Button(model.mode == .kiff ? "Sign out of KIFF" : "Clear the sample", role: .destructive) {
                         Task { await model.signOut(); dismiss() }
                     }
@@ -202,11 +206,11 @@ struct AccountView: View {
             } footer: {
                 Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.")
             }
-            Section {
+            if model.mayDeleteAccount { Section {
                 Button("Delete account…", role: .destructive) { deletingAccount = true }
             } footer: {
                 Text("Deletes every taf, its runs, chats and notes, your Cards and your connections. It can't be undone.")
-            }
+            } }
         }
         .scrollContentBackground(.hidden)
         .screenBackground()

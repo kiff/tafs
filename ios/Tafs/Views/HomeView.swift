@@ -109,9 +109,15 @@ struct HomeView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button { showingSettings = true } label: {
-                    Mascot(size: 34)
+                    HStack(spacing: 8) {
+                        Mascot(size: 34)
+                        // The account this is, always in sight (the 870 test).
+                        if let account = model.accountLabel {
+                            Text(account).scaledFont(13, weight: .semibold).foregroundColor(Theme.soft).lineLimit(1)
+                        }
+                    }
                 }
-                .accessibilityLabel("Settings")
+                .accessibilityLabel(model.accountLabel.map { "Settings, in \($0)" } ?? "Settings")
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if model.canStartTafs {
