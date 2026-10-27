@@ -41,6 +41,10 @@ enum HomeSelection: Hashable {
 struct HomeSplitView: View {
     @EnvironmentObject private var model: AppModel
     @State private var selection: HomeSelection?
+    /// What the app opened on by itself, and whether the owner has chosen since: until they
+    /// do, the first taf in the list is the one open (the 859 test).
+    @State private var opened: HomeSelection?
+    @State private var chosen = false
     @State private var showingNew = false
     @State private var showingSettings = false
 
@@ -74,9 +78,8 @@ struct HomeSplitView: View {
         .navigationSplitViewStyle(.balanced)
         .onAppear { model.sidebarShown = true }
         .onDisappear { model.sidebarShown = false }
-        // The taf open now is the one the app opens on next time (the 845 test).
         .onChange(of: selection) { s in
-            if case .taf(let id)? = s { model.noteOpened(id) }
+            if s != opened { chosen = true }
         }
         // "See it on…" in Setup selects the taf it made (kiff/tafs#96).
         .onChange(of: model.requestedTaf) { id in
@@ -87,18 +90,21 @@ struct HomeSplitView: View {
         }
         .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
         .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
-        // Something open from the start: the taf a call waits on, else the first (CI's
-        // screenshots open Refunds, as on the phone).
-        .task(id: model.tafs.map(\.id)) {
-            if let selected = selection {
+        // Something open from the start: the first taf in the list, which is the one used
+        // last, a call waiting on it first (CI's screenshots open Refunds, as on the phone).
+        // While the list settles at launch it follows its first taf, until the owner chooses
+        // (the 859 test: the app opened Refunds while Refunds 4 led the list).
+        .task(id: model.tafs.map(\.id) + [model.listedTafs.first?.id].compactMap { $0 }) {
+            if chosen, let selected = selection {
                 switch selected {
                 case .taf(let id), .held(_, let id): if model.taf(id) != nil { return }
                 case .haltAll, .overview: return
                 }
             }
             let screenshot = Screenshots.enabled ? model.tafs.first(where: { $0.name == "Refunds" })?.id : nil
-            // The taf the owner used last (the 845 test), else the one a call waits on, else the first.
-            if let id = screenshot ?? model.lastOpenedTaf ?? model.held.first?.tafID ?? model.tafs.first?.id { selection = .taf(id) } else { selection = nil }
+            opened = (screenshot ?? model.listedTafs.first?.id).map { .taf($0) }
+            chosen = false
+            selection = opened
         }
     }
 

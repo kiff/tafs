@@ -302,9 +302,18 @@ struct SetupChatView: View {
                 // The thread as it is now: the captured `items` can be the body's before the
                 // change, without the message just sent (the 845 test, as in TafChatView).
                 let items = textBeforeCards(model.setupThread.items)
-                if let p = pinned, p.hasPrefix("m|"), !ids.contains(p), let words = pinnedWords,
-                   let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
-                    pinned = copy
+                if let p = pinned, p.hasPrefix("m|"), !ids.contains(p) {
+                    if let words = pinnedWords,
+                       let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
+                        pinned = copy
+                    } else {
+                        // Gone, with nothing in its place: to the latest, not past the end, blank
+                        // (the 859 test, as in TafChatView).
+                        pinned = nil
+                        following = true
+                        withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
+                        return
+                    }
                 }
                 // The message the owner just sent is in the thread: it goes to the top and stays
                 // (kiff/tafs#138). Matched by its words among the messages that are new since the send, so
@@ -321,7 +330,13 @@ struct SetupChatView: View {
                     proxy.pinToTop(sent, animated: animate) { touched }
                     return
                 }
-                if !following && !ids.isEmpty && pinned == nil { unseen = true }
+                // The thread changed under a pinned message: back at the top unless the owner has
+                // scrolled, so the view never ends past the thread's end (the 859 test).
+                if let pinned {
+                    if !touched { proxy.pinToTop(pinned, animated: false) { touched } }
+                    return
+                }
+                if !following && !ids.isEmpty { unseen = true }
                 land(proxy, waiting: waiting)
                 follow(proxy)
             }

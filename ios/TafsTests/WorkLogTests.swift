@@ -81,6 +81,22 @@ final class WorkLogTests: XCTestCase {
         XCTAssertNil(messages[2].work, "one the app can't read leaves the message as it is")
     }
 
+    /// A call the stream sends again (a run picked back up replays its steps) keeps its status:
+    /// a finished step never goes back to running (the 859 test). One without an id is a new step.
+    func testAStepSentAgainKeepsItsStatus() {
+        var live = AppModel.LiveAnswer()
+        live.began("kiff_pending", words: nil, call: "c1")
+        live.ended("c1", .done)
+        live.began("memory", words: nil, call: "c2")
+        live.ended("c2", .done)
+        live.began("list_things", words: nil, call: "c3")
+        live.began("kiff_pending", words: nil, call: "c1")
+        live.began("memory", words: nil, call: "c2")
+        XCTAssertEqual(live.steps.map(\.status), [.done, .done, .running])
+        live.began("memory", words: nil, call: nil)
+        XCTAssertEqual(live.steps.count, 4)
+    }
+
     /// The room under a pinned message is the screen less its turn (the 845 test): a whole
     /// screen until the turn is measured, shrinking as the answer grows, never below nothing.
     func testTheRoomUnderAPinnedMessageIsTheScreenLessItsTurn() {

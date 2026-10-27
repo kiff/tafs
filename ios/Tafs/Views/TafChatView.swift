@@ -60,7 +60,6 @@ struct TafChatView: View {
             })
         }
         .task(id: tafID) {
-            model.noteOpened(tafID)
             await model.followChat(tafID)
         }
     }
@@ -253,9 +252,18 @@ struct TafChatView: View {
                 // be the body's before the change, without the message just sent, so the pin
                 // waited for the next change, the answer, and landed at the run's end (the 845 test).
                 let items = model.chatItems(tafID)
-                if let p = pinned, p.hasPrefix("m|"), !ids.contains(p), let words = pinnedWords,
-                   let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
-                    pinned = copy
+                if let p = pinned, p.hasPrefix("m|"), !ids.contains(p) {
+                    if let words = pinnedWords,
+                       let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
+                        pinned = copy
+                    } else {
+                        // The pinned message is gone and nothing took its place: the chat goes to
+                        // the latest rather than stay scrolled past the end of the thread, blank.
+                        pinned = nil
+                        following = true
+                        withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
+                        return
+                    }
                 }
                 // The message the owner just sent is in the thread: it goes to the top and stays
                 // (kiff/tafs#138). Matched by its words among the messages that are new since the send, so
@@ -272,7 +280,16 @@ struct TafChatView: View {
                     proxy.pinToTop(sent, animated: animate) { touched }
                     return
                 }
-                if !following && !ids.isEmpty && pinned == nil { unseen = true }
+                // The thread changed under a pinned message (the run ended and tafs cloud's copy
+                // took the place of the one shown while it worked, or the reload brought more or
+                // fewer messages above it): it's put back at the top, unless the owner has scrolled.
+                // Left where it was, the view could end past the thread's end, blank, with only the
+                // down arrow (the 859 test).
+                if pinned != nil {
+                    repin(proxy)
+                    return
+                }
+                if !following && !ids.isEmpty { unseen = true }
                 land(proxy, items: ids, waiting: waiting)
                 follow(proxy)
             }

@@ -1031,22 +1031,6 @@ final class AppModel: ObservableObject {
         return id
     }
 
-    /// Where the taf opened last is kept, by its KIFF agent: a taf's id here is new each launch.
-    static let lastTafKey = "tafs.lastTaf"
-
-    /// The owner opened this taf: the app opens on it next time (the 845 test).
-    func noteOpened(_ tafID: UUID) {
-        guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return }
-        remembered?.set(agent, forKey: Self.lastTafKey)
-    }
-
-    /// The taf opened last, while it's still one of the account's; nil otherwise.
-    var lastOpenedTaf: UUID? {
-        guard let agent = remembered?.string(forKey: Self.lastTafKey), let id = holderIDs[agent],
-              tafs.contains(where: { $0.id == id }) else { return nil }
-        return id
-    }
-
     /// tafs cloud's events as Activity entries, in the owner's words: one a taf, and one for
     /// each taf when it was all of them.
     func inTafs(_ events: [TafsCloud.AccountEvent]) -> [RecordEntry] {
@@ -4284,6 +4268,9 @@ final class AppModel: ObservableObject {
         /// A tool call begins: shown as a step, in its words. Show draws in the chat itself.
         mutating func began(_ tool: String, words: String?, call: String?) {
             guard tool != "show" else { return }
+            // A call the stream sends again (a run picked back up can replay its steps) keeps
+            // the status it has: a finished step never goes back to running (the 859 test).
+            if let call, steps.contains(where: { $0.call == call }) { return }
             steps.append(LiveStep(call: call, tool: tool, words: words))
         }
 
