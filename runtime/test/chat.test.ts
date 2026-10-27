@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, chatTitle, handle, type HTTPEvent, MEMORY, type Taf } from "../src/cloud/handler.js";
+import { CHAT, chatTitle, handle, type HTTPEvent, MEMORY, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -149,6 +149,28 @@ describe("conversation", () => {
     w.agents.say(chat, "Refunded $120.", at(76));
     const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
     expect(r.body.messages[1].work).toEqual({ ms: 10_000 + 8_000, steps: [{ tool: "list_charges" }, { tool: "get_charge" }] });
+  });
+
+  it("splits a run where kiff/agents marks the turn resumed, and shows a call refused back unmade as not made", async () => {
+    const w = world();
+    const base = RESUMED_SINCE + 3600_000;
+    w.at(new Date(base));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund T-5005", ANA);
+    const list = w.agents.events.get(chat.session)!;
+    const at = (s: number) => new Date(base + s * 1000).toISOString();
+    const usage = (s: number, ms: number, timing: object) =>
+      list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: at(s), kind: "usage", body: { cost_micro_usd: 1, timing: { ms, ...timing } } });
+    usage(3, 2000, { waited: [] });
+    usage(10, 3000, { waited: [{ tool: "create_refund", ms: 0, is_error: true, not_made: true }, { tool: "get_charge", ms: 300 }] });
+    usage(14, 1000, { waited: [] }); // no calls waited on, yet not resumed: the same part
+    w.agents.say(chat, "Refunding $120 waits for your approval.", at(22));
+    // The owner approved; the first turn after it waited on the held call, and is marked.
+    usage(76, 2000, { resumed: true, waited: [{ tool: "create_refund", ms: 900 }] });
+    w.agents.say(chat, "Refunded $120.", at(81));
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    const [, asked, done] = r.body.messages;
+    expect(asked.work).toEqual({ ms: 22_000, steps: [{ tool: "create_refund", not_made: true }, { tool: "get_charge" }] });
+    expect(done.work).toEqual({ ms: 7_000, steps: [{ tool: "create_refund" }] });
   });
 
   it("reads only the latest five runs", async () => {

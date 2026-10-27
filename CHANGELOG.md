@@ -9,9 +9,14 @@ version headings refer to releases, not merely to merged pull requests.
 
 - Chat (#249): a run that fails after a call went through names what went through and
   how much moved, for example "Refunds stopped part-way, after this went through: create
-  refund on ch_3001, US$5.", from the run's own record and KIFF's Record. Before, it only said it stopped part-way, so
-  the owner had to check the Record to learn the money had moved.
-
+  refund on ch_3001, US$5.", from the run's own record and KIFF's Record. Before, it only
+  said it stopped part-way, so the owner had to check the Record to learn the money had
+  moved.
+- Chat: a call kiff/agents refused back unmade, because the taf sent an act beside a read,
+  shows as "not made · read first", not as a failed step. Made again, it's one row
+  with its tries. tafs cloud's `step` event may say `not_made`, and a message's `work`
+  steps may carry `not_made`. A run's work is split where kiff/agents marks a turn
+  `resumed`, the first after a pause, rather than guessed from the calls it waited on.
 - Launch (the 870 test): the taf used last leads the list from the first frame, and the iPad
   opens on it. The list's order is settled once KIFF's record is read, and kept with the
   remembered list, so the app no longer opens on the first taf made and then jumps.

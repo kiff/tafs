@@ -167,7 +167,11 @@ Answering a held call is never a tool.
 
 When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 (`POST /v1/runs/ended`). tafs cloud reads the run back from kiff/agents rather than
-trust the note, and Coach hears it in its run at work, or at its next turn. The app shows
+trust the note, and Coach hears it in its run at work, or at its next turn. kiff/agents
+announces only to URLs it is set to allow (`AGENTS_NOTIFY_URLS`), so tafs cloud's public
+`/v1/runs/ended` must be among them: when it isn't, kiff/agents refuses the run and
+`taf_task` fails with "notify.url is not one this server announces runs to". Moving tafs
+cloud to a new URL means updating that list too. The app shows
 these as lines in Coach's chat ("coach lines"). While the owner is away, what isn't
 urgent waits there as one "While you were away" message instead of a notification
 ([approvals.md](approvals.md#notifications)).
