@@ -1269,18 +1269,35 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     const seenRun = new Set<string>();
     // Each run's work, shown once, on its first message (the 845 test): when the run started,
     // the tools it called, in order, and when it last wrote. The app's live block sits there too,
-    // under the owner's message, so it folds in place when the run ends.
-    const runs = new Map<string, { start: number; tools: Array<{ tool: string; error?: true }>; first?: ThreadMessage; last?: number }>();
+    // under the owner's message, so it folds in place when the run ends. A run that paused on a
+    // held call and went on once the owner answered has its work in parts, each on the part's
+    // first message: the time it waited for the owner isn't work, and what it did before the
+    // pause isn't shown again after it (the 859 test).
+    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; error?: true }>; first?: ThreadMessage; last?: number };
+    const runs = new Map<string, { parts: Part[]; turns: number }>();
     const runOf = (id: string, at: number) => {
       let w = runs.get(id);
-      if (!w) runs.set(id, (w = { start: at, tools: [] }));
+      if (!w) runs.set(id, (w = { parts: [{ start: at, before: 0, seen: at, tools: [] }], turns: 0 }));
       return w;
     };
     for (const e of r.events) {
       if (e.kind === "usage") {
-        const waited = (e.body as { timing?: { waited?: Array<{ tool?: unknown; is_error?: unknown }> } } | undefined)?.timing?.waited ?? [];
-        const w = runOf(e.run, Date.parse(iso(e.time)));
-        for (const t of waited) if (typeof t.tool === "string") w.tools.push({ tool: t.tool, ...(t.is_error === true ? { error: true as const } : {}) });
+        const at = Date.parse(iso(e.time));
+        const w = runOf(e.run, at);
+        const turn = turnTiming(e.body);
+        if (turn) {
+          if (w.turns > 0 && turn.waited.length === 0) {
+            const part = w.parts.at(-1)!;
+            const began = at - turn.ms;
+            // A part that wrote nothing goes on in the next, less the wait between them.
+            if (part.first) w.parts.push({ start: began, before: 0, seen: began, tools: [] });
+            else Object.assign(part, { before: part.before + Math.max(0, part.seen - part.start), start: began });
+          }
+          w.turns++;
+        }
+        const part = w.parts.at(-1)!;
+        if (!Number.isNaN(at)) part.seen = Math.max(part.seen, at);
+        for (const t of turn?.waited ?? []) part.tools.push({ tool: t.tool, ...(t.error ? { error: true as const } : {}) });
         continue;
       }
       if (e.kind === "component") {
@@ -1313,13 +1330,16 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
           ...(app ? { door: { app, reply: reply?.status ?? "pending", ...(reply?.why ? { why: reply.why } : {}) } } : {}),
         };
         messages.push(said);
-        if (!run.first) run.first = said;
-        if (!Number.isNaN(at)) run.last = at;
+        const part = run.parts.at(-1)!;
+        if (!part.first) part.first = said;
+        if (!Number.isNaN(at)) part.last = at;
       }
     }
     for (const w of runs.values()) {
-      if (w.first && w.tools.length > 0 && w.last !== undefined && !Number.isNaN(w.start)) {
-        w.first.work = { ms: Math.max(0, w.last - w.start), steps: w.tools };
+      for (const p of w.parts) {
+        if (p.first && p.tools.length > 0 && p.last !== undefined && !Number.isNaN(p.start)) {
+          p.first.work = { ms: p.before + Math.max(0, p.last - p.start), steps: p.tools };
+        }
       }
     }
   }
@@ -2114,7 +2134,9 @@ export interface StreamResult {
  * GET /v1/tafs/{id}/runs/{run}/stream?after=N picks the person's own run back up
  * (kiff/tafs#285): a phone that left the chat and came back follows it to its
  * end. It sends the steps from the run's record (activity, step, held), `said`
- * {} where the taf wrote a message (the conversation has it), then `end`.
+ * {} where the taf wrote a message (the conversation has it), `part` {at} where
+ * it went on after a pause (a held call the owner answered: what came before is
+ * the conversation's, with its own work), then `end`.
  *
  * Tool inputs and results never reach the phone. The run is kiff/agents'
  * invocation's: a phone that goes away loses nothing, and reads the rest in
@@ -2242,6 +2264,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
  */
 async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined): AsyncGenerator<string> {
   const steps = new Steps();
+  let turns = 0; // a resumed run's model turns so far
   // What it's doing, in a few words: only these, never the call's arguments.
   const call = (tool: string, input: unknown, callID: unknown): string => {
     const id = typeof callID === "string" ? callID : undefined;
@@ -2283,6 +2306,16 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "tool_result") return ended(b.call_id, b);
         if (d.kind === "agent_message" || d.kind === "report") return sse("said", {});
         if (d.kind === "component") return sse("component", { component: d.body });
+        if (d.kind === "usage") {
+          // The first turn after a pause starts a part: what came before it is in the
+          // conversation, with its own work, and isn't shown as this part's (the 859 test).
+          const turn = turnTiming(b);
+          if (!turn) return undefined;
+          const resumed = turns > 0 && turn.waited.length === 0;
+          turns++;
+          const at = Date.parse(typeof d.time === "string" ? d.time : "");
+          return resumed ? sse("part", Number.isNaN(at) ? {} : { at: new Date(at - turn.ms).toISOString() }) : undefined;
+        }
         return undefined;
       }
       case "end":
@@ -2582,6 +2615,22 @@ async function agentsCall<T>(work: () => Promise<T>): Promise<T> {
 }
 
 /** A time as the app reads it: RFC 3339 in UTC, milliseconds at most. */
+/**
+ * A model turn's timing, from its usage record: how long it took, and the tool calls of the
+ * turn before whose results it read. kiff/agents lists those on every turn after a tool call,
+ * so a turn that waited on none, past a run's first, is the first after a pause: a call KIFF
+ * held, answered by the owner. Undefined for a usage record with no timing (a summary's).
+ */
+export function turnTiming(body: unknown): { ms: number; waited: Array<{ tool: string; error: boolean }> } | undefined {
+  const t = (body as { timing?: { ms?: unknown; waited?: unknown } } | undefined)?.timing;
+  if (!t || typeof t !== "object") return undefined;
+  const waited = Array.isArray(t.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown }>) : [];
+  return {
+    ms: typeof t.ms === "number" && t.ms > 0 ? t.ms : 0,
+    waited: waited.filter((w) => typeof w?.tool === "string").map((w) => ({ tool: w.tool as string, error: w.is_error === true })),
+  };
+}
+
 function iso(t: string): string {
   const d = new Date(t);
   return Number.isNaN(d.getTime()) ? t : d.toISOString();

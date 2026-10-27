@@ -697,6 +697,9 @@ final class TafsCloud {
         case thinking(String)
         /// A run picked back up wrote a message: the conversation has it (kiff/tafs#285).
         case said
+        /// A run picked back up went on after a pause, a held call the owner answered: what it
+        /// did before is the conversation's, with its own work (the 859 test).
+        case part
         /// The agent showed a component: the conversation has it.
         case component
         /// The run stopped: its status, and why.
@@ -784,6 +787,7 @@ final class TafsCloud {
         case "step": return (o["call_id"] as? String).map { .step(call: $0, status: o["status"] as? String ?? "done") }
         case "thinking": return (o["text"] as? String).map(StreamEvent.thinking)
         case "said": return .said
+        case "part": return .part
         case "component": return .component
         case "end": return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "")
         case "error": return .broken

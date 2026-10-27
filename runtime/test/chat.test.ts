@@ -112,6 +112,45 @@ describe("conversation", () => {
     expect(JSON.stringify(r.body)).not.toContain("result_bytes");
   });
 
+  it("splits a run's work at a held call the owner answered: each part on its own message, without the wait (the 859 test)", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund T-5005", ANA);
+    const list = w.agents.events.get(chat.session)!;
+    const at = (s: number) => new Date(NOW.getTime() - 3600_000 + s * 1000).toISOString();
+    const usage = (s: number, ms: number, waited: object[]) =>
+      list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: at(s), kind: "usage", body: { cost_micro_usd: 1, timing: { ms, waited } } });
+    usage(3, 2000, []);
+    usage(10, 3000, [{ tool: "list_charges", ms: 400 }]);
+    usage(18, 3000, [{ tool: "get_charge", ms: 300 }]);
+    w.agents.say(chat, "Refunding $120 waits for your approval.", at(22));
+    // Paused on the held refund; the owner approved 52 s later and the run went on.
+    usage(76, 2000, []);
+    usage(80, 1000, [{ tool: "get_charge", ms: 200 }]);
+    w.agents.say(chat, "Refunded $120.", at(81));
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    const [, asked, done] = r.body.messages;
+    expect(asked.work).toEqual({ ms: 22_000, steps: [{ tool: "list_charges" }, { tool: "get_charge" }] });
+    expect(done.work).toEqual({ ms: 7_000, steps: [{ tool: "get_charge" }] });
+  });
+
+  it("keeps a part that wrote nothing with the next, less the wait between them", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund T-5005", ANA);
+    const list = w.agents.events.get(chat.session)!;
+    const at = (s: number) => new Date(NOW.getTime() - 3600_000 + s * 1000).toISOString();
+    const usage = (s: number, ms: number, waited: object[]) =>
+      list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: at(s), kind: "usage", body: { cost_micro_usd: 1, timing: { ms, waited } } });
+    usage(3, 2000, []);
+    usage(10, 3000, [{ tool: "list_charges", ms: 400 }]); // then a held call, with no words
+    usage(70, 2000, []);
+    usage(75, 1000, [{ tool: "get_charge", ms: 200 }]);
+    w.agents.say(chat, "Refunded $120.", at(76));
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.messages[1].work).toEqual({ ms: 10_000 + 8_000, steps: [{ tool: "list_charges" }, { tool: "get_charge" }] });
+  });
+
   it("reads only the latest five runs", async () => {
     const w = world();
     for (let i = 0; i < 7; i++) await jobRun(w, new Date(NOW.getTime() - (10 - i) * 3600_000), `report ${i}`);

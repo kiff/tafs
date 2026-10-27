@@ -183,6 +183,33 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream`, "")).status).toBe(401);
   });
 
+  it("marks where a resumed run went on after a held call the owner answered (the 859 test)", async () => {
+    const w = world();
+    w.agents.streamed.push({ event: "delta", data: { kind: "text", text: "On it." } });
+    const started = await stream(w, PATH, { token: "ana", body: { text: "Refund T-5005" } });
+    const run = String(started.events[0]!.data.run);
+    const usage = (time: string, ms: number, waited: object[]) =>
+      ({ event: "event", data: { kind: "usage", time, body: { cost_micro_usd: 1, timing: { ms, waited } } } });
+    w.agents.resumed.push(
+      usage("2026-10-27T17:00:02Z", 2000, []),
+      { event: "event", data: { kind: "tool_call", body: { call_id: "c1", tool: "list_charges", input: {} } } },
+      { event: "event", data: { kind: "tool_result", body: { call_id: "c1", tool: "list_charges", text: "[]" } } },
+      usage("2026-10-27T17:00:09Z", 3000, [{ tool: "list_charges", ms: 400 }]),
+      { event: "event", data: { kind: "agent_message", body: { text: "The refund waits for you." } } },
+      { event: "event", data: { kind: "tool_call", body: { call_id: "c2", tool: "create_refund", input: {} } } },
+      { event: "event", data: { kind: "tool_result", body: { call_id: "c2", tool: "create_refund", text: "", state: "held", hold: { exception: "exc_1" }, invocation: "tc-1" } } },
+      // The owner approves; the run goes on: the held call's result, then a turn that waited on nothing.
+      { event: "event", data: { kind: "tool_result", body: { call_id: "c2", tool: "create_refund", text: "done" } } },
+      usage("2026-10-27T17:05:04Z", 1500, []),
+      { event: "event", data: { kind: "tool_call", body: { call_id: "c3", tool: "get_charge", input: {} } } },
+      // A summary's usage has no timing: not a turn.
+      { event: "event", data: { kind: "usage", time: "2026-10-27T17:05:05Z", body: { cost_micro_usd: 1 } } },
+    );
+    const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+    expect(r.events.map((e) => e.event)).toEqual(["activity", "step", "said", "activity", "held", "step", "part", "activity", "end"]);
+    expect(r.events.find((e) => e.event === "part")!.data).toEqual({ at: "2026-10-27T17:05:02.500Z" });
+  });
+
   it("carries the files the person attached, with words or alone (kiff/tafs#209)", async () => {
     const w = world();
     const { attachment } = await w.agents.api.createAttachment("t_acme", RAE, "member:u_ana", { media_type: "application/pdf", name: "policy.pdf", size: 900, sha256: "b".repeat(64) });

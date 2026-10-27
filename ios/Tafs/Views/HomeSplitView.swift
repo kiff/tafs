@@ -41,6 +41,10 @@ enum HomeSelection: Hashable {
 struct HomeSplitView: View {
     @EnvironmentObject private var model: AppModel
     @State private var selection: HomeSelection?
+    /// What the app opened on by itself, and whether the owner has chosen since: until they
+    /// do, the first taf in the list is the one open (the 859 test).
+    @State private var opened: HomeSelection?
+    @State private var chosen = false
     @State private var showingNew = false
     @State private var showingSettings = false
 
@@ -74,9 +78,8 @@ struct HomeSplitView: View {
         .navigationSplitViewStyle(.balanced)
         .onAppear { model.sidebarShown = true }
         .onDisappear { model.sidebarShown = false }
-        // The taf open now is the one the app opens on next time (the 845 test).
         .onChange(of: selection) { s in
-            if case .taf(let id)? = s { model.noteOpened(id) }
+            if s != opened { chosen = true }
         }
         // "See it on…" in Setup selects the taf it made (kiff/tafs#96).
         .onChange(of: model.requestedTaf) { id in
@@ -87,18 +90,20 @@ struct HomeSplitView: View {
         }
         .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
         .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
-        // Something open from the start: the taf a call waits on, else the first (CI's
-        // screenshots open Refunds, as on the phone).
-        .task(id: model.tafs.map(\.id)) {
-            if let selected = selection {
+        // Something open from the start: the first taf in the list, which is the one used
+        // last, a call waiting on it first (CI's screenshots open Refunds, as on the phone).
+        // While the list settles at launch it follows its first taf, until the owner chooses
+        // (the 859 test: the app opened Refunds while Refunds 4 led the list).
+        .task(id: model.tafs.map(\.id) + [model.listedTafs.first?.id].compactMap { $0 }) {
+            if chosen, let selected = selection {
                 switch selected {
                 case .taf(let id), .held(_, let id): if model.taf(id) != nil { return }
                 case .haltAll, .overview: return
                 }
             }
-            let screenshot = Screenshots.enabled ? model.tafs.first(where: { $0.name == "Refunds" })?.id : nil
-            // The taf the owner used last (the 845 test), else the one a call waits on, else the first.
-            if let id = screenshot ?? model.lastOpenedTaf ?? model.held.first?.tafID ?? model.tafs.first?.id { selection = .taf(id) } else { selection = nil }
+            opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled)
+            chosen = false
+            selection = opened
         }
     }
 
@@ -115,6 +120,14 @@ struct HomeSplitView: View {
             Image(systemName: h.state == .running ? "hand.raised" : "hand.raised.fill").foregroundColor(Theme.no)
         }
         .task { await model.refreshHalt(nil) }
+    }
+
+    /// The taf the app opens on by itself: the first in the list as it stands, which puts the
+    /// one a call waits on first, then the one used last (the 859 test). CI's screenshots open
+    /// Refunds, as on the phone.
+    static func opening(_ listed: [Taf], screenshot: Bool) -> HomeSelection? {
+        let refunds = screenshot ? listed.first(where: { $0.name == "Refunds" })?.id : nil
+        return (refunds ?? listed.first?.id).map { .taf($0) }
     }
 
     private var sidebar: some View {
@@ -153,6 +166,9 @@ struct HomeSplitView: View {
             Section {
                 ForEach(model.listedTafs) { taf in
                     NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
+                        // A tap on the taf already open is a choice too: the list settling
+                        // later doesn't take the owner away from it.
+                        .simultaneousGesture(TapGesture().onEnded { chosen = true })
                     // Its open trial, its own entry under it (kiff/tafs#173).
                     if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
                         NavigationLink(value: HomeSelection.taf(chat)) { tafRow(trying) }
