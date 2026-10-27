@@ -11,7 +11,6 @@ version headings refer to releases, not merely to merged pull requests.
   asking for a refund (the 859 and 870 tests). The taf twice sent the look-up and the
   refund together, then said it had checked the payment; kiff/agents now refuses a
   refund sent beside a read, and this keeps the taf from spending a turn on it.
-
 - Chat (#249): a run that fails after a call went through names what went through and
   how much moved, for example "Refunds stopped part-way, after this went through: create
   refund on ch_3001, US$5.", from the run's own record and KIFF's Record. Before, it only
