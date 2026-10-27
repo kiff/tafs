@@ -163,6 +163,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A step the owner declined is skipped, not failed");
     // A hand-off refused by the tool showed as done in the plan (the 870 test).
     expect(flat).toContain("A step whose call came back refused or failed is failed, never done, even when you go on");
+    // The rules said reads had no limit; the Card it drafted counted them (the 870 test).
+    expect(flat).toContain("For a read tool, say the call count its Card line will have");
+    expect(flat).toContain("never \"no limit\"");
     // The owner's iPad test (#95): no device's biometry or screen position, a taf that
     // can find its work, the plan finished, and a day that is the account's day.
     // Face ID is named only to say not to name it.
