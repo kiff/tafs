@@ -5,6 +5,15 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+### Fixed
+
+- Chat (the 845 test): a sent message goes to the top at once and stays there while the taf
+  thinks, works and answers. The work block sits under it, with the answer streaming below,
+  and folds in place to "Worked for" when the run ends; a run's work shows once, on its
+  first answer. Coming back from another app shows the chat, not a blank screen. On iPad,
+  the app opens on the taf used last. The sample taf now streams its answer like a real
+  one, and a UI test pins all of this on a simulator.
+
 ### Added
 
 - Chat: while a taf or Coach works, the chat shows the step in progress, one line

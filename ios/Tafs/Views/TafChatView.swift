@@ -57,7 +57,10 @@ struct TafChatView: View {
                 Color.clear.onAppear { footHeight = g.size.height }.onChange(of: g.size.height) { footHeight = $0 }
             })
         }
-        .task(id: tafID) { await model.followChat(tafID) }
+        .task(id: tafID) {
+            model.noteOpened(tafID)
+            await model.followChat(tafID)
+        }
     }
 
     /// Room at the thread's foot for ✦ Coach mode, which floats over the screen's lower right
@@ -84,13 +87,24 @@ struct TafChatView: View {
         return ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
-                    LazyVStack(alignment: .leading, spacing: 12) {
+                    // Not lazy (the 845 test): a thread is at most 100 messages, and a lazy stack
+                    // only estimates the rows it hasn't drawn, so a sent message scrolled to the top
+                    // landed short until the run ended, and coming back from another app the rows
+                    // went blank. Every row is laid out, so a scroll lands where it says.
+                    VStack(alignment: .leading, spacing: 12) {
                         if items.isEmpty && state.unsent.isEmpty {
                             Text("Ask \(taf?.name ?? "it") what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.")
                                 .scaledFont(14).foregroundColor(Theme.dim)
                                 .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 30)
                         }
+                        // The answer streaming now starts at its first words in the items; the work
+                        // block goes just before them, under the owner's message, so the answer streams
+                        // below it and it folds in place when the run ends (the 845 test).
+                        let firstWords = items.firstIndex { if case .streaming = $0 { return true }; return false }
                         ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
+                            if i == firstWords, let live = state.live {
+                                LiveWork(live: live).id("work")
+                            }
                             // A time between parts of the thread that are far apart, not on every line.
                             if i == 0 || item.at.timeIntervalSince(items[i - 1].at) >= 3600 {
                                 Text(AccountTime.calendar.isDateInToday(item.at) ? item.at.shortTime : item.at.shown(date: .abbreviated, time: .shortened))
@@ -131,7 +145,7 @@ struct TafChatView: View {
                         // Under it, what the taf is doing and thinking, and the steps it took
                         // (kiff/tafs#285); the dots while nothing streams yet.
                         if let live = state.live {
-                            LiveWork(live: live).id("work")
+                            if firstWords == nil { LiveWork(live: live).id("work") }
                         } else if thinking {
                             TypingBubble(taf: taf, fullWidth: true).id("thinking")
                         }
@@ -183,6 +197,7 @@ struct TafChatView: View {
                 .frame(maxWidth: Self.readable)
                 .frame(maxWidth: .infinity)
             }
+            .accessibilityIdentifier("chat-thread")
             .dismissesKeyboardInteractively()
             .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: coachRoom) }
             .background(GeometryReader { g in
@@ -375,6 +390,7 @@ struct TafChatView: View {
         let name = model.taf(tafID)?.name ?? "your taf"
         return HStack(alignment: .bottom, spacing: 10) {
             ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft)
+                .accessibilityIdentifier("chat-field")
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -410,6 +426,7 @@ struct TafChatView: View {
                         .opacity(empty ? 0.4 : 1)
                 }
                 .disabled(empty)
+                .accessibilityIdentifier("chat-send")
                 .shortcut(.send)
                 .accessibilityLabel(thinking ? "Send to \(name) while it works" : "Send")
             }
@@ -494,6 +511,7 @@ struct ChatBubble: View {
             HStack {
                 Spacer(minLength: 48)
                 Text(message.text)
+                    .accessibilityIdentifier("owner-message")
                     .scaledFont(15).foregroundColor(.white)
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(Theme.brand)

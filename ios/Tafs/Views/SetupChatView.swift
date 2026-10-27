@@ -170,7 +170,9 @@ struct SetupChatView: View {
         let waiting = model.setupWaiting
         return ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
+                // Not lazy (the 845 test): a lazy stack only estimates rows it hasn't drawn, so
+                // a pinned message landed short and a return from another app showed blank rows.
+                VStack(alignment: .leading, spacing: 12) {
                     if items.isEmpty && !thinking && model.setupUnsent.isEmpty { starts }
                     ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                         // A time between parts of the thread that are far apart, not on every line.
@@ -217,15 +219,16 @@ struct SetupChatView: View {
                                      retry: { await model.retrySetup(unsent) }, discard: { model.discardUnsent(unsent) })
                             .id(unsent.id)
                     }
-                    if !model.setupLiveText.isEmpty {
-                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live"), taf: nil, fullWidth: true, steady: true).id("live")
-                    }
-                    // What Coach is doing and thinking, and the steps it took (kiff/tafs#285); the
-                    // dots while nothing streams yet.
+                    // What Coach is doing and thinking, and the steps it took (kiff/tafs#285), in one
+                    // block under the owner's message, with the answer streaming below it (the 845
+                    // test); the dots while nothing streams yet.
                     if let live = model.setupLive {
                         LiveWork(live: live).id("work")
                     } else if thinking {
                         TypingBubble(taf: nil, fullWidth: true).id("thinking")
+                    }
+                    if !model.setupLiveText.isEmpty {
+                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live"), taf: nil, fullWidth: true, steady: true).id("live")
                     }
                     if !thinking { ended }
                     if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() }.id("queued") }

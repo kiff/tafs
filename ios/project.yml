@@ -219,18 +219,32 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+  # The owner's 845 test, pinned on a simulator: a sent message at the top at once, and the
+  # work block under it (kiff/tafs#289).
+  TafsUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - TafsUITests
+    dependencies:
+      - target: Tafs
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Tafs
 schemes:
   Tafs:
     build:
       targets:
         Tafs: all
         TafsTests: [test]
+        TafsUITests: [test]
     # Run from Xcode, the App Store's products are this file's: Solo and the five packs,
     # with the same product ids as App Store Connect.
     run:
       storeKitConfiguration: Tafs.storekit
     test:
-      targets: [TafsTests]
+      targets: [TafsTests, TafsUITests]
       # StoreKit's local testing (StoreKitLocalTests): the test host's App Store is this file's.
       storeKitConfiguration: Tafs.storekit
   TafsMac:

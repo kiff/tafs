@@ -89,7 +89,7 @@ describe("conversation", () => {
     expect(r.body.messages[0].session).toBe(run.session);
   });
 
-  it("keeps how long the taf worked on a message and the tools it called, by name only (kiff/tafs#285)", async () => {
+  it("keeps how long the taf worked on a run, on its first message, and the tools it called, by name only (kiff/tafs#285)", async () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 3600_000));
     const chat = await w.agents.api.startRun("t_acme", RAE, "Refund the last order", ANA);
@@ -105,8 +105,10 @@ describe("conversation", () => {
     const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
     const [, refunded, after] = r.body.messages;
     expect(refunded.text).toBe("Refunded $20.");
-    expect(refunded.work).toEqual({ ms: 12_000, steps: [{ tool: "get_order", error: true }, { tool: "get_order" }, { tool: "create_refund" }] });
-    expect(after.work).toBeUndefined(); // no tools since the message before
+    // The whole run, on its first message, where the app's work block sat (the 845 test): from
+    // the owner's message to the run's last words.
+    expect(refunded.work).toEqual({ ms: 14_000, steps: [{ tool: "get_order", error: true }, { tool: "get_order" }, { tool: "create_refund" }] });
+    expect(after.work).toBeUndefined(); // the run's work is shown once
     expect(JSON.stringify(r.body)).not.toContain("result_bytes");
   });
 
