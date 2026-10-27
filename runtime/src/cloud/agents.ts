@@ -283,6 +283,42 @@ export interface RunAt {
   live?: boolean;
   /** The account's run grant for a member's run: kiff/agents takes the requester from it. */
   grant?: string;
+  /**
+   * Files the person attached to this message, by id (kiff/tafs#209): theirs, uploaded and
+   * not sent before. Only a person's own chat message carries any.
+   */
+  attachments?: string[];
+}
+
+/** A file as a message records it (kiff/tafs#209): never its bytes. */
+export interface AttachmentRef {
+  id: string;
+  kind: "image" | "pdf" | "text" | "word" | "excel";
+  media_type: string;
+  name: string;
+  size: number;
+}
+
+/** A file the person attached, as kiff/agents shows it to them. */
+export interface Attachment extends AttachmentRef {
+  created: string;
+  sent: boolean;
+}
+
+/** Where the app uploads a file's bytes: a PUT to url with headers, sent as given, until expires. */
+export interface Upload {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  expires: string;
+}
+
+/** What the app declares of a file before uploading it. */
+export interface DeclaredFile {
+  media_type: string;
+  name: string;
+  size: number;
+  sha256: string;
 }
 
 /**
@@ -304,6 +340,7 @@ function runAt(at: RunAt): Record<string, unknown> {
     ...(at.requester ? { requester: at.requester } : {}),
     ...(at.live && !at.session ? { chat: "live" } : {}),
     ...(at.grant ? { run_grant: at.grant } : {}),
+    ...(at.attachments?.length ? { attachments: at.attachments } : {}),
   };
 }
 
@@ -464,6 +501,22 @@ export class Agents {
    */
   async eraseTenant(tenant: string): Promise<void> {
     await this.call("DELETE", tenant, ["tenant"]);
+  }
+
+  // Attachments (kiff/tafs#209).
+
+  /**
+   * A file the person will attach to a message in their chat with the agent: kiff/agents
+   * checks its type and size and answers an upload for exactly it. Over a limit is 400,
+   * saying which.
+   */
+  async createAttachment(tenant: string, agent: string, owner: string, file: DeclaredFile): Promise<{ attachment: Attachment; upload: Upload }> {
+    return this.call("POST", tenant, ["agents", agent, "attachments"], file, { owner });
+  }
+
+  /** A file the person attached, with a download URL for a minute: only theirs; another's is 404. */
+  async readAttachment(tenant: string, agent: string, owner: string, id: string): Promise<Attachment & { url: string; url_expires: string }> {
+    return this.call("GET", tenant, ["agents", agent, "attachments", id], undefined, { owner });
   }
 
   // Runs.

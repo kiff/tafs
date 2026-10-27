@@ -404,10 +404,22 @@ struct TafChatView: View {
     }
 
     private var composer: some View {
-        let empty = draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let key = tafID.uuidString
+        let files = model.files(key)
+        let ready = files.contains { $0.ref != nil }
+        let uploading = model.filesUploading(key)
+        let empty = draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !ready
         let thinking = model.chatThinking(tafID) && model.mode == .kiff
+        // Files go with a message of their own, once the taf is done; and nothing goes while a file
+        // is still going up, so a message never leaves one behind (kiff/tafs#209).
+        let held = model.holdsSend(key, thinking: thinking)
         let name = model.taf(tafID)?.name ?? "your taf"
-        return HStack(alignment: .bottom, spacing: 10) {
+        return VStack(spacing: 0) {
+        FileTray(key: key)
+        HStack(alignment: .bottom, spacing: 10) {
+            #if os(iOS)
+            if model.filesTarget(key) != nil { AttachButton(key: key) }
+            #endif
             ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft)
                 .accessibilityIdentifier("chat-field")
                 .focused($typing)
@@ -435,22 +447,24 @@ struct TafChatView: View {
             } else {
                 // While the taf works, what's written goes to its run, which reads it at its
                 // next step; or, behind a queued message, waits for it to be done.
-                Button(action: send) {
+                Button { send() } label: {
                     Image(systemName: "arrow.up")
                         .scaledFont(16, weight: .bold)
                         .foregroundColor(.white)
                         .frame(width: 40, height: 40)
                         .background(Theme.brand)
                         .clipShape(Circle())
-                        .opacity(empty ? 0.4 : 1)
+                        .opacity(empty || held ? 0.4 : 1)
                 }
-                .disabled(empty)
+                .disabled(empty || held)
                 .accessibilityIdentifier("chat-send")
                 .shortcut(.send)
-                .accessibilityLabel(thinking ? "Send to \(name) while it works" : "Send")
+                .accessibilityLabel(held ? (uploading ? "Send once the files are up" : "Send files once \(name) is done")
+                                    : thinking ? "Send to \(name) while it works" : "Send")
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
+        }
         .frame(maxWidth: Self.readable)
         .frame(maxWidth: .infinity)
         .barBackground()
@@ -463,12 +477,14 @@ struct TafChatView: View {
 
     /// A sent message's menu (kiff/tafs#285): send it again, change it first, or copy it.
     @ViewBuilder private func askAgain(_ text: String) -> some View {
-        Button { draft = text; send() } label: { Label("Send again", systemImage: "arrow.clockwise") }
+        // Its words only: files picked for the next message stay in the tray (kiff/tafs#209).
+        Button { draft = text; send(files: false) } label: { Label("Send again", systemImage: "arrow.clockwise") }
         Button { draft = text; typing = true } label: { Label("Edit and send", systemImage: "pencil") }
         Button { Clipboard.copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
     }
 
-    private func send() {
+    /// Sends what's in the box; with `files`, the tray's ready files go with it.
+    private func send(files withFiles: Bool = true) {
         // Sending stops dictating: what was heard goes with it, as it stands in the box.
         model.dictation.stop()
         let text = draft
@@ -489,8 +505,13 @@ struct TafChatView: View {
         // The keyboard goes down once it's sent (kiff/tafs#138, the owner's call, which
         // reverses #102): the reply and its card get the screen.
         typing = false
+        let key = tafID.uuidString
+        let files = withFiles ? model.takeFiles(key) : []
         Task {
-            if !(await model.submitChat(text, to: tafID)), draft.isEmpty { draft = text }
+            if !(await model.submitChat(text, to: tafID, files: files.compactMap(\.ref))) {
+                if draft.isEmpty { draft = text }
+                model.putBackFiles(files, key)
+            }
         }
     }
 }
@@ -529,16 +550,25 @@ struct ChatBubble: View {
         } else if message.from == .owner {
             HStack {
                 Spacer(minLength: 48)
-                Text(message.text)
-                    .accessibilityIdentifier("owner-message")
-                    .scaledFont(15).foregroundColor(.white)
-                    .padding(.horizontal, 14).padding(.vertical, 10)
-                    .background(Theme.brand)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .opacity(message.session == "pending" ? 0.7 : 1)
-                    // Copied from its menu, with Send again and Edit (kiff/tafs#285), where the chat
-                    // gives one; selectable elsewhere.
-                    .textSelection(.enabled)
+                VStack(alignment: .trailing, spacing: 6) {
+                    // The files sent with it (kiff/tafs#209), each opening full size.
+                    if !message.attachments.isEmpty {
+                        MessageFiles(files: message.attachments, key: taf?.id.uuidString ?? AppModel.setupFiles)
+                            .opacity(message.session == "pending" ? 0.7 : 1)
+                    }
+                    if !message.text.isEmpty {
+                        Text(message.text)
+                            .accessibilityIdentifier("owner-message")
+                            .scaledFont(15).foregroundColor(.white)
+                            .padding(.horizontal, 14).padding(.vertical, 10)
+                            .background(Theme.brand)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .opacity(message.session == "pending" ? 0.7 : 1)
+                            // Copied from its menu, with Send again and Edit (kiff/tafs#285), where the chat
+                            // gives one; selectable elsewhere.
+                            .textSelection(.enabled)
+                    }
+                }
             }
         } else if fullWidth {
             // Full width, with no bubble, as Claude and ChatGPT write (#58).
