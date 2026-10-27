@@ -135,6 +135,26 @@ final class PurchasesTests: XCTestCase {
         XCTAssertNil(UsageView.billingLine(Self.usage(source: "", plan: "trial")))
     }
 
+    /// After a move from Solo to Team (billed by KIFF), Solo still renews in the App Store until
+    /// it's cancelled there: one line says so, with Apple's own page. Nothing about where to buy.
+    func testSoloStillRenewsAfterTheMoveToTeam() {
+        var u = Self.usage(source: "stripe", plan: "team")
+        XCTAssertNil(UsageView.soloStillRenews(u), "nothing to say without a Solo renewing")
+        u.billing?.appleSoloUntil = ISO8601DateFormatter().date(from: "2026-11-03T09:00:00Z")
+        let line = try? XCTUnwrap(UsageView.soloStillRenews(u))
+        XCTAssertTrue(line?.hasPrefix("Team is billed by KIFF now. The Solo bought in the App Store renews on ") ?? false, line ?? "")
+        XCTAssertTrue(line?.hasSuffix("unless it's cancelled, from the Apple account that bought it.") ?? false, line ?? "")
+        XCTAssertFalse(line?.contains("kiff.dev") ?? true, "the app never points to buying elsewhere")
+        u.billing?.source = "apple"
+        XCTAssertNil(UsageView.soloStillRenews(u), "while Apple bills, Manage says it all")
+    }
+
+    func testTheSoloRenewalIsRead() throws {
+        let json = #"{"source":"stripe","manage_url":null,"apple_solo_until":"2026-11-03T09:00:00Z"}"#
+        let b = try KIFFClient.decoder.decode(KIFFClient.Usage.Billing.self, from: Data(json.utf8))
+        XCTAssertEqual(b.appleSoloUntil, ISO8601DateFormatter().date(from: "2026-11-03T09:00:00Z"))
+    }
+
     /// Solo is offered only to an account with no plan billed, to someone who may add tasks:
     /// never to one billed by KIFF, by an agreement, or already by Apple.
     func testNoSubscriptionOfferToAnAccountBilledElsewhere() {

@@ -412,7 +412,10 @@ final class KIFFClient {
         struct Billing: Decodable, Equatable {
             var source: String = ""
             var manageURL: URL? = nil
-            enum CodingKeys: String, CodingKey { case source, manageURL = "manage_url" }
+            /// The account moved from Solo in the App Store to Team, which KIFF bills now,
+            /// and Solo still renews with Apple on this date unless it's cancelled there.
+            var appleSoloUntil: Date? = nil
+            enum CodingKeys: String, CodingKey { case source, manageURL = "manage_url", appleSoloUntil = "apple_solo_until" }
         }
         /// One of the account's packs with tasks left.
         struct HeldPack: Decodable, Equatable, Identifiable {

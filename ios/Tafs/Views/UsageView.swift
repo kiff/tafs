@@ -199,20 +199,40 @@ struct UsageView: View {
         }
     }
 
-    /// Who bills the plan, in one line; Apple's with Manage.
+    /// Who bills the plan, in one line; Apple's with Manage. After a move from Solo to Team,
+    /// while Solo still renews with Apple, a line says so with Apple's own page to cancel it:
+    /// the app never points anywhere else to buy.
     @ViewBuilder private func billingPanel(_ u: KIFFClient.Usage) -> some View {
         if let line = Self.billingLine(u) {
             Panel {
-                HStack {
-                    Text(line).scaledFont(15).foregroundColor(Theme.ink)
-                    Spacer()
-                    if Self.managedByApple(u) {
-                        Button("Manage") { Task { await Purchases.manageSubscriptions() } }
-                            .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text(line).scaledFont(15).foregroundColor(Theme.ink)
+                        Spacer()
+                        if Self.managedByApple(u) {
+                            Button("Manage") { Task { await Purchases.manageSubscriptions() } }
+                                .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                        }
+                    }
+                    if let renews = Self.soloStillRenews(u) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(renews).scaledFont(14).foregroundColor(Theme.soft)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 8)
+                            Button("Cancel Solo") { Task { await Purchases.manageSubscriptions() } }
+                                .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                        }
                     }
                 }
             }
         }
+    }
+
+    /// "The Solo bought in the App Store renews on 3 November…" after a move to Team; nil otherwise.
+    /// It doesn't say "your": the person reading may not be the one who bought it.
+    static func soloStillRenews(_ u: KIFFClient.Usage) -> String? {
+        guard u.billing?.source == "stripe", let until = u.billing?.appleSoloUntil else { return nil }
+        return "Team is billed by KIFF now. The Solo bought in the App Store renews on \(until.shown(date: .long, time: .omitted)) unless it's cancelled, from the Apple account that bought it."
     }
 
     /// One line on who bills the plan; nil when no plan is billed.
