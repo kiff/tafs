@@ -1245,13 +1245,20 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   for (const r of read) {
     if (!r) continue;
     const seenRun = new Set<string>();
-    // The work since the run's last message: when that was, and the tools called since.
-    const since = new Map<string, number>();
-    let tools: Array<{ tool: string; error?: true }> = [];
+    // Each run's work, shown once, on its first message (the 845 test): when the run started,
+    // the tools it called, in order, and when it last wrote. The app's live block sits there too,
+    // under the owner's message, so it folds in place when the run ends.
+    const runs = new Map<string, { start: number; tools: Array<{ tool: string; error?: true }>; first?: ThreadMessage; last?: number }>();
+    const runOf = (id: string, at: number) => {
+      let w = runs.get(id);
+      if (!w) runs.set(id, (w = { start: at, tools: [] }));
+      return w;
+    };
     for (const e of r.events) {
       if (e.kind === "usage") {
         const waited = (e.body as { timing?: { waited?: Array<{ tool?: unknown; is_error?: unknown }> } } | undefined)?.timing?.waited ?? [];
-        for (const t of waited) if (typeof t.tool === "string") tools.push({ tool: t.tool, ...(t.is_error === true ? { error: true as const } : {}) });
+        const w = runOf(e.run, Date.parse(iso(e.time)));
+        for (const t of waited) if (typeof t.tool === "string") w.tools.push({ tool: t.tool, ...(t.is_error === true ? { error: true as const } : {}) });
         continue;
       }
       if (e.kind === "component") {
@@ -1262,10 +1269,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       const text = typeof (e.body as { text?: unknown })?.text === "string" ? ((e.body as { text: string }).text).trim() : "";
       if (!text) continue;
       const at = Date.parse(iso(e.time));
-      const work = e.kind !== "owner_message" && tools.length > 0 && since.has(e.run) && !Number.isNaN(at)
-        ? { ms: Math.max(0, at - since.get(e.run)!), steps: tools } : undefined;
-      since.set(e.run, at);
-      tools = [];
+      const run = runOf(e.run, at);
       if (e.kind === "owner_message") {
         // Each job run opens with the job's instruction: not something the owner typed.
         const kind = r.session.kind === "run" && !seenRun.has(e.run) ? "kickoff" : "message";
@@ -1280,11 +1284,18 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       } else {
         const app = doorRuns.get(e.run);
         const reply = app ? sent.get(e.run) : undefined;
-        messages.push({
+        const said: ThreadMessage = {
           at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id,
           ...(app ? { door: { app, reply: reply?.status ?? "pending", ...(reply?.why ? { why: reply.why } : {}) } } : {}),
-          ...(work ? { work } : {}),
-        });
+        };
+        messages.push(said);
+        if (!run.first) run.first = said;
+        if (!Number.isNaN(at)) run.last = at;
+      }
+    }
+    for (const w of runs.values()) {
+      if (w.first && w.tools.length > 0 && w.last !== undefined && !Number.isNaN(w.start)) {
+        w.first.work = { ms: Math.max(0, w.last - w.start), steps: w.tools };
       }
     }
   }

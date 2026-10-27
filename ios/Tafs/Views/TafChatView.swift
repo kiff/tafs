@@ -33,9 +33,11 @@ struct TafChatView: View {
     /// there, so the same words sent again never pin the older copy (kiff/tafs#138, item 34).
     @State private var sentBefore: Set<String> = []
     @State private var viewport: CGFloat = 600
+    /// The pinned message's turn: from its top to the thread's foot, as laid out (the 845 test).
+    /// The room under it is the screen less this, so the answer growing below never moves it.
+    @State private var turn = PinnedTurn()
     /// The height of what's under the thread: an error, the field, the dictation bar.
     @State private var footHeight: CGFloat = 60
-    @Environment(\.scenePhase) private var scenePhase
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
@@ -57,7 +59,10 @@ struct TafChatView: View {
                 Color.clear.onAppear { footHeight = g.size.height }.onChange(of: g.size.height) { footHeight = $0 }
             })
         }
-        .task(id: tafID) { await model.followChat(tafID) }
+        .task(id: tafID) {
+            model.noteOpened(tafID)
+            await model.followChat(tafID)
+        }
     }
 
     /// Room at the thread's foot for ✦ Coach mode, which floats over the screen's lower right
@@ -84,13 +89,24 @@ struct TafChatView: View {
         return ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
-                    LazyVStack(alignment: .leading, spacing: 12) {
+                    // Not lazy (the 845 test): a thread is at most 100 messages, and a lazy stack
+                    // only estimates the rows it hasn't drawn, so a sent message scrolled to the top
+                    // landed short until the run ended, and coming back from another app the rows
+                    // went blank. Every row is laid out, so a scroll lands where it says.
+                    VStack(alignment: .leading, spacing: 12) {
                         if items.isEmpty && state.unsent.isEmpty {
                             Text("Ask \(taf?.name ?? "it") what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.")
                                 .scaledFont(14).foregroundColor(Theme.dim)
                                 .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.vertical, 30)
                         }
+                        // The answer streaming now starts at its first words in the items; the work
+                        // block goes just before them, under the owner's message, so the answer streams
+                        // below it and it folds in place when the run ends (the 845 test).
+                        let firstWords = items.firstIndex { if case .streaming = $0 { return true }; return false }
                         ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
+                            if i == firstWords, let live = state.live {
+                                LiveWork(live: live).id("work")
+                            }
                             // A time between parts of the thread that are far apart, not on every line.
                             if i == 0 || item.at.timeIntervalSince(items[i - 1].at) >= 3600 {
                                 Text(AccountTime.calendar.isDateInToday(item.at) ? item.at.shortTime : item.at.shown(date: .abbreviated, time: .shortened))
@@ -119,6 +135,7 @@ struct TafChatView: View {
                                 }
                             }
                             .id(item.id)
+                            .pinnedTop(item.id == pinned)
                         }
                         ForEach(state.unsent) { unsent in
                             UnsentBubble(message: unsent, words: unsent.text, busy: model.chatSending.contains(tafID),
@@ -126,12 +143,13 @@ struct TafChatView: View {
                                          discard: { model.discardUnsentChat(unsent, from: tafID) },
                                          taf: (tafID, taf?.name ?? "This taf"))
                                 .id(unsent.id.uuidString)
+                                .pinnedTop(unsent.id.uuidString == pinned)
                         }
                         // The answer streaming now is in the items, in the order it came (kiff/tafs#206).
                         // Under it, what the taf is doing and thinking, and the steps it took
                         // (kiff/tafs#285); the dots while nothing streams yet.
                         if let live = state.live {
-                            LiveWork(live: live).id("work")
+                            if firstWords == nil { LiveWork(live: live).id("work") }
                         } else if thinking {
                             TypingBubble(taf: taf, fullWidth: true).id("thinking")
                         }
@@ -147,6 +165,7 @@ struct TafChatView: View {
                                 .frame(maxWidth: .infinity, alignment: .trailing)
                                 .accessibilityElement(children: .combine)
                                 .id("steer|\(i)")
+                                .pinnedTop("steer|\(i)" == pinned)
                             }
                         }
                         if !thinking { ended(taf) }
@@ -158,8 +177,10 @@ struct TafChatView: View {
                         if let queued = state.queued {
                             QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
                                 .id("queued")
+                                .pinnedTop(pinned == "queued")
                         }
                         Color.clear.frame(height: 1).id(Self.bottom)
+                            .threadFoot()
                             .onAppear {
                                 // A pinned message stays at the top: seeing the bottom under it doesn't make
                                 // the thread follow what arrives (kiff/tafs#206).
@@ -172,17 +193,23 @@ struct TafChatView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
                     .padding(.bottom, pinned == nil ? 12 : 0)
-                    // A whole screen under a pinned message, so a short one reaches the top at once,
-                    // not once the answer has grown below it (kiff/tafs#243). Outside the lazy rows:
-                    // a lazy row's height is only estimated until it's drawn, so the scroll stopped
-                    // short of the top until the answer filled the space (the 755 retest).
-                    if pinned != nil { Color.clear.frame(height: max(0, viewport)) }
+                    // Room under a pinned message, so a short one reaches the top at once, not once
+                    // the answer has grown below it (kiff/tafs#243): the screen less the turn it
+                    // starts (the 845 test), so as the answer grows the room shrinks by as much, and
+                    // nothing moves. It stays once the run ends, until the next message is pinned.
+                    if pinned != nil { Color.clear.frame(height: turn.room(viewport)) }
                 }
+                .coordinateSpace(name: PinnedTurn.space)
+                .onPreferenceChange(PinnedTopKey.self) { turn.top = $0 }
+                .onPreferenceChange(ThreadFootKey.self) { turn.foot = $0 }
                 // A readable column on a wide screen (kiff/tafs#102): the owner's words and the
                 // taf's sit together, not at the screen's far edges.
                 .frame(maxWidth: Self.readable)
                 .frame(maxWidth: .infinity)
             }
+            .accessibilityIdentifier("chat-thread")
+            // What the pin is doing, for the UI test that keeps the 845 test from coming back.
+            .accessibilityValue(pinState)
             .dismissesKeyboardInteractively()
             .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: coachRoom) }
             .background(GeometryReader { g in
@@ -222,6 +249,10 @@ struct TafChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
+                // The thread as it is now, from the model: the `items` this closure captured can
+                // be the body's before the change, without the message just sent, so the pin
+                // waited for the next change, the answer, and landed at the run's end (the 845 test).
+                let items = model.chatItems(tafID)
                 if let p = pinned, p.hasPrefix("m|"), !ids.contains(p), let words = pinnedWords,
                    let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
                     pinned = copy
@@ -266,19 +297,22 @@ struct TafChatView: View {
                 follow(proxy)
             }
             .onAppear { land(proxy, items: items.map(\.id), waiting: waiting) }
-            // Back from another app (the 805 retest): re-pinning a sent message left the screen of
-            // space kept under it in view, blank, and landing at the latest lost the owner's place.
-            // The pin is over: its space goes, the message stays where it was, and nothing else
-            // moves.
-            .onChange(of: scenePhase) { phase in
-                guard phase == .active, let p = pinned else { return }
-                pinned = nil
-                proxy.scrollTo(p, anchor: .top)
-            }
+            // Back from another app, nothing is changed (the 845 test): taking the room under a
+            // pinned message away left the view scrolled past the end of a shorter thread, blank,
+            // until a reload. The pin and its room, sized to the turn, stay where they were.
         }
     }
 
     private static let bottom = "bottom"
+
+    /// The pin as laid out, in screenshots mode only: what ChatPinUITests reports on a failure.
+    private var pinState: String {
+        guard Screenshots.enabled else { return "" }
+        let top = turn.top.map { String(Int($0)) } ?? "-"
+        let foot = turn.foot.map { String(Int($0)) } ?? "-"
+        let room = Int(turn.room(viewport))
+        return "pinned \(pinned ?? "none"), turn \(top)…\(foot), room \(room), viewport \(Int(viewport)), following \(following), touched \(touched)"
+    }
 
     /// The bubble of what the owner just sent, while the taf works: steering its run, or
     /// queued behind it. It goes to the top at once (kiff/tafs#138).
@@ -375,6 +409,7 @@ struct TafChatView: View {
         let name = model.taf(tafID)?.name ?? "your taf"
         return HStack(alignment: .bottom, spacing: 10) {
             ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft)
+                .accessibilityIdentifier("chat-field")
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -410,6 +445,7 @@ struct TafChatView: View {
                         .opacity(empty ? 0.4 : 1)
                 }
                 .disabled(empty)
+                .accessibilityIdentifier("chat-send")
                 .shortcut(.send)
                 .accessibilityLabel(thinking ? "Send to \(name) while it works" : "Send")
             }
@@ -494,6 +530,7 @@ struct ChatBubble: View {
             HStack {
                 Spacer(minLength: 48)
                 Text(message.text)
+                    .accessibilityIdentifier("owner-message")
                     .scaledFont(15).foregroundColor(.white)
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(Theme.brand)
@@ -623,5 +660,46 @@ extension ScrollViewProxy {
                 }
             }
         }
+    }
+}
+
+/// Where a pinned message's turn sits in a chat's thread (the 845 test): its top and the
+/// thread's foot, as laid out, in the thread's own space.
+struct PinnedTurn: Equatable {
+    static let space = "thread"
+    var top: CGFloat?
+    var foot: CGFloat?
+
+    /// The room under the turn: the screen less the turn, so the pinned message sits at the top
+    /// and the answer grows into the room. A whole screen until the turn is measured.
+    func room(_ viewport: CGFloat) -> CGFloat {
+        guard let top, let foot, foot >= top else { return max(0, viewport) }
+        return max(0, viewport - (foot - top))
+    }
+}
+
+struct PinnedTopKey: PreferenceKey {
+    static let defaultValue: CGFloat? = nil
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) { value = nextValue() ?? value }
+}
+
+struct ThreadFootKey: PreferenceKey {
+    static let defaultValue: CGFloat? = nil
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) { value = nextValue() ?? value }
+}
+
+extension View {
+    /// Reports this row's top while it's the pinned message.
+    func pinnedTop(_ pinned: Bool) -> some View {
+        background(GeometryReader { g in
+            Color.clear.preference(key: PinnedTopKey.self, value: pinned ? g.frame(in: .named(PinnedTurn.space)).minY : nil)
+        })
+    }
+
+    /// Reports where the thread's rows end.
+    func threadFoot() -> some View {
+        background(GeometryReader { g in
+            Color.clear.preference(key: ThreadFootKey.self, value: g.frame(in: .named(PinnedTurn.space)).maxY)
+        })
     }
 }

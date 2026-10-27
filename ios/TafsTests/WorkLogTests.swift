@@ -80,4 +80,14 @@ final class WorkLogTests: XCTestCase {
         XCTAssertNil(messages[1].work)
         XCTAssertNil(messages[2].work, "one the app can't read leaves the message as it is")
     }
+
+    /// The room under a pinned message is the screen less its turn (the 845 test): a whole
+    /// screen until the turn is measured, shrinking as the answer grows, never below nothing.
+    func testTheRoomUnderAPinnedMessageIsTheScreenLessItsTurn() {
+        XCTAssertEqual(PinnedTurn().room(800), 800)
+        XCTAssertEqual(PinnedTurn(top: 300, foot: 420).room(800), 680)
+        XCTAssertEqual(PinnedTurn(top: 300, foot: 900).room(800), 200, "the answer grew: the room shrank by as much")
+        XCTAssertEqual(PinnedTurn(top: 300, foot: 1400).room(800), 0)
+        XCTAssertEqual(PinnedTurn(top: 300, foot: 200).room(800), 800, "not laid out yet")
+    }
 }

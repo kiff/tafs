@@ -123,6 +123,8 @@ struct LiveWork: View {
                 if !rows.isEmpty { StepList(rows: rows) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("work-block")
         }
     }
 
@@ -231,6 +233,8 @@ struct WorkSummary: View {
             if open { StepList(rows: rows).transition(.opacity) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("work-summary")
     }
 }
 
@@ -246,6 +250,8 @@ struct SteadyMarkdown: View {
     var body: some View {
         let healed = MarkdownBlock.healed(text)
         MarkdownText(healed, visible: shown, size: size)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("answer-streaming")
             .task(id: text) {
                 let target = MarkdownText(healed).length
                 guard !Motion.reduced else { shown = nil; return }

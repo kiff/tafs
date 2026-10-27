@@ -74,6 +74,10 @@ struct HomeSplitView: View {
         .navigationSplitViewStyle(.balanced)
         .onAppear { model.sidebarShown = true }
         .onDisappear { model.sidebarShown = false }
+        // The taf open now is the one the app opens on next time (the 845 test).
+        .onChange(of: selection) { s in
+            if case .taf(let id)? = s { model.noteOpened(id) }
+        }
         // "See it on…" in Setup selects the taf it made (kiff/tafs#96).
         .onChange(of: model.requestedTaf) { id in
             guard let id else { return }
@@ -93,7 +97,8 @@ struct HomeSplitView: View {
                 }
             }
             let screenshot = Screenshots.enabled ? model.tafs.first(where: { $0.name == "Refunds" })?.id : nil
-            if let id = screenshot ?? model.held.first?.tafID ?? model.tafs.first?.id { selection = .taf(id) } else { selection = nil }
+            // The taf the owner used last (the 845 test), else the one a call waits on, else the first.
+            if let id = screenshot ?? model.lastOpenedTaf ?? model.held.first?.tafID ?? model.tafs.first?.id { selection = .taf(id) } else { selection = nil }
         }
     }
 

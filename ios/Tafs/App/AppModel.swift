@@ -1031,6 +1031,22 @@ final class AppModel: ObservableObject {
         return id
     }
 
+    /// Where the taf opened last is kept, by its KIFF agent: a taf's id here is new each launch.
+    static let lastTafKey = "tafs.lastTaf"
+
+    /// The owner opened this taf: the app opens on it next time (the 845 test).
+    func noteOpened(_ tafID: UUID) {
+        guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return }
+        remembered?.set(agent, forKey: Self.lastTafKey)
+    }
+
+    /// The taf opened last, while it's still one of the account's; nil otherwise.
+    var lastOpenedTaf: UUID? {
+        guard let agent = remembered?.string(forKey: Self.lastTafKey), let id = holderIDs[agent],
+              tafs.contains(where: { $0.id == id }) else { return nil }
+        return id
+    }
+
     /// tafs cloud's events as Activity entries, in the owner's words: one a taf, and one for
     /// each taf when it was all of them.
     func inTafs(_ events: [TafsCloud.AccountEvent]) -> [RecordEntry] {
@@ -2411,8 +2427,8 @@ final class AppModel: ObservableObject {
     /// The tafs a message is on its way to, so one is sent at a time.
     @Published private(set) var chatSending: Set<UUID> = []
     @Published var chatErrors: [UUID: String] = [:]
-    /// How long a sample taf takes to answer; tests set it to zero.
-    var sampleReplyDelay: UInt64 = 700_000_000
+    /// How long a sample taf takes to answer; tests set it to zero, and the UI tests slow it.
+    var sampleReplyDelay: UInt64 = Screenshots.sampleReplySeconds.map { UInt64($0 * 1_000_000_000) } ?? 700_000_000
 
     static let chatLimit = 2000
 
@@ -2485,9 +2501,39 @@ final class AppModel: ObservableObject {
         if mode != .sample { chatSent[tafID, default: []].append(pending) }
 
         if mode == .sample {
-            try? await Task.sleep(nanoseconds: sampleReplyDelay)
+            // The sample answers as a taf does (kiff/tafs#285): it thinks, takes a step, then
+            // writes, into the live answer; then the answer is the thread's, with its work.
+            let reply = sampleReply(to: text, tafID: tafID)
+            let started = clock()
+            let beat = sampleReplyDelay / 2
+            func wait() async -> Bool {
+                if beat > 0 { try? await Task.sleep(nanoseconds: beat) }
+                return current() && mode == .sample
+            }
+            chatStates[tafID, default: ChatState()].live = LiveAnswer(started: started)
+            if beat > 0 {
+                for line in ["Looking at what I did lately, ", "so the answer names each one."] {
+                    guard await wait() else { return .notTried }
+                    chatStates[tafID]?.live?.thinking += line
+                }
+                guard await wait() else { return .notTried }
+                chatStates[tafID]?.live?.began("memory", words: tafActivityWords("memory"), call: "sample-1")
+                guard await wait() else { return .notTried }
+                chatStates[tafID]?.live?.ended("sample-1", .done)
+                for word in reply.split(separator: " ", omittingEmptySubsequences: false) {
+                    try? await Task.sleep(nanoseconds: beat / 12)
+                    guard current(), mode == .sample else { return .notTried }
+                    let t = chatStates[tafID]?.live?.text ?? ""
+                    chatStates[tafID]?.live?.text = t.isEmpty ? String(word) : t + " " + word
+                    chatStates[tafID]?.live?.thinking = ""
+                }
+            }
             guard current(), mode == .sample else { return .notTried }
-            chats[tafID, default: []].append(sampleMessage(.taf, sampleReply(to: text, tafID: tafID)))
+            let ms = Int(clock().timeIntervalSince(started) * 1000)
+            var answer = sampleMessage(.taf, reply)
+            if beat > 0 { answer.work = TafsCloud.Work(ms: ms, steps: [.init(tool: "memory")]) }
+            chats[tafID, default: []].append(answer)
+            chatStates[tafID]?.live = nil
             return .sent
         }
         guard let c = cloudTaf(for: tafID) else {
@@ -4664,6 +4710,12 @@ enum Screenshots {
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
     /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
+    /// `-sampleReplySeconds 20`: the sample taf thinks, works and writes slowly enough for a UI
+    /// test to see each part on a slow simulator.
+    static var sampleReplySeconds: Double? {
+        let s = UserDefaults.standard.double(forKey: "sampleReplySeconds")
+        return enabled && s > 0 ? s : nil
+    }
 
     /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
     /// purchase screens' screenshots.
