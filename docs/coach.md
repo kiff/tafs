@@ -47,7 +47,7 @@ those services, and the phone signs there.
 
 | Card | What it is |
 |---|---|
-| `steps` | The plan: the work ahead, each step pending, active, done, failed or skipped. It keeps its steps; only their status changes |
+| `steps` | The plan: the work ahead, each step pending, active, done, failed or skipped. It keeps its steps; only their status changes. A step whose call was refused or failed is failed, never done; one the owner declined is skipped; one waiting on the owner stays active |
 | `notice` | Something to know |
 | `confirm` | A choice between a few answers |
 | `questions` | Several questions at once, every word Coach's. The app adds "Something else…" under each, and "Chat about this" |

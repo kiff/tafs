@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Coach (the 870 test): a step whose call came back refused or failed shows as failed in
+  its plan, never done, and Coach says what went wrong. Before, a hand-off the tool refused
+  showed as done.
 - Launch (the 870 test): the taf used last leads the list from the first frame, and the iPad
   opens on it. The list's order is settled once KIFF's record is read, and kept with the
   remembered list, so the app no longer opens on the first taf made and then jumps.
