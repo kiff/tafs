@@ -228,10 +228,11 @@ struct UsageView: View {
         }
     }
 
-    /// "Your Solo in the App Store renews on 3 November…" after a move to Team; nil otherwise.
+    /// "The Solo bought in the App Store renews on 3 November…" after a move to Team; nil otherwise.
+    /// It doesn't say "your": the person reading may not be the one who bought it.
     static func soloStillRenews(_ u: KIFFClient.Usage) -> String? {
         guard u.billing?.source == "stripe", let until = u.billing?.appleSoloUntil else { return nil }
-        return "Team is billed by KIFF now. Your Solo in the App Store renews on \(until.shown(date: .long, time: .omitted)) unless you cancel it."
+        return "Team is billed by KIFF now. The Solo bought in the App Store renews on \(until.shown(date: .long, time: .omitted)) unless it's cancelled, from the Apple account that bought it."
     }
 
     /// One line on who bills the plan; nil when no plan is billed.
