@@ -83,6 +83,8 @@ export interface AgentDefinition {
   max_tokens: number;
   /** How hard the model works on each turn ("low" to "max"); absent is the provider's default. */
   effort?: Effort;
+  /** "summarized": a summary of the model's thinking streams as the run goes (kiff/tafs#285). */
+  thinking?: "summarized";
   /**
    * "fast": the turns run at the provider's fast output, at price_fast, when someone waits on the
    * run (kiff/agents#197); a conversation keeps one speed. Absent: standard.
@@ -500,6 +502,18 @@ export class Agents {
     yield* readEvents(res.body);
   }
 
+  /**
+   * Picks a run's stream back up (kiff/tafs#285): its recorded events after `after`, then the
+   * rest as the run goes, until it stops. Only the requester's own run: another's is 404.
+   */
+  async *resumeRun(tenant: string, agent: string, run: string, after: number, requester: string): AsyncGenerator<RunStreamEvent> {
+    const res = await this.send("POST", tenant, ["agents", agent, "runs", run, "resume"], undefined,
+      { after: String(after), requester }, "text/event-stream");
+    if (!res.ok) throw await failure(res);
+    if (!res.body) throw new AgentsError(502, "kiff/agents answered with no stream");
+    yield* readEvents(res.body);
+  }
+
   /** What the account's counted chats cost the model in the period, in micro US dollars (kiff/tafs#193). */
   async aiSpent(tenant: string, period: string): Promise<number> {
     const p = await this.call<{ spent_micro_usd?: number }>("GET", tenant, ["usage", "ai"], undefined, { period });
@@ -700,8 +714,8 @@ async function failure(res: Response): Promise<AgentsError> {
 /**
  * One event of a run's stream (kiff/agents server/runs.go): `run` (the run,
  * first), `event` (a recorded session event), `delta` (what the agent does as
- * it does it: text, tool_call, tool_result, component) and `end` (the run at
- * its stop).
+ * it does it: text, thinking, tool_call, tool_result, component) and `end` (the
+ * run at its stop).
  */
 export interface RunStreamEvent {
   event: string;

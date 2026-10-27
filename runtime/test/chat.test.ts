@@ -89,6 +89,27 @@ describe("conversation", () => {
     expect(r.body.messages[0].session).toBe(run.session);
   });
 
+  it("keeps how long the taf worked on a message and the tools it called, by name only (kiff/tafs#285)", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund the last order", ANA);
+    const list = w.agents.events.get(chat.session)!;
+    const at = (s: number) => new Date(NOW.getTime() - 3600_000 + s * 1000).toISOString();
+    const usage = (s: number, waited: object[]) =>
+      list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: at(s), kind: "usage", body: { cost_micro_usd: 1, timing: { ms: 900, waited } } });
+    usage(2, []);
+    usage(7, [{ tool: "get_order", ms: 300, is_error: true }]);
+    usage(12, [{ tool: "get_order", ms: 200 }, { tool: "create_refund", ms: 900, result_bytes: 40 }]);
+    w.agents.say(chat, "Refunded $20.", at(12));
+    w.agents.say(chat, "Anything else?", at(14));
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    const [, refunded, after] = r.body.messages;
+    expect(refunded.text).toBe("Refunded $20.");
+    expect(refunded.work).toEqual({ ms: 12_000, steps: [{ tool: "get_order", error: true }, { tool: "get_order" }, { tool: "create_refund" }] });
+    expect(after.work).toBeUndefined(); // no tools since the message before
+    expect(JSON.stringify(r.body)).not.toContain("result_bytes");
+  });
+
   it("reads only the latest five runs", async () => {
     const w = world();
     for (let i = 0; i < 7; i++) await jobRun(w, new Date(NOW.getTime() - (10 - i) * 3600_000), `report ${i}`);

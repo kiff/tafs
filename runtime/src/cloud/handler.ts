@@ -95,7 +95,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
   "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
@@ -1184,6 +1184,12 @@ export interface ThreadMessage {
    * ("not_sent", with why), or hasn't yet ("pending").
    */
   door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending"; why?: string };
+  /**
+   * A taf's message that called tools first (kiff/tafs#285): how long it worked on it, from the
+   * message before, and the tools it called, by name, in order, with the ones that failed. From
+   * the run's usage records, which keep each call's tool and time, never its input or result.
+   */
+  work?: { ms: number; steps: Array<{ tool: string; error?: true }> };
 }
 
 /**
@@ -1239,7 +1245,15 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   for (const r of read) {
     if (!r) continue;
     const seenRun = new Set<string>();
+    // The work since the run's last message: when that was, and the tools called since.
+    const since = new Map<string, number>();
+    let tools: Array<{ tool: string; error?: true }> = [];
     for (const e of r.events) {
+      if (e.kind === "usage") {
+        const waited = (e.body as { timing?: { waited?: Array<{ tool?: unknown; is_error?: unknown }> } } | undefined)?.timing?.waited ?? [];
+        for (const t of waited) if (typeof t.tool === "string") tools.push({ tool: t.tool, ...(t.is_error === true ? { error: true as const } : {}) });
+        continue;
+      }
       if (e.kind === "component") {
         components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: e.body });
         continue;
@@ -1247,6 +1261,11 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       if (e.kind !== "owner_message" && e.kind !== "agent_message" && e.kind !== "report") continue;
       const text = typeof (e.body as { text?: unknown })?.text === "string" ? ((e.body as { text: string }).text).trim() : "";
       if (!text) continue;
+      const at = Date.parse(iso(e.time));
+      const work = e.kind !== "owner_message" && tools.length > 0 && since.has(e.run) && !Number.isNaN(at)
+        ? { ms: Math.max(0, at - since.get(e.run)!), steps: tools } : undefined;
+      since.set(e.run, at);
+      tools = [];
       if (e.kind === "owner_message") {
         // Each job run opens with the job's instruction: not something the owner typed.
         const kind = r.session.kind === "run" && !seenRun.has(e.run) ? "kickoff" : "message";
@@ -1264,6 +1283,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         messages.push({
           at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id,
           ...(app ? { door: { app, reply: reply?.status ?? "pending", ...(reply?.why ? { why: reply.why } : {}) } } : {}),
+          ...(work ? { work } : {}),
         });
       }
     }
@@ -2005,13 +2025,21 @@ export interface StreamResult {
  *
  *   event: session    {session, new_session, run}, first
  *   event: taken      {}: the run read a message the owner wrote while it went (steer)
+ *   event: thinking   {text}: more of the summary of what the taf is thinking (kiff/tafs#285)
  *   event: text       {text}: more of the answer
- *   event: activity   {tool}: a tool's name as the agent calls it, never its input
+ *   event: activity   {tool, step?, call_id}: a tool's name as the agent calls it, and what
+ *                     it's doing in a few words, never its input
+ *   event: step       {call_id, status}: how that call ended, "done" or "error" (kiff/tafs#285)
  *   event: held       {exception, invocation}: KIFF holds the call just made for the
  *                     owner, at this point of the answer (kiff/tafs#206)
  *   event: component  {component}: a component the agent showed
  *   event: end        {status, stop}: where the run stopped
  *   event: error      {error}: the stream broke; the conversation has the rest
+ *
+ * GET /v1/tafs/{id}/runs/{run}/stream?after=N picks the person's own run back up
+ * (kiff/tafs#285): a phone that left the chat and came back follows it to its
+ * end. It sends the steps from the run's record (activity, step, held), `said`
+ * {} where the taf wrote a message (the conversation has it), then `end`.
  *
  * Tool inputs and results never reach the phone. The run is kiff/agents'
  * invocation's: a phone that goes away loses nothing, and reads the rest in
@@ -2021,6 +2049,9 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
   try {
     const method = event.requestContext.http.method.toUpperCase();
     const parts = event.rawPath.split("/").filter(Boolean);
+    if (method === "GET" && parts.length === 6 && parts[0] === "v1" && parts[1] === "tafs" && parts[3] === "runs" && parts[5] === "stream") {
+      return await resumeStream(event, parts[2] ?? "", parts[4] ?? "", deps);
+    }
     if (!(method === "POST" && parts.length === 5 && parts[0] === "v1" && parts[1] === "tafs" && parts[3] === "messages" && parts[4] === "stream")) {
       throw new HTTPError(404, "not found");
     }
@@ -2104,40 +2135,83 @@ async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string 
   }
 }
 
-/** kiff/agents' run stream, trimmed to what the phone shows. */
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt): AsyncGenerator<string> {
+/** A run's id as kiff/agents writes it: letters, digits, '-' and '_'. */
+const RUN_ID = /^[A-Za-z0-9_-]{1,128}$/;
+
+/**
+ * GET /v1/tafs/{id}/runs/{run}/stream: the person's own run, picked back up
+ * from its record (kiff/tafs#285). kiff/agents answers only the requester's run.
+ */
+async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps: Deps): Promise<StreamResult> {
+  const me = await person(event, deps);
+  const taf = await owned(me, tafID, deps);
+  if (!RUN_ID.test(runID)) throw new HTTPError(404, "no such run");
+  const after = Number(new URLSearchParams(event.rawQueryString ?? "").get("after") ?? "0");
+  if (!Number.isInteger(after) || after < 0) throw new HTTPError(400, "after is an event index, 0 or more");
+  const run = deps.agents.resumeRun(me.tenantID, taf.id, runID, after, ownerKey(me));
+  let first: IteratorResult<RunStreamEvent>;
+  try {
+    first = await run.next();
+  } catch (err) {
+    throw agentsFailure(err);
+  }
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, undefined) };
+}
+
+/**
+ * kiff/agents' run stream, trimmed to what the phone shows. A started run's
+ * (`at` set) shows what the agent does as it does it; a resumed one's, its
+ * recorded steps.
+ */
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined): AsyncGenerator<string> {
   const steps = new Steps();
+  // What it's doing, in a few words: only these, never the call's arguments.
+  const call = (tool: string, input: unknown, callID: unknown): string => {
+    const id = typeof callID === "string" ? callID : undefined;
+    const step = steps.call(tool, input, id);
+    return sse("activity", { tool, ...(step === undefined ? {} : { step }), ...(id ? { call_id: id } : {}) });
+  };
+  // How a call ended. Where KIFF held it, the app shows the owner's card there in the
+  // answer: only KIFF's keys for it, never what the tool answered.
+  const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown }): string => {
+    steps.result(callID, r.text);
+    if (r.state === "held") {
+      return sse("held", {
+        exception: typeof r.hold?.exception === "string" ? r.hold.exception : "",
+        invocation: typeof r.invocation === "string" ? r.invocation : "",
+      });
+    }
+    return sse("step", { call_id: typeof callID === "string" ? callID : "", status: r.is_error === true ? "error" : "done" });
+  };
   const out = (e: RunStreamEvent): string | undefined => {
     const d = (e.data ?? {}) as Record<string, unknown>;
     switch (e.event) {
       case "run":
-        return sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id });
+        return at ? sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id }) : undefined;
       case "delta":
+        if (!at) return undefined;
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
-        if (d.kind === "tool_call" && typeof d.tool === "string") {
-          // What it's doing, in a few words: only these, never the call's arguments.
-          const step = steps.call(d.tool, d.input, typeof d.call_id === "string" ? d.call_id : undefined);
-          return sse("activity", step === undefined ? { tool: d.tool } : { tool: d.tool, step });
-        }
+        if (d.kind === "thinking" && typeof d.text === "string") return sse("thinking", { text: d.text });
+        if (d.kind === "tool_call" && typeof d.tool === "string") return call(d.tool, d.input, d.call_id);
         if (d.kind === "component" && d.component !== undefined) return sse("component", { component: d.component });
         if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
-        if (d.kind === "tool_result") {
-          steps.result(d.call_id, (d.result as { text?: unknown } | undefined)?.text);
-          // Where KIFF held a call: the app shows the owner's card here in the answer. Only
-          // KIFF's keys for it, never what the tool answered.
-          const r = (d.result ?? {}) as { state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
-          if (r.state === "held") {
-            return sse("held", {
-              exception: typeof r.hold?.exception === "string" ? r.hold.exception : "",
-              invocation: typeof r.invocation === "string" ? r.invocation : "",
-            });
-          }
-        }
-        return undefined; // tool results stay on the server
+        if (d.kind === "tool_result") return ended(d.call_id, (d.result ?? {}) as Record<string, unknown>);
+        return undefined;
+      case "event": {
+        // A started run's recorded events: the conversation has them. A resumed run's are
+        // its steps so far, and where it wrote a message.
+        if (at) return undefined;
+        const b = (d.body ?? {}) as Record<string, unknown>;
+        if (d.kind === "tool_call" && typeof b.tool === "string") return call(b.tool, b.input, b.call_id);
+        if (d.kind === "tool_result") return ended(b.call_id, b);
+        if (d.kind === "agent_message" || d.kind === "report") return sse("said", {});
+        if (d.kind === "component") return sse("component", { component: d.body });
+        return undefined;
+      }
       case "end":
         return sse("end", { status: d.status ?? "", stop: d.stop ?? "" });
       default:
-        return undefined; // recorded events: the conversation has them
+        return undefined;
     }
   };
   try {

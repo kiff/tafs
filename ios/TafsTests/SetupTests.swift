@@ -318,6 +318,12 @@ final class SetupTests: XCTestCase {
         // What Coach is doing, in tafs cloud's words (kiff/tafs#214).
         XCTAssertEqual(e("activity", #"{"tool":"planque","step":"Checking your Stripe connection…"}"#),
                        .activity("planque", step: "Checking your Stripe connection…"))
+        XCTAssertEqual(e("activity", #"{"tool":"get_order","call_id":"c1"}"#), .activity("get_order", call: "c1"))
+        // How a step ended, what the taf thinks, a message a resumed run wrote (kiff/tafs#285).
+        XCTAssertEqual(e("step", #"{"call_id":"c1","status":"error"}"#), .step(call: "c1", status: "error"))
+        XCTAssertEqual(e("thinking", #"{"text":"The order is paid."}"#), .thinking("The order is paid."))
+        XCTAssertEqual(e("said", "{}"), .said)
+        XCTAssertNil(e("step", "{}"))
         XCTAssertEqual(e("component", #"{"component":{}}"#), .component)
         XCTAssertEqual(e("end", #"{"status":"COMPLETED","stop":"answered"}"#), .end(status: "COMPLETED", stop: "answered"))
         XCTAssertEqual(e("error", #"{"error":"x"}"#), .broken)

@@ -1,7 +1,7 @@
 import { JOBS } from "../jobs.js";
 import { type AgentDefinition, type Effort } from "./agents.js";
 import { TOOLS } from "./coach.js";
-import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE, PRICE_FAST } from "./tafdef.js";
+import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, MODEL, PRICE, PRICE_FAST, THINKING } from "./tafdef.js";
 
 /**
  * Setup, the agent that connects a company's tools for its tafs in the app's
@@ -426,6 +426,7 @@ export function setupDefinition(id: string): AgentDefinition {
     price_fast: { ...PRICE_FAST },
     max_tokens: MAX_TOKENS,
     effort: SETUP_EFFORT,
+    thinking: THINKING,
     gateway: KIFF_GATEWAY,
     key_ref: keyRef(id),
     keep: keepRules(),

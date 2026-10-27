@@ -185,7 +185,10 @@ struct SetupChatView: View {
                                                                           text: model.setupThread.ownerWords(m.text), session: m.session), taf: nil)
                             case .message(let m):
                                 // Streamed answers show as written; only without a stream are they revealed.
-                                RevealingBubble(message: m, reveal: revealing(m), revealed: $revealed, grown: $grown)
+                                VStack(alignment: .leading, spacing: 6) {
+                                    if let work = m.work { WorkSummary(work: work) }
+                                    RevealingBubble(message: m, reveal: revealing(m), revealed: $revealed, grown: $grown)
+                                }
                             case .component(let c):
                                 SetupComponentView(shown: c)
                                     .onAppear { cardsInView.insert(c.id) }
@@ -215,16 +218,14 @@ struct SetupChatView: View {
                             .id(unsent.id)
                     }
                     if !model.setupLiveText.isEmpty {
-                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live"), taf: nil, fullWidth: true).id("live")
+                        ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live"), taf: nil, fullWidth: true, steady: true).id("live")
+                    }
+                    // What Coach is doing and thinking, and the steps it took (kiff/tafs#285); the
+                    // dots while nothing streams yet.
+                    if let live = model.setupLive {
+                        LiveWork(live: live).id("work")
                     } else if thinking {
                         TypingBubble(taf: nil, fullWidth: true).id("thinking")
-                    }
-                    if let activity = model.setupLive?.activity {
-                        HStack(spacing: 8) {
-                            ProgressView().controlSize(.mini).tint(Theme.dim)
-                            Text(activity).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
-                        }
-                        .accessibilityElement(children: .combine)
                     }
                     if !thinking { ended }
                     if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() }.id("queued") }

@@ -646,7 +646,8 @@ async function streamed(event: HTTPEvent, out: ResponseStream): Promise<void> {
 
 /**
  * tafs-cloud-stream's handler (kiff/tafs#60): the same code as `handler`,
- * deployed to a second function whose URL streams. It serves one route,
- * POST /v1/tafs/{id}/messages/stream.
+ * deployed to a second function whose URL streams. It serves two routes,
+ * POST /v1/tafs/{id}/messages/stream and GET /v1/tafs/{id}/runs/{run}/stream
+ * (kiff/tafs#285).
  */
 export const stream = typeof awslambda === "undefined" ? streamed : awslambda.streamifyResponse(streamed);

@@ -395,12 +395,15 @@ final class TafsCloud {
         let session: String
         /// It came through one of the taf's doors, or answers one that did.
         var door: DoorMark? = nil
+        /// What the taf did before writing it (kiff/tafs#285): how long it worked, and the
+        /// tools it called. Nil for a message written without calling any.
+        var work: Work? = nil
 
-        init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil) {
-            self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session; self.door = door
+        init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil, work: Work? = nil) {
+            self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session; self.door = door; self.work = work
         }
 
-        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door }
+        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             at = try c.decode(Date.self, forKey: .at)
@@ -410,7 +413,25 @@ final class TafsCloud {
             session = try c.decode(String.self, forKey: .session)
             // A mark the app can't read leaves the message as a plain one.
             door = try? c.decodeIfPresent(DoorMark.self, forKey: .door)
+            work = try? c.decodeIfPresent(Work.self, forKey: .work)
         }
+    }
+
+    /// How long a taf worked on a message, and the tools it called, in order, by name.
+    struct Work: Decodable, Equatable {
+        struct Step: Decodable, Equatable {
+            let tool: String
+            var error = false
+            init(tool: String, error: Bool = false) { self.tool = tool; self.error = error }
+            enum CodingKeys: String, CodingKey { case tool, error }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                tool = try c.decode(String.self, forKey: .tool)
+                error = (try? c.decodeIfPresent(Bool.self, forKey: .error)) ?? false
+            }
+        }
+        let ms: Int
+        let steps: [Step]
     }
 
     /// A door's message or its answer (docs/doors.md): which door, who wrote and the
@@ -602,8 +623,15 @@ final class TafsCloud {
         /// More of the answer, as it is written.
         case text(String)
         /// A tool the agent calls, by name, with what it's doing in a few words when tafs
-        /// cloud says ("Checking your Stripe connection…"): never what it was given.
-        case activity(String, step: String? = nil)
+        /// cloud says ("Checking your Stripe connection…"): never what it was given. `call`
+        /// is the call's id, which its `step` names when it ends (kiff/tafs#285).
+        case activity(String, step: String? = nil, call: String? = nil)
+        /// How a call ended: "done" or "error" (kiff/tafs#285). A held call is `held`.
+        case step(call: String, status: String)
+        /// More of the summary of what the taf is thinking (kiff/tafs#285).
+        case thinking(String)
+        /// A run picked back up wrote a message: the conversation has it (kiff/tafs#285).
+        case said
         /// The agent showed a component: the conversation has it.
         case component
         /// The run stopped: its status, and why.
@@ -633,6 +661,26 @@ final class TafsCloud {
         guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
+        return try await events(request)
+    }
+
+    /// Picks a run of the person's back up (kiff/tafs#285): its steps so far, then the rest
+    /// as it goes, until it stops. Only their own run; another's is a 404.
+    func resumeRun(_ id: String, run: String, after: Int = 0) async throws -> AsyncThrowingStream<StreamEvent, Error> {
+        guard let url = URL(string: "/v1/tafs/\(escaped(id))/runs/\(escaped(run))/stream?after=\(max(0, after))", relativeTo: streamURL) else {
+            throw CloudError(status: 0, message: "Bad path")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 900
+        request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        return try await events(request)
+    }
+
+    /// A stream's events, once tafs cloud answered 200; a refusal throws.
+    private func events(_ request: URLRequest) async throws -> AsyncThrowingStream<StreamEvent, Error> {
         let (bytes, response) = try await session.bytes(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200 else {
@@ -667,7 +715,10 @@ final class TafsCloud {
         case "session": return (o["session"] as? String).map { .session($0, newSession: o["new_session"] as? Bool ?? false, run: o["run"] as? String) }
         case "taken": return .taken
         case "text": return (o["text"] as? String).map(StreamEvent.text)
-        case "activity": return (o["tool"] as? String).map { .activity($0, step: o["step"] as? String) }
+        case "activity": return (o["tool"] as? String).map { .activity($0, step: o["step"] as? String, call: o["call_id"] as? String) }
+        case "step": return (o["call_id"] as? String).map { .step(call: $0, status: o["status"] as? String ?? "done") }
+        case "thinking": return (o["text"] as? String).map(StreamEvent.thinking)
+        case "said": return .said
         case "component": return .component
         case "end": return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "")
         case "error": return .broken

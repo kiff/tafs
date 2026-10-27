@@ -631,6 +631,83 @@ final class ChatTests: XCTestCase {
         await model.chatStreams[id]?.value
     }
 
+    /// While the taf works, the stream says what it thinks and each step it takes, and how
+    /// each ended (kiff/tafs#285): the live answer keeps them, in order, and writing clears
+    /// the thinking it led to.
+    func testTheLiveAnswerKeepsItsThinkingAndSteps() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        var continuation: AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation?
+        model.streamOpener = { _, _ in AsyncThrowingStream { continuation = $0 } }
+        await model.sendChat("Refund the last order", to: id)
+        let stream = try XCTUnwrap(continuation)
+        stream.yield(.session("sesn_9", newSession: false, run: "r1"))
+        stream.yield(.thinking("The order is paid, "))
+        stream.yield(.thinking("so a refund fits."))
+        stream.yield(.activity("get_order", call: "c1"))
+        stream.yield(.step(call: "c1", status: "error"))
+        stream.yield(.activity("get_order", call: "c2"))
+        stream.yield(.step(call: "c2", status: "done"))
+        stream.yield(.activity("create_refund", call: "c3"))
+        stream.yield(.activity("show", call: "c4"))
+        for _ in 0..<2000 where (model.chatState(id).live?.steps.count ?? 0) < 3 { try await Task.sleep(nanoseconds: 1_000_000) }
+        var live = try XCTUnwrap(model.chatState(id).live)
+        XCTAssertEqual(live.thinking, "The order is paid, so a refund fits.")
+        XCTAssertEqual(live.steps.map(\.tool), ["get_order", "get_order", "create_refund"], "show draws in the chat, not as a step")
+        XCTAssertEqual(live.steps.map(\.status), [.error, .done, .running])
+        stream.yield(.held(exception: "ce_7", invocation: "tc-7"))
+        stream.yield(.text("It waits for you."))
+        for _ in 0..<2000 where model.chatState(id).live?.text.isEmpty ?? true { try await Task.sleep(nanoseconds: 1_000_000) }
+        live = try XCTUnwrap(model.chatState(id).live)
+        XCTAssertEqual(live.steps.last?.status, .held, "a held call is the step that was running")
+        XCTAssertEqual(live.thinking, "", "writing clears what it thought")
+        stream.finish()
+        await model.chatStreams[id]?.value
+        XCTAssertNil(model.chatState(id).live)
+    }
+
+    /// A run of the person's that tafs cloud says is at work, with nothing here following it
+    /// (they left the chat and came back), is picked back up once (kiff/tafs#285): its steps
+    /// show as they happen, a message it wrote reloads the thread, and its end ends it.
+    func testARunAtWorkIsPickedBackUpOnce() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"Refund the last order","session":"sesn_9"}],
+         "working":{"session":"sesn_9","run":"r1"}}
+        """)
+        var opened: [String] = []
+        var continuation: AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation?
+        model.resumeOpener = { _, run in opened.append(run); return AsyncThrowingStream { continuation = $0 } }
+        await model.loadChat(id)
+        await model.resumeChat(id)
+        await model.resumeChat(id)
+        XCTAssertEqual(opened, ["r1"], "once per run")
+        let live = try XCTUnwrap(model.chatState(id).live)
+        XCTAssertEqual(live.run, "r1")
+        XCTAssertEqual(live.session, "sesn_9")
+        let stream = try XCTUnwrap(continuation)
+        stream.yield(.activity("get_order", call: "c1"))
+        stream.yield(.step(call: "c1", status: "done"))
+        for _ in 0..<2000 where model.chatState(id).live?.steps.first?.status != .done { try await Task.sleep(nanoseconds: 1_000_000) }
+        XCTAssertEqual(model.chatState(id).live?.steps.map(\.status), [.done])
+        let before = count("GET", "/v1/tafs/depl_1/conversation")
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-10-14T09:01:00Z","from":"owner","kind":"message","text":"Refund the last order","session":"sesn_9"},
+                     {"at":"2026-10-14T09:01:20Z","from":"taf","kind":"message","text":"Refunded.","session":"sesn_9",
+                      "work":{"ms":20000,"steps":[{"tool":"get_order"},{"tool":"create_refund","error":true}]}}]}
+        """)
+        stream.yield(.said)
+        stream.yield(.end(status: "COMPLETED", stop: "answered"))
+        stream.finish()
+        await model.chatStreams[id]?.value
+        XCTAssertGreaterThan(count("GET", "/v1/tafs/depl_1/conversation"), before)
+        XCTAssertNil(model.chatState(id).live)
+        let said = try XCTUnwrap(model.chats[id]?.last)
+        XCTAssertEqual(said.work, TafsCloud.Work(ms: 20000, steps: [.init(tool: "get_order"), .init(tool: "create_refund", error: true)]))
+        await model.resumeChat(id)
+        XCTAssertEqual(opened, ["r1"], "an ended run isn't picked up again")
+    }
+
     /// Recorded words hide live ones only for the live session, from about when it started.
     func testOnlyThisAnswersRecordedWordsHideItsLiveOnes() {
         let start = Date(timeIntervalSince1970: 1_800_000_000)

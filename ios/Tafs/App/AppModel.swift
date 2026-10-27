@@ -2632,16 +2632,28 @@ final class AppModel: ObservableObject {
                     await loadChat(tafID)
                 case .text(let t):
                     chatStates[tafID]?.live?.text += t
-                    // Writing again: the tool call it waited on is over (kiff/tafs#206 6.6).
+                    // Writing again: the tool call it waited on is over (kiff/tafs#206 6.6), and
+                    // what it thought led here.
                     chatStates[tafID]?.live?.activity = nil
-                case .activity(let tool, let step):
+                    chatStates[tafID]?.live?.thinking = ""
+                case .thinking(let t):
+                    chatStates[tafID]?.live?.thinking += t
+                case .activity(let tool, let step, let call):
                     // The words so far are done; the answer goes on below them. Nothing is reloaded.
                     if let t = chatStates[tafID]?.live?.text, !t.isEmpty {
                         chatStates[tafID]?.live?.parts.append(.text(t))
                         chatStates[tafID]?.live?.text = ""
                     }
-                    chatStates[tafID]?.live?.activity = step ?? tafActivityWords(tool)
+                    let words = step ?? tafActivityWords(tool)
+                    chatStates[tafID]?.live?.activity = words
+                    chatStates[tafID]?.live?.began(tool, words: words, call: call)
+                case .step(let call, let status):
+                    chatStates[tafID]?.live?.ended(call, status == "error" ? .error : .done)
+                case .said:
+                    // A run picked back up wrote a message: the thread has it.
+                    await loadChat(tafID)
                 case .held(let exception, let invocation):
+                    chatStates[tafID]?.live?.ended(nil, .held)
                     chatStates[tafID]?.live?.parts.append(.held(exception: exception, invocation: invocation))
                     // KIFF is read for the card, where the call was made.
                     Task {
@@ -3105,12 +3117,15 @@ final class AppModel: ObservableObject {
     /// owner sends another. Ends when the task is cancelled (the view goes away).
     func followChat(_ tafID: UUID) async {
         await loadChat(tafID)
+        await resumeChat(tafID)
         var waitingFor: String?
         var polls = 0
         while !Task.isCancelled {
             try? await Task.sleep(nanoseconds: chatPollInterval)
             if Task.isCancelled { return }
             // A stream shows what the taf does, and reloads the thread itself.
+            if chatState(tafID).live != nil { continue }
+            await resumeChat(tafID)
             if chatState(tafID).live != nil { continue }
             guard mode == .kiff, awaitingReply(tafID) || chatThinking(tafID),
                   let last = chats[tafID]?.last(where: { $0.from == .owner })?.id else { continue }
@@ -3120,6 +3135,36 @@ final class AppModel: ObservableObject {
             await loadChat(tafID)
         }
     }
+
+    /// Picks back up a run of the person's that tafs cloud says is at work while nothing here
+    /// follows it (kiff/tafs#285): they left the chat, or the app, and came back. Its steps
+    /// show as they happen and its end reloads the thread, as a message's stream does. Once
+    /// per run: one whose stream can't open is left to the reloads.
+    func resumeChat(_ tafID: UUID) async {
+        let s = chatState(tafID)
+        guard mode == .kiff, trialChats[tafID] == nil, s.live == nil, !chatSending.contains(tafID),
+              let run = s.workingRun, let session = s.working, session != s.stopped,
+              resumedRuns.insert(run).inserted, let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        let asked = chats[tafID]?.last(where: { $0.from == .owner })
+        let events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>
+        do {
+            if let resumeOpener { events = try await resumeOpener(c.id, run) } else { events = try await cloud.resumeRun(c.id, run: run) }
+        } catch {
+            return
+        }
+        guard gen == accountGeneration, chatState(tafID).live == nil else { return }
+        var live = LiveAnswer(started: asked?.at ?? clock())
+        live.run = run
+        live.session = session
+        chatStates[tafID, default: ChatState()].live = live
+        chatStreams[tafID] = Task { await self.followChatStream(events, tafID: tafID, text: asked?.text ?? "", gen: gen) }
+    }
+
+    /// The runs picked back up here, each once.
+    private var resumedRuns: Set<String> = []
+    /// Opens a run's stream again: tafs cloud's, unless a test gives its own.
+    var resumeOpener: ((String, String) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>)?
 
     /// True while the taf hasn't answered the owner's last message yet.
     func awaitingReply(_ tafID: UUID) -> Bool {
@@ -4053,6 +4098,33 @@ final class AppModel: ObservableObject {
         var parts: [ReplyPart] = []
         /// When it started: the time its words are shown under.
         var started = Date()
+        /// The summary so far of what it's thinking now (kiff/tafs#285); cleared once it writes.
+        var thinking = ""
+        /// The tools it called in this answer, in order, and how each went (kiff/tafs#285).
+        var steps: [LiveStep] = []
+
+        /// A tool call begins: shown as a step, in its words. Show draws in the chat itself.
+        mutating func began(_ tool: String, words: String?, call: String?) {
+            guard tool != "show" else { return }
+            steps.append(LiveStep(call: call, tool: tool, words: words))
+        }
+
+        /// A call ended: the step it began, or the latest still running when the stream
+        /// didn't say which (a held call).
+        mutating func ended(_ call: String?, _ status: LiveStep.Status) {
+            let i = call.flatMap { c in steps.lastIndex { $0.call == c } } ?? steps.lastIndex { $0.status == .running }
+            if let i { steps[i].status = status }
+        }
+    }
+
+    /// One tool call of an answer as it streams (kiff/tafs#285).
+    struct LiveStep: Equatable {
+        enum Status: Equatable { case running, done, error, held }
+        let call: String?
+        let tool: String
+        /// What it's doing, in the owner's words; nil shows the tool's own.
+        let words: String?
+        var status: Status = .running
     }
 
     /// A finished piece of a taf's streamed answer.
@@ -4106,17 +4178,26 @@ final class AppModel: ObservableObject {
                     settleSetupChat(session)
                 case .text(let t):
                     setupLive?.text += t
-                case .activity(let tool, let step):
+                    setupLive?.thinking = ""
+                case .thinking(let t):
+                    setupLive?.thinking += t
+                case .activity(let tool, let step, let call):
                     // The step shows at once; the thread then picks up the words written so far.
-                    setupLive?.activity = step ?? Self.activityWords(tool)
+                    let words = step ?? Self.activityWords(tool)
+                    setupLive?.activity = words
+                    setupLive?.began(tool, words: words, call: call)
                     await loadSetupThread()
                     setupLive?.text = ""
-                case .component:
+                case .step(let call, let status):
+                    setupLive?.ended(call, status == "error" ? .error : .done)
+                case .component, .said:
                     await loadSetupThread()
                     setupLive?.text = ""
                 case .end(let status, _):
                     ended = status
-                case .broken, .taken, .held:
+                case .held:
+                    setupLive?.ended(nil, .held)
+                case .broken, .taken:
                     break
                 }
             }
