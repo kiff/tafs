@@ -95,9 +95,10 @@ A taf's state (`stateOf`):
 The list is ordered with the taf a call waits on first, then by when each was last used.
 On an iPad, the app opens on the list's first taf until the owner picks another
 (`HomeSplitView.opening`); a tap on the taf already open counts as a pick.
-The order settles when the tafs change and when the app comes back, so it doesn't move
-under the owner's finger. The last list is remembered on the phone and shown at the next
-launch before KIFF answers, only for the same account.
+The order settles when the tafs change, when the app comes back, and once more when a
+session first reads KIFF's record, so it doesn't move under the owner's finger. The last
+list is remembered on the phone, in its order, and shown at the next launch before KIFF
+answers, only for the same account: the taf used last leads it from the first frame.
 
 ## A taf's page
 
