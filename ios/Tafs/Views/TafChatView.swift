@@ -208,6 +208,8 @@ struct TafChatView: View {
                 .frame(maxWidth: .infinity)
             }
             .accessibilityIdentifier("chat-thread")
+            // What the pin is doing, for the UI test that keeps the 845 test from coming back.
+            .accessibilityValue(pinState)
             .dismissesKeyboardInteractively()
             .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: coachRoom) }
             .background(GeometryReader { g in
@@ -298,6 +300,15 @@ struct TafChatView: View {
     }
 
     private static let bottom = "bottom"
+
+    /// The pin as laid out, in screenshots mode only: what ChatPinUITests reports on a failure.
+    private var pinState: String {
+        guard Screenshots.enabled else { return "" }
+        let top = turn.top.map { String(Int($0)) } ?? "-"
+        let foot = turn.foot.map { String(Int($0)) } ?? "-"
+        let room = Int(turn.room(viewport))
+        return "pinned \(pinned ?? "none"), turn \(top)…\(foot), room \(room), viewport \(Int(viewport)), following \(following), touched \(touched)"
+    }
 
     /// The bubble of what the owner just sent, while the taf works: steering its run, or
     /// queued behind it. It goes to the top at once (kiff/tafs#138).

@@ -28,15 +28,17 @@ final class ChatPinUITests: XCTestCase {
         XCTAssertTrue(sent.waitForExistence(timeout: 3), "the sent message")
         /// How far the sent message is from the top of the thread.
         func fromTop() -> CGFloat { sent.frame.minY - thread.frame.minY }
+        /// Where things are, and what the pin says, for a failure.
+        func seen() -> String { "\(Int(fromTop())) pt down; message \(sent.frame), thread \(thread.frame); \(thread.value ?? "")" }
         let atTop: CGFloat = 90
 
         // At the top within a moment of Send, before any answer: never at the end of the run.
-        XCTAssertTrue(within(1.0) { fromTop() < atTop }, "the sent message reached the top at once (it was \(fromTop()) pt down)")
+        XCTAssertTrue(within(1.0) { fromTop() < atTop }, "the sent message reached the top at once: \(seen())")
 
         // While the taf thinks and works: still at the top, one work block under it.
         let work = app.descendants(matching: .any)["work-block"]
         XCTAssertTrue(work.waitForExistence(timeout: 10), "the work block")
-        XCTAssertLessThan(fromTop(), atTop, "it stayed at the top while the taf worked")
+        XCTAssertLessThan(fromTop(), atTop, "it stayed at the top while the taf worked: \(seen())")
         XCTAssertGreaterThanOrEqual(work.frame.minY, sent.frame.maxY - 1, "the work block is under the message")
         let workAt = work.frame.minY
 
@@ -44,14 +46,14 @@ final class ChatPinUITests: XCTestCase {
         let answer = app.descendants(matching: .any)["answer-streaming"]
         XCTAssertTrue(answer.waitForExistence(timeout: 60), "the streaming answer")
         XCTAssertGreaterThanOrEqual(answer.frame.minY, work.frame.maxY - 1, "the answer streams below the work block")
-        XCTAssertLessThan(fromTop(), atTop, "it stayed at the top while the answer streamed")
+        XCTAssertLessThan(fromTop(), atTop, "it stayed at the top while the answer streamed: \(seen())")
 
         // Done: the block folds in place to "Worked for", still under the message, above the answer.
         let summary = app.descendants(matching: .any)["work-summary"]
         XCTAssertTrue(summary.waitForExistence(timeout: 120), "Worked for")
         XCTAssertGreaterThanOrEqual(summary.frame.minY, sent.frame.maxY - 1, "Worked for is under the message")
         XCTAssertLessThan(abs(summary.frame.minY - workAt), 24, "it folded in place, without moving")
-        XCTAssertLessThan(fromTop(), atTop, "the message is still at the top")
+        XCTAssertLessThan(fromTop(), atTop, "the message is still at the top: \(seen())")
 
         // Back from another app: the chat shows its messages, not a blank screen (845, item 3).
         XCUIDevice.shared.press(.home)
