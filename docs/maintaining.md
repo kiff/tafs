@@ -22,7 +22,8 @@ blanket auto-merge or workflow approval for external contributions.
 Check the final diff, review state, and required CI. Resolve requested changes;
 a change after approval may require another review. Check dependency and
 workflow changes for changes in permissions or secret access. Keep unrelated
-work out of the PR.
+work out of the PR. A change to what a feature does, a route or a limit carries
+its update to that feature's page in `docs/`.
 
 For approval, account/session, Card, or Record changes, verify what the owner
 sees against what the server accepts and what the vendor actually did. For

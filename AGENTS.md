@@ -25,6 +25,14 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs -destination 'platform=iOS 
 
 New behaviour gets tests. Feature branches only; never push to `main`.
 
+**Documentation ships with the code.** How each feature works is in
+[docs/](docs/README.md), one page per feature, written from the code. A pull request
+that adds or changes a feature, a route, a limit or what a screen does updates that
+page in the same pull request; a new feature gets a page, linked from
+`docs/README.md`. A route changes [docs/api.md](docs/api.md) and the route list at the
+top of `runtime/src/cloud/handler.ts`. Read a feature's page before changing it, and
+check it against the code: a page that no longer matches is a bug, fixed in the same PR.
+
 ## Public contribution and review rules
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) for scope and checks,

@@ -1,0 +1,166 @@
+# A taf's chat
+
+The owner talks to a taf in its chat: asks what it did, or tells it what to do. A
+message steers the taf within its job. It can't widen its Card, and KIFF still checks
+every action the taf takes.
+
+Code: in the app, `TafChatView`, `WorkLog`, `MicButton`, `AttachViews`, and the Chat and
+"A taf's chat, live" sections of `AppModel` (`deliverChat`, `submitChat`,
+`followChatStream`, `resumeChat`, `chatItems`); `TafsCloud.streamMessage` and
+`TafsCloud.resumeRun`. In tafs cloud, `handleStream`, `relay`, `message`, `chatAt`,
+`conversation`, `latestRun`, `steer`, `stop`, `chats`, `archive` and `unarchive` in
+`runtime/src/cloud/handler.ts`. Coach's chat (Setup's) works the same way and shares
+most of this ([coach.md](coach.md)).
+
+## Sending a message
+
+A message is 1 to 2,000 characters, or files alone ([attachments.md](attachments.md)).
+It is a run in one of the person's chats with the taf:
+
+- their **live chat**, which kiff/agents picks: the latest one, while it's recent;
+- a chat they **reopened** from the list, where messages then go on;
+- or a **new chat**, when they ask for one.
+
+Chats are each person's own: nobody else on the account reads them, an admin or the
+account's owner included.
+
+The app sends the message on the stream route (`POST /v1/tafs/{id}/messages/stream`) so
+the answer shows as it's written. When the stream can't open, it sends it plainly
+(`POST /v1/tafs/{id}/messages`) and reloads the thread while the answer is owed: every 4
+seconds, at most 30 times for each unanswered message.
+
+The sent message shows at once, faded until the thread has it. A message that didn't go
+stays where it was written, with why and Retry (`UnsentBubble`). kiff/agents allows each
+person 10 messages in 10 minutes. Past that, the message is kept with "That's a lot of
+messages in a few minutes. Give {taf} a moment, then try again."
+
+A sent message's menu offers **Send again**, **Edit and send** and **Copy**. The mic in
+the message bar dictates into the box, recognised on the device: no audio leaves the
+phone, and nothing is sent until the owner sends it (`Dictation`).
+
+## The answer as it comes
+
+tafs cloud trims kiff/agents' stream to what the phone shows. Tool inputs and results
+never reach the phone.
+
+| Event | Data | What the app does |
+|---|---|---|
+| `session` | `{session, new_session, run}`, first | Notes the chat and the run, for Stop and for steering |
+| `thinking` | `{text}` | Adds to the line of what the taf is thinking |
+| `text` | `{text}` | Adds to the answer |
+| `activity` | `{tool, step?, call_id}` | A step begins, in words: "Asking KIFF: List payments…" |
+| `step` | `{call_id, status}` | That step ended: done or error |
+| `held` | `{exception, invocation}` | KIFF held the call just made: its card goes here in the answer |
+| `taken` | `{}` | The run read a message the owner wrote meanwhile: the thread is reloaded |
+| `component` | `{component}` | Something the agent showed: the thread has it |
+| `part` | `{at}` | A resumed run went on after a held call was answered: a fresh live answer starts (resumed streams only) |
+| `end` | `{status, stop}` | The run stopped |
+| `error` | `{error}` | The stream broke; the thread has the rest |
+
+What a step says comes from the tool's title as its connection gives it, never the
+tool's name in KIFF (`tafActivityWords`).
+
+### The work block
+
+While the taf works, a block sits under the owner's message (`LiveWork`): the step in
+progress on top, one calm line of what it's thinking (shown after a few seconds, changed
+at most every second and a half), and the steps done under it. The answer streams below
+the block.
+
+When the run ends, the thread is reloaded and the stored answer takes the live one's
+place. The block folds in place to "Worked for 12 s" (`WorkSummary`), which opens the
+steps again. tafs cloud puts a run's work on its first message: the time from the run's
+start to its last words, and the tools it called, in order, by name, with the ones that
+failed (`conversation`, from kiff/agents' usage records).
+
+**A run that paused on a held call** has its work in parts, one for each stretch between
+pauses. Each part's work goes on the first message written in it, and its time leaves out
+the wait for the owner: the answer that asked for approval keeps what was done before it,
+and the work after the approval gets its own "Worked for". A part that wrote nothing goes
+on in the next one, less the wait between them. tafs cloud finds a pause from kiff/agents'
+usage timing: every turn after a tool call lists the calls it waited on, so a timed turn
+that waited on none, after the run's first, is the first after a pause (`turnTiming`).
+
+### The sent message stays on top
+
+Sending puts the message at the top of the chat at once, and it stays there while the
+taf thinks, works and answers, with the work block and the answer under it. The thread
+changing under it doesn't move it. Scrolling hands control to the owner, and a "Jump to
+the latest" button (with a dot when something new came) goes to the end.
+`ChatPinUITests` holds this behaviour.
+
+## Writing while the taf works
+
+A message written while the taf works goes to the run at work
+(`POST /v1/tafs/{id}/steer`), which reads it at its next step, before its next turn. It
+shows under the answer: "It reads this at its next step", or "when it carries on" while
+the run waits on a held call. When the run reads it, the stream says `taken`.
+
+If the run ended meanwhile (409), the message waits, and goes as a new message once the
+taf is done. A second message written while one waits joins it. A message with files
+always waits: files go with a message of their own, never into a run.
+
+What a run never read before it ended, as kiff/agents says, goes as the next message
+after the answer.
+
+## Stop, caps and failures
+
+- **Stop** cancels the run at work (`POST /v1/tafs/{id}/stop`). One already ended stays
+  as it ended.
+- A run that stopped at a **cap** says so, never "…": "stopped: this task would cost more
+  than its limit for one task…" (`cost_cap`), or "…took more steps than its limit…"
+  (`turn_cap`) (`capWords`).
+- A run that **failed** part-way says it stopped part-way, with Retry, which sends its
+  message again.
+
+## Held calls in the chat
+
+A call KIFF holds shows as a card in the chat where the taf made it: after the words the
+taf wrote before it, never by clock alone (`chatItems`, `placed`, `heldAfterItsWords`).
+
+- The taf usually writes "waiting for your approval" after the call is held. The card
+  waits for those words, at most 45 seconds after the hold, then shows anyway. Needs
+  you and the alert show it at once.
+- Answering it is the same as anywhere ([approvals.md](approvals.md)). The answer and
+  what became of the call ("Approved once by you · 22:41 · Refund €150.00") stay where
+  the card was.
+- The run paused on the call goes on once it's answered. The app asks tafs cloud to
+  continue it at once (`POST /v1/tafs/{id}/holds/{exception}/continue`), and shows the
+  taf working again.
+
+## Coming back to a run at work
+
+When the owner leaves the chat or the app and comes back while a run works, the app
+picks the run back up once (`resumeChat`, `GET /v1/tafs/{id}/runs/{run}/stream`). That
+stream sends the run's recorded steps (`activity`, `step`, `held`), `said` where the taf
+wrote a message (the app reloads the thread), `part` `{at}` where the run went on after a
+held call was answered, then `end`.
+
+- A step the stream sends again keeps its status: a finished step never goes back to
+  running.
+- On `part`, the app starts a fresh live answer (`LiveAnswer.newPart`). The steps and the
+  held card from before the pause stay with the answer written then, never shown again as
+  the resumed run's work.
+
+## The thread and the chats list
+
+`GET /v1/tafs/{id}/conversation` is the thread: the taf's last 5 job runs and the
+person's last 5 chats, oldest first, at most 100 messages. Each message is
+`{at, from: owner|taf, kind: kickoff|message, text, session}`, with `work`, `door` and
+`attachments` where they apply. With it come the components, whether the taf is at work
+(`working`), what the owner wrote to the run that it hasn't read (`steering`), and where
+the latest run stopped at a cap (`capped`).
+
+- A job run's first message is the job's instruction, shown as a small note.
+- A message that came through a door shows with its door and sender ([doors.md](doors.md)).
+- `GET /v1/tafs/{id}/chats` lists the person's chats, newest first, each named by the
+  start of what they asked. One tap reopens a chat.
+- Archiving a chat takes it out of the list and the thread, and messages no longer go
+  on in it as the live chat. It isn't deleted: kiff/agents keeps it its 30 days.
+  Archived lists them to reopen or put back.
+
+## In sample mode
+
+The sample taf answers as a real one does, streamed into the live answer: it thinks,
+takes a step, then writes. Nothing reaches a model. `-sampleReplySeconds` slows it for
+UI tests ([ios-app.md](ios-app.md#launch-arguments)).

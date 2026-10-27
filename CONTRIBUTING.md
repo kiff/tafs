@@ -36,7 +36,11 @@ references that an outside contributor can read.
 5. Add a short entry under Unreleased in [CHANGELOG.md](CHANGELOG.md) for
    user-visible behavior, security fixes safe to disclose, or compatibility
    changes. Pure refactors and routine documentation corrections need no entry.
-6. State exactly what was tested and what could not be tested. Describe any
+6. Update the feature's page in [docs/](docs/README.md) when the change adds or
+   changes what a feature does, a route, a limit, or a screen's behavior. A new
+   feature gets its page, linked from `docs/README.md`. A page that no longer
+   matches the code is a bug.
+7. State exactly what was tested and what could not be tested. Describe any
    rollout, migration, or cross-repository dependency.
 
 For runtime changes, use Node 22 and the committed lockfile:
