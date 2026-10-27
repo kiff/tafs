@@ -49,7 +49,7 @@ jobs:
           cache: npm
           cache-dependency-path: runtime/package-lock.json
       - run: npm ci && npm run bundle
-      - uses: aws-actions/configure-aws-credentials@v5
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           # The account id stays out of this public repository.
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
