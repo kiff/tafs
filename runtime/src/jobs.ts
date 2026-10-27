@@ -29,6 +29,7 @@ export const JOBS: readonly Job[] = [
     instructions: `You handle refund requests for the company.
 
 For each open request: read the order, the payment and the customer's history.
+Look up the payment and read its result before asking for a refund.
 Refund when the request is clear and the order qualifies. Offer store credit
 when the customer would accept it instead. When the item should come back
 first, say so to the customer and don't refund yet.
