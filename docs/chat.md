@@ -53,6 +53,7 @@ never reach the phone.
 | `held` | `{exception, invocation}` | KIFF held the call just made: its card goes here in the answer |
 | `taken` | `{}` | The run read a message the owner wrote meanwhile: the thread is reloaded |
 | `component` | `{component}` | Something the agent showed: the thread has it |
+| `part` | `{at}` | A resumed run went on after a held call was answered: a fresh live answer starts (resumed streams only) |
 | `end` | `{status, stop}` | The run stopped |
 | `error` | `{error}` | The stream broke; the thread has the rest |
 
@@ -71,6 +72,14 @@ place. The block folds in place to "Worked for 12 s" (`WorkSummary`), which open
 steps again. tafs cloud puts a run's work on its first message: the time from the run's
 start to its last words, and the tools it called, in order, by name, with the ones that
 failed (`conversation`, from kiff/agents' usage records).
+
+**A run that paused on a held call** has its work in parts, one for each stretch between
+pauses. Each part's work goes on the first message written in it, and its time leaves out
+the wait for the owner: the answer that asked for approval keeps what was done before it,
+and the work after the approval gets its own "Worked for". A part that wrote nothing goes
+on in the next one, less the wait between them. tafs cloud finds a pause from kiff/agents'
+usage timing: every turn after a tool call lists the calls it waited on, so a timed turn
+that waited on none, after the run's first, is the first after a pause (`turnTiming`).
 
 ### The sent message stays on top
 
@@ -124,7 +133,14 @@ taf wrote before it, never by clock alone (`chatItems`, `placed`, `heldAfterItsW
 When the owner leaves the chat or the app and comes back while a run works, the app
 picks the run back up once (`resumeChat`, `GET /v1/tafs/{id}/runs/{run}/stream`). That
 stream sends the run's recorded steps (`activity`, `step`, `held`), `said` where the taf
-wrote a message (the app reloads the thread), then `end`.
+wrote a message (the app reloads the thread), `part` `{at}` where the run went on after a
+held call was answered, then `end`.
+
+- A step the stream sends again keeps its status: a finished step never goes back to
+  running.
+- On `part`, the app starts a fresh live answer (`LiveAnswer.newPart`). The steps and the
+  held card from before the pause stay with the answer written then, never shown again as
+  the resumed run's work.
 
 ## The thread and the chats list
 
