@@ -121,7 +121,13 @@ struct TafChatView: View {
                                     VStack(alignment: .leading, spacing: 6) {
                                         // What it did before writing it, folded (kiff/tafs#285).
                                         if m.from == .taf, let work = m.work { WorkSummary(work: work) }
-                                        ChatBubble(message: m, taf: taf, fullWidth: m.from == .taf)
+                                        // The stored answer, apart from the one streaming, which the
+                                        // same bubble draws under its own id (ChatPinUITests).
+                                        if m.from == .taf {
+                                            ChatBubble(message: m, taf: taf, fullWidth: true).accessibilityIdentifier("taf-message")
+                                        } else {
+                                            ChatBubble(message: m, taf: taf, fullWidth: false)
+                                        }
                                     }
                                 case .held(let call):
                                     HeldCallCard(call: call)
@@ -596,7 +602,6 @@ struct ChatBubble: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 2)
                 .textSelection(.enabled)
-                .accessibilityIdentifier("taf-message")
         } else {
             HStack(alignment: .bottom, spacing: 8) {
                 if let taf { TafAvatar(taf: taf, size: 28) } else { Mascot(size: 28) }
@@ -608,7 +613,6 @@ struct ChatBubble: View {
                     .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Theme.line))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .textSelection(.enabled)
-                    .accessibilityIdentifier("taf-message")
                 Spacer(minLength: 48)
             }
         }
