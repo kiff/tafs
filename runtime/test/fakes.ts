@@ -1,4 +1,4 @@
-import { AgentsError, type AIBound, type Notify, type AgentDefinition, type AgentVersion, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AIBound, type AttachmentRef, type Notify, type AgentDefinition, type AgentVersion, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
 import type { CoachStore } from "../src/cloud/coach.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
@@ -81,12 +81,26 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     if (owner) opened.owner = owner;
     return { session: opened.id, opened: true };
   };
-  const newRun = (tenant: string, agent: string, session: string, trigger: string, input: string, source?: string): Run & { tenant: string } => {
+  /** Files people attached (kiff/tafs#209), by id, with their owner and whether a message sent them. */
+  const files = new Map<string, { tenant: string; agent: string; owner: string; sent: boolean; ref: AttachmentRef }>();
+  /** The files a message names, as kiff/agents takes them: the requester's own, unsent, for this agent. */
+  const take = (tenant: string, agent: string, at: RunAt): AttachmentRef[] => {
+    const ids = at.attachments ?? [];
+    if (ids.length && at.requester?.kind !== "member") throw new AgentsError(400, "only a person's own chat message carries attachments");
+    return ids.map((id) => {
+      const f = files.get(id);
+      if (!f || f.tenant !== tenant || f.agent !== agent || f.owner !== `member:${at.requester?.id}`) throw gone();
+      if (f.sent) throw new AgentsError(409, "a file was already sent with another message: attach it again");
+      f.sent = true;
+      return f.ref;
+    });
+  };
+  const newRun = (tenant: string, agent: string, session: string, trigger: string, input: string, source?: string, attached: AttachmentRef[] = []): Run & { tenant: string } => {
     const at = now().toISOString();
     const r = { tenant, id: `run${++n}`, agent, session, trigger, ...(source ? { source } : {}), status: "PENDING" as const, cost_micro_usd: 0, turns: 0, created: at, updated: at };
     runs.unshift(r);
     const list = events.get(session) ?? [];
-    list.push({ session, run: r.id, seq: list.length + 1, time: at, kind: "owner_message", body: { text: input } });
+    list.push({ session, run: r.id, seq: list.length + 1, time: at, kind: "owner_message", body: { text: input, ...(attached.length ? { attachments: attached } : {}) } });
     events.set(session, list);
     const s = sessions.find((x) => x.id === session);
     if (s) s.updated = at;
@@ -282,6 +296,24 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       }
       notes.delete(k(tenant, id));
     },
+    /** A file the person will attach: kiff/agents' limits, kept short here. */
+    async createAttachment(tenant, agent, owner, file) {
+      calls.push(`createAttachment ${agent} ${owner}`);
+      failing("createAttachment");
+      if (!agents.has(k(tenant, agent))) throw gone();
+      if (file.size > 10 * 1024 * 1024) throw new AgentsError(400, `${file.name} is over the most a file may weigh`);
+      const id = `att_${String(++n).padStart(32, "0")}`;
+      const kind = file.media_type.startsWith("image/") ? "image" as const : file.media_type === "application/pdf" ? "pdf" as const : "text" as const;
+      const ref = { id, kind, media_type: file.media_type, name: file.name, size: file.size };
+      files.set(id, { tenant, agent, owner, sent: false, ref });
+      return { attachment: { ...ref, created: now().toISOString(), sent: false }, upload: { url: `https://s3.test/${id}`, method: "PUT", headers: { "Content-Type": file.media_type }, expires: now().toISOString() } };
+    },
+    async readAttachment(tenant, agent, owner, id) {
+      calls.push(`readAttachment ${agent} ${owner} ${id}`);
+      const f = files.get(id);
+      if (!f || f.tenant !== tenant || f.agent !== agent || f.owner !== owner) throw gone();
+      return { ...f.ref, created: now().toISOString(), sent: f.sent, url: `https://s3.test/${id}?signed`, url_expires: now().toISOString() };
+    },
     async startRun(tenant, agent, input, at = {}, ai, notify) {
       calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}`);
       failing("startRun");
@@ -289,8 +321,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       fairUse(tenant, ai);
       // A run grant names its person, as kiff/agents resolves it with KIFF: here "krg_<subject>".
       if (at.grant) at = { ...at, requester: { kind: "member", id: at.grant.replace(/^krg_/, "") } };
+      const attached = take(tenant, agent, at);
       const { session, opened } = place(tenant, agent, at);
-      const run = newRun(tenant, agent, session, "owner", input);
+      const run = newRun(tenant, agent, session, "owner", input, undefined, attached);
       if (at.requester) run.requester = { ...at.requester };
       if (notify) notified.set(run.id, notify);
       // The run as stored, so a test that changes it changes kiff/agents' copy.
@@ -305,8 +338,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       failing("streamRun");
       if (!agents.has(k(tenant, agent))) throw gone();
       fairUse(tenant, ai);
+      const attached = take(tenant, agent, at);
       const { session, opened } = place(tenant, agent, at);
-      const r = newRun(tenant, agent, session, "owner", input);
+      const r = newRun(tenant, agent, session, "owner", input, undefined, attached);
       if (at.requester) r.requester = { ...at.requester };
       yield { event: "run", data: { ...r, new_session: opened } };
       for (const e of streamed) {

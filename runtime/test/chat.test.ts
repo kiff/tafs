@@ -671,3 +671,57 @@ describe("another person's chats", () => {
     expect((await call(w, "GET", `/v1/tafs/${RAE}/conversation/${bos.session}`, { token: "ana" })).status).toBe(404);
   });
 });
+
+describe("attachments (kiff/tafs#209)", () => {
+  const PNG = { media_type: "image/png", name: "receipt.png", size: 2048, sha256: "a".repeat(64) };
+
+  it("declares a file for the person and answers where the phone uploads it", async () => {
+    const w = world();
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/attachments`, { token: "ana", body: PNG });
+    expect(r.status).toBe(200);
+    expect(r.body.attachment).toMatchObject({ kind: "image", name: "receipt.png", sent: false });
+    expect(r.body.upload).toMatchObject({ method: "PUT" });
+    expect(w.agents.calls.at(-1)).toBe(`createAttachment ${RAE} member:u_ana`);
+    // What kiff/agents refuses is said as it said it, before any upload.
+    const big = await call(w, "POST", `/v1/tafs/${RAE}/attachments`, { token: "ana", body: { ...PNG, size: 11 * 1024 * 1024 } });
+    expect(big.status).toBe(400);
+    expect(big.body.error).toContain("receipt.png");
+    for (const bad of [{ ...PNG, sha256: "xyz" }, { ...PNG, size: 0 }, { ...PNG, media_type: "" }]) {
+      expect((await call(w, "POST", `/v1/tafs/${RAE}/attachments`, { token: "ana", body: bad })).status).toBe(400);
+    }
+    expect((await call(w, "POST", `/v1/tafs/${MAX}/attachments`, { token: "ana", body: PNG })).status).toBe(404);
+  });
+
+  it("sends files with the message, alone or with words, and shows them in the thread", async () => {
+    const w = world();
+    const id = (await call(w, "POST", `/v1/tafs/${RAE}/attachments`, { token: "ana", body: PNG })).body.attachment.id as string;
+    const sent = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "", attachments: [id], new_chat: true } });
+    expect(sent.status).toBe(200);
+    const thread = (await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" })).body;
+    const mine = thread.messages.find((m: { from: string; attachments?: unknown[] }) => m.from === "owner" && m.attachments);
+    expect(mine).toMatchObject({ text: "", attachments: [{ id, kind: "image", name: "receipt.png", media_type: "image/png", size: 2048 }] });
+    // Sent once: a second message naming it is kiff/agents' 409.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "again", attachments: [id], new_chat: true } })).status).toBe(409);
+  });
+
+  it("takes at most five files, each once, by the ids uploads gave, and words or files", async () => {
+    const w = world();
+    const id = (n: number) => `att_${String(n).padStart(32, "0")}`;
+    for (const attachments of [[id(1), id(1)], [1, 2, 3, 4, 5, 6].map(id), ["../etc"], "att_1"]) {
+      expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi", attachments } })).status).toBe(400);
+    }
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "", attachments: [] } })).status).toBe(400);
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([]);
+  });
+
+  it("opens a file only for the person who attached it", async () => {
+    const w = world();
+    const id = (await call(w, "POST", `/v1/tafs/${RAE}/attachments`, { token: "ana", body: PNG })).body.attachment.id as string;
+    const mine = await call(w, "GET", `/v1/tafs/${RAE}/attachments/${id}`, { token: "ana" });
+    expect(mine.status).toBe(200);
+    expect(mine.body.url).toContain(id);
+    // Bo is on the account and uses Rae, but it's Ana's file.
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/attachments/${id}`, { token: "approver" })).status).toBe(404);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/attachments/..%2Fx`, { token: "ana" })).status).toBe(404);
+  });
+});

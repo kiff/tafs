@@ -186,7 +186,8 @@ struct SetupChatView: View {
                             switch item {
                             case .message(let m) where m.from == .owner:
                                 ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, kind: m.kind,
-                                                                          text: model.setupThread.ownerWords(m.text), session: m.session), taf: nil)
+                                                                          text: model.setupThread.ownerWords(m.text), session: m.session,
+                                                                          attachments: m.attachments), taf: nil)
                             case .message(let m):
                                 // Streamed answers show as written; only without a stream are they revealed.
                                 VStack(alignment: .leading, spacing: 6) {
@@ -531,9 +532,19 @@ struct SetupChatView: View {
     }
 
     private var composer: some View {
-        let empty = model.setupDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let key = AppModel.setupFiles
+        let ready = model.files(key).contains { $0.ref != nil }
+        let uploading = model.filesUploading(key)
+        let empty = model.setupDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !ready
         let thinking = model.setupThinking
-        return HStack(alignment: .bottom, spacing: 10) {
+        // Files go with a message of their own, once Setup is done and they're all up (kiff/tafs#209).
+        let held = ready && (thinking || uploading)
+        return VStack(spacing: 0) {
+        FileTray(key: key)
+        HStack(alignment: .bottom, spacing: 10) {
+            #if os(iOS)
+            if model.filesTarget(key) != nil { AttachButton(key: key) }
+            #endif
             ChatField(title: thinking ? "Write the next message" : "Ask anything about your tafs", text: $model.setupDraft)
                 .focused($typing)
                 .scaledFont(16)
@@ -566,14 +577,15 @@ struct SetupChatView: View {
                         .frame(width: 40, height: 40)
                         .background(Theme.coach)
                         .clipShape(Circle())
-                        .opacity(empty ? 0.4 : 1)
+                        .opacity(empty || held ? 0.4 : 1)
                 }
-                .disabled(empty)
+                .disabled(empty || held)
                 .shortcut(.send)
-                .accessibilityLabel(thinking ? "Send when this answer is done" : "Send")
+                .accessibilityLabel(held && uploading ? "Send once the files are up" : thinking ? "Send when this answer is done" : "Send")
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
+        }
         .barBackground()
         // Leaving the chat stops dictating, so its words never land in another chat's box.
         .onDisappear { model.dictation.stop() }
@@ -606,7 +618,14 @@ struct SetupChatView: View {
         // The keyboard goes down once it's sent (kiff/tafs#138): the answer gets the screen.
         typing = false
         Haptics.tap()
-        Task { if !(await model.submitSetup(text)), model.setupDraft.isEmpty { model.setupDraft = text } }
+        let key = AppModel.setupFiles
+        let files = model.takeFiles(key)
+        Task {
+            if !(await model.submitSetup(text, files: files.compactMap(\.ref))) {
+                if model.setupDraft.isEmpty { model.setupDraft = text }
+                model.putBackFiles(files, key)
+            }
+        }
     }
 }
 

@@ -451,7 +451,7 @@ final class AppModel: ObservableObject {
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
-        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
+        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
@@ -613,7 +613,7 @@ final class AppModel: ObservableObject {
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
-        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil
+        chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
@@ -2482,9 +2482,11 @@ final class AppModel: ObservableObject {
     @discardableResult
     func sendChat(_ text: String, to tafID: UUID) async -> Bool { await deliverChat(text, to: tafID) == .sent }
 
-    private func deliverChat(_ text: String, to tafID: UUID) async -> Delivery {
+    /// `files` go with the message (kiff/tafs#209): a message may be files alone. One with
+    /// files that doesn't go is left with the composer, files and all, rather than kept unsent.
+    private func deliverChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return .notTried }
+        guard !text.isEmpty || !files.isEmpty else { return .notTried }
         guard text.count <= Self.chatLimit else {
             chatErrors[tafID] = "That's longer than \(Self.chatLimit) characters. Say it in fewer words."
             return .notTried
@@ -2496,7 +2498,8 @@ final class AppModel: ObservableObject {
         func current() -> Bool { gen == accountGeneration }
         chatErrors[tafID] = nil
         let latest = chats[tafID]?.map(\.at).max()
-        let pending = TafsCloud.ChatMessage(at: SentMessages.stamp(after: latest, now: clock()), from: .owner, text: text, session: "pending")
+        let pending = TafsCloud.ChatMessage(at: SentMessages.stamp(after: latest, now: clock()), from: .owner, text: text, session: "pending",
+                                            attachments: files)
         chats[tafID, default: []].append(pending)
         if mode != .sample { chatSent[tafID, default: []].append(pending) }
 
@@ -2548,7 +2551,7 @@ final class AppModel: ObservableObject {
             // Streamed, so the taf's words show as it writes them (#64); sent plainly
             // when the stream can't open.
             // A trial's turn runs in the background, and its chat reloads as it goes.
-            if trialChats[tafID] == nil, let events = try await openStream(c.id, text: text) {
+            if trialChats[tafID] == nil, let events = try await openStream(c.id, text: text, files: files) {
                 guard current() else { return .notTried }
                 chatStates[tafID, default: ChatState()].awaiting = clock()
                 chatStates[tafID]?.live = LiveAnswer(started: clock())
@@ -2560,7 +2563,7 @@ final class AppModel: ObservableObject {
             if trialChats[tafID] != nil {
                 _ = try await cloud.trialMessage(c.id, text: text)
             } else {
-                _ = try await cloud.sendMessage(c.id, text: text)
+                _ = try await cloud.sendMessage(c.id, text: text, files: files)
             }
             guard current() else { return .notTried }
             chatStates[tafID, default: ChatState()].awaiting = clock()
@@ -2571,14 +2574,116 @@ final class AppModel: ObservableObject {
             guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0 == pending }
             chatSent[tafID]?.removeAll { $0 == pending }
+            if !files.isEmpty {
+                chatErrors[tafID] = Self.busyWords(c.name)
+                return .notTried
+            }
             keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
             return .kept
         } catch {
             guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0 == pending }
             chatSent[tafID]?.removeAll { $0 == pending }
+            if !files.isEmpty {
+                chatErrors[tafID] = error.localizedDescription
+                return .notTried
+            }
             keepUnsent(text, tafID, why: error.localizedDescription)
             return .kept
+        }
+    }
+
+    // MARK: Attachments (kiff/tafs#209)
+
+    /// The files picked for each chat's next message, as they go up: a taf's chat by the taf's
+    /// id, Coach's by `setupFiles`. They go with the message, and are cleared once it's sent.
+    @Published private(set) var chatFiles: [String: [PendingFile]] = [:]
+    /// Why a file wasn't added, or a message with files didn't go, by chat.
+    @Published var fileNotices: [String: String] = [:]
+    static let setupFiles = "setup"
+
+    /// Where a chat's files go on tafs cloud: Coach's Setup, or the taf. Nil where nothing can
+    /// be attached: sample mode, a trial, or Setup improving a taf, whose first message tafs
+    /// cloud writes.
+    func filesTarget(_ key: String) -> String? {
+        guard mode == .kiff else { return nil }
+        if key == Self.setupFiles { return setupImproving == nil ? setupTaf?.id : nil }
+        guard let tafID = UUID(uuidString: key), trialChats[tafID] == nil else { return nil }
+        return cloudTaf(for: tafID)?.id
+    }
+
+    func files(_ key: String) -> [PendingFile] { chatFiles[key] ?? [] }
+
+    /// Adds a file to the chat's next message and uploads it: declared to tafs cloud, which
+    /// checks its type and size, then its bytes straight to storage. One that can't go says
+    /// why in the tray, and is left out of the message.
+    func attach(_ file: PreparedFile, to key: String) async {
+        guard let target = filesTarget(key) else { return }
+        fileNotices[key] = nil
+        guard files(key).count < FilePrep.perMessage else {
+            fileNotices[key] = "A message carries at most \(FilePrep.perMessage) files."
+            return
+        }
+        let pending = PendingFile(id: UUID(), name: file.name, mediaType: file.mediaType, thumbnail: file.thumbnail, state: .uploading)
+        chatFiles[key, default: []].append(pending)
+        let gen = accountGeneration
+        let state: PendingFile.State
+        do {
+            let (ref, upload) = try await cloud.attach(target, mediaType: file.mediaType, name: file.name, size: file.data.count,
+                                                       sha256: FilePrep.sha256(file.data))
+            try await cloud.upload(file.data, to: upload)
+            state = .ready(ref)
+        } catch {
+            state = .failed(error.localizedDescription)
+        }
+        guard gen == accountGeneration, let i = chatFiles[key]?.firstIndex(where: { $0.id == pending.id }) else { return }
+        chatFiles[key]?[i].state = state
+    }
+
+    /// A file picked that can't be attached: said in the tray, never uploaded.
+    func refuseFile(_ problem: Error, in key: String) {
+        fileNotices[key] = problem.localizedDescription
+    }
+
+    func removeFile(_ id: UUID, from key: String) {
+        chatFiles[key]?.removeAll { $0.id == id }
+        if chatFiles[key]?.isEmpty == true { chatFiles[key] = nil }
+    }
+
+    /// Whether the chat's files are all up: a message waits for the ones still going.
+    func filesUploading(_ key: String) -> Bool {
+        files(key).contains { $0.state == .uploading }
+    }
+
+    /// The chat's ready files, taken for the message being sent. Ones that failed stay in the tray.
+    func takeFiles(_ key: String) -> [PendingFile] {
+        let ready = files(key).filter { $0.ref != nil }
+        chatFiles[key] = files(key).filter { $0.ref == nil }
+        if chatFiles[key]?.isEmpty == true { chatFiles[key] = nil }
+        return ready
+    }
+
+    /// Puts back files a message didn't take, ahead of any picked since.
+    func putBackFiles(_ taken: [PendingFile], _ key: String) {
+        guard !taken.isEmpty else { return }
+        chatFiles[key] = taken + files(key)
+    }
+
+    /// A file the person attached, downloaded to open full size: a temporary copy under its
+    /// own name, removed by the system. Nil when it couldn't be read; the notice says why.
+    func openFile(_ ref: TafsCloud.AttachmentRef, in key: String) async -> URL? {
+        let target = key == Self.setupFiles ? setupTaf?.id : UUID(uuidString: key).flatMap { cloudTaf(for: $0)?.id }
+        guard mode == .kiff, let target else { return nil }
+        do {
+            let data = try await cloud.attachment(target, file: ref.id)
+            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("attachments/\(ref.id)", isDirectory: true)
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let url = dir.appendingPathComponent((ref.name as NSString).lastPathComponent)
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            fileNotices[key] = "\(ref.name) couldn't be opened: \(error.localizedDescription)"
+            return nil
         }
     }
 
@@ -2773,8 +2878,11 @@ final class AppModel: ObservableObject {
     /// message while one waits joins it. True once the message is taken: sent, queued,
     /// or kept in the thread as not sent. False leaves it with the composer.
     @discardableResult
-    func submitChat(_ text: String, to tafID: UUID) async -> Bool {
+    func submitChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // A message with files goes as a message of its own, never into the run at work
+        // (kiff/tafs#209): the composer sends it once the taf is done.
+        if !files.isEmpty { return await deliverChat(text, to: tafID, files: files) == .sent }
         guard !text.isEmpty else { return false }
         if mode == .kiff, chatThinking(tafID) || chatSending.contains(tafID) {
             // To the run at work, which reads it at its next step (kiff/agents#102). With
@@ -3989,9 +4097,11 @@ final class AppModel: ObservableObject {
     /// was tried and failed), or didn't try (nothing to send, too long, or busy).
     enum Delivery { case sent, kept, notTried }
 
-    private func deliverSetup(_ text: String) async -> Delivery {
+    private func deliverSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
+        guard !text.isEmpty || !files.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
+        // An improvement's first message carries no files: tafs cloud adds the taf's context to it.
+        if !files.isEmpty, setupImproving != nil { return .notTried }
         setupSending = true
         defer { setupSending = false }
         let gen = accountGeneration
@@ -4000,7 +4110,7 @@ final class AppModel: ObservableObject {
         // Stamped no earlier than the thread's latest item: Setup's messages carry tafs
         // cloud's time, so a phone clock a little behind would place it above them.
         let mine = TafsCloud.ChatMessage(at: SentMessages.stamp(after: setupThread.items.map(\.at).max(), now: clock()),
-                                         from: .owner, text: text, session: "pending")
+                                         from: .owner, text: text, session: "pending", attachments: files)
         setupSent.append(mine)
         setupThread.messages.append(mine)
         do {
@@ -4025,7 +4135,7 @@ final class AppModel: ObservableObject {
             }
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
             // when the stream can't open.
-            if let events = try await openStream(s.id, text: text, to: setupTarget) {
+            if let events = try await openStream(s.id, text: text, to: setupTarget, files: files) {
                 guard gen == accountGeneration else { return .notTried }
                 setupAwaiting = clock()
                 setupStreamWorks = true
@@ -4033,7 +4143,7 @@ final class AppModel: ObservableObject {
                 setupStream = Task { await self.followSetupStream(events, text: text, gen: gen) }
                 return .sent
             }
-            let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget)
+            let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget, files: files)
             settleSetupChat(sent.session)
             guard gen == accountGeneration else { return .notTried }
             setupAwaiting = clock()
@@ -4043,6 +4153,11 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return .notTried }
             setupSent.removeAll { $0 == mine }
             setupThread.messages.removeAll { $0 == mine }
+            if !files.isEmpty {
+                // Left with the composer, files and all.
+                fileNotices[Self.setupFiles] = error.localizedDescription
+                return .notTried
+            }
             setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
             return .kept
         }
@@ -4053,8 +4168,10 @@ final class AppModel: ObservableObject {
     /// queued, or kept in the thread as not sent. False leaves it with the composer
     /// (nothing to send, too long to join the queue, or no Setup).
     @discardableResult
-    func submitSetup(_ text: String) async -> Bool {
+    func submitSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // A message with files goes as a message of its own (kiff/tafs#209): the composer sends it once Setup is done.
+        if !files.isEmpty { return await deliverSetup(text, files: files) == .sent }
         guard !text.isEmpty else { return false }
         if setupThinking || setupSending {
             let joined = setupQueued.map { $0 + "\n\n" + text } ?? text
@@ -4191,10 +4308,11 @@ final class AppModel: ObservableObject {
     /// open and the plain send should take the message (no network to it, tafs cloud
     /// without the route, or failing); a refusal (the flood guard, the role) throws, as
     /// the plain send's would.
-    private func openStream(_ id: String, text: String, to target: TafsCloud.ChatTarget = .live) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>? {
+    private func openStream(_ id: String, text: String, to target: TafsCloud.ChatTarget = .live,
+                            files: [TafsCloud.AttachmentRef] = []) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>? {
         do {
             if let streamOpener { return try await streamOpener(id, text) }
-            return try await cloud.streamMessage(id, text: text, to: target)
+            return try await cloud.streamMessage(id, text: text, to: target, files: files)
         } catch let e as TafsCloud.CloudError where (400..<500).contains(e.status) && e.status != 404 && e.status != 408 {
             throw e
         } catch {

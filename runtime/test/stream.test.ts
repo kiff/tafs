@@ -183,6 +183,19 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream`, "")).status).toBe(401);
   });
 
+  it("carries the files the person attached, with words or alone (kiff/tafs#209)", async () => {
+    const w = world();
+    const { attachment } = await w.agents.api.createAttachment("t_acme", RAE, "member:u_ana", { media_type: "application/pdf", name: "policy.pdf", size: 900, sha256: "b".repeat(64) });
+    const r = await stream(w, PATH, { token: "ana", body: { text: "", attachments: [attachment.id] } });
+    expect(r.status).toBe(200);
+    const session = String(r.events[0]!.data.session);
+    const read = await w.agents.api.session("t_acme", session, "member:u_ana");
+    expect(read.events[0]!.body).toEqual({ text: "", attachments: [{ id: attachment.id, kind: "pdf", media_type: "application/pdf", name: "policy.pdf", size: 900 }] });
+    // Luis can't send Ana's file: kiff/agents takes only the requester's own.
+    const theirs = await w.agents.api.createAttachment("t_acme", RAE, "member:u_ana", { media_type: "text/plain", name: "a.txt", size: 5, sha256: "c".repeat(64) });
+    expect((await stream(w, PATH, { token: "luis", body: { text: "hi", attachments: [theirs.attachment.id] } })).status).toBe(404);
+  });
+
   it("checks what messages checks, before any run", async () => {
     const w = world();
     expect((await stream(w, PATH, { body: { text: "hi" } })).status).toBe(401);

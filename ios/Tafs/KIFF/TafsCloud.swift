@@ -386,7 +386,7 @@ final class TafsCloud {
         /// its id: two sent at once stay two.
         var id: String {
             from == .taf ? "\(session)|\(at.timeIntervalSince1970)|taf|\(kind.rawValue)"
-                : "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)"
+                : "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)|\(attachments.map(\.id).joined(separator: ","))"
         }
         let at: Date
         let from: From
@@ -398,12 +398,16 @@ final class TafsCloud {
         /// What the taf did before writing it (kiff/tafs#285): how long it worked, and the
         /// tools it called. Nil for a message written without calling any.
         var work: Work? = nil
+        /// The files the person attached to their message (kiff/tafs#209).
+        var attachments: [AttachmentRef] = []
 
-        init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil, work: Work? = nil) {
+        init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil, work: Work? = nil,
+             attachments: [AttachmentRef] = []) {
             self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session; self.door = door; self.work = work
+            self.attachments = attachments
         }
 
-        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work }
+        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work, attachments }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             at = try c.decode(Date.self, forKey: .at)
@@ -414,7 +418,65 @@ final class TafsCloud {
             // A mark the app can't read leaves the message as a plain one.
             door = try? c.decodeIfPresent(DoorMark.self, forKey: .door)
             work = try? c.decodeIfPresent(Work.self, forKey: .work)
+            attachments = (try? c.decodeIfPresent([AttachmentRef].self, forKey: .attachments)) ?? []
         }
+    }
+
+    // MARK: Attachments (kiff/tafs#209)
+
+    /// A file the person attached to a message, as the thread names it: never its bytes.
+    struct AttachmentRef: Codable, Equatable, Hashable, Identifiable {
+        let id: String
+        /// How the model reads it: "image", "pdf", "text", "word" or "excel".
+        let kind: String
+        let mediaType: String
+        let name: String
+        let size: Int
+        enum CodingKeys: String, CodingKey { case id, kind, name, size, mediaType = "media_type" }
+    }
+
+    /// Where a file's bytes go: a PUT to `url` with `headers`, sent as given, straight to
+    /// storage, never through tafs cloud. It works for a few minutes.
+    struct Upload: Decodable, Equatable {
+        let url: URL
+        let method: String
+        let headers: [String: String]
+    }
+
+    /// Declares a file the person will attach to a message in their chat with the taf (or
+    /// Coach): tafs cloud answers where to upload it. A file over its limit is refused here,
+    /// before any upload, and the refusal says which limit.
+    func attach(_ id: String, mediaType: String, name: String, size: Int, sha256: String) async throws -> (AttachmentRef, Upload) {
+        struct Body: Encodable {
+            let mediaType: String, name: String, size: Int, sha256: String
+            enum CodingKeys: String, CodingKey { case name, size, sha256, mediaType = "media_type" }
+        }
+        struct Response: Decodable { let attachment: AttachmentRef; let upload: Upload }
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/attachments", body: Body(mediaType: mediaType, name: name, size: size, sha256: sha256))
+        return (r.attachment, r.upload)
+    }
+
+    /// Uploads a file's bytes where `attach` said: no KIFF session goes with them.
+    func upload(_ data: Data, to upload: Upload) async throws {
+        var request = URLRequest(url: upload.url)
+        request.httpMethod = upload.method
+        request.timeoutInterval = 120
+        for (name, value) in upload.headers { request.setValue(value, forHTTPHeaderField: name) }
+        let (_, response) = try await session.upload(for: request, from: data)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            throw CloudError(status: status, message: "The file didn't upload. Try attaching it again.")
+        }
+    }
+
+    /// A file the person attached, downloaded: only their own; another's is a 404.
+    func attachment(_ id: String, file: String) async throws -> Data {
+        struct Response: Decodable { let url: URL }
+        let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/attachments/\(escaped(file))")
+        let (data, response) = try await session.data(from: r.url)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else { throw CloudError(status: status, message: "The file couldn't be opened.") }
+        return data
     }
 
     /// How long a taf worked on a message, and the tools it called, in order, by name.
@@ -560,12 +622,15 @@ final class TafsCloud {
         let text: String
         let session: String?
         let newChat: Bool?
-        enum CodingKeys: String, CodingKey { case text, session, newChat = "new_chat" }
+        /// The files attached to it, by the ids their uploads gave (kiff/tafs#209).
+        let attachments: [String]?
+        enum CodingKeys: String, CodingKey { case text, session, attachments, newChat = "new_chat" }
 
-        init(_ text: String, _ target: ChatTarget) {
+        init(_ text: String, _ target: ChatTarget, files: [AttachmentRef] = []) {
             self.text = text
             session = target.session
             newChat = target.newChat ? true : nil
+            attachments = files.isEmpty ? nil : files.map(\.id)
         }
     }
 
@@ -576,8 +641,8 @@ final class TafsCloud {
     }
 
     /// Sends the owner's message: into the taf's current run, or a new one.
-    func sendMessage(_ id: String, text: String, to target: ChatTarget = .live) async throws -> Sent {
-        try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target))
+    func sendMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> Sent {
+        try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target, files: files))
     }
 
     /// One of a taf's chats, to reopen (kiff/tafs#73): named by its first words.
@@ -647,7 +712,7 @@ final class TafsCloud {
 
     /// Sends the owner's message with its run streamed: returns once tafs cloud took it,
     /// with the run's events to follow. A refusal throws, as `sendMessage` does.
-    func streamMessage(_ id: String, text: String, to target: ChatTarget = .live) async throws -> AsyncThrowingStream<StreamEvent, Error> {
+    func streamMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> AsyncThrowingStream<StreamEvent, Error> {
         guard let url = URL(string: "/v1/tafs/\(escaped(id))/messages/stream", relativeTo: streamURL) else {
             throw CloudError(status: 0, message: "Bad path")
         }
@@ -657,7 +722,7 @@ final class TafsCloud {
         request.timeoutInterval = 900
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(MessageBody(text, target))
+        request.httpBody = try JSONEncoder().encode(MessageBody(text, target, files: files))
         guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 

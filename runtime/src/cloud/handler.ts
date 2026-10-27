@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, runGrant, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
@@ -37,7 +37,9 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
  *   POST /v1/tafs/{id}/chats/{session}/archive  hide a chat from the list and the thread (kiff/tafs#82)
  *   GET  /v1/tafs/{id}/chats/archived   the chats the owner archived, to find and reopen one (kiff/tafs#97)
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
- *   POST /v1/tafs/{id}/messages         {text, session?, new_chat?}: into the live chat, a chosen one, or a new one
+ *   POST /v1/tafs/{id}/messages         {text, attachments?, session?, new_chat?}: into the live chat, a chosen one, or a new one
+ *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
+ *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
  *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
@@ -97,6 +99,7 @@ export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
+  "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
   "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
 
@@ -483,6 +486,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
     return message(event, me, taf, deps);
+  }
+  if (parts.length === 4 && method === "POST" && action === "attachments") {
+    return attachFile(event, me, taf, deps);
+  }
+  if (parts.length === 5 && method === "GET" && action === "attachments") {
+    return readFile(me, taf, parts[4] ?? "", deps);
   }
   if (action === "versions" || action === "trials" || action === "switching") return versionRoute(event, method, parts, me, taf, deps);
   if (action === "trial") return trialRoute(event, method, parts, me, taf, deps);
@@ -1184,6 +1193,8 @@ export interface ThreadMessage {
    * ("not_sent", with why), or hasn't yet ("pending").
    */
   door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending"; why?: string };
+  /** The files the person attached to their message (kiff/tafs#209): opened through the attachments route. */
+  attachments?: AttachmentRef[];
   /**
    * A taf's message that called tools first (kiff/tafs#285): how long it worked on it, from the
    * message before, and the tools it called, by name, in order, with the ones that failed. From
@@ -1211,6 +1222,17 @@ async function callRefs(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Array<{
     }
   }
   return out;
+}
+
+/** The files an owner's message names, as kiff/agents recorded them: never their bytes. */
+function attachmentsOf(body: unknown): AttachmentRef[] {
+  const raw = (body as { attachments?: unknown } | undefined)?.attachments;
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((a) => {
+    const x = a as Partial<AttachmentRef>;
+    return typeof x?.id === "string" && typeof x.name === "string" && typeof x.media_type === "string" && typeof x.kind === "string"
+      ? [{ id: x.id, kind: x.kind, media_type: x.media_type, name: x.name, size: typeof x.size === "number" ? x.size : 0 }] : [];
+  });
 }
 
 /**
@@ -1267,7 +1289,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       }
       if (e.kind !== "owner_message" && e.kind !== "agent_message" && e.kind !== "report") continue;
       const text = typeof (e.body as { text?: unknown })?.text === "string" ? ((e.body as { text: string }).text).trim() : "";
-      if (!text) continue;
+      const attached = e.kind === "owner_message" ? attachmentsOf(e.body) : [];
+      if (!text && !attached.length) continue;
       const at = Date.parse(iso(e.time));
       const run = runOf(e.run, at);
       if (e.kind === "owner_message") {
@@ -1280,6 +1303,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         messages.push({
           at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : ownerWords(text), session: r.session.id,
           ...(door ? { door: { app: door.app, from: door.from, ...(door.subject ? { subject: door.subject } : {}) } } : {}),
+          ...(attached.length ? { attachments: attached } : {}),
         });
       } else {
         const app = doorRuns.get(e.run);
@@ -1360,7 +1384,7 @@ interface Steering {
  * taf has only its Card's tools, and remembers what its notes say.
  */
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
-  const owner = chatText(event);
+  const owner = chatText(event, files(event).length > 0);
   const lines = await takeCoachLines(me, taf, deps);
   try {
     return await startMessage(event, me, taf, lines.text(owner), deps);
@@ -1373,6 +1397,8 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
 
 async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<unknown> {
   const [at, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
+  const attached = files(event);
+  if (attached.length) at.attachments = attached;
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text, at, ai));
   return { session: run.session, new_session: newSession(at, run) };
@@ -1842,10 +1868,48 @@ async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): 
 }
 
 /** The owner's message, 1 to CHAT.maxText characters. */
-function chatText(event: HTTPEvent): string {
+/** The person's words: 1 to CHAT.maxText characters, or none when the message is files alone. */
+function chatText(event: HTTPEvent, withFiles = false): string {
   const text = str(parseBody(event).text).trim();
-  if (!text || text.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters`);
+  if ((!text && !withFiles) || text.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters`);
   return text;
+}
+
+/** An attachment's id as kiff/agents makes it. */
+const ATTACHMENT_ID = /^att_[0-9a-f]{32}$/;
+
+/** The files attached to the message, by id (kiff/tafs#209): at most five, each named once. */
+function files(event: HTTPEvent): string[] {
+  const raw = parseBody(event).attachments;
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw) || raw.length > ATTACHMENTS.perMessage || !raw.every((x) => typeof x === "string" && ATTACHMENT_ID.test(x)) || new Set(raw).size !== raw.length) {
+    throw new HTTPError(400, `attach at most ${ATTACHMENTS.perMessage} files, each once, by the id their upload gave`);
+  }
+  return raw as string[];
+}
+
+/** How many files a message carries; kiff/agents keeps the limits per file. */
+export const ATTACHMENTS = { perMessage: 5 };
+
+/**
+ * POST /v1/tafs/{id}/attachments: a file the person will attach to a message in their own
+ * chat (kiff/tafs#209). kiff/agents checks its type and size, keeps it for them alone, and
+ * answers where to upload its bytes: the phone sends them there, never through tafs cloud.
+ */
+async function attachFile(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  const body = parseBody(event);
+  const size = Number(body.size);
+  const file = { media_type: str(body.media_type), name: str(body.name).slice(0, 200), size, sha256: str(body.sha256) };
+  if (!file.media_type || !Number.isInteger(size) || size < 1 || !/^[0-9a-f]{64}$/.test(file.sha256)) {
+    throw new HTTPError(400, "send the file's media_type, name, size in bytes and sha256 (64 lowercase hex digits)");
+  }
+  return agentsCall(() => deps.agents.createAttachment(me.tenantID, taf.id, ownerKey(me), file));
+}
+
+/** GET /v1/tafs/{id}/attachments/{att}: a file the person attached, to download for a minute. Only theirs. */
+async function readFile(me: KIFFIdentity, taf: Taf, id: string, deps: Deps): Promise<unknown> {
+  if (!ATTACHMENT_ID.test(id)) throw new HTTPError(404, "not found");
+  return agentsCall(() => deps.agents.readAttachment(me.tenantID, taf.id, ownerKey(me), id));
 }
 
 /** The person as the requester of their runs: their chats are theirs in kiff/agents. */
@@ -2068,7 +2132,8 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     }
     const me = await person(event, deps);
     const taf = await owned(me, parts[2] ?? "", deps);
-    const owner = chatText(event);
+    const attached = files(event);
+    const owner = chatText(event, attached.length > 0);
     const lines = await takeCoachLines(me, taf, deps);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
@@ -2077,6 +2142,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       const text = lines.text(owner);
       const [chosen, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
       at = chosen;
+      if (attached.length) at.attachments = attached;
       try {
         run = deps.agents.streamRun(me.tenantID, taf.id, text, at, ai);
         first = await run.next();
