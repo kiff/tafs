@@ -4509,7 +4509,7 @@ final class AppModel: ObservableObject {
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.
-    static func activityWords(_ tool: String) -> String? {
+    nonisolated static func activityWords(_ tool: String) -> String? {
         // By its own name, past any prefix the run records it under ("kiff__kiff_draft").
         switch tool.components(separatedBy: "__").last ?? tool {
         case "planque": return "Working on the connection…"
