@@ -34,8 +34,7 @@
 # moved on 25 Oct. The push key is a Secrets Manager replica of us-east-1's. The app
 # reaches tafs-cloud at TAFS_PUBLIC_URL (CloudFront, made by hand like planque's:
 # an ACM certificate in us-east-1, DNS in Vercel) and tafs-cloud-stream at its own
-# function URL. The us-east-1 pair stays, on the same code (the deploy workflow
-# updates both), until older app builds stop calling it; then it's deleted.
+# function URL. The us-east-1 pair was deleted on 27 Oct 2026.
 # Usage: infra/aws.sh path/to/lambda.zip
 #
 # Applied on 2026-10-14 step by step (each part checked before the next), not by
