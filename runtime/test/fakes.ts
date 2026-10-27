@@ -37,6 +37,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const fail = new Map<string, AgentsError | Error>();
   /** What a streamed run's agent does, in order: kiff/agents' stream events, or an Error that breaks it. */
   const streamed: Array<{ event: string; data: unknown } | Error> = [];
+  /** What a resumed run's stream sends before its end: its recorded events (kiff/tafs#285). */
+  const resumed: Array<{ event: string; data: unknown }> = [];
   let n = 0;
 
   const k = (t: string, id: string) => `${t}|${id}`;
@@ -314,6 +316,15 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       (r as { status: string }).status = "COMPLETED";
       yield { event: "end", data: { ...r, stop: "answered" } };
     },
+    /** A run's stream picked back up: only the requester's own run; `resumed`, then its end. */
+    async *resumeRun(tenant, agent, run, after, requester) {
+      calls.push(`resumeRun ${agent} ${run} ${after}`);
+      failing("resumeRun");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === run);
+      if (!r || `${r.requester?.kind}:${r.requester?.id}` !== requester) throw gone();
+      for (const e of resumed) yield e;
+      yield { event: "end", data: { ...r } };
+    },
     async sessions(tenant, agent, limit = 20, owner) {
       failing("sessions");
       return sessions.filter((s) => s.tenant === tenant && s.agent === agent && (!owner || ownedBy(s, owner)))
@@ -457,7 +468,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, versions, trialWrites, switching, versionDefs, halts, trials };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

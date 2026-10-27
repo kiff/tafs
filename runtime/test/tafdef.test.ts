@@ -29,7 +29,7 @@ describe("a taf's definition on kiff/agents", () => {
       expect(d.gateway, job.id).toBe("https://mcp.kiff.dev/mcp");
       expect(d.gateway).toBe(KIFF_GATEWAY);
       expect(Object.keys(d).sort(), job.id).toEqual(
-        ["effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price"].sort());
+        ["effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price", "thinking"].sort());
     }
   });
 
@@ -41,6 +41,7 @@ describe("a taf's definition on kiff/agents", () => {
     const d = definition(ID, jobById("refunds"));
     expect(d.model).toBe(MODEL);
     expect(d.effort).toBe("medium");
+    expect(d.thinking).toBe("summarized"); // the person waiting sees what it considers (kiff/tafs#285)
     expect(EFFORT).toBe("medium");
     expect(d.price).toEqual(PRICE);
     // An hour's cache write at 2× input, so kiff/agents keeps the shared prefix an hour (kiff/agents#171).

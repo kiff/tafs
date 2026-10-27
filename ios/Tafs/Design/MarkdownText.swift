@@ -185,6 +185,28 @@ struct MarkdownBlock: Equatable {
         }
     }
 
+    /// An answer still being written, with what it's in the middle of closed, so no Markdown
+    /// symbol shows while it streams (kiff/tafs#285): bold or inline code left open, a link
+    /// whose address isn't in yet (its text shows). An open code block needs nothing: `parse`
+    /// draws it as code until it closes.
+    static func healed(_ text: String) -> String {
+        var lines = text.components(separatedBy: "\n")
+        let fences = lines.filter { $0.trimmingCharacters(in: .whitespaces).hasPrefix("```") }.count
+        guard fences % 2 == 0, var last = lines.popLast() else { return text }
+        last = last.replacingOccurrences(of: #"\[([^\]]*)\]\([^)]*$"#, with: "$1", options: .regularExpression)
+        last = last.replacingOccurrences(of: #"\[([^\]]*)$"#, with: "$1", options: .regularExpression)
+        // A mark just opened, with nothing after it yet ("Refunded **"), goes until its words
+        // come. One right after a word closes what it opened, and stays.
+        while let end = last.last, end == "*" || end == "_" || end == "`" {
+            let before = last.dropLast(last.reversed().prefix { $0 == end }.count)
+            guard before.last.map({ $0.isWhitespace }) ?? true else { break }
+            last = String(before)
+        }
+        if last.components(separatedBy: "**").count % 2 == 0 { last += "**" }
+        if last.filter({ $0 == "`" }).count % 2 == 1 { last += "`" }
+        return (lines + [last]).joined(separator: "\n")
+    }
+
     static func inline(_ text: String) -> AttributedString {
         let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
         return (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)

@@ -32,10 +32,12 @@ function world() {
 type World = ReturnType<typeof world>;
 
 /** Streams a message; the status, and the events the phone gets, parsed. */
-async function stream(w: World, path: string, opts: { token?: string; body?: unknown } = {}) {
+async function stream(w: World, path: string, opts: { token?: string; body?: unknown; method?: string } = {}) {
+  const [rawPath, rawQueryString] = path.split("?");
   const event: HTTPEvent = {
-    rawPath: path,
-    requestContext: { http: { method: "POST" } },
+    rawPath: rawPath!,
+    rawQueryString,
+    requestContext: { http: { method: opts.method ?? "POST" } },
     headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {},
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   };
@@ -45,7 +47,7 @@ async function stream(w: World, path: string, opts: { token?: string; body?: unk
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER }),
+    fetch: kiff({ ana: ME, viewer: VIEWER, luis: { ...ME, subject: "u_luis" } }),
     now: () => NOW,
   });
   let raw = "";
@@ -71,10 +73,11 @@ describe("a message streamed (kiff/tafs#60)", () => {
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Make sure customers can get their refunds" } });
     expect(r.status).toBe(200);
-    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "text", "activity", "component", "end"]);
+    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "text", "activity", "step", "component", "end"]);
     expect(r.events[0]!.data).toMatchObject({ new_session: true });
     expect(r.events.filter((e) => e.event === "text").map((e) => e.data.text).join("")).toBe("I'll connect **Stripe**.");
-    expect(r.events[3]!.data).toEqual({ tool: "planque", step: "Reading what your provider offers…" });
+    expect(r.events[3]!.data).toEqual({ tool: "planque", step: "Reading what your provider offers…", call_id: "c1" });
+    expect(r.events[4]!.data).toEqual({ call_id: "c1", status: "done" });
     expect(r.events.at(-1)!.data).toEqual({ status: "COMPLETED", stop: "answered" });
     // What tools were given and what they answered never reaches the phone.
     expect(r.raw).not.toContain("grt_secret");
@@ -93,10 +96,10 @@ describe("a message streamed (kiff/tafs#60)", () => {
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Set up refunds" } });
     expect(r.events.filter((e) => e.event === "activity").map((e) => e.data)).toEqual([
-      { tool: "planque", step: "Preparing the connection to Stripe…" },
-      { tool: "planque", step: "Checking your Stripe connection…" },
-      { tool: "kiff_draft", step: "Drafting the Card…" },
-      { tool: "show" },
+      { tool: "planque", step: "Preparing the connection to Stripe…", call_id: "c1" },
+      { tool: "planque", step: "Checking your Stripe connection…", call_id: "c2" },
+      { tool: "kiff_draft", step: "Drafting the Card…", call_id: "c3" },
+      { tool: "show", call_id: "c4" },
     ]);
     expect(r.raw).not.toContain("grt_AbC123xyz");
     expect(r.raw).not.toContain("refunds-k3f9");
@@ -113,7 +116,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
       { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "ch_secret paid" } } },
     );
     const r = await stream(w, PATH, { token: "ana", body: { text: "Refund $20 of T-3002" } });
-    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "activity", "held", "activity", "end"]);
+    expect(r.events.map((e) => e.event)).toEqual(["session", "text", "activity", "held", "activity", "step", "end"]);
     expect(r.events[3]!.data).toEqual({ exception: "exc_1", invocation: "tc-1" });
     expect(r.raw).not.toContain("ch_secret");
     expect(r.raw).not.toContain("op_1");
@@ -130,6 +133,54 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(fresh.events[0]!.data).toMatchObject({ new_session: true });
     expect(fresh.events[0]!.data.session).not.toBe(session);
     expect(w.agents.runs.every((r) => r.requester?.kind === "member" && r.requester.id === "u_ana")).toBe(true);
+  });
+
+  it("streams what the taf is thinking, and how each step ended, never its result (kiff/tafs#285)", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "thinking", text: "The order is paid, " } },
+      { event: "delta", data: { kind: "thinking", text: "so a refund fits." } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "get_order", input: { order: "ord_secret" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "ord_secret not found", is_error: true } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "get_order", input: { order: "ord_secret" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "ord_secret paid" } } },
+      { event: "delta", data: { kind: "text", text: "Refunded." } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Refund the last order" } });
+    expect(r.events.map((e) => e.event)).toEqual(["session", "thinking", "thinking", "activity", "step", "activity", "step", "text", "end"]);
+    expect(r.events.filter((e) => e.event === "thinking").map((e) => e.data.text).join("")).toBe("The order is paid, so a refund fits.");
+    expect(r.events.filter((e) => e.event === "step").map((e) => e.data)).toEqual([
+      { call_id: "c1", status: "error" }, { call_id: "c2", status: "done" },
+    ]);
+    expect(r.raw).not.toContain("ord_secret");
+  });
+
+  it("picks the person's own run back up from its record, steps only (kiff/tafs#285)", async () => {
+    const w = world();
+    w.agents.streamed.push({ event: "delta", data: { kind: "text", text: "On it." } });
+    const started = await stream(w, PATH, { token: "ana", body: { text: "Refund the last order" } });
+    const run = String(started.events[0]!.data.run);
+    w.agents.resumed.push(
+      { event: "event", data: { kind: "owner_message", body: { text: "Refund the last order" } } },
+      { event: "event", data: { kind: "tool_call", body: { call_id: "c1", tool: "create_refund", input: { charge: "ch_secret" } } } },
+      { event: "event", data: { kind: "tool_result", body: { call_id: "c1", tool: "create_refund", text: "held ch_secret", state: "held", hold: { exception: "exc_1" }, invocation: "tc-1" } } },
+      { event: "event", data: { kind: "agent_message", body: { text: "The refund of ch_secret waits for you." } } },
+      { event: "delta", data: { kind: "text", text: "never relayed on a resume" } },
+    );
+    const resume = (path: string, token = "ana") => stream(w, path, { token, method: "GET" });
+    const r = await resume(`/v1/tafs/${RAE}/runs/${run}/stream?after=0`);
+    expect(r.status).toBe(200);
+    expect(r.events.map((e) => e.event)).toEqual(["activity", "held", "said", "end"]);
+    expect(r.events[0]!.data).toEqual({ tool: "create_refund", call_id: "c1" });
+    expect(r.events[1]!.data).toEqual({ exception: "exc_1", invocation: "tc-1" });
+    expect(r.raw).not.toContain("ch_secret");
+    expect(r.raw).not.toContain("never relayed");
+    expect(w.agents.calls).toContain(`resumeRun ${RAE} ${run} 0`);
+    // Another person's run, another account's taf, a bad cursor: never.
+    expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream`, "luis")).status).toBe(404);
+    expect((await resume(`/v1/tafs/${MAX}/runs/${run}/stream`)).status).toBe(404);
+    expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream?after=-1`)).status).toBe(400);
+    expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream`, "")).status).toBe(401);
   });
 
   it("checks what messages checks, before any run", async () => {

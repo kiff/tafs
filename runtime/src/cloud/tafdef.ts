@@ -30,6 +30,11 @@ export const MAX_TOKENS = 16_000;
  * answer (kiff/tafs#102). Measured against high through kiff/agents' gate.
  */
 export const EFFORT: Effort = "medium";
+/**
+ * A summary of the model's thinking streams to the person waiting (kiff/tafs#285): the app
+ * shows it as one line while the taf works. It changes what is shown, not what is billed.
+ */
+export const THINKING = "summarized" as const;
 export const KIFF_GATEWAY = "https://mcp.kiff.dev/mcp";
 /**
  * Finished runs of a session the model gets before a new one: the thread it
@@ -187,6 +192,7 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     price: { ...PRICE },
     max_tokens: MAX_TOKENS,
     effort: EFFORT,
+    thinking: THINKING,
     gateway: KIFF_GATEWAY,
     key_ref: keyRef(tafID),
     keep: keepRules(),

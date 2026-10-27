@@ -7,6 +7,18 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- Chat: while a taf or Coach works, the chat shows the step in progress, one line
+  of what it's thinking (once it has thought for a few seconds, changing at a pace
+  you can read), and the steps done under it. A step tried again shows once, with
+  its number of tries. Once the answer is in, the steps fold into "Worked for
+  12 s", which opens them again, and that line stays with the message. Leaving the
+  chat or the app mid-answer and coming back follows the work to its end. The
+  answer appears at an even pace, with formatting still being written never shown
+  as symbols. A message you sent can be sent again, edited first, or copied from
+  its menu. tafs cloud's message stream gains `thinking` and `step` events and
+  a `call_id` on `activity`; `GET /v1/tafs/{id}/runs/{run}/stream` picks your own
+  run back up; conversation messages may carry `work`. The definitions of tafs and
+  Coach set `thinking: "summarized"`, which needs kiff/agents with it.
 - Doors: a taf can have an email address of its own. It has none until you turn
   it on in the taf's Doors tab, where a dial picks the door and pressing the taf
   opens or closes it. A paired sender's email works like a chat message, under the

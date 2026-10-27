@@ -99,8 +99,15 @@ struct TafChatView: View {
                             }
                             Group {
                                 switch item {
+                                case .message(let m) where m.from == .owner && m.kind != .kickoff && m.door == nil:
+                                    ChatBubble(message: m, taf: taf)
+                                        .contextMenu { askAgain(m.text) }
                                 case .message(let m):
-                                    ChatBubble(message: m, taf: taf, fullWidth: m.from == .taf)
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        // What it did before writing it, folded (kiff/tafs#285).
+                                        if m.from == .taf, let work = m.work { WorkSummary(work: work) }
+                                        ChatBubble(message: m, taf: taf, fullWidth: m.from == .taf)
+                                    }
                                 case .held(let call):
                                     HeldCallCard(call: call)
                                         .onAppear { heldInView.insert(call.id) }
@@ -108,7 +115,7 @@ struct TafChatView: View {
                                 case .outcome(let entry):
                                     OutcomeLine(text: Self.outcomeText(entry), tone: Self.outcomeTone(entry.kind), mark: Self.outcomeMark(entry.kind))
                                 case .streaming(_, let m):
-                                    ChatBubble(message: m, taf: taf, fullWidth: true)
+                                    ChatBubble(message: m, taf: taf, fullWidth: true, steady: true)
                                 }
                             }
                             .id(item.id)
@@ -120,17 +127,13 @@ struct TafChatView: View {
                                          taf: (tafID, taf?.name ?? "This taf"))
                                 .id(unsent.id.uuidString)
                         }
-                        // The answer streaming now is in the items, in the order it came (kiff/tafs#206):
-                        // the dots show only while nothing is being written.
-                        if thinking, state.live?.text.isEmpty ?? true {
+                        // The answer streaming now is in the items, in the order it came (kiff/tafs#206).
+                        // Under it, what the taf is doing and thinking, and the steps it took
+                        // (kiff/tafs#285); the dots while nothing streams yet.
+                        if let live = state.live {
+                            LiveWork(live: live).id("work")
+                        } else if thinking {
                             TypingBubble(taf: taf, fullWidth: true).id("thinking")
-                        }
-                        if let activity = state.live?.activity {
-                            HStack(spacing: 8) {
-                                ProgressView().controlSize(.mini).tint(Theme.dim)
-                                Text(activity).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
-                            }
-                            .accessibilityElement(children: .combine)
                         }
                         // Written to the run while it goes, not read yet, as kiff/agents says (#64).
                         if let steering = state.steering, !steering.over {
@@ -422,6 +425,13 @@ struct TafChatView: View {
     /// The chat's widest column: about 75 characters of text.
     static let readable: CGFloat = 720
 
+    /// A sent message's menu (kiff/tafs#285): send it again, change it first, or copy it.
+    @ViewBuilder private func askAgain(_ text: String) -> some View {
+        Button { draft = text; send() } label: { Label("Send again", systemImage: "arrow.clockwise") }
+        Button { draft = text; typing = true } label: { Label("Edit and send", systemImage: "pencil") }
+        Button { Clipboard.copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
+    }
+
     private func send() {
         // Sending stops dictating: what was heard goes with it, as it stands in the box.
         model.dictation.stop()
@@ -458,6 +468,8 @@ struct ChatBubble: View {
     var visible: Int? = nil
     /// The taf's words full width, with no bubble, as Setup's are (#58).
     var fullWidth = false
+    /// Words streaming in: shown at an even pace, with formatting still open closed (kiff/tafs#285).
+    var steady = false
 
     var body: some View {
         if let door = message.door, message.kind != .kickoff {
@@ -487,11 +499,15 @@ struct ChatBubble: View {
                     .background(Theme.brand)
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .opacity(message.session == "pending" ? 0.7 : 1)
+                    // Copied from its menu, with Send again and Edit (kiff/tafs#285), where the chat
+                    // gives one; selectable elsewhere.
                     .textSelection(.enabled)
             }
         } else if fullWidth {
             // Full width, with no bubble, as Claude and ChatGPT write (#58).
-            MarkdownText(message.text, visible: visible, size: 16)
+            Group {
+                if steady { SteadyMarkdown(text: message.text, size: 16) } else { MarkdownText(message.text, visible: visible, size: 16) }
+            }
                 .foregroundColor(Theme.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 2)
