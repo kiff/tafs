@@ -2818,7 +2818,7 @@ final class AppModel: ObservableObject {
                     chatStates[tafID]?.live?.activity = words
                     chatStates[tafID]?.live?.began(tool, words: words, call: call)
                 case .step(let call, let status):
-                    chatStates[tafID]?.live?.ended(call, status == "error" ? .error : .done)
+                    chatStates[tafID]?.live?.ended(call, LiveStep.Status(stream: status))
                 case .said:
                     // A run picked back up wrote a message: the thread has it.
                     await loadChat(tafID)
@@ -4314,7 +4314,21 @@ final class AppModel: ObservableObject {
 
     /// One tool call of an answer as it streams (kiff/tafs#285).
     struct LiveStep: Equatable {
-        enum Status: Equatable { case running, done, error, held }
+        enum Status: Equatable {
+            case running, done, error, held
+            /// Refused back unmade: an act sent beside a read, so nothing reached KIFF or
+            /// the tool. Not a failure; the taf reads first and makes it again.
+            case notMade
+
+            /// A `step` event's status: "done", "error" or "not_made".
+            init(stream: String) {
+                switch stream {
+                case "error": self = .error
+                case "not_made": self = .notMade
+                default: self = .done
+                }
+            }
+        }
         let call: String?
         let tool: String
         /// What it's doing, in the owner's words; nil shows the tool's own.
@@ -4385,7 +4399,7 @@ final class AppModel: ObservableObject {
                     await loadSetupThread()
                     setupLive?.text = ""
                 case .step(let call, let status):
-                    setupLive?.ended(call, status == "error" ? .error : .done)
+                    setupLive?.ended(call, LiveStep.Status(stream: status))
                 case .component, .said, .part:
                     await loadSetupThread()
                     setupLive?.text = ""

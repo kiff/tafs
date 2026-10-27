@@ -23,6 +23,23 @@ final class WorkLogTests: XCTestCase {
         XCTAssertEqual(WorkLog.rows([("Reading", .done), ("Reading", .done)], running: false).map(\.tries), [1, 1])
     }
 
+    /// A call refused back unmade (an act sent beside a read) isn't a failure: made again,
+    /// it's one row with its tries; not made again, it stays, while the answer is worked on
+    /// and after something else worked.
+    func testAStepNotMadeStaysUnlessMadeAgain() {
+        let again: [(words: String, status: S)] = [("Reading the order", .done), ("Refunding", .notMade), ("Refunding", .done)]
+        XCTAssertEqual(WorkLog.rows(again, running: false), [
+            WorkLog.Row(words: "Reading the order", status: .done, tries: 1),
+            WorkLog.Row(words: "Refunding", status: .done, tries: 2),
+        ])
+        let left: [(words: String, status: S)] = [("Refunding", .notMade), ("Reading the order", .done)]
+        XCTAssertEqual(WorkLog.rows(left, running: false).map(\.status), [.notMade, .done])
+        XCTAssertEqual(WorkLog.rows(left, running: true).map(\.status), [.notMade, .done])
+        XCTAssertEqual(AppModel.LiveStep.Status(stream: "not_made"), .notMade)
+        XCTAssertEqual(AppModel.LiveStep.Status(stream: "error"), .error)
+        XCTAssertEqual(AppModel.LiveStep.Status(stream: "done"), .done)
+    }
+
     /// One readable line of the thinking: the latest sentence, plain, not a list or code.
     func testTheThinkingLineIsOneCalmSentence() {
         XCTAssertEqual(WorkLog.thinkingLine("The customer asks for a refund. The order is **paid** in full."),
@@ -69,14 +86,14 @@ final class WorkLogTests: XCTestCase {
     func testAMessagesWorkIsRead() throws {
         let json = #"""
         [{"at":"2026-10-14T09:01:20Z","from":"taf","kind":"message","text":"Refunded.","session":"s1",
-          "work":{"ms":12000,"steps":[{"tool":"get_order","error":true},{"tool":"create_refund"}]}},
+          "work":{"ms":12000,"steps":[{"tool":"get_order","error":true},{"tool":"create_refund","not_made":true},{"tool":"create_refund"}]}},
          {"at":"2026-10-14T09:01:30Z","from":"taf","kind":"message","text":"Anything else?","session":"s1"},
          {"at":"2026-10-14T09:01:40Z","from":"taf","kind":"message","text":"Odd.","session":"s1","work":{"ms":"x"}}]
         """#
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let messages = try decoder.decode([TafsCloud.ChatMessage].self, from: Data(json.utf8))
-        XCTAssertEqual(messages[0].work, TafsCloud.Work(ms: 12000, steps: [.init(tool: "get_order", error: true), .init(tool: "create_refund")]))
+        XCTAssertEqual(messages[0].work, TafsCloud.Work(ms: 12000, steps: [.init(tool: "get_order", error: true), .init(tool: "create_refund", notMade: true), .init(tool: "create_refund")]))
         XCTAssertNil(messages[1].work)
         XCTAssertNil(messages[2].work, "one the app can't read leaves the message as it is")
     }

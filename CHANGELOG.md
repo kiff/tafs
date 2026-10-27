@@ -7,6 +7,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Chat: a call kiff/agents refused back unmade, because the taf sent an act beside a read,
+  shows as "not made · one call at a time", not as a failed step. Made again, it's one row
+  with its tries. tafs cloud's `step` event may say `not_made`, and a message's `work`
+  steps may carry `not_made`. A run's work is split where kiff/agents marks a turn
+  `resumed`, the first after a pause, rather than guessed from the calls it waited on.
 - Launch (the 870 test): the taf used last leads the list from the first frame, and the iPad
   opens on it. The list's order is settled once KIFF's record is read, and kept with the
   remembered list, so the app no longer opens on the first taf made and then jumps.

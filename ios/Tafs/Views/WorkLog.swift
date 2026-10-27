@@ -11,14 +11,15 @@ enum WorkLog {
         let tries: Int
     }
 
-    /// The steps as rows. Tries of the same step after a failed one are one row, with the
-    /// last try's outcome: trying again until it works is normal. A failed step is left out
-    /// once something worked, or while the answer is still being worked on: what shows is
-    /// what got done. When nothing worked, the failures say why.
+    /// The steps as rows. Tries of the same step after a failed or unmade one are one row,
+    /// with the last try's outcome: trying again until it works is normal. A failed step is
+    /// left out once something worked, or while the answer is still being worked on: what
+    /// shows is what got done. When nothing worked, the failures say why. A step not made
+    /// and not tried again stays: it isn't a failure, and it wasn't done.
     static func rows(_ steps: [(words: String, status: AppModel.LiveStep.Status)], running: Bool) -> [Row] {
         var groups: [[(words: String, status: AppModel.LiveStep.Status)]] = []
         for s in steps {
-            if let last = groups.last, last[0].words == s.words, last[last.count - 1].status == .error {
+            if let last = groups.last, last[0].words == s.words, [.error, .notMade].contains(last[last.count - 1].status) {
                 groups[groups.count - 1].append(s)
             } else {
                 groups.append([s])
@@ -184,7 +185,9 @@ struct StepList: View {
                         .frame(width: 14)
                     Text(Self.past(row.words)).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
-                    if row.tries > 1 {
+                    if row.status == .notMade {
+                        Text("not made · one call at a time").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    } else if row.tries > 1 {
                         Text("\(row.tries) tries").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     }
                 }
@@ -202,6 +205,7 @@ struct StepList: View {
         case .done: return "checkmark"
         case .error: return "exclamationmark.circle"
         case .held: return "hand.raised"
+        case .notMade: return "arrow.uturn.left"
         }
     }
 
@@ -218,7 +222,7 @@ struct WorkSummary: View {
     @State private var open = false
 
     var body: some View {
-        let rows = WorkLog.rows(work.steps.map { (words: model.tafActivityWords($0.tool) ?? $0.tool, status: $0.error ? .error : .done) }, running: false)
+        let rows = WorkLog.rows(work.steps.map { (words: model.tafActivityWords($0.tool) ?? $0.tool, status: $0.notMade ? .notMade : $0.error ? .error : .done) }, running: false)
         VStack(alignment: .leading, spacing: 6) {
             Button { withMotion(.easeOut(duration: 0.25)) { open.toggle() } } label: {
                 HStack(spacing: 4) {
