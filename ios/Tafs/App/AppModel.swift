@@ -335,6 +335,7 @@ final class AppModel: ObservableObject {
         case "separation_of_duties_key": return "Held calls are answered by an approver signed in, not by a key."
         case "card_changer": return "You changed the Card this was held against, so another approver answers it."
         case "hold_check_unavailable": return "KIFF couldn't check who may answer just now. Try again."
+        case "role_forbidden": return "Your role on this account doesn't answer held calls. Someone who approves on it does."
         default: return nil
         }
     }
@@ -529,6 +530,22 @@ final class AppModel: ObservableObject {
 
     /// Whether this person may make and change groups (KIFF's members.manage).
     var canManagePeople: Bool { kiffAccount?.capabilities?.contains("members.manage") ?? false }
+
+    /// Whether this person may answer held calls (KIFF's holds.answer): a viewer may not, so
+    /// their card says who answers instead of offering buttons KIFF refuses (the 870 test:
+    /// "role_forbidden"). An account from before roles lists no capabilities, and may.
+    var mayAnswerHolds: Bool { Self.allows(kiffAccount?.capabilities, "holds.answer") }
+
+    /// Whether this person may delete the account (KIFF's account.delete): it's offered only then.
+    var mayDeleteAccount: Bool { Self.allows(kiffAccount?.capabilities, "account.delete") }
+
+    nonisolated static func allows(_ capabilities: [String]?, _ capability: String) -> Bool {
+        capabilities.map { $0.contains(capability) } ?? true
+    }
+
+    /// The account this person is in, by its name, where they can always see it (the 870 test:
+    /// signed in to their own empty account, the app didn't say so). Nil outside KIFF.
+    var accountLabel: String? { mode == .kiff ? kiffAccount?.name : nil }
 
     /// This person, as KIFF lists the account's people.
     var me: KIFFClient.Person? { people.first { $0.you == true } }
@@ -1276,6 +1293,12 @@ final class AppModel: ObservableObject {
     /// Revoke and the doors' controls, each refused only once tapped).
     func manages(_ tafID: UUID) -> Bool {
         Self.manages(kiffAgent(for: tafID).flatMap { access[$0] })
+    }
+
+    /// Who issued the taf's Card, as this person may see it: its manager sees who they know
+    /// issued it; someone who only uses the taf sees the account, never "You" (the 870 test).
+    func issuer(of taf: Taf) -> String {
+        mode != .kiff || manages(taf.id) ? taf.card.issuedBy : (accountLabel ?? "The account")
     }
 
     nonisolated static func manages(_ access: KIFFClient.Access?) -> Bool {

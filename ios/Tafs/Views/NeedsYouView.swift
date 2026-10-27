@@ -76,7 +76,12 @@ struct HeldCallCard: View {
     /// refuseOnly: KIFF takes this person's refusal but not their approval (they asked for
     /// the call): Refuse and the next steps stay, approving and extra room go.
     @ViewBuilder private func answers(refuseOnly: Bool) -> some View {
-        if model.canAnswer(call) {
+        if !model.mayAnswerHolds {
+            // A viewer uses the taf but doesn't answer for the account (the 870 test).
+            Text("Someone who approves on this account answers this. Their answer shows here.")
+                .scaledFont(13).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+        } else if model.canAnswer(call) {
             if refuseOnly {
                 if !call.approvableOnce, model.mayUseCoach {
                     Button {

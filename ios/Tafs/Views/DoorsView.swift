@@ -13,10 +13,13 @@ struct DoorsView: View {
     @State private var copied = false
     /// Whether this person manages the taf: only then are its doors' controls shown.
     let manages: Bool
+    /// This person's sign-in: their own key, paired for them, reads "You"; anyone else's doesn't.
+    let myEmail: String?
 
-    init(taf: Taf, cloud: TafsCloud, cloudID: String, manages: Bool = true) {
+    init(taf: Taf, cloud: TafsCloud, cloudID: String, manages: Bool = true, myEmail: String? = nil) {
         self.taf = taf
         self.manages = manages
+        self.myEmail = myEmail
         _doors = StateObject(wrappedValue: DoorsModel(cloud: cloud, tafID: cloudID))
     }
 
@@ -126,7 +129,9 @@ struct DoorsView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 // The address once, when the name is only the address (kiff/tafs#236, item 20).
-                                let name = key.auto ? "You" : key.name.flatMap { $0.lowercased() == key.id.lowercased() ? nil : $0 }
+                                // "You" only on this person's own key (the 870 test: the owner's key read "You").
+                                let mine = key.auto && key.id.lowercased() == myEmail?.lowercased()
+                                let name = mine ? "You" : key.name.flatMap { $0.lowercased() == key.id.lowercased() ? nil : $0 }
                                 Text(name ?? key.id).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                                 if name != nil {
                                     Text(key.id).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
