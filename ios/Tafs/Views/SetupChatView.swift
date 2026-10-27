@@ -45,6 +45,8 @@ struct SetupChatView: View {
     /// there, so the same words sent again never pin the older copy (kiff/tafs#138, item 34).
     @State private var sentBefore: Set<String> = []
     @State private var viewport: CGFloat = 600
+    /// The pinned message's turn, as laid out: the room under it is the screen less this (the 845 test).
+    @State private var turn = PinnedTurn()
     /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
     #if os(iOS)
@@ -198,6 +200,7 @@ struct SetupChatView: View {
                             }
                         }
                         .id(item.id)
+                        .pinnedTop(item.id == pinned)
                     }
                     // What ended while the owner was away, in one message, a line each (kiff/tafs#210).
                     let away = model.setupThread.coachLines.filter { $0.away == true }
@@ -217,7 +220,8 @@ struct SetupChatView: View {
                     ForEach(model.setupUnsent) { unsent in
                         UnsentBubble(message: unsent, words: model.setupThread.ownerWords(unsent.text), busy: model.setupSending,
                                      retry: { await model.retrySetup(unsent) }, discard: { model.discardUnsent(unsent) })
-                            .id(unsent.id)
+                            .id(unsent.id.uuidString)
+                            .pinnedTop(unsent.id.uuidString == pinned)
                     }
                     // What Coach is doing and thinking, and the steps it took (kiff/tafs#285), in one
                     // block under the owner's message, with the answer streaming below it (the 845
@@ -231,11 +235,12 @@ struct SetupChatView: View {
                         ChatBubble(message: TafsCloud.ChatMessage(at: Date(), from: .taf, text: model.setupLiveText, session: "live"), taf: nil, fullWidth: true, steady: true).id("live")
                     }
                     if !thinking { ended }
-                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() }.id("queued") }
-                    // Room under a pinned message, so it can sit at the top while the answer is short.
-                    // A whole screen under a pinned message, so a short one reaches the top at once,
-                    // not once the answer has grown below it (kiff/tafs#243).
-                    if pinned != nil { Color.clear.frame(height: max(0, viewport)) }
+                    if let queued = model.setupQueued { QueuedBubble(text: queued, who: "this answer") { _ = model.unqueueSetup() }.id("queued").pinnedTop(pinned == "queued") }
+                    Color.clear.frame(height: 0).threadFoot()
+                    // Room under a pinned message, so a short one reaches the top at once (kiff/tafs#243):
+                    // the screen less the turn it starts (the 845 test), so the answer grows into it
+                    // and nothing moves.
+                    if pinned != nil { Color.clear.frame(height: turn.room(viewport)) }
                     Color.clear.frame(height: 1).id(Self.bottom)
                         .onAppear {
                             // A pinned message stays at the top: seeing the bottom under it doesn't make
@@ -248,6 +253,9 @@ struct SetupChatView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+                .coordinateSpace(name: PinnedTurn.space)
+                .onPreferenceChange(PinnedTopKey.self) { turn.top = $0 }
+                .onPreferenceChange(ThreadFootKey.self) { turn.foot = $0 }
             }
             .dismissesKeyboardInteractively()
             .background(GeometryReader { g in
