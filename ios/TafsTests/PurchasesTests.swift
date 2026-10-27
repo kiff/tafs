@@ -144,7 +144,6 @@ final class PurchasesTests: XCTestCase {
         let line = try? XCTUnwrap(UsageView.soloStillRenews(u))
         XCTAssertTrue(line?.hasPrefix("Team is billed by KIFF now. The Solo bought in the App Store renews on ") ?? false, line ?? "")
         XCTAssertTrue(line?.hasSuffix("unless it's cancelled, from the Apple account that bought it.") ?? false, line ?? "")
-        XCTAssertTrue(line?.hasSuffix(" unless you cancel it.") ?? false)
         XCTAssertFalse(line?.contains("kiff.dev") ?? true, "the app never points to buying elsewhere")
         u.billing?.source = "apple"
         XCTAssertNil(UsageView.soloStillRenews(u), "while Apple bills, Manage says it all")
