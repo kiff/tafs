@@ -11,5 +11,11 @@ final class PrivacyManifestTests: XCTestCase {
         let apis = try XCTUnwrap(manifest["NSPrivacyAccessedAPITypes"] as? [[String: Any]])
         let defaults = apis.first { $0["NSPrivacyAccessedAPIType"] as? String == "NSPrivacyAccessedAPICategoryUserDefaults" }
         XCTAssertEqual(defaults?["NSPrivacyAccessedAPITypeReasons"] as? [String], ["CA92.1"])
+        // Photos a person attaches to a message (kiff/tafs#209): theirs, for the app's use only.
+        let collected = try XCTUnwrap(manifest["NSPrivacyCollectedDataTypes"] as? [[String: Any]])
+        let photos = try XCTUnwrap(collected.first { $0["NSPrivacyCollectedDataType"] as? String == "NSPrivacyCollectedDataTypePhotosorVideos" })
+        XCTAssertEqual(photos["NSPrivacyCollectedDataTypeLinked"] as? Bool, true)
+        XCTAssertEqual(photos["NSPrivacyCollectedDataTypeTracking"] as? Bool, false)
+        XCTAssertEqual(photos["NSPrivacyCollectedDataTypePurposes"] as? [String], ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])
     }
 }
