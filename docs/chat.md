@@ -54,7 +54,7 @@ never reach the phone.
 | `taken` | `{}` | The run read a message the owner wrote meanwhile: the thread is reloaded |
 | `component` | `{component}` | Something the agent showed: the thread has it |
 | `part` | `{at}` | A resumed run went on after a held call was answered: a fresh live answer starts (resumed streams only) |
-| `end` | `{status, stop}` | The run stopped |
+| `end` | `{status, stop, done?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249) |
 | `error` | `{error}` | The stream broke; the thread has the rest |
 
 What a step says comes from the tool's title as its connection gives it, never the
@@ -122,7 +122,11 @@ after the answer.
   than its limit for one task…" (`cost_cap`), or "…took more steps than its limit…"
   (`turn_cap`) (`capWords`).
 - A run that **failed** part-way says it stopped part-way, with Retry, which sends its
-  message again.
+  message again. If a call that acts went through before it stopped, the line names each
+  one by its tool, what it acted on, and how much moved: "Refunds stopped part-way, after
+  this went through: create refund on ch_3001, US$5." The list is the run's own record
+  (`end`'s `done`), never the model's words; the amount is KIFF's, from the call's Record
+  line (by `invocation`), once the Record is read (`failedWords`, kiff/agents#249).
 
 ## Held calls in the chat
 

@@ -402,7 +402,7 @@ struct TafChatView: View {
         switch model.chatState(tafID).ended {
         case .failed?:
             HStack(spacing: 10) {
-                Text("\(taf?.name ?? "The taf") stopped part-way, before it finished.")
+                Text(model.failedWords(tafID, taf: taf?.name ?? "The taf"))
                     .scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button("Retry") { Task { await model.retryChatRun(tafID) } }

@@ -7,6 +7,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Chat (#249): a run that fails after a call went through names what went through and
+  how much moved, for example "Refunds stopped part-way, after this went through: create
+  refund on ch_3001, US$5.", from the run's own record and KIFF's Record. Before, it only
+  said it stopped part-way, so the owner had to check the Record to learn the money had
+  moved.
 - Chat: a call kiff/agents refused back unmade, because the taf sent an act beside a read,
   shows as "not made · read first", not as a failed step. Made again, it's one row
   with its tries. tafs cloud's `step` event may say `not_made`, and a message's `work`

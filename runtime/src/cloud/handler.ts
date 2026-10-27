@@ -2338,7 +2338,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         return undefined;
       }
       case "end":
-        return sse("end", { status: d.status ?? "", stop: d.stop ?? "" });
+        return sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
       default:
         return undefined;
     }
@@ -2631,6 +2631,23 @@ async function agentsCall<T>(work: () => Promise<T>): Promise<T> {
     if (err instanceof AgentsError && err.status < 500) throw new HTTPError(err.status, err.message);
     throw new HTTPError(502, "the tafs' runtime didn't answer; try again");
   }
+}
+
+/**
+ * What a failed run did before it stopped (kiff/agents#249): each call that acted and went
+ * through, by tool, with what it acted on and KIFF's key for it when KIFF named them, so the
+ * app shows the amount KIFF recorded for the call. Never a call's input. The stream is the
+ * person's own chat, so it goes only to the person whose run it is.
+ */
+export function wentThrough(done: unknown): Array<{ tool: string; resource?: string; invocation?: string }> {
+  if (!Array.isArray(done)) return [];
+  const named = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  return done
+    .filter((c): c is { tool: string; resource?: unknown; invocation?: unknown } => typeof c?.tool === "string")
+    .map((c) => {
+      const resource = named(c.resource), invocation = named(c.invocation);
+      return { tool: c.tool, ...(resource ? { resource } : {}), ...(invocation ? { invocation } : {}) };
+    });
 }
 
 /** A time as the app reads it: RFC 3339 in UTC, milliseconds at most. */
