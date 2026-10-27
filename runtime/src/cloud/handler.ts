@@ -24,11 +24,21 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
  * directly. Every route acts for the KIFF account of the person signed in,
  * and only on that account's tafs.
  *
+ * docs/api.md documents every route, who may call it and what it takes; a route
+ * added or changed here changes it too.
+ *
  *   GET  /v1/jobs
  *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary, doors and open trial, and the account's other agents with Cards
+ *   GET  /v1/events                     halts, resumes and door events, newest first, for Activity (kiff/tafs#236)
+ *   GET  /v1/usage/ai                   the period's AI use against its bound (kiff/tafs#193)
+ *   POST /v1/account/delete             erase what tafs cloud and kiff/agents keep for the account (kiff/tafs#185)
+ *   GET | POST | DELETE /v1/halt        the whole account's halt: read, halt, resume once KIFF runs again
+ *   GET  /v1/setup                      the account's Setup (Coach), or null
+ *   POST /v1/setup                      {draft_id, claim_secret}: start it once (kiff/agents#91)
  *   GET  /v1/tafs
- *   POST /v1/tafs                       {name, job, draft_id + claim_secret | agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}
+ *   POST /v1/tafs                       {name, job, draft_id + claim_secret | from_setup + draft_id | agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}
  *   POST /v1/tafs/{id}/pause | resume | run
+ *   GET | POST | DELETE /v1/tafs/{id}/halt  one taf's halt
  *   GET  /v1/tafs/{id}/runs
  *   GET  /v1/tafs/{id}/runs/{session}   the run's report
  *   GET  /v1/tafs/{id}/conversation     the thread: the owner's messages and the taf's
@@ -38,6 +48,9 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
  *   GET  /v1/tafs/{id}/chats/archived   the chats the owner archived, to find and reopen one (kiff/tafs#97)
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
  *   POST /v1/tafs/{id}/messages         {text, attachments?, session?, new_chat?}: into the live chat, a chosen one, or a new one
+ *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
+ *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
+ *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
@@ -58,6 +71,7 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
  *   DELETE /v1/tafs/{id}/trial          Go back: KIFF ends its trial Cards, the trial ends, the live version stays
  *   POST /v1/tafs/{id}/improve          {text}: a new conversation with the account's Setup, opening on this taf (kiff/tafs#107)
  *   GET  /v1/tafs/{id}/memory           what the taf remembers: its notes
+ *   GET  /v1/tafs/{id}/calls            what its calls through KIFF acted on (kiff/tafs#167)
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
  *   POST /v1/push                       {device_token, environment, alert_target?}: this phone gets the account's alerts

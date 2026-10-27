@@ -263,6 +263,10 @@ final class AppModel: ObservableObject {
 
     /// The order the list was last settled in, by taf id.
     @Published private(set) var listOrder: [UUID] = []
+    /// Whether the order was settled with KIFF's record read this session: the first list
+    /// comes before it, so the taf used last wasn't known yet (the 870 test: the iPad opened
+    /// Refunds, with Refunds 4, the one used last, at the bottom).
+    private var orderHasRecord = false
 
     /// Settles the list's order now: when its tafs change, and when the app comes back.
     func settleListOrder() {
@@ -457,7 +461,7 @@ final class AppModel: ObservableObject {
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; listOrder = []; otherAgents = []; held = []; record = []; decided = [:]
+        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -643,7 +647,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        tafs = []; listOrder = []; held = []; record = []; decided = [:]
+        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
         notifyHeld()
@@ -985,6 +989,13 @@ final class AppModel: ObservableObject {
             if let done {
                 record = withDecisions(KIFFMapping.record(done, ids: holderIDs, vendors: toolVendors))
                 await nameRecordLines(gen: gen)
+                // The first record of the session settles the order again: the taf used last
+                // comes first from the start, not only after the app comes back.
+                if gen == accountGeneration, !orderHasRecord {
+                    orderHasRecord = true
+                    settleListOrder()
+                    rememberList()
+                }
             }
             // What happened in tafs itself sits beside KIFF's calls (kiff/tafs#236, items 15 and 19).
             if let happened {
@@ -1090,13 +1101,16 @@ final class AppModel: ObservableObject {
         var ids: [String: UUID]
         var tafs: [Taf]
         var others: [Taf]?
+        /// The list's order as last settled, so the next launch's first frame has the taf
+        /// used last first (the 870 test).
+        var order: [UUID]?
     }
 
     static let listKey = "tafs.list"
 
     private func rememberList() {
         guard mode == .kiff, let remembered else { return }
-        let list = RememberedList(tenant: kiffTenant, ids: holderIDs, tafs: tafs, others: otherAgents)
+        let list = RememberedList(tenant: kiffTenant, ids: holderIDs, tafs: tafs, others: otherAgents, order: listOrder)
         if let data = try? JSONEncoder().encode(list) { remembered.set(data, forKey: Self.listKey) }
     }
 
@@ -1107,6 +1121,7 @@ final class AppModel: ObservableObject {
               list.tenant == kiffTenant else { return }
         holderIDs = list.ids
         tafs = list.tafs
+        listOrder = list.order ?? []
         otherAgents = list.others ?? []
         listLoaded = true
     }

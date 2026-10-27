@@ -45,49 +45,29 @@ them do.
 | Deploys | Ships fixes when CI is green, rolls back | 10 deploys a day; migrations always ask; dropping data never |
 | Chargebacks | Answers card disputes with evidence | Evidence ≤ $500 each; accepting a loss ≤ $100 each |
 
-## Status
+## What it does
 
-Version 0.1. A working iPhone and iPad app with two modes.
+A working iPhone and iPad app, with a Mac window, in two modes: signed in with KIFF, or
+with sample data on the phone. Each feature has a page in [docs/](docs/README.md):
 
-**Signed in with KIFF**
-- Sign in with KIFF's device flow: the phone shows a code and sends its signing
-  key; you approve it in your browser, which shows the key's fingerprint.
-- Start a taf: pick the job and its tools' limits, confirm with Face ID. The
-  phone submits one signed KIFF agent draft holding the taf's Cards; tafs cloud
-  claims the agent's key from the confirmed draft and runs the taf, so the key
-  never reaches the phone. An editor's draft waits for an admin to confirm it
-  in KIFF. A start that fails partway resumes on the next try. When tafs cloud
-  refuses it, the app takes the draft's Cards back; if KIFF doesn't confirm
-  every revocation, the app says so and the owner revokes the rest in KIFF.
-- Your tafs are the agents holding your KIFF Cards (`/v1/me/mandates`), and the
-  ones running on tafs cloud: run them now, read their latest report, chat with
-  them, and see or remove what they remember.
-- Held calls come from KIFF (`/v1/me/card-exceptions`), with amounts in the unit
-  KIFF declares. Approve once or refuse them on the phone: each answer is signed
-  with KIFF's `kiff.answer.v1` message, and KIFF accepts it only with that
-  signature. Revoke a Card from its taf.
+- **[A taf](docs/tafs.md):** its job, Cards, runs, reports, memory and Record; pausing,
+  halting and removing it.
+- **[Chat](docs/chat.md):** ask a taf what it did or tell it what to do; its answer and
+  its work stream as it goes, and a held call shows where it was made.
+- **[Coach mode](docs/coach.md):** say the job; Coach connects the tools, drafts the taf
+  and its Card, and you confirm with Face ID or Touch ID. Improve a taf, try a new
+  version under a trial Card, then install it.
+- **[Held calls](docs/approvals.md):** in Needs you, the chat, the lock screen and a push
+  alert. Approve once, refuse, or give the Card extra room: each answer is signed on the
+  phone and checked by KIFF.
+- **[Accounts](docs/accounts.md):** sign in with KIFF, people and groups, sharing a taf,
+  usage, Solo and task packs through the App Store, deleting the account.
+- **[Photos and files](docs/attachments.md)** on a message, and **[doors](docs/doors.md)**:
+  an email address or WhatsApp number a taf takes work from.
 
-**Sample data**
-- Five sample tafs (the jobs above) and a morning of work, saved on the phone.
-- Start a new taf: say the job, review the drafted Card, issue it with Face ID.
-- The Card is checked on the phone in this mode, and chat replies and memory
-  are samples, not a model.
-
-**Both**
-- Every answer is signed on the phone (Secure Enclave and Face ID on a device). What
-  grants authority is signed by a second key whose own access control requires Face ID.
-- The first held call counts down as a Live Activity on the lock screen and in
-  the Dynamic Island. Each new held call also arrives as a push notification, which
-  says a taf needs you and names the tool, never an amount or request detail
-  ([docs/data.md](docs/data.md)).
-- The Record shows everything, newest first.
-
-What tafs still needs from KIFF is in [docs/needs-from-kiff.md](docs/needs-from-kiff.md).
+How the pieces fit: [docs/README.md](docs/README.md). The API: [docs/api.md](docs/api.md).
 Where tafs data lives, for how long, and who deletes it: [docs/data.md](docs/data.md).
-
-**Coach.** A new taf starts in Coach mode: you say the job, Coach drafts the taf
-and its Card, and you confirm with Face ID or Touch ID. Each taf is its own agent
-holding one or more Cards.
+What tafs still needs from KIFF: [docs/needs-from-kiff.md](docs/needs-from-kiff.md).
 
 ## The runtime
 
@@ -139,20 +119,7 @@ is, on which account, with which rights. A company sees and changes only its
 own tafs; another company's taf answers like a missing one. It holds no model
 key: kiff/agents does.
 
-| Route | Who | What |
-|---|---|---|
-| `GET /v1/jobs` | anyone | the five jobs |
-| `GET /v1/tafs` | a person signed in with KIFF | the account's tafs, and removals not finished |
-| `POST /v1/tafs` | `cards.manage` | start a taf: `{name, job, draft_id + claim_secret, cron?, timezone?, budget_cents?, notes?}`. tafs cloud claims the agent's key from the confirmed KIFF draft once the name is held, so the key never reaches the phone, and keeps it in Secrets Manager. A claim works once, so the draft is kept on record (the taf it is starting, never the key): a retry with the same draft, secret and name resumes from there. A draft whose key was claimed but never kept answers 410; the app then tries to take its Cards back and says which ones the owner must revoke in KIFF if it can't. `agent_key` instead of a draft is still accepted. `notes` (at most 2000 characters) go into the taf's instructions. The key must be an agent's key on the same KIFF account. At most every 15 minutes, at most $10 a run. It runs once at once |
-| `POST /v1/tafs/{id}/pause`, `resume`, `run` | `cards.manage` | its schedule off or on; run now |
-| `GET /v1/tafs/{id}/runs`, `runs/{session}` | a person | recent runs, and a run's report (a run waiting on the owner is still running) |
-| `GET /v1/tafs/{id}/conversation` | a person | the taf's thread: its last 5 runs and last 5 chats, oldest first, at most 100 messages `{at, from: owner\|taf, kind: kickoff\|message, text, session}` |
-| `POST /v1/tafs/{id}/messages` | `cards.manage` | `{text}`, 1 to 2000 characters: a run in the latest chat if it was active in the last 30 minutes, else in a new chat. `{session, new_session}`. At most 10 a taf in 10 minutes |
-| `GET /v1/tafs/{id}/memory` | a person | what the taf remembers, newest first: `{notes: [{id, path, content, updated_at}]}` (a note's name is its id) |
-| `DELETE /v1/tafs/{id}/memory/{note}` | `cards.manage` | forget one note |
-| `DELETE /v1/tafs/{id}` | `cards.manage` | remove it for good: kiff/agents withdraws its held calls and deletes its schedule, runs, chats and notes, then its key and its name go. Nothing else is deleted unless the first step worked; a second remove finishes what the first left. Answers `{done, removed, failed}`. The phone revokes its Cards in KIFF before calling this. Receipts stay in KIFF |
-| `POST /v1/push`, `DELETE /v1/push/{token}` | a person | this phone gets the account's held-call alerts, or stops |
-| `POST /v1/kiff/alerts` | KIFF, signed | a held call or its answer: pushed to the phones, then handed to kiff/agents as KIFF signed it |
+Every route, who may call it and what it takes: [docs/api.md](docs/api.md).
 
 **Memory.** Each taf keeps notes in kiff/agents, through its memory tool,
 shared by its runs and its chats. It reads them before it starts and writes
@@ -185,9 +152,12 @@ pipe); the replica follows.
 
 `.github/workflows/ios.yml` builds and tests every push on GitHub's macOS 26
 runners. A `v*` tag or a manual run (Actions → iOS → Run workflow) also uploads
-to TestFlight for internal testers. It needs four repository secrets:
-`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (an App Store Connect API key with
-the Admin role) and `APPLE_TEAM_ID`.
+to TestFlight: the internal testers ("Team") get it at once, and the external group
+"Beta testers" after Apple's Beta App Review, unless a manual run sets `external` to
+false. Its repository secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8` (an
+App Store Connect API key with the Admin role), `APPLE_TEAM_ID`, the distribution
+certificate (`DIST_P12`, `DIST_P12_PASSWORD`), and for the external group
+`BETA_TESTERS`, `BETA_CONTACT` and `BETA_FEEDBACK_EMAIL`.
 
 ## Build
 

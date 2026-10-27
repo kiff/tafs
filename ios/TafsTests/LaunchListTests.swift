@@ -163,6 +163,27 @@ final class LaunchListTests: XCTestCase {
         XCTAssertFalse(model.loadingList)
     }
 
+    /// The 870 test: the iPad opened Refunds, the first made, then jumped to Refunds 4, the one
+    /// used last, a moment later. The order is settled once KIFF's record is read, and kept with
+    /// the list, so the next launch's first frame has the taf used last first.
+    func testTheTafUsedLastLeadsTheListFromTheFirstFrame() async throws {
+        let refunds = HomeJSON.entry(agent: "refunds-a1", name: "Refunds", id: "depl_1")
+        let refunds4 = HomeJSON.entry(agent: "refunds4-b2", name: "Refunds 4", id: "depl_4")
+        serve(tafs: [refunds, refunds4], others: [])
+        StubProtocol.responses["GET /v1/me/activity?limit=100"] = (200, """
+        {"calls":[{"proposal_id":"p1","action_name":"create_refund","actor_id":"refunds4-b2","outcome":"allowed","held":false,"created_at":"2026-10-27T17:09:00Z"}]}
+        """)
+        let first = model()
+        await first.useSession("kiff_dev_x", tenant: "tenant-a")
+        XCTAssertEqual(first.listedTafs.map(\.name), ["Refunds 4", "Refunds"], "the taf used last first, once the record is read")
+
+        // The next launch, before KIFF answers: the remembered list, already in that order.
+        kiffUnreachable()
+        let next = model()
+        await next.resumeSession("kiff_dev_x", tenant: "tenant-a", keyed: true)
+        XCTAssertEqual(next.listedTafs.map(\.name), ["Refunds 4", "Refunds"], "the first frame keeps the order")
+    }
+
     /// A first launch where KIFF can't be read and nothing is remembered says so, rather
     /// than "No tafs yet"; the next list read clears it.
     func testAFirstLaunchKIFFCantReadSaysItCouldntLoad() async throws {
