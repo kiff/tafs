@@ -3,15 +3,17 @@ import XCTest
 /// The owner's 845 test, pinned so it can't come back: a sent message goes to the top of the
 /// chat at once and stays there while the taf thinks, works and answers; the work block sits
 /// under it with the answer below, and it folds in place to "Worked for" when the run ends.
-/// The sample taf streams its answer as a real one does, so this runs with no server.
+/// The sample taf streams its answer as a real one does, so this runs with no server; it is
+/// slowed so each part lasts longer than a slow simulator takes to look.
 final class ChatPinUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
     }
 
+    @MainActor
     func testASentMessageGoesToTheTopAndTheWorkSitsUnderIt() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "chat"]
+        app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "chat", "-sampleReplySeconds", "20"]
         app.launch()
 
         let field = app.descendants(matching: .any)["chat-field"]
@@ -33,20 +35,20 @@ final class ChatPinUITests: XCTestCase {
 
         // While the taf thinks and works: still at the top, one work block under it.
         let work = app.descendants(matching: .any)["work-block"]
-        XCTAssertTrue(work.waitForExistence(timeout: 3), "the work block")
+        XCTAssertTrue(work.waitForExistence(timeout: 10), "the work block")
         XCTAssertLessThan(fromTop(), atTop, "it stayed at the top while the taf worked")
         XCTAssertGreaterThanOrEqual(work.frame.minY, sent.frame.maxY - 1, "the work block is under the message")
         let workAt = work.frame.minY
 
         // While it writes: the answer streams below the work block, and nothing above moved.
         let answer = app.descendants(matching: .any)["answer-streaming"]
-        XCTAssertTrue(answer.waitForExistence(timeout: 5), "the streaming answer")
+        XCTAssertTrue(answer.waitForExistence(timeout: 60), "the streaming answer")
         XCTAssertGreaterThanOrEqual(answer.frame.minY, work.frame.maxY - 1, "the answer streams below the work block")
         XCTAssertLessThan(fromTop(), atTop, "it stayed at the top while the answer streamed")
 
         // Done: the block folds in place to "Worked for", still under the message, above the answer.
         let summary = app.descendants(matching: .any)["work-summary"]
-        XCTAssertTrue(summary.waitForExistence(timeout: 10), "Worked for")
+        XCTAssertTrue(summary.waitForExistence(timeout: 120), "Worked for")
         XCTAssertGreaterThanOrEqual(summary.frame.minY, sent.frame.maxY - 1, "Worked for is under the message")
         XCTAssertLessThan(abs(summary.frame.minY - workAt), 24, "it folded in place, without moving")
         XCTAssertLessThan(fromTop(), atTop, "the message is still at the top")
@@ -62,6 +64,7 @@ final class ChatPinUITests: XCTestCase {
     }
 
     /// Whether `condition` holds within `seconds`, checked every tenth of a second.
+    @MainActor
     private func within(_ seconds: TimeInterval, _ condition: () -> Bool) -> Bool {
         let end = Date().addingTimeInterval(seconds)
         repeat {

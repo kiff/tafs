@@ -2427,8 +2427,8 @@ final class AppModel: ObservableObject {
     /// The tafs a message is on its way to, so one is sent at a time.
     @Published private(set) var chatSending: Set<UUID> = []
     @Published var chatErrors: [UUID: String] = [:]
-    /// How long a sample taf takes to answer; tests set it to zero.
-    var sampleReplyDelay: UInt64 = 700_000_000
+    /// How long a sample taf takes to answer; tests set it to zero, and the UI tests slow it.
+    var sampleReplyDelay: UInt64 = Screenshots.sampleReplySeconds.map { UInt64($0 * 1_000_000_000) } ?? 700_000_000
 
     static let chatLimit = 2000
 
@@ -4710,6 +4710,12 @@ enum Screenshots {
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
     /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
+    /// `-sampleReplySeconds 20`: the sample taf thinks, works and writes slowly enough for a UI
+    /// test to see each part on a slow simulator.
+    static var sampleReplySeconds: Double? {
+        let s = UserDefaults.standard.double(forKey: "sampleReplySeconds")
+        return enabled && s > 0 ? s : nil
+    }
 
     /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
     /// purchase screens' screenshots.
