@@ -2653,11 +2653,14 @@ export function turnTiming(body: unknown): { ms: number; resumed: boolean; waite
 }
 
 /**
- * When kiff/agents began marking the first turn after a pause (`timing.resumed`). It omits the
- * field when false, so only a turn from then on is read by it; one before is read by the rule
- * that came first: a timed turn that waited on no calls, past the run's first.
+ * From when every turn kiff/agents writes says whether it resumed (`timing.resumed`). It omits
+ * the field when false, so only a turn from then on is read by it; one before is read by the
+ * rule that came first: a timed turn that waited on no calls, past the run's first. kiff/agents
+ * with it was live at 20:26:29 UTC, and a run already going on the code before could write
+ * turns without it for up to its longest run, 15 minutes: hence 20:42. The rule that came
+ * first holds for turns from either, so a later time costs nothing.
  */
-export const RESUMED_SINCE = Date.parse("2026-10-27T20:26:00Z");
+export const RESUMED_SINCE = Date.parse("2026-10-27T20:42:00Z");
 
 /** Whether a timed turn at `at` (ms) starts a part of its run: the first after a pause. */
 export function startsPart(turn: { resumed: boolean; waited: unknown[] }, turnsBefore: number, at: number): boolean {

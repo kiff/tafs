@@ -186,7 +186,7 @@ struct StepList: View {
                     Text(Self.past(row.words)).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                     if row.status == .notMade {
-                        Text("not made · one call at a time").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        Text("not made · read first").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     } else if row.tries > 1 {
                         Text("\(row.tries) tries").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     }

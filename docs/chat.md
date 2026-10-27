@@ -76,11 +76,11 @@ failed (`conversation`, from kiff/agents' usage records).
 Tries of the same step after a failed one are one row, "3 tries", with the last try's
 outcome, and a failed step is left out once something worked (`WorkLog.rows`).
 
-**A step not made.** kiff/agents makes a taf's calls one at a time when it sends a call
-that acts beside one that reads: it refuses the act back, unmade, and the taf reads first.
-Nothing reached KIFF or the tool, so it isn't a failure. The step ends `not_made` and
-shows "not made · one call at a time" with a ↩ mark; made again, it's one row with its
-tries; not made again, it stays in the list.
+**A step not made.** When a taf sends a call that acts in the same turn as one that
+reads, kiff/agents refuses the act back, unmade, and tells the taf to read first. Nothing
+reached KIFF or the tool, so it isn't a failure. The step ends `not_made` and shows
+"not made · read first" with a ↩ mark; made again, it's one row with its tries; not made
+again, it stays in the list.
 
 **A run that paused on a held call** has its work in parts, one for each stretch between
 pauses. Each part's work goes on the first message written in it, and its time leaves out
