@@ -1,6 +1,7 @@
 /**
- * The five jobs a taf can do. Each job is one Claude Managed Agent; each taf
- * is a run of that agent with its own KIFF credential, so its own Card.
+ * The five jobs a taf can do. Each taf is its own agent on kiff/agents, built
+ * from its job (cloud/tafdef.ts), acting as its own KIFF agent, so under its
+ * own Cards.
  *
  * The Card is enforced by KIFF, not by these prompts. The prompts tell the
  * taf how to work inside a Card: what to do when a call is held or refused.

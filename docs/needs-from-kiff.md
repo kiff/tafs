@@ -15,17 +15,20 @@ Tracked on KIFF's side, privately.
 - The settled receipt keeps the proof: the phone's name, its public key, the
   signed text and the signature.
 
-## 2. Tell the phone when a call is held — KIFF shipped its part; tafs hasn't built its part yet
+## 2. Tell the phone when a call is held — shipped, in use
 
 Tracked on KIFF's side, privately.
 - KIFF sends a signed alert to a registered target when a call is held, and
   again when it's answered (`hold_answered`).
 - It retries failed deliveries for about a day, then switches the target off.
 
-**What tafs still needs to build:**
-- a tafs cloud endpoint that checks KIFF's signature and sends an Apple push to
-  the owner's phone, starting or updating the Live Activity countdown;
-- the app registering its push token with tafs cloud.
+**tafs's part — shipped.** tafs cloud's `POST /v1/kiff/alerts` checks KIFF's
+signature, hands the alert to kiff/agents so a paused run goes on, and sends an
+Apple push to the account's phones; the app registers its push token with tafs
+cloud (`POST /v1/push`). How it works: [approvals.md](approvals.md#alerts-while-tafs-is-closed).
+
+**Not built:** the push doesn't start or update the Live Activity's countdown.
+The app starts it while it runs, from KIFF's list of held calls.
 
 **Registering from the phone — shipped.**
 The phone registers its account's alert target with a signed setup call, like
