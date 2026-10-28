@@ -101,7 +101,7 @@ struct HomeSplitView: View {
                 case .haltAll, .overview: return
                 }
             }
-            opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled && Screenshots.listReorderSeconds == nil)
+            opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
             chosen = false
             selection = opened
         }

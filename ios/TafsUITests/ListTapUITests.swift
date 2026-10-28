@@ -33,23 +33,23 @@ final class ListTapUITests: XCTestCase {
     @MainActor
     func testATapOnTheTafAlreadyOpenStaysOpenWhenTheListSettles() throws {
         guard iPad else { throw XCTSkip("the sidebar is the iPad's") }
-        let settles: TimeInterval = 45
-        let launched = Date()
-        let app = launch(["-listReorderSeconds", "\(Int(settles))"])
+        let app = launch(["-listSettlesOnReturn", "YES"])
         let page = app.staticTexts["taf-page-name"]
-        XCTAssertTrue(page.waitForExistence(timeout: 30), "the list opens on its first taf")
+        XCTAssertTrue(page.waitForExistence(timeout: 60), "the list opens on its first taf")
         let open = page.label
         let rows = tafRows(app)
         XCTAssertEqual(name(rows.firstMatch.label), open, "the open taf is the list's first, before it settles")
 
-        XCTAssertLessThan(Date().timeIntervalSince(launched), settles - 3, "the tap comes before the list settles; raise -listReorderSeconds")
         tap(row(app, open), on: .name)
-        // The list settles, its last taf moving to the top. Its clock starts once the sample has
-        // loaded, after a slow launch, so it's looked for every few seconds, not timed: often,
-        // a UI query on a slow simulator times out.
-        RunLoop.current.run(until: launched.addingTimeInterval(settles))
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        // The list settles when the app comes back, as on a device: its last taf moves to the top.
+        // No clock to race on a slow simulator.
+        XCUIDevice.shared.press(.home)
+        RunLoop.current.run(until: Date().addingTimeInterval(2))
+        app.activate()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 30), "the app came back")
         XCTAssertTrue(within(60, every: 3) { name(rows.firstMatch.label) != open },
-                      "the list settled: its last taf is at the top")
+                      "the list settled when the app came back: its last taf is at the top")
         XCTAssertEqual(openName(app), open, "the taf picked by a tap stays open when the list settles")
     }
 
