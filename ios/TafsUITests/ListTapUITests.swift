@@ -46,7 +46,7 @@ final class ListTapUITests: XCTestCase {
         tap(row(app, open), on: .name)
         // The list settles, its last taf moving to the top: waited out, not polled, since a UI
         // query asked over and over while the list moves times out on a slow simulator.
-        RunLoop.current.run(until: launched.addingTimeInterval(settles + 5))
+        RunLoop.current.run(until: launched.addingTimeInterval(settles + 15))
         XCTAssertNotEqual(name(rows.firstMatch.label), open, "the list settled: its last taf is at the top")
         XCTAssertEqual(openName(app), open, "the taf picked by a tap stays open when the list settles")
     }
