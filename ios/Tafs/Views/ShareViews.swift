@@ -226,7 +226,7 @@ struct OverviewView: View {
         .task {
             await model.refreshPeople()
             for taf in model.listedTafs {
-                if let agent = model.kiffAgent(for: taf.id) { shares[agent] = try? await model.kiff.shares(agent: agent) }
+                if model.manages(taf.id), let agent = model.kiffAgent(for: taf.id) { shares[agent] = try? await model.kiff.shares(agent: agent) }
                 if let cloud = model.cloudTaf(for: taf.id), model.reports[cloud.id] == nil { await model.loadReport(cloud) }
             }
         }
@@ -254,51 +254,59 @@ struct OverviewView: View {
         }
     }
 
+    /// One grid, so each heading sits over its column (the 870 test: the headings drifted
+    /// apart from the rows, and only one showed over its column).
     private var tafsTable: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
-                column("TAF", 0.28); column("NOW", 0.22); column("CARD", 0.2); column("LAST RESULT", 0.3)
+        Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 12) {
+            GridRow {
+                ForEach(["TAF", "NOW", "CARD", "LAST RESULT"], id: \.self) { title in
+                    Text(title).scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
-            .padding(.horizontal, 12).padding(.bottom, 6)
             ForEach(model.listedTafs) { taf in
-                Button { open(.taf(taf.id)) } label: { row(taf) }
-                    .buttonStyle(.plain)
-                Divider()
+                Divider().gridCellUnsizedAxes(.horizontal)
+                row(taf)
             }
             if model.listedTafs.isEmpty {
-                Text("No tafs yet.").scaledFont(14).foregroundColor(Theme.dim).padding(12)
+                Text("No tafs yet.").scaledFont(14).foregroundColor(Theme.dim).gridCellColumns(4)
             }
         }
-    }
-
-    private func column(_ title: String, _ share: CGFloat) -> some View {
-        Text(title).scaledFont(11, weight: .bold).foregroundColor(Theme.dim)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(share)
     }
 
     private func row(_ taf: Taf) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            HStack(spacing: 10) {
-                TafAvatar(taf: taf, size: 30)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
-                    Text(usedBy(taf)).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge()
+        GridRow {
+            Button { open(.taf(taf.id)) } label: {
+                HStack(spacing: 10) {
+                    TafAvatar(taf: taf, size: 30)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
+                        let who = usedBy(taf)
+                        if !who.isEmpty { Text(who).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge() }
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel([taf.name, taf.now, Self.cardLine(taf), lastResult(taf)].compactMap { $0 }.joined(separator: ", "))
+            .accessibilityHint("Opens the taf")
+            Group {
+                Text(taf.now).scaledFont(13).foregroundColor(Theme.ink)
+                Text(Self.cardLine(taf) ?? "–").scaledFont(13).foregroundColor(Theme.ink)
+                Text(lastResult(taf)).scaledFont(13).foregroundColor(Theme.soft).lineLimit(2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text(taf.now).scaledFont(13).foregroundColor(Theme.ink).frame(maxWidth: .infinity, alignment: .leading)
-            Text(Self.cardLine(taf) ?? "–").scaledFont(13).foregroundColor(Theme.ink).frame(maxWidth: .infinity, alignment: .leading)
-            Text(lastResult(taf)).scaledFont(13).foregroundColor(Theme.soft).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture { open(.taf(taf.id)) }
+            .accessibilityHidden(true)
         }
-        .padding(12)
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
     }
 
-    /// "Support · 3 people", or who else it's shared with.
+    /// "Support · 3 people", or who else it's shared with: only for whoever manages the taf,
+    /// as on its page. Someone who uses it doesn't see who else does (the 870 test).
     private func usedBy(_ taf: Taf) -> String {
-        guard let agent = model.kiffAgent(for: taf.id), let shares = shares[agent] else { return "" }
+        guard model.manages(taf.id), let agent = model.kiffAgent(for: taf.id), let shares = shares[agent] else { return "" }
         if shares.isEmpty { return "Not shared" }
         var people = Set<String>()
         var names: [String] = []
@@ -312,9 +320,11 @@ struct OverviewView: View {
         return "\(names.joined(separator: ", ")) · \(people.count) \(people.count == 1 ? "person" : "people")"
     }
 
-    /// "70.00 USD of 250.00 USD today", from the Card in front: its money, else its calls.
+    /// "300 US$ left today of 300 US$", from the Card in front, as its page says it: its money,
+    /// else its calls.
     static func cardLine(_ taf: Taf) -> String? {
         guard let card = taf.shownCards.first else { return nil }
+        if let hero = card.hero { return "\(hero.figure) \(hero.words)" }
         if let t = card.total {
             guard let used = t.used else { return "\(t.limit.formatted) \(t.window.label)" }
             return "\(used.formatted) of \(t.limit.formatted) \(t.window.current)"

@@ -75,8 +75,8 @@ uses it (a group, or one person), then what that means for them, then one Face I
 all of it.
 
 **Overview** (`OverviewView`) is today across the tafs the person uses or oversees: what
-needs them, and a line per taf with who uses it, what it does now, its Card and its last
-result.
+needs them, and a line per taf with what it does now, its Card as its page says it, and its
+last result. Who uses the taf shows only to whoever manages it.
 
 ## Usage, tasks and plans
 
