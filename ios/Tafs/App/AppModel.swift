@@ -833,11 +833,23 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let token = pushToken else { return }
         let gen = accountGeneration
         let handoff = pendingHandoff
-        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, target: handoff?.target),
+        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target),
               gen == accountGeneration else { return }
         if handoff != nil { pendingHandoff = nil }
         applyPush(status)
     }
+
+    /// Sound for alerts on this device (Settings, Notifications & haptics; the 901 test). Off,
+    /// tafs cloud sends this device's alerts quietly: they still arrive, with no sound or banner.
+    var alertSound: Bool {
+        get { UserDefaults.standard.object(forKey: Self.alertSoundKey) as? Bool ?? true }
+        set {
+            objectWillChange.send()
+            UserDefaults.standard.set(newValue, forKey: Self.alertSoundKey)
+            Task { await syncPush() }
+        }
+    }
+    static let alertSoundKey = "alertSound"
 
     private func applyPush(_ status: TafsCloud.PushStatus) {
         canAnswerHolds = status.answers
@@ -902,7 +914,7 @@ final class AppModel: ObservableObject {
             }
         }
         do {
-            let status = try await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, target: handoff?.target)
+            let status = try await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target)
             guard gen == accountGeneration else { return false }
             pendingHandoff = nil
             applyPush(status)

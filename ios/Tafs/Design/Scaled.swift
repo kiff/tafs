@@ -29,14 +29,16 @@ extension View {
 }
 
 /// The taps the chat gives (kiff/tafs#58): a light one on send, a success one when an
-/// approval completes.
+/// approval completes. None when Haptics is off in Settings (the 901 test).
 @MainActor
 enum Haptics {
+    static let key = "haptics"
+    static var enabled: Bool { UserDefaults.standard.object(forKey: key) as? Bool ?? true }
     #if canImport(UIKit)
-    static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
-    static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+    static func tap() { if enabled { UIImpactFeedbackGenerator(style: .light).impactOccurred() } }
+    static func success() { if enabled { UINotificationFeedbackGenerator().notificationOccurred(.success) } }
     /// A click as a dial reaches each stop.
-    static func step() { UISelectionFeedbackGenerator().selectionChanged() }
+    static func step() { if enabled { UISelectionFeedbackGenerator().selectionChanged() } }
     #else
     // A Mac has no taps to give.
     static func tap() {}

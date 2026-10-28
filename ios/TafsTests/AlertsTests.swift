@@ -93,6 +93,21 @@ final class AlertsTests: XCTestCase {
         XCTAssertEqual(model.alertsReady, false, "tafs cloud has no secret for the account yet: the card stays")
     }
 
+    /// The 901 test: Sound off in Settings goes to tafs cloud at once, with the token; on by default.
+    func testSoundOffIsHandedOverWithTheToken() async throws {
+        UserDefaults.standard.removeObject(forKey: AppModel.alertSoundKey)
+        defer { UserDefaults.standard.removeObject(forKey: AppModel.alertSoundKey) }
+        let model = model()
+        await signedIn(model)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":true}"#)
+        await model.pushTokenArrived(token)
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/push").last)["sound"] as? Bool, true, "alerts sound unless turned off")
+        model.alertSound = false
+        await model.syncPush()
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/push").last)["sound"] as? Bool, false)
+        XCTAssertFalse(model.alertSound, "kept on this device")
+    }
+
     func testKIFFRefusingTheTargetSaysWhy() async {
         let model = model()
         await signedIn(model)

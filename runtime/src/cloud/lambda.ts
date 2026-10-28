@@ -6,7 +6,7 @@ import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
 import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
-import type { Device, PushStore } from "./push.js";
+import { silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
 import { emailProvider } from "./doors/email.js";
@@ -183,7 +183,7 @@ const push: PushStore = {
       const m = v.M ?? {};
       const env = m.environment?.S;
       return env === "sandbox" || env === "production"
-        ? [{ token, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, manages: m.manages?.BOOL === true, at: m.at?.S ?? "" }]
+        ? [{ token, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, manages: m.manages?.BOOL === true, silent: m.silent?.BOOL === true, at: m.at?.S ?? "" }]
         : [];
     });
     const secrets = Object.values(out.Item?.secrets?.M ?? {})
@@ -194,7 +194,7 @@ const push: PushStore = {
     return { devices, secrets };
   },
   async addDevice(tenant, d) {
-    await setEntry(tenant, "devices", d.token, { environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, manages: { BOOL: d.manages === true }, at: { S: d.at } });
+    await setEntry(tenant, "devices", d.token, { environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, manages: { BOOL: d.manages === true }, silent: { BOOL: d.silent === true }, at: { S: d.at } });
   },
   async removeDevice(tenant, token) {
     await dynamo.send(new UpdateItemCommand({
@@ -234,8 +234,11 @@ async function setEntry(tenant: string, map: "devices" | "secrets", key: string,
   }));
 }
 
-/** Apple push with the "tafs push" key, read from Secrets Manager on first use. */
-const apns = apnsSender({
+/**
+ * Apple push with the "tafs push" key, read from Secrets Manager on first use;
+ * quiet on the phones whose Sound for alerts is off.
+ */
+const apns = silencing(apnsSender({
   keyPEM: async () => {
     const id = process.env.APNS_SECRET_ID;
     if (!id) throw new Error("APNS_SECRET_ID is not set");
@@ -245,7 +248,7 @@ const apns = apnsSender({
   keyID: process.env.APNS_KEY_ID ?? "",
   teamID: process.env.APNS_TEAM_ID ?? "",
   topic: process.env.APNS_TOPIC ?? "bot.tafs.app",
-});
+}));
 
 /**
  * Each account's tafs, in one item (tafs#tenant): a map of taf id → the taf

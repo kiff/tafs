@@ -74,7 +74,7 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
  *   GET  /v1/tafs/{id}/calls            what its calls through KIFF acted on (kiff/tafs#167)
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
- *   POST /v1/push                       {device_token, environment, alert_target?}: this phone gets the account's alerts
+ *   POST /v1/push                       {device_token, environment, sound?, alert_target?}: this phone gets the account's alerts
  *   DELETE /v1/push/{token}             it stops
  *   POST /v1/alerts                     {alert_target}: KIFF's alert target for the account, with no phone's alerts (kiff/tafs#206)
  *   GET  /v1/alerts                     whether tafs cloud holds KIFF's alert secret for the account
@@ -659,7 +659,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     // handed over now or, for a phone that registered before, the one kept.
     const newest = r.target?.secret ?? secrets[0];
     if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
-    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, addsTasks, manages, at });
+    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, at });
     return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0 };
   }
   if (method === "DELETE" && parts.length === 3) {

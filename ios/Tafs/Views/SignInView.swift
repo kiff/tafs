@@ -129,6 +129,7 @@ struct SettingsView: View {
                     if model.mode == .kiff {
                         NavigationLink(PeopleGroupsView.title, destination: PeopleGroupsView().environmentObject(model))
                     }
+                    NavigationLink(NotificationSettingsView.title, destination: NotificationSettingsView().environmentObject(model))
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }
                     }
