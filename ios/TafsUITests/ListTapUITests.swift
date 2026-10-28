@@ -44,10 +44,12 @@ final class ListTapUITests: XCTestCase {
 
         XCTAssertLessThan(Date().timeIntervalSince(launched), settles - 3, "the tap comes before the list settles; raise -listReorderSeconds")
         tap(row(app, open), on: .name)
-        // The list settles, its last taf moving to the top: waited out, not polled, since a UI
-        // query asked over and over while the list moves times out on a slow simulator.
-        RunLoop.current.run(until: launched.addingTimeInterval(settles + 15))
-        XCTAssertNotEqual(name(rows.firstMatch.label), open, "the list settled: its last taf is at the top")
+        // The list settles, its last taf moving to the top. Its clock starts once the sample has
+        // loaded, after a slow launch, so it's looked for every few seconds, not timed: often,
+        // a UI query on a slow simulator times out.
+        RunLoop.current.run(until: launched.addingTimeInterval(settles))
+        XCTAssertTrue(within(60, every: 3) { name(rows.firstMatch.label) != open },
+                      "the list settled: its last taf is at the top")
         XCTAssertEqual(openName(app), open, "the taf picked by a tap stays open when the list settles")
     }
 
@@ -115,13 +117,13 @@ final class ListTapUITests: XCTestCase {
         XCTAssertTrue(within(10) { !app.staticTexts["taf-page-name"].exists }, "back at the list")
     }
 
-    /// Whether `condition` holds within `seconds`, checked every tenth of a second.
+    /// Whether `condition` holds within `seconds`, checked every `every` seconds.
     @MainActor
-    private func within(_ seconds: TimeInterval, _ condition: () -> Bool) -> Bool {
+    private func within(_ seconds: TimeInterval, every: TimeInterval = 0.1, _ condition: () -> Bool) -> Bool {
         let end = Date().addingTimeInterval(seconds)
         repeat {
             if condition() { return true }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+            RunLoop.current.run(until: Date().addingTimeInterval(every))
         } while Date() < end
         return condition()
     }
