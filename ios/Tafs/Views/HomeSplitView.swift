@@ -131,7 +131,9 @@ struct HomeSplitView: View {
     }
 
     private var sidebar: some View {
-        List(selection: $selection) {
+        // Only the owner's taps write through this binding, so each one is a choice, a tap on
+        // the taf already open too: the list settling later doesn't take them away from it.
+        List(selection: Binding(get: { selection }, set: { chosen = true; selection = $0 })) {
             if model.mode == .kiff {
                 Section {
                     // Coach mode (kiff/tafs#138): where tafs are made, connected and changed,
@@ -206,10 +208,9 @@ struct HomeSplitView: View {
 
     /// A taf in the list, and its open trial under it (kiff/tafs#173).
     @ViewBuilder private func tafLinks(_ taf: Taf) -> some View {
+        // No tap gesture of its own: one on the row took the list's taps over its icon and
+        // name, so only the row's empty end selected it (the 901 test).
         NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
-            // A tap on the taf already open is a choice too: the list settling
-            // later doesn't take the owner away from it.
-            .simultaneousGesture(TapGesture().onEnded { chosen = true })
         if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
             NavigationLink(value: HomeSelection.taf(chat)) { tafRow(trying) }
         }

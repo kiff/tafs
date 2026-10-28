@@ -7,6 +7,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- The iPad's tafs list (the 901 test): a tap anywhere on a taf, its icon and name
+  included, opens it. Only the empty end of the row did.
 - Coach mode (the 870 test) works like a taf's chat. The card you answered goes to the top
   and stays, with Coach's work and answer under it. The work block sits under what started
   it and folds in place, each answer lists only its own steps, and folded steps read in
