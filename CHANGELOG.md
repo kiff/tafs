@@ -7,6 +7,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- The iPad's tafs list (the 901 test): a tap anywhere on a taf, its icon and name
+  included, opens it. Only the empty end of the row did.
 - Coach (the 870 test): a step whose call came back refused or failed shows as failed in
   its plan, never done, and Coach says what went wrong. Before, a hand-off the tool refused
   showed as done. Its rules say a read tool's call count as its Card will have it, where

@@ -1200,10 +1200,18 @@ final class AppModel: ObservableObject {
 
     // MARK: Sample mode
 
+    /// `-listSettlesOnReturn`: the app came back, and the sample's list settles with its last
+    /// taf at the top.
+    func settleSampleOnReturn() {
+        guard Screenshots.listSettlesOnReturn, let last = listOrder.last else { return }
+        listOrder = [last] + listOrder.dropLast()
+    }
+
     func startSample() async {
         mode = .sample
         await loadSample()
         save()
+        if Screenshots.listSettlesOnReturn { settleListOrder() }
         if Screenshots.purchases {
             // The purchase screens at the App Store's prices: the sample's usage, which has the
             // store, is otherwise read only when Usage opens.
@@ -5027,6 +5035,10 @@ enum Screenshots {
         let s = UserDefaults.standard.double(forKey: "sampleReplySeconds")
         return enabled && s > 0 ? s : nil
     }
+    /// `-listSettlesOnReturn YES`: the list opens on its first taf, as for a person, and each
+    /// time the app comes back its last taf moves to the top, as when another was used
+    /// meanwhile: for a UI test that a pick stays open when the list settles (the 901 test).
+    static var listSettlesOnReturn: Bool { enabled && UserDefaults.standard.bool(forKey: "listSettlesOnReturn") }
 
     /// The store as KIFF lists it and the App Store prices it (Tafs.storekit's), for the
     /// purchase screens' screenshots.
