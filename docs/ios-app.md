@@ -45,10 +45,12 @@ call its methods; they hold only their own view state.
   Setup, Coach mode.
 - **Errors:** `lastError` is the "Not done" alert, only for something the person did
   that didn't go through. A refresh the app makes by itself never sets it (the 930 test).
-  It sets `unreachable` instead ("Can't reach KIFF"), which shows as one quiet line under
-  the account's name with a link to status.kiff.dev (`UnreachableLine`). It then tries
-  again by itself after 2 s, 10 s, then every 30 s, and the line goes once a refresh gets
-  through.
+  It sets `unreachable` instead: "Can't reach KIFF" when the network failed, "Couldn't
+  load from KIFF" when KIFF answered with an error (`refreshWords`). That shows as one
+  quiet line under the account's name with a link to status.kiff.dev (`UnreachableLine`).
+  The app tries again by itself after 2 s, 10 s, 30 s, 60 s and 120 s (`retryWaits`),
+  then waits for the next return to the app or a pull to refresh. The line goes once a
+  refresh gets through.
 - **Testing:** every client and the clock are injected (`init(signer:kiff:cloud:planque:…)`),
   and tests serve KIFF and tafs cloud from `StubProtocol`. A chat's stream can be given
   directly (`streamOpener`, `resumeOpener`).

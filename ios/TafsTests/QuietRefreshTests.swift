@@ -54,4 +54,14 @@ final class QuietRefreshTests: XCTestCase {
         await model.signOut()
         XCTAssertNil(model.unreachable)
     }
+
+    /// The words are true to what failed: the network, or KIFF answering with an error.
+    func testTheWordsSayWhatFailed() {
+        XCTAssertEqual(AppModel.refreshWords(URLError(.networkConnectionLost)), "Can't reach KIFF")
+        XCTAssertEqual(AppModel.refreshWords(URLError(.notConnectedToInternet)), "Can't reach KIFF")
+        XCTAssertEqual(AppModel.refreshWords(URLError(.badServerResponse)), "Couldn't load from KIFF")
+        XCTAssertEqual(AppModel.refreshWords(KIFFClient.KIFFError.expired), "Couldn't load from KIFF")
+        // A few tries, then none until the person comes back or pulls.
+        XCTAssertEqual(AppModel.retryWaits, [2, 10, 30, 60, 120])
+    }
 }

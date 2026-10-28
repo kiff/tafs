@@ -479,7 +479,7 @@ final class AppModel: ObservableObject {
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retrying?.cancel()
+        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -707,7 +707,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retrying?.cancel()
+        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
         notifyHeld()
@@ -1023,16 +1023,33 @@ final class AppModel: ObservableObject {
     /// the account's name is, never as an alert: "Can't reach KIFF". The app tries again by
     /// itself; nil once a refresh goes through.
     @Published private(set) var unreachable: String?
+    /// Whether the app is still trying again by itself; after a few tries it waits for the
+    /// next return to the app or a pull to refresh.
+    @Published private(set) var retryingRefresh = false
     private var retrying: Task<Void, Never>?
     private var retries = 0
+    /// The waits between tries, then no more until the person comes back or pulls.
+    static let retryWaits: [UInt64] = [2, 10, 30, 60, 120]
 
-    /// A refresh failed: say so quietly, and refresh again a moment later, then less often.
+    /// Words true to what failed: the network, or KIFF answering with an error.
+    nonisolated static func refreshWords(_ error: Error) -> String {
+        let network: Set<URLError.Code> = [.networkConnectionLost, .notConnectedToInternet, .timedOut, .cannotConnectToHost,
+                                           .cannotFindHost, .dnsLookupFailed, .dataNotAllowed, .internationalRoamingOff,
+                                           .secureConnectionFailed]
+        if let e = error as? URLError, network.contains(e.code) { return "Can't reach KIFF" }
+        return "Couldn't load from KIFF"
+    }
+
+    /// A refresh failed: say so quietly, and refresh again a moment later, then less often,
+    /// and stop after a few tries.
     private func refreshFailed(_ words: String, gen: Int) {
         guard gen == accountGeneration else { return }
         unreachable = words
-        retries += 1
-        let seconds: UInt64 = retries == 1 ? 2 : retries == 2 ? 10 : 30
         retrying?.cancel()
+        guard retries < Self.retryWaits.count else { retryingRefresh = false; return }
+        let seconds = Self.retryWaits[retries]
+        retries += 1
+        retryingRefresh = true
         retrying = Task { [weak self] in
             try? await Task.sleep(nanoseconds: seconds * 1_000_000_000)
             guard let self, !Task.isCancelled, self.accountGeneration == gen, self.unreachable != nil else { return }
@@ -1073,6 +1090,7 @@ final class AppModel: ObservableObject {
             if gen == accountGeneration {
                 unreachable = nil
                 retries = 0
+                retryingRefresh = false
                 retrying?.cancel()
                 retrying = nil
             }
@@ -1121,7 +1139,7 @@ final class AppModel: ObservableObject {
             refreshFailed("Couldn't load your tafs", gen: gen)
             if !listLoaded { listUnread = true }
         } catch {
-            refreshFailed("Can't reach KIFF", gen: gen)
+            refreshFailed(Self.refreshWords(error), gen: gen)
             if !listLoaded { listUnread = true }
         }
     }

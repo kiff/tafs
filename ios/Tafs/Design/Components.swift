@@ -252,11 +252,13 @@ enum Legal {
 /// with the status page beside it. Nothing when all is well.
 struct UnreachableLine: View {
     let words: String
+    /// Whether the app is still trying again by itself.
+    var retrying = true
 
     var body: some View {
         HStack(spacing: 6) {
             Circle().fill(Theme.amber).frame(width: 7, height: 7)
-            Text("\(words) · trying again").scaledFont(12).foregroundColor(Theme.dim)
+            Text(retrying ? "\(words) · trying again" : words).scaledFont(12).foregroundColor(Theme.dim)
             Link("Status", destination: Legal.status).scaledFont(12, weight: .semibold)
         }
         .accessibilityElement(children: .combine)
