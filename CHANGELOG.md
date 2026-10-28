@@ -9,6 +9,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 - The iPad's tafs list (the 901 test): a tap anywhere on a taf, its icon and name
   included, opens it. Only the empty end of the row did.
+- Coach (the 870 test): a step whose call came back refused or failed shows as failed in
+  its plan, never done, and Coach says what went wrong. Before, a hand-off the tool refused
+  showed as done. Its rules say a read tool's call count as its Card will have it, where
+  they said "no limit" and the Card then counted the reads.
 - Coach mode (the 870 test) works like a taf's chat. The card you answered goes to the top
   and stays, with Coach's work and answer under it. The work block sits under what started
   it and folds in place, each answer lists only its own steps, and folded steps read in
