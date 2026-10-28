@@ -1053,12 +1053,15 @@ final class AppModel: ObservableObject {
         retrying = Task { [weak self] in
             try? await Task.sleep(nanoseconds: seconds * 1_000_000_000)
             guard let self, !Task.isCancelled, self.accountGeneration == gen, self.unreachable != nil else { return }
-            await self.refresh()
+            await self.refresh(retry: true)
         }
     }
 
-    func refresh() async {
+    /// `retry`: the app's own try again. Any other refresh (back in the app, a pull) starts
+    /// the tries over.
+    func refresh(retry: Bool = false) async {
         guard mode == .kiff else { playNextDemoActions(); return }
+        if !retry { retries = 0 }
         refreshing = true
         let gen = accountGeneration
         // Dropped before its answer: the list wasn't read, so it isn't shown as loaded (and
