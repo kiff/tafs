@@ -479,7 +479,7 @@ final class AppModel: ObservableObject {
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]
+        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -604,6 +604,48 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // MARK: Devices
+
+    /// The devices signed in as this person on the account (Settings, Devices).
+    @Published private(set) var devices: [KIFFClient.Device] = []
+    @Published private(set) var devicesError: String?
+
+    func refreshDevices() async {
+        guard mode == .kiff, let tenant = kiffTenant else { devices = []; return }
+        let gen = accountGeneration
+        kiff.tenant = tenant
+        do {
+            let list = try await kiff.devices()
+            guard gen == accountGeneration else { return }
+            devices = list
+            devicesError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            devicesError = "Couldn't load your devices: \(error.localizedDescription)"
+        }
+    }
+
+    /// Signs another device out of the account, behind Face ID. This device signs out with
+    /// Sign out instead. False when it didn't go through.
+    @discardableResult
+    func removeDevice(_ device: KIFFClient.Device) async -> Bool {
+        guard mode == .kiff, let tenant = kiffTenant, !device.thisDevice else { return false }
+        let gen = accountGeneration
+        let what = "Sign \(device.name ?? "this device") out of your account"
+        do { _ = try await signer.sign(Data("tafs.devices.v1|\(tenant)|\(device.id)".utf8), reason: what) } catch { return false }
+        guard gen == accountGeneration else { return false }
+        kiff.tenant = tenant
+        do {
+            try await kiff.removeDevice(device.id)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            devicesError = "\(what) didn't go through: \(error.localizedDescription)"
+            return false
+        }
+        await refreshDevices()
+        return true
+    }
+
     /// Makes one change to groups or sharing, behind Face ID as KIFF asks of a phone, then
     /// reads them again. `what` is said at the prompt. False when it didn't go through.
     @discardableResult
@@ -665,7 +707,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]
+        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
         notifyHeld()

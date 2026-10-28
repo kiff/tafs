@@ -31,6 +31,12 @@ Signing out (`POST /v1/auth/device/logout`) or switching account clears everythi
 earlier session on the phone, including files opened from a chat. Work still running for
 the old session is dropped when it finishes (`accountGeneration`).
 
+**Devices**, in Settings (`DevicesView`): the devices signed in as this person on the
+account (`GET /v1/me/devices`), each with when it was last used, and "This device" on
+this one. **Sign out** on another device, behind Face ID, removes it
+(`DELETE /v1/me/devices/{id}`): it no longer approves, and its sign-ins on the account
+end at once. This device signs out with **Sign out of KIFF**.
+
 ## Roles and what a person may do
 
 KIFF gives each person a role on the account, and a set of capabilities that the app

@@ -58,6 +58,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- Settings, **Devices**: the devices signed in as you on the account, when each was last
+  used, and Sign out for any but this one, behind Face ID.
 - Settings, **Notifications & haptics** (the 901 test): **Sound** off makes this device's
   alerts arrive quietly, in Notification Center and Needs you, with no sound or banner;
   **Haptics** off stops the app's taps. Each is for this device only. tafs cloud's

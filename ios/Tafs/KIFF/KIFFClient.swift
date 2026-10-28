@@ -224,6 +224,42 @@ final class KIFFClient {
         return r.devices.first { $0.thisDevice == true && $0.id.hasPrefix("dev_") }?.id
     }
 
+    /// A device signed in as this person on the account (Settings, Devices; kiff-cloud#1418).
+    struct Device: Decodable, Identifiable, Equatable {
+        let id: String
+        let name: String?
+        /// When it last reached KIFF; nil before its first use.
+        let lastUsed: Date?
+        let thisDevice: Bool
+
+        enum CodingKeys: String, CodingKey { case id, name, lastUsedAt = "last_used_at", lastSeenAt = "last_seen_at", thisDevice = "this_device" }
+
+        init(id: String, name: String?, lastUsed: Date?, thisDevice: Bool) {
+            self.id = id; self.name = name; self.lastUsed = lastUsed; self.thisDevice = thisDevice
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            name = try c.decodeIfPresent(String.self, forKey: .name)
+            // A device says when it was last used; a session from before devices, when last seen.
+            lastUsed = try c.decodeIfPresent(Date.self, forKey: .lastUsedAt) ?? c.decodeIfPresent(Date.self, forKey: .lastSeenAt)
+            thisDevice = try c.decodeIfPresent(Bool.self, forKey: .thisDevice) ?? false
+        }
+    }
+
+    /// The devices signed in as this person on the account.
+    func devices() async throws -> [Device] {
+        struct Response: Decodable { let devices: [Device] }
+        let r: Response = try await send("GET", "/v1/me/devices")
+        return r.devices
+    }
+
+    /// Signs a device out of the account: it no longer approves, and its sessions are over.
+    func removeDevice(_ id: String) async throws {
+        let _: Empty = try await send("DELETE", "/v1/me/devices/\(id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id)")
+    }
+
     // MARK: Held calls
 
     struct CardException: Decodable, Equatable {
