@@ -484,12 +484,15 @@ final class TafsCloud {
         struct Step: Decodable, Equatable {
             let tool: String
             var error = false
-            init(tool: String, error: Bool = false) { self.tool = tool; self.error = error }
-            enum CodingKeys: String, CodingKey { case tool, error }
+            /// Refused back unmade, an act sent beside a read: not a failure.
+            var notMade = false
+            init(tool: String, error: Bool = false, notMade: Bool = false) { self.tool = tool; self.error = error; self.notMade = notMade }
+            enum CodingKeys: String, CodingKey { case tool, error, notMade = "not_made" }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 tool = try c.decode(String.self, forKey: .tool)
                 error = (try? c.decodeIfPresent(Bool.self, forKey: .error)) ?? false
+                notMade = (try? c.decodeIfPresent(Bool.self, forKey: .notMade)) ?? false
             }
         }
         let ms: Int
@@ -681,6 +684,15 @@ final class TafsCloud {
         let _: Response = try await send("POST", "/v1/tafs/\(escaped(id))/chats/\(escaped(session))/unarchive")
     }
 
+    /// A call a run made that acted and went through (kiff/agents#249).
+    struct DoneCall: Equatable {
+        let tool: String
+        /// What it acted on (a payment's id), when KIFF named it.
+        let resource: String?
+        /// KIFF's key for the call, its Record line's: where the amount it moved is read.
+        var invocation: String? = nil
+    }
+
     /// What a streamed message's run does, as tafs cloud relays it (#60).
     enum StreamEvent: Equatable {
         /// The chat the message went into, first, and the run that answers it.
@@ -691,7 +703,8 @@ final class TafsCloud {
         /// cloud says ("Checking your Stripe connection…"): never what it was given. `call`
         /// is the call's id, which its `step` names when it ends (kiff/tafs#285).
         case activity(String, step: String? = nil, call: String? = nil)
-        /// How a call ended: "done" or "error" (kiff/tafs#285). A held call is `held`.
+        /// How a call ended: "done", "error" or "not_made", refused back unmade beside a read
+        /// (kiff/tafs#285). A held call is `held`.
         case step(call: String, status: String)
         /// More of the summary of what the taf is thinking (kiff/tafs#285).
         case thinking(String)
@@ -702,8 +715,10 @@ final class TafsCloud {
         case part
         /// The agent showed a component: the conversation has it.
         case component
-        /// The run stopped: its status, and why.
-        case end(status: String, stop: String)
+        /// The run stopped: its status, and why. A failed run also says what went through
+        /// before it stopped (kiff/agents#249): each call that acted, by tool and what it
+        /// acted on.
+        case end(status: String, stop: String, done: [DoneCall] = [])
         /// The stream broke on tafs cloud's side; the conversation has the rest.
         case broken
         /// The run read a message the owner wrote to it while it went (kiff/tafs#64).
@@ -789,7 +804,11 @@ final class TafsCloud {
         case "said": return .said
         case "part": return .part
         case "component": return .component
-        case "end": return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "")
+        case "end":
+            let done = (o["done"] as? [[String: Any]] ?? []).compactMap { c in
+                (c["tool"] as? String).map { DoneCall(tool: $0, resource: c["resource"] as? String, invocation: c["invocation"] as? String) }
+            }
+            return .end(status: o["status"] as? String ?? "", stop: o["stop"] as? String ?? "", done: done)
         case "error": return .broken
         case "held": return .held(exception: o["exception"] as? String ?? "", invocation: o["invocation"] as? String ?? "")
         default: return nil

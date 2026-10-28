@@ -56,7 +56,13 @@ those services, and the phone signs there.
 | `result` | The hand-over: a new taf to start, or a taf's new version to try |
 
 The owner's answer to a card is a message, `"[<type> <id>] <answer>"`, one answer per
-card. On a wide screen, `SetupShapePanel` beside the conversation shows what Coach has
+card.
+
+Coach's chat behaves as a taf's ([chat.md](chat.md)). What starts an answer goes to the top
+and stays there: a typed message, or the card the owner just answered. While Coach works,
+its work block sits under it, before the first thing the answer records, and folds in
+place to "Worked for" when it ends. Each answer lists its own steps, starting again after
+a pause, in Coach's words ("Preparing the Card"), never a tool's name. On a wide screen, `SetupShapePanel` beside the conversation shows what Coach has
 made so far: the taf's name, the plan, the tools it connects and the Card KIFF drafted.
 
 ## Making a taf
@@ -167,7 +173,11 @@ Answering a held call is never a tool.
 
 When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 (`POST /v1/runs/ended`). tafs cloud reads the run back from kiff/agents rather than
-trust the note, and Coach hears it in its run at work, or at its next turn. The app shows
+trust the note, and Coach hears it in its run at work, or at its next turn. kiff/agents
+announces only to URLs it is set to allow (`AGENTS_NOTIFY_URLS`), so tafs cloud's public
+`/v1/runs/ended` must be among them: when it isn't, kiff/agents refuses the run and
+`taf_task` fails with "notify.url is not one this server announces runs to". Moving tafs
+cloud to a new URL means updating that list too. The app shows
 these as lines in Coach's chat ("coach lines"). While the owner is away, what isn't
 urgent waits there as one "While you were away" message instead of a notification
 ([approvals.md](approvals.md#notifications)).

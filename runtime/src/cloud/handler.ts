@@ -1214,7 +1214,7 @@ export interface ThreadMessage {
    * message before, and the tools it called, by name, in order, with the ones that failed. From
    * the run's usage records, which keep each call's tool and time, never its input or result.
    */
-  work?: { ms: number; steps: Array<{ tool: string; error?: true }> };
+  work?: { ms: number; steps: Array<{ tool: string; error?: true; not_made?: true }> };
 }
 
 /**
@@ -1287,7 +1287,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     // held call and went on once the owner answered has its work in parts, each on the part's
     // first message: the time it waited for the owner isn't work, and what it did before the
     // pause isn't shown again after it (the 859 test).
-    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; error?: true }>; first?: ThreadMessage; last?: number };
+    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; error?: true; not_made?: true }>; first?: ThreadMessage; last?: number };
     const runs = new Map<string, { parts: Part[]; turns: number }>();
     const runOf = (id: string, at: number) => {
       let w = runs.get(id);
@@ -1300,7 +1300,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         const w = runOf(e.run, at);
         const turn = turnTiming(e.body);
         if (turn) {
-          if (w.turns > 0 && turn.waited.length === 0) {
+          if (startsPart(turn, w.turns, at)) {
             const part = w.parts.at(-1)!;
             const began = at - turn.ms;
             // A part that wrote nothing goes on in the next, less the wait between them.
@@ -1311,7 +1311,10 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         }
         const part = w.parts.at(-1)!;
         if (!Number.isNaN(at)) part.seen = Math.max(part.seen, at);
-        for (const t of turn?.waited ?? []) part.tools.push({ tool: t.tool, ...(t.error ? { error: true as const } : {}) });
+        // A call refused back unmade (an act beside a read) isn't failed work: it shows as not made.
+        for (const t of turn?.waited ?? []) {
+          part.tools.push({ tool: t.tool, ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}) });
+        }
         continue;
       }
       if (e.kind === "component") {
@@ -2287,7 +2290,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
   };
   // How a call ended. Where KIFF held it, the app shows the owner's card there in the
   // answer: only KIFF's keys for it, never what the tool answered.
-  const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown }): string => {
+  const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown }, notMade = false): string => {
     steps.result(callID, r.text);
     if (r.state === "held") {
       return sse("held", {
@@ -2295,7 +2298,9 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         invocation: typeof r.invocation === "string" ? r.invocation : "",
       });
     }
-    return sse("step", { call_id: typeof callID === "string" ? callID : "", status: r.is_error === true ? "error" : "done" });
+    // Refused back unmade (an act beside a read): nothing reached KIFF or the tool.
+    const status = notMade ? "not_made" : r.is_error === true ? "error" : "done";
+    return sse("step", { call_id: typeof callID === "string" ? callID : "", status });
   };
   const out = (e: RunStreamEvent): string | undefined => {
     const d = (e.data ?? {}) as Record<string, unknown>;
@@ -2309,7 +2314,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "tool_call" && typeof d.tool === "string") return call(d.tool, d.input, d.call_id);
         if (d.kind === "component" && d.component !== undefined) return sse("component", { component: d.component });
         if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
-        if (d.kind === "tool_result") return ended(d.call_id, (d.result ?? {}) as Record<string, unknown>);
+        if (d.kind === "tool_result") return ended(d.call_id, (d.result ?? {}) as Record<string, unknown>, d.not_made === true);
         return undefined;
       case "event": {
         // A started run's recorded events: the conversation has them. A resumed run's are
@@ -2317,7 +2322,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (at) return undefined;
         const b = (d.body ?? {}) as Record<string, unknown>;
         if (d.kind === "tool_call" && typeof b.tool === "string") return call(b.tool, b.input, b.call_id);
-        if (d.kind === "tool_result") return ended(b.call_id, b);
+        if (d.kind === "tool_result") return ended(b.call_id, b, b.not_made === true);
         if (d.kind === "agent_message" || d.kind === "report") return sse("said", {});
         if (d.kind === "component") return sse("component", { component: d.body });
         if (d.kind === "usage") {
@@ -2325,15 +2330,15 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
           // conversation, with its own work, and isn't shown as this part's (the 859 test).
           const turn = turnTiming(b);
           if (!turn) return undefined;
-          const resumed = turns > 0 && turn.waited.length === 0;
-          turns++;
           const at = Date.parse(typeof d.time === "string" ? d.time : "");
+          const resumed = startsPart(turn, turns, at);
+          turns++;
           return resumed ? sse("part", Number.isNaN(at) ? {} : { at: new Date(at - turn.ms).toISOString() }) : undefined;
         }
         return undefined;
       }
       case "end":
-        return sse("end", { status: d.status ?? "", stop: d.stop ?? "" });
+        return sse("end", { status: d.status ?? "", stop: d.stop ?? "", ...(d.status === "ERROR" ? { done: wentThrough(d.done) } : {}) });
       default:
         return undefined;
     }
@@ -2628,21 +2633,56 @@ async function agentsCall<T>(work: () => Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * What a failed run did before it stopped (kiff/agents#249): each call that acted and went
+ * through, by tool, with what it acted on and KIFF's key for it when KIFF named them, so the
+ * app shows the amount KIFF recorded for the call. Never a call's input. The stream is the
+ * person's own chat, so it goes only to the person whose run it is.
+ */
+export function wentThrough(done: unknown): Array<{ tool: string; resource?: string; invocation?: string }> {
+  if (!Array.isArray(done)) return [];
+  const named = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  return done
+    .filter((c): c is { tool: string; resource?: unknown; invocation?: unknown } => typeof c?.tool === "string")
+    .map((c) => {
+      const resource = named(c.resource), invocation = named(c.invocation);
+      return { tool: c.tool, ...(resource ? { resource } : {}), ...(invocation ? { invocation } : {}) };
+    });
+}
+
 /** A time as the app reads it: RFC 3339 in UTC, milliseconds at most. */
 /**
- * A model turn's timing, from its usage record: how long it took, and the tool calls of the
- * turn before whose results it read. kiff/agents lists those on every turn after a tool call,
- * so a turn that waited on none, past a run's first, is the first after a pause: a call KIFF
- * held, answered by the owner. Undefined for a usage record with no timing (a summary's).
+ * A model turn's timing, from its usage record: how long it took, whether it is the first
+ * after a pause (a call KIFF held, answered by the owner, or a Continue), and the tool calls
+ * of the turn before whose results it read, each with whether it failed or was refused back
+ * unmade. Undefined for a usage record with no timing (a summary's).
  */
-export function turnTiming(body: unknown): { ms: number; waited: Array<{ tool: string; error: boolean }> } | undefined {
-  const t = (body as { timing?: { ms?: unknown; waited?: unknown } } | undefined)?.timing;
+export function turnTiming(body: unknown): { ms: number; resumed: boolean; waited: Array<{ tool: string; error: boolean; notMade: boolean }> } | undefined {
+  const t = (body as { timing?: { ms?: unknown; resumed?: unknown; waited?: unknown } } | undefined)?.timing;
   if (!t || typeof t !== "object") return undefined;
-  const waited = Array.isArray(t.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown }>) : [];
+  const waited = Array.isArray(t.waited) ? (t.waited as Array<{ tool?: unknown; is_error?: unknown; not_made?: unknown }>) : [];
   return {
     ms: typeof t.ms === "number" && t.ms > 0 ? t.ms : 0,
-    waited: waited.filter((w) => typeof w?.tool === "string").map((w) => ({ tool: w.tool as string, error: w.is_error === true })),
+    resumed: t.resumed === true,
+    waited: waited.filter((w) => typeof w?.tool === "string")
+      .map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true })),
   };
+}
+
+/**
+ * From when every turn kiff/agents writes says whether it resumed (`timing.resumed`). It omits
+ * the field when false, so only a turn from then on is read by it; one before is read by the
+ * rule that came first: a timed turn that waited on no calls, past the run's first. kiff/agents
+ * with it was live at 20:26:29 UTC, and a run already going on the code before could write
+ * turns without it for up to its longest run, 15 minutes: hence 20:42. The rule that came
+ * first holds for turns from either, so a later time costs nothing.
+ */
+export const RESUMED_SINCE = Date.parse("2026-10-27T20:42:00Z");
+
+/** Whether a timed turn at `at` (ms) starts a part of its run: the first after a pause. */
+export function startsPart(turn: { resumed: boolean; waited: unknown[] }, turnsBefore: number, at: number): boolean {
+  if (!Number.isNaN(at) && at >= RESUMED_SINCE) return turn.resumed;
+  return turnsBefore > 0 && turn.waited.length === 0;
 }
 
 function iso(t: string): string {

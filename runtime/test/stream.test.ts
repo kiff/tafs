@@ -183,6 +183,25 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect((await resume(`/v1/tafs/${RAE}/runs/${run}/stream`, "")).status).toBe(401);
   });
 
+  it("says what a failed run did before it stopped, by tool, what it acted on and KIFF's key, never the input (kiff/agents#249)", async () => {
+    const w = world();
+    const started = await stream(w, PATH, { token: "ana", body: { text: "Refund T-3001" } });
+    expect(started.events.at(-1)!.data).toEqual({ status: "COMPLETED", stop: "answered" }); // a run that answered says nothing of it
+    const run = String(started.events[0]!.data.run);
+    const stored = w.agents.runs.find((x) => x.id === run)!;
+    Object.assign(stored, {
+      status: "ERROR",
+      done: [
+        { call_id: "c1", tool: "create_refund", input: { charge: "ch_secret", amount: 500 }, resource: "ch_3001", invocation: "tc-1" },
+        { call_id: "c2", tool: "send_email", input: { body: "secret words" } },
+      ],
+    });
+    const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+    expect(r.events.at(-1)).toEqual({ event: "end", data: { status: "ERROR", stop: "", done: [{ tool: "create_refund", resource: "ch_3001", invocation: "tc-1" }, { tool: "send_email" }] } });
+    expect(r.raw).not.toContain("ch_secret");
+    expect(r.raw).not.toContain("secret words");
+  });
+
   it("marks where a resumed run went on after a held call the owner answered (the 859 test)", async () => {
     const w = world();
     w.agents.streamed.push({ event: "delta", data: { kind: "text", text: "On it." } });
@@ -208,6 +227,33 @@ describe("a message streamed (kiff/tafs#60)", () => {
     const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
     expect(r.events.map((e) => e.event)).toEqual(["activity", "step", "said", "activity", "held", "step", "part", "activity", "end"]);
     expect(r.events.find((e) => e.event === "part")!.data).toEqual({ at: "2026-10-27T17:05:02.500Z" });
+  });
+
+  it("marks a part where kiff/agents says the turn resumed, and a call refused back unmade as not made", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "create_refund", input: {} } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", not_made: true, result: { text: "Read first", is_error: true } } },
+    );
+    const live = await stream(w, PATH, { token: "ana", body: { text: "Refund T-5005" } });
+    expect(live.events.filter((e) => e.event === "step").map((e) => e.data)).toEqual([{ call_id: "c1", status: "not_made" }]);
+    const run = String(live.events[0]!.data.run);
+    const usage = (time: string, ms: number, timing: object) =>
+      ({ event: "event", data: { kind: "usage", time, body: { cost_micro_usd: 1, timing: { ms, ...timing } } } });
+    w.agents.resumed.push(
+      usage("2026-10-27T21:00:02Z", 2000, { waited: [] }),
+      { event: "event", data: { kind: "tool_call", body: { call_id: "c1", tool: "create_refund", input: {} } } },
+      { event: "event", data: { kind: "tool_result", body: { call_id: "c1", tool: "create_refund", text: "Read first", is_error: true, not_made: true } } },
+      usage("2026-10-27T21:00:05Z", 1000, { waited: [] }), // waited on nothing, but not resumed
+      { event: "event", data: { kind: "tool_call", body: { call_id: "c2", tool: "create_refund", input: {} } } },
+      { event: "event", data: { kind: "tool_result", body: { call_id: "c2", tool: "create_refund", text: "", state: "held", hold: { exception: "exc_1" }, invocation: "tc-1" } } },
+      { event: "event", data: { kind: "tool_result", body: { call_id: "c2", tool: "create_refund", text: "done" } } },
+      usage("2026-10-27T21:05:04Z", 1500, { resumed: true, waited: [{ tool: "create_refund", ms: 900 }] }),
+    );
+    const r = await stream(w, `/v1/tafs/${RAE}/runs/${run}/stream?after=0`, { token: "ana", method: "GET" });
+    expect(r.events.map((e) => e.event)).toEqual(["activity", "step", "activity", "held", "step", "part", "end"]);
+    expect(r.events[1]!.data).toEqual({ call_id: "c1", status: "not_made" });
+    expect(r.events.find((e) => e.event === "part")!.data).toEqual({ at: "2026-10-27T21:05:02.500Z" });
   });
 
   it("carries the files the person attached, with words or alone (kiff/tafs#209)", async () => {

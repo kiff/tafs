@@ -49,12 +49,12 @@ never reach the phone.
 | `thinking` | `{text}` | Adds to the line of what the taf is thinking |
 | `text` | `{text}` | Adds to the answer |
 | `activity` | `{tool, step?, call_id}` | A step begins, in words: "Asking KIFF: List payments…" |
-| `step` | `{call_id, status}` | That step ended: done or error |
+| `step` | `{call_id, status}` | That step ended: `done`, `error`, or `not_made` (refused back unmade, below) |
 | `held` | `{exception, invocation}` | KIFF held the call just made: its card goes here in the answer |
 | `taken` | `{}` | The run read a message the owner wrote meanwhile: the thread is reloaded |
 | `component` | `{component}` | Something the agent showed: the thread has it |
 | `part` | `{at}` | A resumed run went on after a held call was answered: a fresh live answer starts (resumed streams only) |
-| `end` | `{status, stop}` | The run stopped |
+| `end` | `{status, stop, done?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249) |
 | `error` | `{error}` | The stream broke; the thread has the rest |
 
 What a step says comes from the tool's title as its connection gives it, never the
@@ -73,13 +73,24 @@ steps again. tafs cloud puts a run's work on its first message: the time from th
 start to its last words, and the tools it called, in order, by name, with the ones that
 failed (`conversation`, from kiff/agents' usage records).
 
+Tries of the same step after a failed one are one row, "3 tries", with the last try's
+outcome, and a failed step is left out once something worked (`WorkLog.rows`).
+
+**A step not made.** When a taf sends a call that acts in the same turn as one that
+reads, kiff/agents refuses the act back, unmade, and tells the taf to read first. Nothing
+reached KIFF or the tool, so it isn't a failure. The step ends `not_made` and shows
+"not made · read first" with a ↩ mark; made again, it's one row with its tries; not made
+again, it stays in the list.
+
 **A run that paused on a held call** has its work in parts, one for each stretch between
 pauses. Each part's work goes on the first message written in it, and its time leaves out
 the wait for the owner: the answer that asked for approval keeps what was done before it,
 and the work after the approval gets its own "Worked for". A part that wrote nothing goes
 on in the next one, less the wait between them. tafs cloud finds a pause from kiff/agents'
-usage timing: every turn after a tool call lists the calls it waited on, so a timed turn
-that waited on none, after the run's first, is the first after a pause (`turnTiming`).
+usage timing: the first turn after a pause says `resumed` (`turnTiming`, `startsPart`).
+Turns recorded before kiff/agents said so (`RESUMED_SINCE`) are read by the rule that came
+first: every turn after a tool call lists the calls it waited on, so a timed turn that
+waited on none, after the run's first, was the first after a pause.
 
 ### The sent message stays on top
 
@@ -111,7 +122,11 @@ after the answer.
   than its limit for one task…" (`cost_cap`), or "…took more steps than its limit…"
   (`turn_cap`) (`capWords`).
 - A run that **failed** part-way says it stopped part-way, with Retry, which sends its
-  message again.
+  message again. If a call that acts went through before it stopped, the line names each
+  one by its tool, what it acted on, and how much moved: "Refunds stopped part-way, after
+  this went through: create refund on ch_3001, US$5." The list is the run's own record
+  (`end`'s `done`), never the model's words; the amount is KIFF's, from the call's Record
+  line (by `invocation`), once the Record is read (`failedWords`, kiff/agents#249).
 
 ## Held calls in the chat
 

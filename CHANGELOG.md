@@ -11,6 +11,32 @@ version headings refer to releases, not merely to merged pull requests.
   its plan, never done, and Coach says what went wrong. Before, a hand-off the tool refused
   showed as done. Its rules say a read tool's call count as its Card will have it, where
   they said "no limit" and the Card then counted the reads.
+- Coach mode (the 870 test) works like a taf's chat. The card you answered goes to the top
+  and stays, with Coach's work and answer under it. The work block sits under what started
+  it and folds in place, each answer lists only its own steps, and folded steps read in
+  Coach's words, not "Asking KIFF to run planque".
+- A taf's page (the 870 test): Share uses the system's share mark, larger, beside who uses
+  the taf. A Card that acts for real no longer says "Live", which read as live money beside
+  a test-mode connection; a Card scoped to another environment still names it. Someone
+  with no connections no longer sees an empty Connections box.
+- The tafs list sets apart the tafs shared with you, under "Shared with you" (#306).
+- Overview (the 870 test): each heading sits over its column, the Card reads as on the taf's
+  page ("300 US$ left today of 300 US$", where it read "0 of 30000 today"), and who uses a
+  taf shows only to whoever manages it.
+- Refunds: the job's instructions say to look up the payment and read its result before
+  asking for a refund (the 859 and 870 tests). The taf twice sent the look-up and the
+  refund together, then said it had checked the payment; kiff/agents now refuses a
+  refund sent beside a read, and this keeps the taf from spending a turn on it.
+- Chat (#249): a run that fails after a call went through names what went through and
+  how much moved, for example "Refunds stopped part-way, after this went through: create
+  refund on ch_3001, US$5.", from the run's own record and KIFF's Record. Before, it only
+  said it stopped part-way, so the owner had to check the Record to learn the money had
+  moved.
+- Chat: a call kiff/agents refused back unmade, because the taf sent an act beside a read,
+  shows as "not made · read first", not as a failed step. Made again, it's one row
+  with its tries. tafs cloud's `step` event may say `not_made`, and a message's `work`
+  steps may carry `not_made`. A run's work is split where kiff/agents marks a turn
+  `resumed`, the first after a pause, rather than guessed from the calls it waited on.
 - Launch (the 870 test): the taf used last leads the list from the first frame, and the iPad
   opens on it. The list's order is settled once KIFF's record is read, and kept with the
   remembered list, so the app no longer opens on the first taf made and then jumps.

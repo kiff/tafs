@@ -261,6 +261,24 @@ final class AppModel: ObservableObject {
     /// it moved while the owner looked at it (the 789 retest).
     var listedTafs: [Taf] { Self.inOrder(tafs, listOrder, fallback: Self.byRecent(tafs, record: record, held: held, chats: chats)) }
 
+    /// The list in two (kiff/tafs#306): the tafs this person manages, and those shared with
+    /// them to use, each in the list's order. Which is which is KIFF's answer; a taf whose
+    /// answer isn't in yet counts as theirs, so nothing moves into "Shared with you" and back.
+    var tafSections: (own: [Taf], shared: [Taf]) {
+        let listed = listedTafs
+        return (listed.filter { !sharedWithMe($0.id) }, listed.filter { sharedWithMe($0.id) })
+    }
+
+    /// Whether a taf was shared with this person to use, not theirs to manage.
+    func sharedWithMe(_ tafID: UUID) -> Bool {
+        mode == .kiff && Self.sharedWithMe(kiffAgent(for: tafID).flatMap { access[$0] })
+    }
+
+    /// KIFF's answer says use without manage; no answer yet is not "shared".
+    nonisolated static func sharedWithMe(_ answer: KIFFClient.Access?) -> Bool {
+        answer.map { !$0.manage } ?? false
+    }
+
     /// The order the list was last settled in, by taf id.
     @Published private(set) var listOrder: [UUID] = []
     /// Whether the order was settled with KIFF's record read this session: the first list
@@ -2573,6 +2591,7 @@ final class AppModel: ObservableObject {
             return .notTried
         }
         chatStates[tafID, default: ChatState()].ended = nil
+        chatStates[tafID]?.wentThrough = []
         chatStates[tafID]?.capped = nil
         do {
             // Streamed, so the taf's words show as it writes them (#64); sent plainly
@@ -2743,6 +2762,8 @@ final class AppModel: ObservableObject {
         var unsent: [UnsentMessage] = []
         var queued: String?
         var ended: RunEnd?
+        /// What the failed run did before it stopped (kiff/agents#249), said with Retry.
+        var wentThrough: [TafsCloud.DoneCall] = []
         /// The run at work, as tafs cloud says, for writing to it.
         var workingRun: String?
         /// What the owner wrote to the latest run that it hasn't read, as kiff/agents says
@@ -2813,6 +2834,7 @@ final class AppModel: ObservableObject {
     /// starts again. A stream that drops leaves the thread to show the rest.
     private func followChatStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, tafID: UUID, text: String, gen: Int) async {
         var ended: String?
+        var didBefore: [TafsCloud.DoneCall] = []
         do {
             for try await e in events {
                 guard gen == accountGeneration else { return }
@@ -2841,7 +2863,7 @@ final class AppModel: ObservableObject {
                     chatStates[tafID]?.live?.activity = words
                     chatStates[tafID]?.live?.began(tool, words: words, call: call)
                 case .step(let call, let status):
-                    chatStates[tafID]?.live?.ended(call, status == "error" ? .error : .done)
+                    chatStates[tafID]?.live?.ended(call, LiveStep.Status(stream: status))
                 case .said:
                     // A run picked back up wrote a message: the thread has it.
                     await loadChat(tafID)
@@ -2859,8 +2881,9 @@ final class AppModel: ObservableObject {
                             self.chatStates[tafID]?.heldKeys[exception] = Self.heldKey(call)
                         }
                     }
-                case .end(let status, let stop):
+                case .end(let status, let stop, let done):
                     ended = status
+                    didBefore = done
                     chatStates[tafID]?.live?.activity = nil
                     if Self.capStops.contains(stop) { chatStates[tafID]?.capped = stop }
                 case .component, .broken:
@@ -2880,7 +2903,10 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return }
         // The run is over (or paused on a held call): the taf is no longer at work.
         if ended != nil { chatStates[tafID]?.awaiting = nil }
-        if ended == "ERROR" { chatStates[tafID]?.ended = .failed(retry: text) }
+        if ended == "ERROR" {
+            chatStates[tafID]?.ended = .failed(retry: text)
+            chatStates[tafID]?.wentThrough = didBefore
+        }
         if ended == "CANCELLED" { chatStates[tafID]?.ended = .stopped }
         // A run that answered or failed never reads what it didn't take: it goes next.
         // One the owner stopped keeps it, not sent, for them to decide.
@@ -3036,6 +3062,26 @@ final class AppModel: ObservableObject {
         case "turn_cap": return "\(taf) stopped: this task took more steps than its limit for one task. Ask for something narrower."
         default: return nil
         }
+    }
+
+    /// What a run that failed part-way says (kiff/agents#249): that it stopped, and each
+    /// call that went through before it did, from the run's own record, never its words,
+    /// with the amount KIFF recorded for it once its Record line is read.
+    func failedWords(_ tafID: UUID, taf: String) -> String {
+        Self.failedWords(taf: taf, done: chatState(tafID).wentThrough.map { c in
+            let line = c.invocation.flatMap(recordEntry(forCall:))
+            return (toolTitle(c.tool) ?? KIFFMapping.toolWords(c.tool), c.resource, line?.amountText)
+        })
+    }
+
+    nonisolated static func failedWords(taf: String, done: [(words: String, resource: String?, amount: String?)]) -> String {
+        guard !done.isEmpty else { return "\(taf) stopped part-way, before it finished." }
+        let calls = done.map { c in
+            let on = c.resource.map { "\(c.words) on \($0)" } ?? c.words
+            return c.amount.map { "\(on), \($0)" } ?? on
+        }
+        let these = calls.count == 1 ? "this went through" : "these went through"
+        return "\(taf) stopped part-way, after \(these): \(calls.joined(separator: "; "))."
     }
 
     /// Retry on a run that failed part-way: its message is sent again.
@@ -4185,7 +4231,9 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return .notTried }
                 setupAwaiting = clock()
                 setupStreamWorks = true
-                setupLive = LiveAnswer()
+                setupLiveBefore = Set(setupThread.items.map(\.id))
+                setupAnsweredCard = SetupThread.Answer(text)?.id
+                setupLive = LiveAnswer(started: clock())
                 setupStream = Task { await self.followSetupStream(events, text: text, gen: gen) }
                 return .sent
             }
@@ -4337,7 +4385,21 @@ final class AppModel: ObservableObject {
 
     /// One tool call of an answer as it streams (kiff/tafs#285).
     struct LiveStep: Equatable {
-        enum Status: Equatable { case running, done, error, held }
+        enum Status: Equatable {
+            case running, done, error, held
+            /// Refused back unmade: an act sent beside a read, so nothing reached KIFF or
+            /// the tool. Not a failure; the taf reads first and makes it again.
+            case notMade
+
+            /// A `step` event's status: "done", "error" or "not_made".
+            init(stream: String) {
+                switch stream {
+                case "error": self = .error
+                case "not_made": self = .notMade
+                default: self = .done
+                }
+            }
+        }
         let call: String?
         let tool: String
         /// What it's doing, in the owner's words; nil shows the tool's own.
@@ -4352,6 +4414,13 @@ final class AppModel: ObservableObject {
         case held(exception: String, invocation: String)
     }
     @Published private(set) var setupLive: LiveAnswer?
+    /// The thread's items when the answer streaming now was asked for: what's new since is
+    /// this answer's, and its work block goes before the first of them, as in a taf's chat
+    /// (the 870 test).
+    private(set) var setupLiveBefore: Set<String> = []
+    /// The card whose answer started the answer streaming now: the chat pins it to the top,
+    /// as a typed message is (the 870 test).
+    @Published private(set) var setupAnsweredCard: String?
     /// Whether a stream has opened here: answers then show as written, not revealed.
     @Published private(set) var setupStreamWorks = false
     private(set) var setupStream: Task<Void, Never>?
@@ -4408,11 +4477,17 @@ final class AppModel: ObservableObject {
                     await loadSetupThread()
                     setupLive?.text = ""
                 case .step(let call, let status):
-                    setupLive?.ended(call, status == "error" ? .error : .done)
-                case .component, .said, .part:
+                    setupLive?.ended(call, LiveStep.Status(stream: status))
+                case .component, .said:
                     await loadSetupThread()
                     setupLive?.text = ""
-                case .end(let status, _):
+                case .part:
+                    // It went on after a pause: what came before is the thread's, with its work,
+                    // and the steps start again (the 870 test, as in a taf's chat).
+                    await loadSetupThread()
+                    setupLive?.newPart()
+                    setupLiveBefore = Set(setupThread.items.map(\.id))
+                case .end(let status, _, _):
                     ended = status
                 case .held:
                     setupLive?.ended(nil, .held)
@@ -4434,11 +4509,20 @@ final class AppModel: ObservableObject {
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.
-    static func activityWords(_ tool: String) -> String? {
-        switch tool {
+    nonisolated static func activityWords(_ tool: String) -> String? {
+        // By its own name, past any prefix the run records it under ("kiff__kiff_draft").
+        switch tool.components(separatedBy: "__").last ?? tool {
         case "planque": return "Working on the connection…"
         case "kiff_draft": return "Preparing the Card…"
         case "kiff_card", "kiff_pending": return "Checking KIFF…"
+        case "tafs_state": return "Reading your tafs…"
+        case "taf_run": return "Reading what a taf did…"
+        case "taf_task": return "Handing the taf its task…"
+        case "run_stop": return "Stopping a run…"
+        case "taf_pause": return "Pausing or resuming a taf…"
+        case "version_try": return "Trying the new version…"
+        case "version_install": return "Installing the new version…"
+        case "memory": return "Reading its notes…"
         case "show": return nil
         default: return "Working…"
         }

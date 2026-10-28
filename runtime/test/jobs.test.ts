@@ -48,6 +48,13 @@ describe("jobs", () => {
     }
   });
 
+  it("has Refunds read the payment before asking for a refund (the 859 and 870 tests)", () => {
+    // T-5005 and T-5003: the look-up and the refund went in one turn, then the taf said it
+    // had checked the payment. kiff/agents refuses an act beside a read now; this line
+    // keeps the taf from paying a turn for it.
+    expect(jobById("refunds")!.instructions).toContain("Look up the payment and read its result before asking for a refund.");
+  });
+
   it("has every taf say an AI agent wrote what it sends outside the company", () => {
     // kiff.dev's Terms state this for tafs (AI Act Article 50); keep it true.
     for (const j of JOBS) {
