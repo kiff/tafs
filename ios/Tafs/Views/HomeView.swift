@@ -254,5 +254,6 @@ struct TafRow: View {
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.line))
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("taf-row")
     }
 }

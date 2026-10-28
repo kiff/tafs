@@ -131,6 +131,7 @@ struct TafDetailView: View {
             TafAvatar(taf: taf, size: 52)
             VStack(alignment: .leading, spacing: 4) {
                 Text(taf.name).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                    .accessibilityIdentifier("taf-page-name")
                 Text(taf.tools.isEmpty ? "No tools yet" : taf.tools.joined(separator: " · "))
                     .scaledFont(13).foregroundColor(Theme.dim)
                 versionLine(taf)
