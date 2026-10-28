@@ -128,8 +128,11 @@ jobs:
               CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/ipad-list-$1.log"
           }
           list 1 && exit 0
-          # Only a failed launch is tried again: an assertion that failed is a real failure.
-          if grep -q "Failed to launch" "$RUNNER_TEMP/ipad-list-1.log" && ! grep -q "XCTAssert" "$RUNNER_TEMP/ipad-list-1.log"; then
+          # Only a failed launch is tried again.
+          # Any test error that isn't a launch or a background assertion is a real failure.
+          log="$RUNNER_TEMP/ipad-list-1.log"
+          real() { awk '/\.swift:[0-9]+: error/ && !/Failed to launch|Failed to get background assertion/ { f = 1 } END { exit !f }' "$log"; }
+          if grep -q "Failed to launch" "$log" && ! real; then
             echo "::warning::The iPad simulator failed to launch the app; running the list tests once more."
             list 2
           else
