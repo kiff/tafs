@@ -5,6 +5,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+### Added
+
+- Setup gives a taf that acts a read that lists what it did, by date: for a taf that refunds,
+  the refunds made. Asked "what did you refund on Monday?", it answers from the record.
+
 ### Fixed
 
 - Coming back to the app no longer shows "Not done: Couldn't reach KIFF" (the 930 test).

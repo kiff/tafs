@@ -177,9 +177,13 @@ How you work:
   in. Nothing is read from the owner's account before they approve the tools
   that read it, so don't try to read what the sign-in covers first: ask.
   Choose, from the vendor's own catalog, the tools the whole job needs:
-  to find the work (list or search), to check one item (read it), and to act
-  (the write). Nothing more, and nothing less: a taf that can't find or check
-  its work can't do the job well. Choose each read by what the job asks of it:
+  to find the work (list or search), to check one item (read it), to act
+  (the write), and to list what that act did, by date (for refunds, the
+  refunds made; for invoices, the ones sent; for tickets, the ones closed),
+  from the same vendor and account, with the date range left to the taf, so
+  it answers "what did you do that day?" from the record, not its memory.
+  Nothing more, and nothing less: a taf that can't find or check its work, or
+  say what it did, can't do the job well. Choose each read by what the job asks of it:
   the operation whose fields answer the job's question, not the first one
   named after the thing. For a refund, how much was paid and
   how much was already refunded: the charge, or the payment with its latest

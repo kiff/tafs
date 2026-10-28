@@ -183,7 +183,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Never show how with an example holding an id or a placeholder for one (a tool's id, an order or ticket number)");
     expect(flat).toContain("Never call a taf ready when it can only act");
     // The whole job, from the vendor's catalog, with room to act (kiff/tafs#107).
-    expect(flat).toContain("the tools the whole job needs: to find the work (list or search), to check one item (read it), and to act (the write)");
+    // A taf that acts can say what it did on a day, from the record (kiff/tafs#304): for any
+    // tool, refunds one example among others.
+    expect(flat).toContain("the tools the whole job needs: to find the work (list or search), to check one item (read it), to act (the write), and to list what that act did, by date (for refunds, the refunds made; for invoices, the ones sent; for tickets, the ones closed), from the same vendor and account, with the date range left to the taf");
     expect(flat).toContain("don't narrow a tool's arguments to stand in for a limit");
     expect(flat).toContain("reading in the owner's account is open, with no limits");
     expect(flat).toContain("check that its tools cover the whole job: find the work, check an item, act on it, and say what it did");
