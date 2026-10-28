@@ -177,6 +177,10 @@ describe("Setup's definition on kiff/agents", () => {
     // The batch measurement: asked for Gmail's MCP server address and looped.
     expect(flat).toContain("Never ask the owner for a server address, a URL or anything technical to connect");
     expect(flat).toContain("or from the owner, who can tell it in its chat");
+    // An Eval's judges: the result's sentence told the owner to pass each refund
+    // "for charge ch_… of this customer", an ask for an id.
+    expect(flat).toContain("the owner can tell it in its chat meanwhile, in their own words (who asked, what for, when): it finds the item itself with its reads");
+    expect(flat).toContain("Never show how with an example holding an id or a placeholder for one (a tool's id, an order or ticket number)");
     expect(flat).toContain("Never call a taf ready when it can only act");
     // The whole job, from the vendor's catalog, with room to act (kiff/tafs#107).
     expect(flat).toContain("the tools the whole job needs: to find the work (list or search), to check one item (read it), and to act (the write)");
