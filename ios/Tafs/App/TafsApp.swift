@@ -5,6 +5,8 @@ struct TafsApp: App {
     @StateObject private var model = AppModel(store: SampleStore(), remembered: .standard)
     @UIApplicationDelegateAdaptor(PushDelegate.self) private var push
     @Environment(\.scenePhase) private var scenePhase
+    /// The app went to the background since it was last active.
+    @State private var wasAway = false
     private let lockScreen = LockScreen()
 
     var body: some Scene {
@@ -38,7 +40,9 @@ struct TafsApp: App {
                 }
         }
         .onChange(of: scenePhase) { phase in
+            if phase == .background { wasAway = true }
             if phase == .active, model.mode == .kiff { Task { await model.refresh(); model.settleListOrder() } }
+            if phase == .active, wasAway { wasAway = false; model.settleSampleOnReturn() }
         }
     }
 }
