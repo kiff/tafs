@@ -244,4 +244,24 @@ extension Date {
 enum Legal {
     static let terms = URL(string: "https://kiff.dev/terms#tafs")!
     static let privacy = URL(string: "https://kiff.dev/privacy#tafs")!
+    /// KIFF's status page, served apart from KIFF, so it answers when KIFF doesn't.
+    static let status = URL(string: "https://status.kiff.dev")!
+}
+
+/// While a refresh can't get through (the 930 test): one quiet line under the account's name,
+/// with the status page beside it. Nothing when all is well.
+struct UnreachableLine: View {
+    let words: String
+    /// Whether the app is still trying again by itself.
+    var retrying = true
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle().fill(Theme.amber).frame(width: 7, height: 7)
+            Text(retrying ? "\(words) · trying again" : words).scaledFont(12).foregroundColor(Theme.dim)
+            Link("Status", destination: Legal.status).scaledFont(12, weight: .semibold)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("unreachable")
+    }
 }

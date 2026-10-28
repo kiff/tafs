@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Coming back to the app no longer shows "Not done: Couldn't reach KIFF" (the 930 test).
+  A refresh the app makes by itself tries again on its own. While KIFF can't be reached, a
+  quiet line under the account's name says so, with a link to KIFF's status page.
 - A held call's card, in the chat, Needs you and the taf's page, says "Nothing is sent until
   you approve." while it waits, and so does its notification. The taf's message about it no
   longer repeats that, and a chat answer no longer ends with a summary of what wasn't done.
