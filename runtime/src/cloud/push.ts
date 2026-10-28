@@ -250,7 +250,7 @@ function heldNotification(body: AlertBody, holdID: string, now: Date): Notificat
     kind: "alert",
     payload: {
       aps: {
-        alert: { title: "A taf needs you", body: `${capitalize(action)} waits for your answer.` },
+        alert: { title: "A taf needs you", body: `${capitalize(action)} waits for your answer. Nothing is sent until you approve.` },
         "thread-id": "held",
         // Approve and Refuse on the notification (kiff/tafs#210, part 2).
         category: "hold",

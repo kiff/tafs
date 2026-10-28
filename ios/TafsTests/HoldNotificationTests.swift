@@ -38,6 +38,7 @@ final class HoldNotificationTests: XCTestCase {
         let words = HoldNotification.words(hold, taf: "Rae", zone: utc)
         XCTAssertEqual(words.title, "Rae needs you")
         XCTAssertTrue(words.body.hasPrefix("\(call.proposed.summary), \(try XCTUnwrap(call.proposed.amount).formatted) · \(call.reason). Answer by 10:51"), words.body)
+        XCTAssertTrue(words.body.hasSuffix(" Nothing is sent until you approve."), words.body)
         XCTAssertEqual(HoldNotification.words(hold, taf: nil, zone: utc).title, "A taf needs you")
     }
 

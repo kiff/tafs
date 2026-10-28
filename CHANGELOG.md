@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- A held call's card, in the chat, Needs you and the taf's page, says "Nothing is sent until
+  you approve." while it waits, and so does its notification. The taf's message about it no
+  longer repeats that, and a chat answer no longer ends with a summary of what wasn't done.
 - Setup, for a taf whose work arrives somewhere it can't connect (an email inbox), tells you
   to pass each request in the taf's chat in your own words. It used to show an example with a
   charge id to type.
