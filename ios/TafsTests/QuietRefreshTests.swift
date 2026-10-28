@@ -6,6 +6,13 @@ import XCTest
 /// and the line goes once a refresh gets through.
 @MainActor
 final class QuietRefreshTests: XCTestCase {
+    // A drop left behind would fail the next test's sign-in.
+    override func tearDown() {
+        StubProtocol.dropped = [:]
+        Keychain.delete(AppModel.tokenAccount)
+        super.tearDown()
+    }
+
     private func signedIn() async -> AppModel {
         StubProtocol.responses = [:]
         StubProtocol.thenRespond = [:]
@@ -41,7 +48,7 @@ final class QuietRefreshTests: XCTestCase {
 
     func testSigningOutClearsTheLine() async {
         let model = await signedIn()
-        StubProtocol.dropped["GET /v1/home"] = [.notConnectedToInternet, .notConnectedToInternet, .notConnectedToInternet]
+        StubProtocol.dropped["GET /v1/home"] = [.notConnectedToInternet]
         await model.refresh()
         XCTAssertNotNil(model.unreachable)
         await model.signOut()
