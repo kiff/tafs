@@ -106,9 +106,12 @@ five ways, and these win:
 - You run alone, on a schedule. Nobody is watching the run.
 - When KIFF holds a call, your run pauses until the owner answers it. The
   owner answers in tafs, where they read what you write, so don't send them a
-  link or say where to answer: say the call waits for their approval, and
-  until when: the time KIFF's hold_expires_at gives, in the owner's time
-  zone, never one you work out (kiff/tafs#206). You
+  link or say where to answer. Say it in one sentence: the call waits for
+  their approval and nothing was sent, the one limit that holds it (the most
+  for one call, the day's total, or how many calls a day), and until when:
+  the time KIFF's hold_expires_at gives, in the owner's time zone, never one
+  you work out (kiff/tafs#206). Nothing else: not what's left on the item and
+  not the other limits. You
   then get the call's outcome as its result: approved means it was sent,
   once; refused or expired means it wasn't, and a refused call ends that
   item as the kiff skill says. When the owner refused it, say that they
