@@ -81,18 +81,18 @@ final class OwnerWordsTests: XCTestCase {
         XCTAssertEqual(d.cardTitle, "The taf's Card")
     }
 
-    /// A Card with no unit declared stays bare, but a total and a count read apart: the old
-    /// Refunds Card said "≤ 50 each · 10 a day · 20 a day".
+    /// A Card with no unit declared stays bare, saying so (kiff/tafs#309), and a total and a count
+    /// read apart: the old Refunds Card said "≤ 50 each · 10 a day · 20 a day".
     func testABareTotalAndACountReadApart() {
         var rule = CardRule(action: "refund_order", label: "Refund order")
         rule.perAction = .bare(50)
         rule.perWindow = .bare(10)
         rule.countPerWindow = 20
-        XCTAssertEqual(rule.summary, "≤ 50 each · 10 in total a day · 20 calls a day")
+        XCTAssertEqual(rule.summary, "≤ 50 (no currency) each · 10 (no currency) in total a day · 20 calls a day")
 
         rule.perWindow = Money(minor: 100000, currency: "EUR", scale: 2)
         rule.countPerWindow = 1
-        XCTAssertEqual(rule.summary, "≤ 50 each · \(Money(minor: 100000, currency: "EUR", scale: 2).formatted) a day · 1 call a day")
+        XCTAssertEqual(rule.summary, "≤ 50 (no currency) each · \(Money(minor: 100000, currency: "EUR", scale: 2).formatted) a day · 1 call a day")
     }
 }
 
