@@ -83,7 +83,7 @@ final class SignInTests: XCTestCase {
         model.nudgeSignIn()
         let began = Date()
         try await model.finishSignIn(try start(), startedAt: Date())
-        XCTAssertLessThan(Date().timeIntervalSince(began), 5, "it didn't wait the minute")
+        XCTAssertLessThan(Date().timeIntervalSince(began), 30, "it didn't wait the minute (a slow CI runner took 9 s)")
         XCTAssertEqual(polls(), 1)
         XCTAssertEqual(model.kiffTenant, "t_01")
         Keychain.delete(AppModel.tokenAccount)
