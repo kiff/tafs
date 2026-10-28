@@ -91,7 +91,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       # The iPad's sidebar (the 901 test): the list's UI tests on the 13-inch iPad as well,
-      # since the iPhone's list pushes a taf instead.
+      # since the iPhone's list pushes a taf instead. A failed test is tried once more: the
+      # iPad simulator sometimes fails to launch the app at all.
       - name: Test the tafs list on an iPad
         run: |
           cd ios
@@ -106,6 +107,7 @@ jobs:
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
             -only-testing:TafsUITests/ListTapUITests \
+            -retry-tests-on-failure -test-iterations 2 \
             -resultBundlePath "$RUNNER_TEMP/ipad-list.xcresult" \
             CODE_SIGNING_ALLOWED=NO
 
