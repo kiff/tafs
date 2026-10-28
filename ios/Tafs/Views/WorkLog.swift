@@ -219,10 +219,14 @@ struct StepList: View {
 struct WorkSummary: View {
     @EnvironmentObject private var model: AppModel
     let work: TafsCloud.Work
+    /// Coach's work: its steps in Coach's words, never "Asking KIFF to run planque" (the 870
+    /// test), and without what it showed, as while it works.
+    var coach = false
     @State private var open = false
 
     var body: some View {
-        let rows = WorkLog.rows(work.steps.map { (words: model.tafActivityWords($0.tool) ?? $0.tool, status: $0.notMade ? .notMade : $0.error ? .error : .done) }, running: false)
+        let steps = coach ? work.steps.filter { AppModel.activityWords($0.tool) != nil } : work.steps
+        let rows = WorkLog.rows(steps.map { (words: Self.words($0.tool, coach: coach, model), status: $0.notMade ? .notMade : $0.error ? .error : .done) }, running: false)
         VStack(alignment: .leading, spacing: 6) {
             Button { withMotion(.easeOut(duration: 0.25)) { open.toggle() } } label: {
                 HStack(spacing: 4) {
@@ -239,6 +243,10 @@ struct WorkSummary: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("work-summary")
+    }
+
+    static func words(_ tool: String, coach: Bool, _ model: AppModel) -> String {
+        coach ? (AppModel.activityWords(tool) ?? tool) : (model.tafActivityWords(tool) ?? tool)
     }
 }
 

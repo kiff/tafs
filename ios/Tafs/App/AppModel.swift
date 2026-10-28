@@ -261,6 +261,24 @@ final class AppModel: ObservableObject {
     /// it moved while the owner looked at it (the 789 retest).
     var listedTafs: [Taf] { Self.inOrder(tafs, listOrder, fallback: Self.byRecent(tafs, record: record, held: held, chats: chats)) }
 
+    /// The list in two (kiff/tafs#306): the tafs this person manages, and those shared with
+    /// them to use, each in the list's order. Which is which is KIFF's answer; a taf whose
+    /// answer isn't in yet counts as theirs, so nothing moves into "Shared with you" and back.
+    var tafSections: (own: [Taf], shared: [Taf]) {
+        let listed = listedTafs
+        return (listed.filter { !sharedWithMe($0.id) }, listed.filter { sharedWithMe($0.id) })
+    }
+
+    /// Whether a taf was shared with this person to use, not theirs to manage.
+    func sharedWithMe(_ tafID: UUID) -> Bool {
+        mode == .kiff && Self.sharedWithMe(kiffAgent(for: tafID).flatMap { access[$0] })
+    }
+
+    /// KIFF's answer says use without manage; no answer yet is not "shared".
+    nonisolated static func sharedWithMe(_ answer: KIFFClient.Access?) -> Bool {
+        answer.map { !$0.manage } ?? false
+    }
+
     /// The order the list was last settled in, by taf id.
     @Published private(set) var listOrder: [UUID] = []
     /// Whether the order was settled with KIFF's record read this session: the first list
@@ -4213,7 +4231,9 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return .notTried }
                 setupAwaiting = clock()
                 setupStreamWorks = true
-                setupLive = LiveAnswer()
+                setupLiveBefore = Set(setupThread.items.map(\.id))
+                setupAnsweredCard = SetupThread.Answer(text)?.id
+                setupLive = LiveAnswer(started: clock())
                 setupStream = Task { await self.followSetupStream(events, text: text, gen: gen) }
                 return .sent
             }
@@ -4394,6 +4414,13 @@ final class AppModel: ObservableObject {
         case held(exception: String, invocation: String)
     }
     @Published private(set) var setupLive: LiveAnswer?
+    /// The thread's items when the answer streaming now was asked for: what's new since is
+    /// this answer's, and its work block goes before the first of them, as in a taf's chat
+    /// (the 870 test).
+    private(set) var setupLiveBefore: Set<String> = []
+    /// The card whose answer started the answer streaming now: the chat pins it to the top,
+    /// as a typed message is (the 870 test).
+    @Published private(set) var setupAnsweredCard: String?
     /// Whether a stream has opened here: answers then show as written, not revealed.
     @Published private(set) var setupStreamWorks = false
     private(set) var setupStream: Task<Void, Never>?
@@ -4451,9 +4478,15 @@ final class AppModel: ObservableObject {
                     setupLive?.text = ""
                 case .step(let call, let status):
                     setupLive?.ended(call, LiveStep.Status(stream: status))
-                case .component, .said, .part:
+                case .component, .said:
                     await loadSetupThread()
                     setupLive?.text = ""
+                case .part:
+                    // It went on after a pause: what came before is the thread's, with its work,
+                    // and the steps start again (the 870 test, as in a taf's chat).
+                    await loadSetupThread()
+                    setupLive?.newPart()
+                    setupLiveBefore = Set(setupThread.items.map(\.id))
                 case .end(let status, _, _):
                     ended = status
                 case .held:
@@ -4476,11 +4509,20 @@ final class AppModel: ObservableObject {
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.
-    static func activityWords(_ tool: String) -> String? {
-        switch tool {
+    nonisolated static func activityWords(_ tool: String) -> String? {
+        // By its own name, past any prefix the run records it under ("kiff__kiff_draft").
+        switch tool.components(separatedBy: "__").last ?? tool {
         case "planque": return "Working on the connection…"
         case "kiff_draft": return "Preparing the Card…"
         case "kiff_card", "kiff_pending": return "Checking KIFF…"
+        case "tafs_state": return "Reading your tafs…"
+        case "taf_run": return "Reading what a taf did…"
+        case "taf_task": return "Handing the taf its task…"
+        case "run_stop": return "Stopping a run…"
+        case "taf_pause": return "Pausing or resuming a taf…"
+        case "version_try": return "Trying the new version…"
+        case "version_install": return "Installing the new version…"
+        case "memory": return "Reading its notes…"
         case "show": return nil
         default: return "Working…"
         }

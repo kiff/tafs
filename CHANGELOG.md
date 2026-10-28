@@ -7,6 +7,18 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Coach mode (the 870 test) works like a taf's chat. The card you answered goes to the top
+  and stays, with Coach's work and answer under it. The work block sits under what started
+  it and folds in place, each answer lists only its own steps, and folded steps read in
+  Coach's words, not "Asking KIFF to run planque".
+- A taf's page (the 870 test): Share uses the system's share mark, larger, beside who uses
+  the taf. A Card that acts for real no longer says "Live", which read as live money beside
+  a test-mode connection; a Card scoped to another environment still names it. Someone
+  with no connections no longer sees an empty Connections box.
+- The tafs list sets apart the tafs shared with you, under "Shared with you" (#306).
+- Overview (the 870 test): each heading sits over its column, the Card reads as on the taf's
+  page ("300 US$ left today of 300 US$", where it read "0 of 30000 today"), and who uses a
+  taf shows only to whoever manages it.
 - Refunds: the job's instructions say to look up the payment and read its result before
   asking for a refund (the 859 and 870 tests). The taf twice sent the look-up and the
   refund together, then said it had checked the payment; kiff/agents now refuses a

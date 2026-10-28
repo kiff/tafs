@@ -100,6 +100,11 @@ session first reads KIFF's record, so it doesn't move under the owner's finger. 
 list is remembered on the phone, in its order, and shown at the next launch before KIFF
 answers, only for the same account: the taf used last leads it from the first frame.
 
+The app shows the list in two parts: **Your tafs**, the ones the person manages, and
+**Shared with you**, the ones shared with them to use (`AppModel.tafSections`). Which is
+which is KIFF's access answer (`manage`); a taf whose answer hasn't come yet counts as
+theirs. Someone with only shared tafs sees just "Shared with you".
+
 ## A taf's page
 
 `TafDetailView` has up to four tabs:
@@ -108,7 +113,9 @@ answers, only for the same account: the taf used last leads it from the first fr
 - **Activity:** its job, its memory, its runs (the next one, Run now, Pause), its
   latest report, the calls waiting on the owner, and its part of the Record.
 - **Card:** its Cards as a stack, as KIFF lists them, each with what it allows, what it
-  has used and what's left, live and test ones apart, and every limit of the front one.
+  has used and what's left, and every limit of the front one. A Card scoped to an
+  environment other than production says which; one that acts for real carries no
+  label. Connections show only when there are some.
   Calls the vendor refused today still count against the Card's totals, and are listed.
   Below them: its connections ([coach.md](coach.md#connections)), Halt, its Usage, its
   Versions, Revoke and Remove for good.
@@ -120,7 +127,8 @@ opens the Card tab.
 
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
-Doors tab, or line saying who it's shared with. On its Cards, "Issued by" names who
+Doors tab, or line saying who it's shared with. For whoever manages it, that line has a
+**Share** button with the system's share mark, beside who uses the taf. On its Cards, "Issued by" names who
 issued them to someone who manages the taf, and the account's name to someone who only
 uses it (`AppModel.issuer`).
 

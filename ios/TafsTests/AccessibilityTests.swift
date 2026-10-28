@@ -57,7 +57,9 @@ final class AccessibilityTests: XCTestCase {
         let hero = card.hero.map { "\($0.figure) \($0.words)" } ?? ""
         XCTAssertFalse(hero.isEmpty)
         XCTAssertTrue(said.hasPrefix(hero), said)
-        XCTAssertTrue(said.contains("Refunds, LIVE"), said)
+        // A Card that acts for real names no environment: "Live" read as live money (the 870 test).
+        XCTAssertTrue(said.contains(". Refunds. "), said)
+        XCTAssertFalse(said.contains("LIVE"), said)
         XCTAssertTrue(said.hasSuffix("Issued by Ana. No end date."), said)
     }
 }

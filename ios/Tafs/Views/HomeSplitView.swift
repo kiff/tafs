@@ -163,23 +163,24 @@ struct HomeSplitView: View {
                     }
                 } header: { Eyebrow(text: "Needs you", color: Theme.amber) }
             }
-            Section {
-                ForEach(model.listedTafs) { taf in
-                    NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
-                        // A tap on the taf already open is a choice too: the list settling
-                        // later doesn't take the owner away from it.
-                        .simultaneousGesture(TapGesture().onEnded { chosen = true })
-                    // Its open trial, its own entry under it (kiff/tafs#173).
-                    if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
-                        NavigationLink(value: HomeSelection.taf(chat)) { tafRow(trying) }
+            let sections = model.tafSections
+            // Theirs, then the ones shared with them (kiff/tafs#306); someone with only shared
+            // tafs sees just those.
+            if !sections.own.isEmpty || sections.shared.isEmpty {
+                Section {
+                    ForEach(sections.own) { taf in tafLinks(taf) }
+                    if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
+                        Text("Connect a tool to set up your first taf.")
+                            .scaledFont(13).foregroundColor(Theme.dim)
+                            .listRowBackground(Color.clear)
                     }
-                }
-                if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
-                    Text("Connect a tool to set up your first taf.")
-                        .scaledFont(13).foregroundColor(Theme.dim)
-                        .listRowBackground(Color.clear)
-                }
-            } header: { Eyebrow(text: "Your tafs") }
+                } header: { Eyebrow(text: "Your tafs") }
+            }
+            if !sections.shared.isEmpty {
+                Section {
+                    ForEach(sections.shared) { taf in tafLinks(taf) }
+                } header: { Eyebrow(text: "Shared with you") }
+            }
             if !model.otherAgents.isEmpty {
                 // Agents made through KIFF's API, not run by tafs: their Cards, apart.
                 Section {
@@ -201,6 +202,17 @@ struct HomeSplitView: View {
     /// keeps its own form, with nothing real behind it.
     private func startNewTaf() {
         if model.mode == .kiff { model.startNewTaf() } else { showingNew = true }
+    }
+
+    /// A taf in the list, and its open trial under it (kiff/tafs#173).
+    @ViewBuilder private func tafLinks(_ taf: Taf) -> some View {
+        NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
+            // A tap on the taf already open is a choice too: the list settling
+            // later doesn't take the owner away from it.
+            .simultaneousGesture(TapGesture().onEnded { chosen = true })
+        if let chat = model.trialChat(of: taf.id), let trying = model.taf(chat) {
+            NavigationLink(value: HomeSelection.taf(chat)) { tafRow(trying) }
+        }
     }
 
     private func tafRow(_ taf: Taf) -> some View {

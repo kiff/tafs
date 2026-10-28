@@ -29,7 +29,7 @@ final class CardsTests: XCTestCase {
         let cards = try XCTUnwrap(rae.kiffCards)
         XCTAssertEqual(cards.map(\.id), ["live", "test"], "the live Card first, as tafs cloud sends them")
         XCTAssertEqual(cards[0].total, CardTotal(limit: eur(80000), used: eur(18000), window: .day))
-        XCTAssertEqual(cards[0].environmentLabel, "LIVE")
+        XCTAssertNil(cards[0].environmentLabel, "a Card that acts for real says no environment")
         XCTAssertEqual(cards[0].rules.first?.perAction, eur(5000))
         XCTAssertEqual(cards[1].environmentLabel, "TEST")
         XCTAssertEqual(cards[1].calls, CardTotal(limit: 200, used: nil, window: .day))
