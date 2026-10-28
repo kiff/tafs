@@ -267,6 +267,9 @@ struct HomeSplitView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(model.accountLabel.map { "Settings, in \($0)" } ?? "Settings")
+            // KIFF can't be reached just now (the 930 test): under the account's name, with
+            // the status page; nothing when all is well.
+            if let words = model.unreachable { UnreachableLine(words: words) }
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(Theme.raised)

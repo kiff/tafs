@@ -14,6 +14,8 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 18) {
                 Eyebrow(text: "They taf. You kiff.")
                 headline
+                // KIFF can't be reached just now: said quietly, under the account's name.
+                if let words = model.unreachable { UnreachableLine(words: words) }
 
                 if let first = model.held.first, let taf = model.taf(first.tafID) {
                     Button { tab = .needsYou } label: { needsYouStrip(first, taf) }

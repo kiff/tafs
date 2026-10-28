@@ -479,7 +479,7 @@ final class AppModel: ObservableObject {
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []
+        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retrying?.cancel()
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -707,7 +707,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []
+        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retrying?.cancel()
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
         notifyHeld()
@@ -1019,6 +1019,27 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// What a refresh the app made by itself couldn't do (the 930 test), said quietly where
+    /// the account's name is, never as an alert: "Can't reach KIFF". The app tries again by
+    /// itself; nil once a refresh goes through.
+    @Published private(set) var unreachable: String?
+    private var retrying: Task<Void, Never>?
+    private var retries = 0
+
+    /// A refresh failed: say so quietly, and refresh again a moment later, then less often.
+    private func refreshFailed(_ words: String, gen: Int) {
+        guard gen == accountGeneration else { return }
+        unreachable = words
+        retries += 1
+        let seconds: UInt64 = retries == 1 ? 2 : retries == 2 ? 10 : 30
+        retrying?.cancel()
+        retrying = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: seconds * 1_000_000_000)
+            guard let self, !Task.isCancelled, self.accountGeneration == gen, self.unreachable != nil else { return }
+            await self.refresh()
+        }
+    }
+
     func refresh() async {
         guard mode == .kiff else { playNextDemoActions(); return }
         refreshing = true
@@ -1048,6 +1069,13 @@ final class AppModel: ObservableObject {
             let done = await activity
             let happened = await events
             let account = await me
+            // KIFF and tafs cloud answered: nothing to say, and no retry waiting.
+            if gen == accountGeneration {
+                unreachable = nil
+                retries = 0
+                retrying?.cancel()
+                retrying = nil
+            }
             // The account read began under this generation: a sign-out or another sign-in
             // meanwhile moves it on, and the old account (and its zone) is dropped here.
             guard gen == accountGeneration else { return }
@@ -1088,11 +1116,12 @@ final class AppModel: ObservableObject {
             cancelled = true
         } catch let error as URLError where error.code == .cancelled {
             cancelled = true
-        } catch let error as TafsCloud.CloudError {
-            lastError = "Couldn't load your tafs: \(error.localizedDescription)"
+        } catch is TafsCloud.CloudError {
+            // A refresh is the app's own doing, so it never shows as "Not done" (the 930 test).
+            refreshFailed("Couldn't load your tafs", gen: gen)
             if !listLoaded { listUnread = true }
         } catch {
-            lastError = "Couldn't reach KIFF: \(error.localizedDescription)"
+            refreshFailed("Can't reach KIFF", gen: gen)
             if !listLoaded { listUnread = true }
         }
     }

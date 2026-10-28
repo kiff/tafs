@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Coming back to the app no longer shows "Not done: Couldn't reach KIFF" (the 930 test).
+  A refresh the app makes by itself tries again on its own. While KIFF can't be reached, a
+  quiet line under the account's name says so, with a link to KIFF's status page.
 - Setup, for a taf whose work arrives somewhere it can't connect (an email inbox), tells you
   to pass each request in the taf's chat in your own words. It used to show an example with a
   charge id to type.
