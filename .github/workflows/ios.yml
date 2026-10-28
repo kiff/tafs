@@ -106,7 +106,15 @@ jobs:
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
             -only-testing:TafsUITests/ListTapUITests \
+            -resultBundlePath "$RUNNER_TEMP/ipad-list.xcresult" \
             CODE_SIGNING_ALLOWED=NO
+
+      # What the iPad's screen showed, when its list test fails.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: ipad-list-xcresult
+          path: ${{ runner.temp }}/ipad-list.xcresult
 
   screenshots:
     needs: [changes, test]

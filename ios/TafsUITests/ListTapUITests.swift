@@ -14,7 +14,7 @@ final class ListTapUITests: XCTestCase {
     @MainActor
     func testATapOnATafsIconOrNameOpensIt() throws {
         let app = launch()
-        let rows = app.descendants(matching: .any).matching(identifier: "taf-row")
+        let rows = tafRows(app)
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 30), "the tafs list")
         XCTAssertGreaterThanOrEqual(rows.count, 3, "the sample's tafs")
 
@@ -39,7 +39,7 @@ final class ListTapUITests: XCTestCase {
         let page = app.staticTexts["taf-page-name"]
         XCTAssertTrue(page.waitForExistence(timeout: 30), "the list opens on its first taf")
         let open = page.label
-        let rows = app.descendants(matching: .any).matching(identifier: "taf-row")
+        let rows = tafRows(app)
         XCTAssertEqual(name(rows.firstMatch.label), open, "the open taf is the list's first, before it settles")
 
         XCTAssertLessThan(Date().timeIntervalSince(launched), settles - 3, "the tap comes before the list settles; raise -listReorderSeconds")
@@ -79,8 +79,16 @@ final class ListTapUITests: XCTestCase {
 
     @MainActor
     private func row(_ app: XCUIApplication, _ name: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(identifier: "taf-row")
-            .matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+        tafRows(app).matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+    }
+
+    /// The list's taf rows. On the iPad they're looked for in the sidebar's list alone: a query
+    /// over the whole app, the open taf's page beside the list included, is too large to answer
+    /// in time there. The iPhone's list is a scroll view, the only screen up.
+    @MainActor
+    private func tafRows(_ app: XCUIApplication) -> XCUIElementQuery {
+        (iPad ? app.collectionViews.firstMatch.descendants(matching: .any) : app.descendants(matching: .any))
+            .matching(identifier: "taf-row")
     }
 
     /// The taf's name, the first part of its row's label.
