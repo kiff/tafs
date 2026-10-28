@@ -10,6 +10,9 @@ version headings refer to releases, not merely to merged pull requests.
 - A taf's answer when KIFF holds a call is one sentence: it waits for your approval and nothing
   was sent, the one limit that holds it, and until when. It used to add what was left on the
   payment and the other limits.
+- A Card's amount with no known currency (#309) says so: "30 000 left today of 30 000 ·
+  no currency", and "≤ 5 000 (no currency) each". It read like money, though the number
+  is the vendor's own, often in cents.
 - The iPad's tafs list (the 901 test): a tap anywhere on a taf, its icon and name
   included, opens it. Only the empty end of the row did.
 - Coach (the 870 test): a step whose call came back refused or failed shows as failed in
