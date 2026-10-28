@@ -90,11 +90,24 @@ jobs:
             -destination "id=$DEVICE_ID" \
             CODE_SIGNING_ALLOWED=NO
 
-      # The iPad's sidebar (the 901 test): the list's UI tests on the 13-inch iPad as well,
-      # since the iPhone's list pushes a taf instead. A failed test is tried once more: the
-      # iPad simulator sometimes fails to launch the app at all.
+  # The iPad's sidebar (the 901 test): the list's UI tests on the 13-inch iPad, since the
+  # iPhone's list pushes a taf instead. A job of its own, beside test, so neither runs past
+  # its time. The tests run once; they run again only when the simulator failed to launch the
+  # app, and any other failure fails the job at once.
+  ipad:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
       - name: Test the tafs list on an iPad
         run: |
+          set -o pipefail
           cd ios
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
           import json, sys
@@ -103,20 +116,32 @@ jobs:
           ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
           print(next((d for d in ipads if "13-inch" in d["name"]), ipads[0])["udid"])
           ')
-          xcodebuild test \
-            -project Tafs.xcodeproj -scheme Tafs \
-            -destination "id=$DEVICE_ID" \
-            -only-testing:TafsUITests/ListTapUITests \
-            -retry-tests-on-failure -test-iterations 2 \
-            -resultBundlePath "$RUNNER_TEMP/ipad-list.xcresult" \
-            CODE_SIGNING_ALLOWED=NO
+          # Booted before the tests start, so the first launch doesn't race the boot.
+          xcrun simctl boot "$DEVICE_ID" || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          list() {
+            xcodebuild test \
+              -project Tafs.xcodeproj -scheme Tafs \
+              -destination "id=$DEVICE_ID" \
+              -only-testing:TafsUITests/ListTapUITests \
+              -resultBundlePath "$RUNNER_TEMP/ipad-list-$1.xcresult" \
+              CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/ipad-list-$1.log"
+          }
+          list 1 && exit 0
+          # Only a failed launch is tried again: an assertion that failed is a real failure.
+          if grep -q "Failed to launch" "$RUNNER_TEMP/ipad-list-1.log" && ! grep -q "XCTAssert" "$RUNNER_TEMP/ipad-list-1.log"; then
+            echo "::warning::The iPad simulator failed to launch the app; running the list tests once more."
+            list 2
+          else
+            exit 1
+          fi
 
       # What the iPad's screen showed, when its list test fails.
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: ipad-list-xcresult
-          path: ${{ runner.temp }}/ipad-list.xcresult
+          path: ${{ runner.temp }}/ipad-list-*.xcresult
 
   screenshots:
     needs: [changes, test]
@@ -228,7 +253,7 @@ jobs:
           path: ${{ runner.temp }}/shots
 
   testflight:
-    needs: test
+    needs: [test, ipad]
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     timeout-minutes: 45
