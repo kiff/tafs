@@ -90,6 +90,24 @@ jobs:
             -destination "id=$DEVICE_ID" \
             CODE_SIGNING_ALLOWED=NO
 
+      # The iPad's sidebar (the 901 test): the list's UI tests on the 13-inch iPad as well,
+      # since the iPhone's list pushes a taf instead.
+      - name: Test the tafs list on an iPad
+        run: |
+          cd ios
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted(k for k in devices if "iOS" in k)
+          ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
+          print(next((d for d in ipads if "13-inch" in d["name"]), ipads[0])["udid"])
+          ')
+          xcodebuild test \
+            -project Tafs.xcodeproj -scheme Tafs \
+            -destination "id=$DEVICE_ID" \
+            -only-testing:TafsUITests/ListTapUITests \
+            CODE_SIGNING_ALLOWED=NO
+
   screenshots:
     needs: [changes, test]
     if: needs.changes.outputs.ui == 'true'

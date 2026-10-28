@@ -1150,6 +1150,14 @@ final class AppModel: ObservableObject {
         mode = .sample
         await loadSample()
         save()
+        if let seconds = Screenshots.listReorderSeconds {
+            settleListOrder()
+            Task { [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                guard let self, let last = self.listOrder.last else { return }
+                self.listOrder = [last] + self.listOrder.dropLast()
+            }
+        }
         if Screenshots.purchases {
             // The purchase screens at the App Store's prices: the sample's usage, which has the
             // store, is otherwise read only when Usage opens.
@@ -4971,6 +4979,13 @@ enum Screenshots {
     /// test to see each part on a slow simulator.
     static var sampleReplySeconds: Double? {
         let s = UserDefaults.standard.double(forKey: "sampleReplySeconds")
+        return enabled && s > 0 ? s : nil
+    }
+    /// `-listReorderSeconds 15`: the list opens on its first taf, as for a person, and that
+    /// many seconds in its last taf moves to the top, as when another is used: for a UI test
+    /// that a pick stays open when the list settles (the 901 test).
+    static var listReorderSeconds: Double? {
+        let s = UserDefaults.standard.double(forKey: "listReorderSeconds")
         return enabled && s > 0 ? s : nil
     }
 

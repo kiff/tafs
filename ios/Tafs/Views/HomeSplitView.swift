@@ -101,7 +101,7 @@ struct HomeSplitView: View {
                 case .haltAll, .overview: return
                 }
             }
-            opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled)
+            opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled && Screenshots.listReorderSeconds == nil)
             chosen = false
             selection = opened
         }
@@ -233,6 +233,7 @@ struct HomeSplitView: View {
         }
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("taf-row")
     }
 
     private func heldRow(_ call: HeldCall, _ taf: Taf) -> some View {
