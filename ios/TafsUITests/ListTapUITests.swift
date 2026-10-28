@@ -33,18 +33,21 @@ final class ListTapUITests: XCTestCase {
     @MainActor
     func testATapOnTheTafAlreadyOpenStaysOpenWhenTheListSettles() throws {
         guard iPad else { throw XCTSkip("the sidebar is the iPad's") }
-        let app = launch(["-listReorderSeconds", "15"])
+        let settles: TimeInterval = 45
+        let launched = Date()
+        let app = launch(["-listReorderSeconds", "\(Int(settles))"])
         let page = app.staticTexts["taf-page-name"]
         XCTAssertTrue(page.waitForExistence(timeout: 30), "the list opens on its first taf")
         let open = page.label
         let rows = app.descendants(matching: .any).matching(identifier: "taf-row")
         XCTAssertEqual(name(rows.firstMatch.label), open, "the open taf is the list's first, before it settles")
 
+        XCTAssertLessThan(Date().timeIntervalSince(launched), settles - 3, "the tap comes before the list settles; raise -listReorderSeconds")
         tap(row(app, open), on: .name)
-        // The list settles: its last taf moves to the top.
-        XCTAssertTrue(within(30) { name(rows.firstMatch.label) != open },
-                      "the list settled after the tap; if it settled before, raise -listReorderSeconds")
-        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        // The list settles, its last taf moving to the top: waited out, not polled, since a UI
+        // query asked over and over while the list moves times out on a slow simulator.
+        RunLoop.current.run(until: launched.addingTimeInterval(settles + 5))
+        XCTAssertNotEqual(name(rows.firstMatch.label), open, "the list settled: its last taf is at the top")
         XCTAssertEqual(openName(app), open, "the taf picked by a tap stays open when the list settles")
     }
 
