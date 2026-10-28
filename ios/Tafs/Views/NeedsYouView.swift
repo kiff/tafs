@@ -238,8 +238,8 @@ struct HeldCallCard: View {
         .onChange(of: model.requestedHold) { _ in takeRequest() }
     }
 
-    /// While a call waits: no money moves until someone approves it. The card, its alert
-    /// and VoiceOver say it, so the taf's own words don't have to.
+    /// While a call waits: nothing the call asks for happens until someone approves it. The
+    /// card, its alert and VoiceOver say it, so the taf's own words don't have to.
     static let nothingSent = "Nothing is sent until you approve."
 
     /// The hold as VoiceOver reads it: "Rae asks: Refund order 42, €150.00. Over €50 each.
