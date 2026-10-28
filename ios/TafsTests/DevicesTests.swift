@@ -1,7 +1,7 @@
 import XCTest
 @testable import Tafs
 
-/// Settings, Devices (kiff-cloud#1418): the devices signed in as this person, and signing
+/// Settings, Devices: the devices signed in as this person, and signing
 /// another one out behind Face ID. This device signs out with Sign out instead.
 @MainActor
 final class DevicesTests: XCTestCase {

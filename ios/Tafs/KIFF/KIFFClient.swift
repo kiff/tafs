@@ -224,7 +224,7 @@ final class KIFFClient {
         return r.devices.first { $0.thisDevice == true && $0.id.hasPrefix("dev_") }?.id
     }
 
-    /// A device signed in as this person on the account (Settings, Devices; kiff-cloud#1418).
+    /// A device signed in as this person on the account (Settings, Devices).
     struct Device: Decodable, Identifiable, Equatable {
         let id: String
         let name: String?

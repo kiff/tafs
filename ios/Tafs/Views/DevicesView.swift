@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings, Devices (kiff-cloud#1418): the devices signed in as this person on the account,
+/// Settings, Devices: the devices signed in as this person on the account,
 /// each with when it was last used, and Sign out for any but this one.
 struct DevicesView: View {
     static let title = "Devices"
