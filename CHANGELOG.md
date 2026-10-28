@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- A Card's amount with no known currency (#309) says so: "30 000 left today of 30 000 ·
+  no currency", and "≤ 5 000 (no currency) each". It read like money, though the number
+  is the vendor's own, often in cents.
 - Coach (the 870 test): a step whose call came back refused or failed shows as failed in
   its plan, never done, and Coach says what went wrong. Before, a hand-off the tool refused
   showed as done. Its rules say a read tool's call count as its Card will have it, where

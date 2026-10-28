@@ -4,7 +4,8 @@ import Foundation
 /// (a currency code such as "EUR", or another unit) and its decimal places.
 ///
 /// Without a unit it is a bare number and is shown as stored: the app never
-/// guesses a currency or a scale.
+/// guesses a currency or a scale, and never lets it read like money
+/// ("30 000 (no currency)", kiff/tafs#309).
 struct Money: Hashable, Comparable, Codable {
     var minor: Int64
     /// The declared unit; nil when there is none or it could not be read.
@@ -35,7 +36,13 @@ struct Money: Hashable, Comparable, Codable {
     /// The amount in whole units: 2550 at scale 2 is 25.5.
     var value: Decimal { Decimal(minor) / pow(Decimal(10), scale) }
 
-    var formatted: String {
+    /// The amount as shown: with its unit, or saying it has none (kiff/tafs#309). An amount
+    /// with no currency is the vendor's own number, often its smallest unit (cents), so it
+    /// never stands alone where money would.
+    var formatted: String { hasUnit ? figure : "\(figure) (no currency)" }
+
+    /// The amount without the "no currency" note: for a figure whose words say it once.
+    var figure: String {
         guard let currency else {
             return NumberFormatter.localizedString(from: NSNumber(value: minor), number: .decimal)
         }
@@ -189,17 +196,22 @@ struct TafCard: Identifiable, Hashable, Codable {
     /// the calls. Use KIFF couldn't read shows the limit alone, never as zero left or used.
     var hero: (figure: String, words: String)? {
         if let t = total {
+            // An amount with no currency says so once, after the words, and its figures stand
+            // bare beside it: "30 000 left today of 30 000 · no currency" (kiff/tafs#309).
+            let unitless = !t.limit.hasUnit
+            let shown = { (m: Money) in unitless ? m.figure : m.formatted }
+            let note = unitless ? " · no currency" : ""
             if let used = t.used, used.currency == t.limit.currency, used.scale == t.limit.scale {
                 let left = Money(minor: max(0, t.limit.minor - used.minor), currency: t.limit.currency, scale: t.limit.scale)
                 // The Card's own total and the extra room apart, as KIFF says them (the 755 retest):
                 // "of 300 US$ + 30 US$ extra room until 00:00".
                 if let extra = t.extra, let own = t.base {
                     let until = t.roomEnds.map { " until \($0.endsWords)" } ?? ""
-                    return (left.formatted, "left \(t.window.current) of \(own.formatted) + \(extra.formatted) extra room\(until)")
+                    return (shown(left), "left \(t.window.current) of \(shown(own)) + \(shown(extra)) extra room\(until)\(note)")
                 }
-                return (left.formatted, "left \(t.window.current) of \(t.limit.formatted)")
+                return (shown(left), "left \(t.window.current) of \(shown(t.limit))\(note)")
             }
-            return (t.limit.formatted, "\(t.window.label) · use unavailable")
+            return (shown(t.limit), "\(t.window.label) · use unavailable\(note)")
         }
         if let c = calls {
             guard let used = c.used else { return ("\(c.limit)", "calls \(c.window.label) · use unavailable") }
@@ -213,7 +225,10 @@ struct TafCard: Identifiable, Hashable, Codable {
     /// "US$170 left", "998 calls left".
     var leftLine: String? {
         guard let hero else { return nil }
-        if total != nil { return hero.words.hasPrefix("left") ? "\(hero.figure) left" : hero.figure }
+        if let t = total {
+            let figure = t.limit.hasUnit ? hero.figure : "\(hero.figure) (no currency)"
+            return hero.words.hasPrefix("left") ? "\(figure) left" : figure
+        }
         if let c = calls, c.used != nil { return "\(hero.figure) \(hero.figure == "1" ? "call" : "calls") left" }
         return nil
     }

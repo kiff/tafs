@@ -44,6 +44,26 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(card.facts, ["≤ \(eur(5000).formatted) each · asks you above"])
     }
 
+    /// kiff/tafs#309: a total with no currency (the tool that tells it gone) read "30 000 left
+    /// today of 30 000", like money. Its face, its edge in the stack, its limit lines and what
+    /// VoiceOver says each say it has no currency.
+    func testAnAmountWithNoCurrencyNeverReadsLikeMoney() {
+        let card = TafCard(id: "c", title: "Refunds", rules: [CardRule(action: "refund", label: "Refunds", perAction: .bare(5000))],
+                           total: CardTotal(limit: .bare(30000), used: .bare(0), window: .day))
+        let thirty = Money.bare(30000).figure
+        XCTAssertEqual(card.hero?.figure, thirty)
+        XCTAssertEqual(card.hero?.words, "left today of \(thirty) · no currency")
+        XCTAssertEqual(card.leftLine, "\(thirty) (no currency) left")
+        XCTAssertEqual(card.facts, ["≤ \(Money.bare(5000).figure) (no currency) each · asks you above"])
+        let said = TafCardFace.spoken(card, issuedBy: "Ana", revoked: false)
+        XCTAssertTrue(said.contains("no currency"), said)
+
+        let unknown = TafCard(id: "c", title: "Refunds", rules: [], total: CardTotal(limit: .bare(30000), used: nil, window: .day))
+        XCTAssertEqual(unknown.hero?.words, "a day · use unavailable · no currency")
+        // An amount with a currency reads as before.
+        XCTAssertEqual(Money.usd(300).formatted, Money.usd(300).figure)
+    }
+
     func testUseKIFFCouldNotReadIsNeverShownAsZero() {
         let money = TafCard(id: "c", title: "Refunds", rules: [], total: CardTotal(limit: eur(80000), used: nil, window: .week))
         XCTAssertEqual(money.hero?.figure, eur(80000).formatted)
