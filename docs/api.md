@@ -50,7 +50,7 @@ details go only to tafs cloud's own log.
 
 | Route | Who | What |
 |---|---|---|
-| `POST /v1/push` | a person | `{device_token, environment, alert_target?}`: this phone gets the account's alerts. Only someone with `holds.answer` may hand over the target's secret, and only their phones are alerted. 50 phones an account at most |
+| `POST /v1/push` | a person | `{device_token, environment, sound?, alert_target?}`: this phone gets the account's alerts; `sound: false` sends them to it quietly, with no sound or banner. Only someone with `holds.answer` may hand over the target's secret, and only their phones are alerted. 50 phones an account at most |
 | `DELETE /v1/push/{token}` | a person | That phone stops: a person removes their own; someone with `cards.manage`, any of the account's |
 | `GET /v1/alerts` | a person | Whether tafs cloud holds KIFF's alert secret for the account |
 | `POST /v1/alerts` | `holds.answer` | `{alert_target}`: the account's alert target, with no phone's alerts |

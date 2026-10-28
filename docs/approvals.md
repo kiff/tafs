@@ -136,6 +136,13 @@ How loudly each notification reaches the owner is decided in tafs cloud as it's 
 | quiet | a task finished, a run that ended, a request answered | No sound or banner; the badge and the chat line update |
 | later | anything not urgent while the owner is away | Nothing is pushed: it waits in Coach's chat, gathered into one "While you were away" message |
 
+**Sound**, in Settings under **Notifications & haptics** (`NotificationSettingsView`), is
+on by default and set for each device. Off, the phone says so when it registers
+(`POST /v1/push` with `sound: false`), and tafs cloud sends every alert to that device
+quietly (`silencing` in `push.ts`): it still arrives in Notification Center and Needs you,
+with no sound, banner or Time Sensitive. **Haptics**, on the same screen, turns off the
+app's taps on that device (`Haptics.enabled`).
+
 ## Halting
 
 **Halt** takes all authority from one taf, or with none chosen from every taf, at once

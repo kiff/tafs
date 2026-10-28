@@ -4,7 +4,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { providerToken } from "../src/cloud/apns.js";
 import type { ReadyRun } from "../src/cloud/forward.js";
 import { FORWARD_TRIES, handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
-import { type Device, type Notification, type PushStore, signedByKIFF } from "../src/cloud/push.js";
+import { type Device, type Notification, type PushStore, quietFor, signedByKIFF, silencing } from "../src/cloud/push.js";
 
 const NOW = new Date("2026-10-15T09:00:00Z");
 const T = Math.floor(NOW.getTime() / 1000);
@@ -515,5 +515,48 @@ describe("the APNs provider token", () => {
     expect(JSON.parse(Buffer.from(h!, "base64url").toString())).toEqual({ alg: "ES256", kid: "KEYID12345" });
     expect(JSON.parse(Buffer.from(c!, "base64url").toString())).toEqual({ iss: "TEAMID1234", iat: T });
     expect(verify("sha256", Buffer.from(`${h}.${c}`), { key: publicKey, dsaEncoding: "ieee-p1363" }, Buffer.from(s!, "base64url"))).toBe(true);
+  });
+});
+
+describe("Sound for alerts, off on a phone", () => {
+  const signedIn = (who: string) => ({ Authorization: `Bearer ${who}` });
+  const accounts = new Map<string, { tenant: string; secret: string }>();
+  const register = (body: object, push: ReturnType<typeof memoryPush>) =>
+    call("POST", "/v1/push", { body: JSON.stringify(body), headers: signedIn("ana"), push, accounts });
+  const hold: Notification = {
+    kind: "alert",
+    payload: { aps: { alert: { title: "A taf needs you", body: "Refund waits for your answer." }, category: "hold", sound: "default", "interruption-level": "time-sensitive" }, open: "needs-you" },
+  };
+  const phone = (silent: boolean): Device => ({ token: TOKEN_A, environment: "production", subject: "ana", answers: true, silent, at: NOW.toISOString() });
+
+  it("is kept with the phone, and turned on again by the next registration that says so", async () => {
+    const push = memoryPush();
+    await register({ device_token: TOKEN_A, environment: "production", sound: false }, push);
+    expect(push.devices.get("t_acme")!.map((d) => d.silent)).toEqual([true]);
+    await register({ device_token: TOKEN_A, environment: "production", sound: true }, push);
+    expect(push.devices.get("t_acme")!.map((d) => d.silent)).toEqual([false]);
+    // An app from before the setting says nothing: its alerts sound, as they did.
+    await register({ device_token: TOKEN_A, environment: "production" }, push);
+    expect(push.devices.get("t_acme")!.map((d) => d.silent)).toEqual([false]);
+    expect((await register({ device_token: TOKEN_A, environment: "production", sound: "off" }, push)).status).toBe(400);
+  });
+
+  it("delivers each alert quietly: no sound, banner or Time Sensitive, the rest as sent", () => {
+    const quiet = quietFor(phone(true), hold);
+    expect(quiet.payload.aps).toEqual({ alert: hold.payload.aps && (hold.payload.aps as Record<string, unknown>).alert, category: "hold", "interruption-level": "passive" });
+    expect(quiet.payload.open).toBe("needs-you");
+    // A phone with sound on, and a background push, are untouched.
+    expect(quietFor(phone(false), hold)).toBe(hold);
+    const wake: Notification = { kind: "background", payload: { aps: { "content-available": 1 } } };
+    expect(quietFor(phone(true), wake)).toBe(wake);
+  });
+
+  it("is applied to every push the sender sends", async () => {
+    const sent: Notification[] = [];
+    const sender = silencing({ async send(_d, n) { sent.push(n); return "sent"; } });
+    await sender.send(phone(true), hold);
+    await sender.send(phone(false), hold);
+    expect(sent.map((n) => (n.payload.aps as Record<string, unknown>)["interruption-level"])).toEqual(["passive", "time-sensitive"]);
+    expect(sent.map((n) => (n.payload.aps as Record<string, unknown>).sound)).toEqual([undefined, "default"]);
   });
 });

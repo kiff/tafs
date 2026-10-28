@@ -34,6 +34,8 @@ export interface Device {
   addsTasks?: boolean;
   /** Whether that person may manage Cards (cards.manage): only their phones hear who wrote to a door. */
   manages?: boolean;
+  /** The person turned off Sound for alerts on this phone: each alert arrives quietly (see `silencing`). */
+  silent?: boolean;
   at: string;
 }
 
@@ -65,6 +67,23 @@ export interface Notification {
 export interface Sender {
   /** "gone": APNs says the token is no longer valid, so the phone is forgotten. */
   send(device: Device, n: Notification): Promise<"sent" | "gone" | "failed">;
+}
+
+/**
+ * A sender that keeps the phones whose Sound for alerts is off quiet: an alert
+ * still arrives, in Notification Center and the badge, with no sound, banner or
+ * Time Sensitive. Every push goes through it, so no kind of alert is missed.
+ */
+export function silencing(sender: Sender): Sender {
+  return { send: (device, n) => sender.send(device, quietFor(device, n)) };
+}
+
+/** `n` as it reaches `device`: as sent, or quiet where the phone asked for no sound. */
+export function quietFor(device: Device, n: Notification): Notification {
+  const aps = n.payload.aps as Record<string, unknown> | undefined;
+  if (!device.silent || n.kind !== "alert" || !aps) return n;
+  const { sound: _sound, ...rest } = aps;
+  return { ...n, payload: { ...n.payload, aps: { ...rest, ...apsFor("quiet") } } };
 }
 
 export class PushError extends Error {
@@ -302,19 +321,25 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** Validates a phone's registration: `{device_token, environment, alert_target?: {id, signing_secret}}`. */
+/**
+ * Validates a phone's registration: `{device_token, environment, sound?, alert_target?: {id, signing_secret}}`.
+ * `sound: false` is the phone's Sound for alerts turned off; left out, alerts sound as before.
+ */
 export function registration(body: Record<string, unknown>): {
   token: string;
   environment: Device["environment"];
+  silent: boolean;
   target?: { id: string; secret: string };
 } {
   const token = typeof body.device_token === "string" ? body.device_token.trim().toLowerCase() : "";
   if (!/^[0-9a-f]{64,200}$/.test(token)) throw new PushError(400, "send the phone's push token, in hex");
   const environment = body.environment;
   if (environment !== "sandbox" && environment !== "production") throw new PushError(400, "environment is sandbox or production");
+  if (body.sound !== undefined && typeof body.sound !== "boolean") throw new PushError(400, "sound is true or false");
+  const silent = body.sound === false;
   const t = body.alert_target;
-  if (t === undefined) return { token, environment };
-  return { token, environment, target: alertTarget(t) };
+  if (t === undefined) return { token, environment, silent };
+  return { token, environment, silent, target: alertTarget(t) };
 }
 
 /** Validates KIFF's alert target as the phone hands it over: `{id, signing_secret}`. */

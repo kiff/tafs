@@ -1135,18 +1135,19 @@ final class TafsCloud {
     }
 
     /// This phone gets the account's alerts at `deviceToken`. With `target`, also hands over
-    /// the KIFF target's signing secret, which checks KIFF's deliveries.
-    func registerPush(deviceToken: String, environment: String, target: KIFFClient.AlertTarget? = nil) async throws -> PushStatus {
+    /// the KIFF target's signing secret, which checks KIFF's deliveries. `sound` false: this
+    /// phone's alerts arrive quietly, with no sound or banner.
+    func registerPush(deviceToken: String, environment: String, sound: Bool = true, target: KIFFClient.AlertTarget? = nil) async throws -> PushStatus {
         struct Target: Encodable {
             let id: String, signingSecret: String
             enum CodingKeys: String, CodingKey { case id, signingSecret = "signing_secret" }
         }
         struct Body: Encodable {
-            let deviceToken: String, environment: String, alertTarget: Target?
-            enum CodingKeys: String, CodingKey { case environment, deviceToken = "device_token", alertTarget = "alert_target" }
+            let deviceToken: String, environment: String, sound: Bool, alertTarget: Target?
+            enum CodingKeys: String, CodingKey { case environment, sound, deviceToken = "device_token", alertTarget = "alert_target" }
         }
         return try await send("POST", "/v1/push", body: Body(
-            deviceToken: deviceToken, environment: environment,
+            deviceToken: deviceToken, environment: environment, sound: sound,
             alertTarget: target.map { Target(id: $0.id, signingSecret: $0.signingSecret) }))
     }
 

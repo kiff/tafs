@@ -58,6 +58,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- Settings, **Notifications & haptics** (the 901 test): **Sound** off makes this device's
+  alerts arrive quietly, in Notification Center and Needs you, with no sound or banner;
+  **Haptics** off stops the app's taps. Each is for this device only. tafs cloud's
+  `POST /v1/push` takes `sound`.
 - Accounts (the 870 test, kiff/tafs#294): a person who uses a shared taf is offered only what
   their role allows. No Approve or Refuse without the right to answer held calls (a line says
   who answers instead), no Delete account without that right, and no Doors tab or share line
