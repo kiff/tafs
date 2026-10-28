@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Setup, for a taf whose work arrives somewhere it can't connect (an email inbox), tells you
+  to pass each request in the taf's chat in your own words. It used to show an example with a
+  charge id to type.
 - A taf's answer when KIFF holds a call is one sentence: it waits for your approval and nothing
   was sent, the one limit that holds it, and until when. It used to add what was left on the
   payment and the other limits.
