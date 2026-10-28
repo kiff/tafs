@@ -83,8 +83,8 @@ describe("jobs", () => {
       // A held call in one sentence: the wait, the one limit, the deadline (the Eval's judges,
       // 28 Oct: "a redundant 'Nothing has been sent yet', and it wanders between the deadline,
       // the charge balance and the limits").
-      expect(flat).toContain("Say it in one sentence: the call waits for their approval, the one limit that holds it (the most for one call, the day's total, or how many calls a day), and until when");
-      expect(flat).toContain("Nothing else: not what's left on the item, not the other limits, and not that nothing was sent, since waiting already says so.");
+      expect(flat).toContain("Say it in one sentence: the call waits for their approval and nothing was sent, the one limit that holds it (the most for one call, the day's total, or how many calls a day), and until when");
+      expect(flat).toContain("Nothing else: not what's left on the item and not the other limits.");
       // The scheduled run's report still names each item by its reference.
       expect(flat).toContain("End every scheduled run with a short report");
     }
