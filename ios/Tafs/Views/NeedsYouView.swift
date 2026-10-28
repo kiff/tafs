@@ -218,6 +218,9 @@ struct HeldCallCard: View {
                         .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                 } else {
                     VStack(alignment: .leading, spacing: 12) {
+                        // Said here, where the owner answers, so the taf's words needn't say it.
+                        Text(HeldCallCard.nothingSent)
+                            .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         // They asked for it: someone else approves, and they can still refuse it.
                         if let code = model.unanswerable[call.id], let words = AppModel.refusalWords(code) {
                             Text(words).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
@@ -235,11 +238,15 @@ struct HeldCallCard: View {
         .onChange(of: model.requestedHold) { _ in takeRequest() }
     }
 
+    /// While a call waits: no money moves until someone approves it. The card, its alert
+    /// and VoiceOver say it, so the taf's own words don't have to.
+    static let nothingSent = "Nothing is sent until you approve."
+
     /// The hold as VoiceOver reads it: "Rae asks: Refund order 42, €150.00. Over €50 each.
-    /// It lapses at 14:05."
+    /// It lapses at 14:05. Nothing is sent until you approve."
     static func sentence(_ call: HeldCall, taf: String?) -> String {
         let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
-        return "\(taf ?? "A taf") asks: \(what). \(call.reason). It lapses at \(call.expiresAt.shortTime)."
+        return "\(taf ?? "A taf") asks: \(what). \(call.reason). It lapses at \(call.expiresAt.shortTime). \(nothingSent)"
     }
 
     private func takeRequest() {

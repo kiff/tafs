@@ -26,7 +26,9 @@ cloud never vouches for one. A held call shows:
   down the first one, in the Dynamic Island too (`LockScreen`).
 
 Each card says what the taf asks (the action, the amount and on what), why KIFF held it,
-and how long is left before it lapses.
+and how long is left before it lapses. While the call waits, the card says "Nothing is
+sent until you approve.", and so do its notification and VoiceOver's reading of it. The
+taf's own message about the hold leaves that out: it's said where the owner answers.
 
 ## Answering
 

@@ -48,6 +48,7 @@ final class AccessibilityTests: XCTestCase {
         XCTAssertTrue(said.hasPrefix("Rae asks: Refund order 42, "), said)
         XCTAssertTrue(said.contains("150"), said)
         XCTAssertTrue(said.contains(". Over $50 each. It lapses at "), said)
+        XCTAssertTrue(said.hasSuffix(". Nothing is sent until you approve."), said)
     }
 
     func testACardReadsItsBalanceFirst() {

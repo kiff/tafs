@@ -163,12 +163,12 @@ describe("KIFF's alerts", () => {
     expect(n.kind).toBe("alert");
     expect(n.collapseID).toBe("hold_1");
     expect(n.expiresAt?.toISOString()).toBe("2026-10-15T09:10:00.000Z");
-    expect(n.payload).toMatchObject({ aps: { alert: { title: "A taf needs you", body: "Stripe refund waits for your answer." } }, open: "needs-you", hold_id: "hold_1" });
+    expect(n.payload).toMatchObject({ aps: { alert: { title: "A taf needs you", body: "Stripe refund waits for your answer. Nothing is sent until you approve." } }, open: "needs-you", hold_id: "hold_1" });
     // An interruption (kiff/tafs#210): Time Sensitive, with Approve and Refuse, and the
     // phone fills in the rest from KIFF, so the push carries no parameters.
     expect(n.payload).toEqual({
       aps: {
-        alert: { title: "A taf needs you", body: "Stripe refund waits for your answer." }, "thread-id": "held", category: "hold",
+        alert: { title: "A taf needs you", body: "Stripe refund waits for your answer. Nothing is sent until you approve." }, "thread-id": "held", category: "hold",
         "mutable-content": 1, sound: "default", "interruption-level": "time-sensitive",
       },
       open: "needs-you", hold_id: "hold_1", expires_at: "2026-10-15T09:10:00.000Z",
@@ -525,7 +525,7 @@ describe("Sound for alerts, off on a phone", () => {
     call("POST", "/v1/push", { body: JSON.stringify(body), headers: signedIn("ana"), push, accounts });
   const hold: Notification = {
     kind: "alert",
-    payload: { aps: { alert: { title: "A taf needs you", body: "Refund waits for your answer." }, category: "hold", sound: "default", "interruption-level": "time-sensitive" }, open: "needs-you" },
+    payload: { aps: { alert: { title: "A taf needs you", body: "Refund waits for your answer. Nothing is sent until you approve." }, category: "hold", sound: "default", "interruption-level": "time-sensitive" }, open: "needs-you" },
   };
   const phone = (silent: boolean): Device => ({ token: TOKEN_A, environment: "production", subject: "ana", answers: true, silent, at: NOW.toISOString() });
 
