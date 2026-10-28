@@ -114,9 +114,9 @@ theirs. Someone with only shared tafs sees just "Shared with you".
   latest report, the calls waiting on the owner, and its part of the Record.
 - **Card:** its Cards as a stack, as KIFF lists them, each with what it allows, what it
   has used and what's left, and every limit of the front one. An amount KIFF gives no
-  currency for says so ("30 000 left today of 30 000 · no currency"), never reading like money. A Card scoped to an
-  environment other than production says which; one that acts for real carries no
-  label. Connections show only when there are some.
+  currency for says so ("30 000 left today of 30 000 · no currency"), never reading
+  like money. A Card scoped to an environment other than production says which; one
+  that acts for real carries no label. Connections show only when there are some.
   Calls the vendor refused today still count against the Card's totals, and are listed.
   Below them: its connections ([coach.md](coach.md#connections)), Halt, its Usage, its
   Versions, Revoke and Remove for good.

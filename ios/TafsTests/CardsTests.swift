@@ -64,6 +64,22 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(Money.usd(300).formatted, Money.usd(300).figure)
     }
 
+    /// kiff/tafs#309, where else a Card shows: the Overview's Card line, and the edge of a Card
+    /// behind the front one in the stack.
+    func testAnAmountWithNoCurrencyReadsSoOnTheOverviewAndTheStack() {
+        let front = TafCard(id: "calls", title: "Reads", rules: [], calls: CardTotal(limit: 1000, used: 2, window: .day))
+        let back = TafCard(id: "money", title: "Refunds", rules: [], total: CardTotal(limit: .bare(30000), used: .bare(0), window: .day))
+        var taf = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
+        taf.kiffCards = [front, back]
+        let thirty = Money.bare(30000).figure
+        // The Card that counts money leads, so the Overview reads its total, saying it has no currency.
+        XCTAssertEqual(OverviewView.cardLine(taf), "\(thirty) left today of \(thirty) · no currency")
+        // Behind it in the stack, a Card with no currency still says so on its edge.
+        taf.kiffCards = [TafCard(id: "money2", title: "Refunds", rules: [], total: CardTotal(limit: .usd(300), used: .usd(0), window: .day)), back]
+        XCTAssertEqual(taf.shownCards.last?.id, "money")
+        XCTAssertEqual(taf.shownCards.last?.leftLine, "\(thirty) (no currency) left")
+    }
+
     func testUseKIFFCouldNotReadIsNeverShownAsZero() {
         let money = TafCard(id: "c", title: "Refunds", rules: [], total: CardTotal(limit: eur(80000), used: nil, window: .week))
         XCTAssertEqual(money.hero?.figure, eur(80000).formatted)
