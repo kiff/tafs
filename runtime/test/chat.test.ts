@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, chatTitle, handle, type HTTPEvent, MEMORY, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
@@ -623,6 +624,18 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
       ["Use test mode", undefined],
     ];
     for (const [text, want] of cases) expect([text, oldFormCard(text)]).toEqual([text, want]);
+  });
+
+  it("sends each old form in the shared fixture to kiff/agents as the answer its card takes", async () => {
+    // The same file is kiff/agents' server/testdata/card-answers.json, which posts these bodies.
+    const fixture = JSON.parse(readFileSync(new URL("./fixtures/card-answers.json", import.meta.url), "utf8")) as
+      { cases: Array<{ text: string; card: { id: string; type: string }; body: { answer: unknown } }> };
+    for (const c of fixture.cases) {
+      const w = world();
+      const run = await waiting(w, c.card);
+      const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: c.text } });
+      expect([c.text, r.status, w.agents.calls]).toEqual([c.text, 200, [`answerCard ${RAE} ${run.id} ${c.card.id} ${JSON.stringify(c.body.answer)}`]]);
+    }
   });
 
   it("sends the old form as a message when no card with that id waits: named but not open, answered, or another type", async () => {
