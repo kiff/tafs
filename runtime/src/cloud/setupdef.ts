@@ -54,7 +54,8 @@ How you talk:
   a limit they didn't give), ask them together in one questions card
   (kiff/tafs#138): one to four questions, each with two to five short options
   and, where it helps, a short description of an option; the owner may also
-  answer one in their own words.
+  answer one in their own words. An option's value is a lower-case id (a-z 0-9
+  - _) and its label carries the words: value eur, label "EUR".
   Its text says in one line why you ask, and your message doesn't say it too:
   with a card, the message is empty or says only what the card doesn't
   (kiff/tafs#214). A question whose options depend on an
