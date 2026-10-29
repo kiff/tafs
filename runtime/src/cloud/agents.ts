@@ -140,6 +140,10 @@ export interface Requirement {
   expires: string;
   answered?: string;
   answer?: string;
+  /** "card" for a card shown to the owner that waits for their answer; none for a call KIFF holds. */
+  kind?: string;
+  /** A card's answer as the run reads it, once answered. */
+  result?: unknown;
 }
 
 export interface Run {
@@ -351,9 +355,10 @@ export interface SessionEvent {
   time: string;
   /**
    * A kind the keep rules name, a `component` the agent showed (kiff/agents#91), or
-   * a `call_ref`: what a call through KIFF acted on, kept like messages (kiff/tafs#167).
+   * a `call_ref`: what a call through KIFF acted on, kept like messages (kiff/tafs#167), or
+   * `answered`: the owner's answer to a card, as data ({id, type, answer?, words?, wrote?, unanswered?}).
    */
-  kind: EventKind | "component" | "call_ref";
+  kind: EventKind | "component" | "call_ref" | "answered";
   body: unknown;
 }
 
@@ -586,6 +591,17 @@ export class Agents {
    */
   steerRun(tenant: string, agent: string, run: string, text: string, requester?: Requester): Promise<Run> {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}) }, requester ? undefined : { ...AS_SERVICE });
+  }
+
+  /**
+   * Answers a card the run waits on, as data (kiff/agents' cards wait for their answer):
+   * checked against the card there, and the run goes on in the background once nothing
+   * else holds it. Only the person whose run it is answers: 404 for another's, 409 for a
+   * card that doesn't wait (answered, stopped waiting, or the run went on), 400 for an
+   * answer the card doesn't take.
+   */
+  answerCard(tenant: string, agent: string, run: string, card: string, answer: unknown, requester: Requester): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "cards", card, "answer"], { answer, requester, background: true });
   }
 
   /**

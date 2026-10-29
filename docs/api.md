@@ -85,6 +85,7 @@ See [chat.md](chat.md) for how the app uses these.
 | `POST /v1/tafs/{id}/steer` | a person | `{run, text}`: to the run at work, read at its next step. 409 when it has ended: send it as a new message |
 | `POST /v1/tafs/{id}/stop` | `cards.manage` | `{session}`: cancel the session's latest run |
 | `POST /v1/tafs/{id}/holds/{exception}/continue` | `holds.answer` | The run paused on that held call goes on now, once KIFF has answered it. `waiting` when KIFF still holds a call of the run |
+| `POST /v1/tafs/{id}/components/{component}/answer` | a person, their own card | `{answer, session?}`: the answer to a card that waits for it, as data ([chat.md](chat.md#cards-that-wait-for-an-answer)). 404 for no card of theirs by that id, 409 once it doesn't wait, 400 for an answer the card doesn't take |
 | `GET /v1/tafs/{id}/conversation` | a person | The thread: messages, components, `working`, `steering`, `capped`, Coach's lines, and the open knocks for someone who manages it ([chat.md](chat.md#the-thread-and-the-chats-list)) |
 | `GET /v1/tafs/{id}/conversation/{session}` | a person, their own chat | One chat of it |
 | `GET /v1/tafs/{id}/chats` | a person | Their chats, newest first, each named by what they asked |
