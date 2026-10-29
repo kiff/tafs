@@ -1,8 +1,8 @@
 name: Android
 
 # Every push and pull request that touches the Android app: build it and run its
-# tests, then run the screens' UI tests on an emulator. The app is not shipped from
-# here yet: signing, the Play Console and Play Billing come with their own setup.
+# tests, then run the screens' UI tests on an emulator. The release bundle for Play is
+# built and signed on a Mac with android/release.sh, whose upload key is in Secrets Manager.
 
 on:
   push:
@@ -42,6 +42,13 @@ jobs:
       # the platform the app compiles against.
       - name: Accept the SDK licences
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      # Firebase's settings for dev.kiff.tafs, from the repository's secret: kept out of the repository,
+      # as build.gradle.kts expects. Without the secret (a fork's pull request) the app builds with alerts off.
+      - name: Firebase's settings
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; fi
       - name: Unit tests and the debug builds
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace
       # What the tests saw, when one fails.

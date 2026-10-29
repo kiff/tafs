@@ -1,4 +1,5 @@
 [versions]
+androidxFragment = "1.8.6"
 androidGradlePlugin = "9.0.1"
 androidxCore = "1.18.0"
 androidxLifecycle = "2.10.0"
@@ -21,6 +22,8 @@ nav3Core = "1.0.1"
 lifecycleViewmodelNav3 = "2.10.0"
 
 [libraries]
+# Biometric 1.1 brings Fragment 1.2, older than registerForActivityResult needs (1.3).
+androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragment" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }

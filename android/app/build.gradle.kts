@@ -8,7 +8,8 @@ android {
   namespace = "bot.tafs.app"
   compileSdk { version = release(37) { minorApiLevel = 0 } }
   defaultConfig {
-    applicationId = "bot.tafs.app"
+    // Play's package for the app. The namespace and the Kotlin packages stay bot.tafs.app.
+    applicationId = "dev.kiff.tafs"
     minSdk = 30
     targetSdk = 37
     versionCode = 1
@@ -16,8 +17,24 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  // The upload key, from outside this public repository: TAFS_UPLOAD_KEYSTORE (a .jks path) and its
+  // passwords in TAFS_UPLOAD_STORE_PASSWORD and TAFS_UPLOAD_KEY_PASSWORD, as android/release.sh sets
+  // them from Secrets Manager. Without them a release build is left unsigned.
+  val uploadKeystore = System.getenv("TAFS_UPLOAD_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
+  signingConfigs {
+    if (uploadKeystore != null) {
+      create("upload") {
+        storeFile = uploadKeystore
+        storePassword = System.getenv("TAFS_UPLOAD_STORE_PASSWORD")
+        keyAlias = System.getenv("TAFS_UPLOAD_KEY_ALIAS") ?: "upload"
+        keyPassword = System.getenv("TAFS_UPLOAD_KEY_PASSWORD")
+      }
+    }
+  }
+
   buildTypes {
     release {
+      if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
@@ -59,6 +76,7 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.activity.compose)
+  implementation(libs.androidx.fragment.ktx)
 
   // Arch Components
   implementation(libs.androidx.lifecycle.runtime.compose)
