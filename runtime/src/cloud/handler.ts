@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
@@ -925,7 +925,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
     const schedule: Schedule = { id: tafID, agent: tafID, cron, time_zone: timezone, input: job.kickoff, enabled: !unscheduled };
     await deps.agents.createSchedule(me.tenantID, schedule).catch(async (err) => {
       // A retry of a start whose schedule was made: the same schedule.
-      if (err instanceof AgentsError && err.status === 409 && await deps.agents.getSchedule(me.tenantID, tafID)) return;
+      if (refused(err, "schedule_exists") && await deps.agents.getSchedule(me.tenantID, tafID)) return;
       throw err;
     });
     await deps.tafs.put(me.tenantID, taf);
@@ -1668,7 +1668,8 @@ async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, compone
     const run = await deps.agents.answerCard(me.tenantID, taf.id, card.run, component, body.answer, member(me));
     return { session: card.session, run: run.id, status: run.status };
   } catch (err) {
-    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, "the card doesn't wait for an answer any more: read the conversation");
+    if (refused(err, "card_not_waiting")) throw new HTTPError(409, "the card doesn't wait for an answer any more: read the conversation");
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no card of yours by that id");
     throw agentsFailure(err);
   }
@@ -2196,7 +2197,8 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
     const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text, member(me));
     return { run: out.id, status: out.status };
   } catch (err) {
-    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, "the run has ended: send it as a new message");
+    if (refused(err, "run_ended", "not_paused")) throw new HTTPError(409, "the run has ended: send it as a new message");
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw agentsFailure(err);
   }
 }
@@ -2215,7 +2217,8 @@ async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): 
     const out = await deps.agents.continueHeld(me.tenantID, taf.id, exception);
     return { run: out.id, status: out.status };
   } catch (err) {
-    if (err instanceof AgentsError && err.status === 409) return { status: "waiting" };
+    if (refused(err, "waiting_for_kiff", "run_changed")) return { status: "waiting" };
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no run of this taf waits on that held call");
     throw agentsFailure(err);
   }
@@ -2753,7 +2756,8 @@ async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): P
     return { stopped: true, run: out.id, status: out.status };
   } catch (err) {
     // Already over: nothing is left to stop.
-    if (err instanceof AgentsError && err.status === 409) return { stopped: false };
+    if (refused(err, "run_ended", "run_changed")) return { stopped: false };
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw err instanceof AgentsError ? new HTTPError(err.status >= 500 ? 502 : err.status, err.message) : err;
   }
 }
@@ -3270,7 +3274,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         const out = await deps.agents.steerRun(call.tenant, taf.id, running, text);
         return { taf: taf.name, run: out.id, status: out.status, sent: "to the run at work, read at its next step" };
       } catch (err) {
-        if (err instanceof AgentsError && err.status === 409) throw new ToolRefusal("that run has ended: hand the task over again without run");
+        if (refused(err, "run_ended")) throw new ToolRefusal("that run has ended: hand the task over again without run");
+        if (err instanceof AgentsError && err.status === 409) throw new ToolRefusal(err.message);
         throw agentsFailure(err);
       }
     }
@@ -3300,7 +3305,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
       const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim());
       return { taf: taf.name, run: out.id, status: out.status, withdrawn: "its held calls, in KIFF; nothing more is sent" };
     } catch (err) {
-      if (err instanceof AgentsError && err.status === 409) return { taf: taf.name, stopped: false, why: "the run had already ended" };
+      if (refused(err, "run_ended", "run_changed")) return { taf: taf.name, stopped: false, why: "the run had already ended" };
+      if (err instanceof AgentsError && err.status === 409) return { taf: taf.name, stopped: false, why: err.message };
       throw agentsFailure(err);
     }
   }

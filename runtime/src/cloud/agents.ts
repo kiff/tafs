@@ -31,9 +31,19 @@ export interface AgentsConfig {
 }
 
 export class AgentsError extends Error {
-  constructor(readonly status: number, message: string, readonly blocking?: BlockingRun[]) {
+  /** code is kiff/agents' typed code for the refusal (`halted`, `run_ended`, …): what to switch on, never the words. */
+  constructor(readonly status: number, message: string, readonly blocking?: BlockingRun[], readonly code?: string) {
     super(message);
   }
+}
+
+/**
+ * Whether err is kiff/agents refusing with a 409 for one of codes. A refusal
+ * from before typed codes carries none and counts as any of them, as every
+ * 409 did then.
+ */
+export function refused(err: unknown, ...codes: string[]): err is AgentsError {
+  return err instanceof AgentsError && err.status === 409 && (err.code === undefined || codes.includes(err.code));
 }
 
 /** A run that keeps a switch from beginning, as kiff/agents names it in the 409 (kiff/tafs#206). */
@@ -770,14 +780,17 @@ export class Agents {
 /** kiff/agents' refusal, as an error with its status and words. */
 async function failure(res: Response): Promise<AgentsError> {
   const text = await res.text().catch(() => "");
+  let code: unknown;
   let msg: unknown;
   let blocking: unknown;
-  try { ({ error: msg, blocking } = JSON.parse(text) as { error?: unknown; blocking?: unknown }); } catch { msg = undefined; }
+  try { ({ error: code, message: msg, blocking } = JSON.parse(text) as { error?: unknown; message?: unknown; blocking?: unknown }); } catch { code = undefined; }
+  // Before typed codes, `error` was the words.
+  if (typeof msg !== "string" || !msg) [msg, code] = [code, undefined];
   const runs = Array.isArray(blocking)
     ? blocking.filter((b): b is BlockingRun => typeof b?.id === "string" && typeof b?.session === "string")
       .map(({ id, session, status, trigger }) => ({ id, session, status, trigger }))
     : undefined;
-  return new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`, runs);
+  return new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`, runs, typeof code === "string" && code ? code : undefined);
 }
 
 /**
