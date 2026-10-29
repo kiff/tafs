@@ -28,6 +28,8 @@ interface ToolDef {
   required: string[];
   /** Read-only: changes nothing (KIFF declares it so). */
   read?: boolean;
+  /** What it lets Coach do, in the owner's words: the line the apps show when the owner gives it. */
+  line: string;
 }
 
 const TAF = { type: "string", description: "The taf's id, from tafs_state, or its name." };
@@ -36,17 +38,17 @@ const RUN = { type: "string", description: "The run's id, from tafs_state or an 
 /** The tools, each a whole job in one call (kiff/tafs#206). */
 export const TOOLS: ToolDef[] = [
   {
-    name: "tafs_state", read: true, properties: {}, required: [],
+    name: "tafs_state", line: "See your tafs, their versions and their runs", read: true, properties: {}, required: [],
     description: "Everything about the account's tafs in one read: each taf, its live version and versions, a switch under way, " +
       "its schedule or that it works from its chat, and its open runs with what each waits on (the held call, its arguments and deadline). " +
       "Each taf's kiff_agent is its KIFF agent: kiff_card {agent: kiff_agent} reads its live Cards, with what's used and left.",
   },
   {
-    name: "taf_run", read: true, properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
+    name: "taf_run", line: "Read one of a taf's runs", read: true, properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
     description: "One run of a taf so far: its status, its answer if it ended, what it waits on, and for a trial what KIFF decided on each write.",
   },
   {
-    name: "taf_task",
+    name: "taf_task", line: "Give a taf a task or a message",
     properties: {
       taf: TAF,
       text: { type: "string", description: "The task or message, in the owner's words." },
@@ -58,23 +60,23 @@ export const TOOLS: ToolDef[] = [
       "With run, the text goes to that run while it works. The task runs under the taf's own Cards.",
   },
   {
-    name: "run_stop", properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
+    name: "run_stop", line: "Stop a taf's run", properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
     description: "Stops a run of a taf. Its held calls are withdrawn in KIFF, and nothing more is sent.",
   },
   {
-    name: "taf_pause",
+    name: "taf_pause", line: "Pause or resume a taf's schedule",
     properties: { taf: TAF, action: { type: "string", enum: ["pause", "resume"] } },
     required: ["taf", "action"],
     description: "Pauses a taf's schedule, or resumes it. A taf that works from its chat has no schedule to pause.",
   },
   {
-    name: "version_try",
+    name: "version_try", line: "Try a version of a taf, sending nothing",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 }, input: { type: "string", description: "What the trial works on; omitted, what each scheduled run asks." } },
     required: ["taf", "n"],
     description: "Tries version n of a taf: KIFF decides each of its writes and sends none. It answers at once; the trial's result comes back to you when it ends.",
   },
   {
-    name: "version_install",
+    name: "version_install", line: "Install a version of a taf",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 } },
     required: ["taf", "n"],
     description: "Installs version n of a taf. KIFF holds this for the owner, who approves it in tafs: the app stops what's in the way, " +
@@ -82,21 +84,6 @@ export const TOOLS: ToolDef[] = [
       "Don't name how the owner approves.",
   },
 ];
-
-/**
- * Coach's tools as the owner gives them: each connected in KIFF as the account's
- * own control server, in the owner's words. The apps show these lines and send what tafs cloud
- * builds, so neither keeps a copy.
- */
-export const COACH_TOOL_LINES: Record<string, string> = {
-  tafs_state: "See your tafs, their versions and their runs",
-  taf_run: "Read one of a taf's runs",
-  taf_task: "Give a taf a task or a message",
-  run_stop: "Stop a taf's run",
-  taf_pause: "Pause or resume a taf's schedule",
-  version_try: "Try a version of a taf, sending nothing",
-  version_install: "Install a version of a taf",
-};
 
 /**
  * Coach's Cards: the reads share one, 500 a day; a task 50 a day and a trial 20, then asked;
@@ -145,7 +132,7 @@ export function coachConnect(missing: ToolDef[], mcp: string): { body: { connect
         idempotency_argument: OP_ARG, ...(t.read ? { read_only: true } : {}),
       })),
     },
-    lines: missing.map((t) => COACH_TOOL_LINES[t.name] ?? t.name),
+    lines: missing.map((t) => t.line),
   };
 }
 

@@ -260,15 +260,13 @@ export async function gatewayConnections(token: string, doFetch: Fetch = fetch, 
   return list.flatMap((c) => (c && typeof c === "object" && typeof (c as { name?: unknown }).name === "string" ? [c as { name: string; url?: string; control?: boolean }] : []));
 }
 
-/** Whether KIFF has issued the Card with this id on the account: its statement exists. */
-export async function cardExists(token: string, id: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<boolean> {
-  try {
-    await ask(token, "GET", `/v1/me/mandates/${encodeURIComponent(id)}/statement`, undefined, doFetch, base);
-    return true;
-  } catch (err) {
-    if (err instanceof KIFFError && err.status === 404) return false;
-    throw err;
-  }
+/**
+ * The ids of the account's Cards in force, from one read of KIFF's list. A revoked or expired Card
+ * is still listed, with `active` false, so it doesn't count.
+ */
+export async function activeCards(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Set<string>> {
+  const out = await ask<{ mandates?: Array<{ id?: unknown; active?: unknown }> }>(token, "GET", "/v1/me/mandates", undefined, doFetch, base);
+  return new Set((out.mandates ?? []).flatMap((m) => (m.active === true && typeof m.id === "string" ? [m.id] : [])));
 }
 
 /**

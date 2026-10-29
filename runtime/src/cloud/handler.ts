@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { cardExists, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, trialOf, whoIs } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -1026,18 +1026,20 @@ const SETUP_NAME_CLAIM = " setup";
  * phone of the account agrees.
  */
 async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Record<string, unknown>> {
+  // Production must set publicURL (TAFS_PUBLIC_URL): the Host header is the caller's to send, and
+  // the tools are connected at this address.
   const host = event.headers?.host ?? event.headers?.Host;
   const self = deps.publicURL ?? (host ? `https://${host}` : "");
   const mcp = `${self}/v1/mcp`;
   const token = bearer(event);
   try {
-    const [there, cards] = await Promise.all([
+    const [there, active] = await Promise.all([
       gatewayConnections(token, deps.fetch, deps.kiffGateway),
-      Promise.all(COACH_CARDS.map((c) => cardExists(token, c.id, deps.fetch, deps.kiffBase))),
+      activeCards(token, deps.fetch, deps.kiffBase),
     ]);
     const plan = coachToolsPlan(there, mcp);
     if (plan.taken) return { state: "taken", taken: plan.taken };
-    const issued = cards.every(Boolean);
+    const issued = COACH_CARDS.every((c) => active.has(c.id));
     if (!plan.missing.length && issued) return { state: "given" };
     // Coach's Cards, with KIFF's own words for them: never tafs cloud's copy of the wording.
     let card: Record<string, unknown> | undefined;

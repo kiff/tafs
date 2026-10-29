@@ -36,10 +36,12 @@ interface Account {
   acksAtOnce?: boolean;
   /** The person's answer per agent (GET /v1/me/access); by default they may use every agent there is. */
   access?: Record<string, { use: boolean; oversee: boolean; manage: boolean }>; accessStatus?: number;
-  /** The account's tool connections in KIFF's gateway, and the Cards KIFF hasn't issued. */
-  connections?: Array<{ name: string; url?: string; control?: boolean }>; gatewayStatus?: number; noCards?: string[];
+  /** The account's tool connections in KIFF's gateway. */
+  connections?: Array<{ name: string; url?: string; control?: boolean }>; gatewayStatus?: number;
   /** The draft bodies KIFF was asked to preview. */
   previewed?: unknown[];
+  /** Every URL KIFF was asked for, when set. */
+  asked?: string[];
 }
 
 /**
@@ -48,6 +50,7 @@ interface Account {
  */
 function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }, agentsOf: () => string[] = () => []) {
   return (async (url: string, init?: RequestInit) => {
+    account.asked?.push(url);
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     if (url.endsWith("/v1/me/access")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -117,7 +120,6 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
     const statement = /\/v1\/me\/mandates\/([^/?]+)\/statement$/.exec(url);
     if (statement) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
-      if (account.noCards?.includes(decodeURIComponent(statement[1]!))) return new Response(JSON.stringify({ error: "no such Card" }), { status: 404 });
       const n = account.revisions?.[decodeURIComponent(statement[1]!)] ?? 1;
       return new Response(JSON.stringify({ revisions: Array.from({ length: n }, (_, i) => ({ revision: i + 1 })) }), { status: 200 });
     }
@@ -782,7 +784,7 @@ describe("Setup (kiff/agents#91)", () => {
     const mcp = "https://tafs.test/v1/mcp";
     const tools = async () => (await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test" } })).body.tools;
     // Nothing connected and no Card: the whole batch, in the owner's words, for the phone to sign as it is.
-    w.account.noCards = COACH_CARDS.map((c) => c.id);
+    const coachCards = (active: boolean) => COACH_CARDS.map((c) => ({ id: c.id, subject: "setup-acme", active }) as Mandate);
     const first = await tools();
     expect(first.state).toBe("to_give");
     // Coach's Cards to sign and submit as they are, worded by KIFF's preview, passed through unchanged.
@@ -796,15 +798,23 @@ describe("Setup (kiff/agents#91)", () => {
     expect(first.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
     expect(first.connect.body.connections[0]).toEqual({ name: "tafs_state", url: mcp, tool: "tafs_state", mode: "verify", audience: mcp, control: true, idempotency_argument: "tafs_op", read_only: true });
     expect(first.connect.body.connections[2]).not.toHaveProperty("read_only");
+    expect(first.connect.lines).toEqual(TOOLS.map((t) => t.line));
     expect(first.connect.lines[0]).toBe("See your tafs, their versions and their runs");
     // Connected, Cards still to issue: no batch left, only the Cards.
     w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
     const cardsOnly = await tools();
     expect(cardsOnly.connect).toBeUndefined();
     expect(cardsOnly.card.body.label).toBe("Coach");
-    // Both: given, the same for every phone of the account.
-    w.account.noCards = [];
+    // A revoked Card is still listed by KIFF, not in force: the Cards are asked for again.
+    w.account.mandates = coachCards(true).map((m, i) => (i === 2 ? { ...m, active: false } : m));
+    expect((await tools()).card.body.label).toBe("Coach");
+    // Both: given, the same for every phone of the account, from one read of the Cards.
+    w.account.mandates = coachCards(true);
+    w.account.asked = [];
     expect(await tools()).toEqual({ state: "given" });
+    expect(w.account.asked.filter((u) => u.endsWith("/v1/me/mandates"))).toHaveLength(1);
+    expect(w.account.asked.filter((u) => u.includes("/statement"))).toEqual([]);
+    w.account.asked = undefined;
     // One of Coach's names held by another server stops it before any Card.
     w.account.connections = [{ name: "taf_task", url: "https://vendor.test/mcp", control: false }];
     expect(await tools()).toEqual({ state: "taken", taken: "taf_task" });
