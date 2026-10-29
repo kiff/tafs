@@ -14,6 +14,8 @@ import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal
  * method throw.
  */
 export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00Z")) {
+  /** What KIFF says each person may do now, for Coach's key: `{cards_manage}` or `{}` (it didn't say). */
+  const access = new Map<string, { cards_manage?: boolean }>();
   const calls: string[] = [];
   /** AI fair use (kiff/tafs#193): each period's spend by `tenant period`, and the bound each chat came with. */
   const spent = new Map<string, number>();
@@ -333,7 +335,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
      * A foreground run's stream: the run, then `streamed` (what the test says the
      * agent does), then its end. `failing("streamRun")` refuses before it begins.
      */
-    async *streamRun(tenant, agent, input, at = {}, ai) {
+    async *streamRun(tenant, agent, input, at = {}, ai, notify) {
       calls.push(`streamRun ${agent} ${at.session ?? (at.live ? "live" : "new")}`);
       failing("streamRun");
       if (!agents.has(k(tenant, agent))) throw gone();
@@ -342,6 +344,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const { session, opened } = place(tenant, agent, at);
       const r = newRun(tenant, agent, session, "owner", input, undefined, attached);
       if (at.requester) r.requester = { ...at.requester };
+      if (notify) notified.set(r.id, notify);
       yield { event: "run", data: { ...r, new_session: opened } };
       for (const e of streamed) {
         if (e instanceof Error) throw e;
@@ -484,6 +487,28 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       r.status = "RUNNING";
       return r;
     },
+    /** A result answered in tafs cloud's name, as kiff/agents takes it: only a result card of the paused run that still waits (else 409). */
+    async answerResult(tenant, agent, id, card, outcome) {
+      calls.push(`answerResult ${agent} ${id} ${card} ${JSON.stringify(outcome)}`);
+      failing("answerResult");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      const q = r?.status === "PAUSED" ? (r.requirements ?? []).find((x) => x.kind === "card" && !x.answered && (x.input as { id?: string; type?: string })?.id === card && (x.input as { type?: string }).type === "result") : undefined;
+      if (!r || !q) throw new AgentsError(409, "no card of this run waits for an answer by that id", undefined, "card_not_waiting");
+      q.answered = now().toISOString();
+      q.result = { answer: outcome, answered_by: "tafs cloud" };
+      return r;
+    },
+    /** What the run's requester may do now: `access` by subject, as KIFF would answer Coach's key; a subject missing from it is KIFF not answering. */
+    async requesterAccess(tenant, agent, id) {
+      calls.push(`requesterAccess ${agent} ${id}`);
+      failing("requesterAccess");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      if (!r) throw gone();
+      if (r.requester?.kind !== "member") throw new AgentsError(409, "no person asked for this run", undefined, "no_requester");
+      const a = access.get(r.requester.id);
+      if (!a) throw new AgentsError(502, "KIFF didn't say what this person may do now", undefined, "kiff_unanswered");
+      return { requester: r.requester, use: true, ...a };
+    },
     async continueHeld(tenant, agent, exception) {
       calls.push(`continueHeld ${agent} ${exception}`);
       failing("continueHeld");
@@ -532,7 +557,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

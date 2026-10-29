@@ -372,6 +372,8 @@ export interface Note {
   agent: string;
   status: string;
   ref: string;
+  /** A paused run's cards that wait, as kiff/agents names them: only which run to read back. */
+  cards?: Array<{ id: string; type: string }>;
 }
 
 export function parseNote(raw: string): Note | undefined {

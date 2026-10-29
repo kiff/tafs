@@ -9,7 +9,7 @@ import type { Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
-import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -1911,5 +1911,98 @@ describe("deleting the account (kiff/tafs#185)", () => {
     expect(r.body).toEqual({ done: false, failed: "tafs", taf: RAE, steps: ["schedule", "history", "memory"] });
     expect(w.agents.calls).not.toContain("eraseTenant");
     expect(w.erased).toEqual([]);
+  });
+});
+
+describe("Coach's result, handed over by tafs cloud", () => {
+  const COACH = "taf-c0ac4000000000000000";
+  const RESULT = { type: "result", id: "done", text: "Refunds is ready.", taf: { agent: "refunds-x", name: "Refunds", job: "refunds", draft: "drf_s1" } };
+
+  /** A world with the account's Coach, its run paused on a result Ana's chat showed, and the deps that hand it over. */
+  async function paused(card: Record<string, unknown> = RESULT, requester: { kind: string; id: string } | undefined = { kind: "member", id: "u_ana" }) {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds");
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, {
+      status: "PAUSED", ...(requester ? { requester } : {}),
+      requirements: [{ call_id: "s1", tool: "show", input: card, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }],
+    });
+    w.agents.calls.length = 0;
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now), publicURL: "https://cloud.test" };
+    const note = (cards: Array<{ id: string; type: string }> = [{ id: String(card.id), type: String(card.type) }]) => handle({
+      rawPath: "/v1/runs/ended", requestContext: { http: { method: "POST" } }, headers: {},
+      body: JSON.stringify({ run: run.id, agent: COACH, status: "PAUSED", ref: `${Buffer.from("t_acme").toString("base64url")}.abcdefghijklmnopqrstuvwx`, cards }),
+    }, deps);
+    const answer = () => w.agents.runs.find((r) => r.id === run.id)!.requirements![0]!.result as { answer?: unknown; answered_by?: string } | undefined;
+    return { w, run: run.id, note, answer };
+  }
+
+  it("makes the taf for the person whose run it is, once, and answers in its own name", async () => {
+    const { w, run, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Refunds", kiffAgent: "refunds-x" });
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(w.agents.calls).toContain(`requesterAccess ${COACH} ${run}`);
+    // A repeat note, or one from a second phone, makes nothing more.
+    w.agents.calls.length = 0;
+    await note();
+    expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft") || c.startsWith("answerResult"))).toEqual([]);
+  });
+
+  it("claims only a draft KIFF says is confirmed: one waiting is answered so, and nothing is made", async () => {
+    const { w, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    await note();
+    expect(answer()).toEqual({ answer: { failed: "waiting for your confirmation" }, answered_by: "tafs cloud" });
+    expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+  });
+
+  it("acts only while KIFF says the person may manage Cards now, and never on old rights", async () => {
+    for (const [said, why] of [[{ cards_manage: false }, "your role on this KIFF account can't manage Cards now"], [{}, "KIFF didn't say whether you may manage Cards now; try again"], [undefined, "KIFF didn't say whether you may manage Cards now; try again"]] as const) {
+      const { w, note, answer } = await paused();
+      if (said) w.agents.access.set("u_ana", said);
+      await note();
+      expect(answer()).toEqual({ answer: { failed: why }, answered_by: "tafs cloud" });
+      expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
+    }
+  });
+
+  it("answers a taf an installed app already made from the same draft as done, never failed", async () => {
+    const { w, note, answer } = await paused();
+    w.tafs.held.set(`t_acme#${NEW2}`, { id: NEW2, name: "Refunds", job: "refunds", kiffAgent: "refunds-x", nameClaim: "x", created: "2026-10-29T09:00:00Z" });
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW2 }, answered_by: "tafs cloud" });
+    expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft") || c.startsWith("requesterAccess"))).toBe(false);
+  });
+
+  it("never tells Coach of a server error: the card stays open, and the next note tries again", async () => {
+    const { w, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("claimTafDraft", new Error("timed out"));
+    await note();
+    expect(answer()).toBeUndefined();
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+  });
+
+  it("does nothing for a note that names no result, a run that isn't Coach's, or a result no longer waiting", async () => {
+    const { w, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note([{ id: "which", type: "confirm" }]);
+    expect(answer()).toBeUndefined();
+    w.agents.runs.forEach((r) => { if (r.agent === COACH) r.requirements![0]!.answered = "2026-10-29T10:00:00Z"; });
+    await note();
+    expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft") || c.startsWith("answerResult"))).toBe(false);
+  });
+
+  it("refuses answered_by from a person's own answer", async () => {
+    const w = world();
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: { taf_id: "x" }, answered_by: "tafs cloud" } });
+    expect(r.status).toBe(400);
+    expect(r.body.error).toContain("answered_by is tafs cloud's alone");
   });
 });

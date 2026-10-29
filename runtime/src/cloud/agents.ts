@@ -46,6 +46,12 @@ export function refused(err: unknown, ...codes: string[]): err is AgentsError {
   return err instanceof AgentsError && err.status === 409 && (err.code === undefined || codes.includes(err.code));
 }
 
+/** The name tafs cloud answers a result in. */
+export const ANSWERED_BY = "tafs cloud";
+
+/** What came of handing the owner over to a taf: exactly one is set. */
+export type ResultOutcome = { taf_id: string } | { version: number } | { failed: string };
+
 /** A run that keeps a switch from beginning, as kiff/agents names it in the 409 (kiff/tafs#206). */
 export interface BlockingRun {
   id: string;
@@ -562,8 +568,8 @@ export class Agents {
    * A refusal before the stream begins throws, as `startRun` does. The run is
    * kiff/agents' invocation's, not this reader's: stopping reading stops none of it.
    */
-  async *streamRun(tenant: string, agent: string, input: string, at: RunAt = {}, ai?: AIBound): AsyncGenerator<RunStreamEvent> {
-    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...runAt(at), ...(ai ? { ai } : {}) },
+  async *streamRun(tenant: string, agent: string, input: string, at: RunAt = {}, ai?: AIBound, notify?: Notify): AsyncGenerator<RunStreamEvent> {
+    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...runAt(at), ...(ai ? { ai } : {}), ...(notify ? { notify } : {}) },
       at.requester || at.grant ? undefined : { ...AS_SERVICE }, "text/event-stream");
     if (!res.ok) throw await failure(res);
     if (!res.body) throw new AgentsError(502, "kiff/agents answered with no stream");
@@ -612,6 +618,25 @@ export class Agents {
    */
   answerCard(tenant: string, agent: string, run: string, card: string, answer: unknown, requester: Requester): Promise<Run> {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "cards", card, "answer"], { answer, requester, background: true });
+  }
+
+  /**
+   * Answers a `result` card in tafs cloud's own name (`answered_by`), never the
+   * person's: what came of handing the owner over to the taf, `{taf_id}`,
+   * `{version}` or `{failed}`. Only a result takes it, and only tafs cloud sends it;
+   * a person's answer never carries it. The run goes on in the background.
+   */
+  answerResult(tenant: string, agent: string, run: string, card: string, outcome: ResultOutcome): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "cards", card, "answer"], { answer: outcome, answered_by: ANSWERED_BY, background: true });
+  }
+
+  /**
+   * What the person who asked for the run may do now, as KIFF says, asked afresh with
+   * the run's agent key: `cards_manage` only when KIFF said it. 409 `no_requester` for
+   * a run no person asked for, 502 `kiff_unanswered` when KIFF didn't answer.
+   */
+  requesterAccess(tenant: string, agent: string, run: string): Promise<{ requester: Requester; use: boolean; cards_manage?: boolean }> {
+    return this.call("GET", tenant, ["agents", agent, "runs", run, "requester", "access"]);
   }
 
   /**

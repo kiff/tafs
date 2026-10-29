@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
@@ -11,7 +11,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, type Note as RunNote, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
@@ -113,7 +113,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -824,7 +824,11 @@ function need(me: KIFFIdentity, capability: string): void {
 }
 
 async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
-  const body = parseBody(event);
+  return makeTaf(parseBody(event), me, deps);
+}
+
+/** POST /v1/tafs's work, for the person me: from their request, or from a result tafs cloud hands over for them. */
+async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps): Promise<{ taf: unknown; session: string | null }> {
   let name = str(body.name).trim();
   if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
   let job;
@@ -1138,6 +1142,7 @@ async function setupDraftKey(me: KIFFIdentity, name: string, draftID: string, ta
       if (!held) await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
       throw new HTTPError(404, "Setup submitted no draft by that id on this account");
     }
+    if (refused(err, "draft_not_ready") && err.code) throw new HTTPError(409, WAITING_FOR_CONFIRMATION);
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw new HTTPError(502, `the taf's key couldn't be claimed: ${(err as Error).message}`);
   }
@@ -1662,6 +1667,8 @@ const ANSWERABLE = ["confirm", "questions", "approval", "sign_in"];
 async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
   const body = parseBody(event);
   if (!("answer" in body)) throw new HTTPError(400, "send the card's answer");
+  // Only tafs cloud answers in its own name (a result's hand-over), never a person's request.
+  if ("answered_by" in body) throw new HTTPError(400, "a person's answer is their own: answered_by is tafs cloud's alone");
   const card = await shownCard(me, taf, component, undefined, str(body.session).trim(), deps);
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   try {
@@ -2543,7 +2550,10 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       at = chosen;
       if (attached.length) at.attachments = attached;
       try {
-        run = deps.agents.streamRun(me.tenantID, taf.id, text, at, ai);
+        // Coach's runs are announced when they pause, so a result it shows is
+        // handed over by tafs cloud with no phone needed (handOver).
+        const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
+        run = deps.agents.streamRun(me.tenantID, taf.id, text, at, ai, notify);
         first = await run.next();
       } catch (err) {
         throw agentsFailure(err);
@@ -3420,6 +3430,7 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
+  if (note.status === "PAUSED" && note.cards?.some((c) => c.type === "result")) return { taken: await handOver(tenant, note, deps) };
   const key = coachKeys.task(tenant, note.ref);
   const task = (await deps.coach.get(key)) as Task | undefined;
   if (!task || task.run !== note.run || task.taf !== note.agent) return { taken: false };
@@ -3448,6 +3459,87 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (level === "quiet") await tellPhones(deps, tenant, endedNotification(name, r));
   if (ended) await deps.coach.remove(key);
   return { taken: true };
+}
+
+/** What tafs cloud answers a result whose draft the owner hasn't confirmed yet. */
+const WAITING_FOR_CONFIRMATION = "waiting for your confirmation";
+
+/** How long a result's hand-over holds its card, so a repeat note or a second phone can't make two. */
+const HANDOVER_HELD_MS = 10 * 60_000;
+
+/**
+ * Hands the owner over to the taf a Coach `result` waits on, with no phone
+ * needed: the note only says which run to read back; what is
+ * made comes from the run as kiff/agents keeps it. For each open result, once per
+ * card: the taf is made for the person whose run it is, only while KIFF says they
+ * may manage Cards now, from the draft they confirmed (kiff/agents claims it, and
+ * KIFF gives no key for an unconfirmed one); then tafs cloud answers the card in its
+ * own name. A refusal (4xx) is answered as failed, so Coach hands over again; a
+ * server error isn't answered, and the next note or the sweep tries again.
+ */
+async function handOver(tenant: string, note: RunNote, deps: Deps): Promise<boolean> {
+  const tafs = await deps.tafs.list(tenant);
+  const coach = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!coach || coach.id !== note.agent || !deps.coach) return false;
+  const r = await deps.agents.getRun(tenant, coach.id, note.run);
+  if (r.status !== "PAUSED") return false;
+  let took = false;
+  for (const q of r.requirements ?? []) {
+    const card = q.input as { type?: string; id?: string; taf?: { agent?: string; name?: string; job?: string; draft?: string; improves?: string; unscheduled?: boolean } } | undefined;
+    if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.id || !card.taf) continue;
+    // Improvements wait for their own credentials question; the app still makes those.
+    if (card.taf.improves) continue;
+    const held = `handover#${tenant}#${r.id}#${card.id}`;
+    if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
+    took = true;
+    const outcome = await newTafFor(tenant, coach.id, r, card.taf, tafs, deps).catch(async (err) => {
+      // Not told: it may still pass. The hold goes, so the next note or the sweep tries again.
+      console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
+      await deps.coach!.remove(held).catch(() => undefined);
+      return undefined;
+    });
+    if (!outcome) continue;
+    await deps.agents.answerResult(tenant, coach.id, r.id, card.id, outcome).catch((err: unknown) => {
+      // Answered meanwhile (another note, or an app from before this): nothing more to do.
+      if (!refused(err, "card_not_waiting")) throw err;
+    });
+  }
+  return took;
+}
+
+/**
+ * The new taf a result hands over to, made for the run's requester: what to answer
+ * the card with. Throws only what may pass on a retry (a server error).
+ */
+async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean },
+  tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
+  // Made already, by an app from before this or an earlier try: the same taf, never a second.
+  const made = tafs.find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
+  if (made) return { taf_id: made.id };
+  let access: { requester: Requester; cards_manage?: boolean };
+  try {
+    access = await deps.agents.requesterAccess(tenant, coach, r.id);
+  } catch (err) {
+    if (refused(err, "no_requester")) return { failed: "no person asked for this chat, so no one can be set up for" };
+    if (err instanceof AgentsError && err.status === 502) return { failed: "KIFF didn't say whether you may manage Cards now; try again" };
+    throw err;
+  }
+  if (access.cards_manage === undefined) return { failed: "KIFF didn't say whether you may manage Cards now; try again" };
+  if (!access.cards_manage) return { failed: "your role on this KIFF account can't manage Cards now" };
+  // The person, as KIFF just answered for them: no session of theirs, and no right beyond that answer.
+  const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
+  try {
+    const out = await makeTaf({ name: taf.name, job: taf.job, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}) }, me, deps);
+    return { taf_id: (out.taf as { id: string }).id };
+  } catch (err) {
+    if (err instanceof HTTPError && err.status >= 400 && err.status < 500) {
+      // Made meanwhile by an app, under this draft: done, not failed.
+      const now = (await deps.tafs.list(tenant)).find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
+      if (now) return { taf_id: now.id };
+      return { failed: err.message };
+    }
+    throw err;
+  }
 }
 
 /** A Coach task's run ended, said quietly: no sound or banner. Only how it ended, never the taf's words. */
