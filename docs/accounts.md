@@ -36,7 +36,9 @@ end the session before anything changes on the phone, so a phone that shows sign
 never holds a session KIFF still accepts. If KIFF doesn't confirm, the phone stays signed
 in and says "Not signed out at KIFF yet. Try again, or sign this phone out from another
 device's Devices." It keeps trying by itself: after 2, 10, 30 and 60 seconds, then every 2
-minutes, until KIFF ends the session (Android: `AppModel.signOutAtKiff`).
+minutes, until KIFF ends the session (Android: `AppModel.signOutAtKiff`). The phone's alerts are
+unregistered with tafs cloud just before KIFF is asked, since that needs the live session,
+and registered again at once if KIFF didn't end it: a phone still signed in keeps its alerts.
 
 **Devices**, in Settings (`DevicesView`): the devices signed in as this person on the
 account (`GET /v1/me/devices`), each with when it was last used, and "This device" on

@@ -306,6 +306,25 @@ class PushTest {
     assertFalse(m.state.value.alertsReady)
   }
 
+  @Test fun aSignOutKiffDidntConfirmKeepsThePhonesAlerts() = runTest {
+    reads()
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    transport.answer("DELETE /v1/push/fcm_token_1", 200, """{"removed":true}""")
+    transport.answer("POST /v1/auth/device/logout", 503, """{"error":"unavailable"}""")
+    secrets.save("1", AppModel.ALERTS_ON)
+    val m = model()
+    val before = transport.requestsTo(register).size
+    assertFalse(m.signOutAtKiff())
+    // Still signed in, so its alerts are registered again at once, after the logout KIFF didn't take.
+    assertTrue(m.state.value.signedIn)
+    val order = transport.requests.map { "${it.method} ${java.net.URI.create(it.url).path}" }
+    val logout = order.lastIndexOf("POST /v1/auth/device/logout")
+    assertTrue(order.lastIndexOf(register) > logout)
+    assertEquals(before + 1, transport.requestsTo(register).size)
+    assertEquals("1", secrets.load(AppModel.ALERTS_ON))
+    assertTrue(m.state.value.alertsReady)
+  }
+
   // MARK: Where a tapped alert goes
 
   @Test fun aTappedAlertAsksForItsScreenOnceAndTheScreenTakesIt() = runTest {

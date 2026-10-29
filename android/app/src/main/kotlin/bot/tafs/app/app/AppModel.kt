@@ -935,8 +935,6 @@ class AppModel(
     signOutRetry?.cancel()
     signOutRetry = null
     _state.update { it.copy(signOutError = null) }
-    // While the session can still say so: this phone stops getting the account's alerts.
-    pushToken?.let { token -> if (alertsWanted()) runCatching { cloud.unregisterPush(token) } }
     if (endSessionAtKiff()) {
       signOut(tellKiff = false)
       return true
@@ -961,17 +959,27 @@ class AppModel(
   /** The sign-out still trying to reach KIFF, if one is. */
   private var signOutRetry: Job? = null
 
-  /** Asks KIFF to end this session. True once it has, or had already; false when it couldn't be told. */
-  private suspend fun endSessionAtKiff(): Boolean = try {
-    kiff.signOut()
-    true
-  } catch (e: CancellationException) {
-    throw e
-  } catch (_: KiffError.Unauthorized) {
-    // KIFF ended it already.
-    true
-  } catch (_: Exception) {
-    false
+  /**
+   * Asks KIFF to end this session. True once it has, or had already; false when it couldn't be told. This phone's alerts
+   * stop with it: tafs cloud is told while the session can still say so, just before, and told again at once if KIFF
+   * didn't end it, so a phone still signed in never goes without its alerts.
+   */
+  private suspend fun endSessionAtKiff(): Boolean {
+    val token = pushToken?.takeIf { alertsWanted() }
+    val unregistered = token != null && runCatching { cloud.unregisterPush(token) }.isSuccess
+    val ended = try {
+      kiff.signOut()
+      true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: KiffError.Unauthorized) {
+      // KIFF ended it already.
+      true
+    } catch (_: Exception) {
+      false
+    }
+    if (!ended && unregistered) syncPush()
+    return ended
   }
 
   /** Signs out of KIFF, or clears the sample: nothing of either stays on the phone. */
