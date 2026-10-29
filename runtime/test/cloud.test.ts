@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, type Taf, trialView, upgradeDefinitions } from "../src/cloud/handler.js";
+import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -1936,7 +1936,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
       body: JSON.stringify({ run: run.id, agent: COACH, status: "PAUSED", ref: `${Buffer.from("t_acme").toString("base64url")}.abcdefghijklmnopqrstuvwx`, cards }),
     }, deps);
     const answer = () => w.agents.runs.find((r) => r.id === run.id)!.requirements![0]!.result as { answer?: unknown; answered_by?: string } | undefined;
-    return { w, run: run.id, note, answer };
+    return { w, run: run.id, note, answer, deps };
   }
 
   it("makes the taf for the person whose run it is, once, and answers in its own name", async () => {
@@ -1962,9 +1962,9 @@ describe("Coach's result, handed over by tafs cloud", () => {
   });
 
   it("acts only while KIFF says the person may manage Cards now, and never on old rights", async () => {
-    for (const [said, why] of [[{ cards_manage: false }, "your role on this KIFF account can't manage Cards now"], [{}, "KIFF didn't say whether you may manage Cards now; try again"], [undefined, "KIFF didn't say whether you may manage Cards now; try again"]] as const) {
+    for (const [said, why] of [[{ cards_manage: false }, "your role on this KIFF account can't manage Cards now"], [{}, "KIFF didn't say whether you may manage Cards now; try again"]] as const) {
       const { w, note, answer } = await paused();
-      if (said) w.agents.access.set("u_ana", said);
+      w.agents.access.set("u_ana", said);
       await note();
       expect(answer()).toEqual({ answer: { failed: why }, answered_by: "tafs cloud" });
       expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
@@ -1979,13 +1979,30 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft") || c.startsWith("requesterAccess"))).toBe(false);
   });
 
-  it("never tells Coach of a server error: the card stays open, and the next note tries again", async () => {
-    const { w, note, answer } = await paused();
+  it("never tells Coach of a server error: the card stays open, and the sweep makes it once", async () => {
+    const { w, note, answer, deps } = await paused();
     w.agents.access.set("u_ana", { cards_manage: true });
     w.agents.fail.set("claimTafDraft", new Error("timed out"));
     await note();
     expect(answer()).toBeUndefined();
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: false }]);
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerResult"))).toHaveLength(1);
+    // Done: nothing is left for the next sweep.
+    expect(await sweepHandOvers(deps)).toEqual([]);
+  });
+
+  it("KIFF not answering is a blip: not told, and tried again on the sweep's backoff", async () => {
+    const { w, note, answer, deps } = await paused();
     await note();
+    expect(answer()).toBeUndefined();
+    expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
+    // Still silent: kept, its tries counted; then KIFF answers, past the backoff.
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: true }]);
+    expect(await sweepHandOvers(deps)).toEqual([]);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.now = new Date(w.now.getTime() + 60 * 60_000);
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: false }]);
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
   });
 

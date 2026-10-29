@@ -11,7 +11,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, type Note as RunNote, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
@@ -3434,7 +3434,7 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
-  if (note.status === "PAUSED" && note.cards?.some((c) => c.type === "result")) return { taken: await handOver(tenant, note, deps) };
+  if (note.status === "PAUSED" && note.cards?.some((c) => c.type === "result")) return { taken: await handOverOrKeep(tenant, note.agent, note.run, deps) };
   const key = coachKeys.task(tenant, note.ref);
   const task = (await deps.coach.get(key)) as Task | undefined;
   if (!task || task.run !== note.run || task.taf !== note.agent) return { taken: false };
@@ -3475,7 +3475,7 @@ async function handOverShown(tenant: string, taf: Taf, components: ThreadCompone
   if (taf.job !== SETUP_JOB || !deps.coach) return;
   const runs = new Set(components.filter((c) => !c.answer && (c.component as { type?: string })?.type === "result").map((c) => c.run));
   for (const run of [...runs].slice(0, 3)) {
-    await handOver(tenant, { run, agent: taf.id, status: "PAUSED", ref: "" }, deps).catch((err) => console.error(`handover ${run}: ${(err as Error).message}`));
+    await handOverOrKeep(tenant, taf.id, run, deps).catch((err) => console.error(`handover ${run}: ${(err as Error).message}`));
   }
 }
 
@@ -3495,13 +3495,14 @@ const HANDOVER_HELD_MS = 10 * 60_000;
  * own name. A refusal (4xx) is answered as failed, so Coach hands over again; a
  * server error isn't answered, and the next note or the sweep tries again.
  */
-async function handOver(tenant: string, note: RunNote, deps: Deps): Promise<boolean> {
+async function handOver(tenant: string, agent: string, run: string, deps: Deps): Promise<{ took: boolean; pending: boolean }> {
   const tafs = await deps.tafs.list(tenant);
   const coach = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
-  if (!coach || coach.id !== note.agent || !deps.coach) return false;
-  const r = await deps.agents.getRun(tenant, coach.id, note.run);
-  if (r.status !== "PAUSED") return false;
+  if (!coach || coach.id !== agent || !deps.coach) return { took: false, pending: false };
+  const r = await deps.agents.getRun(tenant, coach.id, run);
+  if (r.status !== "PAUSED") return { took: false, pending: false };
   let took = false;
+  let pending = false;
   for (const q of r.requirements ?? []) {
     const card = q.input as { type?: string; id?: string; taf?: { agent?: string; name?: string; job?: string; draft?: string; improves?: string; unscheduled?: boolean } } | undefined;
     if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.id || !card.taf) continue;
@@ -3511,9 +3512,10 @@ async function handOver(tenant: string, note: RunNote, deps: Deps): Promise<bool
     if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
     took = true;
     const outcome = await newTafFor(tenant, coach.id, r, card.taf, tafs, deps).catch(async (err) => {
-      // Not told: it may still pass. The hold goes, so the next note or the sweep tries again.
+      // Not told: it may still pass. The hold goes, and the sweep tries again.
       console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
       await deps.coach!.remove(held).catch(() => undefined);
+      pending = true;
       return undefined;
     });
     if (!outcome) continue;
@@ -3522,7 +3524,55 @@ async function handOver(tenant: string, note: RunNote, deps: Deps): Promise<bool
       if (!refused(err, "card_not_waiting")) throw err;
     });
   }
+  return { took, pending };
+}
+
+/** Where the hand-overs a server error left undone wait for the sweep: one list for all accounts. */
+const HANDOVERS_PENDING = "handovers#pending";
+/** How long a hand-over is retried before the card is left to Coach's own wait. */
+const HANDOVER_KEPT_MS = 7 * 24 * 3600_000;
+
+interface PendingHandOver { tenant: string; agent: string; run: string; tries: number; tried: string }
+
+/** handOver, and when a server error left some undone, kept for the sweep. */
+async function handOverOrKeep(tenant: string, agent: string, run: string, deps: Deps): Promise<boolean> {
+  const { took, pending } = await handOver(tenant, agent, run, deps);
+  if (pending) await keepHandOver({ tenant, agent, run, tries: 0, tried: (deps.now?.() ?? new Date()).toISOString() }, deps);
   return took;
+}
+
+async function keepHandOver(p: PendingHandOver, deps: Deps): Promise<void> {
+  const now = deps.now?.() ?? new Date();
+  await deps.coach!.append(HANDOVERS_PENDING, p, new Date(now.getTime() + HANDOVER_KEPT_MS));
+}
+
+/**
+ * The hand-overs a server error (tafs cloud's, kiff/agents', KIFF's) left undone, tried
+ * again on the deletions' backoff, by the same schedule: each run once per sweep, kept
+ * until it is done, its card no longer waits, or a week has passed.
+ */
+export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; pending: boolean }>> {
+  if (!deps.coach) return [];
+  const now = deps.now?.() ?? new Date();
+  const items = (await deps.coach.take(HANDOVERS_PENDING)) as PendingHandOver[];
+  const seen = new Set<string>();
+  const out: Array<{ run: string; pending: boolean }> = [];
+  for (const p of items) {
+    const key = `${p.tenant}#${p.run}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (now.getTime() - Date.parse(p.tried) < backoffMs(p.tries) && p.tries > 0) {
+      await keepHandOver(p, deps);
+      continue;
+    }
+    const { pending } = await handOver(p.tenant, p.agent, p.run, deps).catch((err) => {
+      console.error(`handover sweep ${p.run}: ${(err as Error).message}`);
+      return { took: false, pending: true };
+    });
+    if (pending) await keepHandOver({ ...p, tries: p.tries + 1, tried: now.toISOString() }, deps);
+    out.push({ run: p.run, pending });
+  }
+  return out;
 }
 
 /**
@@ -3539,7 +3589,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: s
     access = await deps.agents.requesterAccess(tenant, coach, r.id);
   } catch (err) {
     if (refused(err, "no_requester")) return { failed: "no person asked for this chat, so no one can be set up for" };
-    if (err instanceof AgentsError && err.status === 502) return { failed: "KIFF didn't say whether you may manage Cards now; try again" };
+    // KIFF not answering is a blip, as any server error: not told, and the sweep tries again.
     throw err;
   }
   if (access.cards_manage === undefined) return { failed: "KIFF didn't say whether you may manage Cards now; try again" };
