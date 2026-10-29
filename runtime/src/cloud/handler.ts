@@ -1203,8 +1203,8 @@ function deletionView(d: Deletion) {
 
 /**
  * POST /v1/account/delete {intent, signature}: the account deleted from one signed intent. Accepted
- * by planque, then KIFF, within the intent's 10 minutes, or nothing is deleted; then finished in
- * order, tafs cloud's own first, KIFF last. What doesn't finish now, the sweep finishes. An intent
+ * by KIFF within the intent's 10 minutes, or nothing is deleted; then finished in order: tafs
+ * cloud's own, planque's (which accepts on KIFF's word, then erases), KIFF's last. What doesn't finish now, the sweep finishes. An intent
  * already accepted for the account goes on with the deletion kept, never a second one.
  */
 async function deleteByIntent(me: KIFFIdentity, body: Record<string, unknown>, token: string, deps: Deps) {
@@ -1225,12 +1225,8 @@ async function deleteByIntent(me: KIFFIdentity, body: Record<string, unknown>, t
     const status = err instanceof PeerError && err.status >= 400 && err.status < 500 ? err.status : 502;
     return new HTTPError(status, `${step === "kiff" ? "KIFF" : "planque"} didn't accept the deletion: ${(err as Error).message}. Nothing was deleted`);
   };
-  // planque first: a refusal there deletes nothing and leaves nothing to undo.
-  try {
-    await deps.deletionPeers.planque.accept(intent, signature);
-  } catch (err) {
-    throw refused("planque", err);
-  }
+  // KIFF accepts first, with the person's session: only it holds the approval key that signed.
+  // planque accepts once KIFF has, taking KIFF's word for it, as part of its own finish step.
   // Kept before KIFF's accept, which signs the phone out: if KIFF's answer is lost, the sweep asks
   // KIFF whether it accepted, and finishes or drops it.
   const d: Deletion = { tenant: me.tenantID, intent, signature, accepted: now.toISOString(), done: [], accepting: true };
@@ -1267,6 +1263,8 @@ export async function finishDeletion(d: Deletion, deps: Deps, now: Date): Promis
         const r = await eraseOwn(d.tenant, deps);
         if (!r.done) why = `${r.failed} didn't finish erasing`;
       } else {
+        // planque's accept first: the same intent again answers the same.
+        if (step === "planque") await deps.deletionPeers!.planque.accept(d.intent, d.signature);
         await deps.deletionPeers![step].finish(d.intent, d.signature);
       }
     } catch (err) {
