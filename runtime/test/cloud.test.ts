@@ -3,6 +3,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
+import { COACH_CARDS, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
@@ -35,6 +36,10 @@ interface Account {
   acksAtOnce?: boolean;
   /** The person's answer per agent (GET /v1/me/access); by default they may use every agent there is. */
   access?: Record<string, { use: boolean; oversee: boolean; manage: boolean }>; accessStatus?: number;
+  /** The account's tool connections in KIFF's gateway, and the Cards KIFF hasn't issued. */
+  connections?: Array<{ name: string; url?: string; control?: boolean }>; gatewayStatus?: number; noCards?: string[];
+  /** The draft bodies KIFF was asked to preview. */
+  previewed?: unknown[];
 }
 
 /**
@@ -98,9 +103,21 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       }
       return new Response(JSON.stringify(t), { status: 200 });
     }
+    if (url.endsWith("/v1/me/agent-drafts/preview")) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      const body = JSON.parse(String(init?.body)) as { cards: Array<{ id: string }> };
+      (account.previewed ??= []).push(body);
+      return new Response(JSON.stringify({ cards: body.cards.map((c) => ({ card_title: `KIFF's title for ${c.id}`, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
+    }
+    if (url === "https://mcp.kiff.dev/v1/connections") {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.gatewayStatus) return new Response(JSON.stringify({ error: "down" }), { status: account.gatewayStatus });
+      return new Response(JSON.stringify({ connections: account.connections ?? [] }), { status: 200 });
+    }
     const statement = /\/v1\/me\/mandates\/([^/?]+)\/statement$/.exec(url);
     if (statement) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.noCards?.includes(decodeURIComponent(statement[1]!))) return new Response(JSON.stringify({ error: "no such Card" }), { status: 404 });
       const n = account.revisions?.[decodeURIComponent(statement[1]!)] ?? 1;
       return new Response(JSON.stringify({ revisions: Array.from({ length: n }, (_, i) => ({ revision: i + 1 })) }), { status: 200 });
     }
@@ -173,11 +190,11 @@ function world() {
 }
 type World = ReturnType<typeof world>;
 
-async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown } = {}) {
+async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; headers?: Record<string, string> } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
     requestContext: { http: { method } },
-    headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {},
+    headers: { ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}), ...opts.headers },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   };
   const r = await handle(event, depsOf(w));
@@ -744,7 +761,7 @@ describe("Setup (kiff/agents#91)", () => {
 
   it("starts once from the phone's no-tools draft: its key claimed here, its definition, no schedule", async () => {
     const w = world();
-    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null });
+    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null, tools: null });
     const r = await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
     expect(r.status).toBe(200);
     expect(r.body.setup).toMatchObject({ id: NEW, name: "Setup", job: "setup", kiff_agent: "setup-acme" });
@@ -757,6 +774,44 @@ describe("Setup (kiff/agents#91)", () => {
     // It's not listed with the tafs, and its chat uses the taf routes by its id.
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
     expect((await call(w, "GET", `/v1/tafs/${NEW}/conversation`, { token: "ana" })).status).toBe(200);
+  });
+
+  it("says what giving Coach its tools still needs, from KIFF", async () => {
+    const w = world();
+    await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
+    const mcp = "https://tafs.test/v1/mcp";
+    const tools = async () => (await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test" } })).body.tools;
+    // Nothing connected and no Card: the whole batch, in the owner's words, for the phone to sign as it is.
+    w.account.noCards = COACH_CARDS.map((c) => c.id);
+    const first = await tools();
+    expect(first.state).toBe("to_give");
+    // Coach's Cards to sign and submit as they are, worded by KIFF's preview, passed through unchanged.
+    expect(first.card.body).toMatchObject({ agent_id: "setup-acme", label: "Coach" });
+    expect(first.card.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+    expect(first.card.body.cards[1]).toEqual({ id: "coach-taf-task", subject: "setup-acme", domain: "gateway", on_exceed: "owner", hold_expiry: "10m", grants: [{ action: "taf_task" }], aggregates: [{ quantity: "count", limit: 50, window: "calendar_day" }] });
+    expect(first.card.body.cards[0]).not.toHaveProperty("hold_expiry");
+    expect(first.card.cards[0]).toEqual({ card_title: "KIFF's title for coach-reads", lines: ["KIFF's line for coach-reads"] });
+    expect(w.account.previewed).toEqual([first.card.body]);
+    expect(first.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
+    expect(first.connect.body.connections[0]).toEqual({ name: "tafs_state", url: mcp, tool: "tafs_state", mode: "verify", audience: mcp, control: true, idempotency_argument: "tafs_op", read_only: true });
+    expect(first.connect.body.connections[2]).not.toHaveProperty("read_only");
+    expect(first.connect.lines[0]).toBe("See your tafs, their versions and their runs");
+    // Connected, Cards still to issue: no batch left, only the Cards.
+    w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
+    const cardsOnly = await tools();
+    expect(cardsOnly.connect).toBeUndefined();
+    expect(cardsOnly.card.body.label).toBe("Coach");
+    // Both: given, the same for every phone of the account.
+    w.account.noCards = [];
+    expect(await tools()).toEqual({ state: "given" });
+    // One of Coach's names held by another server stops it before any Card.
+    w.account.connections = [{ name: "taf_task", url: "https://vendor.test/mcp", control: false }];
+    expect(await tools()).toEqual({ state: "taken", taken: "taf_task" });
+    // KIFF's gateway down: unknown, and Setup still answers.
+    w.account.gatewayStatus = 503;
+    const r = await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test" } });
+    expect(r.status).toBe(200);
+    expect(r.body.tools).toEqual({ state: "unknown" });
   });
 
   it("starts once, needs the right to manage Cards and a draft, and never takes a taf's name", async () => {
@@ -775,7 +830,7 @@ describe("Setup (kiff/agents#91)", () => {
     const r = await call(w, "POST", "/v1/setup", { token: "ana", body: { draft_id: "drf_other", claim_secret: "dcs_o" } });
     expect(r.status).toBe(400);
     expect(w.tafs.held.size).toBe(2);
-    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null });
+    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null, tools: null });
   });
 });
 

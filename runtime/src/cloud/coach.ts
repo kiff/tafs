@@ -83,6 +83,87 @@ export const TOOLS: ToolDef[] = [
   },
 ];
 
+/**
+ * Coach's tools as the owner gives them: each connected in KIFF as the account's
+ * own control server, in the owner's words. The apps show these lines and send what tafs cloud
+ * builds, so neither keeps a copy.
+ */
+export const COACH_TOOL_LINES: Record<string, string> = {
+  tafs_state: "See your tafs, their versions and their runs",
+  taf_run: "Read one of a taf's runs",
+  taf_task: "Give a taf a task or a message",
+  run_stop: "Stop a taf's run",
+  taf_pause: "Pause or resume a taf's schedule",
+  version_try: "Try a version of a taf, sending nothing",
+  version_install: "Install a version of a taf",
+};
+
+/**
+ * Coach's Cards: the reads share one, 500 a day; a task 50 a day and a trial 20, then asked;
+ * stopping and pausing 50 a day each, then refused; every install held for the owner. Stable ids,
+ * so drafting them again revises the same Cards.
+ */
+export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; asks: boolean }> = [
+  { id: "coach-reads", actions: ["tafs_state", "taf_run"], limit: 500, asks: false },
+  { id: "coach-taf-task", actions: ["taf_task"], limit: 50, asks: true },
+  { id: "coach-version-try", actions: ["version_try"], limit: 20, asks: true },
+  { id: "coach-run-stop", actions: ["run_stop"], limit: 50, asks: false },
+  { id: "coach-taf-pause", actions: ["taf_pause"], limit: 50, asks: false },
+  { id: "coach-version-install", actions: ["version_install"], limit: 0, asks: true },
+];
+
+/** A connection in KIFF's gateway, as tafs cloud reads it. */
+export interface GatewayConnection { name: string; url?: string; control?: boolean }
+
+/**
+ * What giving Coach its tools still needs, from the account's connections: the tools to connect, or
+ * the first of Coach's names another connection holds. One there counts as Coach's only when it's
+ * this server (`mcp`) as the control server: Coach's Cards grant by name, so any other would put a
+ * vendor's tool on them.
+ */
+export function coachToolsPlan(there: GatewayConnection[], mcp: string): { missing: ToolDef[]; taken?: string } {
+  const byName = new Map(there.map((c) => [c.name, c]));
+  const missing: ToolDef[] = [];
+  for (const t of TOOLS) {
+    const c = byName.get(t.name);
+    if (!c) { missing.push(t); continue; }
+    if (c.url !== mcp || c.control !== true) return { missing: [], taken: t.name };
+  }
+  return { missing };
+}
+
+/**
+ * The batch that connects the missing tools (KIFF's POST /v1/connections/batch), and its lines. The
+ * phone signs and sends the body as it is; a name already connected the same way is left as it is,
+ * so sending it again is safe.
+ */
+export function coachConnect(missing: ToolDef[], mcp: string): { body: { connections: unknown[] }; lines: string[] } {
+  return {
+    body: {
+      connections: missing.map((t) => ({
+        name: t.name, url: mcp, tool: t.name, mode: "verify", audience: mcp, control: true,
+        idempotency_argument: OP_ARG, ...(t.read ? { read_only: true } : {}),
+      })),
+    },
+    lines: missing.map((t) => COACH_TOOL_LINES[t.name] ?? t.name),
+  };
+}
+
+/**
+ * The draft of Coach's Cards (KIFF's POST /v1/me/agent-drafts), labelled "Coach", for Coach's KIFF
+ * agent: the phone signs and sends it as it is, and a signed submit is the owner's one confirmation.
+ */
+export function coachCardsDraft(agentID: string): { agent_id: string; label: string; cards: unknown[] } {
+  return {
+    agent_id: agentID,
+    label: "Coach",
+    cards: COACH_CARDS.map((c) => ({
+      id: c.id, subject: agentID, domain: "gateway", on_exceed: c.asks ? "owner" : "refuse", ...(c.asks ? { hold_expiry: "10m" } : {}),
+      grants: c.actions.map((action) => ({ action })), aggregates: [{ quantity: "count", limit: c.limit, window: "calendar_day" }],
+    })),
+  };
+}
+
 /** A tool's answer, as Coach reads it. */
 export type ToolAnswer = Record<string, unknown>;
 

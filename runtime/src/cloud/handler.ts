@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, runGrant, trialOf, whoIs } from "./kiff.js";
+import { cardExists, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -11,7 +11,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
@@ -174,6 +174,8 @@ export interface Deps {
   events?: EventLog;
   fetch?: Fetch;
   kiffBase?: string;
+  /** KIFF's gateway, where the account's tool connections are (default mcp.kiff.dev). */
+  kiffGateway?: string;
   /**
    * tafs cloud's own address as its callers name it, e.g. https://cloud.tafs.kiff.dev.
    * Behind CloudFront the request's host is the function's, so Coach's MCP audience
@@ -405,7 +407,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The account's Setup (kiff/agents#91): its chat uses the taf routes, by its id.
     if (parts.length === 2 && method === "GET") {
       const setup = await setupOf(me, deps);
-      return { setup: setup ? await view(setup, me, deps) : null };
+      if (!setup) return { setup: null, tools: null };
+      const [shown, tools] = await Promise.all([view(setup, me, deps), coachTools(event, setup, deps)]);
+      return { setup: shown, tools };
     }
     if (parts.length === 2 && method === "POST") {
       need(me, "cards.manage");
@@ -1012,6 +1016,42 @@ export const SETUP_JOB = "setup";
 const SETUP_NAME_CLAIM = " setup";
 
 /** The account's Setup, if it has one. */
+/**
+ * Coach's tools as KIFF has them, for the phone to give in one confirmation:
+ * `given` once every tool is connected here as the control server and Coach's Cards are issued;
+ * `to_give` with what's left: `connect`, the batch the phone signs and sends as it is, with its
+ * lines, and `card`, Coach's Cards' draft to sign and submit (that submit is the confirmation),
+ * with KIFF's own words for each Card from its preview; `taken` when another connection holds
+ * one of Coach's names; `unknown` when KIFF didn't answer. Read from KIFF each time, so every
+ * phone of the account agrees.
+ */
+async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Record<string, unknown>> {
+  const host = event.headers?.host ?? event.headers?.Host;
+  const self = deps.publicURL ?? (host ? `https://${host}` : "");
+  const mcp = `${self}/v1/mcp`;
+  const token = bearer(event);
+  try {
+    const [there, cards] = await Promise.all([
+      gatewayConnections(token, deps.fetch, deps.kiffGateway),
+      Promise.all(COACH_CARDS.map((c) => cardExists(token, c.id, deps.fetch, deps.kiffBase))),
+    ]);
+    const plan = coachToolsPlan(there, mcp);
+    if (plan.taken) return { state: "taken", taken: plan.taken };
+    const issued = cards.every(Boolean);
+    if (!plan.missing.length && issued) return { state: "given" };
+    // Coach's Cards, with KIFF's own words for them: never tafs cloud's copy of the wording.
+    let card: { body: unknown; cards: unknown } | undefined;
+    if (!issued) {
+      const body = coachCardsDraft(setup.kiffAgent);
+      card = { body, cards: await previewDraft(token, body, deps.fetch, deps.kiffBase) };
+    }
+    return { state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp) } : {}), ...(card ? { card } : {}) };
+  } catch (err) {
+    if (err instanceof KIFFError) return { state: "unknown" };
+    throw err;
+  }
+}
+
 async function setupOf(me: KIFFIdentity, deps: Deps): Promise<Taf | undefined> {
   return (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
 }
