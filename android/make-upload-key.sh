@@ -10,7 +10,7 @@ if aws secretsmanager describe-secret --region "$REGION" --secret-id "$SECRET" >
   echo "$SECRET exists already: keep it. A new upload key needs Play's upload key reset." >&2
   exit 1
 fi
-JAVA_HOME=${JAVA_HOME:-$(ls -d ~/opt/jdk-17*/Contents/Home 2>/dev/null || ls -d ~/opt/jdk-17* | head -1)}
+JAVA_HOME=${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || ls -d ~/opt/jdk-17*/Contents/Home 2>/dev/null || ls -d ~/opt/jdk-17* | head -1)}
 dir=$(mktemp -d)
 trap 'rm -rf "$dir"' EXIT
 store=$(openssl rand -base64 30 | tr -d '/+=' | cut -c1-32)

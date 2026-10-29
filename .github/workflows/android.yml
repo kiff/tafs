@@ -1,8 +1,8 @@
 name: Android
 
 # Every push and pull request that touches the Android app: build it and run its
-# tests, then run the screens' UI tests on an emulator. The release bundle for Play is
-# built and signed on a Mac with android/release.sh, whose upload key is in Secrets Manager.
+# tests, then run the screens' UI tests on an emulator. Run by hand, it also builds the
+# signed release bundle for Play (the release job), with the upload key from Secrets Manager.
 
 on:
   push:
@@ -10,6 +10,8 @@ on:
     paths: ["android/**", ".github/workflows/android.yml"]
   pull_request:
     paths: ["android/**", ".github/workflows/android.yml"]
+  # The signed release bundle for Play, on demand (the release job).
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -92,3 +94,56 @@ jobs:
         with:
           name: android-ui-test-results
           path: android/app/build/reports/androidTests
+
+  # The signed release bundle for Play's internal testing, only when run by hand. The upload key
+  # comes from Secrets Manager (tafs-android/upload-key) through the deploy role, which may read that
+  # one secret, and is written to the runner's temporary directory for the build only. The bundle is
+  # kept one day, for the owner to download and upload to Play.
+  release:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+      - run: chmod +x gradlew
+      - name: Accept the SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
+          aws-region: eu-west-1
+      - name: Firebase's settings
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          test -n "$GOOGLE_SERVICES_JSON" || { echo "::error::GOOGLE_SERVICES_JSON is not set: a release needs alerts on"; exit 1; }
+          printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+      - name: The signed bundle
+        run: |
+          set -euo pipefail
+          key="$RUNNER_TEMP/upload.jks"
+          secret=$(aws secretsmanager get-secret-value --secret-id tafs-android/upload-key --query SecretString --output text)
+          python3 -c 'import base64,json,sys; d=json.loads(sys.stdin.read()); open(sys.argv[1],"wb").write(base64.b64decode(d["keystore"]))' "$key" <<<"$secret"
+          for f in store_password key_password alias; do
+            v=$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get(sys.argv[1], "upload"))' "$f" <<<"$secret")
+            [ "$f" != alias ] && echo "::add-mask::$v"
+            case $f in store_password) export TAFS_UPLOAD_STORE_PASSWORD="$v";; key_password) export TAFS_UPLOAD_KEY_PASSWORD="$v";; alias) export TAFS_UPLOAD_KEY_ALIAS="$v";; esac
+          done
+          unset secret
+          TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :app:bundleRelease --stacktrace
+          rm -f "$key"
+          # Signed with the upload key, or Play refuses it.
+          "$JAVA_HOME/bin/jarsigner" -verify app/build/outputs/bundle/release/app-release.aab >/dev/null
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tafs-android-release-${{ github.run_number }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 1

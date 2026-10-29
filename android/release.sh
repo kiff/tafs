@@ -7,7 +7,7 @@ set -euo pipefail
 cd "${0:A:h}"
 SECRET=tafs-android/upload-key
 REGION=${AWS_REGION:-eu-west-1}
-export JAVA_HOME=${JAVA_HOME:-$(ls -d ~/opt/jdk-17*/Contents/Home 2>/dev/null || ls -d ~/opt/jdk-17* | head -1)}
+export JAVA_HOME=${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || ls -d ~/opt/jdk-17*/Contents/Home 2>/dev/null || ls -d ~/opt/jdk-17* | head -1)}
 export ANDROID_HOME=${ANDROID_HOME:-~/Library/Android/sdk}
 dir=$(mktemp -d)
 trap 'rm -rf "$dir"' EXIT
