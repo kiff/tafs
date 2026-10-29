@@ -195,7 +195,8 @@ class SigningTest {
   @Test fun theBiometricIsNamedInWordsTheOwnerKnows() {
     assertEquals("your fingerprint", Biometry.name(strongEnrolled = true, face = false, fingerprint = true))
     assertEquals("face unlock", Biometry.name(strongEnrolled = true, face = true, fingerprint = false))
-    assertEquals("your fingerprint or face", Biometry.name(strongEnrolled = true, face = true, fingerprint = true))
+    // Face unlock is seldom strong on Android, and only strong approves: a phone with a sensor names the fingerprint alone.
+    assertEquals("your fingerprint", Biometry.name(strongEnrolled = true, face = true, fingerprint = true))
   }
 
   @Test fun withoutAnEnrolledBiometricItIsTheScreenLock() {

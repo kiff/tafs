@@ -97,13 +97,14 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
 }
 
 /**
- * What this phone asks for before it signs, in the words the owner knows (kiff/tafs#87): a
- * fingerprint or face on most phones, else the screen lock. For "Approve once with …".
+ * What this phone asks for before it signs, in the words the owner knows (kiff/tafs#87): for "Approve once with …". An
+ * approval takes a strong biometric only, and face unlock on most Android phones isn't one, so a phone with a fingerprint
+ * sensor names the fingerprint alone; face unlock only where there's no sensor. With no strong biometric enrolled it's the
+ * screen lock, which signs what takes authority away; approving then says to add a fingerprint.
  */
 object Biometry {
   fun name(strongEnrolled: Boolean, face: Boolean, fingerprint: Boolean): String = when {
     !strongEnrolled -> "your screen lock"
-    fingerprint && face -> "your fingerprint or face"
     fingerprint -> "your fingerprint"
     face -> "face unlock"
     else -> "your screen lock"
