@@ -101,6 +101,8 @@ jobs:
   # kept one day, to upload to Play.
   release:
     if: github.event_name == 'workflow_dispatch'
+    # The owner approves each release here; the release role trusts only this environment.
+    environment: android-release
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
