@@ -317,8 +317,17 @@ describe("the email door", () => {
     await emailDoor(w);
     // Signed by another domain than the one in From.
     expect((await emailHook(w, mail(w, { from: "Ana <ana@acme.example>", dkim: "pass", dmarc: "fail" }))).body.outcome).toBe("knock");
-    // A From naming two mailboxes proves neither.
-    expect((await emailHook(w, mail(w, { from: "x@evil.example, Ana <ana@acme.example>" }))).body.outcome).toBe("knock");
+    // A From naming two mailboxes proves neither, however the second hides: in a list, a
+    // comment, or a quoted display name. DMARC passed for the sender's own domain then, and
+    // the address read here could be the other one.
+    for (const from of [
+      "x@evil.example, Ana <ana@acme.example>",
+      "x@evil.example (<ana@acme.example>)",
+      "\"<ana@acme.example>\" <x@evil.example>",
+      "\"ana@acme.example\" <x@evil.example>",
+    ]) {
+      expect((await emailHook(w, mail(w, { from }))).body.outcome, from).toBe("knock");
+    }
     expect(w.agents.runs).toHaveLength(0);
   });
 
