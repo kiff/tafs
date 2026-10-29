@@ -118,7 +118,7 @@ jobs:
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
+          role-to-assume: ${{ secrets.AWS_ANDROID_RELEASE_ROLE }}
           aws-region: eu-west-1
       - name: Firebase's settings
         env:
