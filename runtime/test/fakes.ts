@@ -460,6 +460,30 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       r.steering = [...(r.steering ?? []), { text, at: now().toISOString() }];
       return r;
     },
+    /**
+     * A card's answer, as kiff/agents takes it: only the person whose run it is (else 404),
+     * only a card of the paused run that still waits (else 409), a confirm's answer one of
+     * its options (else 400). Recorded as an `answered` event, and the run goes on.
+     */
+    async answerCard(tenant, agent, id, card, answer, requester) {
+      calls.push(`answerCard ${agent} ${id} ${card} ${JSON.stringify(answer)}`);
+      failing("answerCard");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      if (!r || !r.requester || r.requester.kind !== requester.kind || r.requester.id !== requester.id) throw gone();
+      const q = r.status === "PAUSED" ? (r.requirements ?? []).find((x) => x.kind === "card" && !x.answered && (x.input as { id?: string })?.id === card) : undefined;
+      if (!q) throw new AgentsError(409, "no card of this run waits for an answer by that id");
+      const shown = q.input as { type?: string; options?: Array<{ value: string; label: string }> };
+      const option = shown.options?.find((o) => o.value === answer);
+      if (shown.type === "confirm" && !option) throw new AgentsError(400, `${JSON.stringify(answer)} isn't one of the card's options`);
+      const words = option?.label ?? (typeof answer === "string" ? answer : JSON.stringify(answer));
+      q.answered = now().toISOString();
+      q.result = { answer, words };
+      const list = events.get(r.session) ?? [];
+      list.push({ session: r.session, run: r.id, seq: list.length + 1, time: now().toISOString(), kind: "answered", body: { id: card, type: shown.type, answer, words } });
+      events.set(r.session, list);
+      r.status = "RUNNING";
+      return r;
+    },
     async continueHeld(tenant, agent, exception) {
       calls.push(`continueHeld ${agent} ${exception}`);
       failing("continueHeld");
@@ -502,7 +526,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials };
+  /** A card the run shows and waits on for the owner's answer (kiff/agents' cards wait for their answer). */
+  const ask = (run: Run, component: { id: string; type: string } & Record<string, unknown>, at?: string) => {
+    show(run, component, at);
+    run.status = "PAUSED";
+    run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
+  };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

@@ -55,6 +55,7 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
+ *   POST /v1/tafs/{id}/components/{component}/answer  {answer, session?}: the person's answer to a card that waits for it, as data
  *   GET  /v1/tafs/{id}/versions         the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
  *   POST /v1/tafs/{id}/versions         {note, notes?, draft?, from?, agent?}: its next version, as Setup drafted it, once per result (kiff/tafs#107); nothing goes live
  *   POST /v1/tafs/{id}/versions/{n}/switch  {redraft?, stop_blocking?}: begin the switch to version n, with the Card draft it waits for: nothing of the taf runs until it ends. A run in the way is a 409 naming it (blocking); stop_blocking stops it first (kiff/tafs#206)
@@ -111,7 +112,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -497,6 +498,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "continue") {
     if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
     return goOn(me, taf, parts[4] ?? "", deps);
+  }
+  if (parts.length === 6 && method === "POST" && action === "components" && parts[5] === "answer") {
+    return answerRoute(event, me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
     return message(event, me, taf, deps);
@@ -1193,6 +1197,17 @@ export interface ThreadComponent {
   run: string;
   seq: number;
   component: unknown;
+  /**
+   * A card's answer, once kiff/agents recorded it: what the owner chose (`answered`), that
+   * they wrote a message instead (`wrote`), or that it stopped waiting (`no_answer`).
+   */
+  answer?: CardAnswer;
+}
+
+export interface CardAnswer {
+  state: "answered" | "wrote" | "no_answer";
+  words: string;
+  at: string;
 }
 
 export interface ThreadMessage {
@@ -1209,6 +1224,8 @@ export interface ThreadMessage {
   door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending"; why?: string };
   /** The files the person attached to their message (kiff/tafs#209): opened through the attachments route. */
   attachments?: AttachmentRef[];
+  /** The card the owner's message answered, by id: they wrote while it waited, and their words were its answer. */
+  answers?: string;
   /**
    * A taf's message that called tools first (kiff/tafs#285): how long it worked on it, from the
    * message before, and the tools it called, by name, in order, with the ones that failed. From
@@ -1321,6 +1338,17 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: e.body });
         continue;
       }
+      if (e.kind === "answered") {
+        // The card's answer as kiff/agents recorded it: on the run's latest card with its id.
+        const b = (e.body ?? {}) as { id?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown };
+        const card = components.findLast((c) => c.run === e.run && (c.component as { id?: unknown })?.id === b.id);
+        if (card) card.answer = cardAnswer(b, iso(e.time));
+        // Words the owner wrote while the card waited answered it: they show as their message, as sent.
+        if (typeof b.wrote === "string" && b.wrote.trim()) {
+          messages.push({ at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
+        }
+        continue;
+      }
       if (e.kind !== "owner_message" && e.kind !== "agent_message" && e.kind !== "report") continue;
       const text = typeof (e.body as { text?: unknown })?.text === "string" ? ((e.body as { text: string }).text).trim() : "";
       const attached = e.kind === "owner_message" ? attachmentsOf(e.body) : [];
@@ -1363,6 +1391,13 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
   return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
+}
+
+/** An `answered` event's body as the app shows it. */
+function cardAnswer(b: { words?: unknown; wrote?: unknown; unanswered?: unknown }, at: string): CardAnswer {
+  if (b.unanswered === true) return { state: "no_answer", words: "", at };
+  if (typeof b.wrote === "string" && b.wrote) return { state: "wrote", words: b.wrote, at };
+  return { state: "answered", words: typeof b.words === "string" ? b.words : "", at };
 }
 
 /**
@@ -1422,6 +1457,8 @@ interface Steering {
  */
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   const owner = chatText(event, files(event).length > 0);
+  const answered = await oldFormAnswer(event, me, taf, owner, deps);
+  if (answered) return { session: answered.session, new_session: false, run: answered.id };
   const lines = await takeCoachLines(me, taf, deps);
   try {
     return await startMessage(event, me, taf, lines.text(owner), deps);
@@ -1429,6 +1466,106 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
     // The message didn't start: Coach reads its lines with the next one.
     await lines.putBack();
     throw err;
+  }
+}
+
+/** The card types the person answers, as kiff/agents takes them. */
+const ANSWERABLE = ["confirm", "questions", "approval", "sign_in"];
+
+/**
+ * POST /v1/tafs/{id}/components/{component}/answer {answer, session?}: the person's answer
+ * to a card of theirs that waits for it, as data. kiff/agents checks it against the card
+ * and the run goes on with it. 404 when no card of theirs with that id was shown; 409 when
+ * it doesn't wait any more (answered, stopped waiting, or the run went on); 400 for an
+ * answer the card doesn't take.
+ */
+async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
+  const body = parseBody(event);
+  if (!("answer" in body)) throw new HTTPError(400, "send the card's answer");
+  const card = await shownCard(me, taf, component, undefined, str(body.session).trim(), deps);
+  if (!card) throw new HTTPError(404, "no card of yours by that id");
+  try {
+    const run = await deps.agents.answerCard(me.tenantID, taf.id, card.run, component, body.answer, member(me));
+    return { session: card.session, run: run.id, status: run.status };
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, "the card doesn't wait for an answer any more: read the conversation");
+    if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no card of yours by that id");
+    throw agentsFailure(err);
+  }
+}
+
+/**
+ * The card a person's chat showed with this id (and type, when given): the latest, in the
+ * chat named, else in the chats the thread shows. Only their own chats are read.
+ */
+async function shownCard(me: KIFFIdentity, taf: Taf, id: string, type: string | undefined, session: string, deps: Deps): Promise<{ session: string; run: string } | undefined> {
+  if (!id) return undefined;
+  const picked = session ? [await ownChat(me, taf, session, deps)] :
+    (await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me))))
+      .filter((s) => s.kind === "chat" && !s.archived).sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, CHAT.chatsInThread);
+  let found: { session: string; run: string; time: string } | undefined;
+  for (const s of picked) {
+    const read = await deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined);
+    for (const e of read?.events ?? []) {
+      const c = (e.kind === "component" ? e.body : undefined) as { id?: unknown; type?: unknown } | undefined;
+      if (c?.id !== id || (type && c.type !== type)) continue;
+      if (!found || e.time >= found.time) found = { session: s.id, run: e.run, time: e.time };
+    }
+  }
+  return found && { session: found.session, run: found.run };
+}
+
+/**
+ * The app's answer to a card in the form it has sent until now, "[<type> <id>] <answer>"
+ * (only the person's own message, never a door's), as the answer kiff/agents takes:
+ * confirm → its option's value, questions → the answers' JSON, approval → approved,
+ * declined or failed: <why>, sign_in → signed in, not now or failed: <why>. Undefined
+ * for any other text.
+ */
+export function oldFormCard(text: string): { type: string; id: string; answer: unknown } | undefined {
+  const m = /^\[([a-z_]+) ([^\]\s]+)\] ([\s\S]+)$/.exec(text);
+  if (!m || !ANSWERABLE.includes(m[1]!)) return undefined;
+  const [, type, id, rest] = m as unknown as [string, string, string, string];
+  const failed = rest.startsWith("failed:") ? rest : undefined;
+  switch (type) {
+    case "confirm":
+      return { type, id, answer: rest };
+    case "questions":
+      try {
+        const answer: unknown = JSON.parse(rest);
+        return answer && typeof answer === "object" && !Array.isArray(answer) ? { type, id, answer } : undefined;
+      } catch {
+        return undefined;
+      }
+    case "approval": {
+      const answer = rest === "approved" || rest.startsWith("approved,") ? "approved" : rest === "declined" ? "declined" : failed;
+      return answer ? { type, id, answer } : undefined;
+    }
+    default: {
+      const answer = rest === "signed in" || rest === "not now" ? rest : failed;
+      return answer ? { type, id, answer } : undefined;
+    }
+  }
+}
+
+/**
+ * The person's message, when it is the app's old form of an answer to a card of theirs
+ * that waits: answered as data (kiff/agents' answer), and the run it waits in. Undefined
+ * when it isn't one, names no such card, or kiff/agents doesn't take it (400, 404, 409):
+ * then it goes as a message, as before. A message with files or into a new chat never is.
+ */
+async function oldFormAnswer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<Run | undefined> {
+  const body = parseBody(event);
+  if (body.new_chat === true || files(event).length) return undefined;
+  const card = oldFormCard(text);
+  if (!card) return undefined;
+  const shown = await shownCard(me, taf, card.id, card.type, str(body.session).trim(), deps);
+  if (!shown) return undefined;
+  try {
+    return await deps.agents.answerCard(me.tenantID, taf.id, shown.run, card.id, card.answer, member(me));
+  } catch (err) {
+    if (err instanceof AgentsError && [400, 404, 409].includes(err.status)) return undefined;
+    throw agentsFailure(err);
   }
 }
 
@@ -2211,6 +2348,8 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     const taf = await owned(me, parts[2] ?? "", deps);
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
+    const answered = await oldFormAnswer(event, me, taf, owner, deps);
+    if (answered) return answeredStream(me, taf, answered, deps);
     const lines = await takeCoachLines(me, taf, deps);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
@@ -2238,6 +2377,26 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     const message = status === 500 ? "something went wrong on tafs cloud" : (err as Error).message;
     return { statusCode: status, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: once(JSON.stringify({ error: message })) };
   }
+}
+
+/**
+ * A card answered from the old form, streamed as a message would be: its chat, the message
+ * taken, then the run that waited going on, as a resumed run's stream shows it.
+ */
+async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: Deps): Promise<StreamResult> {
+  const run = deps.agents.resumeRun(me.tenantID, taf.id, answered.id, 0, ownerKey(me));
+  let first: IteratorResult<RunStreamEvent>;
+  try {
+    first = await run.next();
+  } catch (err) {
+    throw agentsFailure(err);
+  }
+  async function* body(): AsyncGenerator<string> {
+    yield sse("session", { session: answered.session, new_session: false, run: answered.id });
+    yield sse("taken", {});
+    yield* relay(run, first, undefined);
+  }
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: body() };
 }
 
 function agentsFailure(err: unknown): unknown {
