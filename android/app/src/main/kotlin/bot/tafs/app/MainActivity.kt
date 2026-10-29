@@ -24,6 +24,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -419,9 +420,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       else TafUsageSheet(taf, state, account, onClose = { usageOpen = false })
     }
     if (!keyboardUp) HorizontalDivider(color = Theme.line)
-    // 64 dp rather than Material's 80, above the system's gesture bar: it takes less of the screen, as iOS's tab bar.
+    // 56 dp rather than Material's 80, above the system's gesture bar: it takes less of the screen, as iOS's tab bar.
     if (!keyboardUp) NavigationBar(
-      Modifier.navigationBarsPadding().height(64.dp),
+      Modifier.navigationBarsPadding().height(56.dp),
       containerColor = Theme.background,
       tonalElevation = 0.dp,
       windowInsets = WindowInsets(0),
@@ -431,7 +432,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           selected = tab == t,
           onClick = { tab = t },
           icon = {
-            val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null) }
+            val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
             if (t == Tab.NeedsYou && state.held.isNotEmpty()) {
               BadgedBox(badge = { Badge(containerColor = Theme.no) { Text("${state.held.size}") } }) { icon() }
             } else {
