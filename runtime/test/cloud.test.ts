@@ -204,7 +204,7 @@ function depsOf(w: World): Deps {
       get: async (tenant) => w.deletions.get(tenant),
       put: async (d) => { w.deletions.set(d.tenant, structuredClone(d)); },
       pending: async () => [...w.deletions.values()].map((d) => structuredClone(d)),
-      finished: async (tenant) => { w.deletions.delete(tenant); w.finishedDeletions.push(tenant); },
+      finished: async (tenant, _at, outcome) => { w.deletions.delete(tenant); w.finishedDeletions.push(outcome === "deleted" ? tenant : `${tenant} dropped`); },
     },
     deletionPeers: Object.fromEntries((["planque", "kiff"] as const).map((name) => [name, {
       accept: async (_i: string, _s: string, bearer?: string) => { w.peerCalls.push(`${name} accept${bearer ? ` as ${bearer}` : ""}`); const e = w.peerRefuse.get(`${name} accept`); if (e) { w.peerRefuse.delete(`${name} accept`); throw e; } },
@@ -1662,7 +1662,7 @@ describe("deleting the account from one signed intent", () => {
   ].join("\n");
   const send = (w: World, body: object, token = "owner") => call(w, "POST", "/v1/account/delete", { token, body });
 
-  it("is accepted by planque then KIFF, then finished in order: tafs cloud's own, planque, KIFF last", async () => {
+  it("is accepted by KIFF first, then finished in order: tafs cloud's own, planque, KIFF last", async () => {
     const w = world();
     const r = await send(w, { intent: intent(), signature: "c2ln" });
     expect(r.status).toBe(200);

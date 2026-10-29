@@ -10,11 +10,11 @@
  *   nonce=<32 hex>
  *
  * one field a line, LF between, no newline at the end; the signature is base64 DER ECDSA over its
- * SHA-256. tafs cloud never vouches for it: planque and KIFF each verify it with the device's key.
+ * SHA-256. tafs cloud never vouches for it: KIFF verifies it with the device's key, and planque takes KIFF's word.
  *
- * Two phases. **Accept**, within the intent's 10 minutes: planque, then KIFF, each verifies the
- * intent and records the deletion as accepted, deleting nothing. From KIFF's accept on, the account
- * can't be used. **Finish**, with no deadline: tafs cloud erases its own, then planque (while KIFF's
+ * Two phases. **Accept**, within the intent's 10 minutes: KIFF verifies the intent, with the
+ * person's session, and records the deletion as accepted, deleting nothing; planque accepts on
+ * KIFF's word, in its finish step. From KIFF's accept on, the account can't be used. **Finish**, with no deadline: tafs cloud erases its own, then planque (while KIFF's
  * connector key still works), then KIFF, last. Each finish is idempotent, and the intent is kept, so
  * a deletion cut short (the phone gone, a service down) is finished by the sweep, with no session
  * and no new signature. There is no undo.
@@ -93,8 +93,11 @@ export interface Deletions {
   put(d: Deletion): Promise<void>;
   /** The deletions not finished yet. */
   pending(): Promise<Deletion[]>;
-  /** A finished deletion: its intent and signature go; only that it was done stays. */
-  finished(tenant: string, at: string): Promise<void>;
+  /**
+   * A finished deletion: its intent and signature go. `deleted` once every step is done; `dropped` when KIFF refused it
+   * or never took it, and nothing was deleted.
+   */
+  finished(tenant: string, at: string, outcome: "deleted" | "dropped"): Promise<void>;
 }
 
 /** planque or KIFF, for a deletion: accept checks the signed intent and records it; finish deletes, again and again the same. */

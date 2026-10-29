@@ -623,12 +623,13 @@ const deletions: Deletions = {
       try { return [JSON.parse(v.S ?? "") as Deletion]; } catch { return []; }
     });
   },
-  async finished(tenant, at) {
+  async finished(tenant, at, outcome) {
     await dynamo.send(new UpdateItemCommand({
       TableName: TABLE, Key: { id: { S: "deletions" } },
       UpdateExpression: "REMOVE #m.#k", ExpressionAttributeNames: { "#m": "pending", "#k": tenant },
     }));
-    console.log(`account deleted: ${tenant} at ${at}`);
+    // A dropped deletion deleted nothing: the log never says otherwise.
+    console.log(outcome === "deleted" ? `account deleted: ${tenant} at ${at}` : `account deletion dropped, nothing deleted: ${tenant} at ${at}`);
   },
 };
 

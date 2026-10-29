@@ -1235,7 +1235,7 @@ async function deleteByIntent(me: KIFFIdentity, body: Record<string, unknown>, t
     await deps.deletionPeers.kiff.accept(intent, signature, token);
   } catch (err) {
     if (err instanceof PeerError && err.status >= 400 && err.status < 500) {
-      await deps.deletions.finished(me.tenantID, now.toISOString());
+      await deps.deletions.finished(me.tenantID, now.toISOString(), "dropped");
       throw refused("kiff", err);
     }
     // No answer from KIFF: kept, for the sweep to settle.
@@ -1280,7 +1280,7 @@ export async function finishDeletion(d: Deletion, deps: Deps, now: Date): Promis
     await deps.deletions!.put(out);
   }
   delete out.failed;
-  await deps.deletions!.finished(d.tenant, now.toISOString());
+  await deps.deletions!.finished(d.tenant, now.toISOString(), "deleted");
   return out;
 }
 
@@ -1298,7 +1298,7 @@ export async function sweepDeletions(deps: Deps): Promise<Array<{ tenant: string
         await deps.deletions.put({ ...d, tried: now.toISOString(), tries: (d.tries ?? 0) + 1, failed: { kiff: (err as Error).message } });
         continue;
       }
-      if (!accepted) { await deps.deletions.finished(d.tenant, now.toISOString()); continue; }
+      if (!accepted) { await deps.deletions.finished(d.tenant, now.toISOString(), "dropped"); continue; }
       d = { ...d };
       delete d.accepting;
       await deps.agents.halt(d.tenant).catch(() => undefined);
