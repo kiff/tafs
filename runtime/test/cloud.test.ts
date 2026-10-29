@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
+import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, type Taf, trialView, upgradeDefinitions } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -2020,5 +2020,14 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const r = await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: { taf_id: "x" }, answered_by: "tafs cloud" } });
     expect(r.status).toBe(400);
     expect(r.body.error).toContain("answered_by is tafs cloud's alone");
+  });
+});
+
+describe("a trial's end", () => {
+  const taf: Taf = { id: RAE, name: "Rae", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
+  const t = { id: "tr1", n: 2, draft: "drf_2", started: "2026-10-20T09:00:00Z", used: "2026-10-21T09:00:00Z" };
+  it("is kiff/agents' own when it says it, and the week it kept before when it doesn't", () => {
+    expect(trialView({ ...t, idle_days: 3, ends: "2026-10-24T09:00:00.000Z" }, taf, undefined)).toMatchObject({ idle_days: 3, ends: "2026-10-24T09:00:00.000Z" });
+    expect(trialView(t, taf, undefined)).toMatchObject({ idle_days: 7, ends: "2026-10-28T09:00:00.000Z" });
   });
 });

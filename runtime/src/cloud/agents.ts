@@ -193,6 +193,8 @@ export interface AgentVersion {
   note: string;
   /** Who made it: the owner's subject, or "setup". */
   by: string;
+  /** Which kind of author that is: a person or an agent (Coach). */
+  by_kind?: "person" | "agent";
   created: string;
   digest: string;
   live: boolean;
@@ -215,8 +217,11 @@ export interface Trial {
   /** Its chat, which kiff/agents opens with the trial (kiff/agents#215). */
   session?: string;
   started: string;
-  /** When the owner last wrote in it: unused for 7 days, it ends. */
+  /** When the owner last wrote in it: unused for idle_days, it ends. */
   used: string;
+  /** How many days unused end it, and when it ends if it stays unused: kiff/agents' own. */
+  idle_days?: number;
+  ends?: string;
 }
 
 /** What a version keeps of an ended trial. */
@@ -456,7 +461,7 @@ export class Agents {
    * changed, who made it, and the KIFF draft revising its Cards, if any.
    * What's live doesn't change. Returns its number.
    */
-  async createVersion(tenant: string, id: string, v: { definition: AgentDefinition; note: string; by: string; draft?: string }): Promise<number> {
+  async createVersion(tenant: string, id: string, v: { definition: AgentDefinition; note: string; by: string; by_kind?: "person" | "agent"; draft?: string }): Promise<number> {
     return (await this.call<{ n: number }>("POST", tenant, ["agents", id, "versions"], v)).n;
   }
 

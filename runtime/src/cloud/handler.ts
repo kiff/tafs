@@ -1928,10 +1928,12 @@ const TRIAL_IDLE_MS = 7 * 24 * 3600_000;
  * its badge (label) and title, what the version changes, the task to try it
  * with, and when it ends unused.
  */
-export function trialView(t: Trial, taf: Taf, note: string | undefined): Trial & { label: string; title: string; changed?: string; try?: string; ends: string } {
+export function trialView(t: Trial, taf: Taf, note: string | undefined): Trial & { label: string; title: string; changed?: string; try?: string; ends: string; idle_days: number } {
   const tryWith = taf.tries?.[String(t.n)];
-  const ends = new Date(Date.parse(t.used) + TRIAL_IDLE_MS).toISOString();
-  return { ...t, label: "Trial", title: `Trying version ${t.n}`, ...(note ? { changed: note } : {}), ...(tryWith ? { try: tryWith } : {}), ends };
+  // kiff/agents' own, when it says them; from before it did, the week it kept then.
+  const ends = t.ends ?? new Date(Date.parse(t.used) + TRIAL_IDLE_MS).toISOString();
+  const idle = t.idle_days ?? TRIAL_IDLE_MS / (24 * 3600_000);
+  return { ...t, label: "Trial", title: `Trying version ${t.n}`, ...(note ? { changed: note } : {}), ...(tryWith ? { try: tryWith } : {}), ends, idle_days: idle };
 }
 
 /** The trial of a taf as the app shows it, or null: one read of its versions for the note. */
@@ -2013,7 +2015,7 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   }
   // The version live now records its Cards first, so going back to it brings them back.
   await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
-  const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", ...(draft ? { draft } : {}) }));
+  const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
   if (from || tryWith) {
     // Kept so the same result hands over this version again, with what to
     // try it with. A record that changed meanwhile is read again once.
