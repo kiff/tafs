@@ -184,18 +184,6 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
           live != null -> item(key = "live") { LiveWork(live) }
           thinking -> item(key = "thinking") { TypingDots() }
         }
-        // Stop: for whoever manages Cards, while a run is at work in this chat.
-        val session = live?.session ?: state.chatWorking[tafId]?.session
-        if (thinking && session != null && state.mode == Mode.kiff && state.canManageCards) {
-          item(key = "stop") {
-            Text(
-              "Stop",
-              style = scaled(14, FontWeight.SemiBold, Theme.no),
-              modifier = Modifier.clip(RoundedCornerShape(50)).border(BorderStroke(1.dp, Theme.line), RoundedCornerShape(50))
-                .clickable { scope.launch { actions.stopChat(tafId) } }.padding(horizontal = 12.dp, vertical = 6.dp),
-            )
-          }
-        }
         // How the latest run ended, when it says so here: stopped part-way (with Retry), stopped by the owner, or at a cap.
         if (!thinking) state.chatEnded[tafId]?.let { end ->
           item(key = "ended") { EndedLine(end, taf?.name ?: "It", onRetry = { text -> following = true; actions.sendChat(text, tafId) { } }) }
@@ -246,6 +234,10 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       // A message is on its way: one at a time. While the taf works, what's written goes to its run.
       sending = tafId in state.chatSending,
       thinking = thinking,
+      // Stop, in Send's place: for whoever manages Cards, while a run is at work in this chat (as iOS).
+      onStop = (live?.session ?: state.chatWorking[tafId]?.session)
+        ?.takeIf { thinking && state.mode == Mode.kiff && state.canManageCards }
+        ?.let { { scope.launch { actions.stopChat(tafId) } } },
     ) {
       val text = draft
       draft = ""
@@ -257,7 +249,15 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
 }
 
 @Composable
-private fun Composer(name: String, draft: String, onDraft: (String) -> Unit, sending: Boolean, thinking: Boolean, onSend: () -> Unit) {
+private fun Composer(
+  name: String,
+  draft: String,
+  onDraft: (String) -> Unit,
+  sending: Boolean,
+  thinking: Boolean,
+  onStop: (() -> Unit)?,
+  onSend: () -> Unit,
+) {
   val empty = draft.isBlank()
   val focus = LocalFocusManager.current
   Box(
@@ -287,7 +287,15 @@ private fun Composer(name: String, draft: String, onDraft: (String) -> Unit, sen
           }
         },
       )
-      Box(
+      if (onStop != null && empty) {
+        // While the taf works and the box is empty, Send is Stop: its run is cancelled.
+        Box(
+          Modifier.size(40.dp).clip(CircleShape).background(Theme.ink).clickable(onClick = onStop).semantics { contentDescription = "Stop" },
+          contentAlignment = Alignment.Center,
+        ) {
+          Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(Color.White))
+        }
+      } else Box(
         Modifier
           .size(40.dp)
           .clip(CircleShape)

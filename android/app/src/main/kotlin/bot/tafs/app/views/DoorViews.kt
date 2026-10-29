@@ -96,14 +96,21 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
   val door = doors.doors.getOrNull(selected)
 
   Panel {
-    Eyebrow("Doors")
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      doors.doors.forEachIndexed { i, d ->
-        val knocking = doors.openKnocks.any { it.door == d.id && !it.isLine }
-        DoorChip(d.app, DoorNames.label(d.app).replaceFirstChar { it.uppercase() }, d.open, knocking, selected == i) { selected = i }
-      }
-      DoorChip("+", "Add", open = false, knocking = false, selected = door == null) { adding = true }
-    }
+    Eyebrow("Doors · turn to pick, press to open")
+    DoorDial(
+      taf, doors.doors, doors.openKnocks, selected,
+      onSelect = { selected = it },
+      onPress = {
+        // The taf in the middle opens or closes the door at the top; at "Add", it adds one.
+        if (door == null) adding = true else if (!doors.busy) scope.launch { actions.setOpen(taf.id, door, !door.open) }
+      },
+    )
+    Text(
+      door?.let { "Press ${taf.name} to ${if (it.open) "close" else "open"} ${it.label}" } ?: "Press ${taf.name} to add a door",
+      style = scaled(12, color = Theme.dim),
+      textAlign = TextAlign.Center,
+      modifier = Modifier.fillMaxWidth(),
+    )
   }
   if (door != null) DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
   else {
@@ -221,29 +228,6 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
       Text(DoorWords.noKeys(door, taf.name), style = scaled(15, color = Theme.ink))
     }
     Text("Remove door", style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onRemove).padding(top = 8.dp))
-  }
-}
-
-/** One stop: the door's badge and name, lit while open, with a dot while a knock waits. */
-@Composable
-private fun DoorChip(app: String, label: String, open: Boolean, knocking: Boolean, selected: Boolean, onClick: () -> Unit) {
-  val shape = RoundedCornerShape(50)
-  Row(
-    Modifier
-      .heightIn(min = 44.dp)
-      .clip(shape)
-      .background(if (selected) Theme.ink.copy(alpha = 0.08f) else Color.Transparent)
-      .border(BorderStroke(1.dp, if (selected) Theme.ink.copy(alpha = 0.4f) else Theme.line), shape)
-      .clickable(onClick = onClick)
-      .padding(horizontal = 8.dp),
-    horizontalArrangement = Arrangement.spacedBy(6.dp),
-    verticalAlignment = Alignment.CenterVertically,
-  ) {
-    Box {
-      DoorBadge(app, open, 24)
-      if (knocking) Box(Modifier.align(Alignment.TopEnd).size(9.dp).clip(CircleShape).background(Theme.amber))
-    }
-    Text(label, style = scaled(14, if (selected) FontWeight.SemiBold else FontWeight.Normal, if (selected) Theme.ink else Theme.soft))
   }
 }
 
