@@ -2030,6 +2030,10 @@ describe("Coach's result, handed over by tafs cloud", () => {
       { ...depsOf(w), coach: memoryCoach(() => w.now) });
     expect(r.statusCode).toBe(200);
     expect(stored.requirements![0]!.result).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // The next read shows what came of it on the card, and who answered: the app only draws it.
+    const again = JSON.parse((await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...depsOf(w), coach: memoryCoach(() => w.now) })).body) as { components: Array<{ component: { id: string }; answer?: unknown }> };
+    expect(again.components.find((c) => c.component.id === "done")?.answer).toMatchObject({ state: "answered", words: "Refunds is set up", by: "tafs cloud", outcome: { taf_id: NEW } });
   });
 
   it("refuses answered_by from a person's own answer", async () => {

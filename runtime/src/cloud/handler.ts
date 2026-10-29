@@ -1395,6 +1395,10 @@ export interface CardAnswer {
   state: "answered" | "wrote" | "no_answer";
   words: string;
   at: string;
+  /** Who answered in the owner's place, when it wasn't them: tafs cloud, for a result. */
+  by?: string;
+  /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. */
+  outcome?: ResultOutcome;
 }
 
 export interface ThreadMessage {
@@ -1527,7 +1531,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       }
       if (e.kind === "answered") {
         // The card's answer as kiff/agents recorded it: on the run's latest card with its id.
-        const b = (e.body ?? {}) as { id?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown };
+        const b = (e.body ?? {}) as { id?: unknown; type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown };
         const card = components.findLast((c) => c.run === e.run && (c.component as { id?: unknown })?.id === b.id);
         if (card) card.answer = cardAnswer(b, iso(e.time));
         // Words the owner wrote while the card waited answered it: they show as their message, as sent.
@@ -1581,10 +1585,18 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
 }
 
 /** An `answered` event's body as the app shows it. */
-function cardAnswer(b: { words?: unknown; wrote?: unknown; unanswered?: unknown }, at: string): CardAnswer {
+function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown }, at: string): CardAnswer {
   if (b.unanswered === true) return { state: "no_answer", words: "", at };
   if (typeof b.wrote === "string" && b.wrote) return { state: "wrote", words: b.wrote, at };
-  return { state: "answered", words: typeof b.words === "string" ? b.words : "", at };
+  const out: CardAnswer = { state: "answered", words: typeof b.words === "string" ? b.words : "", at };
+  if (typeof b.answered_by === "string" && b.answered_by) out.by = b.answered_by;
+  const o = b.answer as { taf_id?: unknown; version?: unknown; failed?: unknown } | null | undefined;
+  if (b.type === "result" && o && typeof o === "object") {
+    if (typeof o.taf_id === "string") out.outcome = { taf_id: o.taf_id };
+    else if (typeof o.version === "number") out.outcome = { version: o.version };
+    else if (typeof o.failed === "string") out.outcome = { failed: o.failed };
+  }
+  return out;
 }
 
 /**

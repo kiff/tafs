@@ -496,6 +496,10 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!r || !q) throw new AgentsError(409, "no card of this run waits for an answer by that id", undefined, "card_not_waiting");
       q.answered = now().toISOString();
       q.result = { answer: outcome, answered_by: "tafs cloud" };
+      const words = "taf_id" in outcome ? "Refunds is set up" : "version" in outcome ? `Version ${outcome.version} is ready to try` : `It didn't go through: ${outcome.failed}`;
+      const list = events.get(r.session) ?? [];
+      list.push({ session: r.session, run: r.id, seq: list.length + 1, time: now().toISOString(), kind: "answered", body: { id: card, type: "result", answer: outcome, words, answered_by: "tafs cloud" } });
+      events.set(r.session, list);
       return r;
     },
     /** What the run's requester may do now: `access` by subject, as KIFF would answer Coach's key; a subject missing from it is KIFF not answering. */
