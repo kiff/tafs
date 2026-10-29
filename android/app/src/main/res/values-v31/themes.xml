@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The splash is the icon on the app's cream ground, so the icon's own ground disappears into it. -->
+    <style name="Theme.Tafs" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FBF7EE</item>
+        <item name="android:windowSplashScreenBackground">#FBF7EE</item>
+    </style>
+</resources>

@@ -96,12 +96,12 @@ for production.
 ## Alerts while tafs is closed
 
 KIFF tells tafs cloud when a call is held, and tafs cloud tells the account's phones
-through Apple push (`runtime/src/cloud/push.ts`):
+through Apple push for an iPhone and Firebase Cloud Messaging for an Android phone (`runtime/src/cloud/push.ts`, `apns.ts`, `fcm.ts`):
 
 1. The phone registers the account's **alert target** in KIFF, pointed at
    `/v1/kiff/alerts`, with a signed setup call (one Face ID). KIFF shows the target's
    signing secret once, to the phone.
-2. The phone hands tafs cloud its push token and that secret (`POST /v1/push`). The
+2. The phone hands tafs cloud its push token and that secret (`POST /v1/push`; an Android phone says `platform: "android"` and gives Firebase's token). The
    secret checks KIFF's deliveries; the token is where they go. An account gets alerts on
    50 phones at most. A phone can also hand over the target alone (`POST /v1/alerts`), so a
    paused run hears the answer whether or not a phone turned on alerts.
@@ -111,6 +111,15 @@ through Apple push (`runtime/src/cloud/push.ts`):
 
 Only phones of people who may answer held calls (`holds.answer`) are alerted, and only
 they may hand over the target's secret.
+
+**On Android** the push is a Firebase data message the phone builds its notification from:
+`kind` (`alert` shows one, `answered` takes it away), the words, where tapping it goes
+(`open`), the call or request it is about, and how loud it is (`level`). It carries no
+amount and no argument, as an iPhone's push doesn't. A phone whose Sound is off gets
+`level: "quiet"`. Google refusing a token it no longer knows forgets that phone; any other
+failure answers KIFF 502, so it sends the alert again. tafs cloud sends to Android only
+where `FCM_PROJECT_ID` and `FCM_SECRET_ID` are set (the Firebase project's service-account
+key in Secrets Manager); without them an Android phone's registration is refused (503).
 
 **What an alert says.** KIFF's alert carries no request parameters, so the push says only
 "A taf needs you" and the action. On the phone, the notification service extension reads

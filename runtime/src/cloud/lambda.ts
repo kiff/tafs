@@ -4,9 +4,10 @@ import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
 import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
+import { fcmSender } from "./fcm.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
 import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
-import { silencing, type Device, type PushStore } from "./push.js";
+import { routing, silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
 import { emailProvider } from "./doors/email.js";
@@ -183,7 +184,7 @@ const push: PushStore = {
       const m = v.M ?? {};
       const env = m.environment?.S;
       return env === "sandbox" || env === "production"
-        ? [{ token, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, manages: m.manages?.BOOL === true, silent: m.silent?.BOOL === true, at: m.at?.S ?? "" }]
+        ? [{ token, platform: m.platform?.S === "android" ? "android" as const : "ios" as const, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, manages: m.manages?.BOOL === true, silent: m.silent?.BOOL === true, at: m.at?.S ?? "" }]
         : [];
     });
     const secrets = Object.values(out.Item?.secrets?.M ?? {})
@@ -194,7 +195,7 @@ const push: PushStore = {
     return { devices, secrets };
   },
   async addDevice(tenant, d) {
-    await setEntry(tenant, "devices", d.token, { environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, manages: { BOOL: d.manages === true }, silent: { BOOL: d.silent === true }, at: { S: d.at } });
+    await setEntry(tenant, "devices", d.token, { platform: { S: d.platform ?? "ios" }, environment: { S: d.environment }, subject: { S: d.subject }, answers: { BOOL: d.answers }, adds_tasks: { BOOL: d.addsTasks === true }, manages: { BOOL: d.manages === true }, silent: { BOOL: d.silent === true }, at: { S: d.at } });
   },
   async removeDevice(tenant, token) {
     await dynamo.send(new UpdateItemCommand({
@@ -235,19 +236,36 @@ async function setEntry(tenant: string, map: "devices" | "secrets", key: string,
 }
 
 /**
- * Apple push with the "tafs push" key, read from Secrets Manager on first use;
- * quiet on the phones whose Sound for alerts is off.
+ * Google push for Android phones, with the Firebase project's service-account key, read from Secrets Manager on first
+ * use. Off unless FCM_PROJECT_ID and FCM_SECRET_ID are set: an Android phone's registration is then refused.
  */
-const apns = silencing(apnsSender({
-  keyPEM: async () => {
-    const id = process.env.APNS_SECRET_ID;
-    if (!id) throw new Error("APNS_SECRET_ID is not set");
-    const out = await new SecretsManagerClient({ region: DATA_REGION }).send(new GetSecretValueCommand({ SecretId: id }));
-    return (out.SecretString ?? "").trim();
-  },
-  keyID: process.env.APNS_KEY_ID ?? "",
-  teamID: process.env.APNS_TEAM_ID ?? "",
-  topic: process.env.APNS_TOPIC ?? "bot.tafs.app",
+const fcm = process.env.FCM_PROJECT_ID && process.env.FCM_SECRET_ID
+  ? fcmSender({
+    projectId: process.env.FCM_PROJECT_ID,
+    credentials: async () => {
+      const out = await new SecretsManagerClient({ region: DATA_REGION }).send(new GetSecretValueCommand({ SecretId: process.env.FCM_SECRET_ID }));
+      return JSON.parse(out.SecretString ?? "") as { client_email: string; private_key: string; token_uri?: string };
+    },
+  })
+  : undefined;
+
+/**
+ * Push to every phone: Apple's with the "tafs push" key, read from Secrets Manager on first use, for an iPhone; Google's
+ * for an Android phone. Quiet on the phones whose Sound for alerts is off.
+ */
+const apns = silencing(routing({
+  ios: apnsSender({
+    keyPEM: async () => {
+      const id = process.env.APNS_SECRET_ID;
+      if (!id) throw new Error("APNS_SECRET_ID is not set");
+      const out = await new SecretsManagerClient({ region: DATA_REGION }).send(new GetSecretValueCommand({ SecretId: id }));
+      return (out.SecretString ?? "").trim();
+    },
+    keyID: process.env.APNS_KEY_ID ?? "",
+    teamID: process.env.APNS_TEAM_ID ?? "",
+    topic: process.env.APNS_TOPIC ?? "bot.tafs.app",
+  }),
+  android: fcm,
 }));
 
 /**
@@ -594,7 +612,7 @@ const doors: DoorsDeps | undefined = process.env.DOORS_PUBLIC_URL ? { store: doo
 const publicURL = (process.env.TAFS_PUBLIC_URL ?? "").replace(/\/+$/, "");
 
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach, events, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, coach, events, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
 }
 
 /**

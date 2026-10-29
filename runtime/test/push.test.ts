@@ -4,7 +4,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { providerToken } from "../src/cloud/apns.js";
 import type { ReadyRun } from "../src/cloud/forward.js";
 import { FORWARD_TRIES, handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
-import { type Device, type Notification, type PushStore, quietFor, signedByKIFF, silencing } from "../src/cloud/push.js";
+import { type Device, type Notification, type PushStore, quietFor, registration, routing, signedByKIFF, silencing } from "../src/cloud/push.js";
 
 const NOW = new Date("2026-10-15T09:00:00Z");
 const T = Math.floor(NOW.getTime() / 1000);
@@ -100,7 +100,7 @@ function fakeContinue(order: string[] = [], status = 202) {
   return c;
 }
 
-function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<ReadyRun | void>; accounts?: Map<string, { tenant: string; secret: string }>; agents?: object }) {
+function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<ReadyRun | void>; accounts?: Map<string, { tenant: string; secret: string }>; agents?: object; androidPush?: boolean }) {
   const event: HTTPEvent = { rawPath: path, requestContext: { http: { method } }, headers: opts.headers ?? {}, body: opts.body };
   const accounts = opts.accounts ?? new Map();
   return handle(event, {
@@ -112,6 +112,7 @@ function call(method: string, path: string, opts: { body?: string; headers?: Rec
     claims: { get: async () => undefined, put: async () => undefined, remove: async () => undefined },
     push: opts.push,
     apns: opts.apns ?? fakeAPNs(),
+    ...(opts.androidPush === undefined ? {} : { androidPush: opts.androidPush }),
     fetch: kiffMe({ ana: ME, viewer: VIEWER }),
     now: () => opts.now ?? NOW,
   } as never).then((r) => ({ status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown> }));
@@ -558,5 +559,104 @@ describe("Sound for alerts, off on a phone", () => {
     await sender.send(phone(false), hold);
     expect(sent.map((n) => (n.payload.aps as Record<string, unknown>)["interruption-level"])).toEqual(["passive", "time-sensitive"]);
     expect(sent.map((n) => (n.payload.aps as Record<string, unknown>).sound)).toEqual([undefined, "default"]);
+  });
+});
+
+describe("an Android phone's alerts", () => {
+  const signedIn = (who: string) => ({ Authorization: `Bearer ${who}` });
+  const FCM_TOKEN = "dXyZ1_abC:APA91bHqLz-9fWk0Qe3mNoPQrStUvWxYz0123456789AbCdEfGhIjKlMnOpQrStUvWxYz";
+  const register = (who: string, body: object, push: ReturnType<typeof memoryPush>, extra: { androidPush?: boolean } = {}) =>
+    call("POST", "/v1/push", { body: JSON.stringify(body), headers: signedIn(who), push, ...extra });
+
+  it("is registered with its Firebase token as it was written, and an iPhone is registered as before", async () => {
+    const push = memoryPush();
+    const target = { id: "at_1", signing_secret: SECRET };
+    expect((await register("ana", { device_token: FCM_TOKEN, platform: "android", environment: "production", sound: false, alert_target: target }, push)).body)
+      .toEqual({ device: true, answers: true, alerts: true });
+    expect((await register("viewer", { device_token: TOKEN_B, environment: "production" }, push)).status).toBe(200);
+    expect(push.devices.get("t_acme")!.map((d) => [d.token, d.platform, d.environment, d.subject, d.silent])).toEqual([
+      [FCM_TOKEN, "android", "production", "u_ana", true],
+      [TOKEN_B, "ios", "production", "u_vic", false],
+    ]);
+    // The environment may be left out: an Android phone has only the one.
+    expect((await register("ana", { device_token: FCM_TOKEN, platform: "android" }, push)).status).toBe(200);
+  });
+
+  it("is refused for a token, platform or environment that isn't one", async () => {
+    const push = memoryPush();
+    for (const body of [
+      { device_token: "short", platform: "android", environment: "production" },
+      { device_token: "has spaces in it that no token has", platform: "android", environment: "production" },
+      { device_token: FCM_TOKEN, platform: "android", environment: "sandbox" },
+      { device_token: FCM_TOKEN, platform: "windows", environment: "production" },
+      { device_token: FCM_TOKEN, environment: "production" }, // an iPhone's token is hex
+      { device_token: TOKEN_A, platform: "android", sound: "off" },
+    ]) {
+      expect((await register("ana", body, push)).status, JSON.stringify(body)).toBe(400);
+    }
+    expect(push.devices.get("t_acme") ?? []).toEqual([]);
+  });
+
+  it("is refused where Google push isn't set up, and an iPhone still is not", async () => {
+    const push = memoryPush();
+    const refused = await register("ana", { device_token: FCM_TOKEN, platform: "android" }, push, { androidPush: false });
+    expect(refused.status).toBe(503);
+    expect(push.devices.get("t_acme") ?? []).toEqual([]);
+    expect((await register("ana", { device_token: TOKEN_A, environment: "production" }, push, { androidPush: false })).status).toBe(200);
+    expect((await register("ana", { device_token: FCM_TOKEN, platform: "android" }, push, { androidPush: true })).status).toBe(200);
+  });
+
+  it("stops when its owner says so: the token comes percent-encoded and keeps its case", async () => {
+    const push = memoryPush();
+    await register("ana", { device_token: FCM_TOKEN, platform: "android" }, push);
+    await register("ana", { device_token: TOKEN_A, environment: "production" }, push);
+    const remove = (who: string, token: string) => call("DELETE", `/v1/push/${token}`, { headers: signedIn(who), push });
+    expect((await remove("ana", encodeURIComponent(FCM_TOKEN.toLowerCase()))).body, "another case is another token").toEqual({ removed: false });
+    expect((await remove("viewer", encodeURIComponent(FCM_TOKEN))).body, "not the viewer's").toEqual({ removed: false });
+    expect((await remove("ana", encodeURIComponent(FCM_TOKEN))).body).toEqual({ removed: true });
+    // An iPhone's hex is lower case whichever case it is written in.
+    expect((await remove("ana", TOKEN_A.toUpperCase())).body).toEqual({ removed: true });
+    expect(push.devices.get("t_acme")).toEqual([]);
+  });
+
+  it("is alerted through Google while an iPhone of the same account is alerted through Apple", async () => {
+    const push = memoryPush();
+    push.secrets.set("t_acme", [SECRET]);
+    push.devices.set("t_acme", [
+      { token: TOKEN_A, platform: "ios", environment: "production", subject: "u_ana", answers: true, at: "" },
+      { token: FCM_TOKEN, platform: "android", environment: "production", subject: "u_ana", answers: true, at: "" },
+      // A phone registered before Android had no platform: an iPhone.
+      { token: TOKEN_B, environment: "sandbox", subject: "u_bo", answers: true, at: "" },
+    ]);
+    const ios = fakeAPNs();
+    const android = fakeAPNs();
+    const r = await alert(held(), push, { apns: routing({ ios, android }) });
+    expect(r).toEqual({ status: 200, body: { sent: 3 } });
+    expect(ios.sent.map((s) => s.token)).toEqual([TOKEN_A, TOKEN_B]);
+    expect(android.sent.map((s) => s.token)).toEqual([FCM_TOKEN]);
+    // Each service gets the same notification: Google's is made from it.
+    expect(android.sent[0]!.n).toEqual(ios.sent[0]!.n);
+  });
+
+  it("is never alerted where there is no Google sender, so KIFF tries again", async () => {
+    const push = memoryPush();
+    push.secrets.set("t_acme", [SECRET]);
+    push.devices.set("t_acme", [{ token: FCM_TOKEN, platform: "android", environment: "production", subject: "u_ana", answers: true, at: "" }]);
+    const r = await alert(held(), push, { apns: routing({ ios: fakeAPNs() }) });
+    expect(r.status).toBe(502);
+  });
+
+  it("is forgotten when Google says its token is gone", async () => {
+    const push = memoryPush();
+    push.secrets.set("t_acme", [SECRET]);
+    push.devices.set("t_acme", [{ token: FCM_TOKEN, platform: "android", environment: "production", subject: "u_ana", answers: true, at: "" }]);
+    const android = fakeAPNs(() => "gone");
+    await alert(held(), push, { apns: routing({ ios: fakeAPNs(), android }) });
+    expect(push.devices.get("t_acme")).toEqual([]);
+  });
+
+  it("validates a registration the way the handler does", () => {
+    expect(registration({ device_token: FCM_TOKEN, platform: "android" })).toEqual({ token: FCM_TOKEN, platform: "android", environment: "production", silent: false });
+    expect(registration({ device_token: TOKEN_A.toUpperCase(), environment: "sandbox" })).toEqual({ token: TOKEN_A, platform: "ios", environment: "sandbox", silent: false });
   });
 });

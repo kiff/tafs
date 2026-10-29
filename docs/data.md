@@ -45,9 +45,10 @@ the copy is checked, so nothing erased in `eu-west-1` stays behind in `us-east-1
 | Email and WhatsApp in transit | The email provider; WhatsApp | Theirs; WhatsApp's in the region the number is registered with | The messages to and from a door. tafs cloud reads an email once and keeps only what's above | Their terms | The provider |
 | Archived chats (#82, #97) | Same table, `archived#tenant#taf` | `eu-west-1` | Account id, taf id, the session ids of the chats the owner archived, listed under Archived until put back. Never their text | 31 days after the latest archive (ttl), past when kiff/agents deletes the chats; or until the taf is removed | tafs cloud on remove; DynamoDB ttl |
 | Claimed drafts | Same table, `draft#tenant#draft` | `eu-west-1` | Account id, KIFF draft id, a sha256 of the draft's claim secret, the taf's name and id, the KIFF agent id. Never the key. A taf Setup made has no claim secret: tafs cloud claims its draft from kiff/agents with its own role (`from_setup`) | Until the taf starts, else 30 days (ttl) | tafs cloud on start; DynamoDB ttl |
-| Phones for alerts (with #32) | Same table, `push#tenant` | `eu-west-1` | Each phone's APNs token and environment, the KIFF person id that registered it, whether they may answer held calls; the account's KIFF alert-target signing secrets (newest 5) | Until the person signs out, Apple reports the token gone, or a manager removes it. Secrets: until 5 newer replace them | tafs cloud |
+| Phones for alerts (with #32) | Same table, `push#tenant` | `eu-west-1` | Each phone's push token (APNs's for an iPhone, Firebase's for an Android phone), its platform and environment, the KIFF person id that registered it, whether they may answer held calls; the account's KIFF alert-target signing secrets (newest 5) | Until the person signs out, Apple or Google reports the token gone, or a manager removes it. Secrets: until 5 newer replace them | tafs cloud |
 | Delivered alerts (with #32) | Same table, `alert#tenant#event#token` | `eu-west-1` | Account id, KIFF event id, phone token | 72 hours, ttl | DynamoDB ttl |
 | The APNs key | AWS Secrets Manager `tafs/apns-key`, replicated to `eu-west-1`, where it's read | `us-east-1`, `eu-west-1` | The "tafs push" key | Until rotated or revoked in the Apple Developer portal | A person |
+| The FCM service account | AWS Secrets Manager, named by `FCM_SECRET_ID`, in the region tafs cloud reads it from | The Firebase project's region | The Firebase project's service-account key, which makes the short-lived tokens tafs cloud sends Android alerts with | Until rotated or revoked in the Firebase console | A person |
 | The Anthropic API key | AWS Secrets Manager `tafs/anthropic-api-key`, replicated to `eu-west-1` | `us-east-1`, `eu-west-1` | The model key. Only kiff/agents reads it (its replica); tafs cloud doesn't | Until rotated | A person |
 | A taf's KIFF agent key | AWS Secrets Manager `agents/<tenant>/kiff/<taf>` | `eu-west-1` | The key the taf calls KIFF's gateway with. tafs cloud writes it and can't read it; kiff/agents reads it for each run | Until the taf is removed: deleted at once, without the recovery window | tafs cloud on remove |
 | An account's alert secret | AWS Secrets Manager `agents-accounts/<KIFF account>` | `eu-west-1` | The account id and its newest KIFF alert-target signing secret, so kiff/agents can check KIFF's alerts too | Until a newer one replaces it | tafs cloud, on each new target |
@@ -82,7 +83,7 @@ tafs cloud ──(its AWS role)─────────▶ kiff/agents defini
 phone ──(a link for minutes)────────▶ S3          an attached file's bytes, up and down (#209)
 kiff/agents ──(model key)───────────▶ Anthropic   one model turn at a time
 kiff/agents ──(agent key)───────────▶ KIFF gateway ──(Card checked)──▶ the company's tools
-KIFF ──(signed alert)───────────────▶ tafs cloud ──(APNs)──▶ phone
+KIFF ──(signed alert)───────────────▶ tafs cloud ──(APNs, or FCM for Android)──▶ phone
                                       tafs cloud ──(as signed)──▶ kiff/agents  (a paused run goes on)
 ```
 
