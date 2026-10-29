@@ -7,6 +7,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- Sign out of KIFF ends the session at KIFF first. When KIFF doesn't confirm, the app stays
+  signed in and says so, instead of showing signed out while the session still works.
 - When a change to groups or sharing fails, the app says why. The reason used to be cleared by
   the list being read again.
 - A Card's total over all time, or over a rolling hour or 24 hours, no longer reads as "a day".

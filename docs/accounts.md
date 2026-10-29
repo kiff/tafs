@@ -28,7 +28,10 @@ Sign in with KIFF's device flow (`AppModel.startSignIn`, `finishSignIn`):
    is registered next ([approvals.md](approvals.md#how-an-answer-is-signed)).
 
 Signing out (`POST /v1/auth/device/logout`) or switching account clears everything of the
-earlier session on the phone, including files opened from a chat. Work still running for
+earlier session on the phone, including files opened from a chat. The session ends at KIFF
+first: when KIFF doesn't confirm, the phone stays signed in and says so ("Not signed out at
+KIFF yet…"), so a device shown as signed out never holds a session KIFF still accepts. A
+session KIFF already ended (a 401, or the account deleted) is cleared on the phone at once. Work still running for
 the old session is dropped when it finishes (`accountGeneration`).
 
 **Devices**, in Settings (`DevicesView`): the devices signed in as this person on the
