@@ -8,6 +8,7 @@ import bot.tafs.app.model.AttachmentRef
 import bot.tafs.app.model.FilePrep
 import bot.tafs.app.model.PendingFile
 import bot.tafs.app.model.PreparedFile
+import bot.tafs.app.model.RunReport
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.ChatMessage
@@ -185,6 +186,12 @@ data class AppState(
   val templateOf: Map<String, String> = emptyMap(),
   /** What each taf remembers, once loaded; not kept between launches. */
   val memories: Map<String, List<MemoryNote>> = emptyMap(),
+  /** Why a taf's notes couldn't be read, or a note wasn't forgotten. */
+  val memoryErrors: Map<String, String> = emptyMap(),
+  /** Each taf's latest run and its report, by the taf's id. */
+  val reports: Map<String, RunReport> = emptyMap(),
+  /** The tafs whose Run now is on its way, so a second tap starts nothing. */
+  val runsInFlight: Set<String> = emptySet(),
   /** Each taf's thread, oldest first; the sample's lives here, not between launches. */
   val chats: Map<String, List<ChatMessage>> = emptyMap(),
   /** The tafs a message is on its way to, so one is sent at a time. */
@@ -755,6 +762,8 @@ class AppModel(
       retrying = null
       _state.update { it.copy(unreachable = null, retryingRefresh = false) }
       show(read)
+      // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
+      if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
     } catch (e: CancellationException) {
       cancelled = true
       throw e
@@ -1098,8 +1107,32 @@ class AppModel(
     save()
   }
 
-  /** Revokes a taf's Card: no new action goes through, and what waited on the owner is refused. */
+  /**
+   * Revokes a taf's Card: no new action goes through, and what waited on the owner is refused. Signed in, KIFF revokes
+   * each of its Cards first; the taf shows stopped only once KIFF has.
+   */
   fun revoke(tafId: String) {
+    if (_state.value.mode == Mode.kiff) viewModelScope.launch { revokeCards(tafId) } else revoked(tafId)
+  }
+
+  /** Revokes the taf's Cards in KIFF. False when KIFF didn't, and it says so; nothing is shown stopped then. */
+  suspend fun revokeCards(tafId: String): Boolean {
+    val taf = _state.value.taf(tafId) ?: return false
+    val generation = accountGeneration
+    try {
+      taf.kiffCardIds.forEach { kiff.revoke(it) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail("KIFF didn't revoke the Card: ${e.message}")
+      return false
+    }
+    if (generation != accountGeneration) return false
+    revoked(tafId)
+    return true
+  }
+
+  private fun revoked(tafId: String) {
     val taf = _state.value.taf(tafId) ?: return
     val dropped = _state.value.heldCalls(tafId)
     update(taf.copy(card = taf.card.copy(revoked = true), state = TafState.revoked, now = "Stopped: Card revoked"))
@@ -1107,6 +1140,137 @@ class AppModel(
     val detail = if (dropped.isEmpty()) "No new action goes through" else "No new action goes through. ${dropped.size} waiting action(s) refused."
     log(tafId, RecordEntry.Kind.revoked, "You revoked ${taf.name}'s Card", detail)
     save()
+  }
+
+  // MARK: Runs, pausing and removing a taf on tafs cloud
+
+  /** Runs a taf now, outside its schedule. The run's session; null when it didn't start, or a Run now for it is on its way. */
+  suspend fun runNow(tafId: String): String? {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return null
+    if (tafId in _state.value.runsInFlight) return null
+    _state.update { it.copy(runsInFlight = it.runsInFlight + tafId) }
+    val generation = accountGeneration
+    try {
+      val session = cloud.runNow(cloudId)
+      if (generation == accountGeneration) loadReport(tafId)
+      return session
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail("The run didn't start: ${e.message}")
+      return null
+    } finally {
+      _state.update { it.copy(runsInFlight = it.runsInFlight - tafId) }
+    }
+  }
+
+  /** Reads the taf's latest run and, once it has stopped, its report. */
+  suspend fun loadReport(tafId: String) {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    val report = try {
+      val runs = cloud.runs(cloudId)
+      val latest = runs.firstOrNull { it.session != null }
+      val session = latest?.session
+      if (session == null) {
+        RunReport(at = runs.firstOrNull()?.at, error = runs.firstOrNull()?.error)
+      } else {
+        val r = cloud.report(cloudId, session)
+        RunReport(session = session, at = latest.at, status = r.status, text = r.text)
+      }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      (_state.value.reports[tafId] ?: RunReport()).copy(error = "Its runs couldn't be loaded: ${e.message}")
+    }
+    if (generation == accountGeneration) _state.update { it.copy(reports = it.reports + (tafId to report)) }
+  }
+
+  /** Pauses or resumes its schedule on tafs cloud: no run starts while it's paused. Its Cards aren't touched; revoke one to stop its authority. */
+  suspend fun setPaused(tafId: String, paused: Boolean) {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    val schedule = try {
+      cloud.setPaused(cloudId, paused)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail("tafs cloud didn't ${if (paused) "pause" else "resume"} it: ${e.message}")
+      return
+    }
+    if (generation != accountGeneration) return
+    val taf = _state.value.taf(tafId) ?: return
+    var updated = taf.copy(paused = schedule.paused, nextRun = schedule.nextRun)
+    if (taf.state != TafState.waiting && taf.state != TafState.revoked && taf.state != TafState.halted) {
+      updated = updated.copy(
+        state = if (schedule.paused) TafState.paused else TafState.working,
+        now = if (schedule.paused) "Paused by you" else schedule.nextRun?.let { "Next run ${shortTime(it)}" } ?: "Back to work",
+      )
+    }
+    update(updated)
+  }
+
+  /**
+   * Removes a taf for good, after one confirmation: KIFF revokes its Cards first, so it can't act whatever happens next;
+   * then tafs cloud stops it, deletes its runs, chats, memory and key, and frees its name. What to tell the owner; null
+   * when nothing was done.
+   */
+  suspend fun removeTaf(tafId: String): String? {
+    val s = _state.value
+    val taf = s.taf(tafId)
+    val cloudId = taf?.cloudId
+    if (s.mode != Mode.kiff || taf == null || cloudId == null) return null
+    val generation = accountGeneration
+    try {
+      signer.sign("tafs.remove.v1|$cloudId".toByteArray(), "Remove ${taf.name} for good")
+    } catch (_: SignerException) {
+      return null
+    }
+    if (generation != accountGeneration) return null
+    var cardsLeft = 0
+    if (!taf.card.revoked) {
+      for (cardId in taf.kiffCardIds) {
+        if (generation != accountGeneration) return null
+        try {
+          kiff.revoke(cardId)
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          cardsLeft += 1
+        }
+      }
+    }
+    if (generation != accountGeneration) return null
+    val cards = if (cardsLeft == 0) "Its Cards are revoked in KIFF." else "KIFF didn't revoke $cardsLeft of its Cards: revoke them in KIFF."
+    val removal = try {
+      cloud.remove(cloudId)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return null
+      return "$cards tafs cloud didn't answer (${e.message}). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again."
+    }
+    if (generation != accountGeneration) return null
+    if (cardsLeft == 0) _state.value.taf(tafId)?.let { update(it.copy(card = it.card.copy(revoked = true), state = TafState.revoked, now = "Removed")) }
+    if (!removal.done) {
+      return "$cards Not finished: its ${removal.failed.joinToString(", ") { removalStep(it) }} couldn't be removed. tafs tries again each time it refreshes."
+    }
+    log(tafId, RecordEntry.Kind.revoked, "You removed ${taf.name}", "Schedule, memory and key deleted; name free")
+    refresh()
+    return "$cards Its schedule, chats, run reports, memory and key are deleted, and the name ${taf.name} is free. KIFF's receipts stay."
+  }
+
+  /** Finishes removals tafs cloud lists as begun. They were confirmed when they began; finishing only deletes what's left of a taf already stopped. */
+  private suspend fun finishRemovals(removing: List<bot.tafs.app.kiff.PendingRemoval>, generation: Int) {
+    for (r in removing) {
+      if (generation != accountGeneration) return
+      attempt { cloud.remove(r.id) }
+    }
+  }
+
+  private fun removalStep(step: String): String = when (step) {
+    "history" -> "runs and chats"
+    else -> step
   }
 
   // MARK: Chat
@@ -2251,15 +2415,64 @@ class AppModel(
 
   // MARK: What a taf remembers
 
-  /** The taf's notes: in the sample, the kind of thing a real one writes down as it learns. */
+  /** The taf's notes: signed in, read from tafs cloud; in the sample, the kind of thing a real one writes down as it learns. */
   fun loadMemory(tafId: String) {
+    if (_state.value.mode == Mode.kiff) {
+      viewModelScope.launch { readMemory(tafId) }
+      return
+    }
     if (_state.value.memories.containsKey(tafId)) return
     _state.update { it.copy(memories = it.memories + (tafId to sampleNotes(tafId, clock()))) }
   }
 
-  /** Forgets one note. */
-  fun forget(note: MemoryNote, tafId: String) =
-    _state.update { s -> s.copy(memories = s.memories + (tafId to (s.memories[tafId] ?: emptyList()).filterNot { it.id == note.id })) }
+  /** Reads what a taf on tafs cloud remembers; one that can't be read says so in its panel. */
+  suspend fun readMemory(tafId: String) {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    val notes = try {
+      cloud.memory(cloudId)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(memoryErrors = it.memoryErrors + (tafId to "Its notes couldn't be loaded: ${e.message}")) }
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(memories = it.memories + (tafId to notes), memoryErrors = it.memoryErrors - tafId) }
+  }
+
+  /** Forgets one note. It goes from the list at once; signed in, it comes back if tafs cloud refuses. */
+  fun forget(note: MemoryNote, tafId: String) {
+    _state.update { s -> s.copy(memories = s.memories + (tafId to (s.memories[tafId] ?: emptyList()).filterNot { it.id == note.id }), memoryErrors = s.memoryErrors - tafId) }
+    if (_state.value.mode == Mode.kiff) viewModelScope.launch { forgetAtCloud(note, tafId) }
+  }
+
+  /** Tells tafs cloud to forget the note. Only that note comes back if it refuses: another Forget may have finished meanwhile. */
+  suspend fun forgetAtCloud(note: MemoryNote, tafId: String): Boolean {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return false
+    val generation = accountGeneration
+    return try {
+      cloud.forget(cloudId, note.id)
+      true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: CloudError) {
+      // Already gone.
+      if (e.status == 404) return true
+      putBack(note, tafId, generation, e)
+      false
+    } catch (e: Exception) {
+      putBack(note, tafId, generation, e)
+      false
+    }
+  }
+
+  private fun putBack(note: MemoryNote, tafId: String, generation: Int, e: Exception) {
+    if (generation != accountGeneration) return
+    _state.update { s ->
+      val notes = (s.memories[tafId].orEmpty().filterNot { it.id == note.id } + note).sortedByDescending { it.updatedAt }
+      s.copy(memories = s.memories + (tafId to notes), memoryErrors = s.memoryErrors + (tafId to "It wasn't forgotten: ${e.message}"))
+    }
+  }
 
   private fun sampleNotes(tafId: String, now: Instant): List<MemoryNote> = listOf(
     Triple("/how-you-like-it.md", "You'd rather I explain a decision in one line than in a paragraph.", 3_600L),

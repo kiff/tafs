@@ -4,6 +4,9 @@ import bot.tafs.app.model.AttachmentRef
 import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.model.DoorMark
+import bot.tafs.app.model.InstantAsString
+import bot.tafs.app.model.MemoryNote
+import java.time.Instant
 import bot.tafs.app.model.Work
 import bot.tafs.app.model.WorkStep
 import kotlinx.serialization.json.JsonPrimitive
@@ -268,6 +271,76 @@ class TafsCloud(
   suspend fun unregisterPush(deviceToken: String) {
     send("DELETE", "/v1/push/${escaped(deviceToken)}")
   }
+
+  // MARK: Runs, memory and removing a taf
+
+  /** One of the taf's runs, newest first: the chat it ran in, when, and why it didn't start, if it didn't. */
+  @kotlinx.serialization.Serializable
+  data class Run(val session: String? = null, @kotlinx.serialization.Serializable(with = InstantAsString::class) val at: Instant, val error: String? = null)
+
+  /** A run's report: "running" while it works, "idle" once it has stopped, and what it wrote. */
+  @kotlinx.serialization.Serializable
+  data class Report(val status: String, val text: String = "")
+
+  /** Where a taf's schedule stands, as tafs cloud answers a pause or resume. */
+  @kotlinx.serialization.Serializable
+  data class Schedule(
+    val status: String = "active",
+    @kotlinx.serialization.SerialName("next_run") @kotlinx.serialization.Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
+    val unscheduled: Boolean? = null,
+  ) {
+    val paused: Boolean get() = status == "paused"
+  }
+
+  /** What removing a taf did: done once every part is gone, each in [removed] or [failed]. A second remove finishes what the first left. */
+  @kotlinx.serialization.Serializable
+  data class Removal(val done: Boolean, val removed: List<String> = emptyList(), val failed: List<String> = emptyList())
+
+  @kotlinx.serialization.Serializable
+  private data class RunStarted(val session: String)
+
+  @kotlinx.serialization.Serializable
+  private data class ScheduleBody(val taf: Schedule)
+
+  @kotlinx.serialization.Serializable
+  private data class Runs(val runs: List<Run> = emptyList())
+
+  @kotlinx.serialization.Serializable
+  private data class ReportBody(val report: Report)
+
+  @kotlinx.serialization.Serializable
+  private data class Note(
+    val id: String,
+    val path: String,
+    val content: String,
+    @kotlinx.serialization.SerialName("updated_at") @kotlinx.serialization.Serializable(with = InstantAsString::class) val updatedAt: Instant,
+  )
+
+  @kotlinx.serialization.Serializable
+  private data class Notes(val notes: List<Note> = emptyList())
+
+  /** Runs the taf now, outside its schedule. Returns the run's session. */
+  suspend fun runNow(id: String): String = post<RunStarted>("/v1/tafs/${escaped(id)}/run", emptyMap()).session
+
+  /** Pauses or resumes its schedule: no run starts while it's paused. Its Cards aren't touched. */
+  suspend fun setPaused(id: String, paused: Boolean): Schedule =
+    post<ScheduleBody>("/v1/tafs/${escaped(id)}/${if (paused) "pause" else "resume"}", emptyMap()).taf
+
+  suspend fun runs(id: String): List<Run> = get<Runs>("/v1/tafs/${escaped(id)}/runs").runs
+
+  suspend fun report(id: String, session: String): Report = get<ReportBody>("/v1/tafs/${escaped(id)}/runs/${escaped(session)}").report
+
+  /** What the taf remembers, newest first. */
+  suspend fun memory(id: String): List<MemoryNote> =
+    get<Notes>("/v1/tafs/${escaped(id)}/memory").notes.map { MemoryNote(it.id, it.path, it.content, it.updatedAt) }
+
+  /** Forgets one note: the taf won't see it on its next run or chat. */
+  suspend fun forget(id: String, note: String) {
+    send("DELETE", "/v1/tafs/${escaped(id)}/memory/${escaped(note)}")
+  }
+
+  /** Removes the taf for good: stops it, deletes its runs, chats, memory and key, and frees its name. Its Cards are KIFF's: the phone revokes them first. */
+  suspend fun remove(id: String): Removal = KiffClient.json.decodeFromString(String(send("DELETE", "/v1/tafs/${escaped(id)}")))
 
   // MARK: Doors
 

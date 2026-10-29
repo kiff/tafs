@@ -343,6 +343,12 @@ data class Taf(
   val kiffCardIds: List<String> = emptyList(),
   /** tafs cloud's id for it, which its chat and runs are under; null for an agent tafs doesn't run, and in the sample. */
   val cloudId: String? = null,
+  /** Its schedule is paused on tafs cloud: no run starts. Its Cards aren't touched. */
+  val paused: Boolean = false,
+  /** When its schedule runs it next, as tafs cloud says. */
+  @Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
+  /** It works from its chat: no schedule runs it, so there's nothing to run now or pause (kiff/tafs#138). */
+  val worksFromChat: Boolean = false,
 ) {
   val initial: String get() = name.take(1).uppercase()
 
@@ -606,4 +612,16 @@ data class RecordEntry(
       if (words.size > 1 && words[1].lowercase() in setOf("a", "an", "the")) return "${words[0]} $money"
       return "$title · $money"
     }
+}
+
+/** A taf's latest run on tafs cloud, as its page shows it: when, whether it's still running, and what it reported. */
+data class RunReport(
+  val session: String? = null,
+  val at: Instant? = null,
+  /** "running" while it works, "idle" once it has stopped. */
+  val status: String? = null,
+  val text: String = "",
+  val error: String? = null,
+) {
+  val finished: Boolean get() = status != null && status != "running"
 }

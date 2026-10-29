@@ -139,6 +139,14 @@ On a wide screen in landscape, a second column beside the chat or activity shows
 waits for the owner and the Cards. Otherwise one line above shows the front Card and
 opens the Card tab.
 
+On Android the page is `views/TafDetailView.kt`, with the same tabs and parts
+(`RunsPanel`, `RunReportPanel`, `MemoryPanel`), and no second column yet. Revoke asks KIFF
+to revoke each of the taf's Cards (`POST /v1/me/mandates/{id}/revoke`, unsigned, since it
+takes authority away) and shows the taf stopped only once KIFF has. Remove for good takes
+one confirmation, revokes its Cards, then asks tafs cloud to remove the rest
+(`DELETE /v1/tafs/{id}`). A removal left half way is finished on the next refresh, from
+the home list's `removing`.
+
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
 Doors tab, or line saying who it's shared with. For whoever manages it, that line has a

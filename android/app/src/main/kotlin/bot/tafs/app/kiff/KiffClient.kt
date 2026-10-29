@@ -480,6 +480,11 @@ class KiffClient(
     send("POST", agent?.let { "/v1/agents/${escaped(it)}/resume" } ?: "/v1/resume", mapOf<String, String>())
   }
 
+  /** Revokes one of a taf's Cards: no new action under it goes through. It takes authority away, so it isn't signed. */
+  suspend fun revoke(cardId: String) {
+    send("POST", "/v1/me/mandates/${escaped(cardId)}/revoke", mapOf<String, String>())
+  }
+
   /** Signs a device out of the account: it no longer approves, and its sessions are over. */
   suspend fun removeDevice(id: String) {
     send("DELETE", "/v1/me/devices/" + escaped(id))

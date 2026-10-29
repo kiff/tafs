@@ -305,6 +305,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect),
       stopChat = model::stopChat,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
+      runNow = { model.runNow(it) },
+      loadReport = model::loadReport,
+      setPaused = model::setPaused,
+      remove = model::removeTaf,
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::approveCoach,
