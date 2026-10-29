@@ -65,6 +65,8 @@ class TafActions(
   val coach: CoachActions,
   /** The taf's connections, read from planque, and ending one. */
   val connections: ConnectionActions,
+  /** Stops what the taf is doing in its chat. */
+  val stopChat: suspend (String) -> Unit = {},
 )
 
 @Composable

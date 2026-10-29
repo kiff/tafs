@@ -354,7 +354,36 @@ class TafsCloud(
     (KiffClient.json.parseToJsonElement(String(body)).jsonObject["error"] as? JsonPrimitive)?.contentOrNull
   }.getOrNull()
 
+  // MARK: A chat, live (docs/chat.md)
+
+  /** Where a run's answer streams: straight to the function, as a run streams for minutes, longer than a CDN waits between bytes. */
+  private val streamUrl: String get() = if (baseUrl == DEFAULT_URL) DEFAULT_STREAM_URL else baseUrl
+
+  /** Sends the owner's message with its run streamed: once tafs cloud took it, the run's events follow. A refusal throws, as [sendMessage] does. */
+  suspend fun streamMessage(id: String, text: String): kotlinx.coroutines.flow.Flow<StreamEvent> =
+    events("POST", "/v1/tafs/${escaped(id)}/messages/stream", jsonBody("text" to text))
+
+  /** Picks a run of the person's back up: its steps so far after event [after], then the rest as it goes, until it stops. */
+  suspend fun resumeRun(id: String, run: String, after: Int = 0): kotlinx.coroutines.flow.Flow<StreamEvent> =
+    events("GET", "/v1/tafs/${escaped(id)}/runs/${escaped(run)}/stream?after=${after.coerceAtLeast(0)}", null)
+
+  /** Stops what the taf is doing in [session]: its latest run is cancelled. One already ended stays as it ended. */
+  suspend fun stop(id: String, session: String) {
+    send("POST", "/v1/tafs/${escaped(id)}/stop", jsonBody("session" to session))
+  }
+
+  private suspend fun events(method: String, path: String, body: ByteArray?): kotlinx.coroutines.flow.Flow<StreamEvent> {
+    val bearer = token ?: throw CloudError(401, "Sign in with KIFF first.")
+    val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer")
+    if (body != null) headers["Content-Type"] = "application/json"
+    val response = transport.stream(HttpRequest(method, streamUrl + path, headers, body))
+    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: "tafs cloud answered ${response.status}")
+    return StreamEvent.parse(response.lines)
+  }
+
   companion object {
     const val DEFAULT_URL = "https://cloud.tafs.kiff.dev"
+    /** tafs cloud's streaming function, as the iPhone app reaches it. */
+    const val DEFAULT_STREAM_URL = "https://ghjfunc5ppretjo22bl5izlnya0zrocm.lambda-url.eu-west-1.on.aws"
   }
 }

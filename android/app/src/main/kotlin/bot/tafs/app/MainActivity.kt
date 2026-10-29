@@ -299,6 +299,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       issuer = model.issuer,
       doors = doorActions,
       connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect),
+      stopChat = model::stopChat,
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::approveCoach,

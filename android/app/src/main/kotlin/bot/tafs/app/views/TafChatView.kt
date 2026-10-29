@@ -74,8 +74,12 @@ import bot.tafs.app.design.TafAvatar
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.brandBackground
 import bot.tafs.app.design.scaled
+import bot.tafs.app.app.AppModel
 import bot.tafs.app.model.Chat
+import bot.tafs.app.model.ChatEnd
 import bot.tafs.app.model.ChatItem
+import bot.tafs.app.model.LiveAnswer
+import bot.tafs.app.model.LiveStep
 import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.Work
 import bot.tafs.app.kiff.KiffMapping
@@ -111,7 +115,8 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
   val showKnocks = state.mode == Mode.kiff && state.doorsOffered.isNotEmpty() && !isTrialChat(tafId) && tafId != COACH_CHAT && taf?.cloudId != null
   val knocking = showKnocks && state.doors[tafId]?.openKnocks.orEmpty().isNotEmpty()
-  val total = items.size + (if (knocking) 1 else 0) + (if (thinking) 1 else 0)
+  val live = state.chatLive[tafId]
+  val total = items.size + (if (knocking) 1 else 0) + (if (thinking || live != null) 1 else 0)
   // Read again when the thread changes.
   LaunchedEffect(items.size, showKnocks) { if (showKnocks) actions.doors.load(tafId) }
   val atBottom by remember { derivedStateOf { !listState.canScrollForward } }
@@ -127,7 +132,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   LaunchedEffect(tafId) { if (total > 0) listState.scrollToItem(total - 1) }
   // Keyed by the last item and the dots too, not only the count: the answer takes the dots' place
   // at the same count, and is taller.
-  LaunchedEffect(total, items.lastOrNull()?.id, thinking) { if (following && total > 0) listState.animateScrollToItem(total - 1) }
+  LaunchedEffect(total, items.lastOrNull()?.id, thinking, live?.text?.length, live?.steps?.size) { if (following && total > 0) listState.animateScrollToItem(total - 1) }
 
   Column(modifier.fillMaxSize()) {
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
@@ -174,7 +179,27 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
           }
         }
         if (knocking) item(key = "knocks") { ChatKnocks(tafId, taf?.name, state, actions.doors) }
-        if (thinking) item(key = "thinking") { TypingDots() }
+        when {
+          // The answer as it's written, under the work that led to it (docs/chat.md, the work block).
+          live != null -> item(key = "live") { LiveWork(live) }
+          thinking -> item(key = "thinking") { TypingDots() }
+        }
+        // Stop: for whoever manages Cards, while a run is at work in this chat.
+        val session = live?.session ?: state.chatWorking[tafId]?.session
+        if (thinking && session != null && state.mode == Mode.kiff && state.canManageCards) {
+          item(key = "stop") {
+            Text(
+              "Stop",
+              style = scaled(14, FontWeight.SemiBold, Theme.no),
+              modifier = Modifier.clip(RoundedCornerShape(50)).border(BorderStroke(1.dp, Theme.line), RoundedCornerShape(50))
+                .clickable { scope.launch { actions.stopChat(tafId) } }.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+          }
+        }
+        // How the latest run ended, when it says so here: stopped part-way (with Retry), stopped by the owner, or at a cap.
+        if (!thinking) state.chatEnded[tafId]?.let { end ->
+          item(key = "ended") { EndedLine(end, taf?.name ?: "It", onRetry = { text -> following = true; actions.sendChat(text, tafId) { } }) }
+        }
       }
 
       // The held call waiting for the owner, when it's out of view; and the way back down.
@@ -368,6 +393,56 @@ private fun WorkSummary(work: Work) {
         val note = if (step.error) " · failed" else if (step.notMade) " · not made" else ""
         Text("• " + KiffMapping.toolWords(step.tool) + note, style = scaled(12, color = if (step.error) Theme.no else Theme.soft))
       }
+    }
+  }
+}
+
+/**
+ * The work of the answer streaming now: the step in progress, or what it's at ("Thinking…", "Writing…"); the line of what it's
+ * thinking while it hasn't started writing; the steps done so far; then the words as they're written.
+ */
+@Composable
+private fun LiveWork(live: LiveAnswer) {
+  val writing = live.text.isNotBlank()
+  // A quick answer's thinking is noise: the line shows once it has thought for a few seconds.
+  var thoughtAWhile by remember(live.started) { mutableStateOf(false) }
+  LaunchedEffect(live.started) { kotlinx.coroutines.delay(3_000); thoughtAWhile = true }
+  Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val running = live.steps.lastOrNull { it.status == LiveStep.Status.running }
+    if (running != null || live.activity != null || !writing) {
+      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        androidx.compose.material3.CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Theme.dim)
+        Text(live.activity ?: running?.words ?: if (writing) "Writing…" else "Thinking…", style = scaled(13, color = Theme.dim))
+      }
+    }
+    if (!writing && thoughtAWhile) {
+      Chat.thinkingLine(live.thinking).takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(13, color = Theme.soft), maxLines = 2) }
+    }
+    live.steps.filter { it.status != LiveStep.Status.running }.forEach { step ->
+      val (mark, note, tone) = when (step.status) {
+        LiveStep.Status.error -> Triple("✗", " · failed", Theme.no)
+        LiveStep.Status.notMade -> Triple("↩", " · not made · read first", Theme.dim)
+        LiveStep.Status.held -> Triple("⏸", " · held for you", Theme.amberText)
+        else -> Triple("✓", "", Theme.soft)
+      }
+      Text("$mark ${step.words}$note", style = scaled(13, color = tone))
+    }
+    if (writing) MarkdownText(live.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
+  }
+}
+
+/** How the chat's latest run ended, said under it: part-way with what went through and Retry, stopped by the owner, or at a cap. */
+@Composable
+private fun EndedLine(end: ChatEnd, taf: String, onRetry: (String) -> Unit) {
+  val words = when (end) {
+    is ChatEnd.Failed -> AppModel.failedWords(taf, end.done)
+    ChatEnd.Stopped -> "You stopped $taf."
+    is ChatEnd.Capped -> AppModel.capWords(end.stop, taf) ?: return
+  }
+  Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text(words, style = scaled(14, color = Theme.ink))
+    if (end is ChatEnd.Failed) {
+      Text("Retry", style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { onRetry(end.retry) }.padding(vertical = 8.dp))
     }
   }
 }

@@ -7,6 +7,10 @@ import bot.tafs.app.model.Answer
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.ChatMessage
+import bot.tafs.app.model.ChatEnd
+import bot.tafs.app.model.LiveAnswer
+import bot.tafs.app.model.LiveStep
+import bot.tafs.app.kiff.StreamEvent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import bot.tafs.app.model.CardCheck
@@ -174,6 +178,9 @@ data class AppState(
   val chatWorking: Map<String, ChatRun> = emptyMap(),
   /** Since when the owner has written to a taf that hasn't yet answered or been seen at work. */
   val chatAwaiting: Map<String, Instant> = emptyMap(),
+  /** The answer each taf is writing now, as its run streams; and how its chat's latest run ended, when the chat says so. */
+  val chatLive: Map<String, LiveAnswer> = emptyMap(),
+  val chatEnded: Map<String, ChatEnd> = emptyMap(),
   /** What the owner sent that tafs cloud's thread doesn't have yet, by taf: kept on screen until it does. */
   val chatSent: Map<String, List<ChatMessage>> = emptyMap(),
   /** Each halt as last read, by the taf's id, "" for the whole account. */
@@ -433,7 +440,7 @@ data class AppState(
    * True while the taf is at work on its chat, or hasn't answered the owner's last message yet: it shows thinking,
    * and the field says the next message is written to it while it works.
    */
-  fun thinking(tafId: String): Boolean = tafId in chatSending || (mode == Mode.kiff && (tafId in chatWorking || tafId in chatAwaiting))
+  fun thinking(tafId: String): Boolean = tafId in chatSending || (mode == Mode.kiff && (tafId in chatWorking || tafId in chatAwaiting || tafId in chatLive))
 
   /**
    * A taf's chat as one timeline: its messages, the calls held for the owner where they were
@@ -866,6 +873,7 @@ class AppModel(
     decided.clear()
     followers.values.forEach { it.cancel() }
     followers.clear()
+    resumedRuns.clear()
     retrying?.cancel()
     retrying = null
     retries = 0
@@ -1048,6 +1056,8 @@ class AppModel(
       readApprovals()
       startHandedOver()
     }
+    // A run at work that this phone isn't following: its stream is picked back up, once.
+    thread.workingRun?.let { run -> resumeChat(tafId, cloudId, run) }
   }
 
   // MARK: Alerts
@@ -1787,13 +1797,14 @@ class AppModel(
     val generation = accountGeneration
     val pending = ChatMessage(nextStamp(tafId), ChatMessage.From.owner, words, "pending")
     append(tafId, pending)
-    _state.update { it.copy(chatSent = it.chatSent + (tafId to (it.chatSent[tafId].orEmpty() + pending))) }
+    _state.update { it.copy(chatSent = it.chatSent + (tafId to (it.chatSent[tafId].orEmpty() + pending)), chatEnded = it.chatEnded - tafId) }
+    var streamed: kotlinx.coroutines.flow.Flow<StreamEvent>? = null
     try {
       if (isTrialChat(tafId)) {
         // A trial's turn runs in the background, and its chat is read again as it goes.
         cloud.trialMessage(cloudId, words)
       } else {
-        val run = _state.value.chatWorking[tafId]?.run
+        val run = _state.value.chatLive[tafId]?.run ?: _state.value.chatWorking[tafId]?.run
         var steered = false
         if (run != null) {
           try {
@@ -1804,7 +1815,9 @@ class AppModel(
             if (e.status != 409) throw e
           }
         }
-        if (!steered) cloud.sendMessage(cloudId, words)
+        // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
+        if (!steered) streamed = openStream(cloudId, words)
+        if (!steered && streamed == null) cloud.sendMessage(cloudId, words)
       }
     } catch (e: CancellationException) {
       throw e
@@ -1826,9 +1839,148 @@ class AppModel(
     if (generation != accountGeneration) return false
     // The taf is answering now: until it has, or is at work, it reads as thinking.
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (tafId to clock())) }
+    val events = streamed
+    if (events != null) {
+      _state.update { it.copy(chatLive = it.chatLive + (tafId to LiveAnswer(started = clock()))) }
+      readThread(tafId)
+      followStream(tafId, events, retry = words)
+      return true
+    }
     readThread(tafId)
     followChat(tafId)
     return true
+  }
+
+  /**
+   * Opens the streamed send. Null when the stream couldn't open and the plain send should take the message (no network to it,
+   * tafs cloud without the route, or failing); a refusal (the flood guard, the role) throws, as the plain send's would.
+   */
+  private suspend fun openStream(cloudId: String, text: String): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
+    cloud.streamMessage(cloudId, text)
+  } catch (e: CancellationException) {
+    throw e
+  } catch (e: CloudError) {
+    if (e.status in 400..499 && e.status != 404 && e.status != 408) throw e
+    null
+  } catch (_: Exception) {
+    null
+  }
+
+  /**
+   * Follows a run's stream into the live answer (docs/chat.md): words as they're written, what it's thinking, each step in
+   * words, a held call's card at once (KIFF is read when the stream says so, as iOS does), and how it ended. When it's over the
+   * thread is read and the stored answer takes the live one's place. A stream that drops without an end leaves the thread to
+   * show the rest, read as before.
+   */
+  private fun followStream(tafId: String, events: kotlinx.coroutines.flow.Flow<StreamEvent>, retry: String?) {
+    val generation = accountGeneration
+    followers[tafId]?.cancel()
+    followers[tafId] = scope.launch {
+      var ended: StreamEvent.End? = null
+      fun live(change: (LiveAnswer) -> LiveAnswer) = _state.update { s ->
+        s.chatLive[tafId]?.let { s.copy(chatLive = s.chatLive + (tafId to change(it))) } ?: s
+      }
+      try {
+        events.collect { e ->
+          if (generation != accountGeneration) throw CancellationException("another account")
+          when (e) {
+            is StreamEvent.Session -> {
+              live { it.copy(session = e.session, run = e.run ?: it.run) }
+              // At work in that chat, for steering and Stop.
+              _state.update { it.copy(chatWorking = it.chatWorking + (tafId to ChatRun(e.session, e.run))) }
+            }
+            is StreamEvent.Text -> live { it.copy(text = it.text + e.text, activity = null, thinking = "") }
+            is StreamEvent.Thinking -> live { it.copy(thinking = it.thinking + e.text) }
+            is StreamEvent.Activity -> live { a ->
+              // The words written so far stay, and the answer goes on below them.
+              val kept = if (a.text.isNotEmpty() && !a.text.endsWith("\n\n")) a.copy(text = a.text + "\n\n") else a
+              kept.began(e.tool, e.step ?: KiffMapping.toolWords(e.tool), e.call)
+            }
+            is StreamEvent.Step -> live { it.ended(e.call, LiveStep.Status.of(e.status)) }
+            is StreamEvent.Held -> {
+              live { it.ended(null, LiveStep.Status.held).copy(activity = null) }
+              // KIFF is read for the card, where the call was made, and for Needs you.
+              scope.launch { refresh() }
+            }
+            StreamEvent.Taken, StreamEvent.Said, StreamEvent.Component -> readThread(tafId)
+            StreamEvent.Part -> {
+              live { it.newPart() }
+              readThread(tafId)
+            }
+            is StreamEvent.End -> {
+              ended = e
+              live { it.copy(activity = null) }
+            }
+            StreamEvent.Broken -> Unit
+          }
+        }
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        // The stream dropped: the thread has the rest.
+      }
+      if (generation != accountGeneration) return@launch
+      val end = ended
+      _state.update { s ->
+        val how = when {
+          end == null -> null
+          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done)
+          end.status == "CANCELLED" -> ChatEnd.Stopped
+          end.stop in CAP_STOPS -> ChatEnd.Capped(end.stop)
+          else -> null
+        }
+        s.copy(chatEnded = if (how != null) s.chatEnded + (tafId to how) else s.chatEnded - tafId)
+      }
+      // Over, or paused on a held call: KIFF is read at once, so the hold shows and the Card's amounts are today's.
+      if (end != null) refresh()
+      readThread(tafId)
+      _state.update { it.copy(chatLive = it.chatLive - tafId, chatAwaiting = if (end != null) it.chatAwaiting - tafId else it.chatAwaiting) }
+      // No end came: the thread is read as the run goes on, as before the stream.
+      if (end == null && busy(tafId)) {
+        followers.remove(tafId)
+        followChat(tafId)
+      }
+    }
+  }
+
+  /** Stops what the taf is doing in its chat: its latest run is cancelled, and the chat says so. */
+  suspend fun stopChat(tafId: String) {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val session = _state.value.chatLive[tafId]?.session ?: _state.value.chatWorking[tafId]?.session ?: return
+    val generation = accountGeneration
+    try {
+      cloud.stop(cloudId, session)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail("Not stopped: ${e.message}")
+      return
+    }
+    if (generation != accountGeneration) return
+    followers.remove(tafId)?.cancel()
+    _state.update {
+      it.copy(chatLive = it.chatLive - tafId, chatAwaiting = it.chatAwaiting - tafId, chatWorking = it.chatWorking - tafId, chatEnded = it.chatEnded + (tafId to ChatEnd.Stopped))
+    }
+    readThread(tafId)
+  }
+
+  /** Runs this phone picked back up, so each is picked up once. */
+  private val resumedRuns = mutableSetOf<String>()
+
+  /** Back in a chat whose run is at work: its stream is picked back up once, its steps so far, then the rest. */
+  private suspend fun resumeChat(tafId: String, cloudId: String, run: String) {
+    if (followers[tafId]?.isActive == true || run in resumedRuns || isTrialChat(tafId)) return
+    resumedRuns += run
+    val events = try {
+      cloud.resumeRun(cloudId, run)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: Exception) {
+      return
+    }
+    val working = _state.value.chatWorking[tafId]
+    _state.update { it.copy(chatLive = it.chatLive + (tafId to LiveAnswer(started = clock(), session = working?.session, run = run))) }
+    followStream(tafId, events, retry = null)
   }
 
   /** Why a message wasn't sent, in words. */
@@ -3226,6 +3378,23 @@ class AppModel(
     /** How often a thread is read again while a run is at work in it, and how many times at most. */
     const val CHAT_POLL_MS = 2_500L
     const val CHAT_POLL_BUDGET = 150
+
+    /** The stops at a cap of the run's own: it ends with no words for it. */
+    val CAP_STOPS = setOf("cost_cap", "turn_cap")
+
+    /** What the chat says when its latest run stopped at a cap, never "…". */
+    fun capWords(stop: String, taf: String): String? = when (stop) {
+      "cost_cap" -> "$taf stopped: this task would cost more than its limit for one task. Ask for something narrower, or someone who manages $taf can raise the limit."
+      "turn_cap" -> "$taf stopped: this task took more steps than its limit for one task. Ask for something narrower."
+      else -> null
+    }
+
+    /** A run that failed part-way, with what went through before it stopped, from the run's own record. */
+    fun failedWords(taf: String, done: List<bot.tafs.app.kiff.DoneCall>): String {
+      if (done.isEmpty()) return "$taf stopped part-way. Nothing went through."
+      val calls = done.joinToString("; ") { c -> KiffMapping.toolWords(c.tool) + (c.resource?.let { " on $it" } ?: "") }
+      return "$taf stopped part-way, after this went through: $calls."
+    }
 
     /** Waits between tries of a doors read that failed. */
     val DOORS_RETRY_MS = listOf(1_000L, 3_000L)
