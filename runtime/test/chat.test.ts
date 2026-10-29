@@ -681,6 +681,8 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     const byID = Object.fromEntries(r.body.components.map((c: { component: { id: string }; answer?: unknown; run: string }) => [c.component.id, c]));
     expect(byID.which).toMatchObject({ run: run.id, answer: { state: "answered", words: "Test mode", at: NOW.toISOString() } });
     expect(byID.limits.answer).toEqual({ state: "wrote", words: "Use live", at: NOW.toISOString() });
+    // What the owner wrote shows as their message, so their words never vanish from the thread.
+    expect(r.body.messages).toContainEqual(expect.objectContaining({ from: "owner", text: "Use live", answers: "limits" }));
     expect(byID.late.answer).toEqual({ state: "no_answer", words: "", at: NOW.toISOString() });
   });
 });

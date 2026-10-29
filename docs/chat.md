@@ -156,7 +156,8 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   waits goes on, and no second run starts beside it.
 - In the thread, each answered card carries `answer` `{state: answered|wrote|no_answer,
   words, at}`: what was chosen, as the card shows it; what was written instead; or that it
-  stopped waiting with no answer.
+  stopped waiting with no answer. Words written instead also show as the owner's message,
+  with `answers` naming the card, so they never vanish from the thread.
 - The app's earlier form, a message `[<type> <id>] <answer>` from the person's own app, is
   still taken as the card's answer when that card waits. Any other text, a door's message, or
   a card that doesn't wait goes as a message. This form goes one release after the app build

@@ -1224,6 +1224,8 @@ export interface ThreadMessage {
   door?: { app: string; from?: string; subject?: string; reply?: "sent" | "not_sent" | "pending"; why?: string };
   /** The files the person attached to their message (kiff/tafs#209): opened through the attachments route. */
   attachments?: AttachmentRef[];
+  /** The card the owner's message answered, by id: they wrote while it waited, and their words were its answer. */
+  answers?: string;
   /**
    * A taf's message that called tools first (kiff/tafs#285): how long it worked on it, from the
    * message before, and the tools it called, by name, in order, with the ones that failed. From
@@ -1341,6 +1343,10 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         const b = (e.body ?? {}) as { id?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown };
         const card = components.findLast((c) => c.run === e.run && (c.component as { id?: unknown })?.id === b.id);
         if (card) card.answer = cardAnswer(b, iso(e.time));
+        // Words the owner wrote while the card waited answered it: they show as their message, as sent.
+        if (typeof b.wrote === "string" && b.wrote.trim()) {
+          messages.push({ at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
+        }
         continue;
       }
       if (e.kind !== "owner_message" && e.kind !== "agent_message" && e.kind !== "report") continue;
