@@ -96,9 +96,9 @@ jobs:
           path: android/app/build/reports/androidTests
 
   # The signed release bundle for Play's internal testing, only when run by hand. The upload key
-  # comes from Secrets Manager (tafs-android/upload-key) through the deploy role, which may read that
-  # one secret, and is written to the runner's temporary directory for the build only. The bundle is
-  # kept one day, for the owner to download and upload to Play.
+  # comes from Secrets Manager (the UPLOAD_KEY_SECRET_ID secret names it) through the deploy role,
+  # which may read that one secret, and is written to the runner's temporary directory for the build only. The bundle is
+  # kept one day, to upload to Play.
   release:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -127,10 +127,12 @@ jobs:
           test -n "$GOOGLE_SERVICES_JSON" || { echo "::error::GOOGLE_SERVICES_JSON is not set: a release needs alerts on"; exit 1; }
           printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
       - name: The signed bundle
+        env:
+          UPLOAD_KEY_SECRET_ID: ${{ secrets.UPLOAD_KEY_SECRET_ID }}
         run: |
           set -euo pipefail
           key="$RUNNER_TEMP/upload.jks"
-          secret=$(aws secretsmanager get-secret-value --secret-id tafs-android/upload-key --query SecretString --output text)
+          secret=$(aws secretsmanager get-secret-value --secret-id "$UPLOAD_KEY_SECRET_ID" --query SecretString --output text)
           python3 -c 'import base64,json,sys; d=json.loads(sys.stdin.read()); open(sys.argv[1],"wb").write(base64.b64decode(d["keystore"]))' "$key" <<<"$secret"
           for f in store_password key_password alias; do
             v=$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get(sys.argv[1], "upload"))' "$f" <<<"$secret")

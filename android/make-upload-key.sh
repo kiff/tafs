@@ -1,11 +1,10 @@
 #!/bin/zsh
-# Makes the app's Play upload key once and keeps it only in AWS Secrets Manager (tafs-android/upload-key):
+# Makes the app's Play upload key once and keeps it only in AWS Secrets Manager (the secret named in UPLOAD_KEY_SECRET_ID):
 # the keystore and its random passwords never touch the repository, a clipboard or a chat. It prints
 # only the certificate's SHA-256 fingerprint, which is public (Play and Firebase ask for it).
-# Run it yourself: ! android/make-upload-key.sh
 set -euo pipefail
-SECRET=tafs-android/upload-key
-REGION=${AWS_REGION:-eu-west-1}
+SECRET=${UPLOAD_KEY_SECRET_ID:?set UPLOAD_KEY_SECRET_ID to the upload key secret}
+REGION=${AWS_REGION:?set AWS_REGION}
 if aws secretsmanager describe-secret --region "$REGION" --secret-id "$SECRET" >/dev/null 2>&1; then
   echo "$SECRET exists already: keep it. A new upload key needs Play's upload key reset." >&2
   exit 1
