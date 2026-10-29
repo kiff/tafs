@@ -7,6 +7,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- A chat that opens with your answers to Setup's questions card is named by those answers,
+  as the card shows them ("Test mode · Monday, Tuesday"), not by their raw JSON.
 - Coming back to the app no longer shows "Not done: Couldn't reach KIFF" (the 930 test).
   A refresh the app makes by itself tries again on its own. While KIFF can't be reached, a
   quiet line under the account's name says so, with a link to KIFF's status page.
