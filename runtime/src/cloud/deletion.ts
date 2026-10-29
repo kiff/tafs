@@ -84,6 +84,8 @@ export interface Deletion {
   tried?: string;
   /** How many times the sweep tried it, for its backoff. */
   tries?: number;
+  /** Kept before KIFF's accept answered: the sweep asks KIFF whether it took it before finishing. */
+  accepting?: boolean;
 }
 
 export interface Deletions {
@@ -97,13 +99,16 @@ export interface Deletions {
 
 /** planque or KIFF, for a deletion: accept checks the signed intent and records it; finish deletes, again and again the same. */
 export interface DeletionPeer {
-  accept(intent: string, signature: string): Promise<void>;
+  /** With `bearer`, the person's session goes with it: KIFF's accept takes the phone's session. */
+  accept(intent: string, signature: string, bearer?: string): Promise<void>;
   finish(intent: string, signature: string): Promise<void>;
+  /** Whether it accepted this intent: false for one it never took (403 `not_accepted`). */
+  accepted(intent: string, signature: string): Promise<boolean>;
 }
 
 /** A peer's refusal: `status` as it answered, `why` in its words. */
 export class PeerError extends Error {
-  constructor(readonly status: number, message: string) {
+  constructor(readonly status: number, message: string, readonly code?: string) {
     super(message);
   }
 }
@@ -113,12 +118,12 @@ export class PeerError extends Error {
  * intent's signature is the authority, so no session goes with it.
  */
 export function httpPeer(base: string, path: string, net: typeof fetch = fetch): DeletionPeer {
-  const post = async (url: string, intent: string, signature: string) => {
+  const post = async (url: string, intent: string, signature: string, bearer?: string) => {
     let res: Response;
     try {
       res = await net(url, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", ...(bearer ? { authorization: `Bearer ${bearer}` } : {}) },
         body: JSON.stringify({ intent, signature }),
         signal: AbortSignal.timeout(20_000),
       });
@@ -126,14 +131,23 @@ export function httpPeer(base: string, path: string, net: typeof fetch = fetch):
       throw new PeerError(502, (err as Error).message);
     }
     if (res.ok) return;
-    const body = await res.json().catch(() => ({})) as { error?: unknown; message?: unknown };
-    const why = typeof body.error === "string" ? body.error : typeof body.message === "string" ? body.message : `answered ${res.status}`;
-    throw new PeerError(res.status, why);
+    const body = await res.json().catch(() => ({})) as { error?: unknown; detail?: unknown; message?: unknown };
+    const why = typeof body.detail === "string" ? body.detail : typeof body.error === "string" ? body.error : typeof body.message === "string" ? body.message : `answered ${res.status}`;
+    throw new PeerError(res.status, why, typeof body.error === "string" ? body.error : undefined);
   };
   const url = `${base.replace(/\/+$/, "")}${path}`;
   return {
-    accept: (intent, signature) => post(url, intent, signature),
+    accept: (intent, signature, bearer) => post(url, intent, signature, bearer),
     finish: (intent, signature) => post(`${url}/finish`, intent, signature),
+    async accepted(intent, signature) {
+      try {
+        await post(`${url}/status`, intent, signature);
+        return true;
+      } catch (err) {
+        if (err instanceof PeerError && err.code === "not_accepted") return false;
+        throw err;
+      }
+    },
   };
 }
 

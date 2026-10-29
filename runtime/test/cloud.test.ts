@@ -207,8 +207,9 @@ function depsOf(w: World): Deps {
       finished: async (tenant) => { w.deletions.delete(tenant); w.finishedDeletions.push(tenant); },
     },
     deletionPeers: Object.fromEntries((["planque", "kiff"] as const).map((name) => [name, {
-      accept: async () => { w.peerCalls.push(`${name} accept`); const e = w.peerRefuse.get(`${name} accept`); if (e) { w.peerRefuse.delete(`${name} accept`); throw e; } },
+      accept: async (_i: string, _s: string, bearer?: string) => { w.peerCalls.push(`${name} accept${bearer ? ` as ${bearer}` : ""}`); const e = w.peerRefuse.get(`${name} accept`); if (e) { w.peerRefuse.delete(`${name} accept`); throw e; } },
       finish: async () => { w.peerCalls.push(`${name} finish`); const e = w.peerRefuse.get(`${name} finish`); if (e) { w.peerRefuse.delete(`${name} finish`); throw e; } },
+      accepted: async () => { w.peerCalls.push(`${name} accepted?`); const e = w.peerRefuse.get(`${name} accepted?`); if (e) { w.peerRefuse.delete(`${name} accepted?`); if (e.code === "not_accepted") return false; throw e; } return true; },
     }])) as Deps["deletionPeers"],
     accountData: {
       erase: async (tenant) => {
@@ -1666,8 +1667,9 @@ describe("deleting the account from one signed intent", () => {
     const r = await send(w, { intent: intent(), signature: "c2ln" });
     expect(r.status).toBe(200);
     expect(r.body).toEqual({ done: ["tafs", "planque", "kiff"], failed: [], pending: false });
-    expect(w.peerCalls).toEqual(["planque accept", "kiff accept", "planque finish", "kiff finish"]);
-    expect(w.agents.calls).toEqual([`deleteAgent ${RAE}`, "eraseTenant"]);
+    expect(w.peerCalls).toEqual(["planque accept", "kiff accept as owner", "planque finish", "kiff finish"]);
+    // Halted at KIFF's accept, before anything is erased: nothing of the account runs from then.
+    expect(w.agents.calls).toEqual(["halt all", `deleteAgent ${RAE}`, "eraseTenant"]);
     expect(w.erased).toEqual(["t_acme"]);
     // Finished: its intent and signature aren't kept.
     expect(w.deletions.has("t_acme")).toBe(false);
@@ -1703,6 +1705,8 @@ describe("deleting the account from one signed intent", () => {
       expect(w.erased).toEqual([]);
       expect(w.agents.calls).toEqual([]);
       expect(w.deletions.size).toBe(0);
+      // A refusal leaves the account usable.
+      expect((await call(w, "GET", "/v1/home", { token: "owner" })).status).not.toBe(410);
     }
   });
 
@@ -1712,7 +1716,7 @@ describe("deleting the account from one signed intent", () => {
     const r = await send(w, { intent: intent(), signature: "c2ln" });
     expect(r.body).toEqual({ done: ["tafs"], failed: [{ step: "planque", why: "planque is down" }, { step: "kiff", why: "not done yet" }], pending: true });
     // KIFF is never finished before planque.
-    expect(w.peerCalls).toEqual(["planque accept", "kiff accept", "planque finish"]);
+    expect(w.peerCalls).toEqual(["planque accept", "kiff accept as owner", "planque finish"]);
     expect(w.deletions.get("t_acme")).toMatchObject({ done: ["tafs"], tries: 1, intent: intent(), signature: "c2ln" });
 
     // The phone is gone. Before its backoff the sweep leaves it; after, it finishes it.
@@ -1732,7 +1736,45 @@ describe("deleting the account from one signed intent", () => {
     await send(w, { intent: intent(), signature: "c2ln" });
     const again = await send(w, { intent: intent({ nonce: "fedcba9876543210fedcba9876543210" }), signature: "b3RoZXI=" });
     expect(again.body).toEqual({ done: ["tafs", "planque", "kiff"], failed: [], pending: false });
-    expect(w.peerCalls.filter((c) => c.endsWith("accept"))).toEqual(["planque accept", "kiff accept"]);
+    expect(w.peerCalls.filter((c) => c.includes("accept"))).toEqual(["planque accept", "kiff accept as owner"]);
+  });
+
+  it("from acceptance on, the account can't be used: no session's route, no door's run, nothing scheduled", async () => {
+    const w = world();
+    w.peerRefuse.set("planque finish", new PeerError(502, "planque is down"));
+    await send(w, { intent: intent(), signature: "c2ln" });
+    // Between accept and finish: a session is refused everywhere but the deletion.
+    for (const [method, path] of [["GET", "/v1/home"], ["POST", `/v1/tafs/${RAE}/messages`], ["GET", `/v1/tafs/${RAE}/conversation`]] as const) {
+      expect([path, (await call(w, method, path, { token: "owner", body: { text: "hi" } })).status]).toEqual([path, 410]);
+    }
+    // kiff/agents was halted at KIFF's accept, so no scheduled run starts (its schedules hold while halted).
+    expect(w.agents.halts.get("t_acme|")?.on).toBe(true);
+    // The deletion itself still goes on.
+    expect((await send(w, { intent: intent(), signature: "c2ln" })).status).toBe(200);
+  });
+
+  it("when KIFF's answer to accept is lost, the sweep asks KIFF and finishes, or drops one KIFF never took", async () => {
+    for (const took of [true, false]) {
+      const w = world();
+      w.peerRefuse.set("kiff accept", new PeerError(502, "timeout"));
+      const r = await send(w, { intent: intent(), signature: "c2ln" });
+      expect(r.status).toBe(200);
+      expect(r.body.pending).toBe(true);
+      expect(w.deletions.get("t_acme")?.accepting).toBe(true);
+      expect(w.erased).toEqual([]);
+      if (!took) w.peerRefuse.set("kiff accepted?", new PeerError(403, "KIFF finishes only a deletion it accepted", "not_accepted"));
+      w.now = new Date(NOW.getTime() + 60_000);
+      await sweepDeletions(depsOf(w));
+      expect(w.peerCalls).toContain("kiff accepted?");
+      if (took) {
+        expect(w.erased).toEqual(["t_acme"]);
+        expect(w.peerCalls.slice(-2)).toEqual(["planque finish", "kiff finish"]);
+      } else {
+        expect(w.erased).toEqual([]);
+        expect(w.peerCalls).not.toContain("kiff finish");
+      }
+      expect(w.deletions.size).toBe(0);
+    }
   });
 
   it("leaves the earlier way, with no intent, as it was", async () => {

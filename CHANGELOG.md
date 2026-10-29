@@ -154,6 +154,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Deleting the account the earlier way, where the app itself asks tafs cloud, planque and KIFF
+  in turn, still works for installed builds. It goes one release after the build that signs one
+  intent for tafs cloud to carry.
 - You see only what your role lets you do: halting, versions, revoking or removing a taf,
   its doors' controls and Coach are hidden unless you may use them, instead of failing
   once tapped (or after Touch ID).

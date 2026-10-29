@@ -389,11 +389,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return { events: deps.events ? await doorEventsFor(event, me, await deps.events.list(me.tenantID), deps) : [] };
   }
   if (parts[1] === "account" && parts.length === 3 && parts[2] === "delete" && method === "POST") {
-    const me = await person(event, deps);
+    const me = await person(event, deps, true);
     const body = parseBody(event);
     // The phone's signed intent: tafs cloud drives the whole deletion. Without one, the app's
     // earlier way, where the phone drives planque and KIFF itself.
-    return body.intent === undefined ? deleteAccount(me, deps) : deleteByIntent(me, body, deps);
+    return body.intent === undefined ? deleteAccount(me, deps) : deleteByIntent(me, body, bearer(event), deps);
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
@@ -641,9 +641,11 @@ function bearer(event: HTTPEvent): string {
   return auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
 }
 
-async function person(event: HTTPEvent, deps: Deps): Promise<KIFFIdentity> {
+async function person(event: HTTPEvent, deps: Deps, deleting = false): Promise<KIFFIdentity> {
   const me = await whoIs(bearer(event), deps.fetch, deps.kiffBase);
   if (me.apiKey) throw new HTTPError(403, "sign in as a person, not with a key");
+  // From a deletion's acceptance on, the account can't be used: only the deletion itself goes on.
+  if (!deleting && deps.deletions && await deps.deletions.get(me.tenantID)) throw new HTTPError(410, "this account is being deleted");
   return me;
 }
 
@@ -1205,31 +1207,49 @@ function deletionView(d: Deletion) {
  * order, tafs cloud's own first, KIFF last. What doesn't finish now, the sweep finishes. An intent
  * already accepted for the account goes on with the deletion kept, never a second one.
  */
-async function deleteByIntent(me: KIFFIdentity, body: Record<string, unknown>, deps: Deps) {
+async function deleteByIntent(me: KIFFIdentity, body: Record<string, unknown>, token: string, deps: Deps) {
   if (!me.capabilities.includes("account.delete")) throw new HTTPError(403, "your role on this KIFF account cannot delete it");
   if (!deps.accountData || !deps.deletions || !deps.deletionPeers) throw new HTTPError(503, "accounts can't be deleted here");
   const intent = str(body.intent), signature = str(body.signature);
   if (!intent || !signature) throw new HTTPError(400, "send the signed intent: {intent, signature}");
   const now = deps.now?.() ?? new Date();
   const kept = await deps.deletions.get(me.tenantID);
-  if (kept) return deletionView(await finishDeletion(kept, deps, now));
+  if (kept) return deletionView(kept.accepting ? kept : await finishDeletion(kept, deps, now));
   try {
     checkIntent(parseIntent(intent), me.tenantID, now);
   } catch (err) {
     if (err instanceof IntentError) throw new HTTPError(err.status, err.message);
     throw err;
   }
-  // Accept: each checks the signature itself. A refusal deletes nothing.
-  for (const [step, peer] of [["planque", deps.deletionPeers.planque], ["kiff", deps.deletionPeers.kiff]] as const) {
-    try {
-      await peer.accept(intent, signature);
-    } catch (err) {
-      const status = err instanceof PeerError && err.status >= 400 && err.status < 500 ? err.status : 502;
-      throw new HTTPError(status, `${step === "kiff" ? "KIFF" : "planque"} didn't accept the deletion: ${(err as Error).message}. Nothing was deleted`);
-    }
+  const refused = (step: "planque" | "kiff", err: unknown) => {
+    const status = err instanceof PeerError && err.status >= 400 && err.status < 500 ? err.status : 502;
+    return new HTTPError(status, `${step === "kiff" ? "KIFF" : "planque"} didn't accept the deletion: ${(err as Error).message}. Nothing was deleted`);
+  };
+  // planque first: a refusal there deletes nothing and leaves nothing to undo.
+  try {
+    await deps.deletionPeers.planque.accept(intent, signature);
+  } catch (err) {
+    throw refused("planque", err);
   }
-  const d: Deletion = { tenant: me.tenantID, intent, signature, accepted: now.toISOString(), done: [] };
+  // Kept before KIFF's accept, which signs the phone out: if KIFF's answer is lost, the sweep asks
+  // KIFF whether it accepted, and finishes or drops it.
+  const d: Deletion = { tenant: me.tenantID, intent, signature, accepted: now.toISOString(), done: [], accepting: true };
   await deps.deletions.put(d);
+  try {
+    await deps.deletionPeers.kiff.accept(intent, signature, token);
+  } catch (err) {
+    if (err instanceof PeerError && err.status >= 400 && err.status < 500) {
+      await deps.deletions.finished(me.tenantID, now.toISOString());
+      throw refused("kiff", err);
+    }
+    // No answer from KIFF: kept, for the sweep to settle.
+    console.error(`delete account: KIFF's accept: ${(err as Error).message}`);
+    return deletionView({ ...d, failed: { kiff: "KIFF didn't answer yet" } });
+  }
+  delete d.accepting;
+  await deps.deletions.put(d);
+  // Nothing of the account runs from now: no scheduled run, no door's, until it's erased.
+  await deps.agents.halt(me.tenantID).catch((err) => console.error(`delete account: halt: ${(err as Error).message}`));
   return deletionView(await finishDeletion(d, deps, now));
 }
 
@@ -1271,8 +1291,20 @@ export async function sweepDeletions(deps: Deps): Promise<Array<{ tenant: string
   if (!deps.deletions || !deps.deletionPeers) return [];
   const now = deps.now?.() ?? new Date();
   const out: Array<{ tenant: string; done: Step[]; pending: boolean }> = [];
-  for (const d of await deps.deletions.pending()) {
+  for (let d of await deps.deletions.pending()) {
     if (d.tried && now.getTime() - Date.parse(d.tried) < backoffMs(d.tries ?? 0)) continue;
+    if (d.accepting) {
+      // KIFF's answer to its accept was lost: KIFF says whether it took it.
+      let accepted: boolean;
+      try { accepted = await deps.deletionPeers.kiff.accepted(d.intent, d.signature); } catch (err) {
+        await deps.deletions.put({ ...d, tried: now.toISOString(), tries: (d.tries ?? 0) + 1, failed: { kiff: (err as Error).message } });
+        continue;
+      }
+      if (!accepted) { await deps.deletions.finished(d.tenant, now.toISOString()); continue; }
+      d = { ...d };
+      delete d.accepting;
+      await deps.agents.halt(d.tenant).catch(() => undefined);
+    }
     const r = await finishDeletion(d, deps, now);
     out.push({ tenant: d.tenant, done: r.done, pending: r.done.length < STEPS.length });
   }
@@ -3309,7 +3341,15 @@ async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coa
 
 function doorContext(deps: Deps): DoorsContext {
   if (!deps.doors) throw new HTTPError(404, "not found");
-  return { doors: deps.doors, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now: deps.now?.() ?? new Date() };
+  // A door's message starts no run on an account being deleted.
+  const agents: DoorsContext["agents"] = {
+    getRun: (...a) => deps.agents.getRun(...a),
+    startRun: async (tenant, ...rest) => {
+      if (deps.deletions && await deps.deletions.get(tenant)) throw new AgentsError(410, "this account is being deleted");
+      return deps.agents.startRun(tenant, ...rest);
+    },
+  };
+  return { doors: deps.doors, tafs: deps.tafs, agents, push: deps.push, apns: deps.apns, now: deps.now?.() ?? new Date() };
 }
 
 /** A door's webhook or page: no sign-in, its provider's signature is the check (doors/inbound.ts). */
