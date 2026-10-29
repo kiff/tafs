@@ -99,7 +99,7 @@ class CoachInstallTest {
     assertTrue(auth.asked.isEmpty())
   }
 
-  @Test fun anInstallWithNoCardAsksOnceMakesTheVersionLiveThenApprovesCoachsCall() = runTest {
+  @Test fun anInstallWithNoCardAsksMakesTheVersionLiveThenApprovesCoachsCallWithAFingerprint() = runTest {
     reads()
     transport.answer(versions, 200, state(v2Live = false, v2Draft = false))
     transport.answer(switch2, 200, """{"switching":{"n":2,"draft":null,"at":"2026-10-28T09:00:00Z"}}""")
@@ -114,13 +114,15 @@ class CoachInstallTest {
     // What's in the way is stopped first.
     assertEquals("true", KiffClient.json.parseToJsonElement(String(transport.requestsTo(switch2).first().body!!)).jsonObject.getValue("stop_blocking").jsonPrimitive.content)
     assertTrue(m.useVersion(ready.version, ready.tafId, null, approving = call))
-    assertEquals(listOf("Use version 2 of Refunds"), auth.asked)
+    // The switch, then Coach's held call: approving it takes its own fingerprint.
+    assertEquals(listOf("Use version 2 of Refunds", "Answer Install a version"), auth.asked)
+    assertEquals(listOf("Answer Install a version"), auth.fingerprints)
     val o = order()
     assertTrue("live before Coach hears", o.indexOf(live2) < o.indexOf(approve))
     assertNotNull("signed", transport.requestsTo(approve).single().body)
   }
 
-  @Test fun anInstallWithACardConfirmsTheCardShownThenGoesLiveThenApprovesUnderTheOneConfirmation() = runTest {
+  @Test fun anInstallWithACardConfirmsTheCardShownThenGoesLiveThenApprovesCoachsCallEachWithAFingerprint() = runTest {
     reads()
     transport.answer(versions, 200, state(v2Live = false, v2Draft = true))
     transport.answer(switch2, 200, """{"switching":{"n":2,"draft":"dr_1","at":"2026-10-28T09:00:00Z"}}""")
@@ -133,7 +135,9 @@ class CoachInstallTest {
     val ready = m.beginCoachInstall(call)!!
     assertTrue(ready.hasCard)
     assertTrue(m.useVersion(ready.version, ready.tafId, "v3", approving = call))
-    assertEquals(listOf("Use version 2 of Refunds, with its Card"), auth.asked)
+    // No presence prompt: KIFF's confirm of the Card shown, then Coach's held call, each behind its own fingerprint.
+    assertEquals(listOf("Use version 2 of Refunds, with its Card", "Answer Install a version"), auth.fingerprints)
+    assertEquals(auth.fingerprints, auth.asked)
     val o = order()
     assertTrue(o.indexOf("POST /v1/me/agent-drafts/dr_1/confirm") < o.indexOf(live2))
     assertTrue(o.indexOf(live2) < o.indexOf(approve))

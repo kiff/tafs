@@ -21,10 +21,19 @@ import java.time.Instant
 class FakeAuthenticator(var confirms: Boolean = true, var available: Boolean = true) : Authenticator {
   val asked = mutableListOf<String>()
 
+  /** What a fingerprint was asked for, to unlock the approval key for one signature. */
+  val fingerprints = mutableListOf<String>()
+
   override val canAuthenticate: Boolean get() = available
 
   override suspend fun authenticate(reason: String): Boolean {
     asked += reason
+    return confirms
+  }
+
+  override suspend fun authenticate(reason: String, signature: java.security.Signature): Boolean {
+    asked += reason
+    fingerprints += reason
     return confirms
   }
 }
@@ -72,7 +81,7 @@ class FakeTransport : Transport {
 fun softwareSigner(
   auth: FakeAuthenticator = FakeAuthenticator(),
   clock: () -> Instant = { Instant.parse("2026-10-28T09:00:00Z") },
-): ApprovalSigning = DeviceSigner(SoftwareKeys(), auth, clock = clock)
+): ApprovalSigning = DeviceSigner(SoftwareKeys(), auth)
 
 /** A model whose owner confirms (or not, as [auth] says) with software keys, on the sample unless [start] is false. */
 fun testModel(

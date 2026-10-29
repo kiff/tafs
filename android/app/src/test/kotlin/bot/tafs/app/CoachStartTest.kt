@@ -76,7 +76,8 @@ class CoachStartTest {
     m.refreshConnections()
     assertFalse(m.state.value.planqueReady)
     assertTrue(m.startCoach())
-    assertEquals(listOf("Connect your tools"), auth.asked)
+    // Yes before anything is made, then a fingerprint for each of Coach's drafts, which grant authority.
+    assertEquals(listOf("Connect your tools", "Start Coach", "Give Coach its Card"), auth.asked)
     assertEquals("setup_1", m.state.value.coachCloudId)
     assertEquals("setup-acme", m.state.value.coachAgent)
     assertTrue(m.state.value.planqueReady)
@@ -121,7 +122,7 @@ class CoachStartTest {
     assertEquals("owner", install.getValue("on_exceed").jsonPrimitive.content)
     // Started, it asks nothing again, and gives the tools only once.
     assertTrue(m.startCoach())
-    assertEquals(1, auth.asked.size)
+    assertEquals(3, auth.asked.size)
     assertEquals(7, transport.requestsTo("POST /v1/connections").size)
   }
 

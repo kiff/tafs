@@ -136,7 +136,7 @@ class KiffClientTest {
     transport.answer("POST /v1/me/device/approval-key", 200, """{"fingerprint":"ab12 cd34 ef56 7890"}""")
     val c = client()
     val held = c.registerApprovalKey(keys.approvalPublicKeyDER) { message ->
-      Base64.getEncoder().encodeToString(keys.sign(message, approval = false))
+      Base64.getEncoder().encodeToString(keys.sign(message))
     }
     assertEquals("ab12 cd34 ef56 7890", held)
     val request = transport.requests.single()

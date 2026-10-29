@@ -48,6 +48,7 @@ fun SettingsSheet(
   state: AppState,
   onSignIn: () -> Unit,
   onSignOut: suspend () -> Unit,
+  onSignInAgain: suspend () -> Boolean = { false },
   onUsage: () -> Unit,
   onTurnOnAlerts: () -> Unit,
   onAlertSound: (Boolean) -> Unit,
@@ -88,6 +89,18 @@ fun SettingsSheet(
             account.email?.takeIf { it.isNotEmpty() }?.let { Value("Email", it) }
           }
           if (state.mode == Mode.sample) Action("Sign in with KIFF", Theme.ink, onSignIn)
+          // This phone can't approve until a new sign-in, which KIFF approves in the browser and which registers its new key.
+          if (state.mode == Mode.kiff && state.approvalKeyLost) {
+            Text(
+              "This phone can't approve until you sign in with KIFF again. Refusing still works.",
+              style = scaled(13, color = Theme.amberText),
+              modifier = Modifier.padding(12.dp),
+            )
+            Action("Sign in again", Theme.amberText) {
+              scope.launch { if (onSignInAgain()) onClose() }
+            }
+            state.signInAgainError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
+          }
           // The account's groups and who is in each.
           if (state.mode == Mode.kiff) Action("People & groups", Theme.ink, onPeople)
           if (state.mode == Mode.kiff) Action("Devices", Theme.ink, onDevices)

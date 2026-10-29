@@ -157,9 +157,10 @@ class KiffClient(
 
   /**
    * Signs, with the approval key, a call that grants authority ([grantsAuthority]), for a session
-   * that registered one (kiff/tafs#233); null otherwise, and the setup signer signs it as before.
+   * that registered one (kiff/tafs#233): it asks for a fingerprint for that one request. Null
+   * otherwise, and the setup signer signs it as before.
    */
-  var approvalSigner: ((ByteArray) -> String)? = null
+  var approvalSigner: (suspend (ByteArray) -> String)? = null
 
   /** Called when KIFF answers that an act needs the approval key this phone doesn't hold. */
   var approvalKeyRequired: (() -> Unit)? = null
@@ -535,9 +536,10 @@ class KiffClient(
 
     // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
     val signed = if (gateway) path == "/v1/connections" else signsSetup(path) || path == "/v1/me/device/approval-key"
-    // What grants authority is signed by the approval key, once the session has one, within a step
-    // the owner confirmed; KIFF picks the key by route, so the header is the same (kiff/tafs#233).
-    val signer = signedBy ?: setupSigner?.let { current -> if (!gateway && grantsAuthority(method, path)) approvalSigner ?: current else current }
+    // What grants authority is signed by the approval key, once the session has one, each request
+    // behind its own fingerprint; KIFF picks the key by route, so the header is the same (kiff/tafs#233).
+    val signer: (suspend (ByteArray) -> String)? = signedBy?.let { s -> { m: ByteArray -> s(m) } }
+      ?: setupSigner?.let { current -> if (!gateway && grantsAuthority(method, path)) approvalSigner ?: { m: ByteArray -> current(m) } else { m: ByteArray -> current(m) } }
     val account = tenant
     if (method in WRITES && signed && signer != null && account != null) {
       val signedAt = signingTime.next()

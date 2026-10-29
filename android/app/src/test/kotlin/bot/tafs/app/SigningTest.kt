@@ -1,6 +1,7 @@
 package bot.tafs.app
 
 import bot.tafs.app.model.Answer
+import bot.tafs.app.signing.ApprovalKeyRenewed
 import bot.tafs.app.signing.Biometry
 import bot.tafs.app.signing.DeviceSigner
 import bot.tafs.app.signing.Messages
@@ -10,8 +11,6 @@ import bot.tafs.app.signing.SoftwareKeys
 import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
-import java.time.Duration
-import java.time.Instant
 import java.util.Base64
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
@@ -22,7 +21,6 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 class SigningTest {
-  private val t0 = Instant.parse("2026-10-28T09:00:00Z")
   private val message = "tafs.answer.v1|held-1|approve-once".toByteArray()
 
   private fun verifies(publicDER: ByteArray, message: ByteArray, signatureBase64: String): Boolean {
@@ -32,10 +30,6 @@ class SigningTest {
       update(message)
       verify(Base64.getDecoder().decode(signatureBase64))
     }
-  }
-
-  private class Clock(var now: Instant) : () -> Instant {
-    override fun invoke() = now
   }
 
   // MARK: The messages
@@ -100,26 +94,6 @@ class SigningTest {
     }
   }
 
-  @Test fun aDeclinedConfirmationOpensNoStep() = runTest {
-    val auth = FakeAuthenticator(confirms = false)
-    val signer = DeviceSigner(SoftwareKeys(), auth)
-    runCatching { signer.signApproval(message, "x") }
-    try {
-      signer.signApprovalConfirmed(message)
-      fail("signed an approval under a confirmation that was declined")
-    } catch (_: SignerException) {
-    }
-  }
-
-  @Test fun nothingSignsAnApprovalBeforeAnyConfirmation() {
-    val signer = DeviceSigner(SoftwareKeys(), FakeAuthenticator())
-    try {
-      signer.signApprovalConfirmed(message)
-      fail("signed an approval with no confirmation")
-    } catch (_: SignerException) {
-    }
-  }
-
   @Test fun aPhoneWithNoScreenLockSignsNothing() = runTest {
     val signer = DeviceSigner(SoftwareKeys(), FakeAuthenticator(available = false))
     try {
@@ -138,41 +112,54 @@ class SigningTest {
     assertTrue(auth.asked.isEmpty())
   }
 
-  // MARK: A step
+  // MARK: Per use
 
-  @Test fun oneConfirmationCoversTheSignaturesOfItsStepAndNoLonger() = runTest {
-    val clock = Clock(t0)
-    val signer = DeviceSigner(SoftwareKeys(), FakeAuthenticator(), clock = clock)
-    signer.sign(message, "Issue it")
-    clock.now = t0.plus(Duration.ofSeconds(119))
-    assertTrue(verifies(signer.approvalPublicKeyDER, message, signer.signApprovalConfirmed(message)))
-    clock.now = t0.plus(Duration.ofSeconds(120))
-    try {
-      signer.signApprovalConfirmed(message)
-      fail("signed an approval after its step ended")
-    } catch (_: SignerException) {
-    }
-  }
-
-  @Test fun aNewConfirmationStartsANewStep() = runTest {
-    val clock = Clock(t0)
+  @Test fun everyApprovalAsksForItsOwnFingerprint() = runTest {
     val auth = FakeAuthenticator()
-    val signer = DeviceSigner(SoftwareKeys(), auth, clock = clock)
-    signer.sign(message, "first")
-    clock.now = t0.plusSeconds(200)
-    signer.sign(message, "second")
-    assertTrue(verifies(signer.approvalPublicKeyDER, message, signer.signApprovalConfirmed(message)))
+    val signer = DeviceSigner(SoftwareKeys(), auth)
+    signer.signApproval(message, "Use version 3 of Refunds, with its Card")
+    signer.signApproval(message, "Approve Refund Eve 45")
+    // Each unlocked the approval key for its one signature; a signature with the signing key asks with no fingerprint.
+    signer.sign(message, "Refuse it")
+    assertEquals(listOf("Use version 3 of Refunds, with its Card", "Approve Refund Eve 45"), auth.fingerprints)
   }
 
-  @Test fun endingAStepEndsItsConfirmation() = runTest {
-    val signer = DeviceSigner(SoftwareKeys(), FakeAuthenticator())
-    signer.sign(message, "x")
-    signer.endStep()
+  @Test fun anApprovalDeclinedAtThePromptSignsNothingAndTheNextAsksAgain() = runTest {
+    val auth = FakeAuthenticator(confirms = false)
+    val signer = DeviceSigner(SoftwareKeys(), auth)
+    runCatching { signer.signApproval(message, "first") }
+    auth.confirms = true
+    val signature = signer.signApproval(message, "second")
+    assertTrue(verifies(signer.approvalPublicKeyDER, message, signature))
+    assertEquals(listOf("first", "second"), auth.fingerprints)
+  }
+
+  // MARK: A key the phone turned off
+
+  @Test fun aKeyTurnedOffByANewFingerprintIsReplacedAndSignsNothing() = runTest {
+    val keys = SoftwareKeys()
+    val auth = FakeAuthenticator()
+    val signer = DeviceSigner(keys, auth)
+    val before = signer.approvalPublicKeyDER
+    keys.invalidateApproval = true
     try {
-      signer.signApprovalConfirmed(message)
-      fail("signed an approval after the step was ended")
-    } catch (_: SignerException) {
+      signer.signApproval(message, "Approve it")
+      fail("signed with a key the phone turned off")
+    } catch (e: ApprovalKeyRenewed) {
+      assertEquals(ApprovalKeyRenewed.WORDS, e.message)
     }
+    // Nothing was asked, and a new key took its place for the next sign-in to register.
+    assertTrue(auth.fingerprints.isEmpty())
+    assertFalse(before.contentEquals(signer.approvalPublicKeyDER))
+  }
+
+  @Test fun refusingStillWorksOnceTheApprovalKeyIsTurnedOff() = runTest {
+    val keys = SoftwareKeys()
+    val signer = DeviceSigner(keys, FakeAuthenticator())
+    keys.invalidateApproval = true
+    runCatching { signer.signApproval(message, "Approve it") }
+    val refusal = "tafs.answer.v1|held-1|reject".toByteArray()
+    assertTrue(verifies(signer.publicKeyDER, refusal, signer.sign(refusal, "Refuse it")))
   }
 
   // MARK: A phone with no approval key
@@ -180,17 +167,27 @@ class SigningTest {
   private class OneKey(private val keys: SoftwareKeys = SoftwareKeys()) : SigningKeys {
     override val publicKeyDER get() = keys.publicKeyDER
     override val approvalPublicKeyDER get() = ByteArray(0)
-    override fun sign(message: ByteArray, approval: Boolean) = keys.sign(message, approval = false)
+    override fun sign(message: ByteArray) = keys.sign(message)
+    override fun approvalSignature(): Signature = throw SignerException(DeviceSigner.NO_FINGERPRINT)
   }
 
-  @Test fun aSignerWithoutAnApprovalKeySignsEverythingWithItsOneKey() = runTest {
+  @Test fun aPhoneWithNoFingerprintNeverApprovesWithTheScreenLock() = runTest {
     val auth = FakeAuthenticator()
     val signer = DeviceSigner(OneKey(), auth)
     assertArrayEquals(ByteArray(0), signer.approvalPublicKeyDER)
-    val signature = signer.signApproval(message, "Approve it")
-    assertTrue(verifies(signer.publicKeyDER, message, signature))
-    // It still asked.
-    assertEquals(listOf("Approve it"), auth.asked)
+    try {
+      signer.signApproval(message, "Approve it")
+      fail("approved with the screen lock alone")
+    } catch (e: SignerException) {
+      assertEquals(DeviceSigner.NO_FINGERPRINT, e.message)
+    }
+    assertTrue(auth.asked.isEmpty())
+  }
+
+  @Test fun aDebugPhoneWithNoScreenLockApprovesTheDemoWithItsOneKey() = runTest {
+    val auth = FakeAuthenticator(available = false)
+    val signer = DeviceSigner(OneKey(), auth, demoWithoutLock = true)
+    assertTrue(verifies(signer.publicKeyDER, message, signer.signApproval(message, "Approve it")))
   }
 
   // MARK: What the phone asks with

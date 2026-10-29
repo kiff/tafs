@@ -11,18 +11,27 @@ import java.security.spec.ECGenParameterSpec
  */
 class SoftwareKeys : SigningKeys {
   private val signing: KeyPair = newPair()
-  private val approval: KeyPair = newPair()
+  private var approval: KeyPair = newPair()
+
+  /** Set to have the next approval find its key turned off, as a phone does when a fingerprint is added. */
+  var invalidateApproval = false
 
   override val publicKeyDER: ByteArray get() = signing.public.encoded
   override val approvalPublicKeyDER: ByteArray get() = approval.public.encoded
 
-  override fun sign(message: ByteArray, approval: Boolean): ByteArray {
-    val key = if (approval) this.approval else signing
-    return Signature.getInstance("SHA256withECDSA").run {
-      initSign(key.private)
-      update(message)
-      sign()
+  override fun sign(message: ByteArray): ByteArray = Signature.getInstance("SHA256withECDSA").run {
+    initSign(signing.private)
+    update(message)
+    sign()
+  }
+
+  override fun approvalSignature(): Signature {
+    if (invalidateApproval) {
+      invalidateApproval = false
+      approval = newPair()
+      throw ApprovalKeyRenewed()
     }
+    return Signature.getInstance("SHA256withECDSA").apply { initSign(approval.private) }
   }
 
   private fun newPair(): KeyPair =

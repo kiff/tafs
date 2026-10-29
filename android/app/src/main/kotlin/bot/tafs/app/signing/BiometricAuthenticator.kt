@@ -9,6 +9,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import java.lang.ref.WeakReference
+import java.security.Signature
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -59,8 +60,38 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
     cont.invokeOnCancellation { prompt.cancelAuthentication() }
   }
 
+  override suspend fun authenticate(reason: String, signature: Signature): Boolean = suspendCancellableCoroutine { cont ->
+    val host = activity?.get()
+    if (host == null) {
+      cont.resume(false)
+      return@suspendCancellableCoroutine
+    }
+    val prompt = BiometricPrompt(
+      host,
+      ContextCompat.getMainExecutor(host),
+      object : BiometricPrompt.AuthenticationCallback() {
+        // The Keystore unlocked this signature for one use: the one the caller holds.
+        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+          if (cont.isActive) cont.resume(result.cryptoObject?.signature === signature)
+        }
+
+        override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+          if (cont.isActive) cont.resume(false)
+        }
+      },
+    )
+    // A strong biometric only: the screen lock never approves, so the prompt offers Cancel in its place.
+    val info = BiometricPrompt.PromptInfo.Builder()
+      .setTitle(reason)
+      .setAllowedAuthenticators(BIOMETRIC_STRONG)
+      .setNegativeButtonText("Cancel")
+      .build()
+    prompt.authenticate(info, BiometricPrompt.CryptoObject(signature))
+    cont.invokeOnCancellation { prompt.cancelAuthentication() }
+  }
+
   companion object {
-    /** A biometric the phone counts as strong, or the screen lock. */
+    /** A biometric the phone counts as strong, or the screen lock: what signs with the signing key asks with either. */
     const val ALLOWED = BIOMETRIC_STRONG or DEVICE_CREDENTIAL
   }
 }

@@ -11,7 +11,12 @@ import bot.tafs.app.model.Decisions
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.kiffName
+import bot.tafs.app.signing.ApprovalKeyRenewed
 import bot.tafs.app.signing.ApprovalSigning
+import bot.tafs.app.signing.DeviceSigner
+import bot.tafs.app.signing.SignerException
+import bot.tafs.app.signing.SigningKeys
+import bot.tafs.app.signing.SoftwareKeys
 import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
@@ -304,6 +309,8 @@ class AnswerKiffTest {
         model.signOut()
         return true
       }
+
+      override suspend fun authenticate(reason: String, signature: java.security.Signature) = authenticate(reason)
     }
     model = testModel(
       transport = transport, secrets = secrets,
@@ -411,6 +418,80 @@ class AnswerKiffTest {
     assertEquals("Sign in with KIFF again to approve from this phone.", m.state.value.lastError)
     assertTrue(auth.asked.isEmpty())
     assertTrue(transport.requests.none { it.url.endsWith("approve-once") })
+  }
+
+  @Test fun anApprovalAsksForItsOwnFingerprintAndNothingElse() = runTest {
+    reads(); answeredOk()
+    val m = model()
+    assertTrue(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
+    // One prompt, the fingerprint that unlocked the approval key for this one signature.
+    assertEquals(listOf("Answer Refund a payment"), auth.fingerprints)
+    assertEquals(auth.fingerprints, auth.asked)
+  }
+
+  @Test fun aKeyTurnedOffByANewFingerprintSendsNothingSaysWhyAndRefusingStillWorks() = runTest {
+    reads()
+    answeredOk(route = "reject")
+    val keys = SoftwareKeys()
+    val signer = DeviceSigner(keys, auth)
+    secrets.save("at_1", AppModel.TOKEN); secrets.save("t_01", AppModel.TENANT); secrets.save("1", AppModel.KEYED)
+    secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
+    val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, start = false).also { it.restore() }
+    val call = m.state.value.held.single()
+    keys.invalidateApproval = true
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertEquals(ApprovalKeyRenewed.WORDS, m.state.value.lastError)
+    assertTrue(m.state.value.approvalKeyLost)
+    assertNull(secrets.load(AppModel.APPROVAL_KEYED))
+    assertTrue(transport.requests.none { it.url.endsWith("approve-once") })
+    // Approving waits for a new sign-in, with no prompt.
+    m.dismissError()
+    auth.asked.clear()
+    assertFalse(m.answer(call, Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
+    // Refusing is the signing key's, which a new fingerprint doesn't touch.
+    assertTrue(m.answer(call, Answer.Refuse))
+    val sent = body("reject")
+    assertTrue(verifies(signer.publicKeyDER, message("reject", at = signedAt(sent)), value(sent)))
+  }
+
+  @Test fun aPhoneWithNoFingerprintDoesNotApproveWithItsScreenLock() = runTest {
+    reads(); answeredOk()
+    val keys = object : SigningKeys {
+      val inner = SoftwareKeys()
+      override val publicKeyDER get() = inner.publicKeyDER
+      override val approvalPublicKeyDER get() = ByteArray(0)
+      override fun sign(message: ByteArray) = inner.sign(message)
+      override fun approvalSignature(): Signature = throw SignerException(DeviceSigner.NO_FINGERPRINT)
+    }
+    secrets.save("at_1", AppModel.TOKEN); secrets.save("t_01", AppModel.TENANT); secrets.save("1", AppModel.KEYED)
+    val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = DeviceSigner(keys, auth), start = false).also { it.restore() }
+    assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
+    assertEquals(DeviceSigner.NO_FINGERPRINT, m.state.value.lastError)
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requests.none { it.url.endsWith("approve-once") })
+  }
+
+  // MARK: Sign in again
+
+  @Test fun signingInAgainEndsTheSessionAtKiffFirstThenSignsOutHere() = runTest {
+    reads()
+    transport.answer("POST /v1/auth/device/logout", 200, "{}")
+    val m = model()
+    assertTrue(m.signInAgain())
+    assertEquals(1, transport.requestsTo("POST /v1/auth/device/logout").size)
+    assertFalse(m.state.value.signedIn)
+    assertNull(secrets.load(AppModel.TOKEN))
+  }
+
+  @Test fun ifKiffDoesNotEndTheSessionNothingChangesHere() = runTest {
+    reads()
+    transport.answer("POST /v1/auth/device/logout", 503, """{"error":"unavailable"}""")
+    val m = model()
+    assertFalse(m.signInAgain())
+    assertTrue(m.state.value.signedIn)
+    assertEquals("at_1", secrets.load(AppModel.TOKEN))
+    assertTrue(m.state.value.signInAgainError!!.startsWith("KIFF didn't end this sign-in, so nothing changed"))
   }
 
   @Test fun withoutAnApprovalKeyTheCurrentKeySignsAnApprovalToo() = runTest {

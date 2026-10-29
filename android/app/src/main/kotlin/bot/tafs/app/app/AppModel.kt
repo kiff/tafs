@@ -93,6 +93,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import bot.tafs.app.signing.ApprovalSigning
+import bot.tafs.app.signing.ApprovalKeyRenewed
+import bot.tafs.app.signing.DeviceSigner
 import bot.tafs.app.signing.Messages
 import bot.tafs.app.signing.SignerException
 import java.io.IOException
@@ -158,8 +160,13 @@ data class AppState(
   val otherAgents: List<Taf> = emptyList(),
   /** This session holds this phone's signing key: KIFF knows it, so it checks this phone's signature on an answer. */
   val sessionHasKey: Boolean = false,
-  /** KIFF holds an approval key for the session that isn't this phone's: approving waits for a new sign-in. */
+  /**
+   * This phone can't approve until a new sign-in: KIFF holds an approval key for the session that isn't this phone's, or the
+   * phone turned its key off when a fingerprint was added. Refusing still works.
+   */
   val approvalKeyLost: Boolean = false,
+  /** Why Sign in again didn't go through. */
+  val signInAgainError: String? = null,
   /** The held calls KIFF said this person may not answer, by call, with its reason: they show words, not buttons. */
   val unanswerable: Map<String, String> = emptyMap(),
   val tafs: List<Taf> = emptyList(),
@@ -832,17 +839,46 @@ class AppModel(
     useApprovalKey()
   }
 
-  /** From now on, what grants authority is signed by the approval key. */
+  /** From now on, what grants authority is signed by the approval key, each request behind its own fingerprint. */
   private fun useApprovalKey() {
     sessionHasApprovalKey = true
     _state.update { it.copy(approvalKeyLost = false) }
     val signer = signer
-    kiff.approvalSigner = { signer.signApprovalConfirmed(it) }
+    kiff.approvalSigner = { signer.signApproval(it, approvalReason) }
+  }
+
+  /** What the fingerprint prompt says for a request that grants authority: the step's own words. */
+  private var approvalReason = "Approve on KIFF"
+
+  /**
+   * Before a step that grants authority, in [reason]'s words. With the approval key in KIFF, each of the step's requests
+   * asks for its own fingerprint, so nothing is asked here. A session KIFF holds no approval key for asks once here,
+   * with the approval key all the same: what it signs is the owner's presence, never a record (kiff/tafs#233).
+   */
+  private suspend fun confirmGrant(presence: String, reason: String) {
+    approvalReason = reason
+    if (!sessionHasApprovalKey) signer.signApproval(presence.toByteArray(), reason)
+  }
+
+  /**
+   * What a signature that didn't happen says: the phone's own reason where the owner can act on it (no fingerprint,
+   * the key turned off), else [otherwise]. A key the phone turned off ends approving until a new sign-in.
+   */
+  private fun notSigned(e: SignerException, otherwise: String): String = when {
+    e is ApprovalKeyRenewed -> {
+      lostApprovalKey()
+      e.message!!
+    }
+    e.message == DeviceSigner.NO_FINGERPRINT -> e.message!!
+    else -> otherwise
   }
 
   private fun forgetApprovalKey() {
     sessionHasApprovalKey = false
-    kiff.approvalSigner = null
+    // A phone with no approval key (no fingerprint enrolled) grants nothing with its screen lock: what grants authority
+    // stops at the signer, which says to add a fingerprint. One with a key KIFF doesn't hold yet signs as before.
+    val signer = signer
+    kiff.approvalSigner = if (signer.approvalPublicKeyDER.isEmpty()) { m -> signer.signApproval(m, approvalReason) } else null
   }
 
   /** KIFF answered that an act needs the approval key this phone doesn't hold: approving waits for a new sign-in, and says so. */
@@ -851,6 +887,30 @@ class AppModel(
     _state.update { it.copy(approvalKeyLost = true) }
     kiff.approvalSigner = null
     secrets.delete(APPROVAL_KEYED)
+  }
+
+  /**
+   * After this phone lost its approval key: the session ends at KIFF first, and its approval key with it, so a key that no
+   * longer approves never stays listed. Only then is the phone signed out; the next sign-in, approved in the browser,
+   * registers the phone's new key as a new device. False when KIFF didn't end the session, and nothing changed here.
+   */
+  suspend fun signInAgain(): Boolean {
+    if (_state.value.mode != Mode.kiff) return false
+    _state.update { it.copy(signInAgainError = null) }
+    // While the session can still say so: this phone stops getting the account's alerts.
+    pushToken?.let { token -> if (alertsWanted()) runCatching { cloud.unregisterPush(token) } }
+    try {
+      kiff.signOut()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: KiffError.Unauthorized) {
+      // KIFF ended it already.
+    } catch (e: Exception) {
+      _state.update { it.copy(signInAgainError = "KIFF didn't end this sign-in, so nothing changed: ${e.message}. Try again.") }
+      return false
+    }
+    signOut(tellKiff = false)
+    return true
   }
 
   /** Signs out of KIFF, or clears the sample: nothing of either stays on the phone. */
@@ -1254,8 +1314,11 @@ class AppModel(
     val sign: (ByteArray) -> String = { signer.signConfirmed(it) }
     try {
       try {
+        // The owner says yes before anything is made: Coach's connector key and its drafts. Its drafts grant authority, so
+        // with the approval key in KIFF each asks for its own fingerprint as well.
         signer.sign("tafs.setup.v1|$tenant".toByteArray(), "Connect your tools")
-      } catch (_: SignerException) {
+      } catch (e: SignerException) {
+        notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
         return false
       }
       if (generation != accountGeneration) return false
@@ -1283,6 +1346,7 @@ class AppModel(
           if (generation != accountGeneration) return false
         }
         if (setup == null) {
+          approvalReason = "Start Coach"
           val draft = kiff.submitNoToolsDraft(COACH_AGENT, "Coach")
           val secret = draft.claimSecret
           if (generation != accountGeneration) return false
@@ -1294,6 +1358,9 @@ class AppModel(
           // Coach's tools wait on its agent, which only a started Coach has.
           keepCoachTools(tenant, setup.kiffAgent, generation)
         }
+      } catch (e: SignerException) {
+        if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
+        return false
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -1347,10 +1414,14 @@ class AppModel(
         kiff.connectCoachTool(tool, cloud.mcpUrl)
       }
       if (generation != accountGeneration) return
+      // Its own fingerprint, in its own words: it gives Coach its tools.
+      approvalReason = "Give Coach its Card"
       kiff.submitCoachCards(agent)
       secrets.save("1", key)
     } catch (e: CancellationException) {
       throw e
+    } catch (e: ApprovalKeyRenewed) {
+      lostApprovalKey()
     } catch (_: Exception) {
       // Not now.
     }
@@ -1460,15 +1531,13 @@ class AppModel(
           return Connected.Stopped
         }
         try {
-          signer.signApproval("tafs.cards.v1|$tenant|${d.id}|${d.version}".toByteArray(), "Give ${d.agentId} its Card")
-        } catch (_: SignerException) {
-          note(cardId, "Not done: it wasn't confirmed.")
-          return Connected.Stopped
-        }
-        if (generation != accountGeneration) return Connected.Stopped
-        kiff.setupSigner = sign
-        try {
+          confirmGrant("tafs.cards.v1|$tenant|${d.id}|${d.version}", "Give ${d.agentId} its Card")
+          if (generation != accountGeneration) return Connected.Stopped
+          kiff.setupSigner = sign
           kiff.confirmDraft(d.id, d.version)
+        } catch (e: SignerException) {
+          note(cardId, notSigned(e, "Not done: it wasn't confirmed."))
+          return Connected.Stopped
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
@@ -2126,20 +2195,21 @@ class AppModel(
         val signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
         val step = (answer as? Answer.NextStep)?.step
         val message = KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
-        // Approving, or raising a Card, grants authority: the approval key signs it, under the confirmation it
-        // checks itself, once KIFF holds it (kiff/tafs#233).
-        val grants = sessionHasApprovalKey && (answer is Answer.ApproveOnce || answer is Answer.ExtraRoom)
+        // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
+        // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
+        // approval key doesn't approve with the screen lock: it says to add a fingerprint. Refusing is the signing key's.
+        val approving = answer is Answer.ApproveOnce || answer is Answer.ExtraRoom
+        if (approving && !sessionHasApprovalKey && signer.approvalPublicKeyDER.isNotEmpty()) registerApprovalKey()
         when {
-          grants && confirmed -> signer.signApprovalConfirmed(message)
-          grants -> signer.signApproval(message, reason)
+          approving && (sessionHasApprovalKey || signer.approvalPublicKeyDER.isEmpty()) -> signer.signApproval(message, reason)
           confirmed -> signer.signConfirmed(message)
           else -> signer.sign(message, reason)
         }.also { signed = KiffClient.AnswerSignature(signedAt, it) }
       } else {
         signer.sign(Messages.answer(call.id, answer), reason)
       }
-    } catch (_: SignerException) {
-      fail("Not sent: it wasn't confirmed.")
+    } catch (e: SignerException) {
+      fail(notSigned(e, "Not sent: it wasn't confirmed."))
       return false
     }
     // The session ended, or another began, while the prompt was up: nothing of this answer goes to the new one.
@@ -2423,17 +2493,18 @@ class AppModel(
     // A claimed draft is later than confirmed, its Cards issued all the same.
     if (draft != null && !draft.confirmed && draft.status != "claimed") {
       try {
-        signer.signApproval("tafs.cards.v1|$tenant|${draft.id}|${draft.version}".toByteArray(), "Use version ${version.n} of $name, with its Card")
-      } catch (_: SignerException) {
-        // The owner backed out before the Card changed: the taf runs again as it was.
-        if (generation == accountGeneration) cancelSwitch(tafId)
-        return false
-      }
-      if (generation != accountGeneration) return false
-      val signer = signer
-      kiff.setupSigner = { signer.signConfirmed(it) }
-      try {
+        confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", "Use version ${version.n} of $name, with its Card")
+        if (generation != accountGeneration) return false
+        val signer = signer
+        kiff.setupSigner = { signer.signConfirmed(it) }
         kiff.confirmDraft(draft.id, draft.version)
+      } catch (e: SignerException) {
+        // The owner backed out before the Card changed: the taf runs again as it was.
+        if (generation == accountGeneration) {
+          cancelSwitch(tafId)
+          notSigned(e, "").takeIf { it.isNotEmpty() }?.let { versionError(tafId, it) }
+        }
+        return false
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -2727,14 +2798,10 @@ class AppModel(
         return null
       }
       try {
-        signer.signApproval("tafs.trial.v1|$tenant|${draft.id}|${draft.version}".toByteArray(), "Try version ${version.n} of ${taf.name}, with its own Card")
-      } catch (_: SignerException) {
-        return null
-      }
-      if (generation != accountGeneration) return null
-      val signer = signer
-      kiff.setupSigner = { signer.signConfirmed(it) }
-      try {
+        confirmGrant("tafs.trial.v1|$tenant|${draft.id}|${draft.version}", "Try version ${version.n} of ${taf.name}, with its own Card")
+        if (generation != accountGeneration) return null
+        val signer = signer
+        kiff.setupSigner = { signer.signConfirmed(it) }
         val confirmed = kiff.confirmDraftAsTrial(draft.id, draft.version)
         // Only a KIFF that runs trials answers "trying"; anything else is never taken for a trial.
         if (confirmed.status != "trying") {
@@ -2748,6 +2815,9 @@ class AppModel(
         if (generation != accountGeneration) return null
         setTrial(open, tafId)
         return trialChatId(tafId)
+      } catch (e: SignerException) {
+        if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { trialError(tafId, it) }
+        return null
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -2784,17 +2854,16 @@ class AppModel(
             trialError(tafId, "Sign in with KIFF again: this sign-in can't sign for the phone.")
             return false
           }
-          try {
-            signer.signApproval("tafs.cards.v1|$tenant|${draft.id}|${draft.version}".toByteArray(), "Install version ${open.n} of ${taf.name}, with its Card")
-          } catch (_: SignerException) {
-            return false
-          }
+          confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", "Install version ${open.n} of ${taf.name}, with its Card")
           if (generation != accountGeneration) return false
           val signer = signer
           kiff.setupSigner = { signer.signConfirmed(it) }
           kiff.confirmDraft(draft.id, draft.version)
         }
         cloud.installTrial(cloudId)
+      } catch (e: SignerException) {
+        if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { trialError(tafId, it) }
+        return false
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -2971,16 +3040,18 @@ class AppModel(
 
   /**
    * Makes one change to groups or sharing, behind one confirmation as KIFF asks of a phone, then reads them again. [what] is
-   * said at the prompt. False when it didn't go through.
+   * said at the prompt. A change that [grants] use of a taf asks for a fingerprint for each share it adds instead, as the
+   * approval key signs each. False when it didn't go through.
    */
-  suspend fun changePeople(what: String, change: suspend (KiffClient) -> Unit): Boolean {
+  suspend fun changePeople(what: String, grants: Boolean = false, change: suspend (KiffClient) -> Unit): Boolean {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || tenant == null) return false
     val generation = accountGeneration
     _state.update { it.copy(peopleError = null) }
     try {
-      signer.sign("tafs.people.v1|$tenant|$what".toByteArray(), what)
-    } catch (_: SignerException) {
+      if (grants) confirmGrant("tafs.people.v1|$tenant|$what", what) else signer.sign("tafs.people.v1|$tenant|$what".toByteArray(), what)
+    } catch (e: SignerException) {
+      notSigned(e, "").takeIf { it.isNotEmpty() }?.let { words -> _state.update { it.copy(peopleError = words) } }
       return false
     }
     if (generation != accountGeneration) return false
@@ -2995,7 +3066,8 @@ class AppModel(
       if (generation != accountGeneration) return false
       // Read again first: a read that works clears the error, and this one must stay on screen.
       refreshPeople()
-      if (generation == accountGeneration) _state.update { it.copy(peopleError = "$what didn't go through: ${e.message}") }
+      val words = if (e is SignerException) notSigned(e, "$what didn't go through: it wasn't confirmed.") else "$what didn't go through: ${e.message}"
+      if (generation == accountGeneration) _state.update { it.copy(peopleError = words) }
       return false
     } finally {
       kiff.setupSigner = null
@@ -3019,7 +3091,7 @@ class AppModel(
 
   /** Shares a taf with [add] and stops sharing it with [remove], behind one confirmation for all of it. */
   suspend fun setShares(agent: String, name: String, add: Set<Share>, remove: Set<Share>): Boolean =
-    changePeople("Share $name") { kiff ->
+    changePeople("Share $name", grants = add.isNotEmpty()) { kiff ->
       add.forEach { kiff.share(agent, it) }
       remove.forEach { kiff.unshare(agent, it) }
     }
@@ -3162,18 +3234,16 @@ class AppModel(
     val name = tafId?.let { _state.value.taf(it)?.name }
     val generation = accountGeneration
     try {
-      // Resuming gives authority back: the approval key signs it, once the owner has confirmed.
-      signer.signApproval("tafs.resume.v1|$tenant|${tafId ?: "*"}".toByteArray(), name?.let { "Resume $it" } ?: "Resume all your tafs")
-    } catch (_: SignerException) {
-      fail("Not resumed: it wasn't confirmed.")
-      return false
-    }
-    if (generation != accountGeneration) return false
-    kiff.tenant = tenant
-    val signer = signer
-    kiff.setupSigner = { signer.signConfirmed(it) }
-    try {
+      // Resuming gives authority back: the approval key signs KIFF's request, behind its own fingerprint.
+      confirmGrant("tafs.resume.v1|$tenant|${tafId ?: "*"}", name?.let { "Resume $it" } ?: "Resume all your tafs")
+      if (generation != accountGeneration) return false
+      kiff.tenant = tenant
+      val signer = signer
+      kiff.setupSigner = { signer.signConfirmed(it) }
       kiff.resume(tafId)
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) fail(notSigned(e, "Not resumed: it wasn't confirmed."))
+      return false
     } catch (_: KiffError.ApprovalKeyRequired) {
       fail(KiffClient.APPROVAL_KEY_LOST)
       return false

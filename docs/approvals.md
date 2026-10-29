@@ -66,6 +66,22 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
     Card, starting a trial, Resume. Its own access control requires Face ID, Touch ID or
     the passcode, so the key checks the prompt, not the app's code. One confirmed Face ID
     covers one confirmed step.
+- On an Android phone the two keys are in the Android Keystore (StrongBox, else the TEE),
+  and the approval key is stricter (`KeystoreKeys`, `DeviceSigner`):
+  - it signs **once per fingerprint**: timeout 0, a strong biometric only, unlocked through
+    `BiometricPrompt` with the signature as its `CryptoObject`. Unlocking the phone counts
+    for nothing, and the screen lock never approves.
+  - every request that grants authority asks for its own fingerprint, with the step's
+    words. Approve, Resume, sharing a taf, starting a trial and installing a version with
+    its Card each take one. Installing Coach's held version takes two (the Card, then
+    Coach's call), and starting Coach the first time takes its "Connect your tools"
+    confirmation and a fingerprint for each of its two drafts.
+  - a phone with no strong biometric enrolled has no approval key and approves nothing: it
+    says to add a fingerprint. Refusing still works.
+  - adding a fingerprint turns the key off for good. The phone makes a new one and says it
+    can't approve until a new sign-in. **Sign in again** in Settings ends the session at
+    KIFF first, the old approval key with it, then signs out; the next sign-in, approved
+    in the browser, registers the new key as a new device.
 - KIFF holds both keys for the session: the current one from sign-in, the approval key
   registered once (`POST /v1/me/device/approval-key`). If KIFF holds an approval key
   that isn't this phone's, approving waits for a new sign-in.
