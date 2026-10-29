@@ -2056,10 +2056,11 @@ async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = fals
   const listed = all.filter((s) => s.kind === "chat" && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined)));
   return listed.flatMap((s, i) => {
-    const text = chatTitle((read[i]?.events ?? []).filter((e) => e.kind === "owner_message").map((e) => {
+    const events = read[i]?.events ?? [];
+    const text = chatTitle(events.filter((e) => e.kind === "owner_message").map((e) => {
       const t = (e.body as { text?: unknown })?.text;
       return typeof t === "string" ? ownerWords(t.trim()) : "";
-    }));
+    }), events.filter((e) => e.kind === "component").map((e) => e.body));
     if (!text) return [];
     const title = text.length > CHAT.chatTitle ? text.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : text;
     return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title }];
@@ -2070,18 +2071,55 @@ async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = fals
  * The owner's answer to a component, as the app writes it (contract 1 on
  * kiff/agents#91): "[<type> <id>] <answer>", such as "[approval connect-stripe] declined".
  */
-const COMPONENT_ANSWER = /^\[(?:steps|notice|confirm|approval|sign_in|result) [^\]\s]+\]/;
+const COMPONENT_ANSWER = /^\[(?:steps|notice|confirm|questions|approval|sign_in|result) ([^\]\s]+)\]/;
 
 /**
  * A chat's title (kiff/tafs#82): the owner's first message that isn't a component's
  * answer, which says what they asked. A chat of answers alone is named by the first
- * one's answer, without its component.
+ * one's answer, without its component; a questions card's answer by its words, from
+ * `shown`, the session's components.
  */
-export function chatTitle(ownerMessages: string[]): string {
+export function chatTitle(ownerMessages: string[], shown: unknown[] = []): string {
   const said = ownerMessages.filter(Boolean);
   const asked = said.find((t) => !COMPONENT_ANSWER.test(t));
   if (asked) return asked;
-  return (said[0] ?? "").replace(COMPONENT_ANSWER, "").trim();
+  const first = said[0] ?? "";
+  const id = COMPONENT_ANSWER.exec(first)?.[1];
+  const answer = first.replace(COMPONENT_ANSWER, "").trim();
+  return (first.startsWith("[questions ") && questionsWords(answer, shown, id)) || answer;
+}
+
+type ShownQuestion = { id?: unknown; options?: Array<{ value?: unknown; label?: unknown }> };
+
+/**
+ * A questions card's answer, `{"<question>": {"value": …} | {"values": […]} | {"own": "…"}}`,
+ * in the owner's words as the apps show it: each choice by its label, in the card's
+ * order, "In your words: “…”" for their own. Undefined when it isn't answers.
+ */
+function questionsWords(answer: string, shown: unknown[], id: string | undefined): string | undefined {
+  let answers: Record<string, { value?: unknown; values?: unknown; own?: unknown }>;
+  try {
+    answers = JSON.parse(answer);
+  } catch {
+    return undefined;
+  }
+  if (!answers || typeof answers !== "object" || Array.isArray(answers)) return undefined;
+  // The card answered: the latest one shown with its id.
+  const card = [...shown].reverse().find((c) => (c as { type?: unknown; id?: unknown })?.type === "questions" && (c as { id?: unknown }).id === id) as { questions?: ShownQuestion[] } | undefined;
+  const questions = Array.isArray(card?.questions) ? card.questions : [];
+  const ids = questions.map((q) => q.id).filter((q): q is string => typeof q === "string");
+  const order = [...ids, ...Object.keys(answers).filter((k) => !ids.includes(k)).sort()];
+  const parts = order.flatMap((q) => {
+    const a = answers[q];
+    if (!a || typeof a !== "object") return [];
+    const options = questions.find((x) => x.id === q)?.options ?? [];
+    const label = (v: unknown) => String(options.find((o) => o.value === v)?.label ?? v);
+    if (typeof a.value === "string") return [label(a.value)];
+    if (Array.isArray(a.values)) return [a.values.map(label).join(", ")];
+    if (typeof a.own === "string") return [`In your words: “${a.own}”`];
+    return [];
+  });
+  return parts.length ? parts.join(" · ") : undefined;
 }
 
 /**

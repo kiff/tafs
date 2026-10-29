@@ -591,6 +591,21 @@ describe("chats (kiff/tafs#73)", () => {
     expect(chatTitle([])).toBe("");
   });
 
+  it("names a chat that opens with a questions card's answer by its words, not its JSON", () => {
+    const card = { type: "questions", id: "limits", questions: [
+      { id: "mode", text: "Which mode?", options: [{ value: "test", label: "Test mode" }, { value: "live", label: "Live" }] },
+      { id: "days", text: "Which days?", multi: true, options: [{ value: "mon", label: "Monday" }, { value: "tue", label: "Tuesday" }] },
+      { id: "cap", text: "How much?", options: [{ value: "100", label: "100 €" }] },
+    ] };
+    const answer = '[questions limits] {"cap":{"own":"300 € on weekdays"},"days":{"values":["mon","tue"]},"mode":{"value":"test"}}';
+    expect(chatTitle([answer], [card])).toBe("Test mode · Monday, Tuesday · In your words: “300 € on weekdays”");
+    // Without the card, the answers' own values; never the JSON.
+    expect(chatTitle([answer])).toBe("In your words: “300 € on weekdays” · mon, tue · test");
+    // A questions answer isn't what the owner asked: a later message names the chat.
+    expect(chatTitle([answer, "Refunds, please"], [card])).toBe("Refunds, please");
+    expect(chatTitle(["[questions limits] not json"])).toBe("not json");
+  });
+
   it("archives a chat: it leaves the list and the thread, and the next message starts a new one (kiff/tafs#82)", async () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 3600_000));
