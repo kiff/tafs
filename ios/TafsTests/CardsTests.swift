@@ -81,9 +81,9 @@ final class CardsTests: XCTestCase {
     }
 
     func testUseKIFFCouldNotReadIsNeverShownAsZero() {
-        let money = TafCard(id: "c", title: "Refunds", rules: [], total: CardTotal(limit: eur(80000), used: nil, window: .week))
+        let money = TafCard(id: "c", title: "Refunds", rules: [], total: CardTotal(limit: eur(80000), used: nil, window: Window("lifetime")))
         XCTAssertEqual(money.hero?.figure, eur(80000).formatted)
-        XCTAssertEqual(money.hero?.words, "a week · use unavailable")
+        XCTAssertEqual(money.hero?.words, "in total · use unavailable")
         let calls = TafCard(id: "c", title: "Reads", rules: [], calls: CardTotal(limit: 200, used: nil, window: .day))
         XCTAssertEqual(calls.hero?.figure, "200")
         XCTAssertEqual(calls.hero?.words, "calls a day · use unavailable")
@@ -137,5 +137,22 @@ final class CardsTests: XCTestCase {
         taf.counted = [:]
         taf.usageUnknown = ["list"]
         XCTAssertNil(taf.shownCards[0].calls?.used, "KIFF couldn't read it: unknown, not zero")
+    }
+
+    /// KIFF's four windows read exactly, tafs cloud's words win, and a window the app doesn't
+    /// know reads as sent: a lifetime or hourly total never reads as a day's again.
+    func testEachOfKIFFsWindowsHasItsOwnWords() throws {
+        XCTAssertEqual([Window("calendar_day"), Window("rolling_24h"), Window("rolling_1h"), Window("lifetime")].map(\.label),
+                       ["a day", "in any 24 hours", "in any hour", "in total"])
+        XCTAssertEqual([Window("calendar_day"), Window("rolling_24h"), Window("rolling_1h"), Window("lifetime")].map(\.current),
+                       ["today", "in the last 24 hours", "in the last hour", "so far"])
+        XCTAssertEqual(Window("calendar_week").label, "calendar_week")
+        XCTAssertEqual(Window("rolling_1h", each: "each hour", now: "this hour").label, "each hour")
+        XCTAssertEqual(Window("lifetime").sumLabel, "in total")
+        XCTAssertEqual(Window.day.sumLabel, "in total a day")
+        // Kept as KIFF's name, and an older cache's "day" reads as a calendar day.
+        let decoded = try JSONDecoder().decode([Window].self, from: Data(#"["day","rolling_1h"]"#.utf8))
+        XCTAssertEqual(decoded, [.day, Window("rolling_1h")])
+        XCTAssertEqual(String(data: try JSONEncoder().encode(Window.day), encoding: .utf8), #""calendar_day""#)
     }
 }

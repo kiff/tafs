@@ -7,6 +7,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- When a change to groups or sharing fails, the app says why. The reason used to be cleared by
+  the list being read again.
+- A Card's total over all time, or over a rolling hour or 24 hours, no longer reads as "a day".
+  The home list gives each total KIFF's own window and its words ("in total", "in any hour").
 - A chat that opens with your answers to Setup's questions card is named by those answers,
   as the card shows them ("Test mode · Monday, Tuesday"), not by their raw JSON.
 - Coming back to the app no longer shows "Not done: Couldn't reach KIFF" (the 930 test).
