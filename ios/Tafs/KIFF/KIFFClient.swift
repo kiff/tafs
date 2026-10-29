@@ -857,10 +857,11 @@ final class KIFFClient {
                 out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", "))
             }
             for a in aggregates ?? [] {
-                let window = KIFFMapping.window(a.window).label
+                // KIFF's own window, exactly: never a lifetime or hourly total read as a day's.
+                let window = Window(a.window)
                 out.append(KIFFMapping.isSum(a.quantity)
-                    ? "\(KIFFMapping.money(a.limit, unit: a.unit, scale: a.scale).formatted) in total \(window)"
-                    : "\(a.limit) \(a.limit == 1 ? "call" : "calls") \(window)")
+                    ? "\(KIFFMapping.money(a.limit, unit: a.unit, scale: a.scale).formatted) \(window.sumLabel)"
+                    : "\(a.limit) \(a.limit == 1 ? "call" : "calls") \(window.label)")
             }
             return out
         }

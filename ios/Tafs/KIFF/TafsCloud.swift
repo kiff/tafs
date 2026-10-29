@@ -108,6 +108,12 @@ final class TafsCloud {
             let scale: Int
         }
 
+        /// A window in the owner's words, as tafs cloud sends them: shown as they are.
+        struct WindowWords: Decodable, Equatable, Sendable {
+            let each: String
+            let now: String
+        }
+
         struct Rule: Decodable, Equatable {
             let action: String
             let label: String
@@ -116,6 +122,7 @@ final class TafsCloud {
             let perWindow: Amount?
             let countPerWindow: Int?
             let window: String
+            var windowWords: WindowWords?
             /// Of perWindow, the extra room KIFF says is active, the Card's own limit, and when
             /// the room ends, as tafs cloud passes them on from KIFF (the 755 retest).
             var extraRoom: Amount?
@@ -124,6 +131,7 @@ final class TafsCloud {
 
             enum CodingKeys: String, CodingKey {
                 case action, label, outside, window
+                case windowWords = "window_words"
                 case perAction = "per_action", perWindow = "per_window", countPerWindow = "count_per_window"
                 case extraRoom = "extra_room", baseLimit = "base_limit", roomWindowEnd = "room_window_end"
             }
@@ -135,6 +143,7 @@ final class TafsCloud {
             let limit: Value
             let used: Value?
             let window: String
+            var windowWords: WindowWords?
             /// Of limit, the extra room KIFF says is active, the Card's own limit, and when the
             /// room ends (the 755 retest).
             var extraRoom: Value?
@@ -143,6 +152,7 @@ final class TafsCloud {
 
             enum CodingKeys: String, CodingKey {
                 case limit, used, window
+                case windowWords = "window_words"
                 case extraRoom = "extra_room", baseLimit = "base_limit", roomWindowEnd = "room_window_end"
             }
         }

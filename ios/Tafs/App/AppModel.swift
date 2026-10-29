@@ -663,8 +663,11 @@ final class AppModel: ObservableObject {
             try await change(kiff)
         } catch {
             guard gen == accountGeneration else { return false }
-            peopleError = "\(what) didn't go through: \(error.localizedDescription)"
+            // Read again first: a reread that works clears the error, so the reason is set
+            // after it, or the owner never sees why the change failed.
             await refreshPeople()
+            guard gen == accountGeneration else { return false }
+            peopleError = "\(what) didn't go through: \(error.localizedDescription)"
             return false
         }
         await refreshPeople()

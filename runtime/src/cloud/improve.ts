@@ -100,8 +100,8 @@ function amount(m: Money | null): string {
 
 function rule(r: Rule): string {
   const parts = r.per_action ? [`${r.label}: at most ${amount(r.per_action)} a call`] : [r.label];
-  if (r.per_window) parts.push(`${amount(r.per_window)} a ${r.window}`);
-  if (r.count_per_window !== null) parts.push(`${r.count_per_window} calls a ${r.window}`);
+  if (r.per_window) parts.push(`${amount(r.per_window)} ${r.window_words.each}`);
+  if (r.count_per_window !== null) parts.push(`${r.count_per_window} calls ${r.window_words.each}`);
   parts.push(r.outside === "refuse" ? "refused beyond that" : "held for the owner beyond that");
   return parts.join(", ");
 }
