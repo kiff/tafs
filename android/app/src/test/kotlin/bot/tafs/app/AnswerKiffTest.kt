@@ -429,6 +429,30 @@ class AnswerKiffTest {
     assertEquals(auth.fingerprints, auth.asked)
   }
 
+  @Test fun anAnswerIsSignedAtTheTimeThePersonConfirmedNotWhenThePromptCameUp() = runTest {
+    reads(); answeredOk(); answeredOk(id = "ce_2", route = "reject")
+    var now = Instant.parse(t0)
+    secrets.save("at_1", AppModel.TOKEN); secrets.save("t_01", AppModel.TENANT); secrets.save("1", AppModel.KEYED)
+    secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
+    val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { now }, start = false).also { it.restore() }
+    // The person takes 90 s at the prompt.
+    auth.whilePrompted = { now = now.plusSeconds(90) }
+    assertTrue(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
+    val sent = body("approve-once")
+    assertEquals("2026-10-28T09:01:30Z", signedAt(sent))
+    assertTrue(verifies(signer.approvalPublicKeyDER, message("approve-once", at = "2026-10-28T09:01:30Z"), value(sent)))
+  }
+
+  @Test fun aRefusalIsSignedAtTheTimeThePersonConfirmedToo() = runTest {
+    reads(); answeredOk(route = "reject")
+    var now = Instant.parse(t0)
+    secrets.save("at_1", AppModel.TOKEN); secrets.save("t_01", AppModel.TENANT); secrets.save("1", AppModel.KEYED)
+    val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { now }, start = false).also { it.restore() }
+    auth.whilePrompted = { now = now.plusSeconds(45) }
+    assertTrue(m.answer(m.state.value.held.single(), Answer.Refuse))
+    assertEquals("2026-10-28T09:00:45Z", signedAt(body("reject")))
+  }
+
   @Test fun aKeyTurnedOffByANewFingerprintSendsNothingSaysWhyAndRefusingStillWorks() = runTest {
     reads()
     answeredOk(route = "reject")

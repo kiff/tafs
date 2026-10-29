@@ -157,10 +157,11 @@ class KiffClient(
 
   /**
    * Signs, with the approval key, a call that grants authority ([grantsAuthority]), for a session
-   * that registered one (kiff/tafs#233): it asks for a fingerprint for that one request. Null
+   * that registered one (kiff/tafs#233): it asks for a fingerprint for that one request, then signs
+   * the message [built] after it, with its time. Null
    * otherwise, and the setup signer signs it as before.
    */
-  var approvalSigner: (suspend (ByteArray) -> String)? = null
+  var approvalSigner: (suspend (built: () -> ByteArray) -> String)? = null
 
   /** Called when KIFF answers that an act needs the approval key this phone doesn't hold. */
   var approvalKeyRequired: (() -> Unit)? = null
@@ -538,14 +539,18 @@ class KiffClient(
     val signed = if (gateway) path == "/v1/connections" else signsSetup(path) || path == "/v1/me/device/approval-key"
     // What grants authority is signed by the approval key, once the session has one, each request
     // behind its own fingerprint; KIFF picks the key by route, so the header is the same (kiff/tafs#233).
-    val signer: (suspend (ByteArray) -> String)? = signedBy?.let { s -> { m: ByteArray -> s(m) } }
-      ?: setupSigner?.let { current -> if (!gateway && grantsAuthority(method, path)) approvalSigner ?: { m: ByteArray -> current(m) } else { m: ByteArray -> current(m) } }
+    val plain = (signedBy ?: setupSigner)?.let { s -> val signs: suspend (() -> ByteArray) -> String = { built -> s(built()) }; signs }
+    val signer = if (signedBy == null && plain != null && !gateway && grantsAuthority(method, path)) approvalSigner ?: plain else plain
     val account = tenant
     if (method in WRITES && signed && signer != null && account != null) {
-      val signedAt = signingTime.next()
       val requestUri = uri.path + (uri.rawQuery?.let { "?$it" } ?: "")
-      val message = requestMessage(account, method, requestUri, payload ?: ByteArray(0), signedAt)
-      headers["KIFF-Device-Signature"] = "t=$signedAt,v1=${signer(message)}"
+      // The time is taken once the person approved: after the fingerprint, for the approval key.
+      var signedAt = ""
+      val value = signer {
+        signedAt = signingTime.next()
+        requestMessage(account, method, requestUri, payload ?: ByteArray(0), signedAt)
+      }
+      headers["KIFF-Device-Signature"] = "t=$signedAt,v1=$value"
     }
     if (authorized) {
       val bearer = token ?: throw KiffError.Unauthorized

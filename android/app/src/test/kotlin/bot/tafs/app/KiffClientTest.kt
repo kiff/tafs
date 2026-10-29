@@ -182,11 +182,29 @@ class KiffClientTest {
 
   // MARK: Which key signs what
 
+  @Test fun aRequestTheApprovalKeySignsCarriesTheTimeThePersonApprovedNotWhenThePromptCameUp() = runTest {
+    var now = Instant.parse("2026-10-14T10:45:00Z")
+    val c = KiffClient(transport, token = "tok", signingTime = SigningTime { now }).also {
+      it.tenant = "t_01"
+      it.setupSigner = { "cur" }
+      // The person takes 90 s at the fingerprint prompt, then the message is built and signed.
+      it.approvalSigner = { built ->
+        now = now.plusSeconds(90)
+        String(built()).lines()[5]
+      }
+    }
+    transport.answer("POST /v1/agents/a1/resume", 200)
+    c.send("POST", "/v1/agents/a1/resume")
+    val header = transport.requestsTo("POST /v1/agents/a1/resume").single().headers["KIFF-Device-Signature"]!!
+    // The header's time is the one signed, both after the prompt.
+    assertEquals("t=2026-10-14T10:46:30.000Z,v1=2026-10-14T10:46:30.000Z", header)
+  }
+
   @Test fun whatGrantsAuthorityGoesToTheApprovalKeyAndTheRestToTheCurrentOne() = runTest {
     val signed = mutableListOf<String>()
     val c = client().also {
       it.setupSigner = { m -> signed += "current:" + String(m).lines()[3]; "cur" }
-      it.approvalSigner = { m -> signed += "approval:" + String(m).lines()[3]; "app" }
+      it.approvalSigner = { built -> signed += "approval:" + String(built()).lines()[3]; "app" }
     }
     for (key in listOf("POST /v1/me/agent-drafts", "POST /v1/me/time-zone", "POST /v1/agents/a1/resume", "DELETE /v1/agents/a1/grants")) {
       transport.answer(key, 200)

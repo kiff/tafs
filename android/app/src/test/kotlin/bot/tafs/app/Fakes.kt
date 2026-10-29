@@ -24,15 +24,20 @@ class FakeAuthenticator(var confirms: Boolean = true, var available: Boolean = t
   /** What a fingerprint was asked for, to unlock the approval key for one signature. */
   val fingerprints = mutableListOf<String>()
 
+  /** What happens while the prompt is up: time passing, say. */
+  var whilePrompted: () -> Unit = {}
+
   override val canAuthenticate: Boolean get() = available
 
   override suspend fun authenticate(reason: String): Boolean {
     asked += reason
+    whilePrompted()
     return confirms
   }
 
   override suspend fun authenticate(reason: String, signature: java.security.Signature): Boolean {
     asked += reason
+    whilePrompted()
     fingerprints += reason
     return confirms
   }

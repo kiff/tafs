@@ -32,7 +32,10 @@ interface ApprovalSigning {
   val approvalPublicKeyDER: ByteArray
 
   /** Asks the owner to confirm, then signs [message]. A base64 DER ECDSA signature over its SHA-256. */
-  suspend fun sign(message: ByteArray, reason: String): String
+  suspend fun sign(message: ByteArray, reason: String): String = sign(reason) { message }
+
+  /** As [sign], with the message [built] only once the owner confirmed, so a signed time in it is when they did. */
+  suspend fun sign(reason: String, built: () -> ByteArray): String
 
   /**
    * Signs [message] without asking again: only for the requests of a step the owner has just
@@ -45,7 +48,13 @@ interface ApprovalSigning {
    * the key unlocks for one signature and only through the prompt, so code that skipped it can't sign, and an unlock of
    * the phone counts for nothing. Throws [ApprovalKeyRenewed] when the phone turned the key off.
    */
-  suspend fun signApproval(message: ByteArray, reason: String): String
+  suspend fun signApproval(message: ByteArray, reason: String): String = signApproval(reason) { message }
+
+  /**
+   * As [signApproval], with the message [built] only once the prompt succeeded: a signed time in it is when the person
+   * approved, not when the prompt came up.
+   */
+  suspend fun signApproval(reason: String, built: () -> ByteArray): String
 }
 
 /** The messages the owner signs, as KIFF and tafs cloud read them: stable across versions. */
@@ -106,29 +115,29 @@ class DeviceSigner(
   override val publicKeyDER: ByteArray get() = keys.publicKeyDER
   override val approvalPublicKeyDER: ByteArray get() = keys.approvalPublicKeyDER
 
-  override suspend fun sign(message: ByteArray, reason: String): String {
+  override suspend fun sign(reason: String, built: () -> ByteArray): String {
     if (!authenticator.canAuthenticate) {
       // No screen lock set on a debug phone: let the demo through.
       if (!demoWithoutLock) throw SignerException("Set a screen lock on this phone to approve")
     } else if (!authenticator.authenticate(reason)) {
       throw SignerException("Not confirmed")
     }
-    return signConfirmed(message)
+    return signConfirmed(built())
   }
 
   override fun signConfirmed(message: ByteArray): String = encode(keys.sign(message))
 
-  override suspend fun signApproval(message: ByteArray, reason: String): String {
+  override suspend fun signApproval(reason: String, built: () -> ByteArray): String {
     if (keys.approvalPublicKeyDER.isEmpty()) {
       // A debug phone with no screen lock has no approval key either: the demo signs with the one key it has.
-      if (demoWithoutLock && !authenticator.canAuthenticate) return sign(message, reason)
+      if (demoWithoutLock && !authenticator.canAuthenticate) return signConfirmed(built())
       // Never the screen lock alone for what grants authority.
       throw SignerException(NO_FINGERPRINT)
     }
     val signature = keys.approvalSignature()
     if (!authenticator.authenticate(reason, signature)) throw SignerException("Not confirmed")
     return try {
-      signature.update(message)
+      signature.update(built())
       encode(signature.sign())
     } catch (e: Exception) {
       throw SignerException("The key could not sign", e)

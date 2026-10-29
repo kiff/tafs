@@ -844,7 +844,7 @@ class AppModel(
     sessionHasApprovalKey = true
     _state.update { it.copy(approvalKeyLost = false) }
     val signer = signer
-    kiff.approvalSigner = { signer.signApproval(it, approvalReason) }
+    kiff.approvalSigner = { built -> signer.signApproval(approvalReason, built) }
   }
 
   /** What the fingerprint prompt says for a request that grants authority: the step's own words. */
@@ -878,7 +878,7 @@ class AppModel(
     // A phone with no approval key (no fingerprint enrolled) grants nothing with its screen lock: what grants authority
     // stops at the signer, which says to add a fingerprint. One with a key KIFF doesn't hold yet signs as before.
     val signer = signer
-    kiff.approvalSigner = if (signer.approvalPublicKeyDER.isEmpty()) { m -> signer.signApproval(m, approvalReason) } else null
+    kiff.approvalSigner = if (signer.approvalPublicKeyDER.isEmpty()) { built -> signer.signApproval(approvalReason, built) } else null
   }
 
   /** KIFF answered that an act needs the approval key this phone doesn't hold: approving waits for a new sign-in, and says so. */
@@ -2191,19 +2191,22 @@ class AppModel(
       val tenant = kiffTenant
       val version = call.accountingVersion
       if (kiffId != null && tenant != null && version != null) {
-        // KIFF's message: this hold, this answer, the hold's version, now.
-        val signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
+        // KIFF's message: this hold, this answer, the hold's version, and the time, taken once the owner confirmed.
         val step = (answer as? Answer.NextStep)?.step
-        val message = KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
+        var signedAt = ""
+        val message = {
+          signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
+          KiffClient.answerMessage(tenant, kiffId, answer.kiffName, step, null, version, signedAt)
+        }
         // Approving, or raising a Card, grants authority: the approval key signs it, behind its own fingerprint, which
         // the key checks itself (kiff/tafs#233). An approval key KIFF doesn't hold yet registers first. A phone with no
         // approval key doesn't approve with the screen lock: it says to add a fingerprint. Refusing is the signing key's.
         val approving = answer is Answer.ApproveOnce || answer is Answer.ExtraRoom
         if (approving && !sessionHasApprovalKey && signer.approvalPublicKeyDER.isNotEmpty()) registerApprovalKey()
         when {
-          approving && (sessionHasApprovalKey || signer.approvalPublicKeyDER.isEmpty()) -> signer.signApproval(message, reason)
-          confirmed -> signer.signConfirmed(message)
-          else -> signer.sign(message, reason)
+          approving && (sessionHasApprovalKey || signer.approvalPublicKeyDER.isEmpty()) -> signer.signApproval(reason, message)
+          confirmed -> signer.signConfirmed(message())
+          else -> signer.sign(reason, message)
         }.also { signed = KiffClient.AnswerSignature(signedAt, it) }
       } else {
         signer.sign(Messages.answer(call.id, answer), reason)
