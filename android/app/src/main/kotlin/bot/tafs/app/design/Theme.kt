@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Typography
 
 /**
  * The tafs palette, taken from the mascot: a warm cream ground, deep ink, and the mascot's
@@ -74,12 +75,6 @@ object Fonts {
   val mono: FontFamily = FontFamily.Monospace
 }
 
-/**
- * Android's text runs larger than iOS's at the same nominal size, more so with the phone's font size raised: every size is
- * drawn at this share of iOS's, still in sp, so it still follows the font size setting.
- */
-const val TEXT_SCALE = 0.9f
-
 /** A text style as iOS's `scaledFont(size, weight, design)`: sp, so it follows the font size setting. */
 fun scaled(
   size: Int,
@@ -89,7 +84,7 @@ fun scaled(
   mono: Boolean = false,
   tracking: TextUnit = TextUnit.Unspecified,
 ): TextStyle = TextStyle(
-  fontSize = (size * TEXT_SCALE).sp,
+  fontSize = size.sp,
   fontWeight = weight,
   color = color,
   fontFamily = when {
@@ -99,6 +94,21 @@ fun scaled(
   },
   letterSpacing = tracking,
 )
+
+/**
+ * Material's type, at iOS's point sizes and with no added letter spacing: a Text without a style of its own (a button's
+ * label, a field's text) looks as iOS's at the system's font size, and grows with it, never shrunk below what the owner chose.
+ */
+private val iosTypography = Typography().run {
+  fun TextStyle.ios(size: Int, line: Int) = copy(fontSize = size.sp, lineHeight = line.sp, letterSpacing = 0.sp)
+  copy(
+    displayLarge = displayLarge.ios(34, 41), displayMedium = displayMedium.ios(28, 34), displaySmall = displaySmall.ios(22, 28),
+    headlineLarge = headlineLarge.ios(34, 41), headlineMedium = headlineMedium.ios(28, 34), headlineSmall = headlineSmall.ios(22, 28),
+    titleLarge = titleLarge.ios(20, 25), titleMedium = titleMedium.ios(17, 22), titleSmall = titleSmall.ios(15, 20),
+    bodyLarge = bodyLarge.ios(17, 22), bodyMedium = bodyMedium.ios(15, 20), bodySmall = bodySmall.ios(13, 18),
+    labelLarge = labelLarge.ios(15, 20), labelMedium = labelMedium.ios(13, 18), labelSmall = labelSmall.ios(11, 13),
+  )
+}
 
 @Composable
 fun TafsTheme(content: @Composable () -> Unit) {
@@ -112,6 +122,7 @@ fun TafsTheme(content: @Composable () -> Unit) {
       surface = Theme.background,
       onSurface = Theme.ink,
     ),
+    typography = iosTypography,
     content = content,
   )
 }
