@@ -29,9 +29,10 @@
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update both functions' code, nothing else.
 #   tafs-android-release       the role the Android release job assumes, only from
-#                              the android-release environment: read the upload key.
-#   tafs/fcm                   the Firebase service account key for Android alerts;
-#                              a person puts it there. Read only if FCM_SECRET_ID is set.
+#                              the android-release environment: read the upload key
+#                              (its secret id in UPLOAD_KEY_SECRET_ID).
+#   FCM_SECRET_ID              the secret holding the Firebase service account key for
+#                              Android alerts; a person puts it there.
 #
 # Everything is named tafs-* and touches nothing of KIFF's own. The functions run in
 # eu-west-1 since 26 Oct 2026, with their data (the table and the push key), which
@@ -292,6 +293,8 @@ aws iam put-role-policy --role-name "$DEPLOY_ROLE" --policy-name deploy-tafs-clo
 # each release run before it starts; the environment admits only main and
 # android-app. The key and the environment are made by hand.
 RELEASE_ROLE=tafs-android-release
+UPLOAD_KEY_SECRET_ID=${UPLOAD_KEY_SECRET_ID:?set UPLOAD_KEY_SECRET_ID to the secret id of the upload key}
+UPLOAD_KEY_ARN=$(aws secretsmanager describe-secret --secret-id "$UPLOAD_KEY_SECRET_ID" --query ARN --output text)
 RELEASE_TRUST="{
   \"Version\": \"2012-10-17\",
   \"Statement\": [{
@@ -316,7 +319,7 @@ aws iam put-role-policy --role-name "$RELEASE_ROLE" --policy-name read-upload-ke
   \"Version\": \"2012-10-17\",
   \"Statement\": [
     {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\",
-     \"Resource\": \"arn:aws:secretsmanager:$REGION:$ACCOUNT:secret:tafs-android/upload-key-*\"}
+     \"Resource\": \"$UPLOAD_KEY_ARN\"}
   ]
 }"
 
