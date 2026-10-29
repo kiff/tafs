@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.COACH_CHAT
@@ -94,26 +95,53 @@ private fun CoachIntro(state: AppState, start: suspend () -> Unit) {
   }
 }
 
-/** The plan, pinned above the thread: the work ahead, each step pending, active, done, failed or skipped. */
+/**
+ * The plan, pinned above the thread: the work ahead, each step pending, active, done, failed or skipped. Folded to the step in
+ * progress until tapped, so the chat comes first (as iOS's SetupPlan).
+ */
 @Composable
 fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
+  var open by remember { mutableStateOf(false) }
+  val steps = plan.steps.orEmpty()
+  val done = steps.count { it.status == "done" }
+  val now = CoachWords.currentStep(steps)
   Panel(modifier) {
-    Eyebrow(plan.title ?: "Plan")
-    plan.steps.orEmpty().forEach { step ->
-      Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(
-          CoachWords.stepMark(step.status),
-          style = scaled(14, FontWeight.SemiBold, when (step.status) {
-            "done" -> Theme.ok
-            "failed" -> Theme.no
-            "active" -> Theme.amberText
-            else -> Theme.dim
-          }),
-        )
-        Text(step.label, style = scaled(14, if (step.status == "active") FontWeight.SemiBold else FontWeight.Normal, if (step.status == "pending" || step.status == "skipped") Theme.dim else Theme.ink))
+    Row(
+      Modifier.fillMaxWidth().clickable(onClickLabel = if (open) "Fold the plan" else "Show the whole plan") { open = !open },
+      horizontalArrangement = Arrangement.spacedBy(10.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      if (!open && now != null) StepMark(now.status)
+      Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Eyebrow("Plan · $done of ${steps.size}")
+        if (!open) {
+          Text(now?.label ?: plan.title ?: "Plan", style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+      }
+      Text(if (open) "⌃" else "⌄", style = scaled(14, FontWeight.Bold, Theme.dim))
+    }
+    if (open) {
+      steps.forEach { step ->
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+          StepMark(step.status)
+          Text(step.label, style = scaled(14, if (step.status == "active") FontWeight.SemiBold else FontWeight.Normal, if (step.status == "pending" || step.status == "skipped") Theme.dim else Theme.ink))
+        }
       }
     }
   }
+}
+
+@Composable
+private fun StepMark(status: String) {
+  Text(
+    CoachWords.stepMark(status),
+    style = scaled(14, FontWeight.SemiBold, when (status) {
+      "done" -> Theme.ok
+      "failed" -> Theme.no
+      "active" -> Theme.amberText
+      else -> Theme.dim
+    }),
+  )
 }
 
 /** What Coach's cards ask of the model. */

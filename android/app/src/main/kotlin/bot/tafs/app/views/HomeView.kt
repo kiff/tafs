@@ -284,9 +284,10 @@ fun TafRow(taf: Taf, onClick: () -> Unit) {
       // KIFF couldn't read the use: say so, never show an empty meter.
       val unknown = taf.usageUnknown?.contains(rule.action) == true
       Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-          Text("${rule.label} · ${limit.formatted} ${rule.window.label}", style = scaled(12, color = Theme.dim))
-          Text(if (unknown) "use unavailable" else used.formatted, style = scaled(12, color = Theme.dim, mono = true))
+        // The label takes what the amount leaves: a long one never squeezes the amount to a digit a line.
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text("${rule.label} · ${limit.formatted} ${rule.window.label}", style = scaled(12, color = Theme.dim), modifier = Modifier.weight(1f))
+          Text(if (unknown) "use unavailable" else used.formatted, style = scaled(12, color = Theme.dim, mono = true), maxLines = 1, softWrap = false)
         }
         if (!unknown) Meter(used.minor.toDouble() / maxOf(limit.minor, 1L), Theme.tafColor(taf.colorIndex))
       }

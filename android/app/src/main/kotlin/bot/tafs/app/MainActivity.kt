@@ -23,6 +23,8 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -417,7 +419,13 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       else TafUsageSheet(taf, state, account, onClose = { usageOpen = false })
     }
     if (!keyboardUp) HorizontalDivider(color = Theme.line)
-    if (!keyboardUp) NavigationBar(containerColor = Theme.background, tonalElevation = 0.dp) {
+    // 64 dp rather than Material's 80, above the system's gesture bar: it takes less of the screen, as iOS's tab bar.
+    if (!keyboardUp) NavigationBar(
+      Modifier.navigationBarsPadding().height(64.dp),
+      containerColor = Theme.background,
+      tonalElevation = 0.dp,
+      windowInsets = WindowInsets(0),
+    ) {
       Tab.entries.forEach { t ->
         NavigationBarItem(
           selected = tab == t,

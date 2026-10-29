@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.kiff.SetupStep
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.COACH_CHAT
@@ -333,6 +334,15 @@ class CoachTest {
     assertEquals("–", CoachWords.stepMark("skipped"))
     assertEquals("○", CoachWords.stepMark("pending"))
     assertEquals("○", CoachWords.stepMark("something new"))
+  }
+
+  @Test fun theFoldedPlanShowsTheStepItIsAt() {
+    fun at(vararg s: String) = CoachWords.currentStep(s.mapIndexed { i, st -> SetupStep("s$i", st) })?.label
+    assertEquals("s1", at("done", "active", "pending"))
+    assertEquals("s1", at("done", "pending", "pending"))
+    assertEquals("s1", at("done", "failed", "pending"))
+    assertEquals("s1", at("done", "done"))
+    assertEquals(null, at())
   }
 
   @Test fun aSignInGoesWhereTheCardsServiceSaysNeverWhereItsWordsSay() {

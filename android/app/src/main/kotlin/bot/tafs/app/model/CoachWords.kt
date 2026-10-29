@@ -1,5 +1,6 @@
 package bot.tafs.app.model
 
+import bot.tafs.app.kiff.SetupStep
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.SetupComponent
 import bot.tafs.app.kiff.SetupQuestion
@@ -217,6 +218,10 @@ object CoachWords {
     // A message before a card placed at its time.
     return placed.withIndex().sortedWith(compareBy({ it.value.second }, { it.index })).map { it.value.first }
   }
+
+  /** The step the plan is at: the active one, else the first not yet done, else the last (as iOS's SetupPlan.current). */
+  fun currentStep(steps: List<SetupStep>): SetupStep? =
+    steps.firstOrNull { it.status == "active" } ?: steps.firstOrNull { it.status == "pending" || it.status == "failed" } ?: steps.lastOrNull()
 
   /** A step's mark in the plan. */
   fun stepMark(status: String): String = when (status) {

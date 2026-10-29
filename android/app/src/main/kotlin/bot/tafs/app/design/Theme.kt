@@ -74,6 +74,12 @@ object Fonts {
   val mono: FontFamily = FontFamily.Monospace
 }
 
+/**
+ * Android's text runs larger than iOS's at the same nominal size, more so with the phone's font size raised: every size is
+ * drawn at this share of iOS's, still in sp, so it still follows the font size setting.
+ */
+const val TEXT_SCALE = 0.9f
+
 /** A text style as iOS's `scaledFont(size, weight, design)`: sp, so it follows the font size setting. */
 fun scaled(
   size: Int,
@@ -83,7 +89,7 @@ fun scaled(
   mono: Boolean = false,
   tracking: TextUnit = TextUnit.Unspecified,
 ): TextStyle = TextStyle(
-  fontSize = size.sp,
+  fontSize = (size * TEXT_SCALE).sp,
   fontWeight = weight,
   color = color,
   fontFamily = when {
