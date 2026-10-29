@@ -95,6 +95,8 @@ data class ChatMessage(
   val work: Work? = null,
   /** It came through one of the taf's doors, or answers one that did. */
   val door: DoorMark? = null,
+  /** The files the owner attached to it (docs/attachments.md). */
+  val attachments: List<AttachmentRef> = emptyList(),
 ) {
   enum class From { owner, taf }
   enum class Kind { kickoff, message }

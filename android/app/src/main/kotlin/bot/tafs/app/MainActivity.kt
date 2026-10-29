@@ -58,6 +58,7 @@ import bot.tafs.app.signing.Biometry
 import bot.tafs.app.views.AccountActions
 import bot.tafs.app.views.CoachActions
 import bot.tafs.app.views.ConnectionActions
+import bot.tafs.app.views.FileActions
 import bot.tafs.app.views.CoachScreen
 import bot.tafs.app.views.DeleteAccountSheet
 import bot.tafs.app.views.DevicesSheet
@@ -115,7 +116,7 @@ class MainActivity : FragmentActivity() {
     val store = SampleStore(File(filesDir, "sample.json"))
     setContent {
       TafsTheme {
-        val model: AppModel = viewModel(factory = AppModel.Factory(store, app.signer, app.kiff, app.cloud, app.secrets, app.deviceName, app.push, app.planque, app.vendorSignIn, app.purchases, app.playBilling))
+        val model: AppModel = viewModel(factory = AppModel.Factory(store, app.signer, app.kiff, app.cloud, app.secrets, app.deviceName, app.push, app.planque, app.vendorSignIn, app.purchases, app.playBilling, java.io.File(cacheDir, "attachments")))
         val biometry = remember { Biometry.of(this@MainActivity) }
         // Firebase gave the phone a new token: the model tells tafs cloud.
         DisposableEffect(model) {
@@ -298,11 +299,12 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadMemory = model::loadMemory,
       forget = model::forget,
       loadChat = model::loadChat,
-      sendChat = model::sendChat,
+      sendChat = { text, tafId, withFiles, onNotSent -> model.sendChat(text, tafId, withFiles, onNotSent) },
       issuer = model.issuer,
       doors = doorActions,
       connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect),
       stopChat = model::stopChat,
+      files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::approveCoach,
@@ -393,7 +395,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         state,
         onSignIn = { showingSettings = false; onSignIn() },
         onSignOut = { model.signOut() },
-        onSignInAgain = { model.signInAgain() },
+        onSignInAgain = { model.signInAgainToApprove() },
         onUsage = { usageTaf = null; usageOpen = true },
         onTurnOnAlerts = { scope.launch { model.turnOnAlerts() } },
         onAlertSound = model::setAlertSound,

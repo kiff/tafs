@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.AttachmentRef
 import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.model.DoorMark
@@ -112,6 +113,9 @@ class TafsCloud(
             runCatching { KiffClient.json.decodeFromJsonElement(WireDoorMark.serializer(), mark) }.getOrNull()
               ?.let { DoorMark(it.app, it.from, it.subject, it.reply, it.why) }
           },
+          attachments = (m.attachments as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull { file ->
+            runCatching { KiffClient.json.decodeFromJsonElement(AttachmentRef.serializer(), file) }.getOrNull()
+          },
         )
       },
       working = wire.working?.session,
@@ -128,9 +132,56 @@ class TafsCloud(
     if (component.type !in SetupComponent.KINDS) null else ShownComponent(wire.at, wire.session, wire.run, component)
   }.getOrNull()
 
-  /** Sends the owner's message: into the taf's live chat, which starts a run, or a new one. */
-  suspend fun sendMessage(id: String, text: String): Sent =
-    post("/v1/tafs/${escaped(id)}/messages", mapOf("text" to text))
+  /** Sends the owner's message, with the files they attached (docs/attachments.md): into the taf's live chat, which starts a run, or a new one. */
+  suspend fun sendMessage(id: String, text: String, files: List<AttachmentRef> = emptyList()): Sent =
+    KiffClient.json.decodeFromString(String(sendJson("POST", "/v1/tafs/${escaped(id)}/messages", messageBody(text, files))))
+
+  /** A message's body: its words, and its files by id when it has any. */
+  private fun messageBody(text: String, files: List<AttachmentRef>) = kotlinx.serialization.json.buildJsonObject {
+    put("text", text)
+    if (files.isNotEmpty()) put("attachments", kotlinx.serialization.json.JsonArray(files.map { JsonPrimitive(it.id) }))
+  }
+
+  // MARK: Photos and files on a message (docs/attachments.md)
+
+  /** Where a file's bytes go: a PUT to [url] with [headers], sent as given, straight to storage, never through tafs cloud. It works for minutes. */
+  @kotlinx.serialization.Serializable
+  data class Upload(val url: String, val method: String = "PUT", val headers: Map<String, String> = emptyMap())
+
+  @kotlinx.serialization.Serializable
+  private data class Attached(val attachment: AttachmentRef, val upload: Upload)
+
+  @kotlinx.serialization.Serializable
+  private data class Download(val url: String)
+
+  /**
+   * Declares a file the person will attach to a message in their chat with the taf (or Coach): tafs cloud answers where to
+   * upload it. A file over its limit is refused here, before any upload, and the refusal says which limit.
+   */
+  suspend fun attach(id: String, mediaType: String, name: String, size: Long, sha256: String): Pair<AttachmentRef, Upload> {
+    val body = kotlinx.serialization.json.buildJsonObject {
+      put("media_type", mediaType)
+      put("name", name)
+      put("size", size)
+      put("sha256", sha256)
+    }
+    val attached = KiffClient.json.decodeFromString<Attached>(String(sendJson("POST", "/v1/tafs/${escaped(id)}/attachments", body)))
+    return attached.attachment to attached.upload
+  }
+
+  /** Uploads a file's bytes where [attach] said: no KIFF session goes with them. */
+  suspend fun upload(data: ByteArray, to: Upload) {
+    val response = transport.send(HttpRequest(to.method, to.url, to.headers, data))
+    if (response.status !in 200..299) throw CloudError(response.status, "The file didn't upload. Try attaching it again.")
+  }
+
+  /** A file the person attached, downloaded: only their own; another's is a 404. */
+  suspend fun attachment(id: String, file: String): ByteArray {
+    val url = get<Download>("/v1/tafs/${escaped(id)}/attachments/${escaped(file)}").url
+    val response = transport.send(HttpRequest("GET", url))
+    if (response.status !in 200..299) throw CloudError(response.status, "The file couldn't be opened.")
+    return response.body
+  }
 
   /**
    * Writes to the run at work (kiff/tafs#64): it reads the message at its next step. A run that has ended throws
@@ -360,8 +411,8 @@ class TafsCloud(
   private val streamUrl: String get() = if (baseUrl == DEFAULT_URL) DEFAULT_STREAM_URL else baseUrl
 
   /** Sends the owner's message with its run streamed: once tafs cloud took it, the run's events follow. A refusal throws, as [sendMessage] does. */
-  suspend fun streamMessage(id: String, text: String): kotlinx.coroutines.flow.Flow<StreamEvent> =
-    events("POST", "/v1/tafs/${escaped(id)}/messages/stream", jsonBody("text" to text))
+  suspend fun streamMessage(id: String, text: String, files: List<AttachmentRef> = emptyList()): kotlinx.coroutines.flow.Flow<StreamEvent> =
+    events("POST", "/v1/tafs/${escaped(id)}/messages/stream", KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), messageBody(text, files)).toByteArray())
 
   /** Picks a run of the person's back up: its steps so far after event [after], then the rest as it goes, until it stops. */
   suspend fun resumeRun(id: String, run: String, after: Int = 0): kotlinx.coroutines.flow.Flow<StreamEvent> =

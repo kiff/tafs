@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the FileProvider shares (docs/attachments.md): the camera's photo before it's redrawn, and files opened full size. -->
+<paths>
+    <cache-path name="camera" path="camera/" />
+    <cache-path name="attachments" path="attachments/" />
+</paths>

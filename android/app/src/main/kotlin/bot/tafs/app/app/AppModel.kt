@@ -4,6 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import bot.tafs.app.model.Answer
+import bot.tafs.app.model.AttachmentRef
+import bot.tafs.app.model.FilePrep
+import bot.tafs.app.model.PendingFile
+import bot.tafs.app.model.PreparedFile
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.ChatMessage
@@ -181,6 +185,10 @@ data class AppState(
   /** The tafs a message is on its way to, so one is sent at a time. */
   val chatSending: Set<String> = emptySet(),
   val chatErrors: Map<String, String> = emptyMap(),
+  /** The files picked for each chat's next message, as they go up (docs/attachments.md): by the chat's id. Sent with the message, then cleared. */
+  val chatFiles: Map<String, List<PendingFile>> = emptyMap(),
+  /** Why a file wasn't added, or couldn't be opened, by chat. */
+  val fileNotices: Map<String, String> = emptyMap(),
   /** The run at work in each taf's chat, as tafs cloud says it. */
   val chatWorking: Map<String, ChatRun> = emptyMap(),
   /** Since when the owner has written to a taf that hasn't yet answered or been seen at work. */
@@ -449,6 +457,20 @@ data class AppState(
    */
   fun thinking(tafId: String): Boolean = tafId in chatSending || (mode == Mode.kiff && (tafId in chatWorking || tafId in chatAwaiting || tafId in chatLive))
 
+  /** Whether the chat takes photos and files: a taf (or Coach) on tafs cloud, signed in; not the sample, nor a trial's chat. */
+  fun canAttach(tafId: String): Boolean = mode == Mode.kiff && !isTrialChat(tafId) && taf(tafId)?.cloudId != null
+
+  /** The files picked for the chat's next message, as they go up. */
+  fun files(tafId: String): List<PendingFile> = chatFiles[tafId].orEmpty()
+
+  /**
+   * Whether Send waits: while any file is still going up, words or not, so a message never goes without a file just
+   * attached; and while files are ready but the taf (or Coach) is at work, since files go with a message of their own,
+   * never into a run.
+   */
+  fun holdsSend(tafId: String): Boolean =
+    files(tafId).any { it.state == PendingFile.State.Uploading } || (thinking(tafId) && files(tafId).any { it.ref != null })
+
   /**
    * A taf's chat as one timeline: its messages, the calls held for the owner where they were
    * held, and what became of earlier held calls (approved, refused) since the thread's first
@@ -505,6 +527,8 @@ class AppModel(
   /** Buying through Google Play; none in a build with Play Billing off (res/values/flags.xml). */
   private val purchases: Purchases = Purchases(NoPlayStore),
   private val playBilling: Boolean = false,
+  /** Where files the person opens full size are copied (docs/attachments.md): removed on sign-out. */
+  private val openedFiles: java.io.File = java.io.File(System.getProperty("java.io.tmpdir"), "attachments"),
 ) : ViewModel() {
   private val _state = MutableStateFlow(AppState())
   val state: StateFlow<AppState> = _state
@@ -894,7 +918,7 @@ class AppModel(
    * longer approves never stays listed. Only then is the phone signed out; the next sign-in, approved in the browser,
    * registers the phone's new key as a new device. False when KIFF didn't end the session, and nothing changed here.
    */
-  suspend fun signInAgain(): Boolean {
+  suspend fun signInAgainToApprove(): Boolean {
     if (_state.value.mode != Mode.kiff) return false
     _state.update { it.copy(signInAgainError = null) }
     // While the session can still say so: this phone stops getting the account's alerts.
@@ -945,6 +969,8 @@ class AppModel(
     store?.clear()
     AccountTime.use(null)
     _state.value = AppState(mode = Mode.signedOut, ready = true)
+    // Nothing the person attached and opened stays on the phone after them.
+    openedFiles.deleteRecursively()
   }
 
   // MARK: Sample mode
@@ -1811,25 +1837,27 @@ class AppModel(
   }
 
   /**
-   * Sends what the owner wrote, from a screen: it shows at once and the taf answers after it.
-   * [onNotSent] gets the words back when they didn't go, so the screen can keep them.
+   * Sends what the owner wrote, from a screen: it shows at once and the taf answers after it. [withFiles] takes the files
+   * ready in the chat's tray with it; Send again and Retry send the words only. [onNotSent] gets the words back when they
+   * didn't go, so the screen can keep them.
    */
-  fun sendChat(text: String, tafId: String, onNotSent: (String) -> Unit) {
-    viewModelScope.launch { if (!deliverChat(text, tafId)) onNotSent(text) }
+  fun sendChat(text: String, tafId: String, withFiles: Boolean = false, onNotSent: (String) -> Unit) {
+    viewModelScope.launch { if (!deliverChat(text, tafId, withFiles)) onNotSent(text) }
   }
 
   /**
    * Sends the owner's message to the taf and waits for its answer. The sample answers from its
-   * own record; signed in, the thread is tafs cloud's.
+   * own record; signed in, the thread is tafs cloud's. A message may be words, files, or both.
    */
-  suspend fun deliverChat(text: String, tafId: String): Boolean {
+  suspend fun deliverChat(text: String, tafId: String, withFiles: Boolean = false): Boolean {
     val words = text.trim()
-    if (words.isEmpty()) return false
+    val files = withFiles && _state.value.mode == Mode.kiff && _state.value.files(tafId).any { it.ref != null }
+    if (words.isEmpty() && !files) return false
     if (words.length > Chat.LIMIT) {
       _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "That's longer than ${Chat.LIMIT} characters. Say it in fewer words.")) }
       return false
     }
-    if (_state.value.mode == Mode.kiff) return deliverToTafsCloud(words, tafId)
+    if (_state.value.mode == Mode.kiff) return deliverToTafsCloud(words, tafId, withFiles)
     if (tafId in _state.value.chatSending) return false
     _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
     try {
@@ -1854,7 +1882,7 @@ class AppModel(
    * step, or, when none is at work (or it just ended), as a new message that starts one. It shows at once, dimmed,
    * until the thread has it; then the thread is read and followed as the taf answers.
    */
-  private suspend fun deliverToTafsCloud(words: String, tafId: String): Boolean {
+  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false): Boolean {
     val taf = _state.value.taf(tafId)
     val cloudId = taf?.cloudId
     if (cloudId == null) {
@@ -1862,9 +1890,13 @@ class AppModel(
       return false
     }
     if (tafId in _state.value.chatSending) return false
+    // Files go with a message of their own, never into a run at work, and never while one is still going up.
+    if (withFiles && _state.value.holdsSend(tafId)) return false
+    val files = if (withFiles) takeFiles(tafId) else emptyList()
+    val refs = files.mapNotNull { it.ref }
     _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
     val generation = accountGeneration
-    val pending = ChatMessage(nextStamp(tafId), ChatMessage.From.owner, words, "pending")
+    val pending = ChatMessage(nextStamp(tafId), ChatMessage.From.owner, words, "pending", attachments = refs)
     append(tafId, pending)
     _state.update { it.copy(chatSent = it.chatSent + (tafId to (it.chatSent[tafId].orEmpty() + pending)), chatEnded = it.chatEnded - tafId) }
     var streamed: kotlinx.coroutines.flow.Flow<StreamEvent>? = null
@@ -1875,7 +1907,7 @@ class AppModel(
       } else {
         val run = _state.value.chatLive[tafId]?.run ?: _state.value.chatWorking[tafId]?.run
         var steered = false
-        if (run != null) {
+        if (run != null && refs.isEmpty()) {
           try {
             cloud.steer(cloudId, run, words)
             steered = true
@@ -1885,8 +1917,8 @@ class AppModel(
           }
         }
         // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
-        if (!steered) streamed = openStream(cloudId, words)
-        if (!steered && streamed == null) cloud.sendMessage(cloudId, words)
+        if (!steered) streamed = openStream(cloudId, words, refs)
+        if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs)
       }
     } catch (e: CancellationException) {
       throw e
@@ -1900,6 +1932,8 @@ class AppModel(
             chatErrors = s.chatErrors + (tafId to sendFailure(e, taf.name)),
           )
         }
+        // Its files didn't go: back in the tray for the next try.
+        putBackFiles(files, tafId)
       }
       return false
     } finally {
@@ -1920,12 +1954,93 @@ class AppModel(
     return true
   }
 
+  // MARK: Photos and files on a message (docs/attachments.md)
+
+  /**
+   * Where a chat's files go on tafs cloud: the taf, or Coach. Null where nothing can be attached: the sample, a trial's
+   * chat, or a taf that doesn't run on tafs cloud.
+   */
+  fun filesTarget(tafId: String): String? = _state.value.takeIf { it.canAttach(tafId) }?.taf(tafId)?.cloudId
+
+  /**
+   * Adds a file to the chat's next message and uploads it: declared to tafs cloud, which checks its type and size, then its
+   * bytes straight to storage. One that can't go says why in the tray, and is left out of the message.
+   */
+  suspend fun attach(file: PreparedFile, tafId: String) {
+    val target = filesTarget(tafId) ?: return
+    if (_state.value.files(tafId).size >= FilePrep.PER_MESSAGE) {
+      refuseFile("A message carries at most ${FilePrep.PER_MESSAGE} files.", tafId)
+      return
+    }
+    val pending = PendingFile(name = file.name, mediaType = file.mediaType, thumbnail = file.thumbnail)
+    _state.update { it.copy(chatFiles = it.chatFiles + (tafId to it.files(tafId) + pending), fileNotices = it.fileNotices - tafId) }
+    val generation = accountGeneration
+    val state = try {
+      val (ref, upload) = cloud.attach(target, file.mediaType, file.name, file.data.size.toLong(), FilePrep.sha256(file.data))
+      cloud.upload(file.data, upload)
+      PendingFile.State.Ready(ref)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      PendingFile.State.Failed(e.message ?: "It didn't upload.")
+    }
+    if (generation != accountGeneration) return
+    _state.update { s -> s.copy(chatFiles = s.chatFiles + (tafId to s.files(tafId).map { if (it.id == pending.id) it.copy(state = state) else it })) }
+  }
+
+  /** A file picked that can't be attached: said in the tray, never uploaded. */
+  fun refuseFile(why: String, tafId: String) {
+    _state.update { it.copy(fileNotices = it.fileNotices + (tafId to why)) }
+  }
+
+  fun removeFile(id: String, tafId: String) {
+    _state.update { s ->
+      val left = s.files(tafId).filterNot { it.id == id }
+      s.copy(chatFiles = if (left.isEmpty()) s.chatFiles - tafId else s.chatFiles + (tafId to left), fileNotices = s.fileNotices - tafId)
+    }
+  }
+
+  /** The chat's ready files, taken for the message being sent. Ones that failed stay in the tray. */
+  private fun takeFiles(tafId: String): List<PendingFile> {
+    val ready = _state.value.files(tafId).filter { it.ref != null }
+    if (ready.isEmpty()) return ready
+    _state.update { s ->
+      val left = s.files(tafId).filter { it.ref == null }
+      s.copy(chatFiles = if (left.isEmpty()) s.chatFiles - tafId else s.chatFiles + (tafId to left))
+    }
+    return ready
+  }
+
+  /** Puts back files a message didn't take, ahead of any picked since. */
+  private fun putBackFiles(taken: List<PendingFile>, tafId: String) {
+    if (taken.isEmpty()) return
+    _state.update { s -> s.copy(chatFiles = s.chatFiles + (tafId to taken + s.files(tafId))) }
+  }
+
+  /**
+   * A file the person attached, downloaded to open full size: a copy under its own name in the app's own folder, removed on
+   * sign-out. Null when it couldn't be read; the notice says why.
+   */
+  suspend fun openFile(ref: AttachmentRef, tafId: String): java.io.File? {
+    val target = filesTarget(tafId) ?: return null
+    return try {
+      val data = cloud.attachment(target, ref.id)
+      val dir = java.io.File(openedFiles, ref.id).apply { mkdirs() }
+      java.io.File(dir, java.io.File(ref.name).name.ifBlank { "file" }).apply { writeBytes(data) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      refuseFile("${ref.name} couldn't be opened: ${e.message}", tafId)
+      null
+    }
+  }
+
   /**
    * Opens the streamed send. Null when the stream couldn't open and the plain send should take the message (no network to it,
    * tafs cloud without the route, or failing); a refusal (the flood guard, the role) throws, as the plain send's would.
    */
-  private suspend fun openStream(cloudId: String, text: String): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
-    cloud.streamMessage(cloudId, text)
+  private suspend fun openStream(cloudId: String, text: String, files: List<AttachmentRef> = emptyList()): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
+    cloud.streamMessage(cloudId, text, files)
   } catch (e: CancellationException) {
     throw e
   } catch (e: CloudError) {
@@ -3441,10 +3556,14 @@ class AppModel(
     private val vendorSignIn: VendorSignIn = NoVendorSignIn,
     private val purchases: Purchases = Purchases(NoPlayStore),
     private val playBilling: Boolean = false,
+    private val openedFiles: java.io.File? = null,
   ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-      AppModel(store, signer, kiff, cloud, secrets, deviceName = deviceName, push = push, planque = planque, vendorSignIn = vendorSignIn, purchases = purchases, playBilling = playBilling) as T
+      AppModel(
+        store, signer, kiff, cloud, secrets, deviceName = deviceName, push = push, planque = planque, vendorSignIn = vendorSignIn,
+        purchases = purchases, playBilling = playBilling, openedFiles = openedFiles ?: java.io.File(System.getProperty("java.io.tmpdir"), "attachments"),
+      ) as T
   }
 
   companion object {

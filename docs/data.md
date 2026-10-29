@@ -71,6 +71,8 @@ the copy is checked, so nothing erased in `eu-west-1` stays behind in `us-east-1
 | The Android phone's approval key | Android Keystore (StrongBox, else the TEE), usable for one signature per fingerprint, through the prompt; turned off by a new fingerprint | The phone | The P-256 key that signs what grants authority, as on iOS. Its public half is registered with KIFF once per session; a key the phone turned off is replaced, and the new one registers at the next sign-in. Never leaves the phone | Until the app is deleted, or a new fingerprint is added | Android |
 | Sample data | The app's Application Support, `sample.json` | The phone | Sample tafs, held calls and the record. Sample mode only; nothing from KIFF | Until sign-out from sample mode | The app |
 | A file opened full size (#209) | The app's temporary folder, `tmp/attachments` | The phone | A copy of a file the person attached, downloaded when they open it in Quick Look | Until sign-out or an account switch, or sooner when iOS clears the folder | The app on sign-out and account switch; iOS |
+| A file opened full size, on Android | The app's cache folder, `cache/attachments` | The phone | A copy of a file the person attached, downloaded when they open it, handed read-only to the phone's own app for its kind through the app's FileProvider | Until sign-out, or sooner when Android clears the cache | The app on sign-out; Android |
+| A photo taken for a message, on Android | The app's cache folder, `cache/camera` | The phone | The camera's photo, before the app redraws it as a JPEG without its metadata | Removed as soon as it's redrawn, or when the photo is cancelled | The app |
 
 ## What goes where
 

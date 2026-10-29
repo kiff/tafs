@@ -168,8 +168,10 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
               when (item) {
                 is ChatItem.Message -> MessageRow(
                   item.message,
+                  tafId = tafId,
+                  files = actions.files,
                   onEdit = { text -> draft = text },
-                  onResend = { text -> following = true; actions.sendChat(text, tafId) { } },
+                  onResend = { text -> following = true; actions.sendChat(text, tafId, false) { } },
                 )
                 is ChatItem.Held -> HeldCallCard(item.call, state, actions.answer)
                 is ChatItem.Outcome -> OutcomeLine(Chat.outcomeText(item.entry), outcomeTone(item.entry.kind), outcomeMark(item.entry.kind))
@@ -186,7 +188,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         }
         // How the latest run ended, when it says so here: stopped part-way (with Retry), stopped by the owner, or at a cap.
         if (!thinking) state.chatEnded[tafId]?.let { end ->
-          item(key = "ended") { EndedLine(end, taf?.name ?: "It", onRetry = { text -> following = true; actions.sendChat(text, tafId) { } }) }
+          item(key = "ended") { EndedLine(end, taf?.name ?: "It", onRetry = { text -> following = true; actions.sendChat(text, tafId, false) { } }) }
         }
       }
 
@@ -227,6 +229,8 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
     state.chatErrors[tafId]?.let { error ->
       Text(error, style = scaled(13, color = Theme.no), modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 4.dp))
     }
+    val canAttach = state.canAttach(tafId)
+    if (canAttach) FileTray(tafId, state, actions.files)
     Composer(
       name = taf?.name ?: "your taf",
       draft = draft,
@@ -234,6 +238,10 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       // A message is on its way: one at a time. While the taf works, what's written goes to its run.
       sending = tafId in state.chatSending,
       thinking = thinking,
+      // Files ready to go make a message of their own, words or not; Send waits while one is going up, or while the taf works.
+      hasFiles = canAttach && state.files(tafId).any { it.ref != null },
+      holdsSend = canAttach && state.holdsSend(tafId),
+      attach = if (canAttach) ({ AttachButton(tafId, state, actions.files) }) else null,
       // Stop, in Send's place: for whoever manages Cards, while a run is at work in this chat (as iOS).
       onStop = (live?.session ?: state.chatWorking[tafId]?.session)
         ?.takeIf { thinking && state.mode == Mode.kiff && state.canManageCards }
@@ -243,7 +251,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       draft = ""
       following = true
       // As sent: if it didn't go (too long), it comes back to the box.
-      actions.sendChat(text, tafId) { notSent -> if (draft.isEmpty()) draft = notSent }
+      actions.sendChat(text, tafId, true) { notSent -> if (draft.isEmpty()) draft = notSent }
     }
   }
 }
@@ -255,10 +263,14 @@ private fun Composer(
   onDraft: (String) -> Unit,
   sending: Boolean,
   thinking: Boolean,
+  hasFiles: Boolean = false,
+  holdsSend: Boolean = false,
+  /** The paperclip, where the chat takes files. */
+  attach: (@Composable () -> Unit)? = null,
   onStop: (() -> Unit)?,
   onSend: () -> Unit,
 ) {
-  val empty = draft.isBlank()
+  val empty = draft.isBlank() && !hasFiles
   val focus = LocalFocusManager.current
   Box(
     Modifier
@@ -272,6 +284,7 @@ private fun Composer(
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.Bottom,
     ) {
+      attach?.invoke()
       val shape = RoundedCornerShape(20.dp)
       BasicTextField(
         value = draft,
@@ -298,10 +311,11 @@ private fun Composer(
       } else Box(
         Modifier
           .size(40.dp)
+          // The whole button dims while it can't send, as iOS's does: circle and arrow together, in one layer.
+          .alpha(if (empty || sending || holdsSend) 0.4f else 1f)
           .clip(CircleShape)
           .brandBackground()
-          .alpha(if (empty || sending) 0.4f else 1f)
-          .clickable(enabled = !empty && !sending) {
+          .clickable(enabled = !empty && !sending && !holdsSend) {
             focus.clearFocus()
             onSend()
           }
@@ -320,29 +334,30 @@ private fun Composer(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MessageRow(message: ChatMessage, onEdit: (String) -> Unit, onResend: (String) -> Unit) {
+private fun MessageRow(message: ChatMessage, tafId: String, files: FileActions, onEdit: (String) -> Unit, onResend: (String) -> Unit) {
   val door = message.door
   if (door != null && message.kind != ChatMessage.Kind.kickoff) {
     // A door's message, or its answer: marked with where it came from and how it went back.
     Column(Modifier.fillMaxWidth(), horizontalAlignment = if (message.from == ChatMessage.From.owner) Alignment.End else Alignment.Start, verticalArrangement = Arrangement.spacedBy(4.dp)) {
       if (message.from == ChatMessage.From.owner) DoorStamp(door, fromOwner = true)
-      MessageBody(message, onEdit, onResend)
+      MessageBody(message, tafId, files, onEdit, onResend)
       if (message.from == ChatMessage.From.taf) DoorStamp(door, fromOwner = false)
     }
   } else {
-    MessageBody(message, onEdit, onResend)
+    MessageBody(message, tafId, files, onEdit, onResend)
   }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MessageBody(message: ChatMessage, onEdit: (String) -> Unit, onResend: (String) -> Unit) {
+private fun MessageBody(message: ChatMessage, tafId: String, files: FileActions, onEdit: (String) -> Unit, onResend: (String) -> Unit) {
   if (message.from == ChatMessage.From.owner) {
     var menu by remember { mutableStateOf(false) }
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-      Box(Modifier.padding(start = 48.dp)) {
+    Column(Modifier.fillMaxWidth().padding(start = 48.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      // A message may be files alone: then there are no words to show, send again or copy.
+      if (message.text.isNotBlank()) Box {
         Text(
           message.text,
           style = scaled(15, color = Color.White),
@@ -353,7 +368,7 @@ private fun MessageBody(message: ChatMessage, onEdit: (String) -> Unit, onResend
             .combinedClickable(onClick = {}, onLongClick = { menu = true })
             .padding(horizontal = 10.dp, vertical = 8.dp),
         )
-        // A sent message's menu (kiff/tafs#285): send it again, change it first, or copy it.
+        // A sent message's menu (kiff/tafs#285): send it again (its words only), change it first, or copy it.
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
           DropdownMenuItem(text = { Text("Send again") }, onClick = { menu = false; onResend(message.text) })
           DropdownMenuItem(text = { Text("Edit and send") }, onClick = { menu = false; onEdit(message.text) })
@@ -363,6 +378,8 @@ private fun MessageBody(message: ChatMessage, onEdit: (String) -> Unit, onResend
           })
         }
       }
+      // The files sent with it, each opened full size.
+      if (message.attachments.isNotEmpty()) MessageFiles(message.attachments, tafId, files)
     }
   } else if (message.kind == ChatMessage.Kind.kickoff) {
     // A run's kickoff shows as a small note, not a bubble.

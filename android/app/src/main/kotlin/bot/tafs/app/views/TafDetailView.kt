@@ -58,7 +58,8 @@ class TafActions(
   val loadMemory: (String) -> Unit,
   val forget: (MemoryNote, String) -> Unit,
   val loadChat: suspend (String) -> Unit,
-  val sendChat: (String, String, (String) -> Unit) -> Unit,
+  /** Sends a message: its words, the chat, whether the tray's files go with it (Send), and what to do with words that didn't go. */
+  val sendChat: (String, String, Boolean, (String) -> Unit) -> Unit,
   val issuer: String,
   val doors: DoorActions,
   /** What Coach's cards ask of the model: answers, and approvals. */
@@ -67,6 +68,8 @@ class TafActions(
   val connections: ConnectionActions,
   /** Stops what the taf is doing in its chat. */
   val stopChat: suspend (String) -> Unit = {},
+  /** Photos and files on a message (docs/attachments.md). */
+  val files: FileActions = FileActions(),
 )
 
 @Composable

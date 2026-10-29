@@ -134,6 +134,8 @@ data class WireChatMessage(
   val text: String,
   val session: String,
   val work: WireWork? = null,
+  /** The files the person attached (docs/attachments.md), read apart: one the app can't read is left out. */
+  val attachments: JsonElement? = null,
   /** Read apart (as JSON), so a mark the app can't read leaves the message plain instead of the thread unread. */
   val door: JsonElement? = null,
 )

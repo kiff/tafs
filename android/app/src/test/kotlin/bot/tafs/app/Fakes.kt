@@ -65,9 +65,17 @@ class FakeTransport : Transport {
 
   fun requestsTo(key: String): List<HttpRequest> = synchronized(requests) { requests.filter { key(it) == key } }
 
+  private val held = mutableMapOf<String, kotlinx.coroutines.CompletableDeferred<Unit>>()
+
+  /** Requests to [key] wait, unanswered, until [release]: as a slow upload. */
+  fun hold(key: String) = synchronized(this) { held[key] = kotlinx.coroutines.CompletableDeferred() }
+
+  fun release(key: String) = synchronized(this) { held.remove(key) }?.complete(Unit)
+
   private fun key(r: HttpRequest) = "${r.method} ${URI.create(r.url).path}"
 
   override suspend fun send(request: HttpRequest): HttpResponse {
+    synchronized(this) { held[key(request)] }?.await()
     val next = synchronized(this) {
       requests += request
       val key = key(request)
@@ -102,8 +110,10 @@ fun testModel(
   scope: kotlinx.coroutines.CoroutineScope? = null,
   push: bot.tafs.app.push.PushPlatform = bot.tafs.app.push.NoPush,
   vendorSignIn: bot.tafs.app.kiff.VendorSignIn = bot.tafs.app.kiff.NoVendorSignIn,
+  /** Where files opened full size go: a test's own folder. */
+  openedFiles: java.io.File = java.nio.file.Files.createTempDirectory("opened").toFile(),
 ) = AppModel(
   store, signer, KiffClient(transport), TafsCloud(transport), secrets,
   clock = clock, sampleReplyDelayMs = sampleReplyDelayMs, followScope = scope, push = push,
-  planque = bot.tafs.app.kiff.PlanqueClient(transport), vendorSignIn = vendorSignIn,
+  planque = bot.tafs.app.kiff.PlanqueClient(transport), vendorSignIn = vendorSignIn, openedFiles = openedFiles,
 ).also { if (start) it.startSample() }
