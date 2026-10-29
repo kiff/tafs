@@ -34,12 +34,9 @@ enum KIFFMapping {
                            bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
     }
 
-    static func window(_ raw: String) -> Window {
-        switch raw.lowercased() {
-        case let w where w.contains("week") || w == "7d": return .week
-        case let w where w.contains("month") || w == "30d": return .month
-        default: return .day
-        }
+    /// A window as tafs cloud sends it: KIFF's name, in the words it sent with it.
+    static func window(_ raw: String, _ words: TafsCloud.HomeTaf.WindowWords?) -> Window {
+        Window(raw, each: words?.each, now: words?.now)
     }
 
     /// What the owner reads for an action, on a Card, an approval or a held call: its tool's
@@ -103,7 +100,7 @@ enum KIFFMapping {
         func amount(_ a: TafsCloud.HomeTaf.Amount?) -> Money? { a.map { money($0.minor, unit: $0.unit, scale: $0.scale) } }
         func rule(_ r: TafsCloud.HomeTaf.Rule) -> CardRule {
             CardRule(action: r.action, label: r.label, perAction: amount(r.perAction), perWindow: amount(r.perWindow),
-                     countPerWindow: r.countPerWindow, window: Window(rawValue: r.window) ?? .day,
+                     countPerWindow: r.countPerWindow, window: window(r.window, r.windowWords),
                      outside: r.outside == "refuse" ? .refuse : .hold, extraRoom: amount(r.extraRoom),
                      baseLimit: amount(r.baseLimit), roomEnds: r.roomWindowEnd)
         }
@@ -131,9 +128,9 @@ enum KIFFMapping {
         taf.kiffCards = h.card.cards?.map { c in
             TafCard(id: c.id, title: c.title, environment: c.environment, live: c.live, active: c.active, expires: c.expires,
                     rules: c.rules.map(rule),
-                    total: c.total.flatMap { t in amount(t.limit).map { CardTotal(limit: $0, used: amount(t.used), window: Window(rawValue: t.window) ?? .day,
+                    total: c.total.flatMap { t in amount(t.limit).map { CardTotal(limit: $0, used: amount(t.used), window: window(t.window, t.windowWords),
                                                                                           extra: amount(t.extraRoom), base: amount(t.baseLimit), roomEnds: t.roomWindowEnd) } },
-                    calls: c.calls.map { CardTotal(limit: $0.limit, used: $0.used, window: Window(rawValue: $0.window) ?? .day,
+                    calls: c.calls.map { CardTotal(limit: $0.limit, used: $0.used, window: window($0.window, $0.windowWords),
                                                    extra: $0.extraRoom, base: $0.baseLimit, roomEnds: $0.roomWindowEnd) })
         }
         taf.doors = h.doors

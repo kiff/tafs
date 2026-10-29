@@ -35,7 +35,33 @@ export interface Rule {
   base_limit?: Money;
   room_window_end?: string;
   count_per_window: number | null;
-  window: "day" | "week" | "month";
+  /** KIFF's window, as KIFF names it: calendar_day, rolling_24h, rolling_1h or lifetime. */
+  window: string;
+  /** The window in the owner's words, for the app to show as it is. */
+  window_words: WindowWords;
+}
+
+/**
+ * A spending window in the owner's words: `each` ends a limit ("$300 a day"), `now` names
+ * the window's use so far ("$40 used today"). One case for each of KIFF's windows; a rolling
+ * one never reads as a day that resets at midnight, and a window KIFF adds later is shown as
+ * it is sent, never guessed.
+ */
+export interface WindowWords {
+  each: string;
+  now: string;
+}
+
+const WINDOWS: Record<string, WindowWords> = {
+  calendar_day: { each: "a day", now: "today" },
+  rolling_24h: { each: "in any 24 hours", now: "in the last 24 hours" },
+  rolling_1h: { each: "in any hour", now: "in the last hour" },
+  lifetime: { each: "in total", now: "so far" },
+};
+
+/** A window's words: KIFF's own, or the window as sent when tafs doesn't know it. */
+export function windowWords(window: string): WindowWords {
+  return WINDOWS[window] ?? { each: window, now: window };
 }
 
 /** What a holder's Cards allow and have used. */
@@ -60,7 +86,8 @@ export interface CardSummary {
 export interface Total<T> {
   limit: T;
   used: T | null;
-  window: Rule["window"];
+  window: string;
+  window_words: WindowWords;
   /** Of limit, the extra room KIFF says is active, the Card's own limit, and when the room ends; absent without any. */
   extra_room?: T;
   base_limit?: T;
@@ -172,11 +199,11 @@ function money(minor: number, unit: string | null | undefined, scale: number | n
   return unit ? { minor, unit, scale: scale ?? 0 } : { minor, unit: null, scale: 0 };
 }
 
-function window(raw: string): Rule["window"] {
-  const w = raw.toLowerCase();
-  if (w.includes("week") || w === "7d") return "week";
-  if (w.includes("month") || w === "30d") return "month";
-  return "day";
+/** A window as the app gets it: KIFF's name, as sent, and its words. */
+function window(raw: string | null | undefined): { window: string; window_words: WindowWords } {
+  // A line with no total has no window of its own: it reads as a day, the Card's default.
+  const w = raw == null ? "calendar_day" : raw.trim();
+  return { window: w, window_words: windowWords(w) };
 }
 
 const label = (action: string, title?: string | null) => title?.trim() || action;
@@ -230,7 +257,7 @@ export function rules(m: Mandate): Rule[] {
     return {
       action: g.action, label: label(g.action, g.title), outside,
       per_action: cap ? money(cap.max, cap.unit, cap.scale) : null,
-      per_window: null, count_per_window: null, window: "day",
+      per_window: null, count_per_window: null, ...window(null),
     };
   });
   const first = out[0];
@@ -249,9 +276,9 @@ export function rules(m: Mandate): Rule[] {
       first.base_limit = money(r.base, unit, scale);
       if (r.ends) first.room_window_end = r.ends;
     }
-    first.window = window(total.window);
+    Object.assign(first, window(total.window));
   } else if (count) {
-    first.window = window(count.window);
+    Object.assign(first, window(count.window));
   }
   return out;
 }
@@ -275,7 +302,7 @@ export function cardView(m: Mandate): CardView {
     total = {
       limit: money(ok && line ? line.limit : agg.limit, unit, scale),
       used: ok && typeof line?.used === "number" ? money(line.used, unit, scale) : null,
-      window: window(agg.window),
+      ...window(agg.window),
     };
     const r = room(line);
     if (r) {
@@ -289,7 +316,7 @@ export function cardView(m: Mandate): CardView {
   if (count) {
     const line = (m.limits ?? []).find((l) => l.quantity === count.quantity && l.window === count.window);
     const ok = line?.status === "ok";
-    calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, window: window(count.window) };
+    calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, ...window(count.window) };
     const r = room(line);
     if (r) {
       calls.extra_room = r.extra;

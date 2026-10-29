@@ -434,8 +434,8 @@ describe("the home list", () => {
   const raeCard: Mandate = {
     id: "card_rae", subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
     grants: [{ action: "stripe_refund", title: "Create refund", per_action_max: [{ quantity: "sum(amount)", max: 10000, unit: "EUR", scale: 2 }] }],
-    aggregates: [{ quantity: "sum(amount)", limit: 100000, window: "1d", unit: "EUR", scale: 2 }, { quantity: "count", limit: 20, window: "1d" }],
-    limits: [{ quantity: "sum(amount)", window: "1d", limit: 100000, used: 20000, status: "ok", unit: "EUR", scale: 2 }],
+    aggregates: [{ quantity: "sum(amount)", limit: 100000, window: "calendar_day", unit: "EUR", scale: 2 }, { quantity: "count", limit: 20, window: "calendar_day" }],
+    limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 100000, used: 20000, status: "ok", unit: "EUR", scale: 2 }],
   };
   const demoCard: Mandate = { id: "card_demo", subject: "support-demo", active: true, grants: [{ action: "lookup" }], aggregates: [] };
 
@@ -457,7 +457,7 @@ describe("the home list", () => {
         rules: [{
           action: "stripe_refund", label: "Create refund", outside: "hold",
           per_action: { minor: 10000, unit: "EUR", scale: 2 }, per_window: { minor: 100000, unit: "EUR", scale: 2 },
-          count_per_window: 20, window: "day",
+          count_per_window: 20, window: "calendar_day", window_words: { each: "a day", now: "today" },
         }],
         used: { stripe_refund: { minor: 20000, unit: "EUR", scale: 2 } }, usage_unknown: [],
         // The same Card on its own, with its environment, total and calls (kiff/tafs#211).
@@ -466,11 +466,11 @@ describe("the home list", () => {
           rules: [{
             action: "stripe_refund", label: "Create refund", outside: "hold",
             per_action: { minor: 10000, unit: "EUR", scale: 2 }, per_window: { minor: 100000, unit: "EUR", scale: 2 },
-            count_per_window: 20, window: "day",
+            count_per_window: 20, window: "calendar_day", window_words: { each: "a day", now: "today" },
           }],
-          total: { limit: { minor: 100000, unit: "EUR", scale: 2 }, used: { minor: 20000, unit: "EUR", scale: 2 }, window: "day" },
+          total: { limit: { minor: 100000, unit: "EUR", scale: 2 }, used: { minor: 20000, unit: "EUR", scale: 2 }, window: "calendar_day", window_words: { each: "a day", now: "today" } },
           // KIFF sent no use for the count, so it's unknown, never zero.
-          calls: { limit: 20, used: null, window: "day" },
+          calls: { limit: 20, used: null, window: "calendar_day", window_words: { each: "a day", now: "today" } },
         }],
       },
     }]);
@@ -523,9 +523,9 @@ describe("the home list", () => {
     expect(r.others).toEqual([{
       id: null, name: "support-demo", job: null, kiff_agent: "support-demo", status: null, next_run: null, last_run: null,
       color: 1, state: "idle", waiting: 0,
-      card: { ids: ["card_demo"], active: true, expires: null, tools: ["lookup"], rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "day" }], used: {}, usage_unknown: [],
+      card: { ids: ["card_demo"], active: true, expires: null, tools: ["lookup"], rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "calendar_day", window_words: { each: "a day", now: "today" } }], used: {}, usage_unknown: [],
         cards: [{ id: "card_demo", title: "lookup", environment: "", live: true, active: true, expires: null,
-          rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "day" }],
+          rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "calendar_day", window_words: { each: "a day", now: "today" } }],
           total: null, calls: null }] },
     }]);
   });
@@ -601,27 +601,27 @@ describe("the home list", () => {
     const w = world();
     w.account.mandates = [{ ...raeCard, limits: [{ ...raeCard.limits![0]!, status: "unavailable", used: null }] }, {
       ...demoCard, subject: "rae", id: "card_count", grants: [{ action: "send_email" }],
-      aggregates: [{ quantity: "sum(units)", limit: 10, window: "7d" }], limits: [{ quantity: "sum(units)", window: "7d", limit: 10, used: 3, status: "ok" }],
+      aggregates: [{ quantity: "sum(units)", limit: 10, window: "rolling_1h" }], limits: [{ quantity: "sum(units)", window: "rolling_1h", limit: 10, used: 3, status: "ok" }],
     }];
     const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
     expect(card.usage_unknown).toEqual(["stripe_refund"]);
     expect(card.used).toEqual({ send_email: { minor: 3, unit: null, scale: 0 } });
-    expect(card.rules[1]).toMatchObject({ action: "send_email", per_window: { minor: 10, unit: null, scale: 0 }, window: "week" });
+    expect(card.rules[1]).toMatchObject({ action: "send_email", per_window: { minor: 10, unit: null, scale: 0 }, window: "rolling_1h", window_words: { each: "in any hour", now: "in the last hour" } });
   });
 
   it("pairs a total with its own use: the day's ceiling with its extra room, and the day's use, not the month's", async () => {
     const w = world();
     w.account.mandates = [{
       ...raeCard,
-      aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d", unit: "EUR", scale: 2 }, { quantity: "sum(amount)", limit: 900000, window: "30d", unit: "EUR", scale: 2 }],
+      aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "calendar_day", unit: "EUR", scale: 2 }, { quantity: "sum(amount)", limit: 900000, window: "lifetime", unit: "EUR", scale: 2 }],
       limits: [
-        { quantity: "sum(amount)", window: "30d", limit: 900000, used: 400000, status: "ok", unit: "EUR", scale: 2 },
-        { quantity: "sum(amount)", window: "1d", limit: 60000, used: 21200, status: "ok", unit: "EUR", scale: 2,
+        { quantity: "sum(amount)", window: "lifetime", limit: 900000, used: 400000, status: "ok", unit: "EUR", scale: 2 },
+        { quantity: "sum(amount)", window: "calendar_day", limit: 60000, used: 21200, status: "ok", unit: "EUR", scale: 2,
           base_limit: 50000, extra_room: 10000, room_window_end: "2026-10-25T23:00:00Z" },
       ],
-    }, { ...demoCard, id: "card_old_api", subject: "rae", grants: [{ action: "pay_invoice" }], aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d" }] }];
+    }, { ...demoCard, id: "card_old_api", subject: "rae", grants: [{ action: "pay_invoice" }], aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "calendar_day" }] }];
     const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
-    expect(card.rules[0]).toMatchObject({ window: "day", per_window: { minor: 60000, unit: "EUR", scale: 2 }, count_per_window: null });
+    expect(card.rules[0]).toMatchObject({ window: "calendar_day", window_words: { each: "a day", now: "today" }, per_window: { minor: 60000, unit: "EUR", scale: 2 }, count_per_window: null });
     // The extra room as KIFF says it, apart from the Card's own 500.00, with when it ends (the 755 retest).
     expect(card.rules[0]).toMatchObject({ extra_room: { minor: 10000, unit: "EUR", scale: 2 }, base_limit: { minor: 50000, unit: "EUR", scale: 2 }, room_window_end: "2026-10-25T23:00:00Z" });
     expect(card.cards[0].total).toMatchObject({ limit: { minor: 60000, unit: "EUR", scale: 2 }, extra_room: { minor: 10000, unit: "EUR", scale: 2 },
@@ -635,8 +635,8 @@ describe("the home list", () => {
     const w = world();
     w.account.mandates = [{
       ...raeCard,
-      aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "1d", unit: "EUR", scale: 2 }],
-      limits: [{ quantity: "sum(amount)", window: "1d", limit: 60000, used: 21200, status: "ok", unit: "EUR", scale: 2 }],
+      aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "calendar_day", unit: "EUR", scale: 2 }],
+      limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 60000, used: 21200, status: "ok", unit: "EUR", scale: 2 }],
     }];
     const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
     expect(card.rules[0].extra_room).toBeUndefined();
@@ -1067,7 +1067,7 @@ describe("a taf's recent calls (kiff/tafs#107)", () => {
     expect(asked).toEqual(["https://api.test/v1/me/activity?actor=rae%20k3f9&limit=20"]);
     const text = improveContext({ id: RAE, name: "Rae", job: "refunds", kiffAgent: "rae" }, {
       ids: [], active: true, expires: null, tools: ["Look up a charge"], used: {}, usage_unknown: [],
-      rules: [{ action: "retrieve_charge", label: "Look up a charge", outside: "hold", per_action: null, per_window: null, count_per_window: 200, window: "day" }],
+      rules: [{ action: "retrieve_charge", label: "Look up a charge", outside: "hold", per_action: null, per_window: null, count_per_window: 200, window: "calendar_day", window_words: { each: "a day", now: "today" } }],
     }, [], "hi");
     expect(text).toContain("- Look up a charge, 200 calls a day, held for the owner beyond that");
     expect(text).not.toContain("no limit a call");

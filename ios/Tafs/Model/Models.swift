@@ -74,24 +74,46 @@ struct Money: Hashable, Comparable, Codable {
     }
 }
 
-enum Window: String, Codable, CaseIterable {
-    case day, week, month
+/// A Card's spending window: KIFF's own name for it (calendar_day, rolling_24h, rolling_1h or
+/// lifetime) and its words. tafs cloud sends the words with it; for what the app reads from
+/// KIFF itself, KIFF's four are known here, exactly. A window it doesn't know reads as it was
+/// sent, never as a day (a lifetime or hourly total read as daily before).
+struct Window: Hashable, Codable, Sendable {
+    let raw: String
+    /// Ends a limit: "a day", "in any hour", "in total".
+    let label: String
+    /// The window's use so far: "today", "in the last hour", "so far".
+    let current: String
 
-    var label: String {
-        switch self {
-        case .day: return "a day"
-        case .week: return "a week"
-        case .month: return "a month"
-        }
+    static let day = Window("calendar_day")
+
+    private static let known: [String: (each: String, now: String)] = [
+        "calendar_day": ("a day", "today"),
+        "rolling_24h": ("in any 24 hours", "in the last 24 hours"),
+        "rolling_1h": ("in any hour", "in the last hour"),
+        "lifetime": ("in total", "so far"),
+    ]
+
+    /// The window `raw`, in `words` when the server sent them.
+    init(_ raw: String, each: String? = nil, now: String? = nil) {
+        // "day" is how the app kept a window before it kept KIFF's own name.
+        let raw = raw == "day" ? "calendar_day" : raw
+        self.raw = raw
+        label = each ?? Self.known[raw]?.each ?? raw
+        current = now ?? Self.known[raw]?.now ?? raw
     }
 
-    /// The window now: "today", "this week", "this month".
-    var current: String {
-        switch self {
-        case .day: return "today"
-        case .week: return "this week"
-        case .month: return "this month"
-        }
+    /// Ends an amount's total: "in total a day" for a day's, so a bare number reads apart from
+    /// a count; any other window's words already say it ("in any hour", "in total").
+    var sumLabel: String { raw == "calendar_day" ? "in total \(label)" : label }
+
+    init(from decoder: Decoder) throws {
+        self.init(try decoder.singleValueContainer().decode(String.self))
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        try c.encode(raw)
     }
 }
 
@@ -148,7 +170,7 @@ struct CardRule: Identifiable, Hashable, Codable {
         var parts: [String] = []
         if let perAction { parts.append("≤ \(perAction.formatted) each") }
         // A bare total and a count read apart (kiff/tafs#94): "10 in total a day · 20 calls a day".
-        if let own = ownTotal { parts.append(own.hasUnit ? "\(own.formatted) \(window.label)" : "\(own.formatted) in total \(window.label)") }
+        if let own = ownTotal { parts.append(own.hasUnit ? "\(own.formatted) \(window.label)" : "\(own.formatted) \(window.sumLabel)") }
         if let roomWords { parts.append(roomWords) }
         if let countPerWindow { parts.append("\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label)") }
         return parts.joined(separator: " · ")

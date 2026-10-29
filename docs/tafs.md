@@ -82,6 +82,18 @@ apart. tafs cloud builds it from its records and KIFF's Cards and held calls, re
 the owner's session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists
 only what KIFF says the person may use or oversee.
 
+A Card's totals carry KIFF's own `window` and its words, `window_words: {each, now}`, which
+the app shows as they are:
+
+| `window` | `each` ("$300 …") | `now` ("$40 used …") |
+|---|---|---|
+| `calendar_day` | a day | today |
+| `rolling_24h` | in any 24 hours | in the last 24 hours |
+| `rolling_1h` | in any hour | in the last hour |
+| `lifetime` | in total | so far |
+
+A window KIFF adds later is shown as it is sent, never as a day.
+
 A taf's state (`stateOf`):
 
 | State | When |

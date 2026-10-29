@@ -224,6 +224,22 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertEqual(model.tafName(agent: "rae-k3f9"), "Rae")
     }
 
+    /// A change KIFF refuses says why, after the people are read again: the reread that works
+    /// used to clear the reason before the owner saw it.
+    func testAFailedPeopleChangeKeepsItsReason() async throws {
+        let model = await signedIn(TwoKeySigner())
+        StubProtocol.responses["PUT /v1/groups/grp_support/members/user_ana"] = (403, #"{"error":"a manager can't name another manager"}"#)
+        StubProtocol.responses["GET /v1/groups"] = (200, #"{"groups":[{"id":"grp_support","name":"Support","members":[],"agents":[]}]}"#)
+        StubProtocol.responses["GET /v1/tenant/members"] = (200, #"{"members":[{"subject":"user_ana","role":"approver","status":"active","email":"ana@acme.test","you":true}]}"#)
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{},"checked_at":"2026-10-26T01:00:00Z"}"#)
+
+        let added = await model.changePeople("Make ana@acme.test a manager") { try await $0.setGroupMember("grp_support", subject: "user_ana", role: "manager") }
+        XCTAssertFalse(added)
+        XCTAssertEqual(model.groups.map(\.name), ["Support"], "read again after the failure")
+        let error = try XCTUnwrap(model.peopleError, "the reason survives the reread")
+        XCTAssertTrue(error.hasPrefix("Make ana@acme.test a manager didn't go through: "), error)
+    }
+
     func testWhatGrantsAuthority() {
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/me/agent-drafts/drf_1/confirm"), "issuing a Card, or starting a trial")
         XCTAssertTrue(KIFFClient.grantsAuthority("POST", "/v1/resume"))

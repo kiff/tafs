@@ -51,11 +51,11 @@ final class Retest755Tests: XCTestCase {
         XCTAssertNil(half.roomWords)
     }
 
-    /// A week's or a month's room ends days later: "until 00:00" read as tonight. It says the
-    /// date then, and only the time when it ends today.
+    /// Room that ends on a later day (a rolling or lifetime total's): "until 00:00" read as
+    /// tonight. It says the date then, and only the time when it ends today.
     func testExtraRoomEndingAnotherDaySaysTheDate() {
         let later = Date().addingTimeInterval(3 * 24 * 3600)
-        let week = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000), window: .week,
+        let week = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000), window: Window("rolling_24h"),
                             extraRoom: usd(3000), baseLimit: usd(30000), roomEnds: later)
         XCTAssertEqual(week.roomWords, "+\(usd(3000).formatted) extra room until \(later.shown(date: .abbreviated, time: .shortened))")
         let tonight = AccountTime.calendar.date(bySettingHour: 23, minute: 59, second: 0, of: Date())!
