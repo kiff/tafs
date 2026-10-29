@@ -58,7 +58,7 @@ jobs:
         run: |
           echo "::error::The evals haven't passed on these definitions. Move kiff/agents' eval/tafs.ref here and let the nightly pass, or run dry."
           exit 1
-      - uses: aws-actions/configure-aws-credentials@v5
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           # The account id stays out of this public repository.
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
