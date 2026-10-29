@@ -135,6 +135,10 @@ final class VersionsTests: XCTestCase {
                           try XCTUnwrap(order.firstIndex(of: "/v1/tafs/depl_1/versions/2/live")), "the Card first, then the switch")
         XCTAssertNil(model.kiff.setupSigner)
         XCTAssertNil(model.switchingVersion[id])
+        // Its Card changed the taf's limits: the list is read again once it's live, so the
+        // taf's page shows the new Card without reopening the app.
+        let live = try XCTUnwrap(order.lastIndex(of: "/v1/tafs/depl_1/versions/2/live"))
+        XCTAssertTrue(order[live...].contains("/v1/home"), "the list read again after the install")
     }
 
     /// Back to a version with the taf's current Cards: one Face ID approves the switch itself.
@@ -151,6 +155,10 @@ final class VersionsTests: XCTestCase {
         XCTAssertEqual(signer.signed, ["tafs.version.v1|t_01|depl_1|1"])
         XCTAssertTrue(StubProtocol.sent.filter { $0.url?.path.hasPrefix("/v1/me/agent-drafts") ?? false }.isEmpty)
         XCTAssertEqual(sent("POST", "/v1/tafs/depl_1/versions/1/live").count, 1)
+        // The Card didn't change, so there's no need to read the list again.
+        let order = StubProtocol.sent.compactMap(\.url?.path)
+        let live = try XCTUnwrap(order.lastIndex(of: "/v1/tafs/depl_1/versions/1/live"))
+        XCTAssertFalse(order[live...].contains("/v1/home"))
     }
 
     /// A draft already claimed has its Cards: the switch is approved, not the draft again.

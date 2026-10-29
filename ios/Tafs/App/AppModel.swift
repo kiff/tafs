@@ -2351,6 +2351,12 @@ final class AppModel: ObservableObject {
         }
         await loadVersions(tafID)
         guard gen == accountGeneration else { return false }
+        // A version that brought a Card changed the taf's limits: the list is read again, so
+        // its page shows the new Card at once, not after the app is reopened.
+        if sw.draft != nil {
+            await refresh()
+            guard gen == accountGeneration else { return false }
+        }
         // Live: now Coach's held call is approved, with the Face ID just given.
         if let approving { await answer(approving, with: .approveOnce, confirmed: true) }
         return gen == accountGeneration
