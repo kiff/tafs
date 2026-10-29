@@ -263,6 +263,17 @@ aws iam put-role-policy --role-name "$DEPLOY_ROLE" --policy-name deploy-tafs-clo
   ]
 }"
 
+# The deletion sweep: every 5 minutes, EventBridge invokes tafs-cloud directly
+# with {"sweep":"deletions"}, so an accepted account deletion cut short (the
+# phone gone, planque or KIFF down) is finished without the phone. A URL
+# request can't take that shape, as for the upgrade.
+aws events put-rule --name tafs-cloud-deletions --schedule-expression "rate(5 minutes)" --state ENABLED >/dev/null
+RULE_ARN=$(aws events describe-rule --name tafs-cloud-deletions --query Arn --output text)
+aws lambda add-permission --function-name "$FN" --statement-id deletions-sweep --action lambda:InvokeFunction \
+  --principal events.amazonaws.com --source-arn "$RULE_ARN" >/dev/null 2>&1 || true
+aws events put-targets --rule tafs-cloud-deletions \
+  --targets "[{\"Id\":\"tafs-cloud\",\"Arn\":\"$FN_ARN\",\"Input\":\"{\\\"sweep\\\":\\\"deletions\\\"}\"}]" >/dev/null
+
 echo "deploy role $(aws iam get-role --role-name "$DEPLOY_ROLE" --query Role.Arn --output text)"
 echo "url $URL"
 echo "stream url $STREAM_URL"

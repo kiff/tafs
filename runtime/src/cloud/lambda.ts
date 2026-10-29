@@ -4,8 +4,11 @@ import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
 import { type AccountStore, keepAccount } from "./accounts.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
+import { type Deletion, type Deletions, httpPeer } from "./deletion.js";
+import { KIFF_API } from "./kiff.js";
+import { PLANQUE } from "./setupdef.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
-import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import { silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
@@ -593,8 +596,50 @@ const doors: DoorsDeps | undefined = process.env.DOORS_PUBLIC_URL ? { store: doo
 /** tafs cloud's own address behind CloudFront (TAFS_PUBLIC_URL); unset, each request's host. */
 const publicURL = (process.env.TAFS_PUBLIC_URL ?? "").replace(/\/+$/, "");
 
+/**
+ * Deletions driven by tafs cloud, kept in one item, `deletions`, by account, until each is finished:
+ * outside every account's own items, so erasing the account keeps it. A finished one leaves only
+ * that it was finished, and when, in the log.
+ */
+const deletions: Deletions = {
+  async get(tenant) {
+    return (await this.pending()).find((d) => d.tenant === tenant);
+  },
+  async put(d) {
+    await dynamo.send(new UpdateItemCommand({
+      TableName: TABLE, Key: { id: { S: "deletions" } },
+      UpdateExpression: "SET #m = if_not_exists(#m, :empty)",
+      ExpressionAttributeNames: { "#m": "pending" }, ExpressionAttributeValues: { ":empty": { M: {} } },
+    }));
+    await dynamo.send(new UpdateItemCommand({
+      TableName: TABLE, Key: { id: { S: "deletions" } },
+      UpdateExpression: "SET #m.#k = :v",
+      ExpressionAttributeNames: { "#m": "pending", "#k": d.tenant }, ExpressionAttributeValues: { ":v": { S: JSON.stringify(d) } },
+    }));
+  },
+  async pending() {
+    const out = await dynamo.send(new GetItemCommand({ TableName: TABLE, Key: { id: { S: "deletions" } }, ConsistentRead: true }));
+    return Object.values(out.Item?.pending?.M ?? {}).flatMap((v) => {
+      try { return [JSON.parse(v.S ?? "") as Deletion]; } catch { return []; }
+    });
+  },
+  async finished(tenant, at) {
+    await dynamo.send(new UpdateItemCommand({
+      TableName: TABLE, Key: { id: { S: "deletions" } },
+      UpdateExpression: "REMOVE #m.#k", ExpressionAttributeNames: { "#m": "pending", "#k": tenant },
+    }));
+    console.log(`account deleted: ${tenant} at ${at}`);
+  },
+};
+
+/** planque and KIFF, for a deletion: each checks the phone's signed intent itself. */
+const deletionPeers = {
+  planque: httpPeer(process.env.PLANQUE_URL ?? PLANQUE, "/v1/account-deletions"),
+  kiff: httpPeer(process.env.KIFF_API_URL ?? KIFF_API, "/v1/account-deletions"),
+};
+
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, coach, events, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, removals, archived, accountData, deletions, deletionPeers, coach, events, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
 }
 
 /**
@@ -606,11 +651,21 @@ interface UpgradeEvent {
   upgrade: { dry_run?: boolean };
 }
 
+/** The deletion sweep, invoked by its schedule: every deletion not finished, tried again. */
+interface SweepEvent {
+  sweep: "deletions";
+}
+
+function isSweep(event: unknown): event is SweepEvent {
+  return typeof event === "object" && event !== null && !("requestContext" in event) && (event as { sweep?: unknown }).sweep === "deletions";
+}
+
 function isUpgrade(event: unknown): event is UpgradeEvent {
   return typeof event === "object" && event !== null && !("requestContext" in event) && "upgrade" in event;
 }
 
-export async function handler(event: HTTPEvent | UpgradeEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] }> {
+export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] } | { swept: unknown[] }> {
+  if (isSweep(event)) return { swept: await sweepDeletions(deps()) };
   if (isUpgrade(event)) {
     try {
       return { upgraded: await upgradeDefinitions(deps(), { dryRun: event.upgrade.dry_run !== false }) };

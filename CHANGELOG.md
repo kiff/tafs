@@ -81,6 +81,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- Deleting your account finishes even if the app closes partway: you confirm once, and tafs
+  cloud deletes the account in tafs, its connections and KIFF, trying again on its own until
+  it's done. It can't be undone.
 - Settings, **Devices**: the devices signed in as you on the account, when each was last
   used, and Sign out for any but this one, behind Face ID.
 - Settings, **Notifications & haptics** (the 901 test): **Sound** off makes this device's

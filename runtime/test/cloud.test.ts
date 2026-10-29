@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
+import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
+import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
@@ -155,6 +156,9 @@ function world() {
     /** The accounts whose own records tafs cloud erased; `eraseFails` makes the next erase throw. */
     erased: [] as string[], eraseFails: false,
     account: { mandates: [], held: [] } as Account,
+    /** Deletions driven by tafs cloud: those kept, those finished, and what planque and KIFF were asked (the fakes' `refuse` and `down` make the next call fail). */
+    deletions: new Map<string, Deletion>(), finishedDeletions: [] as string[],
+    peerCalls: [] as string[], peerRefuse: new Map<string, PeerError>(), now: new Date("2026-10-29T10:00:00Z"),
   };
   for (const [tenant, id, name] of [["t_acme", RAE, "Rae"], ["t_other", MAX, "Max"]] as const) {
     const taf: Taf = { id, name, job: "refunds", kiffAgent: name.toLowerCase(), nameClaim: `claim-${id}`, created: "2026-10-15T09:00:00Z" };
@@ -195,6 +199,17 @@ function depsOf(w: World): Deps {
       add: async (_tenant, e, now) => { w.events.unshift({ at: (now ?? new Date()).toISOString(), ...e }); },
       list: async () => w.events,
     },
+    now: () => w.now,
+    deletions: {
+      get: async (tenant) => w.deletions.get(tenant),
+      put: async (d) => { w.deletions.set(d.tenant, structuredClone(d)); },
+      pending: async () => [...w.deletions.values()].map((d) => structuredClone(d)),
+      finished: async (tenant) => { w.deletions.delete(tenant); w.finishedDeletions.push(tenant); },
+    },
+    deletionPeers: Object.fromEntries((["planque", "kiff"] as const).map((name) => [name, {
+      accept: async () => { w.peerCalls.push(`${name} accept`); const e = w.peerRefuse.get(`${name} accept`); if (e) { w.peerRefuse.delete(`${name} accept`); throw e; } },
+      finish: async () => { w.peerCalls.push(`${name} finish`); const e = w.peerRefuse.get(`${name} finish`); if (e) { w.peerRefuse.delete(`${name} finish`); throw e; } },
+    }])) as Deps["deletionPeers"],
     accountData: {
       erase: async (tenant) => {
         if (w.eraseFails) { w.eraseFails = false; throw new Error("timeout"); }
@@ -1635,6 +1650,95 @@ describe("halting", () => {
     w.account.halts![""] = { state: "running", kiff_ack: false, planque_ack: false };
     expect((await call(w, "DELETE", "/v1/halt", { token: "ana" })).body.halt).toMatchObject({ state: "running", account: false });
     expect((await call(w, "POST", "/v1/halt", { token: "viewer" })).status).toBe(403);
+  });
+});
+
+describe("deleting the account from one signed intent", () => {
+  const NOW = new Date("2026-10-29T10:00:00Z");
+  const intent = (o: { tenant?: string; issued?: string; expires?: string; nonce?: string } = {}) => [
+    "tafs.delete-account.v2", `tenant=${o.tenant ?? "t_acme"}`, "device=dev_1",
+    `issued=${o.issued ?? "2026-10-29T09:59:00Z"}`, `expires=${o.expires ?? "2026-10-29T10:09:00Z"}`, `nonce=${o.nonce ?? "0123456789abcdef0123456789abcdef"}`,
+  ].join("\n");
+  const send = (w: World, body: object, token = "owner") => call(w, "POST", "/v1/account/delete", { token, body });
+
+  it("is accepted by planque then KIFF, then finished in order: tafs cloud's own, planque, KIFF last", async () => {
+    const w = world();
+    const r = await send(w, { intent: intent(), signature: "c2ln" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ done: ["tafs", "planque", "kiff"], failed: [], pending: false });
+    expect(w.peerCalls).toEqual(["planque accept", "kiff accept", "planque finish", "kiff finish"]);
+    expect(w.agents.calls).toEqual([`deleteAgent ${RAE}`, "eraseTenant"]);
+    expect(w.erased).toEqual(["t_acme"]);
+    // Finished: its intent and signature aren't kept.
+    expect(w.deletions.has("t_acme")).toBe(false);
+    expect(w.finishedDeletions).toEqual(["t_acme"]);
+    expect(w.tafs.held.has(`t_other#${MAX}`)).toBe(true);
+  });
+
+  it("refuses, before asking planque or KIFF anything, an intent that's expired, malformed, too long-lived, for another account, or from someone who can't delete", async () => {
+    const w = world();
+    const refused: Array<[object, number, string?]> = [
+      [{ intent: intent({ expires: "2026-10-29T09:59:30Z" }), signature: "c2ln" }, 409],
+      [{ intent: intent({ expires: "2026-10-29T10:30:00Z" }), signature: "c2ln" }, 400],
+      [{ intent: intent({ issued: "2026-10-29T10:05:00Z", expires: "2026-10-29T10:10:00Z" }), signature: "c2ln" }, 400],
+      [{ intent: intent({ tenant: "t_other" }), signature: "c2ln" }, 403],
+      [{ intent: intent({ nonce: "short" }), signature: "c2ln" }, 400],
+      [{ intent: intent().replace("tafs.delete-account.v2", "tafs.delete-account.v1"), signature: "c2ln" }, 400],
+      [{ intent: intent() }, 400],
+      [{ intent: intent(), signature: "c2ln" }, 403, "ana"],
+    ];
+    for (const [body, status, token] of refused) expect([body, (await send(w, body, token)).status]).toEqual([body, status]);
+    expect(w.peerCalls).toEqual([]);
+    expect(w.erased).toEqual([]);
+    expect(w.agents.calls).toEqual([]);
+  });
+
+  it("deletes nothing when planque or KIFF refuses to accept (a reused nonce, another account's device, a bad signature)", async () => {
+    for (const peer of ["planque", "kiff"]) {
+      const w = world();
+      w.peerRefuse.set(`${peer} accept`, new PeerError(409, "this intent's nonce was used"));
+      const r = await send(w, { intent: intent(), signature: "c2ln" });
+      expect(r.status).toBe(409);
+      expect(r.body.error).toContain("Nothing was deleted");
+      expect(w.erased).toEqual([]);
+      expect(w.agents.calls).toEqual([]);
+      expect(w.deletions.size).toBe(0);
+    }
+  });
+
+  it("keeps an accepted deletion when a step fails, and the sweep finishes it later with no session or new signature", async () => {
+    const w = world();
+    w.peerRefuse.set("planque finish", new PeerError(502, "planque is down"));
+    const r = await send(w, { intent: intent(), signature: "c2ln" });
+    expect(r.body).toEqual({ done: ["tafs"], failed: [{ step: "planque", why: "planque is down" }, { step: "kiff", why: "not done yet" }], pending: true });
+    // KIFF is never finished before planque.
+    expect(w.peerCalls).toEqual(["planque accept", "kiff accept", "planque finish"]);
+    expect(w.deletions.get("t_acme")).toMatchObject({ done: ["tafs"], tries: 1, intent: intent(), signature: "c2ln" });
+
+    // The phone is gone. Before its backoff the sweep leaves it; after, it finishes it.
+    w.now = new Date(NOW.getTime() + 60_000);
+    expect(await sweepDeletions(depsOf(w))).toEqual([]);
+    w.now = new Date(NOW.getTime() + 6 * 60_000);
+    expect(await sweepDeletions(depsOf(w))).toEqual([{ tenant: "t_acme", done: ["tafs", "planque", "kiff"], pending: false }]);
+    expect(w.peerCalls.slice(3)).toEqual(["planque finish", "kiff finish"]);
+    expect(w.deletions.size).toBe(0);
+    // tafs cloud's own erase ran once: done steps aren't done again.
+    expect(w.erased).toEqual(["t_acme"]);
+  });
+
+  it("goes on with the deletion already accepted when the phone asks again, never accepting a second", async () => {
+    const w = world();
+    w.peerRefuse.set("kiff finish", new PeerError(503, "KIFF is busy"));
+    await send(w, { intent: intent(), signature: "c2ln" });
+    const again = await send(w, { intent: intent({ nonce: "fedcba9876543210fedcba9876543210" }), signature: "b3RoZXI=" });
+    expect(again.body).toEqual({ done: ["tafs", "planque", "kiff"], failed: [], pending: false });
+    expect(w.peerCalls.filter((c) => c.endsWith("accept"))).toEqual(["planque accept", "kiff accept"]);
+  });
+
+  it("leaves the earlier way, with no intent, as it was", async () => {
+    const w = world();
+    expect((await call(w, "POST", "/v1/account/delete", { token: "owner" })).body).toEqual({ done: true, removed: 1 });
+    expect(w.peerCalls).toEqual([]);
   });
 });
 
