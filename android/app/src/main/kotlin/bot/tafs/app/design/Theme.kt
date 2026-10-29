@@ -84,7 +84,7 @@ fun scaled(
   mono: Boolean = false,
   tracking: TextUnit = TextUnit.Unspecified,
 ): TextStyle = TextStyle(
-  fontSize = size.sp,
+  fontSize = (size * BASE_TYPE).sp,
   fontWeight = weight,
   color = color,
   fontFamily = when {
@@ -96,11 +96,17 @@ fun scaled(
 )
 
 /**
- * Material's type, at iOS's point sizes and with no added letter spacing: a Text without a style of its own (a button's
- * label, a field's text) looks as iOS's at the system's font size, and grows with it, never shrunk below what the owner chose.
+ * The base type: each size a screen names (iOS's point sizes) is drawn at this share of it, so the screens are as dense as
+ * apps like LinkedIn. It sets the base sizes only: they are sp, so text still grows when the person raises their font size.
+ */
+const val BASE_TYPE = 0.9f
+
+/**
+ * Material's type, at the base sizes and with no added letter spacing: a Text without a style of its own (a button's label,
+ * a field's text) matches the screens' own.
  */
 private val iosTypography = Typography().run {
-  fun TextStyle.ios(size: Int, line: Int) = copy(fontSize = size.sp, lineHeight = line.sp, letterSpacing = 0.sp)
+  fun TextStyle.ios(size: Int, line: Int) = copy(fontSize = (size * BASE_TYPE).sp, lineHeight = (line * BASE_TYPE).sp, letterSpacing = 0.sp)
   copy(
     displayLarge = displayLarge.ios(34, 41), displayMedium = displayMedium.ios(28, 34), displaySmall = displaySmall.ios(22, 28),
     headlineLarge = headlineLarge.ios(34, 41), headlineMedium = headlineMedium.ios(28, 34), headlineSmall = headlineSmall.ios(22, 28),
