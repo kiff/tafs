@@ -589,6 +589,17 @@ export class Agents {
   }
 
   /**
+   * Answers a card the run waits on, as data (kiff/agents' cards wait for their answer):
+   * checked against the card there, and the run goes on in the background once nothing
+   * else holds it. Only the person whose run it is answers: 404 for another's, 409 for a
+   * card that doesn't wait (answered, stopped waiting, or the run went on), 400 for an
+   * answer the card doesn't take.
+   */
+  answerCard(tenant: string, agent: string, run: string, card: string, answer: unknown, requester: Requester): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "cards", card, "answer"], { answer, requester, background: true });
+  }
+
+  /**
    * Continues a paused run whose held calls KIFF has resolved, in the background
    * (202). One that isn't paused, or still waits for KIFF, is 409: the sweep or
    * another continue has it.
