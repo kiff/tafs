@@ -684,6 +684,8 @@ final class AppModel: ObservableObject {
     func signOut() async -> Bool {
         signOutError = nil
         if mode == .kiff {
+            // Alerts are unregistered with the session, so before KIFF ends it; registered again
+            // at once when KIFF doesn't, so a device still signed in never goes without them.
             if let pushToken { try? await cloud.unregisterPush(deviceToken: pushToken) }
             do {
                 try await kiff.signOut()
@@ -691,6 +693,7 @@ final class AppModel: ObservableObject {
                 // KIFF had already ended it.
             } catch {
                 signOutError = "Not signed out at KIFF yet: \(error.localizedDescription). Try again, or sign this \(ThisDevice.kind) out from another device's Devices."
+                await syncPush()
                 return false
             }
         }

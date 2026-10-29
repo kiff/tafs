@@ -129,6 +129,26 @@ final class AlertsTests: XCTestCase {
         XCTAssertNil(model.alertsReady)
     }
 
+    /// A sign-out KIFF doesn't confirm keeps this phone's alerts: unregistered with the session
+    /// before the logout, registered again at once after it fails.
+    func testASignOutKIFFRefusedKeepsThisPhonesAlerts() async {
+        let model = model()
+        await signedIn(model)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":true}"#)
+        StubProtocol.responses["DELETE /v1/push/ab01ff"] = (200, #"{"removed":true}"#)
+        StubProtocol.responses["POST /v1/auth/device/logout"] = (503, #"{"error":"down"}"#)
+        await model.pushTokenArrived(token)
+        let out = await model.signOut()
+        XCTAssertFalse(out)
+        XCTAssertEqual(model.mode, .kiff)
+        XCTAssertEqual(model.alertsReady, true)
+        let order = StubProtocol.sent.compactMap { r -> String? in
+            guard let path = r.url?.path, path.hasPrefix("/v1/push") || path == "/v1/auth/device/logout" else { return nil }
+            return "\(r.httpMethod ?? "") \(path)"
+        }
+        XCTAssertEqual(order, ["POST /v1/push", "DELETE /v1/push/ab01ff", "POST /v1/auth/device/logout", "POST /v1/push"])
+    }
+
     /// KIFF replaced the account's target and showed its new secret once; the hand-over to
     /// tafs cloud failed while tafs cloud still held an older secret. The new secret is kept
     /// and handed over again, without a second registration, and alerts don't count as ready
