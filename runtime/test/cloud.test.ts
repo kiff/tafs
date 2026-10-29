@@ -107,7 +107,7 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       if (!byToken[token]) return new Response("{}", { status: 401 });
       const body = JSON.parse(String(init?.body)) as { cards: Array<{ id: string }> };
       (account.previewed ??= []).push(body);
-      return new Response(JSON.stringify({ cards: body.cards.map((c) => ({ card_title: `KIFF's title for ${c.id}`, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
+      return new Response(JSON.stringify({ agent_id: "x", label: "Coach", card_title: "Coach's Card", cards: body.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
     }
     if (url === "https://mcp.kiff.dev/v1/connections") {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -790,7 +790,8 @@ describe("Setup (kiff/agents#91)", () => {
     expect(first.card.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
     expect(first.card.body.cards[1]).toEqual({ id: "coach-taf-task", subject: "setup-acme", domain: "gateway", on_exceed: "owner", hold_expiry: "10m", grants: [{ action: "taf_task" }], aggregates: [{ quantity: "count", limit: 50, window: "calendar_day" }] });
     expect(first.card.body.cards[0]).not.toHaveProperty("hold_expiry");
-    expect(first.card.cards[0]).toEqual({ card_title: "KIFF's title for coach-reads", lines: ["KIFF's line for coach-reads"] });
+    expect(first.card.card_title).toBe("Coach's Card");
+    expect(first.card.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
     expect(w.account.previewed).toEqual([first.card.body]);
     expect(first.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
     expect(first.connect.body.connections[0]).toEqual({ name: "tafs_state", url: mcp, tool: "tafs_state", mode: "verify", audience: mcp, control: true, idempotency_argument: "tafs_op", read_only: true });

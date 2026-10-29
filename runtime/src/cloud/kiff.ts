@@ -272,11 +272,12 @@ export async function cardExists(token: string, id: string, doFetch: Fetch = fet
 }
 
 /**
- * How KIFF would word a draft, without making it (POST /v1/me/agent-drafts/preview): each Card's
- * title and lines, exactly as the submitted draft would read. It writes nothing and needs no signature.
+ * How KIFF would word a draft, without making it (POST /v1/me/agent-drafts/preview): the draft's
+ * card_title and each Card as the submitted draft would read, with its lines. It writes nothing and
+ * needs no signature. Passed on unchanged, so no copy of how a Card reads is kept here.
  */
-export async function previewDraft(token: string, body: unknown, doFetch: Fetch = fetch, base = KIFF_API): Promise<Array<{ card_title?: string; lines: string[] }>> {
-  const out = await ask<{ cards?: Array<{ card_title?: string; lines?: unknown }> }>(token, "POST", "/v1/me/agent-drafts/preview", body, doFetch, base);
+export async function previewDraft(token: string, body: unknown, doFetch: Fetch = fetch, base = KIFF_API): Promise<{ card_title?: unknown; cards: unknown[] }> {
+  const out = await ask<{ card_title?: unknown; cards?: unknown }>(token, "POST", "/v1/me/agent-drafts/preview", body, doFetch, base);
   if (!Array.isArray(out.cards)) throw new KIFFError(502, "KIFF's preview sent no Cards");
-  return out.cards.map((c) => ({ ...(typeof c.card_title === "string" ? { card_title: c.card_title } : {}), lines: Array.isArray(c.lines) ? c.lines.filter((l): l is string => typeof l === "string") : [] }));
+  return { ...(out.card_title === undefined ? {} : { card_title: out.card_title }), cards: out.cards };
 }

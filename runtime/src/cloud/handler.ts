@@ -1040,10 +1040,10 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
     const issued = cards.every(Boolean);
     if (!plan.missing.length && issued) return { state: "given" };
     // Coach's Cards, with KIFF's own words for them: never tafs cloud's copy of the wording.
-    let card: { body: unknown; cards: unknown } | undefined;
+    let card: Record<string, unknown> | undefined;
     if (!issued) {
       const body = coachCardsDraft(setup.kiffAgent);
-      card = { body, cards: await previewDraft(token, body, deps.fetch, deps.kiffBase) };
+      card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
     }
     return { state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp) } : {}), ...(card ? { card } : {}) };
   } catch (err) {
