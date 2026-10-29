@@ -66,7 +66,7 @@ enum TafTemplates {
         job: "Pay routine vendor bills that match a purchase order. Existing vendors only. Never change bank details or add a payee.",
         tools: ["Accounting", "Email"],
         rules: [
-            CardRule(action: "pay_bill", label: "Bills", perAction: .usd(5_000), perWindow: .usd(3_500), nextSteps: ["Pay half now"]),
+            CardRule(action: "pay_bill", label: "Bills", perAction: .usd(3_500), perWindow: .usd(3_500), nextSteps: ["Pay half now"]),
             CardRule(action: "wire", label: "Wires", alwaysAsk: true),
             CardRule(action: "bank_details", label: "Bank detail changes", never: true, outside: .refuse),
             CardRule(action: "new_payee", label: "New payees", never: true, outside: .refuse),
@@ -126,7 +126,7 @@ enum TafTemplates {
         tools: ["Payments"],
         rules: [
             CardRule(action: "submit_evidence", label: "Evidence", perAction: .usd(500), countPerWindow: 50, window: .day),
-            CardRule(action: "accept_dispute", label: "Accepting a loss", perAction: .usd(100), perWindow: .usd(70)),
+            CardRule(action: "accept_dispute", label: "Accepting a loss", perAction: .usd(70), perWindow: .usd(70)),
         ],
         script: [
             ProposedAction(action: "submit_evidence", summary: "Answer dispute on #3318", amount: .usd(120), context: "Delivered, signed for"),
