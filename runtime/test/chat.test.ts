@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, chatTitle, handle, type HTTPEvent, MEMORY, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
+import { CHAT, chatTitle, handle, type HTTPEvent, MEMORY, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -558,6 +558,117 @@ describe("a held call answered (kiff/tafs#206)", () => {
       expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/continue`, { token })).status).toBe(403);
     }
     expect(w.agents.calls).toEqual([]);
+  });
+});
+
+describe("a card answered as data (kiff/agents' cards wait for their answer)", () => {
+  const WHICH = { type: "confirm", id: "which", title: "Which mode?", options: [{ value: "test", label: "Test mode" }, { value: "live", label: "Live" }] };
+  /** Ana's chat with Rae, its run waiting on the card. */
+  async function waiting(w: World, card: { id: string; type: string } & Record<string, unknown> = WHICH) {
+    const run = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe", ANA);
+    w.agents.ask(run, card);
+    w.agents.calls.length = 0;
+    return run;
+  }
+
+  it("answers the card the person's chat shows, and the run goes on", async () => {
+    const w = world();
+    const run = await waiting(w);
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "test" } });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ session: run.session, run: run.id, status: "RUNNING" });
+    expect(w.agents.calls).toEqual([`answerCard ${RAE} ${run.id} which "test"`]);
+  });
+
+  it("is 404 for a card no chat of theirs showed, 409 once it doesn't wait, 400 for an answer it doesn't take", async () => {
+    const w = world();
+    await waiting(w);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/components/other/answer`, { token: "ana", body: { answer: "test" } })).status).toBe(404);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "maybe" } })).status).toBe(400);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: {} })).status).toBe(400);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "test" } })).status).toBe(200);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "live" } })).status).toBe(409);
+  });
+
+  it("never answers another person's card", async () => {
+    const w = world();
+    await waiting(w);
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "editor", body: { answer: "test" } });
+    expect(r.status).toBe(404);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerCard"))).toEqual([]);
+  });
+
+  it("takes the app's old form of an answer as the card's answer, not as a message", async () => {
+    const w = world();
+    const run = await waiting(w);
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "[confirm which] test" } });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ session: run.session, new_session: false, run: run.id });
+    expect(w.agents.calls).toEqual([`answerCard ${RAE} ${run.id} which "test"`]);
+  });
+
+  it("maps each old form to the answer its card takes", () => {
+    const cases: Array<[string, unknown]> = [
+      ["[confirm which] live", { type: "confirm", id: "which", answer: "live" }],
+      [`[questions limits] {"cap":{"value":"50"}}`, { type: "questions", id: "limits", answer: { cap: { value: "50" } } }],
+      ["[approval connect] approved", { type: "approval", id: "connect", answer: "approved" }],
+      ["[approval connect] approved, signed in", { type: "approval", id: "connect", answer: "approved" }],
+      ["[approval connect] declined", { type: "approval", id: "connect", answer: "declined" }],
+      ["[approval connect] failed: Face ID was cancelled", { type: "approval", id: "connect", answer: "failed: Face ID was cancelled" }],
+      ["[sign_in stripe] signed in", { type: "sign_in", id: "stripe", answer: "signed in" }],
+      ["[sign_in stripe] not now", { type: "sign_in", id: "stripe", answer: "not now" }],
+      ["[questions limits] not json", undefined],
+      ["[approval connect] sure", undefined],
+      ["[steps plan] done", undefined],
+      ["Use test mode", undefined],
+    ];
+    for (const [text, want] of cases) expect([text, oldFormCard(text)]).toEqual([text, want]);
+  });
+
+  it("sends the old form as a message when no card with that id waits: named but not open, answered, or another type", async () => {
+    const w = world();
+    const run = await waiting(w);
+    await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "test" } });
+    w.agents.calls.length = 0;
+    const again = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "[confirm which] live" } });
+    expect(again.status).toBe(200);
+    expect(w.agents.calls).toEqual([`answerCard ${RAE} ${run.id} which "live"`, `startRun ${RAE} live`]);
+    w.agents.calls.length = 0;
+    await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "[confirm nothing] live" } });
+    await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "[approval which] approved" } });
+    expect(w.agents.calls).toEqual([`startRun ${RAE} live`, `startRun ${RAE} live`]);
+  });
+
+  it("sends the old form as a message when the card doesn't take the answer", async () => {
+    const w = world();
+    await waiting(w);
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "[confirm which] Test mode" } });
+    expect(r.status).toBe(200);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} live`);
+  });
+
+  it("never answers a card from another person's message in the same words", async () => {
+    const w = world();
+    await waiting(w);
+    await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "editor", body: { text: "[confirm which] test" } });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerCard"))).toEqual([]);
+  });
+
+  it("shows each card's answer in the conversation: chosen, written instead, or none", async () => {
+    const w = world();
+    const run = await waiting(w);
+    await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "test" } });
+    const other = await w.agents.api.startRun("t_acme", RAE, "And the limits?", ANA);
+    w.agents.show(other, { type: "questions", id: "limits" });
+    w.agents.show(other, { type: "confirm", id: "late" });
+    const list = w.agents.events.get(other.session)!;
+    list.push({ session: other.session, run: other.id, seq: list.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: "limits", type: "questions", wrote: "Use live" } });
+    list.push({ session: other.session, run: other.id, seq: list.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: "late", type: "confirm", unanswered: true } });
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    const byID = Object.fromEntries(r.body.components.map((c: { component: { id: string }; answer?: unknown; run: string }) => [c.component.id, c]));
+    expect(byID.which).toMatchObject({ run: run.id, answer: { state: "answered", words: "Test mode", at: NOW.toISOString() } });
+    expect(byID.limits.answer).toEqual({ state: "wrote", words: "Use live", at: NOW.toISOString() });
+    expect(byID.late.answer).toEqual({ state: "no_answer", words: "", at: NOW.toISOString() });
   });
 });
 

@@ -341,3 +341,28 @@ describe("a new chat, streamed (kiff/tafs#73)", () => {
     expect(back.events[0]!.data).toMatchObject({ session, new_session: false });
   });
 });
+
+describe("a card answered from the old form (kiff/agents' cards wait for their answer)", () => {
+  it("answers the waiting card, then streams its run going on, never starting another", async () => {
+    const w = world();
+    const run = await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.ask(run, { type: "confirm", id: "which", options: [{ value: "test", label: "Test mode" }] });
+    w.agents.resumed.push({ event: "event", data: { kind: "agent_message", body: { text: "Test mode it is." } } });
+    w.agents.calls.length = 0;
+    const r = await stream(w, PATH, { token: "ana", body: { text: "[confirm which] test" } });
+    expect(r.status).toBe(200);
+    expect(w.agents.calls).toEqual([`answerCard ${RAE} ${run.id} which "test"`, `resumeRun ${RAE} ${run.id} 0`]);
+    expect(r.events.map((e) => e.event)).toEqual(["session", "taken", "said", "end"]);
+    expect(r.events[0]!.data).toEqual({ session: run.session, new_session: false, run: run.id });
+  });
+
+  it("streams it as a message when no card by that id waits", async () => {
+    const w = world();
+    await w.agents.api.startRun("t_acme", RAE, "Connect my Stripe", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.calls.length = 0;
+    const r = await stream(w, PATH, { token: "ana", body: { text: "[confirm which] test" } });
+    expect(r.status).toBe(200);
+    expect(w.agents.calls.some((c) => c.startsWith("answerCard"))).toBe(false);
+    expect(r.events[0]!.event).toBe("session");
+  });
+});

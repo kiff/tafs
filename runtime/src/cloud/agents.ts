@@ -140,6 +140,10 @@ export interface Requirement {
   expires: string;
   answered?: string;
   answer?: string;
+  /** "card" for a card shown to the owner that waits for their answer; none for a call KIFF holds. */
+  kind?: string;
+  /** A card's answer as the run reads it, once answered. */
+  result?: unknown;
 }
 
 export interface Run {
@@ -351,9 +355,10 @@ export interface SessionEvent {
   time: string;
   /**
    * A kind the keep rules name, a `component` the agent showed (kiff/agents#91), or
-   * a `call_ref`: what a call through KIFF acted on, kept like messages (kiff/tafs#167).
+   * a `call_ref`: what a call through KIFF acted on, kept like messages (kiff/tafs#167), or
+   * `answered`: the owner's answer to a card, as data ({id, type, answer?, words?, wrote?, unanswered?}).
    */
-  kind: EventKind | "component" | "call_ref";
+  kind: EventKind | "component" | "call_ref" | "answered";
   body: unknown;
 }
 
