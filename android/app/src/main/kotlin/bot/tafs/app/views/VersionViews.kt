@@ -166,7 +166,7 @@ private fun VersionRow(
   onInstall: () -> Unit,
 ) {
   Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
       Text("Version ${v.n}", style = scaled(15, FontWeight.SemiBold, Theme.ink))
       if (v.live) Chip("Live now", Theme.ok) else if (trying) Chip("Trying", Theme.amber)
     }
@@ -175,7 +175,7 @@ private fun VersionRow(
     // What each ended trial came to, the one line kept once its chat is gone.
     v.trials.orEmpty().forEach { Text(VersionWords.tried(it), style = scaled(12, color = Theme.soft)) }
     if (!v.live) {
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         if (trying) OutlineButton("Resume the trial", onResume, Modifier.weight(1f))
         else OutlineButton("Try it", onTry, Modifier.weight(1f), enabled = canTry)
         OutlineButton(if (installing) "Installing…" else "Install this version", onInstall, Modifier.weight(1f), enabled = canInstall)
@@ -257,14 +257,14 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
     if (trial != null && taf != null) {
       val busy = tafId in state.trialBusy
       Column(
-        Modifier.fillMaxWidth().background(Theme.amber.copy(alpha = 0.08f)).padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        Modifier.fillMaxWidth().background(Theme.amber.copy(alpha = 0.08f)).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
       ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
           Text("Trying version ${trial.n}", style = scaled(15, FontWeight.SemiBold, Theme.ink))
           Chip("not live", Theme.amber)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           OutlineButton("Go back", { confirmBack = true }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           OutlineButton(if (busy) "Working…" else "Install", { confirmInstall = true }, Modifier.weight(1f), enabled = !busy)
         }
@@ -273,7 +273,7 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
       // Before its first message, what this trial is and what to try.
       if (state.chatItems(chat).isEmpty()) {
         val name = taf.name.substringBefore(" · v")
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
           VersionWords.trialGuide(trial.changed, trial.tryWith, name, trial.ends).forEachIndexed { i, line ->
             Text(line, style = if (i == 0 || i == 1) scaled(14, color = Theme.ink) else scaled(13, color = Theme.soft))
           }
@@ -321,7 +321,7 @@ private fun SwitchUnderWay(sw: Switching, version: Version?, working: Boolean, o
   Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     Text("Installing version ${sw.n}", style = scaled(15, FontWeight.SemiBold, Theme.amberText))
     Text("Your taf doesn't run until it's installed or you cancel.", style = scaled(13, color = Theme.soft))
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
       if (version != null) OutlineButton(if (working) "Installing…" else "Finish", { onFinish(version) }, Modifier.weight(1f), enabled = !working)
       OutlineButton("Cancel", onCancel, Modifier.weight(1f), color = Theme.no, enabled = !working)
     }
@@ -360,14 +360,14 @@ fun VersionCardSheet(
     sheetGesturesEnabled = false,
   ) {
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text("Its Card", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         // Not now: the switch it began is dropped, and the taf runs as it was.
-        Text("Cancel", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onCancel).padding(top = 10.dp))
+        Text("Cancel", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onCancel).padding(top = 8.dp))
       }
       Column(
-        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
       ) {
         Text("Version ${version.n}${version.note?.let { ": $it" } ?: ""}", style = scaled(17, FontWeight.SemiBold, Theme.ink))
         val shown = draft
@@ -389,7 +389,7 @@ fun VersionCardSheet(
 /** The Cards a draft brings, as the owner reads them before confirming: each Card it revises as it is now and as it will be, each new one, and each it removes. */
 @Composable
 fun DraftCardsView(draft: AgentDraft) {
-  Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+  Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
     val lines = draft.cardLines
     draft.cards.orEmpty().forEachIndexed { i, card -> CardView(card, lines[i]) }
     draft.retires.orEmpty().forEach { Retired(it) }
@@ -438,13 +438,13 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
   ) {
     // Its height is fixed: what loads in doesn't resize a sheet that was measured while it was empty.
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
-        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
       ) { content() }
     }
   }
@@ -454,7 +454,7 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
 @Composable
 fun VersionsRow(onClick: () -> Unit) {
   Panel(Modifier.clickable(onClick = onClick)) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Text("Versions", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.weight(1f))
       Text("›", style = scaled(20, color = Theme.dim))
     }

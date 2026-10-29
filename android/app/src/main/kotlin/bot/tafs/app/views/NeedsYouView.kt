@@ -93,7 +93,7 @@ fun NeedsYouView(state: AppState, onAnswer: suspend (HeldCall, Answer) -> Unit, 
   LazyColumn(
     Modifier.fillMaxSize().statusBarsPadding(),
     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-    verticalArrangement = Arrangement.spacedBy(14.dp),
+    verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {
     item { ScreenTitle("Needs you") }
     if (state.held.isEmpty()) {
@@ -155,8 +155,8 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
   }
   val expired = now >= call.expiresAt
   Panel(stroke = Theme.amber.copy(alpha = 0.4f)) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (taf != null) TafAvatar(taf, 32.dp)
         Text(taf?.name ?: "A taf", style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
         Text(remaining(call, now), style = scaled(12, color = Theme.amberText, mono = true))
@@ -167,7 +167,7 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
       Text(
         call.reason,
         style = scaled(12, FontWeight.Medium, Theme.amberText),
-        modifier = Modifier.clip(CircleShape).background(Theme.amber.copy(alpha = 0.14f)).padding(horizontal = 10.dp, vertical = 5.dp),
+        modifier = Modifier.clip(CircleShape).background(Theme.amber.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 5.dp),
       )
     }
     // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and a vendor's own values aren't
@@ -181,7 +181,7 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
       // KIFF says this person may never answer it: words, not buttons that can't work.
       Text(AnswerRefusals.refusalWords(lasting) ?: "KIFF doesn't take your answer to this one.", style = scaled(14, color = Theme.soft))
     } else {
-      Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Said here, where the owner answers, so the taf's words needn't say it.
         Text(NOTHING_SENT, style = scaled(14, color = Theme.soft))
         // They asked for it: someone else approves, and they can still refuse it.
@@ -222,7 +222,7 @@ private fun installTaf(call: HeldCall, state: AppState): String? {
 @Composable
 private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sending: Boolean, send: (Answer) -> Unit, install: (() -> Unit)?) {
   val biometry = LocalBiometry.current
-  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     if (!state.mayAnswerHolds) {
       // A viewer uses the taf but doesn't answer for the account.
       Text("Someone who approves on this account answers this. Their answer shows here.", style = scaled(13, color = Theme.soft))
@@ -249,7 +249,7 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         refusedLine(state.refusedToday(call.tafId))?.let { Text(it, style = scaled(13, color = Theme.soft)) }
         if (state.canManageCards) PrimaryButton("Extra room with $biometry", { send(Answer.ExtraRoom) }, enabled = !sending)
       }
-      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         call.nextSteps.forEach { step -> OutlineButton(step, { send(Answer.NextStep(step)) }, Modifier.weight(1f), enabled = !sending) }
         OutlineButton("Refuse", { send(Answer.Refuse) }, Modifier.weight(1f), color = Theme.no, enabled = !sending)
       }

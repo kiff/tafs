@@ -41,17 +41,17 @@ fun OnboardingView(onSignIn: () -> Unit, onSample: () -> Unit, modifier: Modifie
   ) {
     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
       Mascot(96.dp)
-      Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("They taf.\nYou kiff.", style = scaled(48, FontWeight.Bold, Theme.ink, display = true))
         Text("Hand a job to a taf. It works inside a Card you set, and asks you when it needs more.", style = scaled(16, color = Theme.soft))
       }
-      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Point("Inside the Card", "it acts, and every action has a receipt.", Theme.ok)
         Point("Outside it", "it waits for you, right here.", Theme.amber)
         Point("Revoked", "no new action goes through.", Theme.no)
       }
     }
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       PrimaryButton("Sign in with KIFF", onSignIn)
       OutlineButton("Try it with sample data", onSample, Modifier.fillMaxWidth())
     }
@@ -60,7 +60,7 @@ fun OnboardingView(onSignIn: () -> Unit, onSample: () -> Unit, modifier: Modifie
 
 @Composable
 private fun Point(lead: String, rest: String, color: Color) {
-  Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
     Dot(color)
     Text(
       buildAnnotatedString {

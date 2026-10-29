@@ -89,11 +89,11 @@ fun NewTafFlow(
     containerColor = Theme.background,
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      Row(Modifier.padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+      Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         TextAction("Close", onClose)
         if (step > 1) TextAction("Back") { step -= 1 }
       }
-      Column(Modifier.verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+      Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Eyebrow("New taf · $step of 3")
         when (step) {
           1 -> JobStep(job, { job = it }) { draft = draftFrom(job); step = 2 }
@@ -117,14 +117,14 @@ fun NewTafFlow(
 
 @Composable
 private fun TextAction(text: String, onClick: () -> Unit) {
-  Text(text, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClick).padding(top = 10.dp))
+  Text(text, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClick).padding(top = 8.dp))
 }
 
 // MARK: 1. The job
 
 @Composable
 private fun JobStep(job: String, onJob: (String) -> Unit, onDraft: () -> Unit) {
-  Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
     Text("What's the job?", style = scaled(38, FontWeight.Bold, Theme.ink, display = true))
     Text("Say it the way you'd brief a new hire. Include what it must never do.", style = scaled(15, color = Theme.soft))
     val shape = RoundedCornerShape(18.dp)
@@ -139,7 +139,7 @@ private fun JobStep(job: String, onJob: (String) -> Unit, onDraft: () -> Unit) {
         .clip(shape)
         .background(Theme.panel)
         .border(BorderStroke(1.dp, Theme.line), shape)
-        .padding(12.dp),
+        .padding(8.dp),
     )
     Text("Or start from one of these", style = scaled(13, color = Theme.dim))
     TafTemplates.all.forEach { t -> JobRow(t, selected = job == t.job) { onJob(t.job) } }
@@ -158,8 +158,8 @@ private fun JobRow(template: TafTemplate, selected: Boolean, onClick: () -> Unit
       .background(Theme.panel)
       .border(BorderStroke(1.dp, if (selected) Theme.pink.copy(alpha = 0.6f) else Theme.line), shape)
       .clickable(onClick = onClick)
-      .padding(14.dp),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
+      .padding(10.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     Box(
       Modifier.size(22.dp).clip(CircleShape).then(if (selected) Modifier.brandBackground() else Modifier.border(BorderStroke(1.5.dp, Theme.dim), CircleShape)),
@@ -178,7 +178,7 @@ private fun JobRow(template: TafTemplate, selected: Boolean, onClick: () -> Unit
 
 @Composable
 private fun DraftStep(draft: TafDraft, onDraft: (TafDraft) -> Unit, onReview: () -> Unit) {
-  Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
     BasicTextField(
       value = draft.name,
       onValueChange = { onDraft(draft.copy(name = it)) },
@@ -195,7 +195,7 @@ private fun DraftStep(draft: TafDraft, onDraft: (TafDraft) -> Unit, onReview: ()
     }
     draft.tools.forEach { tool ->
       Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Theme.panel).padding(14.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Theme.panel).padding(10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
       ) {
         Text(tool, style = scaled(15, FontWeight.SemiBold, Theme.ink))
@@ -217,8 +217,8 @@ private fun DraftStep(draft: TafDraft, onDraft: (TafDraft) -> Unit, onReview: ()
 private fun RuleEditor(rule: CardRule, onChange: (CardRule) -> Unit) {
   val shape = RoundedCornerShape(14.dp)
   Column(
-    Modifier.fillMaxWidth().clip(shape).background(Theme.panel).border(BorderStroke(1.dp, Theme.line), shape).padding(14.dp),
-    verticalArrangement = Arrangement.spacedBy(10.dp),
+    Modifier.fillMaxWidth().clip(shape).background(Theme.panel).border(BorderStroke(1.dp, Theme.line), shape).padding(10.dp),
+    verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
       Text(rule.label, style = scaled(15, FontWeight.SemiBold, Theme.ink))
@@ -246,7 +246,7 @@ private fun AmountField(label: String, money: Money, onChange: (Money) -> Unit) 
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
       singleLine = true,
       cursorBrush = SolidColor(Theme.amber),
-      modifier = Modifier.width(110.dp).clip(RoundedCornerShape(10.dp)).background(Theme.background).padding(vertical = 8.dp, horizontal = 10.dp),
+      modifier = Modifier.width(110.dp).clip(RoundedCornerShape(10.dp)).background(Theme.background).padding(vertical = 6.dp, horizontal = 8.dp),
     )
   }
 }
@@ -255,7 +255,7 @@ private fun AmountField(label: String, money: Money, onChange: (Money) -> Unit) 
 private fun CountStepper(text: String, count: Int, onChange: (Int) -> Unit) {
   Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
     Text(text, style = scaled(14, color = Theme.ink, mono = true))
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
       StepButton("−", enabled = count > 1) { onChange(count - 1) }
       StepButton("+", enabled = count < 10_000) { onChange(count + 1) }
     }
@@ -276,13 +276,13 @@ private fun StepButton(symbol: String, enabled: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun IssueStep(draft: TafDraft, issuer: String, colorIndex: Int, issuing: Boolean, onIssue: () -> Unit) {
-  Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+  Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
     Text("Give ${draft.name} its Card", style = scaled(32, FontWeight.Bold, Theme.ink, display = true))
     val face = TafCard.merged("draft", draft.name, draft.rules, threeMonthsOn(Instant.now()))
     TafCardFace(face, issuer, Theme.tafColor(colorIndex))
     // What is signed, in full: every action and its limits, not only the face's main one.
     CardLines(draft.rules)
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Rule("Inside the Card,", "it acts and you get a receipt.", Theme.ok)
       Rule("Outside it,", "it waits for you, here and on your lock screen.", Theme.amber)
       Rule("Revoked,", "no new action goes through.", Theme.no)
@@ -293,7 +293,7 @@ private fun IssueStep(draft: TafDraft, issuer: String, colorIndex: Int, issuing:
 
 @Composable
 private fun Rule(lead: String, rest: String, color: Color) {
-  Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
     Dot(color)
     Text(
       buildAnnotatedString {

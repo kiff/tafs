@@ -228,12 +228,12 @@ fun MarkdownText(text: String, size: Int = 15, color: Color = Theme.ink, modifie
   val blocks = parseMarkdown(text)
   // Lines about 1.4 times the text's size apart: the font's own 1.2, and a fifth more.
   val style = scaled(size, color = color).copy(lineHeight = (size * 1.4f).sp)
-  Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+  Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
     blocks.forEach { block ->
       when (block) {
         is MarkdownBlock.Paragraph -> Text(inlineMarkdown(block.text), style = style)
         is MarkdownBlock.Heading -> Text(inlineMarkdown(block.text), style = style.copy(fontSize = (size + 1).sp, fontWeight = FontWeight.SemiBold))
-        is MarkdownBlock.Bullet -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        is MarkdownBlock.Bullet -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           Text("•", style = style)
           Text(inlineMarkdown(block.text), style = style, modifier = Modifier.weight(1f, fill = false))
         }
@@ -244,7 +244,7 @@ fun MarkdownText(text: String, size: Int = 15, color: Color = Theme.ink, modifie
         is MarkdownBlock.Code -> Text(
           block.text,
           style = scaled(size - 2, color = color, mono = true),
-          modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Theme.raised).padding(10.dp),
+          modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Theme.raised).padding(8.dp),
         )
         is MarkdownBlock.Table -> MarkdownTable(block.rows, size)
       }
@@ -264,7 +264,7 @@ private fun MarkdownTable(rows: List<List<String>>, size: Int) {
       val trailing = isNumericColumn(c, rows)
       Column(horizontalAlignment = if (trailing) Alignment.End else Alignment.Start) {
         rows.forEachIndexed { r, row ->
-          Box(Modifier.padding(vertical = 6.dp, horizontal = 10.dp)) {
+          Box(Modifier.padding(vertical = 6.dp, horizontal = 8.dp)) {
             Text(
               inlineMarkdown(row.getOrElse(c) { "" }),
               style = scaled(size - 1, if (r == 0) FontWeight.SemiBold else FontWeight.Normal, Theme.ink),

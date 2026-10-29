@@ -57,18 +57,18 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
     containerColor = Theme.background,
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text("Devices", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
-        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         state.devicesError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         state.devices.forEach { device ->
           Panel {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(device.name ?: "A device", style = scaled(15, FontWeight.SemiBold, Theme.ink))
                 Text(lastUsed(device), style = scaled(13, color = Theme.dim))
@@ -76,7 +76,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
               if (device.thisDevice) {
                 Text("This device", style = scaled(13, color = Theme.dim))
               } else {
-                Text("Sign out", style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).clickable { removing = device }.padding(top = 12.dp))
+                Text("Sign out", style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).clickable { removing = device }.padding(top = 8.dp))
               }
             }
           }

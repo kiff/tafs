@@ -92,7 +92,7 @@ fun HomeView(
     LazyColumn(
       Modifier.fillMaxSize().statusBarsPadding(),
       contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-      verticalArrangement = Arrangement.spacedBy(18.dp),
+      verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
       item {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -103,7 +103,7 @@ fun HomeView(
       }
       if (sample) {
         item {
-          Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+          Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Eyebrow("They taf. You kiff.")
             Headline(state)
           }
@@ -111,7 +111,7 @@ fun HomeView(
         state.held.firstOrNull()?.let { first ->
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }
         }
-        item { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { state.tafs.forEach { taf -> TafRow(taf) { onOpenTaf(taf.id) } } } }
+        item { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { state.tafs.forEach { taf -> TafRow(taf) { onOpenTaf(taf.id) } } } }
         item { OutlineButton("Play the next sample actions", { pullScope.launch { onPlayNext() } }, Modifier.fillMaxWidth(), color = Theme.soft) }
         item {
           Text(
@@ -121,7 +121,7 @@ fun HomeView(
         }
       } else {
         item {
-          Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+          Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Eyebrow("They taf. You kiff.")
             Headline(state)
           }
@@ -129,11 +129,11 @@ fun HomeView(
         state.held.firstOrNull()?.let { first ->
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }
         }
-        item { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { state.listedTafs.forEach { taf -> TafRow(taf) { onOpenTaf(taf.id) } } } }
+        item { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { state.listedTafs.forEach { taf -> TafRow(taf) { onOpenTaf(taf.id) } } } }
         if (state.otherAgents.isNotEmpty()) {
           // Agents made through KIFF's API, not run by tafs: their Cards, apart.
           item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               Eyebrow("Other agents with Cards")
               state.otherAgents.forEach { taf -> TafRow(taf) { onOpenTaf(taf.id) } }
             }
@@ -165,7 +165,7 @@ fun UnreachableLine(words: String, retrying: Boolean) {
   Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.size(7.dp).clip(CircleShape).background(Theme.amber))
     Text(if (retrying) "$words · trying again" else words, style = scaled(12, color = Theme.dim))
-    Text("Status", style = scaled(12, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(STATUS_PAGE) }.padding(vertical = 8.dp))
+    Text("Status", style = scaled(12, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(STATUS_PAGE) }.padding(vertical = 6.dp))
   }
 }
 
@@ -175,7 +175,7 @@ private fun Header(accountLabel: String?, showNew: Boolean, showCoach: Boolean, 
   Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
     Row(
       Modifier.clickable(onClick = onSettings).semantics { contentDescription = accountLabel?.let { "Settings, in $it" } ?: "Settings" },
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      horizontalArrangement = Arrangement.spacedBy(6.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Mascot(34.dp)
@@ -187,7 +187,7 @@ private fun Header(accountLabel: String?, showNew: Boolean, showCoach: Boolean, 
       Text(
         "✦ Coach",
         style = scaled(14, FontWeight.SemiBold, Color.White),
-        modifier = Modifier.heightIn(min = 36.dp).clip(CircleShape).brandBackground().clickable(onClick = onCoach).padding(horizontal = 14.dp, vertical = 8.dp),
+        modifier = Modifier.heightIn(min = 36.dp).clip(CircleShape).brandBackground().clickable(onClick = onCoach).padding(horizontal = 10.dp, vertical = 6.dp),
       )
     }
     // A new taf starts in Coach mode once signed in; the sample starts from its form.
@@ -234,8 +234,8 @@ private fun NeedsYouStrip(call: HeldCall, taf: Taf, onClick: () -> Unit) {
       .background(Theme.amber.copy(alpha = 0.1f))
       .border(BorderStroke(1.dp, Theme.amber.copy(alpha = 0.4f)), shape)
       .clickable(onClick = onClick)
-      .padding(14.dp),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
+      .padding(10.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Dot(Theme.amber, 10.dp)
@@ -257,10 +257,10 @@ fun TafRow(taf: Taf, onClick: () -> Unit) {
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), shape)
       .clickable(onClick = onClick)
-      .padding(16.dp),
-    verticalArrangement = Arrangement.spacedBy(12.dp),
+      .padding(12.dp),
+    verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
       TafAvatar(taf)
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -285,7 +285,7 @@ fun TafRow(taf: Taf, onClick: () -> Unit) {
       val unknown = taf.usageUnknown?.contains(rule.action) == true
       Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // The label takes what the amount leaves: a long one never squeezes the amount to a digit a line.
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
           Text("${rule.label} · ${limit.formatted} ${rule.window.label}", style = scaled(12, color = Theme.dim), modifier = Modifier.weight(1f))
           Text(if (unknown) "use unavailable" else used.formatted, style = scaled(12, color = Theme.dim, mono = true), maxLines = 1, softWrap = false)
         }

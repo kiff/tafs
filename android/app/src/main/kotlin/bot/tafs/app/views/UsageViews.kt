@@ -69,7 +69,7 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
           // Billed by Google Play: Play's own page to manage or cancel it. The app never points anywhere else to buy.
           if (usage.billing?.source == "google") {
             val uri = LocalUriHandler.current
-            Text("Manage", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(Purchases.MANAGE_SUBSCRIPTIONS) }.padding(vertical = 8.dp))
+            Text("Manage", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(Purchases.MANAGE_SUBSCRIPTIONS) }.padding(vertical = 6.dp))
           }
         }
       }
@@ -124,7 +124,7 @@ private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions
         state.storeProducts[id]?.let { solo ->
           Text("Solo", style = scaled(16, FontWeight.SemiBold, Theme.ink))
           Text(UsageWords.soloTerms(solo.price, solo.period, solo.freeTrial), style = scaled(13, color = Theme.soft))
-          Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+          Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Terms", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/terms#tafs") }.padding(vertical = 6.dp))
             Text("Privacy policy", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/privacy#tafs") }.padding(vertical = 6.dp))
           }
@@ -143,11 +143,11 @@ private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions
         Text(
           if (state.buying == id) "Buying…" else product.price,
           style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
-          modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(12.dp),
+          modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
         )
       }
     }
-    Text("Restore purchases", style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 8.dp))
+    Text("Restore purchases", style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 6.dp))
     state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.ink)) }
   }
 }
@@ -185,7 +185,7 @@ fun TafUsageSheet(tafId: String, state: AppState, actions: AccountActions, onClo
 @Composable
 fun UsageRow(count: Int?, onClick: () -> Unit) {
   Panel(Modifier.clickable(onClick = onClick)) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Text("Usage", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.weight(1f))
       count?.let { Text(UsageWords.tafCount(it), style = scaled(14, color = Theme.soft)) }
       Text("›", style = scaled(20, color = Theme.dim))
@@ -203,13 +203,13 @@ private fun UsageFrame(title: String, onClose: () -> Unit, content: @Composable 
   ) {
     // Its height is fixed: what loads in doesn't resize a sheet that was measured while it was empty.
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(start = 12.dp, top = 10.dp))
+        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(start = 8.dp, top = 8.dp))
       }
       Column(
-        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
       ) { content() }
     }
   }
@@ -262,7 +262,7 @@ private fun CountedTasks(tasks: List<CountedTask>, state: AppState) {
 private fun CountRow(label: String, value: String) {
   Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
     Text(label, style = scaled(14, color = Theme.ink), modifier = Modifier.weight(1f))
-    Text(value, style = scaled(14, color = Theme.soft), modifier = Modifier.padding(start = 12.dp))
+    Text(value, style = scaled(14, color = Theme.soft), modifier = Modifier.padding(start = 8.dp))
   }
 }
 

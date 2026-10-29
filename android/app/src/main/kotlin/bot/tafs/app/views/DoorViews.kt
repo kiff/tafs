@@ -97,7 +97,7 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
 
   Panel {
     Eyebrow("Doors")
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
       doors.doors.forEachIndexed { i, d ->
         val knocking = doors.openKnocks.any { it.door == d.id && !it.isLine }
         DoorChip(d.app, DoorNames.label(d.app).replaceFirstChar { it.uppercase() }, d.open, knocking, selected == i) { selected = i }
@@ -164,7 +164,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
   val clipboard = LocalClipboard.current
   var copied by remember { mutableStateOf(false) }
   Panel {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
       DoorBadge(door.app, door.open, 34)
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Eyebrow("${door.label} door")
@@ -210,7 +210,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
             Text(
               "Unpair",
               style = scaled(13, FontWeight.Medium, Theme.soft),
-              modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.unpair(taf.id, door, key) } }.padding(start = 12.dp, top = 12.dp),
+              modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.unpair(taf.id, door, key) } }.padding(start = 8.dp, top = 8.dp),
             )
           }
         }
@@ -220,7 +220,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
     } else {
       Text(DoorWords.noKeys(door, taf.name), style = scaled(15, color = Theme.ink))
     }
-    Text("Remove door", style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onRemove).padding(top = 12.dp))
+    Text("Remove door", style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onRemove).padding(top = 8.dp))
   }
 }
 
@@ -235,8 +235,8 @@ private fun DoorChip(app: String, label: String, open: Boolean, knocking: Boolea
       .background(if (selected) Theme.ink.copy(alpha = 0.08f) else Color.Transparent)
       .border(BorderStroke(1.dp, if (selected) Theme.ink.copy(alpha = 0.4f) else Theme.line), shape)
       .clickable(onClick = onClick)
-      .padding(horizontal = 12.dp),
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
+      .padding(horizontal = 8.dp),
+    horizontalArrangement = Arrangement.spacedBy(6.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Box {
@@ -283,11 +283,11 @@ private fun AddDoorSheet(doors: TafDoors, onClose: () -> Unit, onPick: (DoorApp)
     containerColor = Theme.background,
   ) {
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.6f).navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text("Add a door", style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
-      Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // WhatsApp's signup runs in a browser this app doesn't open yet.
         val offered = doors.addable.filter { it.kind != "whatsapp" }
         AppSection("Knows who's writing · can hold keys", offered.filter { it.proof == "proven" }, doors.busy, onPick)
@@ -314,8 +314,8 @@ private fun AppSection(title: String, apps: List<DoorApp>, busy: Boolean, onPick
         .background(Theme.panel)
         .border(BorderStroke(1.dp, Theme.line), shape)
         .clickable(enabled = !busy) { onPick(app) }
-        .padding(12.dp),
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
+        .padding(8.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       DoorBadge(app.id, true, 32)
@@ -336,7 +336,7 @@ private fun PairDialog(door: Door, busy: Boolean, onClose: () -> Unit, onPair: (
     onDismissRequest = onClose,
     title = { Text("Pair someone") },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(DoorWords.pairIntro(door), style = scaled(14, color = Theme.soft))
         Field(sender, { sender = it }, DoorWords.pairHint(door))
         Field(name, { name = it }, "Name (optional)")
@@ -359,7 +359,7 @@ internal fun Field(value: String, onValue: (String) -> Unit, hint: String, minHe
     cursorBrush = SolidColor(Theme.amber),
     modifier = Modifier.fillMaxWidth().clip(shape).background(Theme.background).border(BorderStroke(1.dp, Theme.line), shape),
     decorationBox = { field ->
-      Box(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).heightIn(min = minHeight.dp)) {
+      Box(Modifier.padding(horizontal = 8.dp, vertical = 8.dp).heightIn(min = minHeight.dp)) {
         if (value.isEmpty()) Text(hint, style = scaled(15, color = Theme.dim))
         field()
       }
@@ -378,8 +378,8 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
       .clip(shape)
       .background(Theme.amber.copy(alpha = 0.07f))
       .border(BorderStroke(1.dp, Theme.amber.copy(alpha = 0.45f)), shape)
-      .padding(12.dp),
-    verticalArrangement = Arrangement.spacedBy(8.dp),
+      .padding(8.dp),
+    verticalArrangement = Arrangement.spacedBy(6.dp),
   ) {
     Text(DoorWords.knockTitle(knock), style = scaled(10, FontWeight.SemiBold, Theme.amberText, mono = true))
     if (knock.rest != null) {
@@ -390,25 +390,25 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
       Text(knock.text, style = scaled(14, color = Theme.soft), maxLines = if (compact) 3 else 8, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
       DoorWords.attachments(knock)?.let { Text(it, style = scaled(12, color = Theme.dim)) }
       DoorWords.proofNote(knock)?.let { Text(it, style = scaled(12, color = Theme.dim)) }
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+      Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         if (DoorWords.canDoIt(knock)) {
           Text(
             "Do it",
             style = scaled(14, FontWeight.SemiBold, Color.White),
-            modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).background(Theme.amberText).clickable(enabled = !busy) { asking = true }.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).background(Theme.amberText).clickable(enabled = !busy) { asking = true }.padding(horizontal = 12.dp, vertical = 8.dp),
           )
         }
         DoorWords.pairLabel(knock)?.let { label ->
           Text(
             label,
             style = scaled(14, FontWeight.Medium, Theme.ink),
-            modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).border(BorderStroke(1.dp, Theme.ink.copy(alpha = 0.2f)), CircleShape).clickable(enabled = !busy) { onAnswer("pair", null) }.padding(horizontal = 14.dp, vertical = 12.dp),
+            modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).border(BorderStroke(1.dp, Theme.ink.copy(alpha = 0.2f)), CircleShape).clickable(enabled = !busy) { onAnswer("pair", null) }.padding(horizontal = 10.dp, vertical = 8.dp),
           )
         }
         Text(
           "Ignore",
           style = scaled(14, FontWeight.Medium, Theme.soft),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { onAnswer("ignore", null) }.padding(horizontal = 12.dp, vertical = 12.dp),
+          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { onAnswer("ignore", null) }.padding(horizontal = 8.dp, vertical = 8.dp),
         )
       }
     }
@@ -424,7 +424,7 @@ private fun DoItDialog(knock: Knock, tafName: String?, busy: Boolean, onClose: (
     onDismissRequest = onClose,
     title = { Text(DoorWords.doItTitle(tafName)) },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(DoorWords.doItIntro(knock, tafName), style = scaled(14, color = Theme.soft))
         Field(say, { say = it }, "What should it do?", minHeight = 90)
       }
@@ -442,7 +442,7 @@ private fun DoItDialog(knock: Knock, tafName: String?, busy: Boolean, onClose: (
 fun ChatKnocks(tafId: String, tafName: String?, state: AppState, actions: DoorActions) {
   val doors = state.doors[tafId] ?: return
   val scope = rememberCoroutineScope()
-  Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     doors.openKnocks.forEach { knock ->
       KnockCard(knock, tafName, doors.busy) { action, say -> scope.launch { actions.answer(tafId, knock, action, say) } }
     }

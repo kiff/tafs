@@ -85,7 +85,7 @@ fun TafDetailView(
   Column(modifier.fillMaxSize().statusBarsPadding()) {
     BackBar(onBack)
     if (taf == null) {
-      Text("This taf is gone.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(20.dp))
+      Text("This taf is gone.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(16.dp))
       return@Column
     }
     val canChat = state.canChat(taf.id)
@@ -96,7 +96,7 @@ fun TafDetailView(
     var confirmRevoke by rememberSaveable { mutableStateOf(false) }
     val cards = taf.shownCards
 
-    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Header(taf)
       // Who it's shared with, and Share: the taf's manager's to see.
       if (people != null && taf.cloudId != null) ShareLine(taf.id, state, people)
@@ -114,8 +114,8 @@ fun TafDetailView(
       TafChatView(taf.id, state, actions, Modifier.weight(1f))
     } else {
       Column(
-        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
         when (section) {
           Section.Activity -> Activity(taf, state, actions)
@@ -155,7 +155,7 @@ fun TafDetailView(
 @Composable
 internal fun BackBar(onBack: () -> Unit) {
   Row(
-    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onBack).padding(horizontal = 12.dp),
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onBack).padding(horizontal = 8.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = null, tint = Theme.amber, modifier = Modifier.size(20.dp))
@@ -165,7 +165,7 @@ internal fun BackBar(onBack: () -> Unit) {
 
 @Composable
 private fun Header(taf: Taf) {
-  Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
     TafAvatar(taf, 52.dp)
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
       Text(taf.name, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
@@ -201,7 +201,7 @@ private fun CardTab(taf: Taf, actions: TafActions, front: String?, onFront: (Str
   CardLines(shown?.rules ?: emptyList())
   // Pausing and revoking are the sample's until KIFF's own routes are used: revoking one of the owner's real Cards is not faked.
   if (controls && taf.state != TafState.revoked) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
       OutlineButton(if (taf.state == TafState.paused) "Resume" else "Pause", { actions.togglePause(taf.id) }, Modifier.weight(1f))
       OutlineButton("Revoke", onRevoke, Modifier.weight(1f), color = Theme.no)
     }
@@ -221,7 +221,7 @@ private fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, actions: TafAct
         Text("Nothing yet. It writes down what it learns about how you like the job done.", style = scaled(14, color = Theme.soft))
       }
       notes.forEach { note ->
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
           Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(note.content, style = scaled(15, color = Theme.ink))
             Text("${note.title} · ${shortTime(note.updatedAt)}", style = scaled(12, color = Theme.soft))

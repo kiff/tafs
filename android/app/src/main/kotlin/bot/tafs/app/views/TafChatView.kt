@@ -140,7 +140,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         Modifier.widthIn(max = Readable).fillMaxSize(),
         state = listState,
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         if (items.isEmpty()) {
           item(key = "empty") {
@@ -155,7 +155,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         }
         items.forEachIndexed { i, item ->
           item(key = item.id) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               // A time between parts of the thread that are far apart, not on every line.
               if (i == 0 || Duration.between(items[i - 1].at, item.at) >= Duration.ofHours(1)) {
                 Text(
@@ -192,7 +192,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
               "Stop",
               style = scaled(14, FontWeight.SemiBold, Theme.no),
               modifier = Modifier.clip(RoundedCornerShape(50)).border(BorderStroke(1.dp, Theme.line), RoundedCornerShape(50))
-                .clickable { scope.launch { actions.stopChat(tafId) } }.padding(horizontal = 16.dp, vertical = 8.dp),
+                .clickable { scope.launch { actions.stopChat(tafId) } }.padding(horizontal = 12.dp, vertical = 6.dp),
             )
           }
         }
@@ -203,7 +203,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       }
 
       // The held call waiting for the owner, when it's out of view; and the way back down.
-      Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         val waiting = items.lastOrNull { it is ChatItem.Held }
         if (waiting is ChatItem.Held) {
           val index = items.indexOf(waiting)
@@ -237,7 +237,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
     }
 
     state.chatErrors[tafId]?.let { error ->
-      Text(error, style = scaled(13, color = Theme.no), modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 4.dp))
+      Text(error, style = scaled(13, color = Theme.no), modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 4.dp))
     }
     Composer(
       name = taf?.name ?: "your taf",
@@ -268,8 +268,8 @@ private fun Composer(name: String, draft: String, onDraft: (String) -> Unit, sen
     contentAlignment = Alignment.TopCenter,
   ) {
     Row(
-      Modifier.widthIn(max = Readable).fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-      horizontalArrangement = Arrangement.spacedBy(10.dp),
+      Modifier.widthIn(max = Readable).fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.Bottom,
     ) {
       val shape = RoundedCornerShape(20.dp)
@@ -281,7 +281,7 @@ private fun Composer(name: String, draft: String, onDraft: (String) -> Unit, sen
         maxLines = 6,
         modifier = Modifier.weight(1f).clip(shape).background(Theme.panel).border(BorderStroke(1.dp, Theme.line), shape),
         decorationBox = { field ->
-          Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp).heightIn(min = 20.dp)) {
+          Box(Modifier.padding(horizontal = 10.dp, vertical = 8.dp).heightIn(min = 20.dp)) {
             if (draft.isEmpty()) Text(if (thinking) "Write the next message" else "Message $name", style = scaled(16, color = Theme.dim))
             field()
           }
@@ -343,7 +343,7 @@ private fun MessageBody(message: ChatMessage, onEdit: (String) -> Unit, onResend
             .clip(RoundedCornerShape(18.dp))
             .brandBackground()
             .combinedClickable(onClick = {}, onLongClick = { menu = true })
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         )
         // A sent message's menu (kiff/tafs#285): send it again, change it first, or copy it.
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
@@ -410,7 +410,7 @@ private fun LiveWork(live: LiveAnswer) {
   Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     val running = live.steps.lastOrNull { it.status == LiveStep.Status.running }
     if (running != null || live.activity != null || !writing) {
-      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         androidx.compose.material3.CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Theme.dim)
         Text(live.activity ?: running?.words ?: if (writing) "Writing…" else "Thinking…", style = scaled(13, color = Theme.dim))
       }
@@ -442,7 +442,7 @@ private fun EndedLine(end: ChatEnd, taf: String, onRetry: (String) -> Unit) {
   Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
     Text(words, style = scaled(14, color = Theme.ink))
     if (end is ChatEnd.Failed) {
-      Text("Retry", style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { onRetry(end.retry) }.padding(vertical = 8.dp))
+      Text("Retry", style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { onRetry(end.retry) }.padding(vertical = 6.dp))
     }
   }
 }
@@ -458,7 +458,7 @@ private fun TypingDots() {
     label = "phase",
   )
   Row(
-    Modifier.fillMaxWidth().padding(vertical = 8.dp).semantics { contentDescription = "Answering" },
+    Modifier.fillMaxWidth().padding(vertical = 6.dp).semantics { contentDescription = "Answering" },
     horizontalArrangement = Arrangement.spacedBy(5.dp),
   ) {
     repeat(3) { i ->
@@ -471,8 +471,8 @@ private fun TypingDots() {
 @Composable
 private fun OutcomeLine(text: String, tone: Color, mark: String) {
   Row(
-    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.raised.copy(alpha = 0.6f)).padding(horizontal = 12.dp, vertical = 10.dp),
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.raised.copy(alpha = 0.6f)).padding(horizontal = 8.dp, vertical = 8.dp),
+    horizontalArrangement = Arrangement.spacedBy(6.dp),
   ) {
     Box(Modifier.padding(top = 2.dp).size(16.dp).clip(CircleShape).background(tone), contentAlignment = Alignment.Center) {
       Text(mark, style = scaled(10, FontWeight.Bold, Color.White))
@@ -500,14 +500,14 @@ private fun outcomeMark(kind: RecordEntry.Kind): String = when (kind) {
 private fun NeedsYouPill(text: String, onClick: () -> Unit) {
   Row(
     Modifier
-      .padding(horizontal = 16.dp)
+      .padding(horizontal = 12.dp)
       .shadow(6.dp, CircleShape, ambientColor = Theme.ink.copy(alpha = 0.12f))
       .clip(CircleShape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.amber.copy(alpha = 0.6f)), CircleShape)
       .clickable(onClick = onClick)
-      .padding(horizontal = 14.dp, vertical = 10.dp),
-    horizontalArrangement = Arrangement.spacedBy(10.dp),
+      .padding(horizontal = 10.dp, vertical = 8.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Box(Modifier.size(8.dp).clip(CircleShape).background(Theme.amber))

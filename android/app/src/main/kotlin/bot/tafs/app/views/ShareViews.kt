@@ -48,13 +48,13 @@ fun ShareLine(tafId: String, state: AppState, actions: PeopleActions) {
   // Read on open, when the groups change, and again once the sheet closes, whatever it changed.
   LaunchedEffect(tafId, state.groups, sharing) { if (!sharing) shares = actions.shares(tafId) }
   LaunchedEffect(Unit) { if (state.groups.isEmpty() && state.people.isEmpty()) actions.refresh() }
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     // Large enough to find, with who uses the taf beside it.
     val shape = RoundedCornerShape(50)
     Text(
       "Share",
       style = scaled(15, FontWeight.SemiBold, Theme.ink),
-      modifier = Modifier.clip(shape).border(BorderStroke(1.dp, Theme.line), shape).clickable { sharing = true }.padding(horizontal = 14.dp, vertical = 8.dp),
+      modifier = Modifier.clip(shape).border(BorderStroke(1.dp, Theme.line), shape).clickable { sharing = true }.padding(horizontal = 10.dp, vertical = 6.dp),
     )
     Text(PeopleWords.sharedWith(shares, state.groups, state.people), style = scaled(14, color = Theme.soft), maxLines = 1)
   }
@@ -78,16 +78,16 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
   }
   ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
           if (step == 1) "Cancel" else "Back",
           style = scaled(17, FontWeight.SemiBold, Theme.amber),
-          modifier = Modifier.heightIn(min = 44.dp).clickable { if (step == 1) onClose() else step = 1 }.padding(top = 10.dp),
+          modifier = Modifier.heightIn(min = 44.dp).clickable { if (step == 1) onClose() else step = 1 }.padding(top = 8.dp),
         )
-        Text("Share $name", style = scaled(17, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f).padding(top = 10.dp))
+        Text("Share $name", style = scaled(17, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f).padding(top = 8.dp))
         if (step == 1) {
           val ready = loaded && chosen != had
-          Text("Next", style = scaled(17, FontWeight.SemiBold, if (ready) Theme.amber else Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = ready) { step = 2 }.padding(top = 10.dp))
+          Text("Next", style = scaled(17, FontWeight.SemiBold, if (ready) Theme.amber else Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = ready) { step = 2 }.padding(top = 8.dp))
         } else {
           Text(
             "Share",
@@ -99,11 +99,11 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
                 saving = false
                 if (done) onClose()
               }
-            }.padding(top = 10.dp),
+            }.padding(top = 8.dp),
           )
         }
       }
-      Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+      Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (step == 1) {
           Text("STEP 1 OF 2", style = scaled(11, FontWeight.Bold, Theme.dim))
           Text("Who uses $name?", style = scaled(20, FontWeight.Bold, Theme.ink))
@@ -124,7 +124,7 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
             Text("ONE PERSON", style = scaled(12, color = Theme.dim, mono = true))
             state.people.forEach { person ->
               Pick(Share(subject = person.subject), chosen, { chosen = it }) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                   PersonBadge(person.label, size = 28)
                   Text(person.label, style = scaled(15, color = Theme.ink), maxLines = 1)
                 }
@@ -137,7 +137,7 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
           Text(if (chosen.isEmpty()) "$name won't be shared" else "Who gets $name", style = scaled(20, FontWeight.Bold, Theme.ink))
           Panel {
             PeopleWords.consequences(name, had, chosen, state.groups, state.people).forEach { line ->
-              Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+              Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("✓", style = scaled(14, FontWeight.SemiBold, Theme.ok))
                 Text(line, style = scaled(14, color = Theme.ink))
               }

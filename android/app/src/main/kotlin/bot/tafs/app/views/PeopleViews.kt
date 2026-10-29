@@ -91,17 +91,17 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
     containerColor = Theme.background,
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("People & groups", style = scaled(28, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
         // Words, not "+": it makes a group.
         if (state.canManagePeople) {
-          Text("+ Group", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable { namingNew = true }.padding(top = 10.dp))
+          Text("+ Group", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable { namingNew = true }.padding(top = 8.dp))
         }
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
-        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
         state.peopleError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         state.kiffAccount?.let { account ->
@@ -161,7 +161,7 @@ private fun GroupPanel(
       }
       if (state.canManagePeople && group.everyone != true) {
         Box {
-          Text("•••", style = scaled(16, FontWeight.SemiBold, Theme.soft), modifier = Modifier.heightIn(min = 44.dp).clickable { menu = true }.padding(horizontal = 8.dp, vertical = 12.dp))
+          Text("•••", style = scaled(16, FontWeight.SemiBold, Theme.soft), modifier = Modifier.heightIn(min = 44.dp).clickable { menu = true }.padding(horizontal = 6.dp, vertical = 8.dp))
           DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
             DropdownMenuItem(text = { Text("Rename") }, onClick = { menu = false; onRename() })
             DropdownMenuItem(text = { Text("Delete", color = Theme.no) }, onClick = { menu = false; onDelete() })
@@ -171,7 +171,7 @@ private fun GroupPanel(
     }
     PeopleWords.managersFirst(group.members, state.people).forEach { member -> MemberRow(member, group, state, setMember, removeMember) }
     if (state.managesGroup(group)) {
-      Text("+ Add someone to ${group.name}", style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAdd).padding(top = 12.dp))
+      Text("+ Add someone to ${group.name}", style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAdd).padding(top = 8.dp))
     }
   }
 }
@@ -188,7 +188,7 @@ private fun MemberRow(member: GroupMember, group: Group, state: AppState, setMem
     Row(
       Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(enabled = mayRole || mayRemove) { menu = true }.padding(vertical = 6.dp),
       verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       PersonBadge(label)
       Column(Modifier.weight(1f)) {
@@ -217,7 +217,7 @@ private fun GroupNameDialog(group: Group?, onClose: () -> Unit, onSave: suspend 
     onDismissRequest = onClose,
     title = { Text(if (group == null) "New group" else "Rename ${group.name}") },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Field(name, { name = it }, "Support, Finance…")
         Text(
           if (group == null) "Add its people next, then share a taf with it from the taf's page." else "Only the name changes: its people and tafs stay.",
@@ -245,11 +245,11 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
   val outside = state.people.filter { it.subject !in inside }
   ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text("Add to ${group.name}", style = scaled(24, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-        Text("Cancel", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text("Cancel", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
-      Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Naming a manager is for whoever manages people (KIFF's members.manage).
         if (state.canManagePeople) {
           Panel {
@@ -271,7 +271,7 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
                 }
               }.padding(vertical = 6.dp),
               verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(12.dp),
+              horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
               PersonBadge(person.label)
               Text(person.label, style = scaled(15, color = Theme.ink), maxLines = 1)

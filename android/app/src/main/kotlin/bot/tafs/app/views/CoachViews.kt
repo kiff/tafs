@@ -68,8 +68,8 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
       }
       state.coachCloudId == null -> CoachIntro(state, actions.coach.start)
       else -> {
-        Text("Coach", style = scaled(30, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-        CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
+        Text("Coach", style = scaled(30, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+        CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) }
         TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f))
       }
     }
@@ -78,7 +78,7 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
 
 @Composable
 private fun Note(text: String) {
-  Panel(Modifier.padding(16.dp)) { Text(text, style = scaled(15, color = Theme.soft)) }
+  Panel(Modifier.padding(12.dp)) { Text(text, style = scaled(15, color = Theme.soft)) }
 }
 
 /** Before Coach is started on this account: what it is for, and the one confirmation that starts it. */
@@ -86,7 +86,7 @@ private fun Note(text: String) {
 private fun CoachIntro(state: AppState, start: suspend () -> Unit) {
   val scope = rememberCoroutineScope()
   val biometry = LocalBiometry.current
-  Column(Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+  Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Text("Coach", style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
     Text("${CoachWords.INTRO} Each connection and each Card waits for $biometry.", style = scaled(16, color = Theme.soft))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -108,7 +108,7 @@ fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
   Panel(modifier) {
     Row(
       Modifier.fillMaxWidth().clickable(onClickLabel = if (open) "Fold the plan" else "Show the whole plan") { open = !open },
-      horizontalArrangement = Arrangement.spacedBy(10.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       if (!open && now != null) StepMark(now.status)
@@ -122,7 +122,7 @@ fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
     }
     if (open) {
       steps.forEach { step ->
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           StepMark(step.status)
           Text(step.label, style = scaled(14, if (step.status == "active") FontWeight.SemiBold else FontWeight.Normal, if (step.status == "pending" || step.status == "skipped") Theme.dim else Theme.ink))
         }
@@ -215,7 +215,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answer: CoachAnswer
           Text(CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
         } else {
           val biometry = LocalBiometry.current
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             OutlineButton(
               if (state.connecting == grant.id) "Approving…" else "Approve with $biometry",
               { scope.launch { actions.approve(c, grant.digest, draft?.version) } },
@@ -279,10 +279,10 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, onAnswer: (Strin
       return@Panel
     }
     questions.forEach { q ->
-      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(q.text, style = scaled(15, FontWeight.SemiBold, Theme.ink))
         q.note?.let { Text(it, style = scaled(12, color = Theme.dim)) }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
           q.options.forEach { option ->
             Choice(option.label, selected = option.value in selection.picked[q.id].orEmpty()) { selection = selection.pick(q, option.value) }
           }
@@ -308,7 +308,7 @@ private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
       .background(if (selected) Theme.amber.copy(alpha = 0.18f) else Color.Transparent)
       .border(BorderStroke(1.dp, if (selected) Theme.amber else Theme.line), shape)
       .clickable(onClick = onClick)
-      .padding(horizontal = 14.dp, vertical = 12.dp),
+      .padding(horizontal = 10.dp, vertical = 8.dp),
   )
 }
 
@@ -322,7 +322,7 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
     cursorBrush = SolidColor(Theme.amber),
     modifier = Modifier.fillMaxWidth().clip(shape).background(Theme.background).border(BorderStroke(1.dp, Theme.line), shape),
     decorationBox = { field ->
-      androidx.compose.foundation.layout.Box(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).heightIn(min = 40.dp)) {
+      androidx.compose.foundation.layout.Box(Modifier.padding(horizontal = 8.dp, vertical = 8.dp).heightIn(min = 40.dp)) {
         if (value.isEmpty()) Text("In your words", style = scaled(15, color = Theme.dim))
         field()
       }

@@ -93,8 +93,8 @@ fun TafCardFace(card: TafCard, issuedBy: String, color: Color, revoked: Boolean 
       }
       .clearAndSetSemantics { contentDescription = spokenCard(card, issuedBy, revoked) },
   ) {
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Column(Modifier.fillMaxSize().padding(12.dp)) {
+      Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(card.title, style = scaled(12, FontWeight.SemiBold, white, mono = true), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         card.environmentLabel?.let { EnvironmentPill(it) }
       }
@@ -165,8 +165,8 @@ fun CardStack(
           .clip(RoundedCornerShape(18.dp))
           .background(cardFill(card, color).copy(alpha = if (faded(card, revoked)) 0.4f else 1f))
           .clickable { onFront(card.id) }
-          .padding(start = 16.dp, end = 16.dp, top = 9.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+          .padding(start = 12.dp, end = 12.dp, top = 9.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.Top,
       ) {
         Text(card.title, style = scaled(11, FontWeight.SemiBold, Color.White, mono = true), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -193,8 +193,8 @@ fun CardBar(card: TafCard, count: Int, color: Color, revoked: Boolean = false, o
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), shape)
       .clickable(onClick = onOpen)
-      .padding(horizontal = 14.dp, vertical = 9.dp),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
+      .padding(horizontal = 10.dp, vertical = 9.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Box(
@@ -239,7 +239,7 @@ fun CardLines(rules: List<CardRule>) {
           rule.summary,
           style = scaled(13, color = if (rule.never) Theme.no else Theme.ink, mono = true),
           textAlign = TextAlign.End,
-          modifier = Modifier.weight(1f).padding(start = 8.dp),
+          modifier = Modifier.weight(1f).padding(start = 6.dp),
         )
       }
     }

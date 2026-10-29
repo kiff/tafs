@@ -97,11 +97,11 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
       Text(
         "Cancel",
         style = scaled(17, color = Theme.amber),
-        modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp),
+        modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp),
       )
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
         Text("Sign in with KIFF", style = scaled(34, FontWeight.Bold, Theme.ink, display = true))
         Text(
@@ -121,7 +121,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
           // To approve in another browser, where they're signed in to KIFF.
           Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Or open this link in another browser:", style = scaled(13, color = Theme.dim))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
               SelectionContainer(Modifier.weight(1f)) {
                 Text(
                   s.verificationUriComplete,
@@ -140,7 +140,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
               )
             }
           }
-          Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+          Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             CircularProgressIndicator(Modifier.size(20.dp), color = Theme.amber, strokeWidth = 2.dp)
             Text("Waiting for your approval…", style = scaled(14, color = Theme.soft))
           }

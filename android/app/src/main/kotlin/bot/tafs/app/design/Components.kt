@@ -70,7 +70,7 @@ fun StateChip(state: TafState) {
     modifier = Modifier
       .clip(CircleShape)
       .background(color.copy(alpha = 0.15f))
-      .padding(horizontal = 10.dp, vertical = 4.dp),
+      .padding(horizontal = 8.dp, vertical = 4.dp),
   )
 }
 
@@ -110,7 +110,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
       .clip(shape)
       .then(if (enabled) Modifier.brandBackground() else Modifier.background(Theme.dim.copy(alpha = 0.22f)))
       .clickable(enabled = enabled, onClick = onClick)
-      .padding(horizontal = 18.dp),
+      .padding(horizontal = 14.dp),
     contentAlignment = Alignment.Center,
   ) {
     Text(
@@ -132,7 +132,7 @@ fun OutlineButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
       .clip(shape)
       .border(BorderStroke(1.dp, color.copy(alpha = if (enabled) 0.4f else 0.16f)), shape)
       .clickable(enabled = enabled, onClick = onClick)
-      .padding(horizontal = 12.dp),
+      .padding(horizontal = 8.dp),
     contentAlignment = Alignment.Center,
   ) {
     Text(
@@ -156,8 +156,8 @@ fun Panel(
       .clip(shape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, stroke), shape)
-      .padding(16.dp),
-    verticalArrangement = Arrangement.spacedBy(12.dp),
+      .padding(12.dp),
+    verticalArrangement = Arrangement.spacedBy(8.dp),
     content = content,
   )
 }

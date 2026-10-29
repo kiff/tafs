@@ -68,13 +68,13 @@ fun SettingsSheet(
     containerColor = Theme.background,
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text("Settings", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
-        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
         Section("Account") {
           Value("Mode", when (state.mode) {
@@ -107,8 +107,8 @@ fun SettingsSheet(
           Section("Time zone") {
             Value("Time zone", accountZone)
             if (accountZone != device) Action("Use this phone's: $device", Theme.amberText, onUseDeviceZone)
-            state.timeZoneError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(16.dp)) }
-            Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.", style = scaled(13, color = Theme.dim), modifier = Modifier.padding(16.dp))
+            state.timeZoneError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
+            Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.", style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp))
           }
         }
         // A held call reaches this phone with tafs closed: only where the build has Firebase's settings.
@@ -117,12 +117,12 @@ fun SettingsSheet(
             Value("Alerts", AlertWords.status(state.alertsAvailable, state.alertsReady))
             if (state.alertsAvailable && !state.alertsReady) Action(if (state.turningOnAlerts) "Turning on…" else "Turn on alerts", Theme.amberText) { if (!state.turningOnAlerts) onTurnOnAlerts() }
             if (state.alertsAvailable && state.alertsReady) {
-              Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+              Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Sound", style = scaled(16, color = Theme.ink))
                 Switch(checked = state.alertSound, onCheckedChange = onAlertSound, colors = SwitchDefaults.colors(checkedTrackColor = Theme.ok))
               }
             }
-            AlertWords.foot(state.alertsAvailable, state.canAnswerHolds)?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(16.dp)) }
+            AlertWords.foot(state.alertsAvailable, state.canAnswerHolds)?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
           }
         }
         // This period's tasks, and what the tafs did that counted.
@@ -133,7 +133,7 @@ fun SettingsSheet(
           Text(
             "Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this phone.",
             style = scaled(14, color = Theme.soft),
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(12.dp),
           )
         }
         Section("Legal") {
@@ -142,7 +142,7 @@ fun SettingsSheet(
         }
         Section("About") {
           Value("Version", version)
-          Text("They taf. You kiff.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(16.dp))
+          Text("They taf. You kiff.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(12.dp))
         }
         // Set apart from everyday actions, and only for someone whose role may.
         if (state.canDeleteAccount) {
@@ -168,11 +168,11 @@ private fun Section(title: String, content: @Composable ColumnScope.() -> Unit) 
 
 @Composable
 private fun Value(label: String, value: String) {
-  Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+  Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
     Text(label, style = scaled(16, color = Theme.ink))
-    Text(value, style = scaled(16, color = Theme.dim), modifier = Modifier.padding(start = 12.dp))
+    Text(value, style = scaled(16, color = Theme.dim), modifier = Modifier.padding(start = 8.dp))
   }
-  HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 16.dp))
+  HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 12.dp))
 }
 
 @Composable
@@ -180,7 +180,7 @@ private fun Action(label: String, color: Color, onClick: () -> Unit) {
   Text(
     label,
     style = scaled(16, color = color),
-    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
+    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp),
   )
-  HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 16.dp))
+  HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 12.dp))
 }

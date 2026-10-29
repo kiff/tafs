@@ -81,7 +81,7 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
   LazyColumn(
     modifier.fillMaxSize().statusBarsPadding(),
     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-    verticalArrangement = Arrangement.spacedBy(10.dp),
+    verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     item { ScreenTitle("Record") }
     item { Text("Everything your tafs did, were refused, or asked you. Newest first.", style = scaled(14, color = Theme.soft)) }
@@ -110,7 +110,7 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
       }
     }
     if (days.isEmpty()) {
-      item { Text(if (filter == RecordFilter.All) "Nothing yet." else "Nothing here.", style = scaled(14, color = Theme.dim), modifier = Modifier.padding(top = 8.dp)) }
+      item { Text(if (filter == RecordFilter.All) "Nothing yet." else "Nothing here.", style = scaled(14, color = Theme.dim), modifier = Modifier.padding(top = 6.dp)) }
     }
   }
 }
@@ -138,14 +138,14 @@ fun RecordRow(entry: RecordEntry, state: AppState, showTaf: Boolean = true) {
       .clip(shape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), shape)
-      .padding(14.dp),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
+      .padding(10.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     Dot(entry.kind.color, 9.dp, Modifier.padding(top = 6.dp))
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
         Text(entry.titleWithAmount, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f, fill = false))
-        Text(shortTime(entry.at), style = scaled(12, color = Theme.dim, mono = true), modifier = Modifier.padding(start = 8.dp))
+        Text(shortTime(entry.at), style = scaled(12, color = Theme.dim, mono = true), modifier = Modifier.padding(start = 6.dp))
       }
       // "<taf> · <what it acted on> · <who decided> · <result at the tool>"; a call from before KIFF said who
       // decided reads as it did.

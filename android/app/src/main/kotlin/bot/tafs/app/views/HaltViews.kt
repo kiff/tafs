@@ -92,13 +92,13 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
   ) {
     // Its height is fixed: what the halt becomes (running, halting, halted) doesn't resize a sheet already measured.
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(if (tafId == null) "Halt all" else "Halt", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
       }
       Column(
-        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
         Panel {
           Eyebrow(name, if (h.running) Theme.dim else Theme.no)
@@ -130,7 +130,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
             )
           }
           else -> {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
               CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Theme.dim)
               Text("Halting… waiting for every part to confirm.", style = scaled(14, color = Theme.dim))
             }
@@ -150,7 +150,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
 /** One part of a halt, and whether it holds it yet. */
 @Composable
 private fun HoldRow(text: String, held: Boolean) {
-  Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
     Dot(if (held) Theme.ok else Theme.dim)
     Text(text, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
     Text(if (held) "Done" else "Waiting", style = scaled(13, color = Theme.dim))
@@ -161,7 +161,7 @@ private fun HoldRow(text: String, held: Boolean) {
 @Composable
 fun HaltRow(tafId: String?, h: Halt, onClick: () -> Unit, modifier: Modifier = Modifier) {
   Panel(modifier.clickable(onClick = onClick)) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(if (tafId == null) "Halt all" else "Halt", style = scaled(15, FontWeight.SemiBold, Theme.ink))
         Text(HaltWords.rowLine(h), style = scaled(13, color = if (h.running) Theme.dim else Theme.no))

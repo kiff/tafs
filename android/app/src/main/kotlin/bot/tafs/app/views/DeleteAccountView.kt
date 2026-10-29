@@ -54,17 +54,17 @@ fun DeleteAccountSheet(state: AppState, delete: suspend () -> Boolean, clearErro
     containerColor = Theme.background,
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+      Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text("Delete account", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         Text(
           "Cancel",
           style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy, onClick = onClose).padding(top = 10.dp),
+          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy, onClick = onClose).padding(top = 8.dp),
         )
       }
       Column(
-        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
         Panel {
           Text("This deletes your KIFF account and everything tafs keeps for it. It can't be undone.", style = scaled(15, FontWeight.SemiBold, Theme.ink))
@@ -83,9 +83,9 @@ fun DeleteAccountSheet(state: AppState, delete: suspend () -> Boolean, clearErro
           style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.no),
           modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
             .clickable(enabled = !busy) { scope.launch { if (delete()) onClose() } }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         )
-        Text("You confirm with $biometry before anything is deleted. Signed in elsewhere, you're signed out there too.", style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 16.dp))
+        Text("You confirm with $biometry before anything is deleted. Signed in elsewhere, you're signed out there too.", style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 12.dp))
       }
     }
   }
