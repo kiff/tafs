@@ -208,6 +208,8 @@ data class CardException(
   val breaches: List<Breach> = emptyList(),
   val parameters: Map<String, Long>? = null,
   val reason: String? = null,
+  /** KIFF's own words for why it's held, in the amount's unit: "$60 is over the $50 limit for one call". */
+  @SerialName("reason_text") val reasonText: String? = null,
   /** The units the held action declares for its parameters; absent for a bare number. */
   @SerialName("parameter_units") val parameterUnits: Map<String, ParameterUnit>? = null,
   @SerialName("units_unavailable") val unitsUnavailable: Boolean? = null,

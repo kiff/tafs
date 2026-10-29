@@ -149,6 +149,27 @@ class AnswerKiffTest {
     assertEquals("change-card", Answer.ExtraRoom.kiffName)
   }
 
+  @Test fun aHoldBackAfterExtraRoomSaysTheFirstStepWentThroughAndWhyASecondIsNeeded() = runTest {
+    // Over a day's total and the limit for one call: extra room first, then KIFF holds the same call again for the one call.
+    reads(held = held(extra = ""","can_approve_once":false,"reason_text":"$60 would go over today's $50"""")); answeredOk(route = "change-card")
+    val again = held(extra = ""","can_approve_once":true,"reason_text":"$60 is over the $50 limit for one call"""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[$again]}""")
+    val m = model()
+    assertEquals("$60 would go over today's $50", m.state.value.held.single().reason)
+    assertTrue(m.answer(m.state.value.held.single(), Answer.ExtraRoom))
+    assertTrue("ce_1" in m.state.value.roomGiven)
+    m.refresh()
+    val back = m.state.value.held.single()
+    assertEquals("ce_1", back.kiffId)
+    assertTrue(back.approvableOnce)
+    // KIFF's own words, said plainly as the second step.
+    assertEquals("$60 is over the $50 limit for one call", back.reason)
+    assertEquals(
+      "Extra room went through. This call is held again for a limit of its own: $60 is over the $50 limit for one call. Approve it once to let it go, or refuse it.",
+      bot.tafs.app.model.SecondStep.words(back.reason),
+    )
+  }
+
   @Test fun eachAnswerNamesItselfAsKiffDoes() {
     assertEquals("approve-once", Answer.ApproveOnce.kiffName)
     assertEquals("reject", Answer.Refuse.kiffName)
@@ -502,7 +523,7 @@ class AnswerKiffTest {
     reads()
     transport.answer("POST /v1/auth/device/logout", 200, "{}")
     val m = model()
-    assertTrue(m.signInAgainToApprove())
+    assertTrue(m.signOutAtKiff())
     assertEquals(1, transport.requestsTo("POST /v1/auth/device/logout").size)
     assertFalse(m.state.value.signedIn)
     assertNull(secrets.load(AppModel.TOKEN))
@@ -512,10 +533,39 @@ class AnswerKiffTest {
     reads()
     transport.answer("POST /v1/auth/device/logout", 503, """{"error":"unavailable"}""")
     val m = model()
-    assertFalse(m.signInAgainToApprove())
+    assertFalse(m.signOutAtKiff())
     assertTrue(m.state.value.signedIn)
     assertEquals("at_1", secrets.load(AppModel.TOKEN))
-    assertTrue(m.state.value.signInAgainError!!.startsWith("KIFF didn't end this sign-in, so nothing changed"))
+    assertEquals(AppModel.NOT_SIGNED_OUT, m.state.value.signOutError)
+  }
+
+  @Test fun aSignOutKiffDoesntConfirmStaysSignedInSaysSoAndKeepsTryingUntilItDoes() = runTest {
+    reads()
+    // KIFF can't be reached twice, then ends the session.
+    transport.answer("POST /v1/auth/device/logout", 503, """{"error":"unavailable"}""")
+    transport.answer("POST /v1/auth/device/logout", 503, """{"error":"unavailable"}""")
+    transport.answer("POST /v1/auth/device/logout", 200, "{}")
+    secrets.save("at_1", AppModel.TOKEN); secrets.save("t_01", AppModel.TENANT); secrets.save("1", AppModel.KEYED)
+    val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, start = false, scope = backgroundScope).also { it.restore() }
+    assertFalse(m.signOutAtKiff())
+    // Never shown signed out while KIFF still accepts the session.
+    assertTrue(m.state.value.signedIn)
+    assertEquals("at_1", secrets.load(AppModel.TOKEN))
+    assertEquals("Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices.", m.state.value.signOutError)
+    // It tries again by itself: after 2 s (KIFF still away), then 10 s more, when KIFF ends it.
+    testScheduler.advanceTimeBy(2_001); testScheduler.runCurrent()
+    assertTrue(m.state.value.signedIn)
+    testScheduler.advanceTimeBy(10_001); testScheduler.runCurrent()
+    assertEquals(3, transport.requestsTo("POST /v1/auth/device/logout").size)
+    assertFalse(m.state.value.signedIn)
+    assertNull(secrets.load(AppModel.TOKEN))
+  }
+
+  @Test fun signingOutOfTheSampleClearsItWithNothingToAskKiff() = runTest {
+    val m = testModel()
+    assertTrue(m.signOutAtKiff())
+    assertFalse(m.state.value.signedIn)
+    assertTrue(transport.requests.isEmpty())
   }
 
   @Test fun withoutAnApprovalKeyTheCurrentKeySignsAnApprovalToo() = runTest {

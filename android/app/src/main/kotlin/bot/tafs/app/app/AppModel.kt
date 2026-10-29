@@ -169,10 +169,15 @@ data class AppState(
    * phone turned its key off when a fingerprint was added. Refusing still works.
    */
   val approvalKeyLost: Boolean = false,
-  /** Why Sign in again didn't go through. */
-  val signInAgainError: String? = null,
+  /** Why Sign out of KIFF, or Sign in again, didn't go through: KIFF didn't end the session. */
+  val signOutError: String? = null,
   /** The held calls KIFF said this person may not answer, by call, with its reason: they show words, not buttons. */
   val unanswerable: Map<String, String> = emptyMap(),
+  /**
+   * The holds this person gave extra room, by KIFF's id. KIFF keeps a hold's id when the taf tries the call again: one back
+   * as held, over a limit for one call, needs one more answer (Approve once), and the card says so, with KIFF's reason.
+   */
+  val roomGiven: Set<String> = emptySet(),
   val tafs: List<Taf> = emptyList(),
   val held: List<HeldCall> = emptyList(),
   val record: List<RecordEntry> = emptyList(),
@@ -914,27 +919,59 @@ class AppModel(
   }
 
   /**
-   * After this phone lost its approval key: the session ends at KIFF first, and its approval key with it, so a key that no
-   * longer approves never stays listed. Only then is the phone signed out; the next sign-in, approved in the browser,
-   * registers the phone's new key as a new device. False when KIFF didn't end the session, and nothing changed here.
+   * Sign out of KIFF, and Sign in again after this phone lost its approval key: the session ends at KIFF first, and its
+   * keys with it, so a sign-in that should be over never stays listed in Devices, able to approve. Only then is the phone
+   * signed out; a new sign-in, approved in the browser, registers the phone's keys as a new device.
+   *
+   * False when KIFF didn't end the session: the phone stays signed in, never showing signed out while KIFF still accepts
+   * the session, says so, and keeps trying ([SIGN_OUT_RETRY_SECONDS]) until KIFF ends it.
    */
-  suspend fun signInAgainToApprove(): Boolean {
-    if (_state.value.mode != Mode.kiff) return false
-    _state.update { it.copy(signInAgainError = null) }
+  suspend fun signOutAtKiff(): Boolean {
+    if (_state.value.mode != Mode.kiff) {
+      // The sample has nothing at KIFF: it's cleared.
+      signOut()
+      return true
+    }
+    signOutRetry?.cancel()
+    signOutRetry = null
+    _state.update { it.copy(signOutError = null) }
     // While the session can still say so: this phone stops getting the account's alerts.
     pushToken?.let { token -> if (alertsWanted()) runCatching { cloud.unregisterPush(token) } }
-    try {
-      kiff.signOut()
-    } catch (e: CancellationException) {
-      throw e
-    } catch (e: KiffError.Unauthorized) {
-      // KIFF ended it already.
-    } catch (e: Exception) {
-      _state.update { it.copy(signInAgainError = "KIFF didn't end this sign-in, so nothing changed: ${e.message}. Try again.") }
-      return false
+    if (endSessionAtKiff()) {
+      signOut(tellKiff = false)
+      return true
     }
-    signOut(tellKiff = false)
-    return true
+    _state.update { it.copy(signOutError = NOT_SIGNED_OUT) }
+    val generation = accountGeneration
+    signOutRetry = (followScope ?: viewModelScope).launch {
+      var attempt = 0
+      while (generation == accountGeneration) {
+        delay(SIGN_OUT_RETRY_SECONDS[minOf(attempt++, SIGN_OUT_RETRY_SECONDS.lastIndex)] * 1000)
+        if (generation != accountGeneration) return@launch
+        if (endSessionAtKiff()) {
+          signOutRetry = null
+          signOut(tellKiff = false)
+          return@launch
+        }
+      }
+    }
+    return false
+  }
+
+  /** The sign-out still trying to reach KIFF, if one is. */
+  private var signOutRetry: Job? = null
+
+  /** Asks KIFF to end this session. True once it has, or had already; false when it couldn't be told. */
+  private suspend fun endSessionAtKiff(): Boolean = try {
+    kiff.signOut()
+    true
+  } catch (e: CancellationException) {
+    throw e
+  } catch (_: KiffError.Unauthorized) {
+    // KIFF ended it already.
+    true
+  } catch (_: Exception) {
+    false
   }
 
   /** Signs out of KIFF, or clears the sample: nothing of either stays on the phone. */
@@ -2406,7 +2443,8 @@ class AppModel(
       }
       Answer.ExtraRoom -> {
         taf?.let { update(it.copy(now = summary)) }
-        decide(call, RecordEntry.Kind.approved, "Extra room by you · $at · $summary", "Its Card got the room this call needed, until that total resets", signature)
+        decide(call, RecordEntry.Kind.approved, "Extra room by you · $at · $summary", "Its Card got the room for this total, until it resets. Over a limit for one call as well, the call is held again for that", signature)
+        call.kiffId?.let { id -> _state.update { it.copy(roomGiven = it.roomGiven + id) } }
       }
       Answer.Refuse -> {
         taf?.let { update(it.copy(now = "Refused · $summary")) }
@@ -3607,5 +3645,11 @@ class AppModel(
 
     /** The waits between a failed refresh's tries, then none until the person comes back or pulls (kiff/tafs#318). */
     val REFRESH_RETRY_SECONDS = listOf(2L, 10L, 30L, 60L, 120L)
+
+    /** How long a sign-out waits before asking KIFF again to end the session, the last one again and again until it has. */
+    val SIGN_OUT_RETRY_SECONDS = listOf(2L, 10L, 30L, 60L, 120L)
+
+    /** A sign-out KIFF hasn't confirmed: the phone stays signed in, and says so, and keeps trying. */
+    const val NOT_SIGNED_OUT = "Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices."
   }
 }

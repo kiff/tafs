@@ -394,8 +394,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       SettingsSheet(
         state,
         onSignIn = { showingSettings = false; onSignIn() },
-        onSignOut = { model.signOut() },
-        onSignInAgain = { model.signInAgainToApprove() },
+        onSignOut = { model.signOutAtKiff() },
+        onSignInAgain = { model.signOutAtKiff() },
         onUsage = { usageTaf = null; usageOpen = true },
         onTurnOnAlerts = { scope.launch { model.turnOnAlerts() } },
         onAlertSound = model::setAlertSound,

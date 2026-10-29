@@ -267,7 +267,8 @@ object KiffMapping {
   /** The called-for answer of a held call: what the owner reads, and what they sign. [coach]: see [install]. */
   fun held(e: CardException, coach: String? = null): HeldCall {
     val breach = reasonBreach(e)
-    val reason = moneyReason(e) ?: breach?.reason ?: e.reason ?: outcomeText(breach?.outcome)
+    // KIFF's own words first; the app's only where KIFF sends none.
+    val reason = e.reasonText?.takeIf { it.isNotBlank() } ?: moneyReason(e) ?: breach?.reason ?: e.reason ?: outcomeText(breach?.outcome)
     // A gateway call is filed under its tool call's id, which says nothing to the owner: what it's on is in
     // its arguments, as KIFF keeps them (kiff/tafs#102).
     val name = says(e.action, e.title)

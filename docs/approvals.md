@@ -39,6 +39,15 @@ taf's own message about the hold leaves that out: it's said where the owner answ
 | A **next step** | When the hold offers some | Refuses it, with the step for the taf |
 | **Extra room** | The call is over a total the Card keeps across calls (a day's), and the person manages the account's Cards | Gives the Card just the room this call needs, until that total resets |
 
+**Over a total and a limit for one call, it takes two answers,** as KIFF keeps them: extra
+room raises the total and doesn't itself pass the limit for one call. KIFF keeps the hold's
+id: after extra room it's `changed`, and when the taf tries the call again it's back as
+`held`, over the limit for one call only. The card then says plainly that the first step
+went through and why one more is needed, in KIFF's own words (`reason_text`): "Extra room
+went through. This call is held again for a limit of its own: $60 is over the $50 limit
+for one call. Approve it once to let it go, or refuse it." (Android: `SecondStep`,
+`roomGiven`). A held call's reason is KIFF's `reason_text` wherever KIFF sends it.
+
 Over a total, approving once can't pass it, and the card says so. Someone who may use
 Coach also gets "Change the limit in Coach mode", which opens Coach on that taf
 ([coach.md](coach.md#improving-a-taf)).

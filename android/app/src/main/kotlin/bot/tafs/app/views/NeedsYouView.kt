@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.SecondStep
 import bot.tafs.app.model.shortTime
 import bot.tafs.app.model.dayTitle
 import bot.tafs.app.model.localDate
@@ -234,6 +235,10 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         // Installing is approving: the version goes live, then Coach hears. Not offered where it can't be done.
         if (install != null) PrimaryButton(if (sending) "Installing…" else "Install with $biometry", install, enabled = !sending)
       } else if (call.approvableOnce) {
+        // Back after extra room: the first step went through, and this is the second, said plainly with KIFF's reason.
+        if (call.kiffId != null && call.kiffId in state.roomGiven) {
+          Text(SecondStep.words(call.reason), style = scaled(13, color = Theme.amberText))
+        }
         PrimaryButton("Approve once with $biometry", { send(Answer.ApproveOnce) }, enabled = !sending)
       } else {
         // Over a total the Card keeps across calls: approving once can't pass it (kiff/tafs#138, item 49). Extra room

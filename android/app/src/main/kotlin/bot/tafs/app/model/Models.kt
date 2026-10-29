@@ -394,6 +394,16 @@ data class ProposedAction(
   val context: String = "",
 )
 
+/**
+ * What a hold says when it's back after the owner gave it extra room (KIFF keeps its id): the first step went through, and
+ * why one more answer is needed, in KIFF's own reason. Two steps, as KIFF keeps them: extra room raises a total, and doesn't
+ * itself pass a limit for one call.
+ */
+object SecondStep {
+  fun words(reason: String): String =
+    "Extra room went through. This call is held again for a limit of its own: ${reason.trim().trimEnd('.')}. Approve it once to let it go, or refuse it."
+}
+
 /** An action outside the Card, waiting for the owner. */
 @Serializable
 data class HeldCall(

@@ -31,6 +31,13 @@ Signing out (`POST /v1/auth/device/logout`) or switching account clears everythi
 earlier session on the phone, including files opened from a chat. Work still running for
 the old session is dropped when it finishes (`accountGeneration`).
 
+**The session ends at KIFF first.** Sign out, Switch account and Sign in again ask KIFF to
+end the session before anything changes on the phone, so a phone that shows signed out
+never holds a session KIFF still accepts. If KIFF doesn't confirm, the phone stays signed
+in and says "Not signed out at KIFF yet. Try again, or sign this phone out from another
+device's Devices." It keeps trying by itself: after 2, 10, 30 and 60 seconds, then every 2
+minutes, until KIFF ends the session (Android: `AppModel.signOutAtKiff`).
+
 **Devices**, in Settings (`DevicesView`): the devices signed in as this person on the
 account (`GET /v1/me/devices`), each with when it was last used, and "This device" on
 this one. **Sign out** on another device, behind Face ID, removes it

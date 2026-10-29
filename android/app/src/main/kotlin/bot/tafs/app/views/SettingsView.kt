@@ -47,7 +47,8 @@ import kotlinx.coroutines.launch
 fun SettingsSheet(
   state: AppState,
   onSignIn: () -> Unit,
-  onSignOut: suspend () -> Unit,
+  /** Ends the session at KIFF, then signs out here; false when KIFF didn't, and nothing changed. */
+  onSignOut: suspend () -> Boolean,
   onSignInAgain: suspend () -> Boolean = { false },
   onUsage: () -> Unit,
   onTurnOnAlerts: () -> Unit,
@@ -99,19 +100,20 @@ fun SettingsSheet(
             Action("Sign in again", Theme.amberText) {
               scope.launch { if (onSignInAgain()) onClose() }
             }
-            state.signInAgainError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
           }
           // The account's groups and who is in each.
           if (state.mode == Mode.kiff) Action("People & groups", Theme.ink, onPeople)
           if (state.mode == Mode.kiff) Action("Devices", Theme.ink, onDevices)
-          // Another account this person is on: KIFF's sign-in page lists each one.
-          if (state.mode == Mode.kiff) Action("Switch account…", Theme.ink, onSignIn)
+          // Another account this person is on: KIFF's sign-in page lists each one. This session ends at KIFF first, as Sign out's
+          // does, so it never stays live behind the new one.
+          if (state.mode == Mode.kiff) Action("Switch account…", Theme.ink) { scope.launch { if (onSignOut()) onSignIn() } }
           Action(if (state.mode == Mode.kiff) "Sign out of KIFF" else "Clear the sample", Theme.no) {
             scope.launch {
-              onSignOut()
-              onClose()
+              if (onSignOut()) onClose()
             }
           }
+          // KIFF didn't end the session, so nothing changed here: said under it, to try again.
+          state.signOutError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
         }
         // A Card's day ends at midnight here, and every time the owner reads is in it; set from the phone as a signed call.
         if (state.mode == Mode.kiff) state.kiffAccount?.let { account ->
