@@ -3,7 +3,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
-import { COACH_CARDS, TOOLS } from "../src/cloud/coach.js";
+import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
@@ -815,7 +815,20 @@ describe("Setup (kiff/agents#91)", () => {
     expect(w.account.asked.filter((u) => u.endsWith("/v1/me/mandates"))).toHaveLength(1);
     expect(w.account.asked.filter((u) => u.includes("/statement"))).toEqual([]);
     w.account.asked = undefined;
-    // One of Coach's names held by another server stops it before any Card.
+    // Coach's tools connected at tafs cloud's earlier address: connected again here, each replacing
+    // the earlier one, and each one's line says so before the owner signs.
+    const old = "https://old.tafs.test/v1/mcp";
+    w.account.connections = TOOLS.map((t) => ({ name: t.name, url: t.name === "taf_run" ? mcp : old, control: true }));
+    const moved = await tools();
+    expect(moved.state).toBe("to_give");
+    const sent = moved.connect.body.connections as Array<{ name: string; url: string; replace?: boolean }>;
+    expect(sent.map((c) => c.name)).toEqual(TOOLS.filter((t) => t.name !== "taf_run").map((t) => t.name));
+    expect(sent.every((c) => c.url === mcp && c.replace === true)).toBe(true);
+    sent.forEach((c, i) => expect(moved.connect.lines[i]).toBe(`${TOOLS.find((t) => t.name === c.name)!.line} · ${REPLACES_LINE}`));
+    // A batch with nothing to replace marks none, and no line says it replaces.
+    expect(first.connect.body.connections.some((c: { replace?: boolean }) => c.replace)).toBe(false);
+    expect(first.connect.lines.some((l: string) => l.includes(REPLACES_LINE))).toBe(false);
+    // One of Coach's names held by a vendor's tool (not the control server) stops it before any Card.
     w.account.connections = [{ name: "taf_task", url: "https://vendor.test/mcp", control: false }];
     expect(await tools()).toEqual({ state: "taken", taken: "taf_task" });
     // KIFF's gateway down: unknown, and Setup still answers.

@@ -106,33 +106,41 @@ export interface GatewayConnection { name: string; url?: string; control?: boole
  * What giving Coach its tools still needs, from the account's connections: the tools to connect, or
  * the first of Coach's names another connection holds. One there counts as Coach's only when it's
  * this server (`mcp`) as the control server: Coach's Cards grant by name, so any other would put a
- * vendor's tool on them.
+ * vendor's tool on them. One that's the control server at another address (connected before tafs
+ * cloud moved) is connected again here, replacing it: `replace` names those.
  */
-export function coachToolsPlan(there: GatewayConnection[], mcp: string): { missing: ToolDef[]; taken?: string } {
+export function coachToolsPlan(there: GatewayConnection[], mcp: string): { missing: ToolDef[]; replace: string[]; taken?: string } {
   const byName = new Map(there.map((c) => [c.name, c]));
   const missing: ToolDef[] = [];
+  const replace: string[] = [];
   for (const t of TOOLS) {
     const c = byName.get(t.name);
     if (!c) { missing.push(t); continue; }
-    if (c.url !== mcp || c.control !== true) return { missing: [], taken: t.name };
+    if (c.control !== true) return { missing: [], replace: [], taken: t.name };
+    if (c.url !== mcp) { missing.push(t); replace.push(t.name); }
   }
-  return { missing };
+  return { missing, replace };
 }
+
+/** What a replaced connection's line adds, so the owner sees the replacement before signing. */
+export const REPLACES_LINE = "replaces the earlier connection";
 
 /**
  * The batch that connects the missing tools (KIFF's POST /v1/connections/batch), and its lines. The
  * phone signs and sends the body as it is; a name already connected the same way is left as it is,
- * so sending it again is safe.
+ * so sending it again is safe. One in `replace` is marked so: KIFF replaces the account's control
+ * server's own connection of that name, and its line says so.
  */
-export function coachConnect(missing: ToolDef[], mcp: string): { body: { connections: unknown[] }; lines: string[] } {
+export function coachConnect(missing: ToolDef[], mcp: string, replace: string[] = []): { body: { connections: unknown[] }; lines: string[] } {
+  const replacing = new Set(replace);
   return {
     body: {
       connections: missing.map((t) => ({
         name: t.name, url: mcp, tool: t.name, mode: "verify", audience: mcp, control: true,
-        idempotency_argument: OP_ARG, ...(t.read ? { read_only: true } : {}),
+        idempotency_argument: OP_ARG, ...(t.read ? { read_only: true } : {}), ...(replacing.has(t.name) ? { replace: true } : {}),
       })),
     },
-    lines: missing.map((t) => t.line),
+    lines: missing.map((t) => (replacing.has(t.name) ? `${t.line} · ${REPLACES_LINE}` : t.line)),
   };
 }
 

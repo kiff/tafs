@@ -1021,7 +1021,7 @@ const SETUP_NAME_CLAIM = " setup";
  * `given` once every tool is connected here as the control server and Coach's Cards are issued;
  * `to_give` with what's left: `connect`, the batch the phone signs and sends as it is, with its
  * lines, and `card`, Coach's Cards' draft to sign and submit (that submit is the confirmation),
- * with KIFF's own words for each Card from its preview; `taken` when another connection holds
+ * with KIFF's own words for each Card from its preview; `taken` when a vendor's tool holds
  * one of Coach's names; `unknown` when KIFF didn't answer. Read from KIFF each time, so every
  * phone of the account agrees.
  */
@@ -1047,7 +1047,7 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       const body = coachCardsDraft(setup.kiffAgent);
       card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
     }
-    return { state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp) } : {}), ...(card ? { card } : {}) };
+    return { state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace) } : {}), ...(card ? { card } : {}) };
   } catch (err) {
     if (err instanceof KIFFError) return { state: "unknown" };
     throw err;
