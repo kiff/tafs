@@ -41,7 +41,7 @@ details go only to tafs cloud's own log.
 | `POST /v1/setup` | `cards.manage` | Start Coach once: `{draft_id, claim_secret}` from a draft with no tools ([coach.md](coach.md#starting-coach-once-per-account)) |
 | `GET /v1/events` | a person | Halts, resumes and door events, newest first, for Activity. Who wrote to a door shows only for the tafs the person manages |
 | `GET /v1/usage/ai` | a person | The period's AI use as a share of the bound, where the tafs ask next, and whether they're asking now ([accounts.md](accounts.md#ai-use)) |
-| `POST /v1/account/delete` | `account.delete` | Erase everything tafs cloud and kiff/agents keep for the account. A step that fails stops the rest and says which ([accounts.md](accounts.md#deleting-the-account)) |
+| `POST /v1/account/delete` | `account.delete` | `{intent, signature}`: delete the account from the phone's one signed intent. KIFF accepts it first, within its 10 minutes, or nothing is deleted; planque accepts on KIFF's word. tafs cloud then erases its own, planque's, then KIFF's, and what doesn't finish now its sweep finishes. Answers `{done, failed, pending}`. Without an intent, it erases only tafs cloud's and kiff/agents' (the app's earlier way) ([accounts.md](accounts.md#deleting-the-account)) |
 | `GET /v1/halt` | a person | The whole account's halt, as KIFF and kiff/agents hold it |
 | `POST /v1/halt` | `cards.manage` | Halt every taf, in KIFF and kiff/agents at once ([approvals.md](approvals.md#halting)) |
 | `DELETE /v1/halt` | `cards.manage` | Resume kiff/agents, once KIFF says it runs again (409 until the phone resumed it in KIFF) |

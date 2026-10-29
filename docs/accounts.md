@@ -150,5 +150,14 @@ behind Face ID:
 3. The app signs out.
 
 A step that fails stops the rest and says which; asking again goes on from there, since
-every step is safe to repeat. [data.md](data.md#deleting-the-account-185) lists what
+every step is safe to repeat.
+
+**From one signed intent.** The phone signs `tafs.delete-account.v2` once, with its approval
+key (the tenant, the device, when it was made, when it expires, at most 10 minutes later, and a
+nonce), and sends it to `POST /v1/account/delete` `{intent, signature}`. KIFF checks the
+signature itself and accepts the deletion first, with the person's session, deleting nothing yet;
+from KIFF's accept on, the account can't be used. planque then accepts on KIFF's word, in its
+finish step. tafs cloud then erases its own, then planque's, then KIFF's, and
+keeps the intent until all three are done: what fails is tried again every 5 minutes (backing
+off to 6 hours) with no phone. There is no undo. [data.md](data.md#deleting-the-account-185) lists what
 each step deletes.

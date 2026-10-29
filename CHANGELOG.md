@@ -81,10 +81,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- Deleting your account finishes even if the app closes partway: you confirm once, and tafs
+  cloud deletes the account in tafs, its connections and KIFF, trying again on its own until
+  it's done. It can't be undone.
 - A card that waits for your answer (confirm, questions, approval, sign in) gets it as data:
   `POST /v1/tafs/{id}/components/{component}/answer`, and the thread shows each card's
   answer. Your choice reaches the taf as you made it, never as a line of chat text.
-
 - Settings, **Devices**: the devices signed in as you on the account, when each was last
   used, and Sign out for any but this one, behind Face ID.
 - Settings, **Notifications & haptics** (the 901 test): **Sound** off makes this device's
@@ -155,6 +157,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- Deleting the account the earlier way, where the app itself asks tafs cloud, planque and KIFF
+  in turn, still works for installed builds. It goes one release after the build that signs one
+  intent for tafs cloud to carry.
 - The app's earlier way of answering a card, a message `[<type> <id>] <answer>`, still
   works while that card waits, and is taken as the card's answer. It goes one release after
   the app build that uses the answer route.

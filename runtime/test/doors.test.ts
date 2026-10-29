@@ -107,6 +107,8 @@ function world() {
   const pushed: Array<{ token: string; payload: Record<string, unknown> }> = [];
   return {
     agents, tafs, store, secrets, inbox, outbox, waSent, config, pushed, devices,
+    /** Set: the account's deletion was accepted, and nothing of it may run. */
+    deleting: false,
     slots: memorySlots(),
     at: (d: Date) => { clock = d; },
     now,
@@ -146,6 +148,7 @@ async function send(w: World, method: string, path: string, opts: { token?: stri
     doors: { store: w.store, secrets: w.secrets, config: async () => w.config },
     events: eventLog(w.store),
     now: w.now,
+    ...(w.deleting ? { deletions: { get: async (t: string) => (t === "t_acme" ? { tenant: t, intent: "", signature: "", accepted: "", done: [] } : undefined), put: async () => undefined, pending: async () => [], finished: async () => undefined } } : {}),
   });
   let body: unknown;
   try { body = JSON.parse(r.body); } catch { body = r.body; }
@@ -244,6 +247,16 @@ describe("the email door", () => {
     // A late note for the same run sends nothing again.
     await send(w, "POST", "/v1/runs/ended", { body: { run: run.id, agent: REFUNDS, status: "COMPLETED", ref: w.agents.notified.get(run.id)!.ref } });
     expect(w.outbox).toHaveLength(1);
+  });
+
+  it("on an account whose deletion was accepted, a paired sender's email starts no run", async () => {
+    const w = world();
+    await emailDoor(w);
+    w.deleting = true;
+    w.agents.calls.length = 0;
+    await emailHook(w, mail(w, {}));
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([]);
+    expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toEqual([]);
   });
 
   it("a paired sender writing a card's old answer form answers no card: it is their message, read as information", async () => {
