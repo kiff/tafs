@@ -1999,6 +1999,22 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft") || c.startsWith("answerResult"))).toBe(false);
   });
 
+  it("a result a lost note left waiting is handed over when the person next reads Coach's chat", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    w.agents.show(stored, RESULT);
+    Object.assign(stored, { status: "PAUSED", requirements: [{ call_id: "s1", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }] });
+    const r = await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...depsOf(w), coach: memoryCoach(() => w.now) });
+    expect(r.statusCode).toBe(200);
+    expect(stored.requirements![0]!.result).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+  });
+
   it("refuses answered_by from a person's own answer", async () => {
     const w = world();
     const r = await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: { taf_id: "x" }, answered_by: "tafs cloud" } });

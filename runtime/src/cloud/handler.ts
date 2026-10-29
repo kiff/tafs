@@ -483,12 +483,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const doors = await managesTaf(event, me, taf, deps);
     const { messages, components, sessions } = await conversation(me, taf, deps, undefined, doors);
+    await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const only = await ownChat(me, taf, parts[4] ?? "", deps);
     const { messages, components, sessions } = await conversation(me, taf, deps, only);
+    await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
   }
@@ -3459,6 +3461,20 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (level === "quiet") await tellPhones(deps, tenant, endedNotification(name, r));
   if (ended) await deps.coach.remove(key);
   return { taken: true };
+}
+
+/**
+ * The results Coach's chat shows that still wait, handed over now: what a lost note
+ * left undone is done when the person next reads the chat. handOver reads each run
+ * back and acts once per card, so this never makes a second taf. Best effort: the
+ * chat is read whatever happens here.
+ */
+async function handOverShown(tenant: string, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
+  if (taf.job !== SETUP_JOB || !deps.coach) return;
+  const runs = new Set(components.filter((c) => !c.answer && (c.component as { type?: string })?.type === "result").map((c) => c.run));
+  for (const run of [...runs].slice(0, 3)) {
+    await handOver(tenant, { run, agent: taf.id, status: "PAUSED", ref: "" }, deps).catch((err) => console.error(`handover ${run}: ${(err as Error).message}`));
+  }
 }
 
 /** What tafs cloud answers a result whose draft the owner hasn't confirmed yet. */
