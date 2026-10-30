@@ -27,9 +27,22 @@ final class TwoKeySigner: ApprovalSigning {
         return "current"
     }
 
+    /// Set when the next approval prompt closes without a recognized face or finger.
+    var approvalUnrecognized = false
     func signApproval(_ message: Data, reason: String) async throws -> String {
+        if approvalUnrecognized { throw ApprovalSigner.SignerError.notAuthenticated }
         approvalPrompted.append(String(decoding: message, as: UTF8.self))
         return "approval"
+    }
+
+    /// Set when faces or fingerprints were enrolled since the approval key was made: the next
+    /// check makes a new one.
+    var biometricsChanged = false
+    func renewApprovalKeyIfBiometricsChanged() -> Bool {
+        guard biometricsChanged else { return false }
+        biometricsChanged = false
+        approvalKey = Data([0x30, 0x59, 0x04])
+        return true
     }
 
     func signApprovalConfirmed(_ message: Data) throws -> String {
@@ -313,7 +326,7 @@ final class ApprovalKeyTests: XCTestCase {
         signer.approvalPrompted = []
         signer.currentPrompted = []
         await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce)
-        XCTAssertEqual(model.lastError, "Sign in with KIFF again to approve from this phone.", file: file, line: line)
+        XCTAssertEqual(model.lastError, KIFFClient.approvalKeyLost, file: file, line: line)
         XCTAssertTrue(signer.approvalPrompted.isEmpty && signer.currentPrompted.isEmpty, "no Face ID for an answer KIFF would refuse", file: file, line: line)
         XCTAssertTrue(sent("POST", "/v1/me/card-exceptions/ce_1/approve-once").isEmpty, file: file, line: line)
     }
@@ -348,7 +361,7 @@ final class ApprovalKeyTests: XCTestCase {
         let model = await signedIn(signer, held: Self.heldJSON)
         StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/approve-once"] = (403, #"{"error":"approval_key_required"}"#)
         await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce)
-        XCTAssertEqual(model.lastError, "Sign in with KIFF again to approve from this phone.")
+        XCTAssertEqual(model.lastError, KIFFClient.approvalKeyLost)
         XCTAssertTrue(model.approvalKeyLost)
         XCTAssertNil(model.kiff.approvalSigner)
 
@@ -356,6 +369,33 @@ final class ApprovalKeyTests: XCTestCase {
         let again = await signedIn(signer)
         XCTAssertTrue(again.sessionHasApprovalKey)
         XCTAssertFalse(again.approvalKeyLost)
+    }
+
+    func testNewBiometricsAreSaidAtRefreshNotAfterATap() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, held: Self.heldJSON)
+        XCTAssertTrue(model.sessionHasApprovalKey)
+
+        // A face or finger was enrolled: the next refresh finds it, with no prompt.
+        signer.biometricsChanged = true
+        await model.refresh()
+        try await assertCantApprove(model, signer)
+        XCTAssertNil(Keychain.load(AppModel.approvalKeyedAccount))
+    }
+
+    func testAnUnrecognizedPromptSaysTryAgainWhileTheKeyIsGood() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, held: Self.heldJSON)
+        signer.approvalUnrecognized = true
+        await model.answer(try XCTUnwrap(model.held.first), with: .approveOnce)
+        XCTAssertEqual(model.lastError, KIFFClient.notRecognized)
+        XCTAssertFalse(model.approvalKeyLost)
+        XCTAssertTrue(sent("POST", "/v1/me/card-exceptions/ce_1/approve-once").isEmpty)
+    }
+
+    func testTheApprovalKeyTakesTodaysBiometricsOnly() {
+        // Never the passcode, and a new enrollment ends the key.
+        XCTAssertEqual(ApprovalSigner.approvalKeyFlags, [.privateKeyUsage, .biometryCurrentSet])
     }
 
     func testTheFingerprintIsKIFFs() {

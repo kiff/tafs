@@ -117,7 +117,7 @@ final class AppModel: ObservableObject {
     private(set) var sessionHasApprovalKey = false
     /// KIFF holds an approval key for the session that isn't this phone's (it changed after
     /// registering, or another was registered): approving waits for a new sign-in.
-    private(set) var approvalKeyLost = false
+    @Published private(set) var approvalKeyLost = false
     private let signer: ApprovalSigning
     private let store: SampleStore?
     private let clock: () -> Date
@@ -1114,6 +1114,9 @@ final class AppModel: ObservableObject {
     func refresh(retry: Bool = false) async {
         guard mode == .kiff else { playNextDemoActions(); return }
         if !retry { retries = 0 }
+        // Faces or fingerprints changed since the approval key was made: it can't sign again,
+        // so the phone says so now, not after a tap. Its new key counts after a new sign-in.
+        if signer.renewApprovalKeyIfBiometricsChanged() { lostApprovalKey() }
         refreshing = true
         let gen = accountGeneration
         // Dropped before its answer: the list wasn't read, so it isn't shown as loaded (and
@@ -1578,7 +1581,9 @@ final class AppModel: ObservableObject {
                 signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)
             }
         } catch {
-            lastError = "Not sent: it wasn't confirmed."
+            // A prompt closed without a recognized face or finger, while the key is still good.
+            lastError = sessionHasApprovalKey && (answer == .approveOnce || answer == .extraRoom)
+                ? KIFFClient.notRecognized : "Not sent: it wasn't confirmed."
             return
         }
 

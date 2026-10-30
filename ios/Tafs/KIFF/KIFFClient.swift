@@ -160,7 +160,9 @@ final class KIFFClient {
     }
 
     /// What the person reads when this phone can't approve until they sign in again.
-    nonisolated static let approvalKeyLost = "Sign in with KIFF again to approve from this phone."
+    nonisolated static let approvalKeyLost = "Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you sign in again."
+    /// What they read when an approval's prompt closed unrecognized while the key is still good.
+    nonisolated static let notRecognized = "Try again, or sign in again if your Face ID or fingerprints changed."
 
     /// A key's fingerprint as KIFF shows it: the first 8 bytes of the SHA-256 of its SPKI
     /// DER, in hex, in groups of four ("ab12 cd34 ef56 7890").
