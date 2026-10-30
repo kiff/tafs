@@ -326,6 +326,19 @@ describe("the email door", () => {
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "viewer" })).body.knocks).toEqual([]);
   });
 
+  it("tells a phone registered before tafs cloud kept who manages, by whether its person answers held calls", async () => {
+    // Only the alerts are read here: the silent change push is told once every few seconds per taf.
+    const w = world();
+    // An older record: no manages at all, its person answers held calls.
+    w.devices.push({ token: "phone3", environment: "production", subject: "u_bo", answers: true, at: NOW.toISOString() });
+    // A newer one that says, plainly, this person doesn't manage.
+    w.devices.push({ token: "phone4", environment: "production", subject: "u_cy", answers: true, manages: false, at: NOW.toISOString() });
+    await emailDoor(w);
+    await emailHook(w, mail(w, { from: "Ana Lima <ana@northwind.example>", text: "Refund my order 4471 now." }));
+    const alerts = w.pushed.filter((p) => (p.payload.aps as { alert?: unknown }).alert);
+    expect(alerts.map((p) => p.token).sort()).toEqual(["phone1", "phone3"]);
+  });
+
   it("a spoofed From counts as unpaired, and its sender can't be paired from it", async () => {
     const w = world();
     await emailDoor(w);
