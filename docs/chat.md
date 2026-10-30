@@ -86,9 +86,9 @@ the block.
 When the run ends, the thread is reloaded and the stored answer takes the live one's
 place. The block folds in place to "Worked for 12 s" (`WorkSummary`), which opens the
 steps again. On Android it says how long and how many steps, with how many failed
-("Worked 4.2 s · 3 steps, 1 failed", `Chat.workLine`), and lists none: the thread names a
-step only by its tool's id, which the app never shows. A live step tafs cloud gives no
-words for has no line either. tafs cloud puts a run's work on its first message: the time from the run's
+("Worked 4.2 s · 3 steps, 1 failed", `Chat.workLine`), and opens to the steps in tafs
+cloud's words (`work.steps[].words`, `Chat.steps`). A step without words is left out, and a
+live step without `step` words has no line: a tool's id is never shown. tafs cloud puts a run's work on its first message: the time from the run's
 start to its last words, and the tools it called, in order, by name, with the ones that
 failed (`conversation`, from kiff/agents' usage records).
 

@@ -118,6 +118,8 @@ data class Home(
 @Serializable
 data class WireStep(
   val tool: String,
+  /** What the step did, in tafs cloud's words: KIFF's title for the tool, or Coach's. None for a step it has no words for. */
+  val words: String? = null,
   val error: Boolean? = null,
   @SerialName("not_made") val notMade: Boolean? = null,
 )

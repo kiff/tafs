@@ -8,6 +8,8 @@ data class WorkStep(
   val error: Boolean = false,
   /** Refused back unmade, an act sent beside a read: not a failure. */
   val notMade: Boolean = false,
+  /** What it did, in tafs cloud's words; null for a step it has none for, which is never named by its tool. */
+  val words: String? = null,
 )
 
 /** How long a taf worked on a message, and the tools it called, in order, by name. */
@@ -169,7 +171,7 @@ object Chat {
   /** What a message may be at most, as tafs cloud takes it. */
   const val LIMIT = 2000
 
-  /** How long a taf worked and how many steps it took, with those that failed; never which tools, which the thread names only by id. */
+  /** How long a taf worked and how many steps it took, with those that failed. Which steps, only in tafs cloud's words ([steps]). */
   fun workLine(work: Work): String {
     val seconds = work.ms / 1000.0
     val took = if (seconds < 10) "%.1f s".format(java.util.Locale.ROOT, seconds) else "${Math.round(seconds)} s"
@@ -177,6 +179,11 @@ object Chat {
     if (n == 0) return "Worked $took"
     val failed = work.steps.count { it.error }
     return "Worked $took · $n ${if (n == 1) "step" else "steps"}" + if (failed > 0) ", $failed failed" else ""
+  }
+
+  /** The steps tafs cloud has words for, in order, each with how it ended; a step without words is left out, never shown by its tool. */
+  fun steps(work: Work): List<String> = work.steps.mapNotNull { step ->
+    step.words?.let { it + if (step.error) " · failed" else if (step.notMade) " · not made" else "" }
   }
 
   /**

@@ -416,12 +416,21 @@ private fun MessageBody(message: ChatMessage, tafId: String, files: FileActions,
 }
 
 /**
- * How long the taf worked and how many steps it took: "Worked 4 s · 3 steps, 1 failed". The thread names a step only by its
- * tool's id, never in words, so no step is listed: a tool's id is never shown.
+ * How long the taf worked and how many steps it took, folded: "Worked 4 s · 3 steps, 1 failed". Open, the steps tafs cloud has
+ * words for, in order; a step without words is left out, and a tool's id is never shown.
  */
 @Composable
 private fun WorkSummary(work: Work) {
-  Text(Chat.workLine(work), style = scaled(12, FontWeight.Medium, Theme.dim), modifier = Modifier.padding(vertical = 4.dp))
+  var open by remember { mutableStateOf(false) }
+  val steps = Chat.steps(work)
+  Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text(
+      (if (steps.isEmpty()) "" else if (open) "▾ " else "▸ ") + Chat.workLine(work),
+      style = scaled(12, FontWeight.Medium, Theme.dim),
+      modifier = Modifier.heightIn(min = 28.dp).clickable(enabled = steps.isNotEmpty()) { open = !open }.padding(vertical = 4.dp),
+    )
+    if (open) steps.forEach { Text("• $it", style = scaled(12, color = if (it.endsWith(" · failed")) Theme.no else Theme.soft)) }
+  }
 }
 
 /**

@@ -103,7 +103,7 @@ class TafsCloud(
         ChatMessage(
           at = m.at, from = from, text = m.text, session = m.session,
           kind = if (m.kind == "kickoff") ChatMessage.Kind.kickoff else ChatMessage.Kind.message,
-          work = m.work?.let { w -> Work(w.ms, w.steps.map { WorkStep(it.tool, it.error == true, it.notMade == true) }) },
+          work = m.work?.let { w -> Work(w.ms, w.steps.map { WorkStep(it.tool, it.error == true, it.notMade == true, it.words?.trim()?.ifEmpty { null }) }) },
           // A mark the app can't read leaves the message as a plain one.
           door = m.door?.let { mark ->
             runCatching { KiffClient.json.decodeFromJsonElement(WireDoorMark.serializer(), mark) }.getOrNull()

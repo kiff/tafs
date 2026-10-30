@@ -40,6 +40,25 @@ class OwnWordsTest {
     assertFalse(Chat.workLine(Work(4200, steps)).contains("charge"))
   }
 
+  @Test fun aRunsStepsAreListedInTafsCloudsWordsAndOneWithoutWordsIsLeftOut() {
+    val steps = listOf(
+      WorkStep("list_charges_ijkp", words = "Listed your charges"),
+      WorkStep("refund_charge", error = true, words = "Refunded a charge"),
+      WorkStep("kiff_pending"),
+      WorkStep("send_reply", notMade = true, words = "Sent the reply"),
+    )
+    assertEquals(listOf("Listed your charges", "Refunded a charge · failed", "Sent the reply · not made"), Chat.steps(Work(4200, steps)))
+    assertEquals("Worked 4.2 s · 4 steps, 1 failed", Chat.workLine(Work(4200, steps)))
+    assertTrue(Chat.steps(Work(4200, steps)).none { it.contains("_") })
+  }
+
+  @Test fun theThreadsStepWordsAreRead() {
+    val wire = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.WireWork>(
+      """{"ms":1200,"steps":[{"tool":"list_charges_ijkp","words":"Listed your charges"},{"tool":"show"}]}""",
+    )
+    assertEquals(listOf("Listed your charges", null), wire.steps.map { it.words })
+  }
+
   // MARK: Dictation's language
 
   @Test fun englishInFranceDictatesInBritishEnglishThenAmerican() {
