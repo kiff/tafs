@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, trialOf, whoIs } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -14,7 +14,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { summaryOf, workOf } from "./work.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { Steps } from "./steps.js";
+import { stepWords, Steps, type ToolTitles } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -531,15 +531,15 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "conversation") {
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
-    const doors = await managesTaf(event, me, taf, deps);
-    const { messages, components, sessions } = await conversation(me, taf, deps, undefined, doors);
+    const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
+    const { messages, components, sessions } = await conversation(me, taf, deps, undefined, doors, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
-    const only = await ownChat(me, taf, parts[4] ?? "", deps);
-    const { messages, components, sessions } = await conversation(me, taf, deps, only);
+    const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
+    const { messages, components, sessions } = await conversation(me, taf, deps, only, false, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
@@ -1476,8 +1476,10 @@ export interface ThreadMessage {
    * A taf's message that called tools first (kiff/tafs#285): how long it worked on it, from the
    * message before, and the tools it called, by name, in order, with the ones that failed. From
    * the run's usage records, which keep each call's tool and time, never its input or result.
+   * Each step's `words` are what the app shows for it (KIFF's title for a tool through KIFF),
+   * never the tool's name; a step nothing names has none.
    */
-  work?: { ms: number; steps: Array<{ tool: string; error?: true; not_made?: true }> };
+  work?: { ms: number; steps: Array<{ tool: string; words?: string; error?: true; not_made?: true }> };
 }
 
 /**
@@ -1518,7 +1520,12 @@ function attachmentsOf(body: unknown): AttachmentRef[] {
  * kept: the owner's messages and the taf's. A run's first owner message is
  * the job's instruction, shown as such.
  */
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
+/** KIFF's titles for the taf's tools, as the person reads its Cards: what its steps say (stepWords). */
+function titlesOf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Map<string, string>> {
+  return toolTitles(bearer(event), me.tenantID, me.subject, taf.kiffAgent, deps.fetch, deps.kiffBase);
+}
+
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -1550,7 +1557,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     // held call and went on once the owner answered has its work in parts, each on the part's
     // first message: the time it waited for the owner isn't work, and what it did before the
     // pause isn't shown again after it (the 859 test).
-    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; error?: true; not_made?: true }>; first?: ThreadMessage; last?: number };
+    type Part = { start: number; before: number; seen: number; tools: Array<{ tool: string; words?: string; error?: true; not_made?: true }>; first?: ThreadMessage; last?: number };
     const runs = new Map<string, { parts: Part[]; turns: number }>();
     const runOf = (id: string, at: number) => {
       let w = runs.get(id);
@@ -1576,7 +1583,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (!Number.isNaN(at)) part.seen = Math.max(part.seen, at);
         // A call refused back unmade (an act beside a read) isn't failed work: it shows as not made.
         for (const t of turn?.waited ?? []) {
-          part.tools.push({ tool: t.tool, ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}) });
+          const words = stepWords(t.tool, titles);
+          part.tools.push({ tool: t.tool, ...(words ? { words } : {}), ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}) });
         }
         continue;
       }
@@ -1943,8 +1951,8 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     await needTaf(event, me, taf, deps);
     const open = await openTrialOf(me, taf, deps);
     if (!open.session) return { messages: [], components: [], working: false, steering: [] };
-    const only = await ownChat(me, taf, open.session, deps, "trial");
-    const { messages, components, sessions } = await conversation(me, taf, deps, only);
+    const [only, titles] = await Promise.all([ownChat(me, taf, open.session, deps, "trial"), titlesOf(event, me, taf, deps)]);
+    const { messages, components, sessions } = await conversation(me, taf, deps, only, false, titles);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
   }
@@ -2617,15 +2625,17 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
     const answered = await oldFormAnswer(event, me, taf, owner, deps);
-    if (answered) return answeredStream(me, taf, answered, deps);
+    if (answered) return answeredStream(me, taf, answered, deps, await titlesOf(event, me, taf, deps));
     const lines = await takeCoachLines(me, taf, deps);
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
     let at: RunAt;
+    let titles: ToolTitles = new Map();
     try {
       const text = lines.text(owner);
-      const [chosen, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
+      const [chosen, ai, known] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps), titlesOf(event, me, taf, deps)]);
       at = chosen;
+      titles = known;
       if (attached.length) at.attachments = attached;
       try {
         // Coach's runs are announced when they pause, so a result it shows is
@@ -2641,7 +2651,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       await lines.putBack();
       throw err;
     }
-    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, at) };
+    return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, at, titles) };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
     if (status === 500) console.error(err);
@@ -2654,7 +2664,7 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
  * A card answered from the old form, streamed as a message would be: its chat, the message
  * taken, then the run that waited going on, as a resumed run's stream shows it.
  */
-async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: Deps): Promise<StreamResult> {
+async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: Deps, titles: ToolTitles): Promise<StreamResult> {
   const run = deps.agents.resumeRun(me.tenantID, taf.id, answered.id, 0, ownerKey(me));
   let first: IteratorResult<RunStreamEvent>;
   try {
@@ -2665,7 +2675,7 @@ async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: D
   async function* body(): AsyncGenerator<string> {
     yield sse("session", { session: answered.session, new_session: false, run: answered.id });
     yield sse("taken", {});
-    yield* relay(run, first, undefined);
+    yield* relay(run, first, undefined, titles);
   }
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: body() };
 }
@@ -2732,6 +2742,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   if (!RUN_ID.test(runID)) throw new HTTPError(404, "no such run");
   const after = Number(new URLSearchParams(event.rawQueryString ?? "").get("after") ?? "0");
   if (!Number.isInteger(after) || after < 0) throw new HTTPError(400, "after is an event index, 0 or more");
+  const titles = await titlesOf(event, me, taf, deps);
   const run = deps.agents.resumeRun(me.tenantID, taf.id, runID, after, ownerKey(me));
   let first: IteratorResult<RunStreamEvent>;
   try {
@@ -2739,7 +2750,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   } catch (err) {
     throw agentsFailure(err);
   }
-  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, undefined) };
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: relay(run, first, undefined, titles) };
 }
 
 /**
@@ -2747,8 +2758,8 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
  * (`at` set) shows what the agent does as it does it; a resumed one's, its
  * recorded steps.
  */
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined): AsyncGenerator<string> {
-  const steps = new Steps();
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map()): AsyncGenerator<string> {
+  const steps = new Steps(titles);
   let turns = 0; // a resumed run's model turns so far
   // What it's doing, in a few words: only these, never the call's arguments.
   const call = (tool: string, input: unknown, callID: unknown): string => {

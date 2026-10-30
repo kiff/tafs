@@ -113,6 +113,54 @@ describe("conversation", () => {
     expect(JSON.stringify(r.body)).not.toContain("result_bytes");
   });
 
+  it("gives each step its words: KIFF's title for a tool through KIFF, an own tool's by what it does, none for a tool nothing names", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund the last charge", ANA);
+    const list = w.agents.events.get(chat.session)!;
+    const at = (s: number) => new Date(NOW.getTime() - 3600_000 + s * 1000).toISOString();
+    list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: at(9), kind: "usage", body: { cost_micro_usd: 1, timing: { ms: 900, waited: [
+      { tool: "list_charges_ijkp", ms: 300 }, { tool: "memory", ms: 20 }, { tool: "get_charge_ijkp", ms: 200, is_error: true },
+    ] } } });
+    w.agents.say(chat, "Refunded €3.", at(12));
+    const people = kiff({ ana: ME });
+    let mandatesRead = 0;
+    const withCards = (async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/v1/me/mandates")) {
+        mandatesRead++;
+        return new Response(JSON.stringify({ mandates: [
+          { id: "m1", subject: "rae", active: true, grants: [{ action: "list_charges_ijkp", title: "List your charges" }, { action: "get_charge_ijkp", title: null }] },
+          { id: "m2", subject: "someone-else", active: true, grants: [{ action: "memory", title: "Not Rae's" }] },
+        ] }), { status: 200 });
+      }
+      return people(url, init);
+    }) as typeof fetch;
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", fetch: withCards });
+    expect(r.body.messages[1].work.steps).toEqual([
+      { tool: "list_charges_ijkp", words: "List your charges" },
+      { tool: "memory", words: "Going through its notes" },
+      { tool: "get_charge_ijkp", error: true },
+    ]);
+    // Read again soon after: the titles are kept, not asked of KIFF on every read.
+    await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", fetch: withCards });
+    expect(mandatesRead).toBe(1);
+  });
+
+  it("shows the thread when KIFF can't say its tools' titles: the steps just have no words", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund it", ANA);
+    const list = w.agents.events.get(chat.session)!;
+    list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: new Date(NOW.getTime() - 3590_000).toISOString(), kind: "usage", body: { cost_micro_usd: 1, timing: { ms: 900, waited: [{ tool: "list_charges_ijkp", ms: 300 }] } } });
+    w.agents.say(chat, "Done.", new Date(NOW.getTime() - 3589_000).toISOString());
+    const people = kiff({ ana: ME });
+    const down = (async (url: string, init?: RequestInit) =>
+      String(url).endsWith("/v1/me/mandates") ? new Response(JSON.stringify({ error: "down" }), { status: 503 }) : people(url, init)) as typeof fetch;
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", fetch: down });
+    expect(r.status).toBe(200);
+    expect(r.body.messages[1].work.steps).toEqual([{ tool: "list_charges_ijkp" }]);
+  });
+
   it("splits a run's work at a held call the owner answered: each part on its own message, without the wait (the 859 test)", async () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 3600_000));
