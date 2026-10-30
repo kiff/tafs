@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -118,6 +121,12 @@ fun TafDetailView(
     var removal by rememberSaveable { mutableStateOf<String?>(null) }
     val removeScope = rememberCoroutineScope()
     val cards = taf.shownCards
+    // A wide screen in landscape (as iOS on an iPad): beside the chat or the activity, a second column with the call waiting for
+    // the owner and the Cards, when the chat keeps at least a phone's width beside it.
+    val config = androidx.compose.ui.platform.LocalConfiguration.current
+    val pageWidth = config.screenWidthDp - (if (showBack) 0 else 361)
+    val side = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE &&
+      section != Section.Card && section != Section.Doors && pageWidth - SIDE_WIDTH - 32 >= CHAT_AT_LEAST
 
     Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       Header(taf)
@@ -125,13 +134,15 @@ fun TafDetailView(
       if (people != null && taf.cloudId != null) ShareLine(taf.id, state, people)
       Segmented(sections, section, { it.title }) { section = it }
       // The Cards are one line above the chat and the activity; it opens the Card tab (kiff/tafs#211).
-      if (section != Section.Card) {
+      if (section != Section.Card && !side) {
         (cards.firstOrNull { it.id == frontCard } ?: cards.firstOrNull())?.let {
           CardBar(it, cards.size, Theme.tafColor(taf.colorIndex), taf.card.revoked) { section = Section.Card }
         }
       }
     }
 
+    Row(Modifier.weight(1f)) {
+    Column(Modifier.weight(1f).fillMaxHeight()) {
     if (section == Section.Chat) {
       // The thread scrolls on its own, with the field under it.
       TafChatView(taf.id, state, actions, Modifier.weight(1f))
@@ -160,6 +171,12 @@ fun TafDetailView(
           Section.Chat -> Unit
         }
       }
+    }
+    }
+    if (side) {
+      Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
+      SideColumn(taf, state, actions, frontCard, { frontCard = it }) { section = Section.Card }
+    }
     }
 
     if (confirmRevoke) {
@@ -367,5 +384,28 @@ private fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?,
       dismissButton = { TextButton({ forgetting = null }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )
+  }
+}
+
+/** The second column's width, and the least the chat keeps beside it: as iOS's, the largest iPhone's width. */
+private const val SIDE_WIDTH = 360
+private const val CHAT_AT_LEAST = 430
+
+/** Beside the chat or the activity on a wide screen: what waits for the owner, then the Cards, and a way to all of them. */
+@Composable
+private fun SideColumn(taf: Taf, state: AppState, actions: TafActions, front: String?, onFront: (String) -> Unit, onAll: () -> Unit) {
+  Column(
+    Modifier.width(SIDE_WIDTH.dp).fillMaxHeight().verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+    verticalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    val held = state.heldCalls(taf.id)
+    if (held.isNotEmpty()) {
+      Eyebrow("Needs you", color = Theme.amber)
+      held.forEach { HeldCallCard(it, state, actions.answer) }
+    }
+    val cards = taf.shownCards
+    Eyebrow(if (cards.size == 1) "Card" else "Cards")
+    CardStack(cards, actions.issuer, Theme.tafColor(taf.colorIndex), front, onFront, revoked = taf.card.revoked)
+    OutlineButton(if (cards.size == 1) "All of the Card" else "All of the Cards", onAll, Modifier.fillMaxWidth())
   }
 }

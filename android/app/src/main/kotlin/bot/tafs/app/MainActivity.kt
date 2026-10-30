@@ -12,10 +12,13 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -80,6 +83,7 @@ import bot.tafs.app.views.CoachInstalls
 import bot.tafs.app.views.LocalAnswerPage
 import bot.tafs.app.views.LocalImproveInCoach
 import bot.tafs.app.views.LocalReceipt
+import bot.tafs.app.views.OverviewView
 import bot.tafs.app.views.LocalCoachInstalls
 import bot.tafs.app.views.NeedsYouView
 import bot.tafs.app.views.NewTafFlow
@@ -304,6 +308,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   }
   // Coach: the account's Setup, in place of the list. Closing never ends a conversation.
   var coachOpen by rememberSaveable { mutableStateOf(false) }
+  // Overview, on a tablet: beside the list, until a taf is picked.
+  var overviewOpen by rememberSaveable { mutableStateOf(false) }
   val actions = remember(model) {
     TafActions(
       answer = { call, answer -> model.answer(call, answer) },
@@ -364,7 +370,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
 
   // The keyboard pushes the screen up, and the tab bar leaves while it is up, as iOS's does.
   val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-  // A tablet's width, or a phone's landscape on a large one: the list and what's open side by side (Material's expanded width).
+  // A tablet, either way up, or a large phone on its side: the list and what's open side by side.
   val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= WIDE_DP
 
   Column(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
@@ -378,7 +384,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onNeedsYou = { tab = Tab.NeedsYou },
               // The sample plays its next round; signed in, KIFF is read again.
               onPlayNext = { if (state.mode == Mode.sample) model.playNextDemoActions() else model.refresh() },
-              onOpenTaf = { coachOpen = false; trialTaf = null; openTaf = it },
+              onOpenTaf = { coachOpen = false; trialTaf = null; overviewOpen = false; openTaf = it },
               onNewTaf = { showingNew = true },
               onSettings = { showingSettings = true },
               onHaltAll = { haltTaf = null; haltOpen = true },
@@ -415,11 +421,22 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             // A tablet (as iOS's HomeSplitView): the list beside what's open. It opens on the list's first taf until another is
             // picked.
             Row(Modifier.fillMaxSize()) {
-              Box(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight()) { home() }
+              androidx.compose.foundation.layout.Column(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight()) {
+                Box(Modifier.weight(1f)) { home() }
+                // Overview: today across the tafs, at the foot of the list (as iOS's sidebar row).
+                Box(Modifier.fillMaxWidth().height(1.dp).background(Theme.line))
+                androidx.compose.material3.Text(
+                  "Overview",
+                  style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
+                  modifier = Modifier.fillMaxWidth().clickable { coachOpen = false; trialTaf = null; overviewOpen = true }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                )
+              }
               Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
               Box(Modifier.weight(1f).fillMaxHeight()) {
                 when {
                   open != null -> open()
+                  overviewOpen -> OverviewView(state, loadReport = model::loadReport) { overviewOpen = false; openTaf = it }
                   state.tafs.isNotEmpty() -> detail(state.tafs.first().id)
                   else -> Unit
                 }
@@ -513,8 +530,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   }
 }
 
-/** From this width the Tafs tab shows the list beside what's open, as iOS on an iPad. */
-private const val WIDE_DP = 840
+/** From this width the Tafs tab shows the list beside what's open, as iOS on an iPad: a tablet either way up, or a large phone on its side. */
+private const val WIDE_DP = 720
 
 /** The list's width beside what's open: iOS's sidebar. */
 private val SIDEBAR_WIDTH = 360.dp

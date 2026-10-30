@@ -19,8 +19,8 @@ version headings refer to releases, not merely to merged pull requests.
   Every approval is signed with an approval key that needs a fingerprint for each
   signature. A new fingerprint turns it off until the next sign-in. Signing out ends the
   session at KIFF before the phone shows signed out. Buying through Google Play is built
-  but off. On a tablet, the list sits beside what's open. There's no Overview, and no
-  second column on a taf's page, yet.
+  but off. On a tablet, the list sits beside what's open, with Overview, and a taf's page
+  has its second column in landscape.
 - tafs cloud can alert Android phones through Firebase Cloud Messaging. `POST /v1/push` takes
   `platform: "android"` with the phone's Firebase token; an iPhone registers as before.
   Android alerts are data messages the phone builds its notification from, with no call

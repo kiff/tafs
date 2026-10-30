@@ -107,10 +107,11 @@ A taf's state (`stateOf`):
 The list is ordered with the taf a call waits on first, then by when each was last used.
 On an iPad, the app opens on the list's first taf until the owner picks another
 (`HomeSplitView.opening`). A tap anywhere on a row picks it, and a tap on the taf
-already open counts as a pick too. On an Android tablet, or any screen 840 dp wide or more,
-the Tafs tab shows the list (360 dp, as iOS's sidebar) beside what's open, a taf, Coach
-or a trial, and opens on the list's first taf the same way (`MainActivity`, `WIDE_DP`).
-Android has no Overview, and no second column on a taf's page, yet.
+already open counts as a pick too. On an Android tablet, either way up, or any screen 720 dp
+wide or more, the Tafs tab shows the list (360 dp, as iOS's sidebar) beside what's open, a taf, Coach
+or a trial, and opens on the list's first taf the same way (`MainActivity`, `WIDE_DP`). Overview
+is at the foot of the list (`OverviewView`), without who uses each taf yet. In landscape, a
+taf's page has the second column where the chat keeps 430 dp beside it (`SideColumn`).
 The order settles when the tafs change, when the app comes back, and once more when a
 session first reads KIFF's record, so it doesn't move under the owner's finger. The last
 list is remembered on the phone, in its order, and shown at the next launch before KIFF
