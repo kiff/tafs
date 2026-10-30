@@ -34,13 +34,13 @@ details go only to tafs cloud's own log.
 | Route | Who | What |
 |---|---|---|
 | `GET /v1/jobs` | anyone | The five jobs: `{jobs: [{id, name, summary, cron}]}` |
-| `GET /v1/home` | a person | The app's list: each taf's state, colour, Card summary, doors and open trial, and the account's other agents with Cards ([tafs.md](tafs.md#the-home-list)) |
+| `GET /v1/home` | a person | The app's list: each taf's state, colour, Card summary, doors (each with its `label`) and open trial, and the account's other agents with Cards ([tafs.md](tafs.md#the-home-list)). Also `limits: {text, trial_idle_days}`, the longest message and how long a trial waits unused, which the apps check and keep no copy of |
 | `GET /v1/tafs` | a person | The account's tafs the person may use or oversee, and removals not finished |
 | `POST /v1/tafs` | `cards.manage` | Start a taf: `{name, job, draft_id + claim_secret \| from_setup + draft_id \| agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}` ([tafs.md](tafs.md#starting-a-taf)) |
 | `GET /v1/setup` | a person | `{setup, tools}`: the account's Coach (Setup), or `null`; and Coach's tools as KIFF has them. `tools.state` is `given` (every tool connected here and each of Coach's Cards in force; a revoked Card doesn't count), `to_give`, `taken` (`taken`: the name a vendor's tool holds; one of Coach's tools at tafs cloud's earlier address is connected again instead, its entry marked `replace: true` and its line saying it replaces the earlier connection) or `unknown`. With `to_give`: `connect {body, lines[]}`, the batch for KIFF's `POST /v1/connections/batch`, and `card {body, card_title, cards[]}`, Coach's Cards' draft for `POST /v1/me/agent-drafts` with KIFF's own words for it from its preview, unchanged. The phone signs and sends each body as it is; the signed submit is the owner's one confirmation |
 | `POST /v1/setup` | `cards.manage` | Start Coach once: `{draft_id, claim_secret}` from a draft with no tools ([coach.md](coach.md#starting-coach-once-per-account)) |
 | `GET /v1/events` | a person | Halts, resumes and door events, newest first, for Activity. Who wrote to a door shows only for the tafs the person manages |
-| `GET /v1/usage/ai` | a person | The period's AI use as a share of the bound, where the tafs ask next, and whether they're asking now ([accounts.md](accounts.md#ai-use)) |
+| `GET /v1/usage/ai` | a person | The period's AI use as a share of the bound, where the tafs ask next, whether they're asking now, and `words` saying all that for the apps to show ([accounts.md](accounts.md#ai-use)) |
 | `POST /v1/account/delete` | `account.delete` | `{intent, signature}`: delete the account from the phone's one signed intent. KIFF accepts it first, within its 10 minutes, or nothing is deleted; planque accepts on KIFF's word. tafs cloud then erases its own, planque's, then KIFF's, and what doesn't finish now its sweep finishes. Answers `{done, failed, pending}`. Without an intent, it erases only tafs cloud's and kiff/agents' (the app's earlier way) ([accounts.md](accounts.md#deleting-the-account)) |
 | `GET /v1/halt` | a person | The whole account's halt, as KIFF and kiff/agents hold it |
 | `POST /v1/halt` | `cards.manage` | Halt every taf, in KIFF and kiff/agents at once ([approvals.md](approvals.md#halting)) |
@@ -64,6 +64,9 @@ details go only to tafs cloud's own log.
 |---|---|---|
 | `DELETE /v1/tafs/{id}` | manages | Remove it for good, each step safe to repeat: `{done, removed, failed}`. The phone revokes its Cards in KIFF first |
 | `POST /v1/tafs/{id}/pause`, `resume` | manages | Its schedule off or on. 409 for a taf that works from its chat |
+| `GET /v1/tafs/{id}/work` | a person | Where its work stands ([reliability.md](reliability.md#the-tafs-view)): `{summary: {status, line, needs_you}, next_run, counts, requests: [{id, at, state, line, deliveries}]}`, every line and time written in the account's zone (`time_zone`) |
+| `POST /v1/tafs/{id}/requests/{run}/deliveries/door_reply/send` | manages | Send again: the door reply of that run, given up on after its tries, sent once more with new tries. Does no work, signs nothing. `{state: sent \| not_sent \| waiting}`; 404 when nothing of that run waits to be sent; 409 while it's being sent, or when the taf no longer answers through its door. A send that fails keeps the reply for the next tap. A delivery that can be sent again has `send_again: true` in `GET …/work` |
+| `PUT /v1/tafs/{id}/results` | manages | `{places}`: where its results go, one or more of `door_reply`, `app`, `owner_email` ([doors.md](doors.md#where-results-go)). The taf's view lists them as `results`; a taf that never set them answers through its door alone |
 | `POST /v1/tafs/{id}/run` | manages | Run it now: `{session}`. 409 for a taf that works from its chat |
 | `GET /v1/tafs/{id}/runs` | a person | Its recent job runs: `{runs: [{session, at, error}]}` |
 | `GET /v1/tafs/{id}/runs/{session}` | a person | A run's report: the agent's last answer, and whether it's still working |
@@ -79,7 +82,7 @@ See [chat.md](chat.md) for how the app uses these.
 
 | Route | Who | What |
 |---|---|---|
-| `POST /v1/tafs/{id}/messages` | a person | `{text, attachments?, session?, new_chat?}`: a run in the person's live chat, a chosen one, or a new one. Text is 1 to 2,000 characters, or none with files. 429 past the flood guard |
+| `POST /v1/tafs/{id}/messages` | a person | `{text, attachments?, session?, new_chat?}`: a run in the person's live chat, a chosen one, or a new one. Text is 1 to 2,000 characters, or none with files. 429 past the flood guard. Answers `{session, new_session, run, message: {id, at}}`: the thread gives the same message that `id`, so the app matches its send without guessing |
 | `POST /v1/tafs/{id}/messages/stream` | a person | The same message, its answer streamed as server-sent events ([chat.md](chat.md#the-answer-as-it-comes)) |
 | `GET /v1/tafs/{id}/runs/{run}/stream?after=N` | a person, their own run | Pick a run back up: its recorded steps after event N (with `part` where it went on after a held call), then the rest until it stops |
 | `POST /v1/tafs/{id}/steer` | a person | `{run, text}`: to the run at work, read at its next step. 409 when it has ended: send it as a new message |
@@ -123,7 +126,7 @@ See [doors.md](doors.md). Reading needs a session; changing, managing the taf.
 
 | Route | What |
 |---|---|
-| `GET /v1/tafs/{id}/doors` | The taf's doors, the apps a door can open on here, and its open knocks |
+| `GET /v1/tafs/{id}/doors` | The taf's doors, the apps a door can open on here, and its open knocks, each with its door's `label` |
 | `POST /v1/tafs/{id}/doors` | `{app, code?, phone_number_id?, waba_id?}`: turn a door on |
 | `PATCH /v1/tafs/{id}/doors/{door}` | `{open}` |
 | `DELETE /v1/tafs/{id}/doors/{door}` | Remove it |

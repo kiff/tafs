@@ -53,10 +53,32 @@ deployment offers a door; WhatsApp is offered only once it's set up.
   again later starts nothing.
 - A removed email address is retired for a year, never given to another taf, so mail
   from its old senders can't reach someone else.
-- A reply the provider doesn't take is tried again, up to three times, when the owner
-  next reads the chat or the doors or a message comes in. So is one whose run's note
-  was lost. Each reply is sent once, however many notes come.
+- A message is one request in kiff/agents (`dedup_key`, `source`): sent again after tafs cloud lost
+  kiff/agents' answer, it gets the run it started, never a second, and one reply.
+- A reply the provider doesn't take is tried again after 5, 20 and 60 minutes, by the
+  sweep that runs every 5 minutes (`sweepDoorReplies`). After the last try the chat
+  says it wasn't sent. A try isn't sent before its time, even when the owner reads the
+  chat. A reply whose run's note was lost is sent when the owner next reads the chat or
+  the doors, or a message comes in. Each reply is sent once, however many notes come.
 - Replies in one email thread, or from one WhatsApp number, go on in the same chat.
+
+## Where results go
+
+A taf's results go to the places set for it (`PUT /v1/tafs/{id}/results`):
+- **`door_reply`:** the answer to the sender, through the door it came in on, on the same thread.
+  A taf that never set its places has only this.
+- **`app`:** an alert to the phones of the people who manage the taf, never with the taf's words.
+  It says who was answered, and through which door, only once the door's reply went out. While the
+  reply waits for its retry, the alert waits too. If the reply is given up on, the alert says it
+  wasn't sent and that it can be sent again from the taf.
+- **`owner_email`:** an email to the owner, at the address their email door pairs, with the
+  taf's answer. It isn't sent when the owner wrote the message, since they get the reply.
+
+Each place is sent once (`settle` in `doors.ts`). A place that fails is tried again alone on the
+same waits as the door's reply, so a reply already sent isn't sent again while the owner's email
+waits. A door's reply given up on after its last try is kept for 30 days, and the owner can
+send it again from the taf's page (**Send again**). That sends the taf's answer once more, with new
+tries, and does no work.
 
 ## What's kept
 

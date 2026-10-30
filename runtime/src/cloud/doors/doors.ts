@@ -1,8 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { AgentsError, type AIBound, type Run } from "../agents.js";
-import { newRef, refTenant, type Note } from "../coach.js";
+import { refTenant, type Note } from "../coach.js";
 import type { Device, PushStore, Sender } from "../push.js";
-import type { AgentsAPI, Taf, Tafs } from "../handler.js";
+import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
 import { type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
@@ -89,7 +89,8 @@ async function changeDoors(store: DoorStore, tenant: string, taf: string, change
 
 export async function knocksOf(store: DoorStore, tenant: string, taf: string): Promise<Knock[]> {
   const v = (await store.get(doorKeys.knocks(tenant, taf))) as { knocks?: Knock[] } | undefined;
-  return Array.isArray(v?.knocks) ? v.knocks : [];
+  // Each with its door's name (`label`), so the apps name the door without their own copy.
+  return Array.isArray(v?.knocks) ? v.knocks.map((k) => ({ ...k, label: APPS.find((x) => x.id === k.app)?.label ?? k.app })) : [];
 }
 
 async function changeKnocks(store: DoorStore, tenant: string, taf: string, now: Date, change: (knocks: Knock[]) => Knock[]): Promise<void> {
@@ -202,7 +203,10 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   const threadKey = doorKeys.thread(tenant, taf.id, door.id, hash(a.from, a.threadKey));
   const prior = (await store.get(threadKey)) as { session?: string } | undefined;
   const ai = (await store.get(doorKeys.bound(tenant))) as AIBound | undefined;
-  const ref = newRef(tenant);
+  // One message, one request (docs/reliability.md): its key names it in kiff/agents, and its ref is made from it,
+  // so a message sent again, after an answer lost on the way, gets the first run and the reply its note names.
+  const key = hash(a.route, a.from, a.id);
+  const ref = `${Buffer.from(tenant).toString("base64url")}.${createHash("sha256").update(`door-ref|${key}`).digest("base64url").slice(0, 24)}`;
   const notify = { url: `${cfg.publicURL}/v1/runs/ended`, ref };
   // Owed before the run starts, so a run that ends at once still finds where its answer goes.
   const reply: Reply = {
@@ -217,11 +221,11 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   let run: Run;
   try {
     try {
-      run = await ctx.agents.startRun(tenant, taf.id, input, { session: prior?.session, requester }, ai?.period ? ai : undefined, notify);
+      run = await ctx.agents.startRun(tenant, taf.id, input, { session: prior?.session, requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
     } catch (err) {
       // The thread's chat is gone or busy: a new chat takes the message.
       if (!(prior?.session && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429)) throw err;
-      run = await ctx.agents.startRun(tenant, taf.id, input, { requester }, ai?.period ? ai : undefined, notify);
+      run = await ctx.agents.startRun(tenant, taf.id, input, { requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
     }
   } catch (err) {
     await forgetReply(ctx, tenant, taf.id, ref).catch(() => undefined);
@@ -274,12 +278,13 @@ async function countDropped(ctx: DoorsContext, tenant: string, taf: Taf, door: D
 }
 
 /** One alert to the phones of the people who manage Cards; a failure is logged, never in the way. */
-async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, body: string, knock: string): Promise<void> {
+async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, body: string, knock: string, about: "knock" | "reply" = "knock"): Promise<void> {
   try {
     const { devices } = await ctx.push.get(tenant);
     await Promise.all(devices.filter((d: Device) => d.manages === true).map((d: Device) => ctx.apns.send(d, {
       kind: "alert",
-      payload: { aps: { alert: { title: taf.name, body }, sound: "default" }, door_knock: { taf: taf.id, knock } },
+      // Every door alert opens the taf (`open`, `taf_id`, read by both apps); a knock's also names the knock.
+      payload: { aps: { alert: { title: taf.name, body }, sound: "default" }, open: "taf", taf_id: taf.id, ...(about === "knock" ? { door_knock: { taf: taf.id, knock } } : {}) },
       collapseID: knock.slice(0, 64),
     }).catch(() => "failed")));
   } catch (err) {
@@ -328,6 +333,8 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
   const reply = (await store.get(key)) as Reply | undefined;
   // Gone (expired, or settled elsewhere): nothing is owed.
   if (!reply) return void (await dropPending(ctx, tenant, tafID, ref));
+  // A try the provider didn't take waits its turn: the sweep sends it when it's due.
+  if (reply.next_at && Date.parse(reply.next_at) > ctx.now.getTime()) return;
   const runID = reply.run || noted;
   if (!runID) return;
   // The note says what kiff/agents knows; the run, read back, says what happened.
@@ -339,21 +346,158 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
   const door = taf && (await doorsOf(store, tenant, taf.id)).find((d) => d.id === reply.door);
   const app = door && appOf(cfg, door.app);
   const base = { run: runID, door: reply.door, app: door?.app ?? "", at: ctx.now.toISOString() };
-  let sent: Sent;
-  if (!taf || !door || !app) {
-    sent = { ...base, status: "not_sent", why: "the door was removed" };
-  } else {
-    const out = await sendReply(ctx, cfg, tenant, taf, door, { ...reply, run: runID }, replyText(taf, r, reply), ref);
-    if (out.retry && (reply.tries ?? 0) + 1 < DOOR.replyTries) {
-      await store.put(key, { ...reply, run: runID, tries: (reply.tries ?? 0) + 1 }, addDays(ctx.now, DOOR.replyDays));
-      await store.remove(doorKeys.sending(tenant, ref));
-      return;
+  const text = taf ? replyText(taf, r, reply) : "";
+  // Each place the taf's results go, once: a place done on an earlier try isn't sent again.
+  const done = new Set(reply.done ?? []);
+  let retry = false;
+  let sent: Sent | undefined;
+  // The chat's stamp for the door's reply, written as soon as it's settled, not after the other places.
+  const stamp = (x: Sent) => update<{ sent: Sent[] }>(store, doorKeys.sent(tenant, reply.taf),
+    (read) => ({ sent: [x, ...(read?.sent ?? [])].slice(0, 100) }), addDays(ctx.now, DOOR.threadDays));
+  for (const place of taf ? placesOf(taf) : ["door_reply" as const]) {
+    if (done.has(place)) continue;
+    if (place === "door_reply") {
+      if (!taf || !door || !app) { await stamp({ ...base, status: "not_sent", why: "the door was removed" }); done.add(place); continue; }
+      const out = await sendReply(ctx, cfg, tenant, taf, door, { ...reply, run: runID }, text, ref);
+      if (out.retry) { retry = true; sent = out.sent; continue; }
+      await stamp(out.sent);
+      done.add(place);
+    } else if (place === "app") {
+      // The alert says what happened, never the taf's words: only once the door's reply went out. While
+      // that reply waits for its next try the alert waits with it, and one given up on is said below.
+      if (taf && placesOf(taf).includes("door_reply") && !done.has("door_reply")) continue;
+      if (taf) await tellOwner(ctx, tenant, taf, `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`, "reply");
+      done.add(place);
+    } else if (place === "owner_email") {
+      const owner = door?.keys.find((k) => k.auto)?.id ?? (await ownerEmailOf(store, tenant, reply.taf));
+      // No address, or the owner wrote it themselves and has the reply already: nothing to send.
+      if (!taf || !owner || owner === reply.to || !cfg.email) { done.add(place); continue; }
+      const from = (await doorsOf(store, tenant, taf.id)).find((d) => d.kind === "email")?.address;
+      if (!from) { done.add(place); continue; }
+      try {
+        await cfg.email.send({
+          from: `${taf.name.replace(/[<>"\n]/g, "")} <${from}>`, to: owner, subject: `${taf.name}: answered ${reply.name || reply.to}`,
+          text: `${taf.name} answered ${reply.name || reply.to}${reply.subject ? ` about "${reply.subject}"` : ""}:\n\n${text}`,
+          idempotencyKey: hash("door-owner", ref),
+        });
+        done.add(place);
+      } catch (err) {
+        console.error("owner email not sent:", err instanceof Error ? err.message : "error");
+        const status = (err as { status?: unknown })?.status;
+        if (typeof status !== "number" || status >= 500 || status === 429) retry = true;
+        else done.add(place);
+      }
     }
-    sent = out.sent;
   }
-  await update<{ sent: Sent[] }>(store, doorKeys.sent(tenant, reply.taf),
-    (read) => ({ sent: [sent, ...(read?.sent ?? [])].slice(0, 100) }), addDays(ctx.now, DOOR.threadDays));
+  const tries = reply.tries ?? 0;
+  if (retry && tries < DOOR.replyWaitsMinutes.length) {
+    const next = new Date(ctx.now.getTime() + DOOR.replyWaitsMinutes[tries]! * 60_000).toISOString();
+    await store.put(key, { ...reply, run: runID, tries: tries + 1, next_at: next, done: [...done] }, addDays(ctx.now, DOOR.replyDays));
+    await update<{ items: Retrying[] }>(store, doorKeys.retrying(), (read) => {
+      const items = (read?.items ?? []).filter((i) => !(i.tenant === tenant && i.ref === ref));
+      return { items: [...items, { tenant, taf: reply.taf, ref }].slice(-MAX_RETRYING) };
+    });
+    await store.remove(doorKeys.sending(tenant, ref));
+    return;
+  }
+  // Given up on: the chat says the door's reply wasn't sent, and it's kept for Send again.
+  if (sent && !done.has("door_reply")) {
+    await stamp(sent);
+    if (taf && placesOf(taf).includes("app") && !done.has("app")) {
+      await tellOwner(ctx, tenant, taf, `Your reply to ${reply.name || reply.to} wasn't sent. You can send it again from ${taf.name}.`, `reply-${ref}`, "reply");
+    }
+    if (taf && door && app) {
+      await store.put(doorKeys.unsent(tenant, reply.taf, runID), { ref, reply: { ...reply, run: runID } }, addDays(ctx.now, DOOR.replyDays));
+    }
+  }
   await forgetReply(ctx, tenant, reply.taf, ref);
+}
+
+/**
+ * Send again (docs/reliability.md): the door reply of the run that was given up on, sent once more, now, with a
+ * fresh set of tries. It sends what the taf already wrote and does no work. The door's provider sends one email per
+ * idempotency key, so the key is new for this send. 404 when there's nothing of that run to send.
+ */
+/** Which of these runs have a door reply that can be sent again. */
+export async function unsentOf(store: DoorStore, tenant: string, taf: string, runs: string[]): Promise<Set<string>> {
+  const have = await Promise.all(runs.map(async (r) => ((await store.get(doorKeys.unsent(tenant, taf, r))) ? r : undefined)));
+  return new Set(have.filter((r): r is string => !!r));
+}
+
+export async function sendAgain(ctx: DoorsContext, tenant: string, taf: string, run: string): Promise<{ state: Sent["status"] | "waiting" }> {
+  const { store } = ctx.doors;
+  const key = doorKeys.unsent(tenant, taf, run);
+  const kept = (await store.get(key)) as { ref: string; reply: Reply } | undefined;
+  if (!kept) throw new DoorError(404, "this request has no reply waiting to be sent again");
+  const record = await ctx.tafs.get(tenant, taf);
+  if (record && !placesOf(record).includes("door_reply")) throw new DoorError(409, "this taf no longer answers through its door: set it to again first");
+  // Claimed first, so two taps send it once.
+  const claim = doorKeys.sending(tenant, `again#${taf}#${run}`);
+  if (!(await store.create(claim, 1, new Date(ctx.now.getTime() + 10 * 60_000)))) {
+    throw new DoorError(409, "this reply is being sent already");
+  }
+  const ref = `${kept.ref}~again${ctx.now.getTime().toString(36)}`;
+  const { tries: _t, next_at: _n, done: _d, ...reply } = kept.reply;
+  const again = doorKeys.reply(tenant, ref);
+  await store.put(again, { ...reply, done: ["app", "owner_email"] }, addDays(ctx.now, DOOR.replyDays));
+  try {
+    await settle(ctx, tenant, ref, run, taf);
+  } catch (err) {
+    // Not sent: the kept reply stays for the next tap, and the try made for this one goes.
+    await store.remove(again).catch(() => undefined);
+    await store.remove(claim).catch(() => undefined);
+    throw err;
+  }
+  // Sent, or waiting for its retry with the sweep: either way it's no longer one to send again.
+  await store.remove(key);
+  await store.remove(claim);
+  const left = (await store.get(doorKeys.reply(tenant, ref))) as Reply | undefined;
+  if (left) return { state: "waiting" };
+  const last = (await sentOf(store, tenant, taf)).find((s) => s.run === run);
+  return { state: last?.status ?? "not_sent" };
+}
+
+/** Where a taf's results go: its settings, or, for a taf from before them, its door's reply alone. */
+export function placesOf(taf: Taf): ResultPlace[] {
+  return taf.results?.length ? taf.results : ["door_reply"];
+}
+
+/** The owner's own email, as their email door pairs it, when the reply came through another door. */
+async function ownerEmailOf(store: DoorStore, tenant: string, taf: string): Promise<string | undefined> {
+  return (await doorsOf(store, tenant, taf)).find((d) => d.kind === "email")?.keys.find((k) => k.auto)?.id;
+}
+
+/** A reply waiting for its next try, as the sweep's list keeps it. */
+interface Retrying { tenant: string; taf: string; ref: string }
+
+/** The most replies the sweep's list keeps waiting, across accounts. */
+const MAX_RETRYING = 500;
+
+/**
+ * The replies a provider didn't take, each tried again once its wait is over,
+ * by the sweep's schedule: a reply no longer needs a note or the owner reading
+ * the chat to be tried. One still waiting, or still owed, stays in the list;
+ * one sent, given up on, or gone leaves it.
+ */
+export async function sweepDoorReplies(ctx: DoorsContext): Promise<Array<{ ref: string; waiting: boolean }>> {
+  const { store } = ctx.doors;
+  const list = (await store.get(doorKeys.retrying())) as { items?: Retrying[] } | undefined;
+  const out: Array<{ ref: string; waiting: boolean }> = [];
+  const done = new Set<string>();
+  for (const i of list?.items ?? []) {
+    await settle(ctx, i.tenant, i.ref, undefined, i.taf).catch((err) => console.error("door reply not settled:", err instanceof Error ? err.message : "error"));
+    const reply = (await store.get(doorKeys.reply(i.tenant, i.ref))) as Reply | undefined;
+    const waiting = !!reply?.next_at;
+    if (!waiting) done.add(`${i.tenant}#${i.ref}`);
+    out.push({ ref: i.ref, waiting });
+  }
+  if (done.size) {
+    await update<{ items: Retrying[] }>(store, doorKeys.retrying(), (read) => {
+      const items = (read?.items ?? []).filter((i) => !done.has(`${i.tenant}#${i.ref}`));
+      return items.length ? { items } : undefined;
+    });
+  }
+  return out;
 }
 
 async function forgetReply(ctx: DoorsContext, tenant: string, taf: string, ref: string): Promise<void> {
@@ -676,7 +820,7 @@ export async function doorLights(store: DoorStore, tenant: string, taf: string, 
     knocksOf(store, tenant, taf),
   ]);
   return doors.map((d, i) => ({
-    app: d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
+    app: d.app, label: APPS.find((x) => x.id === d.app)?.label ?? d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
     knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
   }));
 }

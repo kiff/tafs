@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
-import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { type Deps, handle, type HTTPEvent, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
 import { localPart, parseDoorMessage } from "../src/cloud/doors/doors.js";
@@ -138,7 +138,15 @@ async function send(w: World, method: string, path: string, opts: { token?: stri
     headers: { ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}), ...(opts.headers ?? {}) },
     body: opts.raw ?? (opts.body === undefined ? undefined : JSON.stringify(opts.body)),
   };
-  const r = await handle(event, {
+  const r = await handle(event, depsOf(w));
+  let body: unknown;
+  try { body = JSON.parse(r.body); } catch { body = r.body; }
+  return { status: r.statusCode, body: body as Record<string, any>, headers: r.headers };
+}
+
+/** What tafs cloud runs with in this world. */
+function depsOf(w: World): Deps {
+  return {
     agents: w.agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: w.tafs,
     names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(),
     push: { get: async () => ({ devices: w.devices, secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
@@ -149,10 +157,7 @@ async function send(w: World, method: string, path: string, opts: { token?: stri
     events: eventLog(w.store),
     now: w.now,
     ...(w.deleting ? { deletions: { get: async (t: string) => (t === "t_acme" ? { tenant: t, intent: "", signature: "", accepted: "", done: [] } : undefined), put: async () => undefined, pending: async () => [], finished: async () => undefined } } : {}),
-  });
-  let body: unknown;
-  try { body = JSON.parse(r.body); } catch { body = r.body; }
-  return { status: r.statusCode, body: body as Record<string, any>, headers: r.headers };
+  };
 }
 
 /** The email provider's signed delivery of a received email. */
@@ -387,6 +392,27 @@ describe("the email door", () => {
     expect(chat.body.messages.at(-1).door).toMatchObject({ reply: "sent" });
   });
 
+  it("a message sent again after its answer was lost on the way starts one run, and gets one reply", async () => {
+    const w = world();
+    await emailDoor(w);
+    const id = mail(w, {});
+    // kiff/agents takes the first send, but its answer never reaches tafs cloud.
+    const start = w.agents.api.startRun;
+    let lose = true;
+    w.agents.api.startRun = async (...a) => {
+      const r = await start(...a);
+      if (lose) { lose = false; throw Object.assign(new Error("kiff/agents didn't answer"), { status: 502 }); }
+      return r;
+    };
+    expect((await emailHook(w, id)).status).toBeGreaterThanOrEqual(500);
+    // The provider sends it again: the same request, so the first run.
+    expect((await emailHook(w, id)).body.outcome).toBe("run");
+    expect(w.agents.runs).toHaveLength(1);
+    expect(w.agents.runs[0]).toMatchObject({ source: "email" });
+    await finish(w, w.agents.runs[0]!, "Refunded.");
+    expect(w.outbox).toHaveLength(1);
+  });
+
   it("a reply the provider didn't take is tried again, then said to be not sent", async () => {
     const w = world();
     await emailDoor(w);
@@ -397,10 +423,182 @@ describe("the email door", () => {
     w.config.email!.send = async (e) => { if (down-- > 0) throw Object.assign(new Error("down"), { status: 503 }); return sendEmail(e); };
     await finish(w, run, "Refunded.");
     expect(w.outbox).toHaveLength(0);
+    // Not due yet: neither reading the doors nor the sweep tries it again.
     await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    expect(await sweepReplies(depsOf(w))).toEqual([{ ref: expect.any(String), waiting: true }]);
     expect(w.outbox).toHaveLength(0);
-    await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    // After 5 minutes the sweep tries it, and it fails again; after 20 more, it goes.
+    w.at(new Date(NOW.getTime() + 5 * 60_000));
+    await sweepReplies(depsOf(w));
+    expect(w.outbox).toHaveLength(0);
+    w.at(new Date(NOW.getTime() + 26 * 60_000));
+    expect(await sweepReplies(depsOf(w))).toEqual([{ ref: expect.any(String), waiting: false }]);
     expect(w.outbox).toHaveLength(1);
+    // Sent: nothing is left for the sweep.
+    expect(await sweepReplies(depsOf(w))).toEqual([]);
+  });
+
+  /** Bea, paired from her first email's knock, then writing again: a run whose reply goes to her, not the owner. */
+  async function beaRun(w: World): Promise<Run> {
+    await emailHook(w, mail(w, { from: "Bea Ruiz <bea@northwind.example>", text: "Refund order 4471." }));
+    const knock = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0];
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/knocks/${knock.id}`, { token: "ana", body: { action: "pair" } })).status).toBe(200);
+    w.agents.runs.length = 0;
+    expect((await emailHook(w, mail(w, { from: "Bea Ruiz <bea@northwind.example>", text: "Refund order 4471, please." }))).body.outcome).toBe("run");
+    return w.agents.runs[0]!;
+  }
+
+  it("a result goes to every place the taf's results are set to: the door, the app, the owner's email", async () => {
+    const w = world();
+    await emailDoor(w);
+    const set = await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["owner_email", "app", "door_reply"] } });
+    expect(set.status).toBe(200);
+    expect(set.body.taf.results).toEqual(["door_reply", "app", "owner_email"]);
+    const run = await beaRun(w);
+    w.pushed.length = 0;
+    await finish(w, run, "Refunded.");
+    expect(w.outbox.map((o) => o.to)).toEqual(["bea@northwind.example", "ana@acme.example"]);
+    expect(w.outbox[1]!.subject).toBe("Refunds: answered Bea Ruiz");
+    expect(w.outbox[1]!.text).toContain("Refunded.");
+    // The alert says it was answered, never the taf's words.
+    expect(w.pushed.map((p) => (p.payload.aps as { alert: { body: string } }).alert.body)).toEqual(["Answered Bea Ruiz through its email door."]);
+    // It opens the taf, and names no knock.
+    expect(w.pushed[0]!.payload).toMatchObject({ open: "taf", taf_id: REFUNDS });
+    expect(w.pushed[0]!.payload.door_knock).toBeUndefined();
+    // Another note for the same run sends nothing more.
+    await finish(w, run, "Refunded.");
+    expect(w.outbox).toHaveLength(2);
+  });
+
+  it("a place that fails is tried again alone: the door's reply isn't sent twice", async () => {
+    const w = world();
+    await emailDoor(w);
+    await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["door_reply", "owner_email"] } });
+    const run = await beaRun(w);
+    const sendEmail = w.config.email!.send;
+    let down = 1;
+    w.config.email!.send = async (e) => {
+      if (e.to === "ana@acme.example" && down-- > 0) throw Object.assign(new Error("down"), { status: 503 });
+      return sendEmail(e);
+    };
+    await finish(w, run, "Refunded.");
+    expect(w.outbox.map((o) => o.to)).toEqual(["bea@northwind.example"]);
+    // The chat shows the door's reply sent already, while the owner's email waits.
+    const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
+    expect(chat.body.messages.at(-1).door).toMatchObject({ reply: "sent" });
+    w.at(new Date(NOW.getTime() + 5 * 60_000));
+    await sweepReplies(depsOf(w));
+    expect(w.outbox.map((o) => o.to)).toEqual(["bea@northwind.example", "ana@acme.example"]);
+    expect(await sweepReplies(depsOf(w))).toEqual([]);
+  });
+
+  it("a reply given up on can be sent again by the owner, once, doing no work", async () => {
+    const w = world();
+    await emailDoor(w);
+    await emailHook(w, mail(w, {}));
+    const run = w.agents.runs[0]!;
+    const sendEmail = w.config.email!.send;
+    w.config.email!.send = async () => { throw Object.assign(new Error("down"), { status: 503 }); };
+    await finish(w, run, "Refunded.");
+    let at = NOW.getTime();
+    for (const wait of [5, 20, 60]) { at += wait * 60_000; w.at(new Date(at)); await sweepReplies(depsOf(w)); }
+    // Given up on: the taf's page offers Send again for it.
+    const page = await send(w, "GET", `/v1/tafs/${REFUNDS}/work`, { token: "ana" });
+    expect(page.body.requests[0].deliveries).toEqual([expect.objectContaining({ place: "door_reply", state: "not_sent", send_again: true })]);
+    // Only someone who manages the taf sends it, and only a door's reply.
+    const path = `/v1/tafs/${REFUNDS}/requests/${run.id}/deliveries/door_reply/send`;
+    expect((await send(w, "POST", path, { token: "viewer" })).status).toBe(403);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/requests/${run.id}/deliveries/app/send`, { token: "ana" })).status).toBe(400);
+    w.config.email!.send = sendEmail;
+    const runs = w.agents.runs.length;
+    const again = await send(w, "POST", path, { token: "ana" });
+    expect(again.status).toBe(200);
+    expect(again.body).toEqual({ state: "sent" });
+    expect(w.outbox).toHaveLength(1);
+    expect(w.agents.runs).toHaveLength(runs);
+    const after = await send(w, "GET", `/v1/tafs/${REFUNDS}/work`, { token: "ana" });
+    expect(after.body.requests[0].deliveries).toEqual([expect.objectContaining({ state: "sent" })]);
+    // Sent: there's nothing left to send again.
+    expect((await send(w, "POST", path, { token: "ana" })).status).toBe(404);
+  });
+
+  it("the app hears a reply went out only once it did, and that it wasn't sent once it's given up on", async () => {
+    const w = world();
+    await emailDoor(w);
+    await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["door_reply", "app"] } });
+    const run = await beaRun(w);
+    w.pushed.length = 0;
+    const sendEmail = w.config.email!.send;
+    let down = 1;
+    w.config.email!.send = async (e) => { if (down-- > 0) throw Object.assign(new Error("down"), { status: 503 }); return sendEmail(e); };
+    await finish(w, run, "Refunded.");
+    // The reply waits for its retry: no alert says it was answered.
+    expect(w.pushed).toEqual([]);
+    w.at(new Date(NOW.getTime() + 5 * 60_000));
+    await sweepReplies(depsOf(w));
+    expect(w.pushed.map((p) => (p.payload.aps as { alert: { body: string } }).alert.body)).toEqual(["Answered Bea Ruiz through its email door."]);
+  });
+
+  it("a reply given up on tells the app it wasn't sent", async () => {
+    const w = world();
+    await emailDoor(w);
+    await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["door_reply", "app"] } });
+    const run = await beaRun(w);
+    w.pushed.length = 0;
+    w.config.email!.send = async () => { throw Object.assign(new Error("down"), { status: 503 }); };
+    await finish(w, run, "Refunded.");
+    let at = NOW.getTime();
+    for (const wait of [5, 20, 60]) { at += wait * 60_000; w.at(new Date(at)); await sweepReplies(depsOf(w)); }
+    expect(w.pushed.map((p) => (p.payload.aps as { alert: { body: string } }).alert.body)).toEqual(["Your reply to Bea Ruiz wasn't sent. You can send it again from Refunds."]);
+  });
+
+  it("Send again keeps the reply when sending it fails, so the next tap can", async () => {
+    const w = world();
+    await emailDoor(w);
+    await emailHook(w, mail(w, {}));
+    const run = w.agents.runs[0]!;
+    w.config.email!.send = async () => { throw Object.assign(new Error("down"), { status: 503 }); };
+    await finish(w, run, "Refunded.");
+    let at = NOW.getTime();
+    for (const wait of [5, 20, 60]) { at += wait * 60_000; w.at(new Date(at)); await sweepReplies(depsOf(w)); }
+    const path = `/v1/tafs/${REFUNDS}/requests/${run.id}/deliveries/door_reply/send`;
+    // kiff/agents can't be read: the reply isn't lost.
+    const getRun = w.agents.api.getRun;
+    w.agents.api.getRun = async () => { throw Object.assign(new Error("kiff/agents is down"), { status: 502 }); };
+    expect((await send(w, "POST", path, { token: "ana" })).status).toBeGreaterThanOrEqual(500);
+    w.agents.api.getRun = getRun;
+    w.config.email!.send = async () => undefined;
+    expect((await send(w, "POST", path, { token: "ana" })).status).toBe(200);
+  });
+
+  it("only someone who manages the taf sets where its results go, to known places", async () => {
+    const w = world();
+    expect((await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "viewer", body: { places: ["app"] } })).status).toBe(403);
+    expect((await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: [] } })).status).toBe(400);
+    expect((await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["slack"] } })).status).toBe(400);
+    // A taf from before the setting answers through its door alone.
+    const list = (await send(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs as Array<{ id: string; results: string[] }>;
+    expect(list.find((t) => t.id === REFUNDS)!.results).toEqual(["door_reply"]);
+  });
+
+  it("a reply the provider never takes is tried after 5, 20 and 60 minutes, then said to be not sent", async () => {
+    const w = world();
+    await emailDoor(w);
+    await emailHook(w, mail(w, {}));
+    const run = w.agents.runs[0]!;
+    let tries = 0;
+    w.config.email!.send = async () => { tries++; throw Object.assign(new Error("down"), { status: 503 }); };
+    await finish(w, run, "Refunded.");
+    let at = NOW.getTime();
+    for (const wait of [5, 20, 60]) {
+      at += wait * 60_000;
+      w.at(new Date(at));
+      await sweepReplies(depsOf(w));
+    }
+    expect(tries).toBe(4);
+    expect(await sweepReplies(depsOf(w))).toEqual([]);
+    const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
+    expect(chat.body.messages.at(-1).door).toMatchObject({ reply: "not_sent" });
   });
 
   it("a display name holding an address doesn't pass for that sender", async () => {
@@ -624,7 +822,10 @@ describe("knocks and keys", () => {
     await emailHook(w, mail(w, { from: "Ana Lima <ana@northwind.example>" }));
     const home = await send(w, "GET", "/v1/home", { token: "ana" });
     expect(home.status).toBe(200);
-    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", open: true, resting: false, knocks: 1 }]);
+    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", label: "Email", open: true, resting: false, knocks: 1 }]);
+    // Knocks name their door, and the list says the limits the apps check.
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0]).toMatchObject({ app: "email", label: "Email" });
+    expect(home.body.limits).toEqual({ text: 2000, trial_idle_days: 7 });
   });
 
   it("removing the taf removes its doors", async () => {

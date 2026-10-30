@@ -80,13 +80,19 @@ export interface AIView {
   used_pct: number | null;
   asks_at_pct: number | null;
   paused: boolean;
+  /** The same, in words the apps show as they are. */
+  words: string;
 }
 
 /** The period's use as a share of the base, where the tafs ask next, and whether they're asking now. */
 export function view(p: Plan | undefined, spent: number): AIView {
   const b = p ? base(p) : 0;
-  if (!p || b <= 0) return { used_pct: null, asks_at_pct: null, paused: false };
-  return { used_pct: Math.floor((spent * 100) / b), asks_at_pct: 100 * (p.goOns + 1), paused: spent >= bound(p) };
+  if (!p || b <= 0) return { used_pct: null, asks_at_pct: null, paused: false, words: "Your plan sets no AI limit for your tafs." };
+  const used = Math.floor((spent * 100) / b), at = 100 * (p.goOns + 1), paused = spent >= bound(p);
+  const words = paused
+    ? `Your tafs used ${used}% of this period's AI and are waiting for you: go on, and they ask again at ${at + 100}%.`
+    : `Your tafs used ${used}% of this period's AI. They ask you before going past ${at}%.`;
+  return { used_pct: used, asks_at_pct: at, paused, words };
 }
 
 /** Whether kiff/agents refused a chat for AI fair use. */

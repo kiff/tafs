@@ -228,3 +228,29 @@ the latest run stopped at a cap (`capped`).
 The sample taf answers as a real one does, streamed into the live answer: it thinks,
 takes a step, then writes. Nothing reaches a model. `-sampleReplySeconds` slows it for
 UI tests ([ios-app.md](ios-app.md#launch-arguments)).
+
+## Message ids
+
+Every message in the thread has a stable `id` (`conversation` in `handler.ts`). A run's first
+owner message is `<run>.in`, and that's the id `POST …/messages` answers for the message just
+sent. Every other message is `<run>.<seq>`. An app matches what it sent to the thread by that id,
+and never by text or time.
+
+## The live line
+
+While a taf works, the stream sends one line for the app to show (`event: state`, `relay` in
+`handler.ts`). It has one `state`: `thinking`, `working` with the step's `words`, `waiting_for_you`,
+or `done`. It's sent only when it changes, and a line holds at least a second (`STATE_HOLD_MS`),
+so it doesn't flicker. Waiting for the person and the end go at once. The model's thinking text is
+never in it. An app shows this line and doesn't draw the `thinking` events. When the run ends, the
+line becomes the message's "Worked … · N steps".
+
+## The thread in one order
+
+The thread also comes as one ordered list, `items` (`threadItems` in `handler.ts`). Each entry
+is `{type: "message", message}` or `{type: "card", card}`, by time. A card shown again (the same id
+in the same chat, in any run of it) replaces its earlier version where it first appeared. A call KIFF held is
+`{type: "held", held: {exception, invocation?, run, session, at}}`, at the point it was held: only
+KIFF's keys, and the app reads the call itself from KIFF. An app draws `items` as
+they come, and places or folds nothing itself. `messages` and `components` stay, for apps from
+before.

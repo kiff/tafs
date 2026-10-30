@@ -18,6 +18,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [accounts.md](accounts.md) | Signing in, roles, people and groups, sharing a taf, usage, plans and purchases, the time zone, deleting the account |
 | [attachments.md](attachments.md) | Photos and files on a message |
 | [doors.md](doors.md) | Doors: email and WhatsApp addresses a taf takes work from |
+| [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
 | [ios-app.md](ios-app.md) | The app's code: its model, screens, services, launch arguments and tests |
 | [android-app.md](android-app.md) | The Android app's code: building and testing it, its packages, signing, releases |

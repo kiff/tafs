@@ -11,10 +11,11 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
+import { summaryOf, workOf } from "./work.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { stepWords, Steps, type ToolTitles } from "./steps.js";
-import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 
@@ -251,6 +252,25 @@ export interface Taf {
    * words (kiff/tafs#247), by version: shown in the version's trial.
    */
   tries?: Record<string, string>;
+  /**
+   * Where its results go (docs/reliability.md): through the door the work came in on, a line
+   * in the app, an email to the owner. Absent: the door's reply alone, as before.
+   */
+  results?: ResultPlace[];
+}
+
+/** A place a taf's results go. */
+export type ResultPlace = "door_reply" | "app" | "owner_email";
+
+/** Every place a result can go, in the order they're sent. */
+export const RESULT_PLACES: readonly ResultPlace[] = ["door_reply", "app", "owner_email"];
+
+/** The places a request names, each once, in RESULT_PLACES' order: at least one, and only those. */
+export function resultPlaces(v: unknown): ResultPlace[] {
+  if (!Array.isArray(v) || !v.length || !v.every((p) => typeof p === "string" && (RESULT_PLACES as readonly string[]).includes(p))) {
+    throw new HTTPError(400, `places is one or more of ${RESULT_PLACES.join(", ")}`);
+  }
+  return RESULT_PLACES.filter((p) => v.includes(p));
 }
 
 export interface Tafs {
@@ -466,6 +486,36 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const s = await agentsCall(() => deps.agents.switchSchedule(me.tenantID, taf.id, action === "resume"));
     return { taf: await view(taf, me, deps, s) };
   }
+  if (parts.length === 4 && method === "GET" && action === "work") {
+    // Where its work stands, for its page (docs/reliability.md): every line and time written here.
+    const now = deps.now?.() ?? new Date();
+    const [runs, v, sent] = await Promise.all([
+      agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
+      view(taf, me, deps),
+      deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
+    ]);
+    const zone = me.timeZone ?? "UTC";
+    const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
+    const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again) };
+  }
+  if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
+    // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
+    await needTaf(event, me, taf, deps);
+    if (parts[6] !== "door_reply") throw new HTTPError(400, "only a door's reply is sent again");
+    try {
+      return await sendAgain(doorContext(deps), me.tenantID, taf.id, parts[4] ?? "");
+    } catch (err) {
+      if (err instanceof DoorError) throw new HTTPError(err.status, err.message);
+      throw err;
+    }
+  }
+  if (parts.length === 4 && method === "PUT" && action === "results") {
+    await needTaf(event, me, taf, deps);
+    const updated = { ...taf, results: resultPlaces(parseBody(event).places) };
+    await deps.tafs.put(me.tenantID, updated);
+    return { taf: await view(updated, me, deps) };
+  }
   if (parts.length === 4 && method === "POST" && action === "run") {
     await needTaf(event, me, taf, deps);
     const run = await agentsCall(() => deps.agents.trigger(me.tenantID, taf.id));
@@ -484,17 +534,17 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, sessions } = await conversation(me, taf, deps, undefined, doors, titles);
+    const { messages, components, held, sessions } = await conversation(me, taf, deps, undefined, doors, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
+    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, sessions } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, sessions } = await conversation(me, taf, deps, only, false, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
+    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -1409,6 +1459,11 @@ export interface CardAnswer {
 }
 
 export interface ThreadMessage {
+  /**
+   * The message's stable id: a run's first owner message is `<run>.in`, which is what
+   * `POST …/messages` answers for the message it sent; every other is `<run>.<seq>`.
+   */
+  id: string;
   at: string;
   from: "owner" | "taf";
   kind: "kickoff" | "message";
@@ -1477,7 +1532,7 @@ function titlesOf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Pro
   return toolTitles(bearer(event), me.tenantID, me.subject, taf.kiffAgent, deps.fetch, deps.kiffBase);
 }
 
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; sessions: Session[] }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -1497,6 +1552,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s)).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
   const components: ThreadComponent[] = [];
+  const held: ThreadHeld[] = [];
   /** Runs a door's message started, by run: their answers go back through it. */
   const doorRuns = new Map<string, string>();
   const sent = new Map((deps.doors ? await sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : []).map((x) => [x.run, x]));
@@ -1540,8 +1596,16 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         }
         continue;
       }
+      if (e.kind === "tool_result") {
+        // A call KIFF held, where it was held: the app reads the call itself from KIFF.
+        const b = (e.body ?? {}) as { state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
+        if (b.state === "held" && typeof b.hold?.exception === "string" && b.hold.exception) {
+          held.push({ at: iso(e.time), session: r.session.id, run: e.run, exception: b.hold.exception, ...(typeof b.invocation === "string" ? { invocation: b.invocation } : {}) });
+        }
+        continue;
+      }
       if (e.kind === "component") {
-        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: e.body });
+        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: withLine(e.body) });
         continue;
       }
       if (e.kind === "answered") {
@@ -1551,7 +1615,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (card) card.answer = cardAnswer(b, iso(e.time));
         // Words the owner wrote while the card waited answered it: they show as their message, as sent.
         if (typeof b.wrote === "string" && b.wrote.trim()) {
-          messages.push({ at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
+          messages.push({ id: `${e.run}.${e.seq}`, at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
         }
         continue;
       }
@@ -1563,12 +1627,14 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       const run = runOf(e.run, at);
       if (e.kind === "owner_message") {
         // Each job run opens with the job's instruction: not something the owner typed.
-        const kind = r.session.kind === "run" && !seenRun.has(e.run) ? "kickoff" : "message";
+        const first = !seenRun.has(e.run);
+        const kind = r.session.kind === "run" && first ? "kickoff" : "message";
         seenRun.add(e.run);
         // A message that came through a door is shown as written, marked with its door and sender.
         const door = parseDoorMessage(text);
         if (door) doorRuns.set(e.run, door.app);
         messages.push({
+          id: first ? inputID(e.run) : `${e.run}.${e.seq}`,
           at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : ownerWords(text), session: r.session.id,
           ...(door ? { door: { app: door.app, from: door.from, ...(door.subject ? { subject: door.subject } : {}) } } : {}),
           ...(attached.length ? { attachments: attached } : {}),
@@ -1577,7 +1643,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         const app = doorRuns.get(e.run);
         const reply = app ? sent.get(e.run) : undefined;
         const said: ThreadMessage = {
-          at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id,
+          id: `${e.run}.${e.seq}`, at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id,
           ...(app ? { door: { app, reply: reply?.status ?? "pending", ...(reply?.why ? { why: reply.why } : {}) } } : {}),
         };
         messages.push(said);
@@ -1596,7 +1662,66 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   }
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
-  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
+  held.sort((a, b) => a.at.localeCompare(b.at));
+  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), sessions: picked };
+}
+
+/** One entry of the thread in order: a message, or a card at its place. */
+export type ThreadItem = { type: "message"; message: ThreadMessage } | { type: "card"; card: ThreadComponent } | { type: "held"; held: ThreadHeld };
+
+/**
+ * A call KIFF held for the owner, at its place in the thread: only KIFF's keys for
+ * it. The app reads the call itself, its words and its answer, from KIFF with the person's session.
+ */
+export interface ThreadHeld {
+  at: string;
+  session: string;
+  run: string;
+  exception: string;
+  invocation?: string;
+}
+
+/**
+ * The thread as one ordered list, so neither app places or folds anything: messages and cards by
+ * time, a card shown again (the same id in the same chat) replacing its earlier version in place, at
+ * the time it first appeared.
+ */
+export function threadItems(messages: ThreadMessage[], components: ThreadComponent[], held: ThreadHeld[] = []): ThreadItem[] {
+  const cards = new Map<string, ThreadComponent & { first: string }>();
+  for (const c of components) {
+    const id = String((c.component as { id?: unknown })?.id ?? "");
+    // The same card shown again in the chat replaces it, in a later run of the chat too.
+    const key = `${c.session}#${id}`;
+    const seen = cards.get(key);
+    cards.set(key, { ...c, first: seen?.first ?? c.at });
+  }
+  const items: Array<{ at: string; order: number; item: ThreadItem }> = [];
+  messages.forEach((m, i) => items.push({ at: m.at, order: i, item: { type: "message", message: m } }));
+  [...cards.values()].forEach(({ first, ...c }, i) => items.push({ at: first, order: messages.length + i, item: { type: "card", card: c } }));
+  held.forEach((h, i) => items.push({ at: h.at, order: messages.length + cards.size + i, item: { type: "held", held: h } }));
+  return items.sort((a, b) => a.at.localeCompare(b.at) || a.order - b.order).map((x) => x.item);
+}
+
+/**
+ * A plan (a `steps` component) with its one-line form, `line`: "Step 3 of 6 · Your rules", the step
+ * at work or the first still to do, or "Done · 6 of 6". So an app shows the plan in one line, with no
+ * counting of its own. Any other component is as it came.
+ */
+export function withLine(component: unknown): unknown {
+  const c = component as { type?: unknown; steps?: unknown } | null | undefined;
+  if (!c || c.type !== "steps" || !Array.isArray(c.steps) || !c.steps.length) return component;
+  const steps = c.steps as Array<{ label?: unknown; status?: unknown }>;
+  const n = steps.length;
+  const at = steps.findIndex((s) => s.status === "active");
+  const next = at >= 0 ? at : steps.findIndex((s) => s.status !== "done" && s.status !== "skipped");
+  if (next < 0) return { ...c, line: `Done · ${n} of ${n}` };
+  const label = typeof steps[next]!.label === "string" ? (steps[next]!.label as string).trim() : "";
+  return { ...c, line: `Step ${next + 1} of ${n}${label ? ` · ${label}` : ""}` };
+}
+
+/** The id of a run's first owner message: what `POST …/messages` answers, so the app matches its send to the thread. */
+function inputID(run: string): string {
+  return `${run}.in`;
 }
 
 /** An `answered` event's body as the app shows it. */
@@ -1792,7 +1917,7 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   if (attached.length) at.attachments = attached;
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text, at, ai));
-  return { session: run.session, new_session: newSession(at, run) };
+  return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created } };
 }
 
 /**
@@ -1897,9 +2022,9 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const open = await openTrialOf(me, taf, deps);
     if (!open.session) return { messages: [], components: [], working: false, steering: [] };
     const [only, titles] = await Promise.all([ownChat(me, taf, open.session, deps, "trial"), titlesOf(event, me, taf, deps)]);
-    const { messages, components, sessions } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, sessions } = await conversation(me, taf, deps, only, false, titles);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
+    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
   }
   await needTaf(event, me, taf, deps);
   const token = bearer(event);
@@ -2541,6 +2666,11 @@ export interface StreamResult {
  *   event: held       {exception, invocation}: KIFF holds the call just made for the
  *                     owner, at this point of the answer (kiff/tafs#206)
  *   event: component  {component}: a component the agent showed
+ *   event: state      {state, words?}: the one line the app shows while the taf works, as tafs
+ *                     cloud paces it: "thinking", "working" with the step's words, "waiting_for_you",
+ *                     then "done". Sent only when it changes, a line held at least a second
+ *                     (STATE_HOLD_MS) unless it waits for the person or ends. The model's thinking
+ *                     text is never in it: an app shows this line, and draws no `thinking` text
  *   event: end        {status, stop}: where the run stopped
  *   event: error      {error}: the stream broke; the conversation has the rest
  *
@@ -2703,8 +2833,45 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
  * (`at` set) shows what the agent does as it does it; a resumed one's, its
  * recorded steps.
  */
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map()): AsyncGenerator<string> {
+/** How long the stream's `state` line holds before it changes, unless it waits for the person or ends. */
+export const STATE_HOLD_MS = 1000;
+
+/** The card types a run waits on the person for: while one shows, the line says it waits for them. */
+const WAITS_FOR_YOU = new Set(["confirm", "questions", "approval", "sign_in"]);
+
+/**
+ * The stream's one calm line (`state`): what the taf does now, sent only on a change, and held at
+ * least STATE_HOLD_MS so it doesn't flicker. A line the hold kept back goes with the next event
+ * once the hold is over, or is replaced by a newer one.
+ */
+class Pace {
+  private sent?: { key: string; at: number };
+  private pending?: { state: string; words?: string };
+  constructor(private readonly now: () => number) {}
+
+  /** The `state` event to send now for this line, if any. */
+  set(state: string, words?: string): string | undefined {
+    this.pending = { state, ...(words ? { words } : {}) };
+    return this.flush(state === "waiting_for_you" || state === "done");
+  }
+
+  /** The line held back, once its hold is over (or at once, when `now`). */
+  flush(now = false): string | undefined {
+    const p = this.pending;
+    if (!p) return undefined;
+    const key = `${p.state}|${p.words ?? ""}`;
+    if (this.sent?.key === key) { this.pending = undefined; return undefined; }
+    const t = this.now();
+    if (!now && this.sent && t - this.sent.at < STATE_HOLD_MS) return undefined;
+    this.sent = { key, at: t };
+    this.pending = undefined;
+    return sse("state", p);
+  }
+}
+
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now): AsyncGenerator<string> {
   const steps = new Steps(titles);
+  const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
   // What it's doing, in a few words: only these, never the call's arguments.
   const call = (tool: string, input: unknown, callID: unknown): string => {
@@ -2736,7 +2903,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
         if (d.kind === "thinking" && typeof d.text === "string") return sse("thinking", { text: d.text });
         if (d.kind === "tool_call" && typeof d.tool === "string") return call(d.tool, d.input, d.call_id);
-        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: d.component });
+        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: withLine(d.component) });
         if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
         if (d.kind === "tool_result") return ended(d.call_id, (d.result ?? {}) as Record<string, unknown>, d.not_made === true);
         return undefined;
@@ -2748,7 +2915,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "tool_call" && typeof b.tool === "string") return call(b.tool, b.input, b.call_id);
         if (d.kind === "tool_result") return ended(b.call_id, b, b.not_made === true);
         if (d.kind === "agent_message" || d.kind === "report") return sse("said", {});
-        if (d.kind === "component") return sse("component", { component: d.body });
+        if (d.kind === "component") return sse("component", { component: withLine(d.body) });
         if (d.kind === "usage") {
           // The first turn after a pause starts a part: what came before it is in the
           // conversation, with its own work, and isn't shown as this part's (the 859 test).
@@ -2767,14 +2934,40 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         return undefined;
     }
   };
+  // The line each event puts the taf on: thinking while the model writes or thinks, working on a
+  // step in its words, waiting for the person on a card that waits or a held call, done at the end.
+  const line = (e: RunStreamEvent): string | undefined => {
+    const d = (e.data ?? {}) as Record<string, unknown>;
+    const b = (e.event === "event" ? (d.body ?? {}) : d) as Record<string, unknown>;
+    const kind = d.kind;
+    if (e.event === "end") return pace.set("done");
+    if (e.event === "run") return pace.set("thinking");
+    if (kind === "thinking" || kind === "text") return pace.set("thinking");
+    if (kind === "tool_call" && typeof b.tool === "string") {
+      return pace.set("working", steps.call(b.tool, b.input)?.replace(/…$/, ""));
+    }
+    if (kind === "tool_result") {
+      const r = (e.event === "event" ? b : (d.result ?? {})) as { state?: unknown };
+      return pace.set(r.state === "held" ? "waiting_for_you" : "thinking");
+    }
+    if (kind === "component") {
+      const c = (e.event === "event" ? d.body : d.component) as { type?: unknown } | undefined;
+      return typeof c?.type === "string" && WAITS_FOR_YOU.has(c.type) ? pace.set("waiting_for_you") : undefined;
+    }
+    return pace.flush();
+  };
   try {
     if (first && !first.done) {
       const s = out(first.value);
       if (s) yield s;
+      const l = line(first.value);
+      if (l) yield l;
     }
     for await (const e of run) {
       const s = out(e);
       if (s) yield s;
+      const l = line(e);
+      if (l) yield l;
     }
   } catch (err) {
     console.error(err);
@@ -2957,6 +3150,8 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule)
     ...(taf.unscheduled ? { unscheduled: true } : {}),
     next_run: s?.enabled && s.next ? iso(s.next) : null,
     last_run: last ? iso(last.created) : null,
+    /** Where its results go (docs/reliability.md). */
+    results: placesOf(taf),
   };
 }
 
@@ -3004,6 +3199,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
+  // Where each taf's work stands (docs/reliability.md): one read of its recent runs. A read that fails leaves it out.
+  const now = deps.now?.() ?? new Date();
+  const recent = await Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => undefined)));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
@@ -3012,7 +3210,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
     const words = JOBS.find((j) => j.id === v.job)?.summary;
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
-    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}) };
+    const runs = recent[i];
+    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now) : undefined;
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}), ...(work ? { work } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.
@@ -3029,7 +3229,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
-  return { tafs: listed, others, removing, ...(doors.length ? { doors_offered: doors } : {}) };
+  // The limits the apps check before sending: tafs cloud's, never a copy on the phone.
+  const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
+  return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}) };
 }
 
 /** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */
@@ -3275,7 +3477,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         ]);
         const live = state.versions.find((v) => v.live);
         return {
-          id: t.id, name: t.name, job: t.job, kiff_agent: t.kiffAgent,
+          id: t.id, name: t.name, job: t.job, kiff_agent: t.kiffAgent, results: placesOf(t),
           ...(t.unscheduled ? { works_from_chat: true } : schedule
             ? { schedule: { cron: schedule.cron, time_zone: schedule.time_zone || "UTC", on: schedule.enabled, ...(schedule.next ? { next: iso(schedule.next) } : {}) } }
             : {}),
@@ -3361,6 +3563,13 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (taf.unscheduled) throw new ToolRefusal(`${taf.name} works from its chat: it has no schedule to ${on ? "resume" : "pause"}`);
     const s = await agentsCall(() => deps.agents.switchSchedule(call.tenant, taf.id, on));
     return { taf: taf.name, schedule: on ? "on" : "paused", ...(s.next ? { next: iso(s.next) } : {}) };
+  }
+  if (name === "taf_results") {
+    if (may && !may.manage) throw new ToolRefusal(`where ${taf.name}'s results go is for the people who manage it`);
+    let places: ResultPlace[];
+    try { places = resultPlaces(args.places); } catch (err) { throw new ToolRefusal((err as Error).message); }
+    await deps.tafs.put(call.tenant, { ...taf, results: places });
+    return { taf: taf.name, results: places };
   }
   if (may && !may.manage) throw new ToolRefusal(`changing ${taf.name}'s version is for the people who manage it`);
   if (!Number.isInteger(n) || n < 1) throw new ToolRefusal("n is a version number, from tafs_state");
@@ -3559,6 +3768,12 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     });
   }
   return { took, pending };
+}
+
+/** The door replies a provider didn't take, tried again by the sweep once their wait is over. */
+export async function sweepReplies(deps: Deps): Promise<Array<{ ref: string; waiting: boolean }>> {
+  if (!deps.doors) return [];
+  return sweepDoorReplies(doorContext(deps));
 }
 
 /** Where the hand-overs a server error left undone wait for the sweep: one list for all accounts. */

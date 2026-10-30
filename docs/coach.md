@@ -198,6 +198,7 @@ under Coach's Cards first.
 | `taf_task` | Hands a taf a task or a message: a new run, or to a run at work |
 | `run_stop` | Stops a run; its held calls are withdrawn |
 | `taf_pause` | Pauses or resumes a taf's schedule |
+| `taf_results` | Sets where a taf's results go, all places at once ([doors.md](doors.md#where-results-go)). KIFF holds every change for the owner, who approves it in tafs |
 | `version_try` | Tries a version: KIFF decides each of its writes and sends none |
 | `version_install` | Installs a version. KIFF holds this for the owner, who approves it in tafs: the app stops what's in the way, confirms the version's Card and makes it live |
 
@@ -213,3 +214,10 @@ cloud to a new URL means updating that list too. The app shows
 these as lines in Coach's chat ("coach lines"). While the owner is away, what isn't
 urgent waits there as one "While you were away" message instead of a notification
 ([approvals.md](approvals.md#notifications)).
+
+## The plan in one line
+
+A plan (`steps` component) comes with `line`, its one-line form (`withLine` in `handler.ts`):
+"Step 3 of 6 · Your rules", for the step at work or the first still to do, or "Done · 6 of 6". It's
+in the thread and on the stream alike. An app shows the plan folded to that line in Coach's header,
+and opens it to the steps.
