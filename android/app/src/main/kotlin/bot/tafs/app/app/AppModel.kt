@@ -627,12 +627,16 @@ class AppModel(
     kiffTenant = tenant
     kiff.tenant = tenant
     forgetApprovalKey()
+    // Checked at launch, with no prompt: a fingerprint added since turned the key off, and the owner learns it here, not
+    // after a tap that fails.
+    val keyGone = keyed && !signer.approvalKeyUsable()
     // The approval key counts only while it's the one KIFF registered: a key made anew since (the
     // lock screen turned off and on) registers again, and KIFF's answer says whether it may.
     val key = signer.approvalPublicKeyDER
     if (keyed && key.isNotEmpty() && KiffClient.sameKey(secrets.load(APPROVAL_KEYED), key)) useApprovalKey()
     // Drawn at once, saying it is loading, not after the network: the owner never waits on a blank screen.
     _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0") }
+    if (keyGone) lostApprovalKey()
     refresh()
     // A session from before the approval key registers it once (kiff/tafs#233).
     registerApprovalKey()
@@ -954,6 +958,7 @@ class AppModel(
       e.message!!
     }
     e.message == DeviceSigner.NO_FINGERPRINT -> e.message!!
+    e.message == DeviceSigner.NOT_RECOGNIZED -> e.message!!
     else -> otherwise
   }
 

@@ -277,7 +277,8 @@ class AnswerKiffTest {
     assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
     assertTrue(transport.requests.none { it.method == "POST" })
     assertEquals(1, m.state.value.held.size)
-    assertEquals("Not sent: it wasn't confirmed.", m.state.value.lastError)
+    // A fingerprint not given says the way on: the same words as a key that's gone.
+    assertEquals(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, m.state.value.lastError)
     assertTrue(m.state.value.record.none { it.signature != null })
   }
 
@@ -472,6 +473,28 @@ class AnswerKiffTest {
     auth.whilePrompted = { now = now.plusSeconds(45) }
     assertTrue(m.answer(m.state.value.held.single(), Answer.Refuse))
     assertEquals("2026-10-28T09:00:45Z", signedAt(body("reject")))
+  }
+
+  @Test fun aKeyTurnedOffWhileTheAppWasClosedIsFoundAtLaunchWithNoTapAndNoPrompt() = runTest {
+    reads()
+    val keys = SoftwareKeys()
+    val signer = DeviceSigner(keys, auth)
+    secrets.save("at_1", AppModel.TOKEN); secrets.save("t_01", AppModel.TENANT); secrets.save("1", AppModel.KEYED)
+    secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
+    // A fingerprint was added while tafs was closed: the key KIFF holds is off.
+    keys.invalidateApproval = true
+    val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, start = false).also { it.restore() }
+    // Known at launch, before any tap: the screens say so, and nothing was asked.
+    assertTrue(m.state.value.approvalKeyLost)
+    assertTrue(auth.asked.isEmpty())
+    assertNull(secrets.load(AppModel.APPROVAL_KEYED))
+  }
+
+  @Test fun aKeyStillValidAtLaunchIsUsedAsBefore() = runTest {
+    reads()
+    val m = model()
+    assertFalse(m.state.value.approvalKeyLost)
+    assertTrue(signer.approvalKeyUsable())
   }
 
   @Test fun aKeyTurnedOffByANewFingerprintSendsNothingSaysWhyAndRefusingStillWorks() = runTest {

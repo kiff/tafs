@@ -93,7 +93,7 @@ fun SettingsSheet(
           // This phone can't approve until a new sign-in, which KIFF approves in the browser and which registers its new key.
           if (state.mode == Mode.kiff && state.approvalKeyLost) {
             Text(
-              "This phone can't approve until you sign in with KIFF again. Refusing still works.",
+              bot.tafs.app.signing.ApprovalKeyRenewed.WORDS + " Refusing still works.",
               style = scaled(13, color = Theme.amberText),
               modifier = Modifier.padding(12.dp),
             )

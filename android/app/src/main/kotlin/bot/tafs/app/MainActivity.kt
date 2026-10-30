@@ -82,6 +82,7 @@ import bot.tafs.app.views.UsageSheet
 import bot.tafs.app.views.CoachInstalls
 import bot.tafs.app.views.LocalAnswerPage
 import bot.tafs.app.views.LocalImproveInCoach
+import bot.tafs.app.views.LocalSignInAgain
 import bot.tafs.app.views.LocalReceipt
 import bot.tafs.app.views.OverviewView
 import bot.tafs.app.views.LocalCoachInstalls
@@ -178,6 +179,7 @@ fun RootView(model: AppModel) {
   // Where the owner left off: signed in to KIFF, the saved sample, or the first screen.
   LaunchedEffect(model) { model.restore() }
   var signingIn by rememberSaveable { mutableStateOf(false) }
+  val rootScope = rememberCoroutineScope()
 
   Box(Modifier.fillMaxSize().background(Theme.background)) {
     when {
@@ -187,6 +189,7 @@ fun RootView(model: AppModel) {
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
         LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
+        LocalSignInAgain provides { rootScope.launch { model.signOutAtKiff() } },
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
         LocalCoachInstalls provides remember(model) {

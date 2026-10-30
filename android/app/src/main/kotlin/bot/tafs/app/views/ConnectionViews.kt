@@ -58,7 +58,9 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
         val tools = ConnectionWords.tools(grant)
         if (tools.isNotEmpty()) Text(tools, style = scaled(13, color = Theme.soft))
         ConnectionWords.lastEvent(grant)?.let { Text(it, style = scaled(12, color = Theme.dim)) }
-        if (grant.needsReconnect) {
+        if (grant.needsReconnect && state.approvalKeyLost) {
+          ApprovalKeyLine()
+        } else if (grant.needsReconnect) {
           val busy = state.connecting != null
           OutlineButton(
             if (state.connecting == grant.id) state.connectStep ?: "Opening the sign-in…" else "Sign in again",

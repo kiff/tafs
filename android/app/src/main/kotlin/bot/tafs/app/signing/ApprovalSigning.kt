@@ -13,7 +13,11 @@ open class SignerException(message: String, cause: Throwable? = null) : Exceptio
  */
 class ApprovalKeyRenewed(cause: Throwable? = null) : SignerException(WORDS, cause) {
   companion object {
-    const val WORDS = "A fingerprint was added to this phone, so it can't approve until you sign in with KIFF again. Refusing still works."
+    /**
+     * The approval key is gone, or a finger wasn't recognized: approvals need a fingerprint, and the screen lock never approves,
+     * so the way on is a new sign-in, which registers a new key. Said where the owner would approve, before any tap.
+     */
+    const val WORDS = "Your fingerprints changed, or none was recognized, so this phone can't approve until you sign in again."
   }
 }
 
@@ -55,6 +59,12 @@ interface ApprovalSigning {
    * approved, not when the prompt came up.
    */
   suspend fun signApproval(reason: String, built: () -> ByteArray): String
+
+  /**
+   * Whether the approval key can still sign, checked without a prompt: false when a fingerprint added since turned it off (a new
+   * one is made in its place, which KIFF learns at the next sign-in). True where there's no key to check.
+   */
+  fun approvalKeyUsable(): Boolean = true
 }
 
 /** The messages the owner signs, as KIFF and tafs cloud read them: stable across versions. */
@@ -135,7 +145,8 @@ class DeviceSigner(
       throw SignerException(NO_FINGERPRINT)
     }
     val signature = keys.approvalSignature()
-    if (!authenticator.authenticate(reason, signature)) throw SignerException("Not confirmed")
+    // A finger not recognized, or the prompt closed: the way on is the same as for a key that's gone, so the words are too.
+    if (!authenticator.authenticate(reason, signature)) throw SignerException(NOT_RECOGNIZED)
     return try {
       signature.update(built())
       encode(signature.sign())
@@ -144,9 +155,22 @@ class DeviceSigner(
     }
   }
 
+  override fun approvalKeyUsable(): Boolean {
+    if (keys.approvalPublicKeyDER.isEmpty()) return true
+    return try {
+      keys.approvalSignature()
+      true
+    } catch (_: ApprovalKeyRenewed) {
+      false
+    } catch (_: Exception) {
+      true
+    }
+  }
+
   private fun encode(der: ByteArray): String = Base64.getEncoder().encodeToString(der)
 
   companion object {
     const val NO_FINGERPRINT = "Add a fingerprint to this phone to approve from it. Refusing still works."
+    const val NOT_RECOGNIZED = ApprovalKeyRenewed.WORDS
   }
 }
