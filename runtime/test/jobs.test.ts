@@ -91,6 +91,8 @@ describe("jobs", () => {
       // A chat answer ends with no report: the judges read a scheduled run's "nothing else was
       // done or left undone" as filler.
       expect(flat).toContain("with no closing summary of what was or wasn't done: that's a scheduled run's report");
+      // Each outcome said once (Eval 41015204757: "it was sent once. The refund went through.").
+      expect(flat).toContain("each thing once: after a held call the owner approved, one sentence says what went through");
       // The scheduled run's report still names each item by its reference.
       expect(flat).toContain("End every scheduled run with a short report");
     }
