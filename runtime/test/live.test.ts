@@ -30,9 +30,16 @@ describe("live updates for the whole account", () => {
     logRequest(event, 200, 12);
     const line = log.mock.calls[0]![0] as string;
     log.mockRestore();
-    expect(JSON.parse(line)).toEqual({ event: "request", method: "GET", route: "/v1/tafs/:id/runs/:id/stream", status: 200, ms: 12 });
+    expect(JSON.parse(line)).toEqual({ event: "request", method: "GET", route: "/v1/tafs/:x/runs/:x/stream", status: 200, ms: 12 });
     expect(line).not.toContain("secret");
     expect(line).not.toContain("hi");
+    // An address or a note's name in the path is masked like an id.
+    const log2 = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    logRequest({ ...event, rawPath: "/v1/tafs/taf-a/doors/email/keys/ana%40acme.example" } as HTTPEvent, 200, 3);
+    logRequest({ ...event, rawPath: "/v1/tafs/taf-a/memory/%40ana" } as HTTPEvent, 200, 3);
+    const lines = log2.mock.calls.map((c) => JSON.parse(c[0] as string).route);
+    log2.mockRestore();
+    expect(lines).toEqual(["/v1/tafs/:x/doors/email/keys/:x", "/v1/tafs/:x/memory/:x"]);
   });
 });
 

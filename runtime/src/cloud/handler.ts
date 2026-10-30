@@ -397,12 +397,19 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   }
 }
 
+/** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
+const ROUTE_WORDS = new Set(("v1 account ai alerts answer archive archived attachments calls chats components continue conversation " +
+  "delete deletions deliveries doors door email whatsapp ended events halt holds home improve install jobs keys kiff knocks live mcp " +
+  "memory messages pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
+  "unarchive usage versions work webhooks").split(" "));
+
 /**
- * One line per request, so a check can be confirmed from tafs cloud's own logs: the method, the
- * route with its ids masked, the status and how long it took. Never a body, a token, a query or an id.
+ * One line per request, so a check can be confirmed from tafs cloud's own logs: the method, the route
+ * with every part that isn't one of its fixed words masked, the status and how long it took. Never a
+ * body, a token, a query, an id, an address or a name.
  */
 export function logRequest(event: HTTPEvent, status: number, ms: number): void {
-  const route = event.rawPath.split("/").map((p) => (/^taf-/.test(p) || (/\d/.test(p) && p.length >= 6) || p.length > 32 ? ":id" : p)).join("/");
+  const route = event.rawPath.split("/").map((p) => (p === "" || ROUTE_WORDS.has(p) ? p : ":x")).join("/");
   console.log(JSON.stringify({ event: "request", method: event.requestContext.http.method.toUpperCase(), route, status, ms }));
 }
 

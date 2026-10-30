@@ -401,7 +401,8 @@ const TELL_EVERY_MS = 3000;
 
 /**
  * A silent push to every phone of the account saying what changed (docs/approvals.md, "Live updates"):
- * each phone reads it again with its own session, so a person who may not see the taf learns nothing.
+ * each phone reads it again with its own session, so a person who may not see the taf learns only that
+ * something changed on a taf of the account, never what.
  * Told at most once every few seconds per account, kind and taf. A push that fails is logged, never
  * in the way of the change itself.
  */
@@ -414,7 +415,12 @@ export async function tellChange(tenant: string, change: Change, taf: string | u
   try {
     const { devices } = await deps.push.get(tenant);
     const n = changeNotification(change, taf);
-    await Promise.all(devices.map((d) => deps.apns.send(d, n).catch(() => "failed")));
+    // Never in the way of the answer: the sends get a second and a half, then the request goes on.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+      Promise.all(devices.map((d) => deps.apns.send(d, n).catch(() => "failed"))),
+      new Promise((done) => { timer = setTimeout(done, 1500); }),
+    ]).finally(() => clearTimeout(timer));
   } catch (err) {
     console.error(`change ${change} not told: ${(err as Error).message}`);
   }

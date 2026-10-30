@@ -234,6 +234,8 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
     throw err;
   }
   started();
+  // The phones of the account read the taf again, so the message shows in an open chat.
+  await tellChange(tenant, "taf", taf.id, { push: ctx.push, apns: ctx.apns });
   // The run is going: what follows only helps, and its failure never starts it again.
   await store.put(threadKey, { session: run.session }, addDays(ctx.now, DOOR.threadDays))
     .catch((err) => console.error("door thread not kept:", err instanceof Error ? err.message : "error"));
@@ -404,6 +406,8 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
     await store.remove(doorKeys.sending(tenant, ref));
     return;
   }
+  // The phones read the taf again: the reply's stamp shows in an open chat.
+  if (taf) await tellChange(tenant, "taf", taf.id, { push: ctx.push, apns: ctx.apns });
   // Given up on: the chat says the door's reply wasn't sent, and it's kept for Send again.
   if (sent && !done.has("door_reply")) {
     await stamp(sent);
