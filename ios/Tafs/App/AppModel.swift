@@ -262,8 +262,11 @@ final class AppModel: ObservableObject {
     /// A taf newly waiting on the owner still goes to the top at once.
     var listedTafs: [Taf] {
         let settled = Self.inOrder(tafs, listOrder, fallback: Self.byRecent(tafs, record: record, held: held, chats: chats, signedOut: signedOutTafs))
-        return Self.waitingFirst(settled, waiting: waitingOnOwner)
+        return Self.waitingFirst(settled, waiting: waitingOnOwner.subtracting(waitingWhenSettled))
     }
+
+    /// The tafs waiting on the owner when the order was last settled: already placed by it.
+    private var waitingWhenSettled: Set<UUID> = []
 
     /// The tafs waiting on the owner: a call held for an answer, or a connection its vendor
     /// signed out, to sign in to again.
@@ -272,7 +275,7 @@ final class AppModel: ObservableObject {
     /// The tafs with a connection their vendor signed out.
     private var signedOutTafs: Set<UUID> { Set(tafs.map(\.id).filter { signedOut($0) != nil }) }
 
-    /// The tafs waiting on the owner first, each part in the order it had.
+    /// The tafs newly waiting on the owner first, each part in the order it had.
     nonisolated static func waitingFirst(_ tafs: [Taf], waiting: Set<UUID>) -> [Taf] {
         tafs.filter { waiting.contains($0.id) } + tafs.filter { !waiting.contains($0.id) }
     }
@@ -305,6 +308,7 @@ final class AppModel: ObservableObject {
     /// Settles the list's order now: when its tafs change, and when the app comes back.
     func settleListOrder() {
         listOrder = Self.byRecent(tafs, record: record, held: held, chats: chats, signedOut: signedOutTafs).map(\.id)
+        waitingWhenSettled = waitingOnOwner
     }
 
     /// tafs in a settled order; a taf the order doesn't know yet comes after, as `fallback` has it.
@@ -496,7 +500,7 @@ final class AppModel: ObservableObject {
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
+        tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -755,7 +759,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
+        tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
         notifyHeld()
