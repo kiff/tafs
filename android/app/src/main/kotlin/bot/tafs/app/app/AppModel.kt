@@ -257,6 +257,13 @@ data class AppState(
   /** Where an approval in progress is, once past opening the vendor's page: "Checking the sign-in…". */
   val connectStep: String? = null,
   val cardsAnswering: Set<String> = emptySet(),
+  /**
+   * What the owner wrote in each chat and hasn't sent, Coach's included, by chat: kept while they go elsewhere in the app, and
+   * dropped with the account's state at sign-out or a switch of account (as iOS's setupDraft).
+   */
+  val drafts: Map<String, String> = emptyMap(),
+  /** Cards whose answer tafs cloud took, before the thread has it: shown answered, never as open again. */
+  val cardsTaken: Set<String> = emptySet(),
   val cardErrors: Map<String, String> = emptyMap(),
   /** The version each improvement result made, by its key; those being made, and those that failed (with why). */
   val improvedVersions: Map<String, Int> = emptyMap(),
@@ -1305,6 +1312,11 @@ class AppModel(
   }
 
   /** Reads the taf's latest run and, once it has stopped, its report. */
+  /** Keeps what the owner wrote in a chat and hasn't sent; an empty one is dropped. */
+  fun setDraft(tafId: String, text: String) {
+    _state.update { it.copy(drafts = if (text.isEmpty()) it.drafts - tafId else it.drafts + (tafId to text)) }
+  }
+
   /** Reads where the taf's work stands, from tafs cloud (docs/reliability.md): its requests and skipped firings, in its words. */
   suspend fun loadWork(tafId: String) {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
@@ -1909,7 +1921,11 @@ class AppModel(
     try {
       tools.connect?.let { kiff.connectBatch(it.body) }
       if (generation != accountGeneration) return false
-      tools.card?.let {
+      // tafs cloud drafts the Card over tools KIFF holds: one sent without it comes once the batch is in, so it's read again
+      // here and given in the same flow, and the owner taps once.
+      val card = tools.card ?: if (tools.connect != null) cloud.coachTools()?.card else null
+      if (generation != accountGeneration) return false
+      card?.let {
         // Its own fingerprint, in its own words: it gives Coach its Cards.
         approvalReason = "Give Coach its Card"
         kiff.submitDraft(it.body)
@@ -2264,16 +2280,21 @@ class AppModel(
       if (generation != accountGeneration) return false
       val gone = e is CloudError && e.status == 409
       if (!gone) _state.update { it.copy(cardErrors = it.cardErrors + (id to "Your answer wasn't sent. ${ErrorWords.of(e)}")) }
-      readThread(COACH_CHAT)
       _state.update { it.copy(cardsAnswering = it.cardsAnswering - id) }
+      readThread(COACH_CHAT)
       return false
+    } finally {
+      // Whatever comes after (the thread read, following the run), the answer is no longer on its way once tafs cloud has
+      // answered: a screen torn down meanwhile (the vendor's page opening) never leaves the card on "Sending your answer…".
+      _state.update { it.copy(cardsAnswering = it.cardsAnswering - id) }
     }
     if (generation != accountGeneration) return false
+    // Taken: the card shows it's answered at once, until the thread's words for it come.
+    _state.update { it.copy(cardsTaken = it.cardsTaken + id) }
     answered.session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
     // Coach is at work again: it reads as thinking until its run is followed, and the run's end reads the thread again.
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (COACH_CHAT to clock()), chatEnded = it.chatEnded - COACH_CHAT) }
     readThread(COACH_CHAT)
-    _state.update { it.copy(cardsAnswering = it.cardsAnswering - id) }
     // The run paused on the card and goes on now: its stream is followed to its end, which reads the thread again.
     answered.run?.let { resumeChat(COACH_CHAT, cloudId, it, again = true) } ?: followChat(COACH_CHAT)
     return true

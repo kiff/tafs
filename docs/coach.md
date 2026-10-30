@@ -36,7 +36,18 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
   plan line folds away while the thread scrolls down and comes back on the way up, so a card
   has the screen. The phone never counts the plan's steps.
-- **No taf-page offer.** A new conversation offers no taf to improve. A
+- **Improve a taf:** a new conversation offers **Improve <name>** for each taf the person
+  manages (`CoachWords.improvable`), and a taf's Activity tab has **Improve in Coach**; both open a
+  new conversation about it (`AppModel.improveTaf`, `improveInCoach`), as iOS's start choice does.
+- **What the owner wrote and didn't send** stays while they go elsewhere in the app, in Coach and
+  in each taf's chat (`AppState.drafts`, as iOS's `setupDraft`); it goes at sign-out or a switch
+  of account.
+- **A card's answer tafs cloud took** reads answered at once ("Answered."), until the thread
+  brings kiff/agents' words for it; never "Sending your answer…" after tafs cloud answered, even if
+  the screen was torn down meanwhile (a vendor's sign-in page opening).
+- **Coach's tools in one tap:** when tafs cloud sends the connect batch before Coach's Card (the
+  Card is drafted over tools KIFF holds), the app reads the tools again after the batch and gives
+  the Card in the same flow. A
   taf is improved from a hold's **Change the limit in Coach mode**, which opens Coach on a
   new conversation about it (`AppModel.improveInCoach`).
 - **Previous conversations** lists them newest first. A long press archives one, and

@@ -204,6 +204,8 @@ class CoachActions(
   val start: suspend () -> Unit = {},
   /** Signs in again at the vendor, for a sign-in card: a new approval, one confirmation. */
   val signInAgain: suspend (SetupComponent) -> Unit = {},
+  /** A new conversation about improving one taf, by its id: Coach starts from what it did and what its Card allows. */
+  val improve: (String) -> Unit = {},
   /** Tries again to make the version an improvement names. */
   val makeVersion: suspend (SetupComponent) -> Unit = {},
   /** Opens a taf, by its KIFF agent; and a taf's versions. */
@@ -216,7 +218,8 @@ class CoachActions(
 fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
   val c = shown.component
   // Answered once the thread says so, in kiff/agents' words; on its way while tafs cloud takes it.
-  val answered = shown.answer?.let(CoachWords::answered) ?: if (c.id in state.cardsAnswering) CoachWords.ANSWERING else null
+  val answered = shown.answer?.let(CoachWords::answered)
+    ?: if (c.id in state.cardsAnswering) CoachWords.ANSWERING else if (c.id in state.cardsTaken) CoachWords.TAKEN else null
   when (c.type) {
     "notice" -> NoticeCard(c)
     "confirm" -> ConfirmCard(c, answered, state.cardErrors[c.id], actions.answer)

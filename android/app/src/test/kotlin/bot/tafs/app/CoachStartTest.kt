@@ -133,6 +133,25 @@ class CoachStartTest {
     assertEquals(2, transport.requestsTo("POST /v1/me/agent-drafts").size)
   }
 
+  @Test fun aConnectBatchWithNoCardYetGivesTheCardInTheSameFlow() = runTest {
+    reads()
+    val connectOnly = """{"state":"to_give","connect":{"body":$connectBody,"lines":["Read your tafs"]}}"""
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$connectOnly}""")
+    // Once the batch is in, tafs cloud drafts the Card over the tools KIFF now holds.
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":{"state":"given"}}""")
+    transport.answer("POST /v1/connections/batch", 200)
+    transport.answer("POST /v1/me/agent-drafts", 200, """{"id":"dr_c","status":"confirmed"}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
+    val m = model()
+    m.loadCoach()
+    assertTrue(m.giveCoachTools())
+    // One tap: the batch, then the Card it waited for, under its own fingerprint.
+    assertEquals(1, transport.requestsTo("POST /v1/connections/batch").size)
+    assertEquals(KiffClient.json.parseToJsonElement(cardBody), KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/me/agent-drafts").single().body!!)))
+    assertEquals("Give Coach its Card", auth.asked.last())
+  }
+
   @Test fun theCardsReadInKiffsWordsAndTheConnectionsInTafsClouds() {
     val tools = KiffClient.json.decodeFromString<bot.tafs.app.kiff.CoachTools>(toGive)
     assertTrue(tools.toGive)

@@ -92,6 +92,22 @@ class CardAnswersTest {
     assertFalse(m.state.value.cardsAnswering.contains("c1"))
   }
 
+  @Test fun anAnswerTafsCloudTookNeverLeavesTheCardSendingEvenIfTheThreadCantBeRead() = runTest {
+    reads()
+    val signIn = cards[3].second
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("s1", signIn)}]}""")
+    transport.answer(conversation, 503, """{"error":"later"}""")
+    transport.answer("POST /v1/tafs/setup_1/components/s1/answer", 200, """{"session":"s1","run":"r1","status":"running"}""")
+    val m = model()
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertTrue(m.answerCard("sign_in", "s1", "signed in"))
+    // Taken: not "Sending your answer…", and not open again, though the thread hasn't the answer yet.
+    assertFalse(m.state.value.cardsAnswering.contains("s1"))
+    assertTrue(m.state.value.cardsTaken.contains("s1"))
+    assertNull(m.state.value.coachComponents.single().answer)
+  }
+
   @Test fun aQuestionsCardsAnswerGoesAsItsJson() = runTest {
     reads()
     transport.answer(conversation, 200, """{"messages":[],"components":[${shown("q1", cards[1].second)}]}""")
