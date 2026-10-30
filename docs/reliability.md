@@ -17,8 +17,8 @@ also stops the retries and deliveries that are waiting.
 
 | | Does |
 |---|---|
-| **kiff/agents** | Runs the work: keeps accepted requests, recovers a crashed run, retries a step, keeps a step's operation id, ignores duplicates, runs one request at a time per door thread, and keeps the outbox of deliveries |
-| **tafs cloud** | Owns the settings: a taf's schedules with their rules, and where results go. Builds the taf's view for the apps. Coach proposes changes to these settings |
+| **kiff/agents** | Runs the work: keeps accepted requests, recovers a crashed run, retries a step, keeps a step's operation id, ignores duplicates, runs one request at a time per door thread, applies a schedule's rules, and keeps each note to tafs cloud until it's taken |
+| **tafs cloud** | Owns the settings: a taf's schedules with their rules, and where results go. Sends each result to each place from its own outbox. Builds the taf's view for the apps. Coach proposes changes to these settings |
 | **KIFF** | Decides every action, as today. A call sent again with the same operation id gives back its first outcome and is never carried out twice. An outcome that isn't known is never sent again: it is checked first |
 | **The apps** | Show what tafs cloud returns, send the owner's changes, sign approvals. They compute no time, retry or state |
 
@@ -108,14 +108,20 @@ A taf's settings list the places its results go:
 | `app` | A line in the app, with a notification |
 | `owner_email` | An email to the owner |
 
-Each result becomes one **delivery** per place, kept in an outbox:
+The work of delivering is split in two:
+- **kiff/agents keeps the note.** Each change of a request's state is a note to tafs cloud,
+  kept until tafs cloud answers it with a 2xx and tried again on the same waits as a step.
+  The note only says which request and run to read back, as notes do today.
+- **tafs cloud sends.** It reads the request back and makes one **delivery** per place, kept
+  in its own outbox. It already does this for a door's reply. That becomes the `door_reply`
+  delivery, and `app` and `owner_email` work the same way:
 
 ```json
 { "request": "req_…", "place": "door_reply", "key": "…", "state": "sent", "tries": 1, "next_at": null }
 ```
 
-- `key` is made from the request and the place. A delivery sent again with the same key is
-  sent once.
+- `key` is made from the request and the place. A delivery is claimed before it's sent, so
+  two notes for the same request send it once.
 - A delivery that fails is tried again on the same 3 tries as a step. Past the last it's
   `needs_you` for that delivery only.
 - Trying a delivery again never repeats the work. A refund that went through stays one
