@@ -7,9 +7,13 @@ object ConnectionWords {
   /** Where a connection stands. */
   fun status(g: Grant): String = when {
     g.connected -> "Connected"
+    g.needsReconnect -> signedOut(g)
     g.holdsSignIn -> "Signed in · Coach is choosing its tools"
     else -> g.status.replace('_', ' ').replaceFirstChar { it.uppercase() }
   }
+
+  /** A connection its vendor signed out, in planque's words; before planque sends them, the app's. */
+  fun signedOut(g: Grant): String = g.statusWords?.takeIf { it.isNotBlank() } ?: "Signed out by ${g.vendor} · sign in again"
 
   /** The tools the taf has through it, in words; Coach's own reads are not the taf's. */
   fun tools(g: Grant): String = g.request.tools.filter { it.tafs }.joinToString(" · ") { it.words }

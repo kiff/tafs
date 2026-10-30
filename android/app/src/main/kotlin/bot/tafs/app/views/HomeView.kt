@@ -83,7 +83,7 @@ fun HomeView(
   val pullScope = rememberCoroutineScope()
   // The order the list last showed, held while it's on screen (ListOrder): starting afresh on a pull, and when the app comes back.
   val shownOrder = remember { mutableStateOf<ListOrder.Shown?>(null) }
-  val waiting = state.held.map { it.tafId }.toSet()
+  val waiting = state.waitingOnOwner
   val order = ListOrder.hold(shownOrder.value, state.listedTafs.map { it.id }, waiting)
   SideEffect { shownOrder.value = ListOrder.Shown(order, waiting) }
   androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { shownOrder.value = null }
@@ -143,7 +143,9 @@ fun HomeView(
         item {
           Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             val byId = state.listedTafs.associateBy { it.id }
-            order.forEach { id -> byId[id]?.let { taf -> TafRow(taf) { onOpenTaf(taf.id) } } }
+            order.forEach { id ->
+              byId[id]?.let { taf -> TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut)) { onOpenTaf(taf.id) } }
+            }
           }
         }
         if (state.otherAgents.isNotEmpty()) {
@@ -264,7 +266,7 @@ private fun NeedsYouStrip(call: HeldCall, taf: Taf, onClick: () -> Unit) {
 }
 
 @Composable
-fun TafRow(taf: Taf, onClick: () -> Unit) {
+fun TafRow(taf: Taf, signedOut: String? = null, onClick: () -> Unit) {
   val shape = RoundedCornerShape(18.dp)
   Column(
     Modifier
@@ -289,7 +291,8 @@ fun TafRow(taf: Taf, onClick: () -> Unit) {
             )
           }
         }
-        Text(taf.now, style = scaled(13, color = Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // A connection its vendor signed out says so, in planque's words, in place of what it's doing: it waits on the owner.
+        Text(signedOut ?: taf.now, style = scaled(13, color = if (signedOut != null) Theme.amberText else Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
       }
       StateChip(taf.state)
     }

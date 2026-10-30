@@ -90,6 +90,15 @@ session (`AppModel.changed`, `readChange`). Nothing is shown and nothing is take
 - `halted` and `resumed`: the home list;
 - `knock`: that taf's doors, and its thread where it's been read.
 
+Every refresh and every push also reads planque's grants again: tafs cloud never sees them, so
+this is how a connection its vendor signed out reaches the list.
+
+**A connection its vendor signed out** (`needs_reconnect`): its taf waits on the owner in the
+home list, at the top with the held calls, its row reading planque's `status_words` ("Signed out
+by Stripe · sign in again"; `AppState.signedOut`, `waitingOnOwner`). On the taf's Card tab its
+connection says the same, with **Sign in again**: one approval, then the vendor's own page
+(`AppModel.reconnect`), and "Connected" only once planque answers connected.
+
 A change of a kind the app doesn't know is ignored; coming back to the app reads everything
 again. Opening a chat no longer reads it on a timer: a run at work is followed on its stream, and
 the timer is left only where nothing else tells the phone (a trial's chat, a run whose stream

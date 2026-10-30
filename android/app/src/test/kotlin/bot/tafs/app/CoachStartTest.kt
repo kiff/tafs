@@ -82,7 +82,7 @@ class CoachStartTest {
     reads()
     startAnswers()
     val m = model()
-    m.refreshConnections()
+    // The start's refresh read planque's grants: planque doesn't know this phone yet.
     assertFalse(m.state.value.planqueReady)
     assertTrue(m.startCoach())
     // Yes before anything is made, then a fingerprint for each of Coach's drafts, which grant authority.
