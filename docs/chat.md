@@ -74,7 +74,7 @@ never reach the phone.
 
 | Event | Data | What the app does |
 |---|---|---|
-| `session` | `{session, new_session, run}`, first | Notes the chat and the run, for Stop and for steering |
+| `session` | `{session, new_session, run, message: {id, at}}`, first | Notes the chat and the run, for Stop and for steering. `message` is the owner's message as the thread names it, so the app matches its send by id; a message that steers a run already at work has none |
 | `thinking` | `{text}` | Adds to the line of what the taf is thinking |
 | `text` | `{text}` | Adds to the answer |
 | `activity` | `{tool, step?, call_id}` | A step begins, in words: "Asking KIFF: List payments…" |

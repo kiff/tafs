@@ -195,9 +195,13 @@ struct SetupChatView: View {
                         Group {
                             switch item {
                             case .message(let m) where m.from == .owner:
-                                ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, kind: m.kind,
-                                                                          text: model.setupThread.ownerWords(m.text), session: m.session,
-                                                                          attachments: m.attachments), taf: nil)
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    ChatBubble(message: TafsCloud.ChatMessage(at: m.at, from: .owner, kind: m.kind,
+                                                                              text: model.setupThread.ownerWords(m.text), session: m.session,
+                                                                              attachments: m.attachments), taf: nil)
+                                    // Written while a card waited: these words were its answer (`answers`).
+                                    if m.answers != nil { AnsweredCardLine() }
+                                }
                             case .message(let m):
                                 // Streamed answers show as written; only without a stream are they revealed.
                                 VStack(alignment: .leading, spacing: 6) {
