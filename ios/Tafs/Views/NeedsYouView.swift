@@ -93,6 +93,9 @@ struct HeldCallCard: View {
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(sending)
                 }
+            } else if model.approvalKeyLost, call.kiffID != nil {
+                // Approving or extra room would fail: the way out instead. Refuse stays below.
+                ApprovalKeyLostLine()
             } else if call.approvableOnce {
                 Button {
                     if call.install != nil { install() } else { send(.approveOnce) }

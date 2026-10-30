@@ -12,6 +12,9 @@ protocol ApprovalSigning {
     /// Asks for Face ID (or the passcode), then signs `message`. Returns a base64 DER
     /// ECDSA signature over its SHA-256.
     func sign(_ message: Data, reason: String) async throws -> String
+    /// As `sign`, for a step that grants authority (a Card, a connection, a trial, Resume,
+    /// sharing): its prompt takes Face ID or Touch ID only, since the approval key signs under it.
+    func sign(_ message: Data, reason: String, grants: Bool) async throws -> String
     /// Signs `message` without asking again: only for the requests of a step the owner
     /// has just confirmed with Face ID (starting a taf signs each of its setup calls).
     func signConfirmed(_ message: Data) throws -> String
@@ -22,12 +25,16 @@ protocol ApprovalSigning {
     /// The public half of the approval key (P-256, SPKI DER), which signs only what grants
     /// authority (kiff/tafs#233); empty when this device holds none.
     var approvalPublicKeyDER: Data { get }
-    /// Asks for Face ID (or the passcode), then signs `message` with the approval key. The
-    /// key checks that Face ID itself: code that skipped the prompt can't sign with it.
+    /// Asks for Face ID or Touch ID, never the passcode, then signs `message` with the approval
+    /// key. The key checks that biometric itself: code that skipped the prompt can't sign with it.
     func signApproval(_ message: Data, reason: String) async throws -> String
     /// Signs `message` with the approval key under the Face ID that just confirmed this step
     /// (`sign` or `signApproval`), without asking again. Past the step, it throws.
     func signApprovalConfirmed(_ message: Data) throws -> String
+    /// Whether the approval key can no longer sign because the enrolled faces or fingerprints
+    /// changed since it was made, found with no prompt. When so, a new key takes its place,
+    /// which KIFF holds only after a new sign-in.
+    func renewApprovalKeyIfBiometricsChanged() -> Bool
 }
 
 extension ApprovalSigning {
@@ -42,6 +49,17 @@ extension ApprovalSigning {
 extension ApprovalSigning {
     /// Signers without an approval key sign everything with the one key they have.
     var approvalPublicKeyDER: Data { Data() }
+    /// Whether the enrolled faces or fingerprints changed since the key was made. Only two
+    /// known domains that differ say so: none now also means a lockout after a few misses, or
+    /// a face not available, and those leave a good key alone. A key whose biometrics are truly
+    /// gone fails at signing, which says to sign in again.
+    nonisolated static func biometricsChanged(made: Data?, now: Data?) -> Bool {
+        guard let made, let now else { return false }
+        return made != now
+    }
+
+    func renewApprovalKeyIfBiometricsChanged() -> Bool { false }
+    func sign(_ message: Data, reason: String, grants: Bool) async throws -> String { try await sign(message, reason: reason) }
     func signApproval(_ message: Data, reason: String) async throws -> String { try await sign(message, reason: reason) }
     func signApprovalConfirmed(_ message: Data) throws -> String { try signConfirmed(message) }
 
@@ -64,21 +82,29 @@ extension ApprovalSigning {
 /// control: it signs what reads or takes authority away (Refuse, Halt all, Setup's and
 /// planque's requests), which may run with no one at the screen. The **approval key** signs
 /// only what grants authority (Approve, issuing a Card, starting a trial, Resume): in the
-/// Secure Enclave its own access control requires Face ID or the passcode, so the key checks
+/// Secure Enclave its own access control requires the faces or fingerprints enrolled when it was
+/// made, never the passcode (the screen lock never approves, as on Android), so the key checks
 /// the prompt, not the app's code. One confirmed Face ID covers one confirmed step.
 @MainActor
 final class ApprovalSigner: ApprovalSigning {
     enum SignerError: Error { case notAuthenticated }
 
     private static let keyAccount = "tafs.signing-key"
-    private static let approvalKeyAccount = "tafs.approval-key"
+    /// The approval key's handle. "v2": biometrics only. The key under the first name also took
+    /// the passcode; a key's access control can't change, so each phone makes a new one, and
+    /// KIFF holds it after one new sign-in.
+    private static let approvalKeyAccount = "tafs.approval-key.v2"
+    private static let looseApprovalKeyAccount = "tafs.approval-key"
+    /// The enrolled biometrics when the approval key was made (`evaluatedPolicyDomainState`):
+    /// when they differ, the key no longer signs.
+    private static let approvalDomainAccount = "tafs.approval-key.domain"
 
     private let enclaveKey: SecureEnclave.P256.Signing.PrivateKey?
     private let softwareKey: P256.Signing.PrivateKey?
     /// The approval key: in the Secure Enclave, its handle (the Keychain keeps it); or, in
     /// the Simulator, a software key.
-    private let approvalHandle: Data?
-    private let approvalPublic: Data
+    private var approvalHandle: Data?
+    private var approvalPublic: Data
     private let softwareApprovalKey: P256.Signing.PrivateKey?
     /// The Face ID that confirmed the current step, and when: the approval key signs under
     /// it, without asking again, until the step is over.
@@ -132,12 +158,13 @@ final class ApprovalSigner: ApprovalSigning {
         var softwareApproval: P256.Signing.PrivateKey?
         #if os(iOS)
         let savedApproval = Keychain.load(Self.approvalKeyAccount).flatMap { Data(base64Encoded: $0) }
+        // The key that also took the passcode is never used again.
+        Keychain.delete(Self.looseApprovalKeyAccount)
         if SecureEnclave.isAvailable {
             if let savedApproval, let key = try? SecureEnclave.P256.Signing.PrivateKey(dataRepresentation: savedApproval) {
                 handle = savedApproval
                 approvalPublic = key.publicKey.derRepresentation
-            } else if let key = Self.newApprovalKey() {
-                Keychain.save(key.dataRepresentation.base64EncodedString(), for: Self.approvalKeyAccount)
+            } else if let key = Self.makeApprovalKey() {
                 handle = key.dataRepresentation
                 approvalPublic = key.publicKey.derRepresentation
             }
@@ -158,15 +185,50 @@ final class ApprovalSigner: ApprovalSigning {
     }
 
     #if os(iOS)
-    /// A new approval key in the Secure Enclave, usable only after Face ID (the faces enrolled
-    /// now) or the passcode, as the prompt offers; none on a phone with no passcode.
-    private static func newApprovalKey() -> SecureEnclave.P256.Signing.PrivateKey? {
-        guard let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
-                                                           [.privateKeyUsage, .biometryCurrentSet, .or, .devicePasscode], nil)
-        else { return nil }
-        return try? SecureEnclave.P256.Signing.PrivateKey(accessControl: access)
+    /// The approval key's access control: the faces or fingerprints enrolled now, and nothing
+    /// else. A new enrollment ends the key, and the passcode never unlocks it.
+    nonisolated static let approvalKeyFlags: SecAccessControlCreateFlags = [.privateKeyUsage, .biometryCurrentSet]
+
+    /// A new approval key in the Secure Enclave, kept with the biometrics it was made under;
+    /// none on a phone with no passcode, or no Face ID or Touch ID enrolled.
+    private static func makeApprovalKey() -> SecureEnclave.P256.Signing.PrivateKey? {
+        guard let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, approvalKeyFlags, nil),
+              let key = try? SecureEnclave.P256.Signing.PrivateKey(accessControl: access) else { return nil }
+        Keychain.save(key.dataRepresentation.base64EncodedString(), for: approvalKeyAccount)
+        if let domain = biometricsDomain() { Keychain.save(domain.base64EncodedString(), for: approvalDomainAccount) }
+        return key
+    }
+
+    /// The enrolled faces or fingerprints, as an opaque value that changes when they do; nil
+    /// when none are enrolled.
+    private static func biometricsDomain() -> Data? {
+        let context = LAContext()
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) else { return nil }
+        return context.evaluatedPolicyDomainState
     }
     #endif
+
+    func renewApprovalKeyIfBiometricsChanged() -> Bool {
+        #if os(iOS)
+        guard approvalHandle != nil, SecureEnclave.isAvailable else { return false }
+        let made = Keychain.load(Self.approvalDomainAccount).flatMap { Data(base64Encoded: $0) }
+        guard Self.biometricsChanged(made: made, now: Self.biometricsDomain()) else { return false }
+        // A key made under other biometrics: it can't sign again.
+        Keychain.delete(Self.approvalKeyAccount)
+        Keychain.delete(Self.approvalDomainAccount)
+        endStep()
+        if let key = Self.makeApprovalKey() {
+            approvalHandle = key.dataRepresentation
+            approvalPublic = key.publicKey.derRepresentation
+        } else {
+            approvalHandle = nil
+            approvalPublic = Data()
+        }
+        return true
+        #else
+        return false
+        #endif
+    }
 
     var approvalPublicKeyDER: Data { approvalPublic }
 
@@ -181,8 +243,13 @@ final class ApprovalSigner: ApprovalSigning {
         return try signConfirmed(message)
     }
 
+    func sign(_ message: Data, reason: String, grants: Bool) async throws -> String {
+        try await authenticate(reason: reason, biometricsOnly: grants)
+        return try signConfirmed(message)
+    }
+
     func signApproval(_ message: Data, reason: String) async throws -> String {
-        try await authenticate(reason: reason)
+        try await authenticate(reason: reason, biometricsOnly: true)
         return try signApprovalConfirmed(message)
     }
 
@@ -220,14 +287,17 @@ final class ApprovalSigner: ApprovalSigning {
         return signature.base64EncodedString()
     }
 
-    private func authenticate(reason: String) async throws {
+    /// `biometricsOnly`: an approval's prompt, which offers no passcode; the device key's
+    /// takes either, as Android's signing key does.
+    private func authenticate(reason: String, biometricsOnly: Bool = false) async throws {
+        let policy: LAPolicy = biometricsOnly ? .deviceOwnerAuthenticationWithBiometrics : .deviceOwnerAuthentication
         let context = LAContext()
         if reusesUnlock {
             reusesUnlock = false
             context.touchIDAuthenticationAllowableReuseDuration = Self.unlockReuse
         }
         var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+        guard context.canEvaluatePolicy(policy, error: &error) else {
             #if targetEnvironment(simulator)
             endStep()
             step = (context, Date())
@@ -236,7 +306,7 @@ final class ApprovalSigner: ApprovalSigning {
             throw SignerError.notAuthenticated
             #endif
         }
-        let ok = try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)
+        let ok = try await context.evaluatePolicy(policy, localizedReason: reason)
         if !ok { throw SignerError.notAuthenticated }
         // This Face ID confirms a new step: the last one's is over.
         endStep()
