@@ -117,8 +117,13 @@ data class DraftAggregate(val quantity: String, val limit: Long = 0, val window:
 
 /** A Card's terms alone: what `current` holds. */
 @Serializable
-data class DraftTerms(val grants: List<DraftGrant>? = null, val aggregates: List<DraftAggregate>? = null) {
-  val lines: List<String> get() = DraftCard(grants, aggregates).lines
+data class DraftTerms(
+  val grants: List<DraftGrant>? = null,
+  val aggregates: List<DraftAggregate>? = null,
+  @SerialName("on_exceed") val onExceed: String? = null,
+  @SerialName("lines") val kiffLines: List<String>? = null,
+) {
+  val lines: List<String> get() = DraftCard(grants, aggregates, onExceed = onExceed, kiffLines = kiffLines).lines
 }
 
 /** One Card of a draft, as the owner reads it: each action and its limits. */
@@ -131,10 +136,21 @@ data class DraftCard(
   val current: DraftTerms? = null,
   /** KIFF says a Card the draft revises keeps its full terms: only KIFF holds both, so the app never works it out from the lines. */
   val unchanged: Boolean? = null,
+  /** What KIFF does with a call past a limit: "owner" holds it for the owner, "refuse" refuses it; null from a KIFF that doesn't say. */
+  @SerialName("on_exceed") val onExceed: String? = null,
+  /** KIFF's own words for the Card: shown as they are when sent. The app words it only for a KIFF that doesn't send them. */
+  @SerialName("lines") val kiffLines: List<String>? = null,
 ) {
+  /** Past a limit, the call asks the owner first: the lines say so, as KIFF's own words do. */
+  val asksPastLimits: Boolean get() = onExceed == "owner"
+
   val isUnchanged: Boolean get() = unchanged == true && current != null
 
-  /** The lines the owner approves, in their words: "Refund a payment: up to €100.00 each", "€1,000.00 in total a day", "20 calls a day". */
+  /**
+   * The lines the owner approves, in their words: "Refund a payment: up to €100.00 each", "€1,000.00 in total a day", "20 calls a day".
+   * On a Card that asks past its limits: "up to €100.00 each; more asks you first", "€1,000.00 in total a day, then it asks you",
+   * "20 calls a day, then it asks you", and a count of 0 is "Each call asks you first".
+   */
   val lines: List<String> get() = lines(alike(grants.orEmpty()))
 
   /**
@@ -142,6 +158,7 @@ data class DraftCard(
    * action in words. An amount's unit is KIFF's, or the number stays bare: never a guessed name or currency.
    */
   fun lines(alike: Set<String>): List<String> {
+    kiffLines?.takeIf { it.isNotEmpty() }?.let { return it }
     val out = mutableListOf<String>()
     for (g in grants.orEmpty()) {
       val name = KiffMapping.name(g.action, g.title)
@@ -149,12 +166,17 @@ data class DraftCard(
         if (KiffMapping.isSum(cap.quantity)) "up to ${KiffMapping.money(cap.max, cap.unit, cap.scale).formatted} each" else "up to ${cap.max} each"
       }
       val action = if (name.lowercase() in alike) "$name · ${KiffMapping.toolWords(g.action)}" else name
-      out += if (caps.isEmpty()) action else "$action: " + caps.joinToString(", ")
+      val more = if (asksPastLimits) "; more asks you first" else ""
+      out += if (caps.isEmpty()) action else "$action: " + caps.joinToString(", ") + more
     }
+    val then = if (asksPastLimits) ", then it asks you" else ""
     for (a in aggregates.orEmpty()) {
       val window = KiffMapping.window(a.window).label
-      out += if (KiffMapping.isSum(a.quantity)) "${KiffMapping.money(a.limit, a.unit, a.scale).formatted} in total $window"
-      else "${a.limit} ${if (a.limit == 1L) "call" else "calls"} $window"
+      out += when {
+        KiffMapping.isSum(a.quantity) -> "${KiffMapping.money(a.limit, a.unit, a.scale).formatted} in total $window$then"
+        asksPastLimits && a.limit == 0L -> "Each call asks you first"
+        else -> "${a.limit} ${if (a.limit == 1L) "call" else "calls"} $window$then"
+      }
     }
     return out
   }

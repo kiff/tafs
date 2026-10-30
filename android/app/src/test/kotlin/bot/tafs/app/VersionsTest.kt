@@ -397,6 +397,54 @@ class VersionsTest {
     assertEquals(listOf("list charges: up to 5 each", "1 call a day", "20 calls a week"), card.lines)
   }
 
+  private fun asking(onExceed: String?, count: Long, window: String = "day") = KiffClient.json.decodeFromString<DraftCard>(
+    """{"grants":[{"action":"create_refund","title":"Refund a payment","per_action_max":[{"quantity":"sum(amount)","max":4000,"unit":"USD","scale":2}]}],
+        "aggregates":[{"quantity":"sum(amount)","limit":30000,"window":"$window","unit":"USD","scale":2},{"quantity":"count","limit":$count,"window":"$window"}]
+        ${onExceed?.let { ""","on_exceed":"$it"""" } ?: ""}}""",
+  )
+
+  @Test fun aCardThatAsksPastItsLimitsSaysSoOnEveryLine() {
+    val each = Money.of(4000, "USD", 2).formatted
+    val total = Money.of(30000, "USD", 2).formatted
+    for ((window, words) in listOf("day" to "a day", "week" to "a week", "month" to "a month")) {
+      assertEquals(
+        listOf("Refund a payment: up to $each each; more asks you first", "$total in total $words, then it asks you", "Each call asks you first"),
+        asking("owner", 0, window).lines,
+      )
+      assertEquals("1 call $words, then it asks you", asking("owner", 1, window).lines.last())
+      assertEquals("20 calls $words, then it asks you", asking("owner", 20, window).lines.last())
+    }
+  }
+
+  @Test fun aCardThatRefusesPastItsLimitsOrDoesntSayReadsAsBefore() {
+    val each = Money.of(4000, "USD", 2).formatted
+    val total = Money.of(30000, "USD", 2).formatted
+    for (onExceed in listOf("refuse", null, "something_new")) {
+      assertEquals(listOf("Refund a payment: up to $each each", "$total in total a day", "0 calls a day"), asking(onExceed, 0).lines)
+      assertEquals("1 call a day", asking(onExceed, 1).lines.last())
+      assertEquals("20 calls a day", asking(onExceed, 20).lines.last())
+    }
+  }
+
+  @Test fun kiffsOwnLinesAreShownAsTheyCome() {
+    val card = KiffClient.json.decodeFromString<DraftCard>(
+      """{"on_exceed":"owner","aggregates":[{"quantity":"count","limit":0,"window":"day"}],"lines":["Each call asks you first, in KIFF's words"],
+          "current":{"aggregates":[{"quantity":"count","limit":20,"window":"day"}],"lines":["20 calls a day"]}}""",
+    )
+    assertEquals(listOf("Each call asks you first, in KIFF's words"), card.lines)
+    assertEquals(listOf("Each call asks you first, in KIFF's words"), card.lines(setOf("anything")))
+    assertEquals(listOf("20 calls a day"), card.current!!.lines)
+  }
+
+  @Test fun aRevisionReadsEachSidesOwnPolicyNowAndAfter() {
+    val card = KiffClient.json.decodeFromString<DraftCard>(
+      """{"revises":"c1","on_exceed":"owner","aggregates":[{"quantity":"count","limit":0,"window":"day"}],
+          "current":{"on_exceed":"refuse","aggregates":[{"quantity":"count","limit":20,"window":"day"}]}}""",
+    )
+    assertEquals(listOf("Each call asks you first"), card.lines)
+    assertEquals(listOf("20 calls a day"), card.current!!.lines)
+  }
+
   @Test fun twoGrantsThatReadAlikeEachAddTheirActionInWords() {
     val d = KiffClient.json.decodeFromString<AgentDraft>(
       """{"id":"d","status":"draft","version":"v1","cards":[

@@ -145,6 +145,11 @@ It has up to four tabs:
   like money. A Card scoped to an environment other than production says which; one
   that acts for real carries no label. Connections show only when there are some.
   Calls the vendor refused today still count against the Card's totals, and are listed.
+  A limit says what happens past it, from each rule's `outside` in tafs cloud's list (the
+  Card's `on_exceed` in KIFF). On a `hold` rule: "up to $40 each; more asks you first",
+  "$300 in total a day, then it asks you", "20 calls a day, then it asks you", and a count
+  of 0 is "Each call asks you first". A `refuse` rule reads "≤ $40 each · $300 a day ·
+  20 calls a day". These are KIFF's own words for its Cards, the same on both apps.
   Below them: its connections ([coach.md](coach.md#connections)), Halt, its Usage, its
   Versions, Revoke and Remove for good.
 - **Doors** (where the taf has them, and only for someone who manages it): [doors.md](doors.md).

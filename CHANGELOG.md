@@ -7,6 +7,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, Cards:** a limit says what happens past it. On a Card that asks the owner past its
+  limits: "up to $40 each; more asks you first", "$300 in total a day, then it asks you", "20 calls
+  a day, then it asks you", and a count of 0 reads "Each call asks you first", never "0 calls a
+  day". This applies on a taf's Card tab and on a draft's Cards, where KIFF's own `lines` are shown
+  when it sends them. A Card that refuses past its limits reads as before. iPhone and iPad follow.
 - **iPhone and iPad, sent messages:** a sent message is matched to the thread by tafs cloud's id
   for it, from its send or its stream's first event, never by its words, except a steer or an
   older tafs cloud; a message that answered a card says "Answered the card above".
