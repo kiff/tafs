@@ -82,10 +82,10 @@ those services, and the phone signs there.
 | `result` | The hand-over: a new taf to start, or a taf's new version to try |
 
 The owner's answer to a card goes as data, one answer per card
-([chat.md](chat.md#cards-that-wait-for-an-answer)). Android answers through
+([chat.md](chat.md#cards-that-wait-for-an-answer)). Both apps answer through
 `POST /v1/tafs/{id}/components/{component}/answer`, and each card shows the answer the thread
-holds, in kiff/agents' words. The iPhone app still sends the earlier message form,
-`"[<type> <id>] <answer>"`, which tafs cloud takes as the card's answer, until it follows.
+holds, in kiff/agents' words; the iPhone app does the same. tafs cloud still takes the
+earlier message form, `"[<type> <id>] <answer>"`, from an older build.
 
 Coach's chat behaves as a taf's ([chat.md](chat.md)). What starts an answer goes to the top
 and stays there: a typed message, or the card the owner just answered. While Coach works,
@@ -117,8 +117,7 @@ then shows its plan. Then, each step behind the owner's yes:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". The app starts nothing itself
    (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
-   set up that isn't listed yet). The iPhone app still starts it itself
-   (`POST /v1/tafs` with `from_setup`) until it follows in its own pull request.
+   set up that isn't listed yet). The iPhone app does the same.
    A taf's next version is still made by the app, from an improvement's result.
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works

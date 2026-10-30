@@ -94,6 +94,34 @@ class CoachScreenTest {
     hold()
   }
 
+  @Test fun thePlanOpensToItsStepsAndFoldsBack() {
+    show(null)
+    rule.onNodeWithText("Step 3 of 6 · Your rules").performClick()
+    rule.onNodeWithText("Connect Stripe").assertIsDisplayed()
+    rule.onNodeWithText("Start Refunds").assertIsDisplayed()
+    hold()
+    rule.onNodeWithText("Step 3 of 6 · Your rules").performClick()
+    rule.onNodeWithText("Start Refunds").assertDoesNotExist()
+  }
+
+  @Test fun theLiveLineThinking() {
+    show(LiveAnswer(started = Instant.now(), state = LiveState("thinking")))
+    rule.onNodeWithText("Thinking…").assertIsDisplayed()
+    hold()
+  }
+
+  @Test fun theLiveLineWaitingForYou() {
+    show(LiveAnswer(started = Instant.now(), state = LiveState("waiting_for_you")))
+    rule.onNodeWithText("Waiting for you").assertIsDisplayed()
+    hold()
+  }
+
+  @Test fun atDoneTheLiveLineIsGone() {
+    show(LiveAnswer(started = Instant.now(), state = LiveState("done")))
+    rule.onNodeWithText("Thinking…").assertDoesNotExist()
+    rule.onNodeWithText("Waiting for you").assertDoesNotExist()
+  }
+
   @Test fun theMenuHoldsCoachsConversations() {
     show(null)
     rule.onNodeWithText("⋯").performClick()

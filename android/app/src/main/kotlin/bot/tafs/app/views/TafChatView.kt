@@ -443,9 +443,11 @@ private fun LiveWork(live: LiveAnswer) {
   Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     val line = Chat.liveLine(live)
     if (line != null) {
+      // Waiting for the owner, nothing is at work: the line says so in amber, with no spinner.
+      val waiting = live.state?.state == "waiting_for_you"
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        androidx.compose.material3.CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Theme.dim)
-        Text(line, style = scaled(13, color = if (live.state?.state == "waiting_for_you") Theme.amberText else Theme.dim))
+        if (!waiting) androidx.compose.material3.CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Theme.dim)
+        Text(line, style = scaled(13, color = if (waiting) Theme.amberText else Theme.dim))
       }
     }
     if (writing) MarkdownText(live.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
