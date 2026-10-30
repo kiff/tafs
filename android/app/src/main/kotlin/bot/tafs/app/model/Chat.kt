@@ -176,6 +176,17 @@ object Chat {
   /** What a message may be at most, as tafs cloud takes it. */
   const val LIMIT = 2000
 
+  /** A row of a taf's work: a request, or a scheduled run that was skipped. */
+  sealed interface WorkRow {
+    val at: java.time.Instant
+    data class Request(val request: bot.tafs.app.kiff.WorkRequest) : WorkRow { override val at get() = request.at }
+    data class Skipped(val firing: bot.tafs.app.kiff.SkippedFiring) : WorkRow { override val at get() = firing.due }
+  }
+
+  /** A taf's requests and skipped firings, each in its own place by time, newest first. */
+  fun workRows(work: bot.tafs.app.kiff.TafWork): List<WorkRow> =
+    (work.requests.map { WorkRow.Request(it) } + work.skipped.map { WorkRow.Skipped(it) }).sortedByDescending { it.at }
+
   /** One row of a chat: a thread item (by its index), or a door's knock waiting on the owner. */
   sealed interface Row {
     val key: String

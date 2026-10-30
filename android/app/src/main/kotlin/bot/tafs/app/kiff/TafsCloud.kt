@@ -382,6 +382,19 @@ class TafsCloud(
 
   suspend fun runs(id: String): List<Run> = get<Runs>("/v1/tafs/${escaped(id)}/runs").runs
 
+  /** Where the taf's work stands (docs/reliability.md, "The taf's view"): every line and time in tafs cloud's words. */
+  suspend fun work(id: String): TafWork = get<TafWork>("/v1/tafs/${escaped(id)}/work")
+
+  /**
+   * Send again: the door reply of [run], given up on after its tries, sent once more. It does no work and signs nothing.
+   * Returns the delivery's state: sent, not_sent or waiting.
+   */
+  suspend fun sendAgain(id: String, run: String, place: String = "door_reply"): String =
+    post<SentAgain>("/v1/tafs/${escaped(id)}/requests/${escaped(run)}/deliveries/${escaped(place)}/send", emptyMap()).state
+
+  @kotlinx.serialization.Serializable
+  private data class SentAgain(val state: String = "")
+
   suspend fun report(id: String, session: String): Report = get<ReportBody>("/v1/tafs/${escaped(id)}/runs/${escaped(session)}").report
 
   /** What the taf's calls through KIFF acted on (kiff/tafs#167): KIFF's key for the call, and the value of the argument its Card scopes on, kept 30 days. */

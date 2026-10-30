@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.Chat
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -84,6 +85,9 @@ class TafActions(
   val runNow: suspend (String) -> Unit = {},
   /** Reads its latest run and report. */
   val loadReport: suspend (String) -> Unit = {},
+  /** Reads where its work stands (docs/reliability.md), and sends a door reply again by its run. */
+  val loadWork: suspend (String) -> Unit = {},
+  val sendAgain: suspend (String, String) -> Unit = { _, _ -> },
   /** Pauses or resumes its schedule. */
   val setPaused: suspend (String, Boolean) -> Unit = { _, _ -> },
   /** Removes it for good, after one confirmation: what to tell the owner, null when nothing was done. */
@@ -277,6 +281,7 @@ private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
   if (state.mode == Mode.sample || taf.cloudId != null) MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions)
   if (state.mode == Mode.kiff && taf.cloudId != null) {
     RunsPanel(taf, taf.id in state.runsInFlight, actions)
+    WorkPanel(taf, state, actions)
     RunReportPanel(taf.id, state.reports[taf.id], actions)
   }
   state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) }
@@ -330,6 +335,49 @@ private fun RunsPanel(taf: Taf, inFlight: Boolean, actions: TafActions) {
         OutlineButton(if (taf.paused) "Resume" else "Pause", { scope.launch { actions.setPaused(taf.id, !taf.paused) } }, Modifier.weight(1f))
       }
     }
+  }
+}
+
+/**
+ * Where the taf's work stands, as tafs cloud says it: its line, then its recent requests and skipped firings, newest first, each in
+ * tafs cloud's words. A request needing the owner is amber, a failed one red; a skipped firing isn't a failure, so it's dim. A door
+ * reply given up on offers Send again to whoever manages the taf.
+ */
+@Composable
+private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
+  val scope = rememberCoroutineScope()
+  LaunchedEffect(taf.id) { actions.loadWork(taf.id) }
+  val work = state.works[taf.id]
+  val error = state.workErrors[taf.id]
+  if (work == null && error == null) return
+  Panel {
+    Eyebrow("Its work")
+    work?.summary?.line?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
+    work?.let { Chat.workRows(it) }?.forEach { row ->
+      when (row) {
+        is Chat.WorkRow.Skipped -> Text(row.firing.words, style = scaled(13, color = Theme.dim))
+        is Chat.WorkRow.Request -> Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          val r = row.request
+          Text(r.line, style = scaled(14, color = when (r.state) {
+            "needs_you" -> Theme.amberText
+            "failed" -> Theme.no
+            else -> Theme.soft
+          }))
+          r.deliveries.forEach { d ->
+            Text(d.line, style = scaled(12, color = if (d.sendAgain) Theme.amberText else Theme.dim))
+            if (d.sendAgain && state.manages(taf.id)) {
+              OutlineButton(
+                if (r.id in state.sendingAgain) "Sending again…" else "Send again",
+                { scope.launch { actions.sendAgain(taf.id, r.id) } },
+                Modifier.fillMaxWidth(),
+                enabled = r.id !in state.sendingAgain,
+              )
+            }
+          }
+        }
+      }
+    }
+    error?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
 

@@ -11,6 +11,10 @@ version headings refer to releases, not merely to merged pull requests.
   home list, its row in planque's words ("Signed out by Stripe · sign in again"), and its Card
   tab offers **Sign in again**. planque's grants are read on every refresh and live update.
 
+- **Android, a taf's work:** the Activity tab shows tafs cloud's view of the taf's work: its
+  line, its recent requests in tafs cloud's words, skipped scheduled runs (dim, in their place by
+  time), and **Send again** for a door reply given up on.
+
 - **Android, a taf's page:** a compact header (back, name, state) whose Share and Card line
   fold as it scrolls; a chat opens at its newest message, with a door's knocks at their own
   times; and a paired sender's waiting message reads "Paired · Do it or Ignore this message".
