@@ -125,6 +125,12 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Every message's first sentence is the outcome, or what waits on the owner, or the question asked.");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("What you checked on the way comes after it, briefly, or not at all.");
     expect(SETUP_INSTRUCTIONS).toContain("Falta que apruebes las herramientas de Reembolsos");
+    // After tafs cloud answers the result, one closing message, always (Eval 41042518957).
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("always write one closing message, even when nothing more is needed");
+    expect(SETUP_INSTRUCTIONS).not.toContain("The app starts the taf from that draft.");
+    // A reconnect is said only once the taf's own read works (the owner's phone, 30 Oct: "reconnected" before anything used it).
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Before saying it's fixed, check it the way the taf works");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("never the names of your tools or KIFF's and planque's parts");
     // No closing offer of more help (Eval 41024236766: "Si quieres cambiarlos, dímelo aquí.").
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("End when it's said: no offer of more help");
     expect(SETUP_INSTRUCTIONS).not.toMatch(/\d+ words/);

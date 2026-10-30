@@ -72,6 +72,9 @@ export function fcmMessage(n: Notification, now: Date): { data: Record<string, s
   if (n.kind === "background") {
     data.kind = p.answered === true ? "answered" : "background";
     set("hold_id", str(p.hold_id));
+    // What changed on the account, for the phone to read again: only the kind and the taf.
+    set("change", str(p.change));
+    set("taf_id", str(p.taf_id));
   } else {
     data.kind = "alert";
     set("title", str(alert?.title));

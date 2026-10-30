@@ -330,6 +330,17 @@ function answerNotification(requestID: string, status: unknown, pack: unknown, n
   };
 }
 
+/** What changed on an account, for its phones to read again (docs/approvals.md, "Live updates"). */
+export type Change = "taf" | "halted" | "resumed" | "knock";
+
+/**
+ * A silent push saying what changed: only its kind and the taf, never words or amounts. The phone
+ * reads again what the kind names, with its own session, and trusts nothing from the push itself.
+ */
+export function changeNotification(change: Change, taf?: string): Notification {
+  return { kind: "background", payload: { aps: { "content-available": 1 }, change, ...(taf ? { taf_id: taf } : {}) } };
+}
+
 function answeredNotification(holdID: string): Notification {
   return { kind: "background", payload: { aps: { "content-available": 1 }, hold_id: holdID, answered: true } };
 }
@@ -382,4 +393,35 @@ export function alertTarget(t: unknown): { id: string; secret: string } {
     throw new PushError(400, "alert_target is KIFF's {id, signing_secret}");
   }
   return { id, secret };
+}
+
+/** Changes told to an account's phones in the last few seconds, by account, kind and taf: told once. */
+const told = new Map<string, number>();
+const TELL_EVERY_MS = 3000;
+
+/**
+ * A silent push to every phone of the account saying what changed (docs/approvals.md, "Live updates"):
+ * each phone reads it again with its own session, so a person who may not see the taf learns only that
+ * something changed on a taf of the account, never what.
+ * Told at most once every few seconds per account, kind and taf. A push that fails is logged, never
+ * in the way of the change itself.
+ */
+export async function tellChange(tenant: string, change: Change, taf: string | undefined, deps: { push: PushStore; apns: Sender }): Promise<void> {
+  const key = `${tenant}|${change}|${taf ?? ""}`;
+  const now = Date.now();
+  if ((told.get(key) ?? 0) > now - TELL_EVERY_MS) return;
+  told.set(key, now);
+  if (told.size > 5000) told.delete(told.keys().next().value!);
+  try {
+    const { devices } = await deps.push.get(tenant);
+    const n = changeNotification(change, taf);
+    // Never in the way of the answer: the sends get a second and a half, then the request goes on.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+      Promise.all(devices.map((d) => deps.apns.send(d, n).catch(() => "failed"))),
+      new Promise((done) => { timer = setTimeout(done, 1500); }),
+    ]).finally(() => clearTimeout(timer));
+  } catch (err) {
+    console.error(`change ${change} not told: ${(err as Error).message}`);
+  }
 }

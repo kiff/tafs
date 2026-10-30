@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { AgentsError, type AIBound, type Run } from "../agents.js";
 import { refTenant, type Note } from "../coach.js";
-import type { Device, PushStore, Sender } from "../push.js";
+import { type Device, type PushStore, type Sender, tellChange } from "../push.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
@@ -117,7 +117,9 @@ function appOf(_cfg: DoorsConfig, id: string): DoorApp | undefined {
  */
 export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: string[]): string {
   const who = a.name ? `${a.name} <${a.from}>` : a.from;
-  const back = `your answer goes back by ${app.label.toLowerCase()}`;
+  // The sender is outside the account: the answer says what was done or found in plain words, and
+  // what went wrong only as "not now", never an error, a tool, an id or how anything is connected.
+  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company: say what you did or found in plain words; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
@@ -232,6 +234,8 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
     throw err;
   }
   started();
+  // The phones of the account read the taf again, so the message shows in an open chat.
+  await tellChange(tenant, "taf", taf.id, { push: ctx.push, apns: ctx.apns });
   // The run is going: what follows only helps, and its failure never starts it again.
   await store.put(threadKey, { session: run.session }, addDays(ctx.now, DOOR.threadDays))
     .catch((err) => console.error("door thread not kept:", err instanceof Error ? err.message : "error"));
@@ -250,6 +254,8 @@ async function addKnock(ctx: DoorsContext, tenant: string, taf: Taf, door: Door,
   await changeKnocks(ctx.doors.store, tenant, taf.id, ctx.now, (knocks) => [knock, ...knocks]);
   await logEvent(eventLog(ctx.doors.store), tenant, { kind: "knocked", taf: taf.id, name: taf.name, app: app.id, from: a.name }, ctx.now);
   await tellOwner(ctx, tenant, taf, `${a.name ?? a.from} wrote by ${app.label.toLowerCase()}${a.spoofed ? " (the sender check failed)" : ""}. Nothing was done.`, knock.id);
+  // Every phone of the account reads the taf's thread again, so the knock shows in an open chat.
+  await tellChange(tenant, "knock", taf.id, { push: ctx.push, apns: ctx.apns });
 }
 
 /**
@@ -400,6 +406,8 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
     await store.remove(doorKeys.sending(tenant, ref));
     return;
   }
+  // The phones read the taf again: the reply's stamp shows in an open chat.
+  if (taf) await tellChange(tenant, "taf", taf.id, { push: ctx.push, apns: ctx.apns });
   // Given up on: the chat says the door's reply wasn't sent, and it's kept for Send again.
   if (sent && !done.has("door_reply")) {
     await stamp(sent);
@@ -568,6 +576,25 @@ export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, o
     keys: app?.proof === "proven" ? d.keys.map((k) => ({ id: k.id, ...(k.name ? { name: k.name } : {}), auto: k.auto === true })) : [],
     today: today.keys, limit: DOOR.keysPerDay, resting: today.keys >= DOOR.keysPerDay,
     others_today: today.others, others_limit: DOOR.othersPerDay,
+    words: doorWords(d, app, today),
+  };
+}
+
+/**
+ * What the door's page says, in words the apps show as they are: where it stands, what a tap on
+ * it does, and that its settings (keys and limits) are below. So neither app writes its own.
+ */
+export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }): { state: string; tap: string; settings: string } {
+  const label = app?.label ?? d.app;
+  const state = !d.open
+    ? `Closed: messages to ${d.address} start nothing.`
+    : today.keys >= DOOR.keysPerDay
+      ? `Open, resting until tomorrow: ${DOOR.keysPerDay} of ${DOOR.keysPerDay} messages from you and paired senders today.`
+      : `Open: messages from you and paired senders to ${d.address} start work.`;
+  return {
+    state,
+    tap: d.open ? `Tap to close the ${label.toLowerCase()} door.` : `Tap to open the ${label.toLowerCase()} door.`,
+    settings: "Paired senders and today's limits are below.",
   };
 }
 

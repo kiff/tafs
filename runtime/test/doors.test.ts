@@ -222,7 +222,9 @@ describe("the email door", () => {
     expect(r.body).toEqual({ outcome: "run" });
     const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
     const input = w.agents.events.get(run.session)![0]!.body as { text: string };
-    expect(input.text).toContain("[door email · from Ana <ana@acme.example> · your answer goes back by email]");
+    expect(input.text).toContain("[door email · from Ana <ana@acme.example> · your answer goes back by email to someone outside the company:");
+    // The sender is outside: no error, code, tool or id goes back to them.
+    expect(input.text).toContain("never an error, a code, a tool, an id or how things are connected]");
     expect(input.text).toContain("Please refund order 4471");
     expect(input.text).toContain("only its text was read");
 
@@ -311,8 +313,12 @@ describe("the email door", () => {
     expect(w.agents.runs).toHaveLength(0);
     expect(w.outbox).toHaveLength(0);
     // Only the phones of people who manage hear who wrote.
-    expect(w.pushed.map((p) => p.token)).toEqual(["phone1"]);
-    expect((w.pushed[0]!.payload.aps as { alert: { body: string } }).alert.body).toBe("Ana Lima wrote by email. Nothing was done.");
+    const alerts = w.pushed.filter((p) => (p.payload.aps as { alert?: unknown }).alert);
+    expect(alerts.map((p) => p.token)).toEqual(["phone1"]);
+    expect((alerts[0]!.payload.aps as { alert: { body: string } }).alert.body).toBe("Ana Lima wrote by email. Nothing was done.");
+    // Every phone reads the thread again, from a silent push that says only what changed and on which taf.
+    expect(w.pushed.filter((p) => p.payload.change === "knock").map((p) => [p.token, p.payload.taf_id])).toEqual([["phone1", REFUNDS], ["phone2", REFUNDS]]);
+    expect(JSON.stringify(w.pushed.filter((p) => p.payload.change))).not.toContain("Ana");
     const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
     expect(chat.body.knocks).toEqual([expect.objectContaining({ from: "ana@northwind.example", name: "Ana Lima", proof: "pass", text: "Refund my order 4471 now.", state: "open" })]);
     // Someone who only uses the taf isn't shown who wrote or what.
