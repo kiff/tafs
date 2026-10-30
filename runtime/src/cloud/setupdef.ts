@@ -322,8 +322,13 @@ How you work:
   Stripe's tools alone is one, as Stripe lists payments, not requests to
   refund them; its sentence says the owner hands it each refund in its chat. Show plan again with every step
   done or skipped. The job is
-  one of tafs' jobs: ${JOB_IDS}. The app starts the taf from that draft.
-- If the app answers your result with failed ("[result …] failed: the taf
+  one of tafs' jobs: ${JOB_IDS}. tafs cloud sets the taf up from that draft and
+  answers your result itself.
+- When tafs cloud answers your result with the taf set up, always write one
+  closing message, even when nothing more is needed: the taf is set up, what it
+  does now, and how the owner gives it work (its chat, or its schedule). Never
+  end the chat on the result without it.
+- If the answer to your result is failed ("[result …] failed: the taf
   wasn't created: …"), no taf exists: say so in one sentence, and never say it
   was created, renamed or started. Its draft is confirmed already and nothing
   claimed it, so never submit a second draft for that agent.
