@@ -1,5 +1,7 @@
 package bot.tafs.app
 
+import kotlinx.coroutines.flow.toList
+import bot.tafs.app.kiff.StreamEvent
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.ChatRun
@@ -386,6 +388,47 @@ class ChatKiffTest {
     assertEquals(listOf(b), waiting)
     val both = one + msg("Sí", ChatMessage.From.owner, "2026-10-28T09:00:04Z")
     assertTrue(SentMessages.merge(both, listOf(a, b), t0.plusSeconds(10)).second.isEmpty())
+  }
+
+  @Test fun aSentMessageWithTafsCloudsIdIsFoundByItsIdNeverByItsWords() {
+    // Sent with the id its send answered: an earlier "Sí" in the thread, with another id, isn't it.
+    val sent = msg("Sí", ChatMessage.From.owner, "2026-10-28T09:00:00Z").copy(serverId = "run_2.in")
+    val earlier = msg("Sí", ChatMessage.From.owner, "2026-10-28T09:00:01Z").copy(serverId = "run_1.in")
+    val (all, waiting) = SentMessages.merge(listOf(earlier), listOf(sent), t0.plusSeconds(5))
+    assertEquals(listOf(sent), waiting)
+    assertEquals(2, all.size)
+    // Its own copy, whatever its words came back as.
+    val own = msg("Sí, gracias", ChatMessage.From.owner, "2026-10-28T09:00:02Z").copy(serverId = "run_2.in")
+    assertTrue(SentMessages.merge(listOf(earlier, own), listOf(sent), t0.plusSeconds(5)).second.isEmpty())
+  }
+
+  @Test fun aSendTakesTheIdTafsCloudAnswersAndTheThreadsCopyByItReplacesIt() = runTest {
+    readsOf()
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 404, """{"error":"not_found"}""")
+    transport.answer("POST /v1/tafs/taf_1/messages", 200, """{"session":"s1","new_session":false,"run":"run_2","message":{"id":"run_2.in","at":"2026-10-28T09:00:00Z"}}""")
+    // The thread has an older "Sí" and, later, the one just sent, by its id.
+    transport.answer(conversation, 200, """{"messages":[{"id":"run_1.in","at":"2026-10-28T08:00:00Z","from":"owner","text":"Sí","session":"s1"}]}""")
+    transport.answer(conversation, 200, """{"messages":[{"id":"run_1.in","at":"2026-10-28T08:00:00Z","from":"owner","text":"Sí","session":"s1"},{"id":"run_2.in","at":"2026-10-28T09:00:00Z","from":"owner","text":"Sí","session":"s1"}]}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertTrue(m.deliverChat("Sí", "refunds-1"))
+    // Marked with its id, it waited while the thread had only the older "Sí"; the second read has it, and it goes.
+    m.loadChat("refunds-1")
+    assertTrue(m.state.value.chatSent["refunds-1"].isNullOrEmpty())
+    assertEquals(listOf("run_1.in", "run_2.in"), m.state.value.chats["refunds-1"].orEmpty().map { it.serverId })
+  }
+
+  @Test fun theStreamsSessionEventCarriesTheMessagesId() = runTest {
+    val events = StreamEvent.parse(kotlinx.coroutines.flow.flowOf("event: session", "data: {\"session\":\"s1\",\"new_session\":false,\"run\":\"run_2\",\"message\":{\"id\":\"run_2.in\",\"at\":\"2026-10-28T09:00:00Z\"}}", "")).toList()
+    assertEquals(listOf(StreamEvent.Session("s1", false, "run_2", "run_2.in")), events)
+  }
+
+  @Test fun aMessageThatAnsweredACardSaysWhich() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, """{"messages":[{"id":"r.3","at":"2026-10-28T08:00:00Z","from":"owner","text":"Use live","session":"s1","answers":"limits"}]}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertEquals("limits", m.state.value.chats["refunds-1"]!!.single().answers)
   }
 
   @Test fun aSentMessageNobodyHasAfterTwoMinutesIsGiven() {

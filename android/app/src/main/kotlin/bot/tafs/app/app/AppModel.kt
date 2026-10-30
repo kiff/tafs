@@ -48,7 +48,6 @@ import bot.tafs.app.push.NoPush
 import bot.tafs.app.push.PushPlatform
 import kotlinx.serialization.Serializable
 import bot.tafs.app.kiff.ShownComponent
-import bot.tafs.app.model.CoachAnswer
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.kiff.Door
 import bot.tafs.app.kiff.DoorApp
@@ -534,7 +533,7 @@ data class AppState(
     val messages = chats[tafId] ?: emptyList()
     // Coach's thread has its cards in it, and the owner's answers to them read as what they chose.
     if (tafId == COACH_CHAT) {
-      return CoachWords.items(messages.map { if (it.from == ChatMessage.From.owner) it.copy(text = CoachWords.ownerWords(it.text, coachComponents)) else it }, coachComponents)
+      return CoachWords.items(messages, coachComponents)
     }
     val items = mutableListOf<ChatItem>()
     items += messages.map { ChatItem.Message(it) }
@@ -2278,11 +2277,10 @@ class AppModel(
    * Answers one of Coach's cards as data (docs/chat.md): tafs cloud hands it to the run that waits on the card, which goes on.
    * The card shows the answer once the thread has it, in kiff/agents' words; until then it says the answer is on its way. The
    * run that goes on is followed like any run at work, so Coach's next words show without leaving it. A questions card's
-   * answer is its JSON. A card that no longer waits (409) is read again as it is. The sample has no Coach run: there the answer
-   * is a message, as before.
+   * answer is its JSON. A card that no longer waits (409) is read again as it is. Only signed in: the sample has no Coach.
    */
   suspend fun answerCard(type: String, id: String, answer: String): Boolean {
-    if (_state.value.mode != Mode.kiff) return deliverChat(CoachAnswer.message(type, id, answer), COACH_CHAT)
+    if (_state.value.mode != Mode.kiff) return false
     val cloudId = _state.value.coachCloudId ?: return false
     if (id in _state.value.cardsAnswering) return false
     val value: kotlinx.serialization.json.JsonElement =
@@ -2409,7 +2407,10 @@ class AppModel(
           }
           // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
           if (!steered) streamed = openStream(cloudId, words, refs, session, fresh)
-          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh).also { if (coach) settleCoachChat(it.session) }
+          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh).also { sent ->
+            if (coach) settleCoachChat(sent.session)
+            sent.message?.let { markSent(tafId, pending, it.id) }
+          }
         }
       }
     } catch (e: CancellationException) {
@@ -2438,7 +2439,7 @@ class AppModel(
     if (events != null) {
       _state.update { it.copy(chatLive = it.chatLive + (tafId to LiveAnswer(started = clock()))) }
       readThread(tafId)
-      followStream(tafId, events, retry = words)
+      followStream(tafId, events, retry = words, sent = pending)
       return true
     }
     readThread(tafId)
@@ -2559,7 +2560,21 @@ class AppModel(
    * thread is read and the stored answer takes the live one's place. A stream that drops without an end leaves the thread to
    * show the rest, read as before.
    */
-  private fun followStream(tafId: String, events: kotlinx.coroutines.flow.Flow<StreamEvent>, retry: String?) {
+  /**
+   * The message on its way takes tafs cloud's id for it, from its send or its stream: the thread's copy is then found by that
+   * id alone (SentMessages.merge), never by its words.
+   */
+  private fun markSent(tafId: String, sent: ChatMessage, serverId: String) {
+    val marked = sent.copy(serverId = serverId)
+    _state.update { s ->
+      s.copy(
+        chats = s.chats + (tafId to s.chats[tafId].orEmpty().map { if (it == sent) marked else it }),
+        chatSent = s.chatSent + (tafId to s.chatSent[tafId].orEmpty().map { if (it == sent) marked else it }),
+      )
+    }
+  }
+
+  private fun followStream(tafId: String, events: kotlinx.coroutines.flow.Flow<StreamEvent>, retry: String?, sent: ChatMessage? = null) {
     val generation = accountGeneration
     followers[tafId]?.cancel()
     followers[tafId] = scope.launch {
@@ -2573,6 +2588,7 @@ class AppModel(
           when (e) {
             is StreamEvent.Session -> {
               live { it.copy(session = e.session, run = e.run ?: it.run) }
+              if (sent != null && e.messageId != null) markSent(tafId, sent, e.messageId)
               // A new Coach conversation is the one shown once it has begun.
               if (tafId == COACH_CHAT) settleCoachChat(e.session)
               // At work in that chat, for steering and Stop.

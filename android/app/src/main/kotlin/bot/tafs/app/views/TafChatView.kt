@@ -414,6 +414,8 @@ private fun MessageBody(message: ChatMessage, tafId: String, files: FileActions,
       }
       // The files sent with it, each opened full size.
       if (message.attachments.isNotEmpty()) MessageFiles(message.attachments, tafId, files)
+      // Written while a card waited: these words were the card's answer (`answers`).
+      if (message.answers != null) Text(Chat.ANSWERED_CARD, style = scaled(12, color = Theme.dim))
     }
   } else if (message.kind == ChatMessage.Kind.kickoff) {
     // A run's kickoff shows as a small note, not a bubble.

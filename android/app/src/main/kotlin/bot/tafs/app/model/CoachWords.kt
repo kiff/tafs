@@ -16,26 +16,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
-/** The owner's answer to a card, as the contract has it: "[<type> <id>] <answer>". */
-data class CoachAnswer(val type: String, val id: String, val text: String) {
-  val failed: Boolean get() = text.startsWith("failed")
-
-  companion object {
-    /** Null when the message isn't an answer to a card. */
-    fun parse(message: String): CoachAnswer? {
-      if (!message.startsWith("[")) return null
-      val close = message.indexOf(']')
-      if (close < 0) return null
-      val head = message.substring(1, close).split(" ", limit = 2)
-      if (head.size != 2 || head[0] !in SetupComponent.KINDS) return null
-      return CoachAnswer(head[0], head[1], message.substring(close + 1).trim())
-    }
-
-    /** The message that answers a card. */
-    fun message(type: String, id: String, answer: String): String = "[$type $id] $answer"
-  }
-}
-
 /**
  * The owner's answers to a questions card, as one message to the agent: `{"<question>": {"value": …} | {"values": […]} |
  * {"own": "…"}}`. Each answer is a choice of the agent's, several (a multi question), or the owner's own words.
@@ -195,19 +175,6 @@ object CoachWords {
   fun improvementKey(c: SetupComponent): String {
     val what = c.taf?.draft ?: java.security.MessageDigest.getInstance("SHA-256").digest((c.taf?.note ?: "").toByteArray()).take(8).joinToString("") { "%02x".format(it) }
     return "${c.id}|$what"
-  }
-
-  /** An owner's message in their own words: an answer to a card reads as what they chose, never as the contract's form. */
-  fun ownerWords(text: String, components: List<ShownComponent>): String {
-    val a = CoachAnswer.parse(text) ?: return text
-    val component = components.firstOrNull { it.id == a.id }?.component
-    return when (a.type) {
-      "confirm" -> component?.options?.firstOrNull { it.value == a.text }?.label ?: a.text
-      "approval" -> if (a.failed) "Approve · it didn't go through" else if (a.text == "declined") "Decline" else "Approve"
-      "sign_in" -> if (a.failed) "Sign in · it didn't go through" else if (a.text == "not now") "Not now" else "Signed in"
-      "questions" -> QuestionAnswers.words(a.text, component?.questions.orEmpty()) ?: a.text
-      else -> a.text
-    }
   }
 
   /**
