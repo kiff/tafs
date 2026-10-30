@@ -206,11 +206,12 @@ class CoachStartTest {
 
   // MARK: Hand-overs
 
-  private fun coachThread(component: String, messages: String = "[]") {
+  private fun coachThread(component: String, messages: String = "[]", answer: String? = null) {
     transport.answer("GET /v1/setup", 200, """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}}""")
+    val answered = answer?.let { ""","answer":$it""" } ?: ""
     transport.answer(
       "GET /v1/tafs/setup_1/conversation", 200,
-      """{"messages":$messages,"components":[{"at":"2026-10-28T08:00:00Z","session":"s1","run":"r1","component":$component}]}""",
+      """{"messages":$messages,"components":[{"at":"2026-10-28T08:00:00Z","session":"s1","run":"r1","component":$component$answered}]}""",
     )
     transport.answer("POST /v1/tafs/setup_1/messages", 200, """{"session":"s1","new_session":false}""")
   }
@@ -220,66 +221,61 @@ class CoachStartTest {
 
   private fun told() = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/tafs/setup_1/messages").last().body!!)).jsonObject.getValue("text").jsonPrimitive.content
 
-  @Test fun aHandOverStartsItsTafOnceFromCoachsDraft() = runTest {
-    reads()
-    coachThread(handOver)
-    transport.answer("POST /v1/tafs", 200, """{"taf":{"id":"c_9","name":"Refunds"}}""")
-    val m = model()
-    m.refresh()
-    transport.answer("GET /v1/home", 200, refunds)
-    m.loadCoach()
-    m.loadChat(COACH_CHAT)
-    val start = body("POST /v1/tafs")
-    assertEquals("dr_t", start.getValue("draft_id").jsonPrimitive.content)
-    assertEquals("true", start.getValue("from_setup").jsonPrimitive.content)
-    assertEquals("true", start.getValue("unscheduled").jsonPrimitive.content)
-    assertTrue(m.state.value.tafs.any { it.id == "refunds-2" })
-    // Read again, the started taf isn't started twice.
-    m.loadChat(COACH_CHAT)
-    assertEquals(1, transport.requestsTo("POST /v1/tafs").size)
+  private fun handOver(m: AppModel) = m.state.value.coachComponents.single { it.id == "r1" }.let { CoachWords.handOver(it.answer, m.state.value.tafs.any { t -> t.id == "refunds-2" }) }
+
+  /** The phone never starts a new taf, nor answers its card: that's tafs cloud's. */
+  private fun nothingStartedHere() {
+    assertTrue(transport.requestsTo("POST /v1/tafs").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
     assertTrue(auth.asked.isEmpty())
   }
 
-  @Test fun aHandOverTafsCloudRefusesIsToldToCoachOnce() = runTest {
+  @Test fun aHandOverTafsCloudSetUpReadsTheListOnceAndOpensTheTaf() = runTest {
     reads()
-    coachThread(handOver)
-    transport.answer("POST /v1/tafs", 400, """{"error":"that job isn't one tafs runs"}""")
+    coachThread(handOver, answer = """{"state":"answered","words":"","by":"tafs cloud","outcome":{"taf_id":"c_9"}}""")
     val m = model()
-    m.loadCoach()
-    m.loadChat(COACH_CHAT)
-    assertEquals("[result r1] failed: the taf wasn't created: that job isn't one tafs runs", told())
-    assertEquals("Refunds isn't started yet: that job isn't one tafs runs", m.state.value.tafStartErrors["r1"])
-    m.loadChat(COACH_CHAT)
-    assertEquals(1, transport.requestsTo("POST /v1/tafs").size)
-    assertEquals(1, transport.requestsTo("POST /v1/tafs/setup_1/messages").size)
-  }
-
-  @Test fun aHandOverThatFailedOnTheNetworkWaitsForTryAgainAndCoachIsNotTold() = runTest {
-    reads()
-    coachThread(handOver)
-    transport.answer("POST /v1/tafs", 503, """{"error":"try later"}""")
-    val m = model()
-    m.loadCoach()
-    m.loadChat(COACH_CHAT)
-    assertEquals("Refunds isn't started yet: try later", m.state.value.tafStartErrors["r1"])
-    assertTrue(transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
-    // Try again, and it starts.
     m.refresh()
-    transport.answer("POST /v1/tafs", 200, """{"taf":{"id":"c_9","name":"Refunds"}}""")
     transport.answer("GET /v1/home", 200, refunds)
-    m.startSetupTaf(KiffClient.json.decodeFromString<SetupComponent>(handOver))
-    assertNull(m.state.value.tafStartErrors["r1"])
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertEquals("c_9", m.state.value.coachComponents.single().answer?.outcome?.tafId)
+    assertEquals(CoachWords.HandOver.SetUp, handOver(m))
     assertTrue(m.state.value.tafs.any { it.id == "refunds-2" })
+    // Read again, the list isn't read again for it.
+    val homes = transport.requestsTo("GET /v1/home").size
+    m.loadChat(COACH_CHAT)
+    assertEquals(homes, transport.requestsTo("GET /v1/home").size)
+    nothingStartedHere()
   }
 
-  @Test fun aNameAnotherTafHasIsToldToCoach() = runTest {
+  @Test fun aHandOverTafsCloudCouldNotSetUpSaysWhyWithNoTryAgain() = runTest {
     reads()
-    coachThread(handOver)
-    transport.answer("POST /v1/tafs", 409, """{"error":"you already have a taf named Refunds"}""")
+    coachThread(handOver, answer = """{"state":"answered","words":"","by":"tafs cloud","outcome":{"failed":"the account already has a taf named Refunds"}}""")
     val m = model()
     m.loadCoach()
     m.loadChat(COACH_CHAT)
-    assertEquals("[result r1] failed: the taf wasn't created: the account already has a taf named Refunds", told())
+    assertEquals(CoachWords.HandOver.Failed("the account already has a taf named Refunds"), handOver(m))
+    assertEquals("Refunds wasn't set up: the account already has a taf named Refunds.", CoachWords.notSetUp("Refunds", "the account already has a taf named Refunds"))
+    nothingStartedHere()
+  }
+
+  @Test fun aHandOverWithNoAnswerYetIsBeingSetUpAndThePhoneDoesNothing() = runTest {
+    reads()
+    coachThread(handOver)
+    val m = model()
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertNull(m.state.value.coachComponents.single().answer)
+    assertEquals(CoachWords.HandOver.SettingUp, handOver(m))
+    assertEquals("Setting up Refunds…", CoachWords.settingUp("Refunds"))
+    nothingStartedHere()
+  }
+
+  @Test fun aCardsAnswerOutlivesTheCardShownAgainWithoutIt() {
+    val card = KiffClient.json.decodeFromString<SetupComponent>(handOver)
+    val first = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", card, bot.tafs.app.kiff.CardAnswer(outcome = bot.tafs.app.kiff.ResultOutcome(tafId = "c_9")))
+    val again = first.copy(answer = null)
+    assertEquals("c_9", CoachWords.fold(listOf(first, again)).single().answer?.outcome?.tafId)
   }
 
   private val improvement = """{"type":"result","id":"r2","taf":{"agent":"refunds-2","name":"Refunds","improves":"c_9","note":"Asks before refunds over 50","draft":"dr_v","try":"Refund order 1001"}}"""

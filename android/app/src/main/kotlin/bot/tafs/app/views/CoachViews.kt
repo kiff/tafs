@@ -158,8 +158,6 @@ class CoachActions(
   val start: suspend () -> Unit = {},
   /** Signs in again at the vendor, for a sign-in card: a new approval, one confirmation. */
   val signInAgain: suspend (SetupComponent) -> Unit = {},
-  /** Tries again to start the taf a hand-over names. */
-  val startTaf: suspend (SetupComponent) -> Unit = {},
   /** Tries again to make the version an improvement names. */
   val makeVersion: suspend (SetupComponent) -> Unit = {},
   /** Opens a taf, by its KIFF agent; and a taf's versions. */
@@ -179,7 +177,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
     "questions" -> QuestionsCard(c, answered = answer?.text, actions.answer)
     "approval" -> ApprovalCard(c, state, answer, actions)
     "sign_in" -> SignInCard(c, state, answer, actions)
-    "result" -> if (c.taf?.improves != null) ImprovementCard(c, state, actions) else HandOverCard(c, state, answer, actions)
+    "result" -> if (c.taf?.improves != null) ImprovementCard(c, state, actions) else HandOverCard(shown, state, actions)
   }
 }
 
@@ -396,33 +394,30 @@ private fun SignInCard(c: SetupComponent, state: AppState, answer: CoachAnswer?,
 }
 
 /**
- * Coach's hand-over of a new taf. The app starts it once by itself, wherever the owner is; the card says how that went: open it,
- * starting, didn't start with Try again, or Coach was told and hands it over again.
+ * Coach's hand-over of a new taf. tafs cloud sets it up and answers the card; the card says what came of it: set up, with Open;
+ * why it wasn't, with no Try again, since Coach hands it over again itself; or, until the answer comes, that it's being set up.
  */
 @Composable
-private fun HandOverCard(c: SetupComponent, state: AppState, answer: CoachAnswer?, actions: CoachActions) {
-  val scope = rememberCoroutineScope()
+private fun HandOverCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
+  val c = shown.component
   val taf = c.taf ?: return
-  // The name the taf got, once started: tafs cloud gives a taken name the first free "<name> 2", so Coach's may name another taf.
-  val started = state.tafs.firstOrNull { it.id == taf.agent }
-  val name = started?.name ?: taf.name
-  val renamed = started != null && started.name != taf.name
+  // The name the taf got, once listed: tafs cloud gives a taken name the first free "<name> 2", so Coach's may name another taf.
+  val id = shown.answer?.outcome?.tafId
+  val listed = state.tafs.firstOrNull { it.id == taf.agent || (id != null && it.cloudId == id) }
+  val name = listed?.name ?: taf.name
   Panel(stroke = Theme.ok.copy(alpha = 0.45f)) {
     Eyebrow("Set up · $name", Theme.ok)
     c.text?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     c.tools?.takeIf { it.isNotEmpty() }?.let { Text(it.joinToString(" · "), style = scaled(13, color = Theme.soft)) }
-    val error = state.tafStartErrors[c.id]
-    when {
-      started != null -> PrimaryButton(if (renamed) "Open $name" else c.yes ?: "See it on $name", { actions.openTaf(taf.agent) })
-      answer?.failed == true || c.id in state.toldStartFailures -> {
-        Text(error ?: "${taf.name} wasn't created: ${answer?.let(::why) ?: "it didn't start"}.", style = scaled(13, color = Theme.no))
+    when (val h = CoachWords.handOver(shown.answer, listed != null)) {
+      CoachWords.HandOver.SetUp ->
+        if (listed != null) PrimaryButton(if (listed.name != taf.name) "Open $name" else c.yes ?: "See it on $name", { actions.openTaf(listed.id) })
+        else Text(CoachWords.settingUp(name), style = scaled(13, color = Theme.dim))
+      is CoachWords.HandOver.Failed -> {
+        Text(CoachWords.notSetUp(taf.name, h.why), style = scaled(13, color = Theme.no))
         Text(CoachWords.COACH_KNOWS, style = scaled(13, color = Theme.dim))
       }
-      error != null -> {
-        Text(error, style = scaled(13, color = Theme.no))
-        OutlineButton("Try again", { scope.launch { actions.startTaf(c) } }, Modifier.fillMaxWidth(), enabled = c.id !in state.startingTafs)
-      }
-      taf.job != null -> Text("Starting ${taf.name}…", style = scaled(13, color = Theme.dim))
+      CoachWords.HandOver.SettingUp -> Text(CoachWords.settingUp(name), style = scaled(13, color = Theme.dim))
     }
   }
 }

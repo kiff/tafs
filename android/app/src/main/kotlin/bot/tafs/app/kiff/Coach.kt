@@ -97,10 +97,21 @@ data class WireShown(
   val session: String = "",
   val run: String = "",
   val component: JsonElement,
+  val answer: JsonElement? = null,
 )
 
-/** A component as the thread holds it: where it first appeared, and its latest version (showing an id again replaces it in place). */
-data class ShownComponent(val firstAt: Instant, val session: String, val run: String, val component: SetupComponent) {
+/**
+ * A card's answer as kiff/agents recorded it. [by] is "tafs cloud" when tafs cloud answered a result itself, with its [outcome]:
+ * the taf it set up, the version it made, or why it didn't.
+ */
+@Serializable
+data class CardAnswer(val state: String = "answered", val words: String = "", val by: String? = null, val outcome: ResultOutcome? = null)
+
+@Serializable
+data class ResultOutcome(@SerialName("taf_id") val tafId: String? = null, val version: Int? = null, val failed: String? = null)
+
+/** A component as the thread holds it: where it first appeared, its latest version (showing an id again replaces it in place), and its answer. */
+data class ShownComponent(val firstAt: Instant, val session: String, val run: String, val component: SetupComponent, val answer: CardAnswer? = null) {
   val id: String get() = component.id
 }
 
@@ -112,14 +123,6 @@ data class CloudSetup(
   /** The KIFF agent Coach acts as: the holder of its Cards. */
   @SerialName("kiff_agent") val kiffAgent: String? = null,
 )
-
-/** A taf tafs cloud started: the app reads the list again to show it, so only its id and name are kept. */
-@Serializable
-data class StartedTaf(val id: String, val name: String = "")
-
-/** What starting a taf answers: the taf, and its first run's chat (none for a taf that works from its chat). */
-@Serializable
-data class Started(val taf: StartedTaf, val session: String? = null)
 
 @Serializable
 internal data class SetupResponse(val setup: CloudSetup? = null, val tools: CoachTools? = null)

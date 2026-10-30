@@ -168,6 +168,26 @@ object CoachWords {
   const val SIGN_IN_NOTE = "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed."
   const val COACH_KNOWS = "Coach knows, and hands it over again."
 
+  /** A hand-over as the card says it, from tafs cloud's answer: set up, why it wasn't, or not answered yet. */
+  sealed interface HandOver {
+    data object SetUp : HandOver
+    data class Failed(val why: String) : HandOver
+    data object SettingUp : HandOver
+  }
+
+  /** [listed]: the taf is already on the account's list. */
+  fun handOver(answer: bot.tafs.app.kiff.CardAnswer?, listed: Boolean): HandOver {
+    val outcome = answer?.outcome
+    return when {
+      outcome?.failed != null -> HandOver.Failed(outcome.failed)
+      outcome?.tafId != null || listed -> HandOver.SetUp
+      else -> HandOver.SettingUp
+    }
+  }
+
+  fun settingUp(name: String) = "Setting up $name…"
+  fun notSetUp(name: String, why: String) = "$name wasn't set up: ${why.trimEnd('.')}."
+
   /**
    * An improvement result, by its card and what it carries (its draft, else its note). The card's id is Coach's to pick and comes
    * back in another conversation: keyed by the id alone, a new conversation's card showed the version an earlier one made.
@@ -207,7 +227,7 @@ object CoachWords {
     val out = mutableListOf<ShownComponent>()
     for (s in shown) {
       val i = out.indexOfFirst { it.id == s.id }
-      if (i >= 0) out[i] = out[i].copy(component = s.component) else out += s
+      if (i >= 0) out[i] = out[i].copy(component = s.component, answer = s.answer ?: out[i].answer) else out += s
     }
     return out
   }

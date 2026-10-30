@@ -63,22 +63,6 @@ class TafsCloud(
       ?: throw CloudError(502, "tafs cloud didn't answer with Coach.")
 
   /**
-   * Starts a taf Coach made: kiff/agents claims its key from the draft Coach submitted, so it never reaches the phone or tafs
-   * cloud. Runs it once now, unless its tools can't find its work: then it works from its chat.
-   */
-  suspend fun startFromSetup(name: String, job: String, draft: String, unscheduled: Boolean = false, timezone: String = java.util.TimeZone.getDefault().id): Started {
-    val body = kotlinx.serialization.json.buildJsonObject {
-      put("name", name)
-      put("job", job)
-      put("draft_id", draft)
-      put("timezone", timezone)
-      put("from_setup", true)
-      if (unscheduled) put("unscheduled", true)
-    }
-    return KiffClient.json.decodeFromString<Started>(String(sendJson("POST", "/v1/tafs", body)))
-  }
-
-  /**
    * Stores a taf's next version as Coach drafted it, once per result ([from]): nothing goes live. Returns its number. [agent] is
    * the result's: tafs cloud refuses an improvement of another taf's agent.
    */
@@ -142,7 +126,8 @@ class TafsCloud(
   private fun shown(element: kotlinx.serialization.json.JsonElement): ShownComponent? = runCatching {
     val wire = KiffClient.json.decodeFromJsonElement(WireShown.serializer(), element)
     val component = KiffClient.json.decodeFromJsonElement(SetupComponent.serializer(), wire.component)
-    if (component.type !in SetupComponent.KINDS) null else ShownComponent(wire.at, wire.session, wire.run, component)
+    val answer = wire.answer?.let { runCatching { KiffClient.json.decodeFromJsonElement(CardAnswer.serializer(), it) }.getOrNull() }
+    if (component.type !in SetupComponent.KINDS) null else ShownComponent(wire.at, wire.session, wire.run, component, answer)
   }.getOrNull()
 
   /**

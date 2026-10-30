@@ -247,11 +247,6 @@ data class AppState(
   /** Coach is being started on this account, and why it wasn't, when it wasn't. */
   val startingCoach: Boolean = false,
   val coachStartError: String? = null,
-  /** The hand-overs (Coach's result cards, by id) whose taf is being started, or failed to start (with why). */
-  val startingTafs: Set<String> = emptySet(),
-  val tafStartErrors: Map<String, String> = emptyMap(),
-  /** The hand-overs this phone told Coach didn't start, before the thread shows the answer. */
-  val toldStartFailures: Set<String> = emptySet(),
   /** The version each improvement result made, by its key; those being made, and those that failed (with why). */
   val improvedVersions: Map<String, Int> = emptyMap(),
   val makingVersions: Set<String> = emptySet(),
@@ -1496,7 +1491,7 @@ class AppModel(
     }
     if (tafId == COACH_CHAT) {
       readApprovals()
-      startHandedOver()
+      followHandOvers()
     }
     // A run at work that this phone isn't following: its stream is picked back up, once.
     thread.workingRun?.let { run -> resumeChat(tafId, cloudId, run) }
@@ -2037,23 +2032,18 @@ class AppModel(
 
   // MARK: Coach's hand-overs
 
-  /** A hand-over's taf, by the KIFF agent it acts as. */
-  private fun startedTaf(agent: String): Boolean = _state.value.tafs.any { it.id == agent }
-
-  /** The agents whose re-handed-over result already started by itself once, so a refusal that isn't about the name can't loop with no one in it. */
-  private val restartedAgents = mutableSetOf<String>()
-
-  /** The results whose failure is being sent to Coach now, so it's sent once. */
-  private val tellingStartFailures = mutableSetOf<String>()
+  /** The tafs tafs cloud said it set up that the list was read again for, so a taf not listed yet is read for once. */
+  private val setUpTafs = mutableSetOf<String>()
 
   /**
-   * Coach's hand-over starts its taf once, wherever the owner is: not only while the result card is on screen, so the taf reaches the
-   * list either way. One that didn't start waits for the card's Try again; one whose failure Coach was told of is Coach's to hand over
-   * again. An improvement makes the taf's next version, never a new taf.
+   * Coach's results. A new taf is tafs cloud's to set up: it answers the card itself, and the phone only shows the answer,
+   * reading the list again once for a taf it set up. An improvement makes the taf's next version here, once.
    */
-  private suspend fun startHandedOver() {
+  private suspend fun followHandOvers() {
     if (_state.value.mode != Mode.kiff) return
-    for (c in _state.value.coachComponents.map { it.component }.filter { it.type == "result" }) {
+    var readList = false
+    for (shown in _state.value.coachComponents.filter { it.component.type == "result" }) {
+      val c = shown.component
       val taf = c.taf ?: continue
       if (taf.improves != null) {
         val key = improvementKey(c)
@@ -2061,85 +2051,10 @@ class AppModel(
         if (key !in s.improvedVersions && key !in s.makingVersions && key !in s.improveErrors) makeImprovedVersion(c)
         continue
       }
-      if (taf.job == null || taf.draft == null) continue
-      val s = _state.value
-      if (startedTaf(taf.agent) || c.id in s.startingTafs || c.id in s.tafStartErrors) continue
-      if (startFailureTold(c)) continue
-      // A result Coach handed over again after a failed start starts by itself once per agent; one that fails again waits for the
-      // owner's Try again.
-      val again = s.coachComponents.any { it.component.id != c.id && it.component.taf?.agent == taf.agent && startFailureTold(it.component) }
-      if (again) {
-        if (taf.agent in restartedAgents) {
-          _state.update { it.copy(tafStartErrors = it.tafStartErrors + (c.id to "${taf.name} isn't started yet: its start failed before. Try again when you're ready.")) }
-          continue
-        }
-        restartedAgents += taf.agent
-      }
-      startSetupTaf(c)
+      val id = shown.answer?.outcome?.tafId ?: continue
+      if (_state.value.tafs.none { it.cloudId == id || it.id == taf.agent } && setUpTafs.add(id)) readList = true
     }
-  }
-
-  /** Whether Coach was told this hand-over failed: it then shows a new result, and the card waits for it rather than offering the same start again. */
-  fun startFailureTold(c: SetupComponent): Boolean =
-    CoachWords.answerTo(c.id, _state.value.chats[COACH_CHAT].orEmpty())?.failed == true || c.id in _state.value.toldStartFailures
-
-  /**
-   * Starts the taf a result hands over to, once: tafs cloud stores it, and kiff/agents claims its key from Coach's draft. Then it shows
-   * with the account's other tafs.
-   */
-  suspend fun startSetupTaf(c: SetupComponent) {
-    val taf = c.taf ?: return
-    val job = taf.job ?: return
-    val draft = taf.draft ?: return
-    if (_state.value.mode != Mode.kiff || taf.improves != null || startedTaf(taf.agent) || c.id in _state.value.startingTafs) return
-    _state.update { it.copy(startingTafs = it.startingTafs + c.id, tafStartErrors = it.tafStartErrors - c.id) }
-    val generation = accountGeneration
-    var nameTaken = false
-    try {
-      cloud.startFromSetup(taf.name, job, draft, unscheduled = taf.unscheduled == true)
-    } catch (e: CancellationException) {
-      throw e
-    } catch (e: CloudError) {
-      if (generation != accountGeneration) return
-      if (e.status == 409 && (e.message ?: "").contains("already have a taf named")) {
-        // Started before, by this phone or another, unless another taf has the name.
-        nameTaken = true
-      } else {
-        _state.update { it.copy(tafStartErrors = it.tafStartErrors + (c.id to "${taf.name} isn't started yet: ${e.message}")) }
-        // tafs cloud refused it (a 4xx): trying the same again fails the same way, so Coach hears of it. A server error or a lost
-        // connection may pass: the card's Try again stays, and Coach isn't told. Not a 401: signing in again fixes it, as time does a 429.
-        if (e.status in 400..499 && e.status != 401 && e.status != 429) tellCoachStartFailed(c, e.message ?: "tafs cloud refused it")
-        return
-      }
-    } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(tafStartErrors = it.tafStartErrors + (c.id to "${taf.name} isn't started yet: ${e.message}")) }
-      return
-    } finally {
-      if (generation == accountGeneration) _state.update { it.copy(startingTafs = it.startingTafs - c.id) }
-    }
-    if (generation != accountGeneration) return
-    refresh()
-    // A 409 can also mean another taf has the name: say so rather than wait forever.
-    if (nameTaken && !startedTaf(taf.agent)) {
-      _state.update { it.copy(tafStartErrors = it.tafStartErrors + (c.id to "${taf.name} isn't started yet: the account already has a taf by that name.")) }
-      tellCoachStartFailed(c, "the account already has a taf named ${taf.name}")
-    }
-  }
-
-  /**
-   * Tells Coach, once, that the taf its result handed over wasn't created and why, as the answer to that result: its draft is
-   * confirmed and unclaimed, so Coach hands it over again, under a new name when the name was taken.
-   */
-  private suspend fun tellCoachStartFailed(c: SetupComponent, why: String) {
-    if (startFailureTold(c) || c.id in tellingStartFailures) return
-    tellingStartFailures += c.id
-    try {
-      val sent = deliverChat(CoachAnswer.message("result", c.id, "failed: the taf wasn't created: $why"), COACH_CHAT)
-      // Told only once it went: a send that failed leaves Try again on the card, and the next failure tries to tell Coach again.
-      if (sent) _state.update { it.copy(toldStartFailures = it.toldStartFailures + c.id) }
-    } finally {
-      tellingStartFailures -= c.id
-    }
+    if (readList) refresh()
   }
 
   /**

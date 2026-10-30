@@ -102,10 +102,17 @@ then shows its plan. Then, each step behind the owner's yes:
 3. **Approve the Card.** The owner reads the Card on its approval card and confirms it
    with one Face ID, which signs exactly the draft version shown. An editor's draft
    waits for an admin to confirm it in KIFF.
-4. **Start the taf.** The result card hands over the taf. The app asks tafs cloud to
-   start it once (`POST /v1/tafs` with `from_setup`): kiff/agents claims the key from
-   Coach's draft, and the taf joins the account's list ([tafs.md](tafs.md#starting-a-taf)).
-   A start that failed is told to Coach, which shows a new result.
+4. **Start the taf.** The result card hands over the taf. tafs cloud starts it as the
+   person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
+   claims the key from Coach's draft, and the taf joins the account's list
+   ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
+   (`answer.by`, `answer.outcome`: `{taf_id}` or `{failed}`), and the card shows it:
+   set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
+   itself; and until the answer comes, "Setting up…". The app starts nothing itself
+   (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
+   set up that isn't listed yet). The iPhone app still starts it itself
+   (`POST /v1/tafs` with `from_setup`) until it follows in its own pull request.
+   A taf's next version is still made by the app, from an improvement's result.
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works
 from its chat.
