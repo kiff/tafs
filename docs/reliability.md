@@ -137,9 +137,24 @@ The work of delivering is split in two:
 
 ## The taf's view
 
-tafs cloud returns one view of a taf for both apps: its status, the count of requests in each
-state, its next run, and its recent requests with their deliveries. Every time, every
-"next try at" and every state in it is worked out by tafs cloud. The apps show it as it is.
+tafs cloud returns one view of a taf for both apps. The apps show it as it is.
+
+- **Words and fields both.** Each state comes with `line`, the words the app shows, with every
+  time already written in the account's time zone ("Trying again at 14:20, 2 of 3"). The
+  fields (`state`, `try`, `of`, `next_at`, `reason`) are there for sorting and badges only. An
+  app never formats a time or builds a line from them.
+- **In the list:** each taf in `GET /v1/home` gains `work: {status, line, needs_you}`. That's
+  the taf's status (`working`, `retrying`, `needs_you`, `paused` or `idle`), its line, and how
+  many of its requests need the owner. The list needs no read per taf.
+- **On the taf's page:** `GET /v1/tafs/{id}/work` gives the counts per state, the next run, and
+  the recent requests, newest first, each with its `line` and its deliveries.
+- **A delivery that needs you** is a request whose work is done but whose result didn't reach
+  one place after its tries. Its line says where and why. Its action is **Send again**
+  (`POST /v1/tafs/{id}/requests/{request}/deliveries/{place}/send`, for someone who manages the
+  taf). It sends what the taf already wrote, once, and does no work. It isn't a KIFF action, so
+  nothing is signed.
+- **The `app` place's alert** is the alert tafs cloud already sends, through APNs and FCM. It has
+  `open: "taf"` and `taf_id`, which every door alert now carries, so tapping it opens the taf.
 
 ## How it's proven
 

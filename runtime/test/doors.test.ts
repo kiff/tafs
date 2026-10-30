@@ -441,6 +441,9 @@ describe("the email door", () => {
     expect(w.outbox[1]!.text).toContain("Refunded.");
     // The alert says it was answered, never the taf's words.
     expect(w.pushed.map((p) => (p.payload.aps as { alert: { body: string } }).alert.body)).toEqual(["Answered Bea Ruiz through its email door."]);
+    // It opens the taf, and names no knock.
+    expect(w.pushed[0]!.payload).toMatchObject({ open: "taf", taf_id: REFUNDS });
+    expect(w.pushed[0]!.payload.door_knock).toBeUndefined();
     // Another note for the same run sends nothing more.
     await finish(w, run, "Refunded.");
     expect(w.outbox).toHaveLength(2);

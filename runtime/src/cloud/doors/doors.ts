@@ -274,12 +274,13 @@ async function countDropped(ctx: DoorsContext, tenant: string, taf: Taf, door: D
 }
 
 /** One alert to the phones of the people who manage Cards; a failure is logged, never in the way. */
-async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, body: string, knock: string): Promise<void> {
+async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, body: string, knock: string, about: "knock" | "reply" = "knock"): Promise<void> {
   try {
     const { devices } = await ctx.push.get(tenant);
     await Promise.all(devices.filter((d: Device) => d.manages === true).map((d: Device) => ctx.apns.send(d, {
       kind: "alert",
-      payload: { aps: { alert: { title: taf.name, body }, sound: "default" }, door_knock: { taf: taf.id, knock } },
+      // Every door alert opens the taf (`open`, `taf_id`, read by both apps); a knock's also names the knock.
+      payload: { aps: { alert: { title: taf.name, body }, sound: "default" }, open: "taf", taf_id: taf.id, ...(about === "knock" ? { door_knock: { taf: taf.id, knock } } : {}) },
       collapseID: knock.slice(0, 64),
     }).catch(() => "failed")));
   } catch (err) {
@@ -359,7 +360,7 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
       done.add(place);
     } else if (place === "app") {
       // An alert says only that it was answered, never the taf's words; a phone that's off misses only the alert.
-      if (taf) await tellOwner(ctx, tenant, taf, `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`);
+      if (taf) await tellOwner(ctx, tenant, taf, `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`, "reply");
       done.add(place);
     } else if (place === "owner_email") {
       const owner = door?.keys.find((k) => k.auto)?.id ?? (await ownerEmailOf(store, tenant, reply.taf));
