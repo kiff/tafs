@@ -209,6 +209,8 @@ today's limits are below). The apps show them as they are.
 ## Answering someone outside
 
 A door's message reaches the taf with a first line saying who wrote and that the answer goes back
-to someone outside the company (`doorMessage`). It tells the taf to say what it did or found in plain
-words, and when something failed, only that it can't be done now and the owner will follow up: never
-an error, a code, a tool, an id, or how anything is connected. The details stay in the owner's chat.
+to someone outside the company whom the owner lets give it work (`doorMessage`): a paired sender, since a
+stranger's message is a knock and never starts a run. It tells the taf to do what they ask within its job, reads included, and to answer
+with what they asked for in plain words. A paired sender asking for the last three charges gets them;
+refusing them would make the door useless for reads. When something failed, it says only that it
+can't be done now and the owner will follow up: never an error, a code, a tool, an id, or how anything is connected. The details stay in the owner's chat.

@@ -117,9 +117,11 @@ function appOf(_cfg: DoorsConfig, id: string): DoorApp | undefined {
  */
 export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: string[]): string {
   const who = a.name ? `${a.name} <${a.from}>` : a.from;
-  // The sender is outside the account: the answer says what was done or found in plain words, and
-  // what went wrong only as "not now", never an error, a tool, an id or how anything is connected.
-  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company: say what you did or found in plain words; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
+  // The sender is outside the account, but paired: the owner lets them give this taf work (a stranger's
+  // message is a knock, never a run). So the taf does what they ask within its job, reads included, and
+  // answers with what they asked for. What went wrong is only "not now", never an error, a tool, an id or how anything
+  // is connected.
+  const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
