@@ -816,9 +816,14 @@ describe("Setup (kiff/agents#91)", () => {
     const cardsOnly = await tools();
     expect(cardsOnly.connect).toBeUndefined();
     expect(cardsOnly.card.body.label).toBe("Coach");
-    // A revoked Card is still listed by KIFF, not in force: the Cards are asked for again.
+    // A revoked Card is still listed by KIFF, not in force: that Card alone is asked for again.
     w.account.mandates = coachCards(true).map((m, i) => (i === 2 ? { ...m, active: false } : m));
-    expect((await tools()).card.body.label).toBe("Coach");
+    const again = await tools();
+    expect(again.card.body.label).toBe("Coach");
+    expect(again.card.body.cards.map((c: { id: string }) => c.id)).toEqual([COACH_CARDS[2]!.id]);
+    // A Card added later (taf_results) is drafted alone, never with the ones Coach holds in force.
+    w.account.mandates = coachCards(true).filter((m) => m.id !== "coach-taf-results");
+    expect((await tools()).card.body.cards.map((c: { id: string }) => c.id)).toEqual(["coach-taf-results"]);
     // Both: given, the same for every phone of the account, from one read of the Cards.
     w.account.mandates = coachCards(true);
     w.account.asked = [];

@@ -1124,17 +1124,22 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
     ]);
     const plan = coachToolsPlan(there, mcp);
     if (plan.taken) return { state: "taken", taken: plan.taken };
-    const issued = COACH_CARDS.every((c) => active.has(c.id));
+    const missingCards = new Set(COACH_CARDS.filter((c) => !active.has(c.id)).map((c) => c.id));
+    const issued = missingCards.size === 0;
     if (!plan.missing.length && issued) return { state: "given" };
-    // Coach's Cards, with KIFF's own words for them: never tafs cloud's copy of the wording.
+    // Coach's Cards it doesn't hold in force, with KIFF's own words for them: never tafs cloud's copy.
     let card: Record<string, unknown> | undefined;
     if (!issued) {
-      const body = coachCardsDraft(setup.kiffAgent);
+      const body = coachCardsDraft(setup.kiffAgent, missingCards);
       card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
     }
     return { state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace) } : {}), ...(card ? { card } : {}) };
   } catch (err) {
-    if (err instanceof KIFFError) return { state: "unknown" };
+    if (err instanceof KIFFError) {
+      // Said in the logs, so "KIFF didn't answer" can be told from a refusal: its status and words.
+      console.error(`coach tools: KIFF answered ${err.status}: ${err.message}`);
+      return { state: "unknown" };
+    }
     throw err;
   }
 }

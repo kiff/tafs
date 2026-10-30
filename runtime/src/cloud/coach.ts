@@ -162,11 +162,13 @@ export function coachConnect(missing: ToolDef[], mcp: string, replace: string[] 
  * The draft of Coach's Cards (KIFF's POST /v1/me/agent-drafts), labelled "Coach", for Coach's KIFF
  * agent: the phone signs and sends it as it is, and a signed submit is the owner's one confirmation.
  */
-export function coachCardsDraft(agentID: string): { agent_id: string; label: string; cards: unknown[] } {
+export function coachCardsDraft(agentID: string, only?: ReadonlySet<string>): { agent_id: string; label: string; cards: unknown[] } {
   return {
     agent_id: agentID,
     label: "Coach",
-    cards: COACH_CARDS.map((c) => ({
+    // Only the Cards Coach doesn't hold in force yet, when given: one added later (taf_results) is
+    // drafted alone, so the draft never names a Card KIFF holds otherwise.
+    cards: COACH_CARDS.filter((c) => !only || only.has(c.id)).map((c) => ({
       id: c.id, subject: agentID, domain: "gateway", on_exceed: c.asks ? "owner" : "refuse", ...(c.asks ? { hold_expiry: "10m" } : {}),
       grants: c.actions.map((action) => ({ action })), aggregates: [{ quantity: "count", limit: c.limit, window: "calendar_day" }],
     })),
