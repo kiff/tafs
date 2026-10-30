@@ -411,6 +411,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                   CoachChatActions(
                     newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
                     loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
+                    giveTools = model::giveCoachTools,
                   )
                 },
               )

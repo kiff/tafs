@@ -2,7 +2,6 @@ package bot.tafs.app
 
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.COACH_CHAT
-import bot.tafs.app.kiff.Connection
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.SetupComponent
@@ -56,16 +55,26 @@ class CoachStartTest {
 
   // MARK: Starting Coach
 
+  /** Coach's tools as tafs cloud answers them: the bodies the phone signs and sends exactly as they come. */
+  private val connectBody = """{"connections":[{"name":"tafs_state","url":"https://cloud.tafs.kiff.dev/v1/mcp","tool":"tafs_state","mode":"verify","audience":"https://cloud.tafs.kiff.dev/v1/mcp","control":true,"idempotency_argument":"tafs_op","read_only":true},{"name":"taf_results","url":"https://cloud.tafs.kiff.dev/v1/mcp","tool":"taf_results","mode":"verify","audience":"https://cloud.tafs.kiff.dev/v1/mcp","control":true,"idempotency_argument":"tafs_op","replace":true}]}"""
+  private val cardBody = """{"agent_id":"setup-acme","label":"Coach","cards":[{"id":"coach-version-install","subject":"setup-acme","domain":"gateway","on_exceed":"owner","hold_expiry":"10m","grants":[{"action":"version_install"}],"aggregates":[{"quantity":"count","limit":0,"window":"calendar_day"}]}]}"""
+  private val toGive =
+    """{"state":"to_give","connect":{"body":$connectBody,"lines":["Read your tafs","Read a taf's results · replaces the earlier connection"]},
+        "card":{"body":$cardBody,"card_title":"Coach","cards":[{"title":"Install a version","lines":["Always asks you"]},{"id":7}]}}"""
+  private val coach = """{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}"""
+
   private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""") {
+    // Before the start, no Coach; once started, its tools still to give; once given, given.
     transport.answer("GET /v1/setup", 200, """{"setup":null}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":{"state":"given"}}""")
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", keys.first, keys.second)
     transport.answer("POST /v1/accounts/t_01/enrolment", enrol.first, enrol.second)
     transport.answer("POST /v1/me/agent-drafts", 200, """{"id":"dr_setup","status":"confirmed","claim_secret":"cs_1"}""")
-    transport.answer("POST /v1/setup", 200, """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}}""")
-    transport.answer("GET /v1/connections", 200, """{"connections":[]}""")
-    transport.answer("POST /v1/connections", 200)
+    transport.answer("POST /v1/setup", 200, """{"setup":$coach}""")
+    transport.answer("POST /v1/connections/batch", 200)
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
   }
 
@@ -99,41 +108,71 @@ class CoachStartTest {
     assertNotNull(transport.requestsTo("POST /v1/accounts/t_01/enrolment").single().headers["Planque-Device-Signature"])
   }
 
-  @Test fun coachGetsItsSevenToolsOnTheGatewayThenItsCardsOnce() = runTest {
+  @Test fun coachsToolsAndCardGoToKiffExactlyAsTafsCloudGivesThemOnce() = runTest {
     reads()
     startAnswers()
     val m = model()
-    // planque doesn't know this phone yet.
     m.refreshConnections()
     assertTrue(m.startCoach())
-    val connections = transport.requestsTo("POST /v1/connections")
-    assertEquals(KiffClient.COACH_TOOLS.map { it.name }, connections.map { KiffClient.json.parseToJsonElement(String(it.body!!)).jsonObject.getValue("name").jsonPrimitive.content })
-    for (r in connections) {
-      assertEquals("https://mcp.kiff.dev/v1/connections", r.url)
-      assertNotNull("signed", r.headers["KIFF-Device-Signature"])
-      val c = KiffClient.json.parseToJsonElement(String(r.body!!)).jsonObject
-      assertEquals("https://cloud.tafs.kiff.dev/v1/mcp", c.getValue("url").jsonPrimitive.content)
-      assertEquals("verify", c.getValue("mode").jsonPrimitive.content)
-    }
-    // The second agent draft is Coach's Cards: every install held for the owner.
-    val cards = body("POST /v1/me/agent-drafts", 1)
-    assertEquals("setup-acme", cards.getValue("agent_id").jsonPrimitive.content)
-    val install = cards.getValue("cards").jsonArray.map { it.jsonObject }.single { it.getValue("id").jsonPrimitive.content == "coach-version-install" }
-    assertEquals("owner", install.getValue("on_exceed").jsonPrimitive.content)
-    // Started, it asks nothing again, and gives the tools only once.
+    // The connect batch, signed, to KIFF's gateway, byte for byte what tafs cloud gave.
+    val batch = transport.requestsTo("POST /v1/connections/batch").single()
+    assertEquals("https://mcp.kiff.dev/v1/connections/batch", batch.url)
+    assertNotNull("signed", batch.headers["KIFF-Device-Signature"])
+    assertEquals(KiffClient.json.parseToJsonElement(connectBody), KiffClient.json.parseToJsonElement(String(batch.body!!)))
+    // Then Coach's Card, as drafted, under its own fingerprint.
+    val card = transport.requestsTo("POST /v1/me/agent-drafts")[1]
+    assertNotNull("signed", card.headers["KIFF-Device-Signature"])
+    assertEquals(KiffClient.json.parseToJsonElement(cardBody), KiffClient.json.parseToJsonElement(String(card.body!!)))
+    assertEquals("Give Coach its Card", auth.asked.last())
+    assertEquals("given", m.state.value.coachTools?.state)
+    assertNull(m.state.value.coachToolsError)
+    // Started and given, it asks nothing again and sends nothing again.
     assertTrue(m.startCoach())
     assertEquals(3, auth.asked.size)
-    assertEquals(7, transport.requestsTo("POST /v1/connections").size)
+    assertEquals(1, transport.requestsTo("POST /v1/connections/batch").size)
+    assertEquals(2, transport.requestsTo("POST /v1/me/agent-drafts").size)
   }
 
-  @Test fun aToolNameAnotherServerHoldsStopsCoachsToolsBeforeAnyCard() {
-    val mcp = "https://cloud.tafs.kiff.dev/v1/mcp"
-    val (missing, taken) = KiffClient.coachToolsPlan(listOf(Connection("tafs_state", mcp, true), Connection("taf_task", "https://mcp.stripe.com", false)), mcp)
-    assertEquals("taf_task", taken)
-    assertTrue(missing.isEmpty())
-    val (rest, none) = KiffClient.coachToolsPlan(listOf(Connection("tafs_state", mcp, true)), mcp)
-    assertNull(none)
-    assertEquals(KiffClient.COACH_TOOLS.drop(1), rest)
+  @Test fun theCardsReadInKiffsWordsAndTheConnectionsInTafsClouds() {
+    val tools = KiffClient.json.decodeFromString<bot.tafs.app.kiff.CoachTools>(toGive)
+    assertTrue(tools.toGive)
+    assertEquals(listOf("Read your tafs", "Read a taf's results · replaces the earlier connection"), tools.connect?.lines)
+    assertEquals("Coach", tools.card?.cardTitle)
+    // A Card the app can't read is left out, not guessed at.
+    assertEquals(listOf("Install a version" to listOf("Always asks you")), tools.card?.words)
+  }
+
+  private suspend fun startedWith(tools: String): AppModel {
+    reads()
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$tools}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
+    return model().also { it.loadCoach() }
+  }
+
+  @Test fun aToolNameAnotherServerHoldsIsNamedAndNothingIsSent() = runTest {
+    val m = startedWith("""{"state":"taken","taken":"taf_task"}""")
+    assertFalse(m.giveCoachTools())
+    assertEquals(CoachWords.taken("taf_task"), m.state.value.coachToolsError)
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertTrue(auth.asked.isEmpty())
+  }
+
+  @Test fun toolsKiffDidNotAnswerForAskToTryAgainAndNothingIsSent() = runTest {
+    val m = startedWith("""{"state":"unknown"}""")
+    assertFalse(m.giveCoachTools())
+    assertEquals(CoachWords.TOOLS_UNKNOWN, m.state.value.coachToolsError)
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
+    assertTrue(auth.asked.isEmpty())
+  }
+
+  @Test fun anOwnerWhoDoesNotConfirmGivesNoCardAndCanGiveItLater() = runTest {
+    val m = startedWith(toGive)
+    transport.answer("POST /v1/connections/batch", 200)
+    auth.confirms = false
+    assertFalse(m.giveCoachTools())
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertTrue(m.state.value.coachTools?.toGive == true)
   }
 
   @Test fun anOwnerWhoDoesNotConfirmStartsNothing() = runTest {

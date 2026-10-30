@@ -84,7 +84,8 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
     words. Approve, Resume, sharing a taf, starting a trial and installing a version with
     its Card each take one. Installing Coach's held version takes two (the Card, then
     Coach's call), and starting Coach the first time takes its "Connect your tools"
-    confirmation and a fingerprint for each of its two drafts.
+    confirmation and a fingerprint for each of its two drafts, then signs the connect batch
+    tafs cloud gave and asks a fingerprint for Coach's Card ("Give Coach its Card").
   - a phone with no strong biometric enrolled has no approval key and approves nothing: it
     says to add a fingerprint. Refusing still works.
   - adding a fingerprint turns the key off for good. The phone makes a new one and says it

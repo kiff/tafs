@@ -12,7 +12,7 @@ version headings refer to releases, not merely to merged pull requests.
   - tafs, Needs you and the Record, with KIFF's receipts checked on the phone;
   - a taf's page, with its runs, last report, memory, Revoke and Remove;
   - the live chat, with photos, files and dictation;
-  - Coach, with its conversations;
+  - Coach, with its conversations, given its tools and Card exactly as tafs cloud drafts them;
   - Doors, Versions and trials, Halt, Usage and asking an admin for tasks;
   - People and groups, Devices, the time zone and Delete account.
 

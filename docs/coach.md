@@ -51,6 +51,15 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    on the phone.
 2. The phone submits a KIFF agent draft with no tools for Coach. tafs cloud claims its
    key, so the key never reaches the phone (`POST /v1/setup`).
+3. The phone gives Coach its tools, as tafs cloud says them (`GET /v1/setup`'s `tools`).
+   With `to_give`, it signs and sends the `connect` batch to KIFF's gateway
+   (`POST /v1/connections/batch`), then, under its own fingerprint, Coach's Cards' draft
+   (`POST /v1/me/agent-drafts`), each body exactly as it came. The phone builds neither:
+   the tools' names, addresses and Cards are tafs cloud's, and the words the owner reads
+   are its `lines` and KIFF's own preview of the Cards. `given` sends nothing; `taken`
+   names the vendor's tool that holds one of Coach's names, and `unknown` asks to try
+   again, both sending nothing. A replaced connection's line says what it replaces.
+   (Android: `AppModel.giveCoachTools`, `CoachToolsPanel`.)
 
 ## What Coach shows
 

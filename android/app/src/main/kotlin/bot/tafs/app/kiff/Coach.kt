@@ -122,7 +122,46 @@ data class StartedTaf(val id: String, val name: String = "")
 data class Started(val taf: StartedTaf, val session: String? = null)
 
 @Serializable
-internal data class SetupResponse(val setup: CloudSetup? = null)
+internal data class SetupResponse(val setup: CloudSetup? = null, val tools: CoachTools? = null)
 
 @Serializable
 internal data class CreatedVersion(val version: Int)
+
+/**
+ * Coach's tools as KIFF has them, from tafs cloud (`GET /v1/setup`'s `tools`), read each time so every phone of the account
+ * agrees: `given`, `to_give` with what's left, `taken` (a vendor's tool holds one of Coach's names) or `unknown` (KIFF didn't
+ * answer). The phone signs and sends each body exactly as it comes: it builds none of it.
+ */
+@Serializable
+data class CoachTools(
+  val state: String = "unknown",
+  val taken: String? = null,
+  val connect: CoachConnect? = null,
+  val card: CoachCardDraft? = null,
+) {
+  val toGive: Boolean get() = state == "to_give"
+}
+
+/** The batch for KIFF's `POST /v1/connections/batch`, and a line per tool for the owner to read before signing. */
+@Serializable
+data class CoachConnect(val body: kotlinx.serialization.json.JsonObject, val lines: List<String> = emptyList())
+
+/** Coach's Cards' draft for `POST /v1/me/agent-drafts`, with KIFF's own words for it from its preview, unchanged. */
+@Serializable
+data class CoachCardDraft(
+  val body: kotlinx.serialization.json.JsonObject,
+  @SerialName("card_title") val cardTitle: String? = null,
+  val cards: List<kotlinx.serialization.json.JsonElement> = emptyList(),
+) {
+  /** Each Card in KIFF's words, its title and lines; one the app can't read is left out. */
+  val words: List<Pair<String, List<String>>>
+    get() = cards.mapNotNull { element ->
+      val card = element as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+      fun text(key: String) = (card[key] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
+      val lines = (card["lines"] as? kotlinx.serialization.json.JsonArray).orEmpty()
+        .mapNotNull { (it as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { p -> p.isString }?.content }
+      val title = text("title") ?: text("card_title") ?: text("label")
+      if (title == null && lines.isEmpty()) return@mapNotNull null
+      (title ?: "") to lines
+    }
+}

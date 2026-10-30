@@ -119,9 +119,6 @@ internal data class PeopleResponse(val members: List<Person> = emptyList())
 @Serializable
 internal data class SharesResponse(val grants: List<Share> = emptyList())
 
-/** One of Coach's tools on tafs cloud's server, each its own connection in KIFF; the reads are declared read-only. */
-data class CoachTool(val name: String, val readOnly: Boolean)
-
 /** One of the account's tool connections in KIFF's gateway: its name (a held call's action), the server it reaches, and whether it is the account's control server. */
 @Serializable
 data class Connection(val name: String, val url: String? = null, val control: Boolean? = null)
@@ -364,57 +361,15 @@ class KiffClient(
   }
 
   /**
-   * Connects one of Coach's tools on tafs cloud's server ([mcp]) as the account's own control server: verify mode, so the
-   * server checks KIFF's permit on each call and KIFF holds no credential for it. A signed setup call to the gateway; one at a
-   * time, since each rewrites the account's gateway contract.
+   * Gives Coach its tools: KIFF's batch of connections as tafs cloud sent it (`tools.connect.body`), sent as it is. A signed setup
+   * call to the gateway; a name already connected the same way is left as it is, so sending it again is safe.
    */
-  suspend fun connectCoachTool(tool: CoachTool, mcp: String) {
-    val body = buildJsonObject {
-      put("name", tool.name)
-      put("url", mcp)
-      put("tool", tool.name)
-      put("mode", "verify")
-      put("audience", mcp)
-      put("control", true)
-      put("idempotency_argument", "tafs_op")
-      if (tool.readOnly) put("read_only", true)
-    }
-    sendJson("POST", "/v1/connections", body, gateway = true)
+  suspend fun connectBatch(body: JsonObject) {
+    sendJson("POST", "/v1/connections/batch", body, gateway = true)
   }
 
-  /**
-   * Coach's Cards, for the account's Setup agent: the reads share one, 500 a day; a task 50 a day and a trial 20, then asked;
-   * stopping and pausing 50 a day each, then refused; and every install held for the owner. Stable ids, so sending them again
-   * revises the same Cards. From the phone, signed, they are issued at once.
-   */
-  suspend fun submitCoachCards(agentId: String) {
-    fun card(id: String, actions: List<String>, limit: Int, asks: Boolean) = buildJsonObject {
-      put("id", id)
-      put("subject", agentId)
-      put("domain", "gateway")
-      put("on_exceed", if (asks) "owner" else "refuse")
-      if (asks) put("hold_expiry", "10m")
-      put("grants", kotlinx.serialization.json.buildJsonArray { actions.forEach { add(buildJsonObject { put("action", it) }) } })
-      put("aggregates", kotlinx.serialization.json.buildJsonArray {
-        add(buildJsonObject {
-          put("quantity", "count")
-          put("limit", limit)
-          put("window", "calendar_day")
-        })
-      })
-    }
-    val body = buildJsonObject {
-      put("agent_id", agentId)
-      put("label", "Coach")
-      put("cards", kotlinx.serialization.json.buildJsonArray {
-        add(card("coach-reads", listOf("tafs_state", "taf_run"), 500, asks = false))
-        add(card("coach-taf-task", listOf("taf_task"), 50, asks = true))
-        add(card("coach-version-try", listOf("version_try"), 20, asks = true))
-        add(card("coach-run-stop", listOf("run_stop"), 50, asks = false))
-        add(card("coach-taf-pause", listOf("taf_pause"), 50, asks = false))
-        add(card("coach-version-install", listOf("version_install"), 0, asks = true))
-      })
-    }
+  /** Submits a draft exactly as tafs cloud sent it (Coach's Cards, `tools.card.body`): from the phone, signed by the approval key, it is issued at once. */
+  suspend fun submitDraft(body: JsonObject) {
     sendJson("POST", "/v1/me/agent-drafts", body)
   }
 
@@ -553,7 +508,7 @@ class KiffClient(
     if (payload != null) headers["Content-Type"] = "application/json"
 
     // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
-    val signed = if (gateway) path == "/v1/connections" else signsSetup(path) || path == "/v1/me/device/approval-key"
+    val signed = if (gateway) path == "/v1/connections" || path == "/v1/connections/batch" else signsSetup(path) || path == "/v1/me/device/approval-key"
     // What grants authority is signed by the approval key, once the session has one, each request
     // behind its own fingerprint; KIFF picks the key by route, so the header is the same (kiff/tafs#233).
     val plain = (signedBy ?: setupSigner)?.let { s -> val signs: suspend (() -> ByteArray) -> String = { built -> s(built()) }; signs }
@@ -604,26 +559,6 @@ class KiffClient(
 
     private val WRITES = setOf("POST", "PUT", "PATCH", "DELETE")
 
-    val COACH_TOOLS = listOf(
-      CoachTool("tafs_state", true), CoachTool("taf_run", true), CoachTool("taf_task", false), CoachTool("run_stop", false),
-      CoachTool("taf_pause", false), CoachTool("version_try", false), CoachTool("version_install", false),
-    )
-
-    /**
-     * What giving Coach its tools needs, from the account's connections: the tools still to connect, or the first name another
-     * connection holds. One there counts as Coach's only when it is tafs cloud's server ([mcp]) as the control server: Coach's
-     * Cards grant by name, so any other would put a vendor's tool on them.
-     */
-    fun coachToolsPlan(there: List<Connection>, mcp: String): Pair<List<CoachTool>, String?> {
-      val byName = there.associateBy { it.name }
-      val missing = mutableListOf<CoachTool>()
-      for (tool in COACH_TOOLS) {
-        val c = byName[tool.name]
-        if (c == null) missing += tool
-        else if (c.url != mcp || c.control != true) return emptyList<CoachTool>() to tool.name
-      }
-      return missing to null
-    }
     internal val json = Json { ignoreUnknownKeys = true }
 
     private fun base64(bytes: ByteArray): String = java.util.Base64.getEncoder().encodeToString(bytes)

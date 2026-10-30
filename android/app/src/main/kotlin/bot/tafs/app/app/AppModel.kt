@@ -271,6 +271,9 @@ data class AppState(
   val coachLines: List<TafsCloud.CoachLine> = emptyList(),
   /** Coach was asked to open, from a screen without it: the tab screen opens it, then says so. */
   val coachRequested: Boolean = false,
+  /** Coach's tools as KIFF has them, from tafs cloud; null until read. And why giving them didn't go. */
+  val coachTools: bot.tafs.app.kiff.CoachTools? = null,
+  val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
   val planqueReady: Boolean = false,
@@ -834,7 +837,8 @@ class AppModel(
     val tafs = read.home.tafs.map { KiffMapping.taf(it, ownerName) }
     val others = read.home.others.map { KiffMapping.taf(it, ownerName) }
     val holders = (tafs + others).map { it.id }.toSet()
-    val coach = coachWithTools()
+    // A held install is Coach's only from Coach's own agent, which KIFF holds only under Coach's install Card.
+    val coach = _state.value.coachAgent?.takeIf { it.isNotEmpty() }
     val held = read.exceptions.map { KiffMapping.held(it, coach) }
     _state.update { s ->
       s.copy(
@@ -1656,7 +1660,7 @@ class AppModel(
     if (_state.value.mode != Mode.kiff) return
     val generation = accountGeneration
     val setup = try {
-      cloud.setup()
+      cloud.setupAndTools()
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -1664,7 +1668,8 @@ class AppModel(
       return
     }
     if (generation == accountGeneration) {
-      _state.update { it.copy(coachCloudId = setup?.id, coachAgent = setup?.kiffAgent, coachChecked = true, chatErrors = it.chatErrors - COACH_CHAT) }
+      val (coach, tools) = setup
+      _state.update { it.copy(coachCloudId = coach?.id, coachAgent = coach?.kiffAgent, coachChecked = true, coachTools = tools, chatErrors = it.chatErrors - COACH_CHAT) }
     }
   }
 
@@ -1708,7 +1713,6 @@ class AppModel(
       var setup = _state.value.coachCloudId?.let { id -> CloudSetup(id, kiffAgent = _state.value.coachAgent) }
       try {
         if (setup == null) setup = cloud.setup()
-        keepCoachTools(tenant, setup?.kiffAgent, generation)
         if (!_state.value.planqueReady) {
           try {
             planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
@@ -1733,8 +1737,6 @@ class AppModel(
             return false
           }
           setup = cloud.startSetup(draft.id, secret)
-          // Coach's tools wait on its agent, which only a started Coach has.
-          keepCoachTools(tenant, setup.kiffAgent, generation)
         }
       } catch (e: SignerException) {
         if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
@@ -1747,6 +1749,8 @@ class AppModel(
       }
       if (generation != accountGeneration) return false
       _state.update { it.copy(coachCloudId = setup?.id, coachAgent = setup?.kiffAgent, coachChecked = true) }
+      // Within the step the owner just confirmed: Coach's tools, as tafs cloud says they're still to give.
+      giveCoachTools()
     } finally {
       planque.signer = null
       kiff.setupSigner = null
@@ -1759,50 +1763,70 @@ class AppModel(
 
   private fun startFailed(words: String) = _state.update { it.copy(coachStartError = words) }
 
-  /** Where this phone remembers Coach's tools are given: per account, Coach and server. */
-  private fun coachToolsKey(tenant: String, agent: String) = "coachTools.$tenant.$agent.${cloud.mcpUrl}"
-
-  /** The account's Coach, once this phone gave it its tools; null before. Only its held version_install is an install. */
-  private fun coachWithTools(): String? {
-    val tenant = kiffTenant ?: return null
-    val agent = _state.value.coachAgent?.takeIf { it.isNotEmpty() } ?: return null
-    return agent.takeIf { secrets.load(coachToolsKey(tenant, it)) == "1" }
+  /** Reads Coach's tools as KIFF has them, from tafs cloud: what's still to give, if anything. */
+  suspend fun loadCoachTools() {
+    if (_state.value.mode != Mode.kiff || _state.value.coachCloudId == null) return
+    val generation = accountGeneration
+    val tools = attempt { cloud.coachTools() } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(coachTools = tools) }
   }
 
   /**
-   * Gives Coach its tools, inside a step the owner just confirmed, so no new prompt: each of the seven tools on tafs cloud's
-   * server connected in KIFF as the account's control server, one at a time; then Coach's Cards, which name them. A connection
-   * there already counts only when it's this server's control connection: a name another server holds stops it before any Card,
-   * since the Cards grant by name. Done once per Coach and server on this phone; when it can't be now, Coach does without its
-   * tools until the next confirmed step.
+   * Gives Coach its tools, as tafs cloud says they're still to give (`GET /v1/setup`'s `tools`, docs/coach.md): the batch of
+   * connections, sent as it comes and signed; then Coach's Cards' draft, sent as it comes, behind its own fingerprint. The phone
+   * builds neither: tafs cloud reads KIFF each time, so every phone of the account agrees. A name a vendor's tool holds stops it
+   * before anything is sent, and says which. True once nothing's left to give.
    */
-  private suspend fun keepCoachTools(tenant: String, agent: String?, generation: Int) {
-    if (agent.isNullOrEmpty()) return
-    val key = coachToolsKey(tenant, agent)
-    if (secrets.load(key) == "1") return
-    try {
-      val (missing, taken) = KiffClient.coachToolsPlan(kiff.connections(), cloud.mcpUrl)
-      if (generation != accountGeneration) return
-      if (taken != null) {
-        fail("Coach can't have its tools yet: another tool in KIFF is named $taken. Rename or remove it in KIFF.")
-        return
-      }
-      for (tool in missing) {
-        if (generation != accountGeneration) return
-        kiff.connectCoachTool(tool, cloud.mcpUrl)
-      }
-      if (generation != accountGeneration) return
-      // Its own fingerprint, in its own words: it gives Coach its tools.
-      approvalReason = "Give Coach its Card"
-      kiff.submitCoachCards(agent)
-      secrets.save("1", key)
+  suspend fun giveCoachTools(): Boolean {
+    val tenant = kiffTenant ?: return false
+    if (_state.value.mode != Mode.kiff || _state.value.coachCloudId == null) return false
+    val generation = accountGeneration
+    val tools = try {
+      cloud.coachTools()
     } catch (e: CancellationException) {
       throw e
-    } catch (e: ApprovalKeyRenewed) {
-      lostApprovalKey()
-    } catch (_: Exception) {
-      // Not now.
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = "Couldn't read Coach's tools: ${e.message}") }
+      return false
+    } ?: return false
+    if (generation != accountGeneration) return false
+    _state.update { it.copy(coachTools = tools, coachToolsError = null) }
+    when (tools.state) {
+      "given" -> return true
+      "taken" -> {
+        _state.update { it.copy(coachToolsError = CoachWords.taken(tools.taken)) }
+        return false
+      }
+      "unknown" -> {
+        _state.update { it.copy(coachToolsError = CoachWords.TOOLS_UNKNOWN) }
+        return false
+      }
     }
+    val signer = signer
+    kiff.tenant = tenant
+    kiff.setupSigner = { signer.signConfirmed(it) }
+    try {
+      tools.connect?.let { kiff.connectBatch(it.body) }
+      if (generation != accountGeneration) return false
+      tools.card?.let {
+        // Its own fingerprint, in its own words: it gives Coach its Cards.
+        approvalReason = "Give Coach its Card"
+        kiff.submitDraft(it.body)
+      }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { words -> _state.update { it.copy(coachToolsError = words) } }
+      return false
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = "Coach's tools weren't given: ${e.message}") }
+      return false
+    } finally {
+      kiff.setupSigner = null
+    }
+    if (generation != accountGeneration) return false
+    loadCoachTools()
+    return true
   }
 
   // MARK: Coach's approvals (planque and KIFF)
@@ -3057,7 +3081,7 @@ class AppModel(
         return false
       }
       // Within the step the owner just confirmed: Coach's tools, if this phone hasn't given them yet.
-      keepCoachTools(tenant, _state.value.coachAgent, generation)
+      if (_state.value.coachTools?.toGive == true) giveCoachTools()
     } else {
       try {
         signer.sign("tafs.version.v1|$tenant|$cloudId|${version.n}".toByteArray(), "Use version ${version.n} of $name")

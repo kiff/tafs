@@ -145,6 +145,11 @@ object CoachWords {
   val IMPROVE_EXAMPLES = listOf("How is it going?", "Why was something refused or held?", "It can't find the work it should do")
 
   const val ASK_ANYTHING = "Ask anything about your tafs"
+
+  const val TOOLS_UNKNOWN = "KIFF didn't answer about Coach's tools. Try again in a moment."
+
+  /** A vendor's tool holds one of Coach's names, as tafs cloud says: Coach's Cards grant by name, so it can't have its tools. */
+  fun taken(name: String?) = "Coach can't have its tools yet: another tool in KIFF is named ${name ?: "as one of them"}. Rename or remove it in KIFF."
   const val ASK_ANYTHING_LINE = "Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval."
 
   fun improveLine(name: String) = "Say what should change, or ask how it's going. Coach mode starts from what $name did and what its Card allows."

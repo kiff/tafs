@@ -55,6 +55,8 @@ class CoachChatActions(
   val loadArchived: suspend () -> Unit = {},
   val archive: suspend (String) -> Boolean = { false },
   val unarchive: suspend (String) -> Boolean = { false },
+  /** Gives Coach the tools tafs cloud says are still to give. */
+  val giveTools: suspend () -> Boolean = { false },
 )
 
 /** Above Coach's chat: a new conversation, and the earlier ones to reopen. */
@@ -195,5 +197,47 @@ fun CoachLines(lines: List<TafsCloud.CoachLine>) {
       }
     }
     here.forEach { Text("→ ${it.taf}: ${it.said}", style = scaled(14, color = Theme.soft)) }
+  }
+}
+
+/**
+ * Coach's tools still to give, as tafs cloud reads them from KIFF (docs/coach.md): each connection's line and Coach's Card in
+ * KIFF's own words, read before the one confirmation that gives them. A name a vendor's tool holds, or KIFF not answering,
+ * says so instead. Nothing shows once they're given.
+ */
+@Composable
+fun CoachToolsPanel(state: AppState, actions: CoachChatActions) {
+  val tools = state.coachTools ?: return
+  if (tools.state == "given") return
+  val scope = rememberCoroutineScope()
+  var giving by remember { mutableStateOf(false) }
+  bot.tafs.app.design.Panel(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), stroke = Theme.amber.copy(alpha = 0.45f)) {
+    bot.tafs.app.design.Eyebrow("Coach's tools", color = Theme.amber)
+    when (tools.state) {
+      "taken" -> Text(CoachWords.taken(tools.taken), style = scaled(14, color = Theme.ink))
+      "unknown" -> Text(CoachWords.TOOLS_UNKNOWN, style = scaled(14, color = Theme.ink))
+      else -> {
+        tools.connect?.lines?.forEach { Text("· $it", style = scaled(14, color = Theme.ink)) }
+        tools.card?.let { card ->
+          card.cardTitle?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp)) }
+          card.words.forEach { (title, lines) ->
+            if (title.isNotEmpty()) Text(title, style = scaled(13, FontWeight.SemiBold, Theme.ink))
+            lines.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
+          }
+        }
+        bot.tafs.app.design.PrimaryButton(
+          if (giving) "Giving…" else "Give Coach its tools",
+          {
+            giving = true
+            scope.launch {
+              actions.giveTools()
+              giving = false
+            }
+          },
+          enabled = !giving,
+        )
+      }
+    }
+    state.coachToolsError?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }

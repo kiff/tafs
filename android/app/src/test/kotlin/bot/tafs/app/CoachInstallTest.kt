@@ -43,14 +43,13 @@ class CoachInstallTest {
   private fun state(v2Live: Boolean, v2Draft: Boolean) =
     """{"versions":[{"n":1,"created":"2026-10-20T09:00:00Z","live":${!v2Live}},{"n":2,"note":"Asks before refunds over 50","by":"setup","created":"2026-10-27T09:00:00Z","live":$v2Live${if (v2Draft) ""","draft":"dr_1"""" else ""}}],"switching":null}"""
 
-  private fun reads(held: String = installHeld(), toolsGiven: Boolean = true) {
+  private fun reads(held: String = installHeld(), coachNamed: Boolean = true) {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["holds.answer","cards.manage","members.manage"]}""")
     transport.answer("GET /v1/home", 200, home)
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[$held]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/access", 200, """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}""")
-    transport.answer("GET /v1/setup", 200, """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"$coach"}}""")
-    if (toolsGiven) secrets.save("1", "coachTools.t_01.$coach.https://cloud.tafs.kiff.dev/v1/mcp")
+    transport.answer("GET /v1/setup", 200, if (coachNamed) """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"$coach"},"tools":{"state":"given"}}""" else """{"setup":null}""")
   }
 
   private suspend fun model(): AppModel {
@@ -70,7 +69,7 @@ class CoachInstallTest {
   @Test fun onlyCoachsOwnHeldVersionInstallIsAnInstall() {
     assertEquals(VersionInstall("taf_1", 2), KiffMapping.install(exception(installHeld()), coach))
     assertNull("another agent's call of the same name", KiffMapping.install(exception(installHeld(subject = "refunds-1")), coach))
-    assertNull("no Coach whose tools this phone gave", KiffMapping.install(exception(installHeld()), null))
+    assertNull("no Coach named by tafs cloud", KiffMapping.install(exception(installHeld()), null))
     assertNull("no version", KiffMapping.install(exception(installHeld(args = """{"taf":"taf_1"}""")), coach))
     assertNull("no taf", KiffMapping.install(exception(installHeld(args = """{"n":2}""")), coach))
     assertEquals(VersionInstall("Refunds", 3), KiffMapping.install(exception(installHeld(args = """{"taf":"Refunds","n":"3"}""")), coach))
@@ -82,8 +81,8 @@ class CoachInstallTest {
     assertEquals(VersionInstall("taf_1", 2), m.state.value.held.single().install)
   }
 
-  @Test fun aCoachThisPhoneDidNotGiveToolsToAsksAsAnyHeldCall() = runTest {
-    reads(toolsGiven = false)
+  @Test fun withNoCoachFromTafsCloudItAsksAsAnyHeldCall() = runTest {
+    reads(coachNamed = false)
     val m = model()
     assertNull(m.state.value.held.single().install)
   }

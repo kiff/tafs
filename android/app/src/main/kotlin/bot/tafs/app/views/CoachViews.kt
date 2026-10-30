@@ -70,6 +70,7 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
       else -> {
         Text("Coach", style = scaled(30, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
         CoachChatBar(state, chats)
+        CoachToolsPanel(state, chats)
         CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) }
         TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f))
       }

@@ -48,6 +48,12 @@ class TafsCloud(
   /** The account's Setup (Coach), or null before it is started. */
   suspend fun setup(): CloudSetup? = get<SetupResponse>("/v1/setup").setup
 
+  /** Coach's tools as KIFF has them, read each time (`GET /v1/setup`'s `tools`): what's still to give, in bodies to sign as they come. */
+  suspend fun coachTools(): CoachTools? = get<SetupResponse>("/v1/setup").tools
+
+  /** The account's Coach and its tools, from one read. */
+  suspend fun setupAndTools(): Pair<CloudSetup?, CoachTools?> = get<SetupResponse>("/v1/setup").let { it.setup to it.tools }
+
   /** Where Coach's tools are, on tafs cloud: KIFF's gateway reaches them there, each call carrying KIFF's permit. */
   val mcpUrl: String get() = "$baseUrl/v1/mcp"
 
