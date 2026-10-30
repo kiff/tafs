@@ -8,7 +8,7 @@ import { type Deletion, type Deletions, httpPeer } from "./deletion.js";
 import { KIFF_API } from "./kiff.js";
 import { PLANQUE } from "./setupdef.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
-import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, sweepHandOvers, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import { silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
@@ -652,7 +652,7 @@ interface UpgradeEvent {
   upgrade: { dry_run?: boolean };
 }
 
-/** The deletion sweep, invoked by its schedule: every deletion not finished, tried again. */
+/** The deletion sweep, invoked by its schedule: every deletion not finished, and every hand-over a server error left undone, tried again. */
 interface SweepEvent {
   sweep: "deletions";
 }
@@ -665,8 +665,12 @@ function isUpgrade(event: unknown): event is UpgradeEvent {
   return typeof event === "object" && event !== null && !("requestContext" in event) && "upgrade" in event;
 }
 
-export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] } | { swept: unknown[] }> {
-  if (isSweep(event)) return { swept: await sweepDeletions(deps()) };
+export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] } | { swept: unknown[]; handovers?: unknown[] }> {
+  if (isSweep(event)) {
+    // The same schedule retries Coach's hand-overs a server error left undone.
+    const d = deps();
+    return { swept: await sweepDeletions(d), handovers: await sweepHandOvers(d) };
+  }
   if (isUpgrade(event)) {
     try {
       return { upgraded: await upgradeDefinitions(deps(), { dryRun: event.upgrade.dry_run !== false }) };

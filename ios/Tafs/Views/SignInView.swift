@@ -141,7 +141,10 @@ struct SettingsView: View {
                         Button("Switch account…") { signingIn = true }
                     }
                     Button(model.mode == .kiff ? "Sign out of KIFF" : "Clear the sample", role: .destructive) {
-                        Task { await model.signOut(); dismiss() }
+                        Task { if await model.signOut() { dismiss() } }
+                    }
+                    if let why = model.signOutError {
+                        Text(why).scaledFont(14).foregroundColor(Theme.no)
                     }
                 }
                 Section("How it works") {

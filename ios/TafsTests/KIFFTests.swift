@@ -47,7 +47,8 @@ final class StubProtocol: URLProtocol {
             client?.urlProtocol(self, didFailWithError: URLError(code))
             return
         }
-        let (status, body) = Self.responses[key] ?? (404, #"{"error":"not stubbed"}"#)
+        // KIFF ends a session when asked, unless a test says otherwise.
+        let (status, body) = Self.responses[key] ?? (key == "POST /v1/auth/device/logout" ? (200, "{}") : (404, #"{"error":"not stubbed"}"#))
         if let next = Self.thenRespond.removeValue(forKey: key) { Self.responses.merge(next) { $1 } }
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)

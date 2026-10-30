@@ -28,6 +28,8 @@ interface ToolDef {
   required: string[];
   /** Read-only: changes nothing (KIFF declares it so). */
   read?: boolean;
+  /** What it lets Coach do, in the owner's words: the line the apps show when the owner gives it. */
+  line: string;
 }
 
 const TAF = { type: "string", description: "The taf's id, from tafs_state, or its name." };
@@ -36,17 +38,17 @@ const RUN = { type: "string", description: "The run's id, from tafs_state or an 
 /** The tools, each a whole job in one call (kiff/tafs#206). */
 export const TOOLS: ToolDef[] = [
   {
-    name: "tafs_state", read: true, properties: {}, required: [],
+    name: "tafs_state", line: "See your tafs, their versions and their runs", read: true, properties: {}, required: [],
     description: "Everything about the account's tafs in one read: each taf, its live version and versions, a switch under way, " +
       "its schedule or that it works from its chat, and its open runs with what each waits on (the held call, its arguments and deadline). " +
       "Each taf's kiff_agent is its KIFF agent: kiff_card {agent: kiff_agent} reads its live Cards, with what's used and left.",
   },
   {
-    name: "taf_run", read: true, properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
+    name: "taf_run", line: "Read one of a taf's runs", read: true, properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
     description: "One run of a taf so far: its status, its answer if it ended, what it waits on, and for a trial what KIFF decided on each write.",
   },
   {
-    name: "taf_task",
+    name: "taf_task", line: "Give a taf a task or a message",
     properties: {
       taf: TAF,
       text: { type: "string", description: "The task or message, in the owner's words." },
@@ -58,23 +60,23 @@ export const TOOLS: ToolDef[] = [
       "With run, the text goes to that run while it works. The task runs under the taf's own Cards.",
   },
   {
-    name: "run_stop", properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
+    name: "run_stop", line: "Stop a taf's run", properties: { taf: TAF, run: RUN }, required: ["taf", "run"],
     description: "Stops a run of a taf. Its held calls are withdrawn in KIFF, and nothing more is sent.",
   },
   {
-    name: "taf_pause",
+    name: "taf_pause", line: "Pause or resume a taf's schedule",
     properties: { taf: TAF, action: { type: "string", enum: ["pause", "resume"] } },
     required: ["taf", "action"],
     description: "Pauses a taf's schedule, or resumes it. A taf that works from its chat has no schedule to pause.",
   },
   {
-    name: "version_try",
+    name: "version_try", line: "Try a version of a taf, sending nothing",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 }, input: { type: "string", description: "What the trial works on; omitted, what each scheduled run asks." } },
     required: ["taf", "n"],
     description: "Tries version n of a taf: KIFF decides each of its writes and sends none. It answers at once; the trial's result comes back to you when it ends.",
   },
   {
-    name: "version_install",
+    name: "version_install", line: "Install a version of a taf",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 } },
     required: ["taf", "n"],
     description: "Installs version n of a taf. KIFF holds this for the owner, who approves it in tafs: the app stops what's in the way, " +
@@ -82,6 +84,80 @@ export const TOOLS: ToolDef[] = [
       "Don't name how the owner approves.",
   },
 ];
+
+/**
+ * Coach's Cards: the reads share one, 500 a day; a task 50 a day and a trial 20, then asked;
+ * stopping and pausing 50 a day each, then refused; every install held for the owner. Stable ids,
+ * so drafting them again revises the same Cards.
+ */
+export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; asks: boolean }> = [
+  { id: "coach-reads", actions: ["tafs_state", "taf_run"], limit: 500, asks: false },
+  { id: "coach-taf-task", actions: ["taf_task"], limit: 50, asks: true },
+  { id: "coach-version-try", actions: ["version_try"], limit: 20, asks: true },
+  { id: "coach-run-stop", actions: ["run_stop"], limit: 50, asks: false },
+  { id: "coach-taf-pause", actions: ["taf_pause"], limit: 50, asks: false },
+  { id: "coach-version-install", actions: ["version_install"], limit: 0, asks: true },
+];
+
+/** A connection in KIFF's gateway, as tafs cloud reads it. */
+export interface GatewayConnection { name: string; url?: string; control?: boolean }
+
+/**
+ * What giving Coach its tools still needs, from the account's connections: the tools to connect, or
+ * the first of Coach's names another connection holds. One there counts as Coach's only when it's
+ * this server (`mcp`) as the control server: Coach's Cards grant by name, so any other would put a
+ * vendor's tool on them. One that's the control server at another address (connected before tafs
+ * cloud moved) is connected again here, replacing it: `replace` names those.
+ */
+export function coachToolsPlan(there: GatewayConnection[], mcp: string): { missing: ToolDef[]; replace: string[]; taken?: string } {
+  const byName = new Map(there.map((c) => [c.name, c]));
+  const missing: ToolDef[] = [];
+  const replace: string[] = [];
+  for (const t of TOOLS) {
+    const c = byName.get(t.name);
+    if (!c) { missing.push(t); continue; }
+    if (c.control !== true) return { missing: [], replace: [], taken: t.name };
+    if (c.url !== mcp) { missing.push(t); replace.push(t.name); }
+  }
+  return { missing, replace };
+}
+
+/** What a replaced connection's line adds, so the owner sees the replacement before signing. */
+export const REPLACES_LINE = "replaces the earlier connection";
+
+/**
+ * The batch that connects the missing tools (KIFF's POST /v1/connections/batch), and its lines. The
+ * phone signs and sends the body as it is; a name already connected the same way is left as it is,
+ * so sending it again is safe. One in `replace` is marked so: KIFF replaces the account's control
+ * server's own connection of that name, and its line says so.
+ */
+export function coachConnect(missing: ToolDef[], mcp: string, replace: string[] = []): { body: { connections: unknown[] }; lines: string[] } {
+  const replacing = new Set(replace);
+  return {
+    body: {
+      connections: missing.map((t) => ({
+        name: t.name, url: mcp, tool: t.name, mode: "verify", audience: mcp, control: true,
+        idempotency_argument: OP_ARG, ...(t.read ? { read_only: true } : {}), ...(replacing.has(t.name) ? { replace: true } : {}),
+      })),
+    },
+    lines: missing.map((t) => (replacing.has(t.name) ? `${t.line} · ${REPLACES_LINE}` : t.line)),
+  };
+}
+
+/**
+ * The draft of Coach's Cards (KIFF's POST /v1/me/agent-drafts), labelled "Coach", for Coach's KIFF
+ * agent: the phone signs and sends it as it is, and a signed submit is the owner's one confirmation.
+ */
+export function coachCardsDraft(agentID: string): { agent_id: string; label: string; cards: unknown[] } {
+  return {
+    agent_id: agentID,
+    label: "Coach",
+    cards: COACH_CARDS.map((c) => ({
+      id: c.id, subject: agentID, domain: "gateway", on_exceed: c.asks ? "owner" : "refuse", ...(c.asks ? { hold_expiry: "10m" } : {}),
+      grants: c.actions.map((action) => ({ action })), aggregates: [{ quantity: "count", limit: c.limit, window: "calendar_day" }],
+    })),
+  };
+}
 
 /** A tool's answer, as Coach reads it. */
 export type ToolAnswer = Record<string, unknown>;
@@ -296,6 +372,8 @@ export interface Note {
   agent: string;
   status: string;
   ref: string;
+  /** A paused run's cards that wait, as kiff/agents names them: only which run to read back. */
+  cards?: Array<{ id: string; type: string }>;
 }
 
 export function parseNote(raw: string): Note | undefined {

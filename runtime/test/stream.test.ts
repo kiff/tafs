@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
-import { handleStream, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { handleStream, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -32,7 +32,7 @@ function world() {
 type World = ReturnType<typeof world>;
 
 /** Streams a message; the status, and the events the phone gets, parsed. */
-async function stream(w: World, path: string, opts: { token?: string; body?: unknown; method?: string } = {}) {
+async function stream(w: World, path: string, opts: { token?: string; body?: unknown; method?: string; publicURL?: string } = {}) {
   const [rawPath, rawQueryString] = path.split("?");
   const event: HTTPEvent = {
     rawPath: rawPath!,
@@ -49,6 +49,7 @@ async function stream(w: World, path: string, opts: { token?: string; body?: unk
     forward: async () => undefined,
     fetch: kiff({ ana: ME, viewer: VIEWER, luis: { ...ME, subject: "u_luis" } }),
     now: () => NOW,
+    ...(opts.publicURL ? { publicURL: opts.publicURL } : {}),
   });
   let raw = "";
   for await (const chunk of r.body) raw += chunk;
@@ -364,5 +365,21 @@ describe("a card answered from the old form (kiff/agents' cards wait for their a
     expect(r.status).toBe(200);
     expect(w.agents.calls.some((c) => c.startsWith("answerCard"))).toBe(false);
     expect(r.events[0]!.event).toBe("session");
+  });
+});
+
+describe("Coach's runs announce their pauses", () => {
+  it("a Coach message's run is announced to tafs cloud, a taf's isn't", async () => {
+    const w = world();
+    const COACH = "taf-c0ac4000000000000000";
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-15T09:00:00Z" });
+    void w.agents.api.putAgent("t_acme", COACH, {} as never);
+    const coach = await stream(w, `/v1/tafs/${COACH}/messages/stream`, { token: "ana", body: { text: "Set up refunds" }, publicURL: "https://cloud.test" });
+    expect(coach.error).toBe("");
+    const coachRun = w.agents.runs.find((r) => r.agent === COACH)!;
+    expect(w.agents.notified.get(coachRun.id)?.url).toBe("https://cloud.test/v1/runs/ended");
+    const taf = await stream(w, `/v1/tafs/${RAE}/messages/stream`, { token: "ana", body: { text: "Refund order 42" }, publicURL: "https://cloud.test" });
+    expect(taf.error).toBe("");
+    expect(w.agents.notified.has(w.agents.runs.find((r) => r.agent === RAE)!.id)).toBe(false);
   });
 });

@@ -1,8 +1,8 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
 import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, runGrant, trialOf, whoIs } from "./kiff.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
 import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -11,7 +11,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { COACH_LINES, type CoachCall, type CoachStore, keys as coachKeys, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
@@ -113,7 +113,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -174,6 +174,8 @@ export interface Deps {
   events?: EventLog;
   fetch?: Fetch;
   kiffBase?: string;
+  /** KIFF's gateway, where the account's tool connections are (default mcp.kiff.dev). */
+  kiffGateway?: string;
   /**
    * tafs cloud's own address as its callers name it, e.g. https://cloud.tafs.kiff.dev.
    * Behind CloudFront the request's host is the function's, so Coach's MCP audience
@@ -405,7 +407,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The account's Setup (kiff/agents#91): its chat uses the taf routes, by its id.
     if (parts.length === 2 && method === "GET") {
       const setup = await setupOf(me, deps);
-      return { setup: setup ? await view(setup, me, deps) : null };
+      if (!setup) return { setup: null, tools: null };
+      const [shown, tools] = await Promise.all([view(setup, me, deps), coachTools(event, setup, deps)]);
+      return { setup: shown, tools };
     }
     if (parts.length === 2 && method === "POST") {
       need(me, "cards.manage");
@@ -479,12 +483,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const doors = await managesTaf(event, me, taf, deps);
     const { messages, components, sessions } = await conversation(me, taf, deps, undefined, doors);
+    await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const only = await ownChat(me, taf, parts[4] ?? "", deps);
     const { messages, components, sessions } = await conversation(me, taf, deps, only);
+    await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
   }
@@ -820,7 +826,11 @@ function need(me: KIFFIdentity, capability: string): void {
 }
 
 async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
-  const body = parseBody(event);
+  return makeTaf(parseBody(event), me, deps);
+}
+
+/** POST /v1/tafs's work, for the person me: from their request, or from a result tafs cloud hands over for them. */
+async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps): Promise<{ taf: unknown; session: string | null }> {
   let name = str(body.name).trim();
   if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
   let job;
@@ -921,7 +931,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
     const schedule: Schedule = { id: tafID, agent: tafID, cron, time_zone: timezone, input: job.kickoff, enabled: !unscheduled };
     await deps.agents.createSchedule(me.tenantID, schedule).catch(async (err) => {
       // A retry of a start whose schedule was made: the same schedule.
-      if (err instanceof AgentsError && err.status === 409 && await deps.agents.getSchedule(me.tenantID, tafID)) return;
+      if (refused(err, "schedule_exists") && await deps.agents.getSchedule(me.tenantID, tafID)) return;
       throw err;
     });
     await deps.tafs.put(me.tenantID, taf);
@@ -1012,6 +1022,44 @@ export const SETUP_JOB = "setup";
 const SETUP_NAME_CLAIM = " setup";
 
 /** The account's Setup, if it has one. */
+/**
+ * Coach's tools as KIFF has them, for the phone to give in one confirmation:
+ * `given` once every tool is connected here as the control server and Coach's Cards are issued;
+ * `to_give` with what's left: `connect`, the batch the phone signs and sends as it is, with its
+ * lines, and `card`, Coach's Cards' draft to sign and submit (that submit is the confirmation),
+ * with KIFF's own words for each Card from its preview; `taken` when a vendor's tool holds
+ * one of Coach's names; `unknown` when KIFF didn't answer. Read from KIFF each time, so every
+ * phone of the account agrees.
+ */
+async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Record<string, unknown>> {
+  // Production must set publicURL (TAFS_PUBLIC_URL): the Host header is the caller's to send, and
+  // the tools are connected at this address.
+  const host = event.headers?.host ?? event.headers?.Host;
+  const self = deps.publicURL ?? (host ? `https://${host}` : "");
+  const mcp = `${self}/v1/mcp`;
+  const token = bearer(event);
+  try {
+    const [there, active] = await Promise.all([
+      gatewayConnections(token, deps.fetch, deps.kiffGateway),
+      activeCards(token, deps.fetch, deps.kiffBase),
+    ]);
+    const plan = coachToolsPlan(there, mcp);
+    if (plan.taken) return { state: "taken", taken: plan.taken };
+    const issued = COACH_CARDS.every((c) => active.has(c.id));
+    if (!plan.missing.length && issued) return { state: "given" };
+    // Coach's Cards, with KIFF's own words for them: never tafs cloud's copy of the wording.
+    let card: Record<string, unknown> | undefined;
+    if (!issued) {
+      const body = coachCardsDraft(setup.kiffAgent);
+      card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
+    }
+    return { state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace) } : {}), ...(card ? { card } : {}) };
+  } catch (err) {
+    if (err instanceof KIFFError) return { state: "unknown" };
+    throw err;
+  }
+}
+
 async function setupOf(me: KIFFIdentity, deps: Deps): Promise<Taf | undefined> {
   return (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
 }
@@ -1096,6 +1144,7 @@ async function setupDraftKey(me: KIFFIdentity, name: string, draftID: string, ta
       if (!held) await deps.claims.remove(me.tenantID, draftID).catch(() => undefined);
       throw new HTTPError(404, "Setup submitted no draft by that id on this account");
     }
+    if (refused(err, "draft_not_ready") && err.code) throw new HTTPError(409, WAITING_FOR_CONFIRMATION);
     if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw new HTTPError(502, `the taf's key couldn't be claimed: ${(err as Error).message}`);
   }
@@ -1346,6 +1395,10 @@ export interface CardAnswer {
   state: "answered" | "wrote" | "no_answer";
   words: string;
   at: string;
+  /** Who answered in the owner's place, when it wasn't them: tafs cloud, for a result. */
+  by?: string;
+  /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. */
+  outcome?: ResultOutcome;
 }
 
 export interface ThreadMessage {
@@ -1478,7 +1531,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       }
       if (e.kind === "answered") {
         // The card's answer as kiff/agents recorded it: on the run's latest card with its id.
-        const b = (e.body ?? {}) as { id?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown };
+        const b = (e.body ?? {}) as { id?: unknown; type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown };
         const card = components.findLast((c) => c.run === e.run && (c.component as { id?: unknown })?.id === b.id);
         if (card) card.answer = cardAnswer(b, iso(e.time));
         // Words the owner wrote while the card waited answered it: they show as their message, as sent.
@@ -1532,10 +1585,18 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
 }
 
 /** An `answered` event's body as the app shows it. */
-function cardAnswer(b: { words?: unknown; wrote?: unknown; unanswered?: unknown }, at: string): CardAnswer {
+function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown }, at: string): CardAnswer {
   if (b.unanswered === true) return { state: "no_answer", words: "", at };
   if (typeof b.wrote === "string" && b.wrote) return { state: "wrote", words: b.wrote, at };
-  return { state: "answered", words: typeof b.words === "string" ? b.words : "", at };
+  const out: CardAnswer = { state: "answered", words: typeof b.words === "string" ? b.words : "", at };
+  if (typeof b.answered_by === "string" && b.answered_by) out.by = b.answered_by;
+  const o = b.answer as { taf_id?: unknown; version?: unknown; failed?: unknown } | null | undefined;
+  if (b.type === "result" && o && typeof o === "object") {
+    if (typeof o.taf_id === "string") out.outcome = { taf_id: o.taf_id };
+    else if (typeof o.version === "number") out.outcome = { version: o.version };
+    else if (typeof o.failed === "string") out.outcome = { failed: o.failed };
+  }
+  return out;
 }
 
 /**
@@ -1620,13 +1681,16 @@ const ANSWERABLE = ["confirm", "questions", "approval", "sign_in"];
 async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
   const body = parseBody(event);
   if (!("answer" in body)) throw new HTTPError(400, "send the card's answer");
+  // Only tafs cloud answers in its own name (a result's hand-over), never a person's request.
+  if ("answered_by" in body) throw new HTTPError(400, "a person's answer is their own: answered_by is tafs cloud's alone");
   const card = await shownCard(me, taf, component, undefined, str(body.session).trim(), deps);
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   try {
     const run = await deps.agents.answerCard(me.tenantID, taf.id, card.run, component, body.answer, member(me));
     return { session: card.session, run: run.id, status: run.status };
   } catch (err) {
-    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, "the card doesn't wait for an answer any more: read the conversation");
+    if (refused(err, "card_not_waiting")) throw new HTTPError(409, "the card doesn't wait for an answer any more: read the conversation");
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no card of yours by that id");
     throw agentsFailure(err);
   }
@@ -1876,10 +1940,12 @@ const TRIAL_IDLE_MS = 7 * 24 * 3600_000;
  * its badge (label) and title, what the version changes, the task to try it
  * with, and when it ends unused.
  */
-export function trialView(t: Trial, taf: Taf, note: string | undefined): Trial & { label: string; title: string; changed?: string; try?: string; ends: string } {
+export function trialView(t: Trial, taf: Taf, note: string | undefined): Trial & { label: string; title: string; changed?: string; try?: string; ends: string; idle_days: number } {
   const tryWith = taf.tries?.[String(t.n)];
-  const ends = new Date(Date.parse(t.used) + TRIAL_IDLE_MS).toISOString();
-  return { ...t, label: "Trial", title: `Trying version ${t.n}`, ...(note ? { changed: note } : {}), ...(tryWith ? { try: tryWith } : {}), ends };
+  // kiff/agents' own, when it says them; from before it did, the week it kept then.
+  const ends = t.ends ?? new Date(Date.parse(t.used) + TRIAL_IDLE_MS).toISOString();
+  const idle = t.idle_days ?? TRIAL_IDLE_MS / (24 * 3600_000);
+  return { ...t, label: "Trial", title: `Trying version ${t.n}`, ...(note ? { changed: note } : {}), ...(tryWith ? { try: tryWith } : {}), ends, idle_days: idle };
 }
 
 /** The trial of a taf as the app shows it, or null: one read of its versions for the note. */
@@ -1961,7 +2027,7 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   }
   // The version live now records its Cards first, so going back to it brings them back.
   await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
-  const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", ...(draft ? { draft } : {}) }));
+  const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
   if (from || tryWith) {
     // Kept so the same result hands over this version again, with what to
     // try it with. A record that changed meanwhile is read again once.
@@ -2154,7 +2220,8 @@ async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): 
     const out = await deps.agents.steerRun(me.tenantID, taf.id, run, text, member(me));
     return { run: out.id, status: out.status };
   } catch (err) {
-    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, "the run has ended: send it as a new message");
+    if (refused(err, "run_ended", "not_paused")) throw new HTTPError(409, "the run has ended: send it as a new message");
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw agentsFailure(err);
   }
 }
@@ -2173,7 +2240,8 @@ async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): 
     const out = await deps.agents.continueHeld(me.tenantID, taf.id, exception);
     return { run: out.id, status: out.status };
   } catch (err) {
-    if (err instanceof AgentsError && err.status === 409) return { status: "waiting" };
+    if (refused(err, "waiting_for_kiff", "run_changed")) return { status: "waiting" };
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no run of this taf waits on that held call");
     throw agentsFailure(err);
   }
@@ -2498,7 +2566,10 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
       at = chosen;
       if (attached.length) at.attachments = attached;
       try {
-        run = deps.agents.streamRun(me.tenantID, taf.id, text, at, ai);
+        // Coach's runs are announced when they pause, so a result it shows is
+        // handed over by tafs cloud with no phone needed (handOver).
+        const notify = taf.job === SETUP_JOB && deps.publicURL ? { url: `${deps.publicURL}/v1/runs/ended`, ref: newRef(me.tenantID) } : undefined;
+        run = deps.agents.streamRun(me.tenantID, taf.id, text, at, ai, notify);
         first = await run.next();
       } catch (err) {
         throw agentsFailure(err);
@@ -2711,7 +2782,8 @@ async function stop(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): P
     return { stopped: true, run: out.id, status: out.status };
   } catch (err) {
     // Already over: nothing is left to stop.
-    if (err instanceof AgentsError && err.status === 409) return { stopped: false };
+    if (refused(err, "run_ended", "run_changed")) return { stopped: false };
+    if (err instanceof AgentsError && err.status === 409) throw new HTTPError(409, err.message);
     throw err instanceof AgentsError ? new HTTPError(err.status >= 500 ? 502 : err.status, err.message) : err;
   }
 }
@@ -3228,7 +3300,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         const out = await deps.agents.steerRun(call.tenant, taf.id, running, text);
         return { taf: taf.name, run: out.id, status: out.status, sent: "to the run at work, read at its next step" };
       } catch (err) {
-        if (err instanceof AgentsError && err.status === 409) throw new ToolRefusal("that run has ended: hand the task over again without run");
+        if (refused(err, "run_ended")) throw new ToolRefusal("that run has ended: hand the task over again without run");
+        if (err instanceof AgentsError && err.status === 409) throw new ToolRefusal(err.message);
         throw agentsFailure(err);
       }
     }
@@ -3258,7 +3331,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
       const out = await deps.agents.cancelRun(call.tenant, taf.id, str(args.run).trim());
       return { taf: taf.name, run: out.id, status: out.status, withdrawn: "its held calls, in KIFF; nothing more is sent" };
     } catch (err) {
-      if (err instanceof AgentsError && err.status === 409) return { taf: taf.name, stopped: false, why: "the run had already ended" };
+      if (refused(err, "run_ended", "run_changed")) return { taf: taf.name, stopped: false, why: "the run had already ended" };
+      if (err instanceof AgentsError && err.status === 409) return { taf: taf.name, stopped: false, why: err.message };
       throw agentsFailure(err);
     }
   }
@@ -3372,6 +3446,7 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
+  if (note.status === "PAUSED" && note.cards?.some((c) => c.type === "result")) return { taken: await handOverOrKeep(tenant, note.agent, note.run, deps) };
   const key = coachKeys.task(tenant, note.ref);
   const task = (await deps.coach.get(key)) as Task | undefined;
   if (!task || task.run !== note.run || task.taf !== note.agent) return { taken: false };
@@ -3400,6 +3475,155 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (level === "quiet") await tellPhones(deps, tenant, endedNotification(name, r));
   if (ended) await deps.coach.remove(key);
   return { taken: true };
+}
+
+/**
+ * The results Coach's chat shows that still wait, handed over now: what a lost note
+ * left undone is done when the person next reads the chat. handOver reads each run
+ * back and acts once per card, so this never makes a second taf. Best effort: the
+ * chat is read whatever happens here.
+ */
+async function handOverShown(tenant: string, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
+  if (taf.job !== SETUP_JOB || !deps.coach) return;
+  const runs = new Set(components.filter((c) => !c.answer && (c.component as { type?: string })?.type === "result").map((c) => c.run));
+  for (const run of [...runs].slice(0, 3)) {
+    await handOverOrKeep(tenant, taf.id, run, deps).catch((err) => console.error(`handover ${run}: ${(err as Error).message}`));
+  }
+}
+
+/** What tafs cloud answers a result whose draft the owner hasn't confirmed yet. */
+const WAITING_FOR_CONFIRMATION = "waiting for your confirmation";
+
+/** How long a result's hand-over holds its card, so a repeat note or a second phone can't make two. */
+const HANDOVER_HELD_MS = 10 * 60_000;
+
+/**
+ * Hands the owner over to the taf a Coach `result` waits on, with no phone
+ * needed: the note only says which run to read back; what is
+ * made comes from the run as kiff/agents keeps it. For each open result, once per
+ * card: the taf is made for the person whose run it is, only while KIFF says they
+ * may manage Cards now, from the draft they confirmed (kiff/agents claims it, and
+ * KIFF gives no key for an unconfirmed one); then tafs cloud answers the card in its
+ * own name. A refusal (4xx) is answered as failed, so Coach hands over again; a
+ * server error isn't answered, and the next note or the sweep tries again.
+ */
+async function handOver(tenant: string, agent: string, run: string, deps: Deps): Promise<{ took: boolean; pending: boolean }> {
+  const tafs = await deps.tafs.list(tenant);
+  const coach = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!coach || coach.id !== agent || !deps.coach) return { took: false, pending: false };
+  const r = await deps.agents.getRun(tenant, coach.id, run);
+  if (r.status !== "PAUSED") return { took: false, pending: false };
+  let took = false;
+  let pending = false;
+  for (const q of r.requirements ?? []) {
+    const card = q.input as { type?: string; id?: string; taf?: { agent?: string; name?: string; job?: string; draft?: string; improves?: string; unscheduled?: boolean } } | undefined;
+    if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.id || !card.taf) continue;
+    // Improvements wait for their own credentials question; the app still makes those.
+    if (card.taf.improves) continue;
+    const held = `handover#${tenant}#${r.id}#${card.id}`;
+    if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
+    took = true;
+    const outcome = await newTafFor(tenant, coach.id, r, card.taf, tafs, deps).catch(async (err) => {
+      // Not told: it may still pass. The hold goes, and the sweep tries again.
+      console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
+      await deps.coach!.remove(held).catch(() => undefined);
+      pending = true;
+      return undefined;
+    });
+    if (!outcome) continue;
+    await deps.agents.answerResult(tenant, coach.id, r.id, card.id, outcome).catch(async (err: unknown) => {
+      // Answered meanwhile (another note, or an app from before this): nothing more to do.
+      if (refused(err, "card_not_waiting")) return;
+      // Not answered, as a failed make: the sweep tries again, and finds the taf made.
+      console.error(`handover ${r.id} ${card.id} answer: ${(err as Error).message}`);
+      await deps.coach!.remove(held).catch(() => undefined);
+      pending = true;
+    });
+  }
+  return { took, pending };
+}
+
+/** Where the hand-overs a server error left undone wait for the sweep: one list for all accounts. */
+const HANDOVERS_PENDING = "handovers#pending";
+/** How long a hand-over is retried before the card is left to Coach's own wait. */
+const HANDOVER_KEPT_MS = 7 * 24 * 3600_000;
+
+interface PendingHandOver { tenant: string; agent: string; run: string; tries: number; tried: string }
+
+/** handOver, and when a server error left some undone, kept for the sweep. */
+async function handOverOrKeep(tenant: string, agent: string, run: string, deps: Deps): Promise<boolean> {
+  const { took, pending } = await handOver(tenant, agent, run, deps);
+  if (pending) await keepHandOver({ tenant, agent, run, tries: 0, tried: (deps.now?.() ?? new Date()).toISOString() }, deps);
+  return took;
+}
+
+async function keepHandOver(p: PendingHandOver, deps: Deps): Promise<void> {
+  const now = deps.now?.() ?? new Date();
+  await deps.coach!.append(HANDOVERS_PENDING, p, new Date(now.getTime() + HANDOVER_KEPT_MS));
+}
+
+/**
+ * The hand-overs a server error (tafs cloud's, kiff/agents', KIFF's) left undone, tried
+ * again on the deletions' backoff, by the same schedule: each run once per sweep, kept
+ * until it is done, its card no longer waits, or a week has passed.
+ */
+export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; pending: boolean }>> {
+  if (!deps.coach) return [];
+  const now = deps.now?.() ?? new Date();
+  const items = (await deps.coach.take(HANDOVERS_PENDING)) as PendingHandOver[];
+  const seen = new Set<string>();
+  const out: Array<{ run: string; pending: boolean }> = [];
+  for (const p of items) {
+    const key = `${p.tenant}#${p.run}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (now.getTime() - Date.parse(p.tried) < backoffMs(p.tries) && p.tries > 0) {
+      await keepHandOver(p, deps);
+      continue;
+    }
+    const { pending } = await handOver(p.tenant, p.agent, p.run, deps).catch((err) => {
+      console.error(`handover sweep ${p.run}: ${(err as Error).message}`);
+      return { took: false, pending: true };
+    });
+    if (pending) await keepHandOver({ ...p, tries: p.tries + 1, tried: now.toISOString() }, deps);
+    out.push({ run: p.run, pending });
+  }
+  return out;
+}
+
+/**
+ * The new taf a result hands over to, made for the run's requester: what to answer
+ * the card with. Throws only what may pass on a retry (a server error).
+ */
+async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean },
+  tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
+  // Made already, by an app from before this or an earlier try: the same taf, never a second.
+  const made = tafs.find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
+  if (made) return { taf_id: made.id };
+  let access: { requester: Requester; cards_manage?: boolean };
+  try {
+    access = await deps.agents.requesterAccess(tenant, coach, r.id);
+  } catch (err) {
+    if (refused(err, "no_requester")) return { failed: "no person asked for this chat, so no one can be set up for" };
+    // KIFF not answering is a blip, as any server error: not told, and the sweep tries again.
+    throw err;
+  }
+  if (access.cards_manage === undefined) return { failed: "KIFF didn't say whether you may manage Cards now; try again" };
+  if (!access.cards_manage) return { failed: "your role on this KIFF account can't manage Cards now" };
+  // The person, as KIFF just answered for them: no session of theirs, and no right beyond that answer.
+  const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
+  try {
+    const out = await makeTaf({ name: taf.name, job: taf.job, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}) }, me, deps);
+    return { taf_id: (out.taf as { id: string }).id };
+  } catch (err) {
+    if (err instanceof HTTPError && err.status >= 400 && err.status < 500) {
+      // Made meanwhile by an app, under this draft: done, not failed.
+      const now = (await deps.tafs.list(tenant)).find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
+      if (now) return { taf_id: now.id };
+      return { failed: err.message };
+    }
+    throw err;
+  }
 }
 
 /** A Coach task's run ended, said quietly: no sound or banner. Only how it ended, never the taf's words. */

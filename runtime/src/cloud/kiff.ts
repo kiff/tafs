@@ -24,6 +24,8 @@ export class KIFFError extends Error {
 export type Fetch = typeof fetch;
 
 export const KIFF_API = "https://api.kiff.dev";
+/** KIFF's gateway API, where the account's tool connections are (tafdef's KIFF_GATEWAY is its MCP endpoint). */
+export const KIFF_GATEWAY_API = "https://mcp.kiff.dev";
 
 export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<KIFFIdentity> {
   if (!token) throw new KIFFError(401, "sign in with KIFF");
@@ -248,4 +250,32 @@ export async function runGrant(token: string, agent: string, doFetch: Fetch = fe
   const out = (await res.json().catch(() => ({}))) as { grant?: unknown; error?: unknown };
   if (res.status === 403 && out.error === "no_access") return "no_access";
   return res.ok && typeof out.grant === "string" && out.grant ? out.grant : undefined;
+}
+
+/** The account's tool connections in KIFF's gateway, read with the person's session. */
+export async function gatewayConnections(token: string, doFetch: Fetch = fetch, base = KIFF_GATEWAY_API): Promise<Array<{ name: string; url?: string; control?: boolean }>> {
+  const out = await ask<unknown>(token, "GET", "/v1/connections", undefined, doFetch, base);
+  const list = Array.isArray(out) ? out : (out as { connections?: unknown }).connections;
+  if (!Array.isArray(list)) throw new KIFFError(502, "KIFF's gateway sent no connections");
+  return list.flatMap((c) => (c && typeof c === "object" && typeof (c as { name?: unknown }).name === "string" ? [c as { name: string; url?: string; control?: boolean }] : []));
+}
+
+/**
+ * The ids of the account's Cards in force, from one read of KIFF's list. A revoked or expired Card
+ * is still listed, with `active` false, so it doesn't count.
+ */
+export async function activeCards(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Set<string>> {
+  const out = await ask<{ mandates?: Array<{ id?: unknown; active?: unknown }> }>(token, "GET", "/v1/me/mandates", undefined, doFetch, base);
+  return new Set((out.mandates ?? []).flatMap((m) => (m.active === true && typeof m.id === "string" ? [m.id] : [])));
+}
+
+/**
+ * How KIFF would word a draft, without making it (POST /v1/me/agent-drafts/preview): the draft's
+ * card_title and each Card as the submitted draft would read, with its lines. It writes nothing and
+ * needs no signature. Passed on unchanged, so no copy of how a Card reads is kept here.
+ */
+export async function previewDraft(token: string, body: unknown, doFetch: Fetch = fetch, base = KIFF_API): Promise<{ card_title?: unknown; cards: unknown[] }> {
+  const out = await ask<{ card_title?: unknown; cards?: unknown }>(token, "POST", "/v1/me/agent-drafts/preview", body, doFetch, base);
+  if (!Array.isArray(out.cards)) throw new KIFFError(502, "KIFF's preview sent no Cards");
+  return { ...(out.card_title === undefined ? {} : { card_title: out.card_title }), cards: out.cards };
 }
