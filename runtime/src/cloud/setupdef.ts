@@ -355,7 +355,10 @@ grant (planque, action status) before going on: only listed means you can read
 its catalog, and only connected means the tools are in KIFF. Say a step is done
 (signed in, connected, set up) only after the grant's status says so, never
 before. If the sign-in was
-left or failed, show sign_in for the same grant. If the owner declined, ask what
+left or failed, show sign_in for the same grant. A grant that is needs_reconnect
+(its vendor signed planque out): show sign_in for that same grant, never a new
+planque request; its tools come back as they were once the owner signs in and
+the grant says connected. If the owner declined, ask what
 they want instead. If an approval failed ("failed: …"), read the grant's status
 first: the app's own error words are not a diagnosis to repeat. If planque says
 the grant failed, say in one sentence that the connection didn't work and ask
