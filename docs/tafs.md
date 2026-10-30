@@ -189,6 +189,14 @@ moved, Stopped, Waiting.
 - An answer the owner gave that KIFF hasn't recorded yet shows as answered until KIFF's
   record has it (`withDecisions`).
 
+On Android the sheet is `views/ReceiptSheet.kt` and the check `kiff/ReceiptCheck.kt`, the
+same digest, the same chain bytes as KIFF wrote them, and the same pinned signer as iOS.
+Keccak-256 and the secp256k1 key recovery come from Bouncy Castle's lightweight API;
+iOS's test receipt and vectors are Android's tests too. A verified receipt whose line
+names another payment, amount or answer than the one KIFF signed doesn't check out
+(`ReceiptSteps.mismatch`). Each line's payment comes from tafs cloud's call references,
+read after each refresh and kept only where its hash is KIFF's (`KiffMapping.naming`).
+
 ## Pausing, revoking and removing
 
 - **Pause / Resume** turns the taf's schedule off or on. It doesn't touch its Cards.

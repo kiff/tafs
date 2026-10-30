@@ -330,6 +330,15 @@ class TafsCloud(
 
   suspend fun report(id: String, session: String): Report = get<ReportBody>("/v1/tafs/${escaped(id)}/runs/${escaped(session)}").report
 
+  /** What the taf's calls through KIFF acted on (kiff/tafs#167): KIFF's key for the call, and the value of the argument its Card scopes on, kept 30 days. */
+  @kotlinx.serialization.Serializable
+  data class CallRef(val invocation: String, val value: String)
+
+  @kotlinx.serialization.Serializable
+  private data class CallRefs(val calls: List<CallRef> = emptyList())
+
+  suspend fun calls(id: String): List<CallRef> = get<CallRefs>("/v1/tafs/${escaped(id)}/calls").calls
+
   /** What the taf remembers, newest first. */
   suspend fun memory(id: String): List<MemoryNote> =
     get<Notes>("/v1/tafs/${escaped(id)}/memory").notes.map { MemoryNote(it.id, it.path, it.content, it.updatedAt) }

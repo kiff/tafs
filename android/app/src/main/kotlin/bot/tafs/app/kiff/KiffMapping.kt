@@ -48,6 +48,21 @@ object KiffMapping {
   /** A record entry's id, from KIFF's call id: the same on every refresh. */
   fun recordId(proposalId: String): String = UUID.nameUUIDFromBytes("tafs.record|$proposalId".toByteArray()).toString()
 
+  /** Whether [value] is what KIFF hashed for what a call acted on: "sha256:" and its hex. */
+  fun isOn(value: String, hash: String): Boolean =
+    hash == "sha256:" + java.security.MessageDigest.getInstance("SHA-256").digest(value.toByteArray()).joinToString("") { "%02x".format(it) }
+
+  /**
+   * The Record's lines with what each acted on, from the tafs' call references by KIFF's key (kiff/tafs#167): only a value
+   * whose hash is KIFF's, so a line never names a payment KIFF didn't.
+   */
+  fun naming(record: List<RecordEntry>, refs: Map<String, String>): List<RecordEntry> = record.map { e ->
+    val key = e.entityId
+    val hash = e.onHash
+    val value = key?.let { refs[it] }
+    if (hash != null && value != null && isOn(value, hash)) e.copy(onValue = value) else e
+  }
+
   // MARK: Words
 
   /**
@@ -203,7 +218,7 @@ object KiffMapping {
       RecordEntry(
         id = recordId(c.proposalId), tafId = actor, kind = kind, title = name(c.actionName, c.title), detail = detail, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
-        readOnly = c.readOnly, amountText = c.amount?.let(::amountText),
+        readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
         entityId = c.entityId, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt, why = c.reasons,
         madeAt = c.madeAt, reason = c.reason,
         refusedByTool = if (refusedByTool) true else null,

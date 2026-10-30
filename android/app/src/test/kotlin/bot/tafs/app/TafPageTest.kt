@@ -199,6 +199,24 @@ class TafPageTest {
     assertEquals(2, transport.requestsTo("DELETE /v1/tafs/taf_1").size)
   }
 
+  // MARK: The Record
+
+  @Test fun aRefreshNamesWhatEachLineActedOnFromTafsCloudsCallsCheckedAgainstKiffsHash() = runTest {
+    val hash = "sha256:" + java.security.MessageDigest.getInstance("SHA-256").digest("pi_3Q".toByteArray()).joinToString("") { "%02x".format(it) }
+    reads()
+    transport.answer(
+      "GET /v1/me/activity", 200,
+      """{"calls":[{"proposal_id":"p1","action_name":"create_refund","title":"Refund a payment","actor_id":"refunds-1","outcome":"allowed","created_at":"2026-10-28T08:00:00Z","entity_id":"inv_1","on_hash":"$hash","on_arg":"payment_intent"}]}""",
+    )
+    transport.answer("GET /v1/tafs/taf_1/calls", 200, """{"calls":[{"invocation":"inv_1","value":"pi_3Q"}]}""")
+    val m = model()
+    // The first read took reads()' empty activity; this one has the call.
+    m.refresh()
+    val line = m.state.value.record.single { it.entityId == "inv_1" }
+    assertEquals("pi_3Q", line.onValue)
+    assertEquals(1, transport.requestsTo("GET /v1/tafs/taf_1/calls").size)
+  }
+
   // MARK: What it remembers
 
   @Test fun whatItRemembersIsReadFromTafsCloudAndForgettingOneTellsIt() = runTest {

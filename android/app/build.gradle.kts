@@ -109,6 +109,7 @@ dependencies {
   implementation(libs.androidx.browser)
   // Buying Solo and task packs through Google Play (docs/accounts.md), off until KIFF records Play purchases.
   implementation(libs.billing.ktx)
+  implementation(libs.bouncycastle)
 
   // Alerts: Firebase Cloud Messaging carries tafs cloud's push to this phone. The app builds and runs without it:
   // alerts are on only in a build that has the project's google-services.json (see push/Alerts.kt).

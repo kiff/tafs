@@ -764,6 +764,7 @@ class AppModel(
       show(read)
       // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
       if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
+      nameRecordLines(generation)
     } catch (e: CancellationException) {
       cancelled = true
       throw e
@@ -1259,6 +1260,27 @@ class AppModel(
     refresh()
     return "$cards Its schedule, chats, run reports, memory and key are deleted, and the name ${taf.name} is free. KIFF's receipts stay."
   }
+
+  /**
+   * What each Record line acted on (kiff/tafs#167): the call references of each taf with a line KIFF hashed a resource
+   * for, read from tafs cloud. Best effort: a taf whose calls can't be read keeps its lines without the payment.
+   */
+  private suspend fun nameRecordLines(generation: Int) {
+    val tafIds = _state.value.record.filter { it.onHash != null && it.onValue == null }.map { it.tafId }.toSet()
+    val cloudIds = tafIds.mapNotNull { _state.value.taf(it)?.cloudId }
+    if (cloudIds.isEmpty()) return
+    val refs = mutableMapOf<String, String>()
+    for (id in cloudIds) {
+      val list = attempt { cloud.calls(id) } ?: continue
+      if (generation != accountGeneration) return
+      list.forEach { refs[it.invocation] = it.value }
+    }
+    if (generation != accountGeneration || refs.isEmpty()) return
+    _state.update { it.copy(record = KiffMapping.naming(it.record, refs)) }
+  }
+
+  /** KIFF's receipt for a Record line, as KIFF wrote it, for the phone to check. */
+  suspend fun receipt(traceId: String): ByteArray = kiff.receipt(traceId)
 
   /** Finishes removals tafs cloud lists as begun. They were confirmed when they began; finishing only deletes what's left of a taf already stopped. */
   private suspend fun finishRemovals(removing: List<bot.tafs.app.kiff.PendingRemoval>, generation: Int) {

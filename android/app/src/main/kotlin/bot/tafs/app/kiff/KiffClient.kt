@@ -480,6 +480,9 @@ class KiffClient(
     send("POST", agent?.let { "/v1/agents/${escaped(it)}/resume" } ?: "/v1/resume", mapOf<String, String>())
   }
 
+  /** KIFF's receipt for a call, as KIFF wrote it: its bytes are what [ReceiptCheck] checks, never decoded and written again. */
+  suspend fun receipt(traceId: String): ByteArray = send("GET", "/v1/receipts/${escaped(traceId)}")
+
   /** Revokes one of a taf's Cards: no new action under it goes through. It takes authority away, so it isn't signed. */
   suspend fun revoke(cardId: String) {
     send("POST", "/v1/me/mandates/${escaped(cardId)}/revoke", mapOf<String, String>())

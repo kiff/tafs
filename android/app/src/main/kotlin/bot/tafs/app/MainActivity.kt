@@ -74,6 +74,7 @@ import bot.tafs.app.views.VersionsSheet
 import bot.tafs.app.views.UsageSheet
 import bot.tafs.app.views.CoachInstalls
 import bot.tafs.app.views.LocalAnswerPage
+import bot.tafs.app.views.LocalReceipt
 import bot.tafs.app.views.LocalCoachInstalls
 import bot.tafs.app.views.NeedsYouView
 import bot.tafs.app.views.NewTafFlow
@@ -172,6 +173,8 @@ fun RootView(model: AppModel) {
       !state.signedIn -> OnboardingView(onSignIn = { signingIn = true }, onSample = model::startSample)
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
+        // KIFF's receipt for a Record line, signed in: the sample has none.
+        LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,

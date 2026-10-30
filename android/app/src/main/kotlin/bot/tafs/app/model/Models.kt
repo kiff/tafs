@@ -524,6 +524,9 @@ data class RecordEntry(
   val readOnly: Boolean? = null,
   /** "€150.00", as the Record shows an amount. */
   val amountText: String? = null,
+  /** The amount as KIFF recorded it, value and unit: checked against the one its receipt signed. */
+  val amountValue: String? = null,
+  val amountUnit: String? = null,
   /** KIFF's key for the call (the gateway's "tc-…"), what the taf's call_ref names it by. */
   val entityId: String? = null,
   /**

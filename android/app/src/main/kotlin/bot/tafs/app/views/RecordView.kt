@@ -132,12 +132,16 @@ private fun Chip(title: String, selected: Boolean, onClick: () -> Unit) {
 @Composable
 fun RecordRow(entry: RecordEntry, state: AppState, showTaf: Boolean = true) {
   val shape = RoundedCornerShape(14.dp)
+  // Done in tafs, not a call: there's no receipt to show (kiff/tafs#236). Anything else opens its sheet.
+  var showing by rememberSaveable { mutableStateOf(false) }
+  if (showing) ReceiptSheet(entry, state) { showing = false }
   Row(
     Modifier
       .fillMaxWidth()
       .clip(shape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), shape)
+      .clickable(enabled = entry.kind != Kind.inTafs) { showing = true }
       .padding(10.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
