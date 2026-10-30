@@ -76,7 +76,10 @@ object DoorWords {
 
   /** The top line of a knock: "● KNOCK · BY EMAIL · DIDN'T CHECK OUT". */
   fun knockTitle(k: Knock): String =
-    "● KNOCK · BY ${DoorNames.label(k.app).uppercase()}" + if (k.proof == "fail") " · DIDN'T CHECK OUT" else ""
+    (if (k.paired) "PAIRED · BY " else "● KNOCK · BY ") + DoorNames.label(k.app).uppercase() + if (k.proof == "fail") " · DIDN'T CHECK OUT" else ""
+
+  /** Under a paired sender's message, kept from its knock: it waits for the owner, as a message, not a stranger. */
+  const val PAIRED_LINE = "Paired · Do it or Ignore this message"
 
   /** The line saying a door had its day's messages, and how many more were dropped. */
   fun restLine(k: Knock): String {

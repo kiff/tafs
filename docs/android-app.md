@@ -28,6 +28,10 @@ working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-
   <img src="screenshots/android/coach-live-waiting.png" width="180" alt="The live line: Waiting for you">
 </p>
 
+A taf's page, under its compact header (the sample's Refunds):
+
+<p><img src="screenshots/android/taf-page.png" width="180" alt="A taf's page: one header row, the tabs and the Card's line, then the chat"></p>
+
 ## Building and testing
 
 ```bash

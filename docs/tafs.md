@@ -124,7 +124,11 @@ theirs. Someone with only shared tafs sees just "Shared with you".
 
 ## A taf's page
 
-`TafDetailView` has up to four tabs:
+`TafDetailView` opens under a compact header, one row: back, the taf's avatar and name, and
+its state. Its tabs come next, and the Card's one line under them. On Android, Share and the
+Card line fold away while the page scrolls down and come back on the way up, so the chat has
+the screen; the header doesn't list the taf's tools, which the Card tab says in KIFF's words.
+It has up to four tabs:
 
 - **Chat** (first, where the taf can chat): [chat.md](chat.md).
 - **Activity:** its job, its memory, its runs (the next one, Run now, Pause), its

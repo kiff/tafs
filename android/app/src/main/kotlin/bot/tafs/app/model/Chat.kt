@@ -176,6 +176,30 @@ object Chat {
   /** What a message may be at most, as tafs cloud takes it. */
   const val LIMIT = 2000
 
+  /** One row of a chat: a thread item (by its index), or a door's knock waiting on the owner. */
+  sealed interface Row {
+    val key: String
+    data class Item(val index: Int, override val key: String) : Row
+    data class Knock(val knock: bot.tafs.app.kiff.Knock) : Row {
+      override val key: String get() = "knock-" + knock.id
+    }
+  }
+
+  /**
+   * The thread's items with the door's open knocks, each at its own time: a knock goes before the first item that came after it,
+   * so the newest of all is last. Knocks at the same time keep their order.
+   */
+  fun withKnocks(items: List<ChatItem>, knocks: List<bot.tafs.app.kiff.Knock>): List<Row> {
+    val out = mutableListOf<Row>()
+    val waiting = knocks.sortedBy { it.at }.toMutableList()
+    items.forEachIndexed { i, item ->
+      while (waiting.isNotEmpty() && waiting.first().at < item.at) out += Row.Knock(waiting.removeAt(0))
+      out += Row.Item(i, item.id)
+    }
+    waiting.forEach { out += Row.Knock(it) }
+    return out
+  }
+
   /**
    * The live line to show now, or none: tafs cloud's while its stream sends one (none at `done`); before that, the step at work,
    * else "Thinking…" until the words start.

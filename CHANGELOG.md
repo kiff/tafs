@@ -7,6 +7,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, a taf's page:** a compact header (back, name, state) whose Share and Card line
+  fold as it scrolls; a chat opens at its newest message, with a door's knocks at their own
+  times; and a paired sender's waiting message reads "Paired · Do it or Ignore this message".
+
 - **Android, Coach's screen:** a compact header (back, Coach, a menu with its conversations),
   the plan in tafs cloud's one line that folds away as the thread scrolls, and one calm live
   line from tafs cloud's stream instead of the model's thinking and a list of steps. Alerts
