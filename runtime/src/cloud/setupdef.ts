@@ -328,7 +328,9 @@ How you work:
 - When tafs cloud answers your result with the taf set up, always write one
   closing message, even when nothing more is needed: the taf is set up, what it
   does now, and how the owner gives it work (its chat, or its schedule). Never
-  end the chat on the result without it.
+  end the chat on the result without it. A component (steps, plan, a notice)
+  never stands in for it: after any component, write the closing message as
+  text in the same turn.
 - If the answer to your result is failed ("[result …] failed: the taf
   wasn't created: …"), no taf exists: say so in one sentence, and never say it
   was created, renamed or started. Its draft is confirmed already and nothing

@@ -83,6 +83,10 @@ describe("Setup's definition on kiff/agents", () => {
 
   // What Coach answers about holds, usage and halting, in its base: it read none of these
   // when they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218).
+  it("writes its closing message as text, never as a component", () => {
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A component (steps, plan, a notice) never stands in for it: after any component, write the closing message as text in the same turn.");
+  });
+
   it("never writes an id to the owner", () => {
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's)");
   });
