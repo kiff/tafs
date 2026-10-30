@@ -163,6 +163,15 @@ through Apple push for an iPhone and Firebase Cloud Messaging for an Android pho
 Only phones of people who may answer held calls (`holds.answer`) are alerted, and only
 they may hand over the target's secret.
 
+**A vendor signing a connection out.** When a vendor ends the sign-in planque holds for a
+taf's connection, KIFF sends `connection_signed_out` with the grant, the taf's agent and the
+vendor's name. tafs cloud finds the taf that runs that agent and alerts the same phones:
+"Stripe signed Refunds out · sign in again". Tapping it opens the taf (`open: "taf"`), where
+its Card tab offers **Sign in again**. It sounds but isn't Time Sensitive, since nothing waits on
+a deadline. It never says why the vendor ended the sign-in, and no run waits on it, so it isn't
+handed to kiff/agents. KIFF's resend of the same event tells nobody twice, and an agent that no
+taf runs any more tells nobody.
+
 **On Android** the push is a Firebase data message the phone builds its notification from:
 `kind` (`alert` shows one, `answered` takes it away), the words, where tapping it goes
 (`open`), the call or request it is about, and how loud it is (`level`). A door's alert
