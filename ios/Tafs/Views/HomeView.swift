@@ -213,6 +213,7 @@ struct HomeView: View {
 }
 
 struct TafRow: View {
+    @EnvironmentObject private var model: AppModel
     let taf: Taf
 
     var body: some View {
@@ -228,7 +229,13 @@ struct TafRow: View {
                             .background(Theme.amber).clipShape(Capsule())
                     }
                     }
-                    Text(taf.now).scaledFont(13).foregroundColor(Theme.dim).oneLineUnlessLarge()
+                    // A connection its vendor signed out says so, in planque's words, in place of
+                    // what it's doing: it waits on the owner.
+                    if let out = model.signedOut(taf.id) {
+                        Text(out.signedOutWords).scaledFont(13).foregroundColor(Theme.amberText).oneLineUnlessLarge()
+                    } else {
+                        Text(taf.now).scaledFont(13).foregroundColor(Theme.dim).oneLineUnlessLarge()
+                    }
                 }
                 Spacer(minLength: 8)
                 StateChip(state: taf.state)

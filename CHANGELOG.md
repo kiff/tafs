@@ -7,6 +7,16 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, this round:** a taf's page has a compact header (avatar, name, state) whose
+  version, Share and Card line fold as the chat scrolls down; a door's knocks sit in the chat at
+  their own times, and a paired sender's waiting message reads "Paired · Do it or Ignore this
+  message". The app reads again what tafs cloud's live updates name, and shows each door's words.
+  A taf whose connection its vendor signed out waits on the owner at the top of the home list,
+  in planque's words, and its Card tab and Coach's card offer **Sign in again**; a sign-in reads
+  as signed in only once planque says connected. The Activity tab shows the taf's work, with
+  skipped scheduled runs and **Send again** for a door reply given up on. Dictation goes in at
+  the cursor (iOS 18 and later).
+
 - **Android, a connection its vendor signed out:** its taf waits on the owner at the top of the
   home list, its row in planque's words ("Signed out by Stripe · sign in again"), and its Card
   tab offers **Sign in again**. planque's grants are read on every refresh and live update.

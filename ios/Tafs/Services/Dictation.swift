@@ -96,9 +96,14 @@ final class Dictation: ObservableObject {
     private let engine: SpeechEngine
     /// The languages this device dictates in, the owner's first.
     var languages: [Language] { engine.languages() }
-    /// What the box held when dictation started, and each finished stretch of speech since:
-    /// the words being heard go after it.
+    /// What the box held before its insertion point when dictation started, and each finished
+    /// stretch of speech since: the words being heard go after it.
     private var before = ""
+    /// What the box held after its insertion point: it stays after the words heard.
+    private var after = ""
+    /// Where the box's insertion point is, in characters, as its field last said; nil when
+    /// it can't say (before iOS 18), so dictation goes at the end.
+    var cursor: Int?
     /// The stretch of speech being heard now, as the recognizer has it so far.
     private var hearing = ""
     private var hints: [String] = []
@@ -162,7 +167,7 @@ final class Dictation: ObservableObject {
             state = .blocked(why)
             return
         }
-        before = text
+        (before, after) = Self.split(text, at: cursor)
         original = text
         hearing = ""
         quietEnds = 0
@@ -236,7 +241,9 @@ final class Dictation: ObservableObject {
         if Self.startsAfresh(hearing, words) { before = Self.joined(before, hearing) }
         hearing = words
         if !words.trimmingCharacters(in: .whitespaces).isEmpty { quietEnds = 0 }
-        write(Self.joined(before, hearing))
+        write(Self.joined(before, hearing) + Self.rest(after))
+        // A language switch, or the next tap, goes on after what was just said.
+        cursor = Self.joined(before, hearing).count
         if done {
             before = Self.joined(before, hearing)
             hearing = ""
@@ -293,6 +300,21 @@ final class Dictation: ObservableObject {
         guard !words.isEmpty else { return before }
         guard !before.isEmpty else { return words }
         return before.last?.isWhitespace == true ? before + words : before + " " + words
+    }
+
+    /// The box split at its insertion point: the words heard go between the two. No point,
+    /// or one past the end, is the end.
+    static func split(_ text: String, at cursor: Int?) -> (String, String) {
+        guard let cursor, cursor >= 0, cursor < text.count else { return (text, "") }
+        let i = text.index(text.startIndex, offsetBy: cursor)
+        return (String(text[..<i]), String(text[i...]))
+    }
+
+    /// What was after the insertion point, after the words heard: one space between, unless it
+    /// starts with a space or closes the sentence.
+    static func rest(_ after: String) -> String {
+        guard let first = after.first else { return "" }
+        return first.isWhitespace || ".,;:!?)".contains(first) ? after : " " + after
     }
 
     /// The hints, each once, without blanks, at most 100: the recognizer weighs fewer better.

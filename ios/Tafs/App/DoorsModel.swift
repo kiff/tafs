@@ -7,7 +7,11 @@ import Foundation
 final class DoorsModel: ObservableObject {
     @Published private(set) var doors: [TafsCloud.Door] = []
     @Published private(set) var apps: [TafsCloud.DoorApp] = []
-    @Published private(set) var knocks: [TafsCloud.Knock] = []
+    @Published private(set) var knocks: [TafsCloud.Knock] = [] {
+        didSet { onKnocks?(openKnocks) }
+    }
+    /// The open knocks, each time they change: the chat places them at their times.
+    var onKnocks: (@MainActor ([TafsCloud.Knock]) -> Void)?
     @Published private(set) var loaded = false
     @Published private(set) var busy = false
     @Published var error: String?

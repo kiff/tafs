@@ -302,4 +302,36 @@ final class DictationTests: XCTestCase {
         await settle()
         XCTAssertEqual(box, "Hi")
     }
+
+    /// Dictation goes in where the owner left the insertion point, not at the end: what was
+    /// after it stays after the words heard.
+    func testWordsGoInAtTheInsertionPoint() async {
+        let speech = FakeSpeech()
+        let dictation = Dictation(engine: speech, language: .english)
+        var box = "Refund for Ana."
+        dictation.cursor = 6
+        await dictation.start(text: box, hints: []) { box = $0 }
+        speech.hear("order 4471")
+        await settle()
+        XCTAssertEqual(box, "Refund order 4471 for Ana.")
+        speech.hear("order 4471 today", done: true)
+        await settle()
+        await settle()
+        XCTAssertEqual(box, "Refund order 4471 today for Ana.")
+        dictation.cancel()
+        XCTAssertEqual(box, "Refund for Ana.", "cancelling puts the box back")
+    }
+
+    func testTheBoxSplitsAtItsInsertionPoint() {
+        XCTAssertEqual(Dictation.split("Refund Ana", at: 6).0, "Refund")
+        XCTAssertEqual(Dictation.split("Refund Ana", at: 6).1, " Ana")
+        XCTAssertEqual(Dictation.split("Refund", at: nil).0, "Refund", "no point: the end")
+        XCTAssertEqual(Dictation.split("Refund", at: 6).1, "", "at the end")
+        XCTAssertEqual(Dictation.split("Refund", at: 40).0, "Refund", "past the end: the end")
+        XCTAssertEqual(Dictation.split("Refund", at: 0).1, "Refund", "at the start")
+        XCTAssertEqual(Dictation.rest(""), "")
+        XCTAssertEqual(Dictation.rest(" Ana"), " Ana")
+        XCTAssertEqual(Dictation.rest(". Thanks"), ". Thanks")
+        XCTAssertEqual(Dictation.rest("Ana"), " Ana")
+    }
 }
