@@ -165,6 +165,16 @@ struct SetupThread: Equatable {
         let type: String
         let id: String
         let text: String
+        /// kiff/agents' words for it, when the answer came as data (the card's `answer`):
+        /// what the card shows, as recorded.
+        var words: String? = nil
+
+        init(type: String, id: String, text: String, words: String? = nil) {
+            self.type = type
+            self.id = id
+            self.text = text
+            self.words = words
+        }
 
         init?(_ message: String) {
             guard message.hasPrefix("["), let close = message.firstIndex(of: "]") else { return nil }
@@ -184,9 +194,36 @@ struct SetupThread: Equatable {
         }
     }
 
-    /// The owner's latest answer to a component, as the thread has it.
+    /// The owner's latest answer to a component, as the thread has it: the answer kiff/agents
+    /// recorded on the card, else an answer sent the old way, as a message.
     func answer(to id: String) -> Answer? {
-        messages.lazy.reversed().filter { $0.from == .owner }.compactMap { Answer($0.text) }.first { $0.id == id }
+        if let shown = components.last(where: { $0.component.id == id }), let recorded = shown.answer,
+           let a = Self.answer(recorded, to: shown.component) {
+            return a
+        }
+        return messages.lazy.reversed().filter { $0.from == .owner }.compactMap { Answer($0.text) }.first { $0.id == id }
+    }
+
+    /// A card's recorded answer in the form the cards read (`text` as the old message carried
+    /// it), from kiff/agents' words for it: a confirm's option by its label, an approval's or a
+    /// sign-in's outcome, a questions card's answers as words. One that stopped waiting with no
+    /// answer, or that the owner wrote past, is none: the owner's message is in the thread.
+    static func answer(_ recorded: TafsCloud.CardAnswer, to c: SetupComponent) -> Answer? {
+        guard recorded.state == "answered" else { return nil }
+        let words = recorded.words
+        let failed = words.range(of: " · it didn't go through: ").map { "failed: " + words[$0.upperBound...] }
+        let text: String
+        switch c.type {
+        case .confirm:
+            text = c.options?.first { $0.label == words }?.value ?? words
+        case .approval:
+            text = failed ?? (words == "Declined" ? "declined" : "approved")
+        case .signIn:
+            text = failed ?? (words == "Signed in" ? "signed in" : "not now")
+        default:
+            text = words
+        }
+        return Answer(type: c.type.rawValue, id: c.id, text: text, words: words)
     }
 
     /// An owner's message in their own words: an answer to a component reads as what

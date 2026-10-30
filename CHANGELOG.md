@@ -159,6 +159,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- On iPhone and iPad, a card's answer goes to tafs cloud as data, not as a message in the chat,
+  and the card shows the answer as it was recorded: your choice, Approved, Declined, or why it
+  didn't go through. An answer that doesn't go stays on the card, so you can answer again.
+- Dictation in a language whose own form the device doesn't have uses its best form: British,
+  then American English for English; a language's own country's form for the others.
 - On iPhone and iPad, a taf Coach hands over is set up by tafs cloud, not by the app. Its card
   shows tafs cloud's answer: set up, with a button to open it; why it wasn't, with Coach handing
   it over again; or "Setting up…" until the answer comes. The card no longer offers Try again.

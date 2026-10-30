@@ -647,6 +647,43 @@ final class TafsCloud {
         try await send("POST", "/v1/tafs/\(escaped(id))/improve", body: ["text": text])
     }
 
+    /// A card's answer, as tafs cloud takes it: the run that waited on it goes on.
+    struct CardAnswered: Decodable, Equatable {
+        let session: String
+        let run: String
+        let status: String
+    }
+
+    /// A card's answer as data: a string (a confirm's option value, an approval's or a
+    /// sign-in's outcome), or a questions card's answer to each question.
+    enum CardAnswerValue: Encodable, Equatable {
+        case text(String)
+        case questions([String: QuestionAnswer])
+
+        struct QuestionAnswer: Codable, Equatable {
+            var value: String?
+            var values: [String]?
+            var own: String?
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.singleValueContainer()
+            switch self {
+            case .text(let s): try c.encode(s)
+            case .questions(let q): try c.encode(q)
+            }
+        }
+    }
+
+    /// The owner's answer to a card of theirs that waits for it, as data
+    /// (`POST /v1/tafs/{id}/components/{component}/answer`): kiff/agents checks it against the
+    /// card, and the run goes on with it. A 409 says the card doesn't wait any more.
+    func answerCard(_ id: String, component: String, answer: CardAnswerValue, session: String?) async throws -> CardAnswered {
+        struct Body: Encodable { let answer: CardAnswerValue; let session: String? }
+        return try await send("POST", "/v1/tafs/\(escaped(id))/components/\(escaped(component))/answer",
+                              body: Body(answer: answer, session: session))
+    }
+
     /// Sends the owner's message: into the taf's current run, or a new one.
     func sendMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> Sent {
         try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target, files: files))

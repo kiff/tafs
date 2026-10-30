@@ -345,15 +345,17 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(MarkdownText("**ab** cd").length, 5)
     }
 
-    /// An approval answers what happened: approved and signed in for a connection, approved
-    /// for the Cards of a connected one; a confirm answers with its value.
-    func testAnswersFollowContractOne() async throws {
+    /// An approval answers what happened, as data on the card's own route: approved for a
+    /// connection and for the Cards of a connected one; a confirm answers with its value.
+    func testAnswersGoAsDataOnTheCardsRoute() async throws {
         let signer = FaceIDSigner()
         let vendor = StubVendor()
         let model = await model(signer: signer, vendor: vendor)
         model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        for id in ["connect-stripe", "refunds-card", "which"] {
+            StubProtocol.responses["POST /v1/tafs/taf-setup/components/\(id)/answer"] = (200, #"{"session":"s1","run":"r1","status":"RUNNING"}"#)
+        }
         await model.loadSetup()
 
         let pending = PlanqueTests.grantJSONFor(status: "pending")
@@ -364,8 +366,8 @@ final class SetupTests: XCTestCase {
         await model.refreshConnections()
         let connect = try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01"}"#)
         await model.approve(connect, shown: model.grants.first?.digest, shownDraft: nil)
-        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
-                       "[approval connect-stripe] approved, signed in")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-stripe/answer").last)["answer"] as? String, "approved")
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "never a message in the old form")
 
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected"))]}"#)
         StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"draft","version":"v3"}"#)
@@ -373,13 +375,12 @@ final class SetupTests: XCTestCase {
         await model.refreshConnections()
         let cards = try SetupTests.component(#"{"type":"approval","id":"refunds-card","grant":"g_01","draft":"d_01"}"#)
         await model.approve(cards, shown: model.grants.first?.digest, shownDraft: "v3")
-        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
-                       "[approval refunds-card] approved")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/refunds-card/answer").last)["answer"] as? String, "approved")
         XCTAssertEqual(signer.prompts.count, 2, "one Face ID per approval")
 
         let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
         await model.answer(which, "test")
-        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String, "[confirm which] test")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/which/answer").last)["answer"] as? String, "test")
         XCTAssertTrue(model.answered.contains("which"))
         Keychain.delete(AppModel.planqueAccount)
     }
@@ -393,7 +394,9 @@ final class SetupTests: XCTestCase {
         let model = await model(signer: signer, vendor: vendor)
         model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        for id in ["connect-stripe", "stripe-tools"] {
+            StubProtocol.responses["POST /v1/tafs/taf-setup/components/\(id)/answer"] = (200, #"{"session":"s1","run":"r1","status":"RUNNING"}"#)
+        }
         await model.loadSetup()
 
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
@@ -404,8 +407,8 @@ final class SetupTests: XCTestCase {
         vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
         await model.refreshConnections()
         await model.approve(try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01"}"#), shown: model.grants.first?.digest, shownDraft: nil)
-        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
-                       "[approval connect-stripe] approved, signed in", "a listed grant is an answer too")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-stripe/answer").last)["answer"] as? String,
+                       "approved", "a listed grant is an answer too")
         XCTAssertTrue(model.grants.first?.listed ?? false)
         XCTAssertTrue(model.grants.first?.holdsSignIn ?? false)
 
@@ -418,8 +421,7 @@ final class SetupTests: XCTestCase {
         XCTAssertTrue(model.grants.first?.holdsSignIn ?? false, "a pending grant with a held sign-in is shown")
         StubProtocol.sent = []
         await model.approve(try SetupTests.component(#"{"type":"approval","id":"stripe-tools","grant":"g_01"}"#), shown: model.grants.first?.digest, shownDraft: nil)
-        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)["text"] as? String,
-                       "[approval stripe-tools] approved", "no sign-in, so the answer doesn't claim one")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/stripe-tools/answer").last)["answer"] as? String, "approved")
         XCTAssertEqual(vendor.opened.count, 1, "no second sign-in")
         XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").isEmpty)
         XCTAssertEqual(signer.prompts.count, 2, "one Face ID per approval")
@@ -502,22 +504,19 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
         await model.loadSetup()
         StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (429, #"{"error":"that's 10 messages in 10 minutes"}"#)
-        let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
-        await model.answer(which, "live")
-        XCTAssertEqual(model.setupUnsent.map(\.text), ["[confirm which] live"])
+        await model.sendSetup("Use the test account")
+        XCTAssertEqual(model.setupUnsent.map(\.text), ["Use the test account"])
         XCTAssertEqual(model.setupUnsent.first?.why, "that's 10 messages in 10 minutes")
-        XCTAssertFalse(model.answered.contains("which"), "the card can be answered again")
         XCTAssertFalse(model.setupThread.messages.contains { $0.session == "pending" })
         XCTAssertNil(model.setupError, "the message says it, not a line under the thread")
 
-        // Retry, with tafs cloud taking it: sent once, and the card goes quiet.
+        // Retry, with tafs cloud taking it: sent once.
         StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = nil
         StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
         StubProtocol.sent = []
         await model.retrySetup(try XCTUnwrap(model.setupUnsent.first))
         XCTAssertTrue(model.setupUnsent.isEmpty)
-        XCTAssertTrue(model.answered.contains("which"))
-        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").map { body($0)["text"] as? String }, ["[confirm which] live"])
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").map { body($0)["text"] as? String }, ["Use the test account"])
 
         // Deleting one that isn't sent drops it.
         StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (503, #"{"error":"down"}"#)
@@ -550,33 +549,59 @@ final class SetupTests: XCTestCase {
         _ = model.unqueueSetup()
         model.discardUnsent(try XCTUnwrap(model.setupUnsent.first))
 
-        // An answer that isn't sent, then the card answered again and sent.
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A card's answer that doesn't go stays on the card, in the app's words, and the card can
+    /// be answered again; one tafs cloud says the card no longer waits for (409) reads the thread
+    /// again. Neither becomes a message, and an answer the thread already has isn't sent again.
+    func testACardsAnswerThatDoesntGoStaysOnTheCard() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
-        await model.loadSetupThread()
+        await model.loadSetup()
         let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/which/answer"] = (503, #"{"error":"agents is down"}"#)
         await model.answer(which, "live")
-        XCTAssertEqual(model.setupUnsent.map(\.text), ["[confirm which] live"])
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = nil
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        XCTAssertFalse(model.answered.contains("which"), "the card can be answered again")
+        XCTAssertEqual(model.cardNotes["which"], "Your answer didn't reach Setup. Tap it again.")
+        XCTAssertTrue(model.setupUnsent.isEmpty, "never a message")
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty)
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/which/answer"] = (200, #"{"session":"s1","run":"r1","status":"RUNNING"}"#)
         StubProtocol.sent = []
         await model.answer(which, "test")
-        XCTAssertTrue(model.setupUnsent.isEmpty, "the earlier answer goes")
-        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").map { body($0)["text"] as? String }, ["[confirm which] test"])
+        XCTAssertNil(model.cardNotes["which"])
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/which/answer").last)["answer"] as? String, "test")
 
-        // A Retry of an answer the thread already has sends nothing.
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (503, #"{"error":"down"}"#)
+        // The card stopped waiting meanwhile: the thread is read again, nothing is kept.
         let signIn = try SetupTests.component(#"{"type":"sign_in","id":"in","service":"mcp.stripe.com","grant":"g_01"}"#)
-        await model.answer(signIn, "not now")
-        let unsent = try XCTUnwrap(model.setupUnsent.first)
-        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
-        {"messages":[{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"[sign_in in] not now","session":"s1"}],"components":[],"working":null}
-        """)
-        await model.loadSetupThread()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/in/answer"] = (409, #"{"error":"the card doesn't wait for an answer any more: read the conversation"}"#)
         StubProtocol.sent = []
-        await model.retrySetup(unsent)
-        XCTAssertTrue(model.setupUnsent.isEmpty)
-        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "not answered twice")
+        await model.answer(signIn, "not now")
+        XCTAssertFalse(model.answered.contains("in"))
+        XCTAssertFalse(sent("GET", "cloud.test", "/v1/tafs/taf-setup/conversation").isEmpty, "the thread read again")
         Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A card's recorded answer draws it as answered (kiff/agents' words), whatever this phone
+    /// sent: a confirm by its option, an approval, a sign-in's "not now", questions by their words.
+    func testARecordedAnswerDrawsTheCard() throws {
+        let confirm = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test mode"},{"value":"live","label":"Live"}]}"#)
+        XCTAssertEqual(SetupThread.answer(TafsCloud.CardAnswer(words: "Test mode"), to: confirm)?.text, "test")
+        let approval = try SetupTests.component(#"{"type":"approval","id":"a","grant":"g_01"}"#)
+        XCTAssertEqual(SetupThread.answer(TafsCloud.CardAnswer(words: "Approved"), to: approval)?.text, "approved")
+        XCTAssertEqual(SetupThread.answer(TafsCloud.CardAnswer(words: "Declined"), to: approval)?.text, "declined")
+        let failed = SetupThread.answer(TafsCloud.CardAnswer(words: "Approve · it didn't go through: the grant expired"), to: approval)
+        XCTAssertEqual(failed?.failed, true)
+        XCTAssertEqual(failed?.why, "the grant expired")
+        let signIn = try SetupTests.component(#"{"type":"sign_in","id":"in","service":"mcp.stripe.com","grant":"g_01"}"#)
+        XCTAssertEqual(SetupThread.answer(TafsCloud.CardAnswer(words: "Not now"), to: signIn)?.text, "not now")
+        let questions = try SetupTests.component(#"{"type":"questions","id":"q","questions":[]}"#)
+        XCTAssertEqual(SetupThread.answer(TafsCloud.CardAnswer(words: "Test mode · Monday"), to: questions)?.words, "Test mode · Monday")
+        XCTAssertNil(SetupThread.answer(TafsCloud.CardAnswer(state: "no_answer"), to: confirm), "it stopped waiting: not answered")
     }
 
     /// What the owner writes while Setup works waits, and is sent once Setup is done, as
@@ -887,44 +912,29 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// A tapped choice shows at once as the owner's message (#82), before tafs cloud
-    /// answers; a reload that doesn't have it yet keeps it, and tafs cloud's copy takes
-    /// its place without showing it twice.
-    func testATappedChoiceShowsAtOnceAndOnce() async throws {
+    /// A tapped choice goes as the card's answer, never as a message: the card goes quiet at
+    /// once, and shows the choice as kiff/agents recorded it once the thread has it.
+    func testATappedChoiceIsTheCardsAnswer() async throws {
         let model = await model(signer: FaceIDSigner())
         model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
-        await model.loadSetup()
-        // A stream the test holds open: Setup hasn't answered, nor recorded the message.
-        var continuation: AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation?
-        let events = AsyncThrowingStream<TafsCloud.StreamEvent, Error> { continuation = $0 }
-        let stream = try XCTUnwrap(continuation)
-        model.streamOpener = { _, _ in events }
-        let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
-        await model.answer(which, "live")
-        let mine = { model.setupThread.messages.filter { $0.from == .owner && $0.text == "[confirm which] live" } }
-        XCTAssertEqual(mine().count, 1, "shown as soon as it's tapped")
-        XCTAssertEqual(model.setupThread.answer(to: "which")?.text, "live", "the card shows the choice")
-
-        // A reload while it's on its way: tafs cloud doesn't have it yet, and it stays.
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
-        await model.loadSetupThread()
-        XCTAssertEqual(mine().count, 1, "a reload doesn't drop it")
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/which/answer"] = (200, #"{"session":"s1","run":"r1","status":"RUNNING"}"#)
+        await model.loadSetup()
+        let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
+        StubProtocol.sent = []
+        await model.answer(which, "live")
+        XCTAssertTrue(model.answered.contains("which"), "the card goes quiet at once")
+        XCTAssertFalse(model.setupThread.messages.contains { $0.from == .owner }, "no message in the old form")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/which/answer").last)["answer"] as? String, "live")
 
-        // tafs cloud has it: its copy, once.
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let at = iso.string(from: Date())
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
-        {"messages":[{"at":"\(at)","from":"owner","kind":"message","text":"[confirm which] live","session":"s1"}],"components":[],"working":null}
+        {"messages":[],"components":[{"at":"2026-10-17T10:00:00.000Z","session":"s1","run":"r1","seq":1,
+          "component":{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]},
+          "answer":{"state":"answered","words":"Live","at":"2026-10-17T10:00:05.000Z"}}],"working":null}
         """)
         await model.loadSetupThread()
-        XCTAssertEqual(mine().map(\.session), ["s1"], "tafs cloud's copy, not twice")
-        await model.loadSetupThread()
-        XCTAssertEqual(mine().count, 1)
-        stream.yield(.end(status: "COMPLETED", stop: "answered"))
-        stream.finish()
-        await model.setupStream?.value
+        XCTAssertEqual(model.setupThread.answer(to: "which")?.text, "live", "the card shows the choice")
         Keychain.delete(AppModel.planqueAccount)
     }
 

@@ -4814,29 +4814,70 @@ final class AppModel: ObservableObject {
         setupThread.messages.contains { $0.from == .owner && $0.at > at }
     }
 
-    /// The owner's answer to a component, as contract 1 says: "[<type> <id>] <answer>".
-    /// An earlier answer to it that wasn't sent goes: one answer per card.
+    /// The owner's answer to a card, as data (`POST …/components/{id}/answer`): tafs cloud has
+    /// kiff/agents check it against the card, and the run that waited goes on; the phone follows
+    /// it, as it does a message's. `text` is the answer as the card gives it ("live", "approved",
+    /// "failed: why", a questions card's JSON). A card that doesn't wait any more (409) is read
+    /// again; any other failure stays on the card, in the app's words.
     func answer(_ component: SetupComponent, _ text: String) async {
         setupUnsent.removeAll { SetupThread.Answer($0.text)?.id == component.id }
+        guard let s = setupTaf, let value = Self.answerValue(component.type, text) else { return }
         answered.insert(component.id)
         cardNotes[component.id] = nil
-        let line = "[\(component.type.rawValue) \(component.id)] \(text)"
-        // A message on its way: the answer waits for it, and the card says so (kiff/tafs#236,
-        // item 2). It used to be dropped without a word.
-        if setupSending {
-            setupAnswersWaiting.removeAll { SetupThread.Answer($0)?.id == component.id }
-            setupAnswersWaiting.append(line)
-            cardNotes[component.id] = "Sent once your last message has gone."
+        let session = setupThread.components.last { $0.component.id == component.id }?.session
+        let gen = accountGeneration
+        do {
+            let r = try await cloud.answerCard(s.id, component: component.id, answer: value, session: session)
+            guard gen == accountGeneration else { return }
+            settleSetupChat(r.session)
+            await followAnswered(s.id, run: r.run, gen: gen)
+        } catch let e as TafsCloud.CloudError where e.status == 409 {
+            guard gen == accountGeneration else { return }
+            answered.remove(component.id)
+            await loadSetupThread()
+        } catch {
+            guard gen == accountGeneration else { return }
+            answered.remove(component.id)
+            cardNotes[component.id] = "Your answer didn't reach Setup. Tap it again."
+        }
+    }
+
+    /// A card's answer as tafs cloud takes it, from the card's own form of it: a questions card's
+    /// answers as they were chosen; an approval "approved" (whatever followed it, "approved,
+    /// signed in"), "declined" or "failed: why"; a sign-in "signed in", "not now" or "failed:
+    /// why"; a confirm the option's value. None for an answer the card doesn't take.
+    nonisolated static func answerValue(_ type: SetupComponent.Kind, _ text: String) -> TafsCloud.CardAnswerValue? {
+        let failed = text.hasPrefix("failed:") ? text : nil
+        switch type {
+        case .confirm:
+            return text.isEmpty ? nil : .text(text)
+        case .questions:
+            guard let q = try? JSONDecoder().decode([String: TafsCloud.CardAnswerValue.QuestionAnswer].self, from: Data(text.utf8)) else { return nil }
+            return .questions(q)
+        case .approval:
+            if text == "approved" || text.hasPrefix("approved,") { return .text("approved") }
+            if text == "declined" { return .text("declined") }
+            return failed.map { .text($0) }
+        case .signIn:
+            if text == "signed in" || text == "not now" { return .text(text) }
+            return failed.map { .text($0) }
+        default:
+            return nil
+        }
+    }
+
+    /// Follows the run a card's answer let go on, as a message's stream is followed: its words
+    /// as it writes them, then the thread. A stream that can't open leaves it to the thread.
+    private func followAnswered(_ setupID: String, run: String, gen: Int) async {
+        setupAwaiting = clock()
+        guard let events = try? await cloud.resumeRun(setupID, run: run) else {
+            await loadSetupThread()
             return
         }
-        switch await deliverSetup(line) {
-        case .sent: break
-        // Kept in the thread as not sent, with why and Retry.
-        case .kept: answered.remove(component.id)
-        case .notTried:
-            answered.remove(component.id)
-            cardNotes[component.id] = "Your answer couldn't be sent. Tap it again."
-        }
+        guard gen == accountGeneration else { return }
+        setupLiveBefore = Set(setupThread.items.map(\.id))
+        setupLive = LiveAnswer(started: clock())
+        setupStream = Task { await self.followSetupStream(events, text: "", gen: gen) }
     }
 
     /// Answers to cards given while Setup was at work, sent in order once it's done.
