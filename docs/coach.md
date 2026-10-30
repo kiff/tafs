@@ -122,7 +122,10 @@ then shows its plan. Then, each step behind the owner's yes:
    submits a KIFF draft of the taf's Cards: what each tool may do, how much each time,
    how much a day. KIFF takes a Card only for a tool that is connected.
 3. **Approve the Card.** The owner reads the Card on its approval card and confirms it
-   with one Face ID, which signs exactly the draft version shown. An editor's draft
+   with one Face ID, which signs exactly the draft version shown. Each draft Card's lines
+   are KIFF's `lines` for it, as they come. For a KIFF that doesn't send them, the app words
+   them from the Card's terms and its `on_exceed`, with the same words as a taf's Card tab
+   ([tafs.md](tafs.md)): an `owner` Card says what asks the owner past each limit. An editor's draft
    waits for an admin to confirm it in KIFF.
 4. **Start the taf.** The result card hands over the taf. tafs cloud starts it as the
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents

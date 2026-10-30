@@ -60,7 +60,7 @@ class TafDetailTest {
 
   @Test fun theFaceNamesTheLimitForOneCallAndHowManyTools() {
     val card = TafCard.merged("c", "Refunds", refunds.rules, null)
-    assertEquals(listOf("≤ ${Money.usd(150.0).formatted} each · asks you above", "3 tools"), card.facts)
+    assertEquals(listOf("up to ${Money.usd(150.0).formatted} each; more asks you first", "3 tools"), card.facts)
   }
 
   @Test fun aTafWithoutKiffCardsDrawsItsLinesAsOneCard() {
