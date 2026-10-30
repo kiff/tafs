@@ -120,6 +120,11 @@ describe("Setup's definition on kiff/agents", () => {
     // as taps, and never an id asked of them.
     expect(SETUP_INSTRUCTIONS).toContain("In the owner's language: every message, and every component's title");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Concisely: say what you did and what the owner does next, first, then stop.");
+    // The first sentence leads: the outcome, what waits on the owner, or the question; what was
+    // checked comes after, if at all, with an example in the owner's language (Eval 41013084238).
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Every message's first sentence is the outcome, or what waits on the owner, or the question asked.");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("What you checked on the way comes after it, briefly, or not at all.");
+    expect(SETUP_INSTRUCTIONS).toContain("Falta que apruebes las herramientas de Reembolsos");
     expect(SETUP_INSTRUCTIONS).not.toMatch(/\d+ words/);
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
     expect(SETUP_INSTRUCTIONS).toContain("as a notice (tone info");
