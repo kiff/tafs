@@ -73,8 +73,11 @@ never reach the phone.
 | `end` | `{status, stop, done?}` | The run stopped. A failed run (`ERROR`) adds `done`: each call that acted and went through, as `{tool, resource?, invocation?}`, never its input (kiff/agents#249) |
 | `error` | `{error}` | The stream broke; the thread has the rest |
 
-What a step says comes from the tool's title as its connection gives it, never the
-tool's name in KIFF (`tafActivityWords`).
+What a step says comes from tafs cloud, never the tool's name (`steps.ts`): for a tool
+through KIFF, KIFF's title for it on the taf's Cards (`grants[].title`, read as the person
+and kept a minute); for Coach's and the agents' own tools, what they do ("Drafting the
+Card…", "Showing you a card…"). A tool nothing names has no words, and the app shows the
+step without them.
 
 ### The work block
 
@@ -85,12 +88,14 @@ the block.
 
 When the run ends, the thread is reloaded and the stored answer takes the live one's
 place. The block folds in place to "Worked for 12 s" (`WorkSummary`), which opens the
-steps again. On Android it says how long and how many steps, with how many failed
-("Worked 4.2 s · 3 steps, 1 failed", `Chat.workLine`), and opens to the steps in tafs
-cloud's words (`work.steps[].words`, `Chat.steps`). A step without words is left out, and a
-live step without `step` words has no line: a tool's id is never shown. tafs cloud puts a run's work on its first message: the time from the run's
-start to its last words, and the tools it called, in order, by name, with the ones that
-failed (`conversation`, from kiff/agents' usage records).
+steps again. tafs cloud puts a run's work on its first message: the time from the run's
+start to its last words, and the tools it called, in order, with the ones that failed
+(`conversation`, from kiff/agents' usage records). Each step is `{tool, words?, error?,
+not_made?}`: the app shows `words`, the same as the live step's without the "…", and never
+`tool`. On Android the block says how long and how many steps, with how many failed
+("Worked 4.2 s · 3 steps, 1 failed", `Chat.workLine`), and opens to the steps that have
+words (`Chat.steps`); a step without words is left out, and a live step without `step`
+words has no line.
 
 Tries of the same step after a failed one are one row, "3 tries", with the last try's
 outcome, and a failed step is left out once something worked (`WorkLog.rows`).
