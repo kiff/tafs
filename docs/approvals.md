@@ -92,6 +92,12 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
     can't approve until a new sign-in. **Sign in again** in Settings ends the session at
     KIFF first, the old approval key with it, then signs out; the next sign-in, approved
     in the browser, registers the new key as a new device.
+  - **said at launch, not after a tap** (Android): the app checks the key at start, with no
+    prompt (`ApprovalSigning.approvalKeyUsable`). When it's off, or KIFF holds another, the home
+    screen, Needs you and the approval cards say "Your fingerprints changed, or none was
+    recognized, so this phone can't approve until you sign in again", with **Sign in again**,
+    in place of a button that would fail; Refuse stays. A prompt closed without a recognized
+    finger says the same. The screen lock never approves, on either app.
 - KIFF holds both keys for the session: the current one from sign-in, the approval key
   registered once (`POST /v1/me/device/approval-key`). If KIFF holds an approval key
   that isn't this phone's, approving waits for a new sign-in.

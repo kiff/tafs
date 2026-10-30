@@ -177,7 +177,7 @@ class HaltTest {
     auth.confirms = false
     val m = model()
     assertFalse(m.resumeHalt("refunds-1"))
-    assertEquals("Not resumed: it wasn't confirmed.", m.state.value.lastError)
+    assertEquals(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, m.state.value.lastError)
     assertTrue(transport.requests.none { it.url.endsWith("/resume") || it.method == "DELETE" })
   }
 

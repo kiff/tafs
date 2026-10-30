@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
+import bot.tafs.app.app.Mode
 import bot.tafs.app.kiff.AgentDraft
 import bot.tafs.app.kiff.Version
 import bot.tafs.app.design.OutlineButton
@@ -61,6 +62,22 @@ val LocalAnswerPage = staticCompositionLocalOf<(HeldCall) -> String?> { { null }
 
 /** Opens Coach on a new conversation about a taf, by its id: for a hold over a total, to change the limit. Null where Coach isn't there. */
 val LocalImproveInCoach = staticCompositionLocalOf<((String) -> Unit)?> { null }
+
+/** Signs in again with KIFF, which registers a new approval key: where the phone can't approve, it's offered in place of a button that would fail. */
+val LocalSignInAgain = staticCompositionLocalOf<(() -> Unit)?> { null }
+
+/**
+ * The phone can't approve until a new sign-in (its approval key is gone, or KIFF holds another): said where the owner would
+ * approve, with Sign in again, before any tap. Refusing still works.
+ */
+@Composable
+fun ApprovalKeyLine(modifier: Modifier = Modifier) {
+  val signInAgain = LocalSignInAgain.current
+  Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Text(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, style = scaled(14, color = Theme.amberText))
+    signInAgain?.let { OutlineButton("Sign in again", it, Modifier.fillMaxWidth(), color = Theme.amberText) }
+  }
+}
 
 /**
  * Coach's held installs (kiff/tafs#206): approving one is installing its version. The switch begins, what's in the way stopped;
@@ -190,7 +207,10 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
         Text(NOTHING_SENT, style = scaled(14, color = Theme.soft))
         // They asked for it: someone else approves, and they can still refuse it.
         lasting?.let { code -> AnswerRefusals.refusalWords(code)?.let { Text(it, style = scaled(14, color = Theme.soft)) } }
-        Answers(call, state, refuseOnly = lasting != null, sending = sending, send = ::send, install = if (installs != null) ::install else null)
+        // No approval key KIFF holds: it says so before a tap, and only Refuse is offered.
+        val keyLost = state.mode == Mode.kiff && state.approvalKeyLost
+        if (keyLost) ApprovalKeyLine()
+        Answers(call, state, refuseOnly = lasting != null || keyLost, sending = sending, send = ::send, install = if (installs != null) ::install else null)
         // Why the install didn't go on: a run in the way, a Card that changed, a switch that didn't finish.
         if (call.install != null) installTaf(call, state)?.let { tafId -> state.versionErrors[tafId]?.let { Text(it, style = scaled(13, color = Theme.no)) } }
       }

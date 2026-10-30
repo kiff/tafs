@@ -246,6 +246,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
     (grant?.takeIf { it.needsReconnect }?.statusWords ?: c.title)?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
     when {
       answered != null -> Text(answered, style = scaled(13, FontWeight.Medium, Theme.dim))
+      state.approvalKeyLost -> ApprovalKeyLine()
       !state.planqueReady -> Text(CoachWords.NOT_CONNECTABLE, style = scaled(14, color = Theme.soft))
       grant == null -> Text("Reading what it asks for…", style = scaled(14, color = Theme.soft))
       else -> {
@@ -407,6 +408,11 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, ac
   val again = grant?.needsReconnect == true
   when {
     answered != null -> Text("Sign in at $vendor · $answered", style = scaled(14, FontWeight.Medium, Theme.dim))
+    // A sign-in starts with an approval, which this phone can't give until a new sign-in with KIFF.
+    state.approvalKeyLost -> Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
+      Text("Sign in at $vendor", style = scaled(15, FontWeight.SemiBold, Theme.ink))
+      ApprovalKeyLine()
+    }
     else -> {
       val busy = state.connecting != null
       val waiting = c.grant != null && state.connecting == c.grant

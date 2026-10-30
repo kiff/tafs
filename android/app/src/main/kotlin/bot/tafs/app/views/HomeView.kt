@@ -110,6 +110,8 @@ fun HomeView(
           Header(state.accountLabel, showNew = sample, showCoach = state.mayUseCoach, onSettings, onNewTaf, onCoach)
           // KIFF can't be reached just now: said quietly, under the account's name.
           state.unreachable?.let { UnreachableLine(it, state.retryingRefresh) }
+          // The phone can't approve until a new sign-in: one calm line, said at launch rather than after a tap.
+          if (state.mode == Mode.kiff && state.approvalKeyLost) ApprovalKeyLine(Modifier.padding(top = 4.dp))
         }
       }
       if (sample) {
