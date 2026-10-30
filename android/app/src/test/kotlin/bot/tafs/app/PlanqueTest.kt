@@ -351,12 +351,52 @@ class PlanqueTest {
     assertEquals(1, transport.requestsTo(approve).size)
   }
 
+  private val twoTafs =
+    """{"tafs":[{"id":"taf_2","name":"Bills","kiff_agent":"bills-1","color":2,"state":"idle","card":{"ids":["c2"],"active":true}},
+        {"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}"""
+
+  @Test fun aTafWhoseConnectionItsVendorSignedOutWaitsOnTheOwnerInPlanquesWords() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, twoTafs)
+    transport.answer(grants, 200, """{"grants":[${grant(status = "needs_reconnect", extra = ""","status_words":"Signed out by Stripe · sign in again"""")}]}""")
+    val m = model()
+    m.refresh()
+    // Read on the refresh itself, with no Coach and no taf page open.
+    assertEquals("refunds-1", m.state.value.signedOut("refunds-1")?.request?.agent)
+    assertEquals(setOf("refunds-1"), m.state.value.waitingOnOwner)
+    // It goes to the top, as a held call does, and its row reads planque's words.
+    assertEquals("refunds-1", m.state.value.listedTafs.first().id)
+    assertEquals("Signed out by Stripe · sign in again", bot.tafs.app.model.ConnectionWords.signedOut(m.state.value.signedOut("refunds-1")!!))
+    // It's still the taf's connection on its page, to sign in again.
+    assertEquals(listOf("g1"), m.state.value.connections("refunds-1").map { it.id })
+  }
+
+  @Test fun aSignedOutConnectionWithNoWordsYetSaysSoInTheAppsWords() {
+    val g = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant(status = "needs_reconnect"))
+    assertEquals("Signed out by mcp.stripe.com · sign in again", bot.tafs.app.model.ConnectionWords.signedOut(g))
+  }
+
+  @Test fun anyLiveUpdateReadsPlanquesGrantsAgain() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, twoTafs)
+    transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
+    val m = model()
+    m.refresh()
+    transport.answer(grants, 200, """{"grants":[${grant(status = "needs_reconnect")}]}""")
+    val before = transport.requestsTo(grants).size
+    m.readChange("knock", "taf_1")
+    assertEquals(before + 1, transport.requestsTo(grants).size)
+    assertEquals(setOf("refunds-1"), m.state.value.waitingOnOwner)
+  }
+
   @Test fun aPhonePlanqueDoesNotKnowCannotApproveAndSaysWhereToStart() = runTest {
     reads()
     val m = model()
+    val before = transport.requests.count { it.url.contains("planque") }
     val result = m.connect("a1", "g1", digest)
     assertTrue(result is AppModel.Connected.Failed && result.why.contains("Start from tafs on an iPhone"))
-    assertTrue(transport.requests.none { it.url.contains("planque") })
+    // The approval asks planque nothing: only the refresh read its grants.
+    assertEquals(before, transport.requests.count { it.url.contains("planque") })
   }
 
   private val draft = """{"id":"dr_1","agent_id":"refunds-1","status":"draft","version":"v3","cards":[{"grants":[{"action":"create_refund_repg","title":"Refund a payment"}]}]}"""

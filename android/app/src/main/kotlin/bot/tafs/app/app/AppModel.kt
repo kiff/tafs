@@ -343,7 +343,13 @@ data class AppState(
    * A taf's connections: the grants made for its KIFF agent that are connected, or whose sign-in planque holds while Coach chooses
    * the tools, so the owner can see and end them.
    */
-  fun connections(tafId: String): List<Grant> = grants.filter { it.request.agent == tafId && (it.connected || it.holdsSignIn) }
+  fun connections(tafId: String): List<Grant> = grants.filter { it.request.agent == tafId && (it.connected || it.holdsSignIn || it.needsReconnect) }
+
+  /**
+   * The taf's connection its vendor signed out, if one is: the taf can't use those tools until the owner signs in again, so it
+   * waits on the owner in the list, in planque's words.
+   */
+  fun signedOut(tafId: String): Grant? = grants.firstOrNull { it.request.agent == tafId && it.needsReconnect }
 
   /** The Card draft a switch to [version] waits for: the one tafs cloud prepared when it began, else the version's own. */
   fun switchDraft(version: Version, tafId: String): String? {
@@ -452,12 +458,16 @@ data class AppState(
    * latest call, or the latest message in its chat), so the taf the owner just worked with is at the top.
    * Tafs with nothing yet keep tafs cloud's order, after the rest.
    */
+  /** The tafs waiting on the owner: a call held for an answer, or a connection to sign in to again. */
+  val waitingOnOwner: Set<String>
+    get() = held.map { it.tafId }.toSet() + tafs.filter { signedOut(it.id) != null }.map { it.id }
+
   val listedTafs: List<Taf>
     get() {
       val latest = mutableMapOf<String, Instant>()
       for (e in record) latest[e.tafId] = maxOf(latest[e.tafId] ?: Instant.MIN, e.at)
       for ((id, messages) in chats) messages.lastOrNull()?.at?.let { latest[id] = maxOf(latest[id] ?: Instant.MIN, it) }
-      val waiting = held.map { it.tafId }.toSet()
+      val waiting = waitingOnOwner
       return tafs.withIndex().sortedWith(
         compareByDescending<IndexedValue<Taf>> { it.value.id in waiting }
           .thenByDescending { latest[it.value.id] ?: Instant.MIN }
@@ -782,6 +792,8 @@ class AppModel(
       retrying = null
       _state.update { it.copy(unreachable = null, retryingRefresh = false) }
       show(read)
+      // planque's grants too, after the list: a taf whose connection its vendor signed out waits on the owner there.
+      refreshConnections()
       // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
       if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
       nameRecordLines(generation)
@@ -1550,13 +1562,27 @@ class AppModel(
     viewModelScope.launch { readChange(change, cloudId) }
   }
 
+  /**
+   * Signs in again to a connection its vendor signed out, from the taf's page: the same approval as Coach's card, behind one
+   * fingerprint, then the vendor's own page. Signed in only once planque answers connected.
+   */
+  suspend fun reconnect(grant: Grant) {
+    val result = connect(grant.id, grant.id, grant.digest)
+    if (result is Connected.Failed) note(grant.id, result.why)
+  }
+
   /** Reads again what a live update names (see [changed]). */
   suspend fun readChange(change: String, cloudId: String?) {
     if (_state.value.mode != Mode.kiff) return
     val tafId = cloudId?.let { id -> _state.value.tafs.firstOrNull { it.cloudId == id }?.id }
     when (change) {
       "taf", "halted", "resumed" -> refresh()
-      "knock" -> tafId?.let { loadDoors(it) }
+      "knock" -> {
+        tafId?.let { loadDoors(it) }
+        // Every push reads planque's grants too (a refresh does): tafs cloud never sees them, so a connection its vendor signed
+        // out shows after the next push, whatever it named.
+        refreshConnections()
+      }
     }
     if ((change == "taf" || change == "knock") && tafId != null && tafId in _state.value.chats) readThread(tafId)
   }

@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import bot.tafs.app.design.OutlineButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,6 +34,8 @@ import kotlinx.coroutines.launch
 class ConnectionActions(
   val refresh: suspend () -> Unit,
   val disconnect: suspend (String) -> Boolean,
+  /** Signs in again to a connection its vendor signed out: one approval, then the vendor's page. */
+  val reconnect: suspend (Grant) -> Unit = {},
 )
 
 /**
@@ -54,6 +58,16 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
         val tools = ConnectionWords.tools(grant)
         if (tools.isNotEmpty()) Text(tools, style = scaled(13, color = Theme.soft))
         ConnectionWords.lastEvent(grant)?.let { Text(it, style = scaled(12, color = Theme.dim)) }
+        if (grant.needsReconnect) {
+          val busy = state.connecting != null
+          OutlineButton(
+            if (state.connecting == grant.id) state.connectStep ?: "Opening the sign-in…" else "Sign in again",
+            { scope.launch { actions.reconnect(grant) } },
+            Modifier.fillMaxWidth(),
+            enabled = !busy,
+          )
+          state.coachNotes[grant.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+        }
         Text(
           "Disconnect",
           style = scaled(14, FontWeight.Medium, Theme.no),
