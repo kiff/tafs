@@ -41,7 +41,9 @@ A request is one piece of work for a taf, from one source:
 - `dedup_key` is the door's message id, or the firing's key. A second request with the same
   key is the same request: it's accepted once and starts nothing new.
 - A request is stored before it runs. If kiff/agents can't store it, the door or the
-  schedule is told so and tries again. It isn't dropped.
+  schedule is told so and tries again. It isn't dropped. A door message is tafs cloud's until
+  `startRun` takes it: one that didn't start isn't marked seen, so the provider's retry
+  starts it.
 
 ### Its states
 
@@ -64,9 +66,11 @@ paused, cancelled: from any state but done
 ## A crash
 
 Today a run whose Lambda stopped is marked failed after a few minutes. Instead:
-- A working run holds a **lease** and renews it while it works.
-- A run whose lease ran out is picked up again and continues from its **last safe step**: the
-  last step whose outcome kiff/agents recorded.
+- A working run holds a **lease** that ends a minute after its invocation's deadline. A Lambda
+  can't outlive its deadline, so the lease ends when the worker does.
+- Before a turn's write calls go out, the run stores that turn. That's its **last safe step**.
+  Read-only turns aren't stored.
+- A run whose lease ran out is picked up again from its last safe step.
 - Picking a run up again counts as one of its tries. Past the last try it's `needs_you`.
 
 ## Never twice
@@ -75,9 +79,11 @@ Each step that acts sends KIFF an **operation id** made from the request's id an
 It's the same every time that step is tried, after a crash too, never a new one. So:
 - a step that had already gone through gets its first outcome back from KIFF, and nothing is
   done again;
-- a step whose outcome is unknown is checked with the tool's status lookup before anything is
-  sent again;
-- a step that hadn't gone through goes through once.
+- a step KIFF never sent goes through once;
+- a step whose outcome is **unknown** is never sent again on its own. kiff/agents asks KIFF to
+  reconcile it (`POST /v1/operations/{key}/reconcile`), and KIFF asks the tool's own read-only
+  status lookup, for tools that have one. Proven to have had no effect, the step may go once
+  more, with a new id. Otherwise it's `needs_you`, in KIFF's words.
 
 ## One at a time per thread
 
