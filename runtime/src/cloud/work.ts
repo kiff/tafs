@@ -1,4 +1,4 @@
-import type { Run } from "./agents.js";
+import type { Fired, Run } from "./agents.js";
 import type { Sent } from "./doors/model.js";
 
 /**
@@ -29,6 +29,37 @@ export interface RequestView {
   line: string;
   /** Where its result went, as far as tafs cloud sent it. */
   deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true }>;
+}
+
+/** A firing its schedule skipped, as the taf's page shows it: not a failure, nothing was run. */
+export interface SkippedView {
+  due: string;
+  why: "missed" | "busy";
+  words: string;
+}
+
+/** How many skipped firings the page shows, newest first, and from how far back. */
+const SKIPPED_SHOWN = 5;
+const SKIPPED_DAYS = 7;
+
+/**
+ * The firings the taf's schedule skipped lately, in words: one that came too
+ * late, or while its last run was still working.
+ */
+export function skippedOf(fired: Fired[], zone: string, now: Date): SkippedView[] {
+  const since = now.getTime() - SKIPPED_DAYS * 86_400_000;
+  return fired
+    .filter((f) => (f.outcome === "skipped_missed" || f.outcome === "skipped_busy") && new Date(f.due).getTime() >= since)
+    .slice(0, SKIPPED_SHOWN)
+    .map((f) => {
+      const busy = f.outcome === "skipped_busy";
+      const when = timeIn(f.due, zone, now);
+      return {
+        due: new Date(f.due).toISOString(),
+        why: busy ? "busy" : "missed",
+        words: busy ? `Skipped the ${when} run: the last one was still working` : `Skipped the ${when} run: it came too late to run`,
+      };
+    });
 }
 
 /** A needs_you older than this no longer counts on the list: it stays on the taf's page. */

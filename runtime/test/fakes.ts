@@ -1,4 +1,4 @@
-import { AgentsError, type AIBound, type AttachmentRef, type Notify, type AgentDefinition, type AgentVersion, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AIBound, type AttachmentRef, type Notify, type AgentDefinition, type AgentVersion, type Fired, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
 import type { CoachStore } from "../src/cloud/coach.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
@@ -111,6 +111,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     return r;
   };
 
+  /** Each schedule's firings, newest first, as kiff/agents keeps them. */
+  const firings = new Map<string, Fired[]>();
   /** Each agent's versions (kiff/tafs#107), and each trial's writes, by run. */
   const versions = new Map<string, AgentVersion[]>();
   const trialWrites = new Map<string, TrialWrite[]>();
@@ -542,6 +544,10 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!schedules.has(k(tenant, id))) throw gone();
       return runs.filter((r) => r.tenant === tenant && r.source === id).slice(0, limit);
     },
+    async scheduleFirings(tenant, id, limit = 20) {
+      if (!schedules.has(k(tenant, id))) throw gone();
+      return (firings.get(k(tenant, id)) ?? []).slice(0, limit);
+    },
   };
 
   /** What the agent said in a run, as kiff/agents records it: a job run's last answer is its report. */
@@ -568,7 +574,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

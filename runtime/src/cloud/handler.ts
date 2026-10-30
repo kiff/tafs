@@ -11,7 +11,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { summaryOf, workOf } from "./work.js";
+import { skippedOf, summaryOf, workOf } from "./work.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { stepWords, Steps, type ToolTitles } from "./steps.js";
@@ -114,7 +114,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -514,15 +514,17 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "GET" && action === "work") {
     // Where its work stands, for its page (docs/reliability.md): every line and time written here.
     const now = deps.now?.() ?? new Date();
-    const [runs, v, sent] = await Promise.all([
+    const [runs, v, sent, fired] = await Promise.all([
       agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
       view(taf, me, deps),
       deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
+      // A taf with no schedule, or a kiff/agents without the history, has no skipped firings to show.
+      taf.unscheduled ? Promise.resolve([]) : deps.agents.scheduleFirings(me.tenantID, taf.id, 20).catch(() => []),
     ]);
     const zone = me.timeZone ?? "UTC";
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again) };
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again), skipped: skippedOf(fired, zone, now) };
   }
   if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
     // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
