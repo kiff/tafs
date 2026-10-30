@@ -115,9 +115,21 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
     in place of a button that would fail; Refuse stays. A prompt closed without a recognized
     finger, while the key is still good, says "Try again, or sign in again if your fingerprints
     changed". The screen lock never approves, on either app.
+  - **Approve again in your browser** (Android, `AppModel.relink`): where KIFF can re-link the
+    phone, the line says "…so this phone can't approve until you approve it again in your
+    browser", with that button and **Sign in again instead** under it. Its new approval key
+    (already made when the old one was turned off) proves itself first, behind one fingerprint,
+    and the device key signs the request, `POST /v1/me/device/relink`. The phone then shows KIFF's
+    code ("approve only with this phone in your hands") with **Open KIFF to approve** and Cancel,
+    and polls `device/token` until `relinked`. It counts only if KIFF's fingerprint is the new
+    key's and the key still signs. The session, its alerts and its list stay; nothing is signed
+    in anew. A code that expires, or isn't approved, leaves the phone as it was and says so; a
+    KIFF without the route (404) leaves **Sign in again**. A phone with no fingerprint is told to
+    add one, and no browser opens. iOS does the same.
 - KIFF holds both keys for the session: the current one from sign-in, the approval key
-  registered once (`POST /v1/me/device/approval-key`). If KIFF holds an approval key
-  that isn't this phone's, approving waits for a new sign-in.
+  registered once (`POST /v1/me/device/approval-key`), or replaced by a re-link the owner
+  approved in the browser. If KIFF holds an approval key that isn't this phone's, approving
+  waits for Approve again or a new sign-in.
 - A held call is answered on the phone only when KIFF checks the phone's signature on it:
   the session holds the phone's key, and the hold says which version the owner saw
   (`canAnswer`). Otherwise the card links to answering it in KIFF.

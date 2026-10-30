@@ -25,6 +25,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import bot.tafs.app.app.Relink
+import bot.tafs.app.design.Eyebrow
 import androidx.compose.ui.platform.LocalUriHandler
 import bot.tafs.app.design.LocalBiometry
 import bot.tafs.app.kiff.AnswerRefusals
@@ -67,17 +75,69 @@ val LocalImproveInCoach = staticCompositionLocalOf<((String) -> Unit)?> { null }
 val LocalSignInAgain = staticCompositionLocalOf<(() -> Unit)?> { null }
 
 /**
- * The phone can't approve until a new sign-in (its approval key is gone, or KIFF holds another): said where the owner would
- * approve, with Sign in again, before any tap. Refusing still works.
+ * Approve again in your browser, where KIFF can re-link this phone: what it's waiting for, and its actions. Null where it isn't
+ * offered (the sample, previews, a KIFF without it), which leaves Sign in again.
+ */
+class ApproveAgain(
+  val relink: Relink?,
+  val problem: String?,
+  val start: () -> Unit,
+  val cancel: () -> Unit,
+  /** The app came back from the browser: KIFF is asked again at once. */
+  val nudge: () -> Unit,
+)
+
+val LocalApproveAgain = compositionLocalOf<ApproveAgain?> { null }
+
+/**
+ * The phone can't approve (its approval key is gone, or KIFF holds another): said where the owner would approve, before any
+ * tap, with Approve again in your browser where KIFF can re-link it, else Sign in again. Refusing still works.
  */
 @Composable
 fun ApprovalKeyLine(modifier: Modifier = Modifier) {
   val signInAgain = LocalSignInAgain.current
+  val again = LocalApproveAgain.current
   Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    Text(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, style = scaled(14, color = Theme.amberText))
-    signInAgain?.let { OutlineButton("Sign in again", it, Modifier.fillMaxWidth(), color = Theme.amberText) }
+    if (again == null) {
+      Text(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, style = scaled(14, color = Theme.amberText))
+      signInAgain?.let { OutlineButton("Sign in again", it, Modifier.fillMaxWidth(), color = Theme.amberText) }
+      return@Column
+    }
+    Text(bot.tafs.app.signing.ApprovalKeyRenewed.APPROVE_AGAIN_WORDS, style = scaled(14, color = Theme.amberText))
+    val relink = again.relink
+    if (relink == null) {
+      OutlineButton(APPROVE_AGAIN, again.start, Modifier.fillMaxWidth(), color = Theme.amberText)
+      // The way that always works: a new sign-in, which ends this session first.
+      signInAgain?.let {
+        Text(
+          "Sign in again instead",
+          style = scaled(13, FontWeight.SemiBold, Theme.dim),
+          modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = it).padding(vertical = 12.dp),
+        )
+      }
+    } else {
+      val uri = LocalUriHandler.current
+      // Back from approving in the browser: ask KIFF at once.
+      LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { again.nudge() }
+      Panel(stroke = Theme.amber.copy(alpha = 0.4f)) {
+        Eyebrow("Your code")
+        SelectionContainer { Text(relink.userCode, style = scaled(28, FontWeight.SemiBold, Theme.ink, mono = true)) }
+        Text("Check that KIFF shows the same code, and approve only with this phone in your hands.", style = scaled(13, color = Theme.dim))
+      }
+      PrimaryButton("Open KIFF to approve", { uri.openUri(relink.link) })
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        CircularProgressIndicator(Modifier.size(18.dp), color = Theme.amber, strokeWidth = 2.dp)
+        Text(WAITING_FOR_BROWSER, style = scaled(14, color = Theme.soft), modifier = Modifier.weight(1f))
+        // A 44 dp target, its word level with the line beside it.
+        Text("Cancel", style = scaled(14, FontWeight.SemiBold, Theme.amber), modifier = Modifier.clickable(onClick = again.cancel).padding(horizontal = 4.dp, vertical = 12.dp))
+      }
+    }
+    again.problem?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
+
+const val APPROVE_AGAIN = "Approve again in your browser"
+const val WAITING_FOR_BROWSER = "Waiting for your browser…"
 
 /**
  * Coach's held installs (kiff/tafs#206): approving one is installing its version. The switch begins, what's in the way stopped;
