@@ -82,9 +82,16 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
     saved with the key) differs. Only two known values that differ count, so a lockout after
     a few misses, or a face not available, leaves a good key alone. It then makes a new key
     and says so on the home screen and in Needs you: "Your Face ID or fingerprints changed,
-    or weren't recognized, so this phone can't approve until you sign in again", with
-    **Sign in again**, in place of Approve; Refuse stays. KIFF holds the old key for the
-    session, so the new one counts after the next sign-in. A prompt closed unrecognized,
+    or weren't recognized, so this phone can't approve until you approve it again in your
+    browser", with **Approve again in your browser**, in place of Approve; Refuse stays.
+  - **re-linking, with no sign-out** (`AppModel.startRelink`): the new key signs KIFF's
+    `kiff.approval-key-relink.v1` message (the account, the SHA-256 of the device key and of
+    the new key, the time) under Face ID or Touch ID, and the device key signs
+    `POST /v1/me/device/relink`. The phone shows the code and opens KIFF's page, where the
+    person approves it, only with the phone in hand. It polls `device/token` until
+    `{"status":"relinked"}`, then approves with the new key. The session, its alerts and its
+    list stay. "Waiting for your browser…" has **Cancel**. A KIFF without re-link (404) says to
+    sign in again from Settings, and **Sign in again instead** stays under the line. A prompt closed unrecognized,
     while the key is still good, says "Try again, or sign in again if your Face ID or
     fingerprints changed".
   - the approval key is kept under `tafs.approval-key.v2`. The first key, under

@@ -7,6 +7,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, approve again without signing out:** after a face or fingerprint is added,
+  **Approve again in your browser** lets the phone approve with its new key once the person
+  approves it in KIFF, showing the same code on the phone and the page. The session, alerts and
+  list stay. Sign in again remains the fallback.
 - **iPhone and iPad, approvals by Face ID or Touch ID only:** what grants authority (Approve,
   Extra room, a Card, a trial, Resume, sharing, connecting a tool) takes Face ID or Touch ID,
   never the passcode, and the approval key itself requires the faces or fingerprints enrolled
