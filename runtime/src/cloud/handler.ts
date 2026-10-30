@@ -1460,7 +1460,7 @@ export interface CardAnswer {
 
 export interface ThreadMessage {
   /**
-   * The message's stable id (#1425 item 5): a run's first owner message is `<run>.in`, which is what
+   * The message's stable id: a run's first owner message is `<run>.in`, which is what
    * `POST …/messages` answers for the message it sent; every other is `<run>.<seq>`.
    */
   id: string;
@@ -1597,7 +1597,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         continue;
       }
       if (e.kind === "tool_result") {
-        // A call KIFF held, where it was held (#1425 item 4): the app reads the call itself from KIFF.
+        // A call KIFF held, where it was held: the app reads the call itself from KIFF.
         const b = (e.body ?? {}) as { state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
         if (b.state === "held" && typeof b.hold?.exception === "string" && b.hold.exception) {
           held.push({ at: iso(e.time), session: r.session.id, run: e.run, exception: b.hold.exception, ...(typeof b.invocation === "string" ? { invocation: b.invocation } : {}) });
@@ -1666,11 +1666,11 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), sessions: picked };
 }
 
-/** One entry of the thread in order (#1425 item 3): a message, or a card at its place. */
+/** One entry of the thread in order: a message, or a card at its place. */
 export type ThreadItem = { type: "message"; message: ThreadMessage } | { type: "card"; card: ThreadComponent } | { type: "held"; held: ThreadHeld };
 
 /**
- * A call KIFF held for the owner, at its place in the thread (#1425 item 4): only KIFF's keys for
+ * A call KIFF held for the owner, at its place in the thread: only KIFF's keys for
  * it. The app reads the call itself, its words and its answer, from KIFF with the person's session.
  */
 export interface ThreadHeld {
@@ -1683,14 +1683,15 @@ export interface ThreadHeld {
 
 /**
  * The thread as one ordered list, so neither app places or folds anything: messages and cards by
- * time, a card shown again (the same id in the same run) replacing its earlier version in place, at
+ * time, a card shown again (the same id in the same chat) replacing its earlier version in place, at
  * the time it first appeared.
  */
 export function threadItems(messages: ThreadMessage[], components: ThreadComponent[], held: ThreadHeld[] = []): ThreadItem[] {
   const cards = new Map<string, ThreadComponent & { first: string }>();
   for (const c of components) {
     const id = String((c.component as { id?: unknown })?.id ?? "");
-    const key = `${c.run}#${id}`;
+    // The same card shown again in the chat replaces it, in a later run of the chat too.
+    const key = `${c.session}#${id}`;
     const seen = cards.get(key);
     cards.set(key, { ...c, first: seen?.first ?? c.at });
   }
@@ -3228,7 +3229,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
-  // The limits the apps check before sending (#1425 item 9): tafs cloud's, never a copy on the phone.
+  // The limits the apps check before sending: tafs cloud's, never a copy on the phone.
   const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
   return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}) };
 }

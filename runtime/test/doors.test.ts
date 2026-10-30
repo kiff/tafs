@@ -522,6 +522,55 @@ describe("the email door", () => {
     expect((await send(w, "POST", path, { token: "ana" })).status).toBe(404);
   });
 
+  it("the app hears a reply went out only once it did, and that it wasn't sent once it's given up on", async () => {
+    const w = world();
+    await emailDoor(w);
+    await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["door_reply", "app"] } });
+    const run = await beaRun(w);
+    w.pushed.length = 0;
+    const sendEmail = w.config.email!.send;
+    let down = 1;
+    w.config.email!.send = async (e) => { if (down-- > 0) throw Object.assign(new Error("down"), { status: 503 }); return sendEmail(e); };
+    await finish(w, run, "Refunded.");
+    // The reply waits for its retry: no alert says it was answered.
+    expect(w.pushed).toEqual([]);
+    w.at(new Date(NOW.getTime() + 5 * 60_000));
+    await sweepReplies(depsOf(w));
+    expect(w.pushed.map((p) => (p.payload.aps as { alert: { body: string } }).alert.body)).toEqual(["Answered Bea Ruiz through its email door."]);
+  });
+
+  it("a reply given up on tells the app it wasn't sent", async () => {
+    const w = world();
+    await emailDoor(w);
+    await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["door_reply", "app"] } });
+    const run = await beaRun(w);
+    w.pushed.length = 0;
+    w.config.email!.send = async () => { throw Object.assign(new Error("down"), { status: 503 }); };
+    await finish(w, run, "Refunded.");
+    let at = NOW.getTime();
+    for (const wait of [5, 20, 60]) { at += wait * 60_000; w.at(new Date(at)); await sweepReplies(depsOf(w)); }
+    expect(w.pushed.map((p) => (p.payload.aps as { alert: { body: string } }).alert.body)).toEqual(["Your reply to Bea Ruiz wasn't sent. You can send it again from Refunds."]);
+  });
+
+  it("Send again keeps the reply when sending it fails, so the next tap can", async () => {
+    const w = world();
+    await emailDoor(w);
+    await emailHook(w, mail(w, {}));
+    const run = w.agents.runs[0]!;
+    w.config.email!.send = async () => { throw Object.assign(new Error("down"), { status: 503 }); };
+    await finish(w, run, "Refunded.");
+    let at = NOW.getTime();
+    for (const wait of [5, 20, 60]) { at += wait * 60_000; w.at(new Date(at)); await sweepReplies(depsOf(w)); }
+    const path = `/v1/tafs/${REFUNDS}/requests/${run.id}/deliveries/door_reply/send`;
+    // kiff/agents can't be read: the reply isn't lost.
+    const getRun = w.agents.api.getRun;
+    w.agents.api.getRun = async () => { throw Object.assign(new Error("kiff/agents is down"), { status: 502 }); };
+    expect((await send(w, "POST", path, { token: "ana" })).status).toBeGreaterThanOrEqual(500);
+    w.agents.api.getRun = getRun;
+    w.config.email!.send = async () => undefined;
+    expect((await send(w, "POST", path, { token: "ana" })).status).toBe(200);
+  });
+
   it("only someone who manages the taf sets where its results go, to known places", async () => {
     const w = world();
     expect((await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "viewer", body: { places: ["app"] } })).status).toBe(403);
@@ -774,7 +823,7 @@ describe("knocks and keys", () => {
     const home = await send(w, "GET", "/v1/home", { token: "ana" });
     expect(home.status).toBe(200);
     expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", label: "Email", open: true, resting: false, knocks: 1 }]);
-    // Knocks name their door, and the list says the limits the apps check (#1425 items 9, 11).
+    // Knocks name their door, and the list says the limits the apps check.
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0]).toMatchObject({ app: "email", label: "Email" });
     expect(home.body.limits).toEqual({ text: 2000, trial_idle_days: 7 });
   });

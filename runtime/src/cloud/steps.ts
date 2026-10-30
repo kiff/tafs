@@ -55,6 +55,8 @@ export class Steps {
     switch (tool) {
       case "show":
         return "Showing you a card…";
+      case "taf_results":
+        return "Setting where its results go…";
       case "memory":
         return "Going through its notes…";
       case "workspace":

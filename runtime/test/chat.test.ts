@@ -355,7 +355,7 @@ describe("messages", () => {
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "And order 9?" } });
     expect(r.body).toMatchObject({ session: chat.session, new_session: false });
     expect(w.agents.runs[0]!.requester).toEqual(ANA.requester);
-    // The sent message's id is the one the thread gives it (#1425 item 5).
+    // The sent message's id is the one the thread gives it.
     expect(r.body.message).toEqual({ id: `${r.body.run}.in`, at: expect.any(String) });
     const thread = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
     expect(thread.body.messages.map((m: { id: string }) => m.id)).toContain(r.body.message.id);

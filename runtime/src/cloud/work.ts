@@ -88,7 +88,7 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
 /** A taf's status and line on the list, from its recent runs, newest first. */
 export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now: Date): WorkSummary {
   const { paused = false, halted = false, unscheduled = false, next = null } = typeof how === "boolean" ? { paused: how } : how;
-  // Halted stops everything, its holds included: that comes first (#1425 item 10).
+  // Halted stops everything, its holds included: that comes first.
   if (halted) return { status: "halted", line: "Halted · resume it from Halt", needs_you: 0 };
   const recent = runs.filter((r) => now.getTime() - Date.parse(r.updated) < NEEDS_YOU_DAYS * 86_400_000);
   const needs = recent.filter((r) => r.state === "needs_you" || (r.status === "PAUSED" && r.requirements?.some((q) => q.exception && !q.answered)));

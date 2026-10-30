@@ -363,7 +363,9 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
       await stamp(out.sent);
       done.add(place);
     } else if (place === "app") {
-      // An alert says only that it was answered, never the taf's words; a phone that's off misses only the alert.
+      // The alert says what happened, never the taf's words: only once the door's reply went out. While
+      // that reply waits for its next try the alert waits with it, and one given up on is said below.
+      if (taf && placesOf(taf).includes("door_reply") && !done.has("door_reply")) continue;
       if (taf) await tellOwner(ctx, tenant, taf, `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`, "reply");
       done.add(place);
     } else if (place === "owner_email") {
@@ -401,6 +403,9 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
   // Given up on: the chat says the door's reply wasn't sent, and it's kept for Send again.
   if (sent && !done.has("door_reply")) {
     await stamp(sent);
+    if (taf && placesOf(taf).includes("app") && !done.has("app")) {
+      await tellOwner(ctx, tenant, taf, `Your reply to ${reply.name || reply.to} wasn't sent. You can send it again from ${taf.name}.`, `reply-${ref}`, "reply");
+    }
     if (taf && door && app) {
       await store.put(doorKeys.unsent(tenant, reply.taf, runID), { ref, reply: { ...reply, run: runID } }, addDays(ctx.now, DOOR.replyDays));
     }
@@ -424,16 +429,28 @@ export async function sendAgain(ctx: DoorsContext, tenant: string, taf: string, 
   const key = doorKeys.unsent(tenant, taf, run);
   const kept = (await store.get(key)) as { ref: string; reply: Reply } | undefined;
   if (!kept) throw new DoorError(404, "this request has no reply waiting to be sent again");
+  const record = await ctx.tafs.get(tenant, taf);
+  if (record && !placesOf(record).includes("door_reply")) throw new DoorError(409, "this taf no longer answers through its door: set it to again first");
   // Claimed first, so two taps send it once.
-  if (!(await store.create(doorKeys.sending(tenant, `again#${taf}#${run}`), 1, new Date(ctx.now.getTime() + 10 * 60_000)))) {
+  const claim = doorKeys.sending(tenant, `again#${taf}#${run}`);
+  if (!(await store.create(claim, 1, new Date(ctx.now.getTime() + 10 * 60_000)))) {
     throw new DoorError(409, "this reply is being sent already");
   }
-  await store.remove(key);
   const ref = `${kept.ref}~again${ctx.now.getTime().toString(36)}`;
   const { tries: _t, next_at: _n, done: _d, ...reply } = kept.reply;
-  await store.put(doorKeys.reply(tenant, ref), { ...reply, done: ["app", "owner_email"] }, addDays(ctx.now, DOOR.replyDays));
-  await settle(ctx, tenant, ref, run, taf);
-  await store.remove(doorKeys.sending(tenant, `again#${taf}#${run}`));
+  const again = doorKeys.reply(tenant, ref);
+  await store.put(again, { ...reply, done: ["app", "owner_email"] }, addDays(ctx.now, DOOR.replyDays));
+  try {
+    await settle(ctx, tenant, ref, run, taf);
+  } catch (err) {
+    // Not sent: the kept reply stays for the next tap, and the try made for this one goes.
+    await store.remove(again).catch(() => undefined);
+    await store.remove(claim).catch(() => undefined);
+    throw err;
+  }
+  // Sent, or waiting for its retry with the sweep: either way it's no longer one to send again.
+  await store.remove(key);
+  await store.remove(claim);
   const left = (await store.get(doorKeys.reply(tenant, ref))) as Reply | undefined;
   if (left) return { state: "waiting" };
   const last = (await sentOf(store, tenant, taf)).find((s) => s.run === run);

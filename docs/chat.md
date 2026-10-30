@@ -249,7 +249,7 @@ line becomes the message's "Worked … · N steps".
 
 The thread also comes as one ordered list, `items` (`threadItems` in `handler.ts`). Each entry
 is `{type: "message", message}` or `{type: "card", card}`, by time. A card shown again (the same id
-in the same run) replaces its earlier version where it first appeared. A call KIFF held is
+in the same chat, in any run of it) replaces its earlier version where it first appeared. A call KIFF held is
 `{type: "held", held: {exception, invocation?, run, session, at}}`, at the point it was held: only
 KIFF's keys, and the app reads the call itself from KIFF. An app draws `items` as
 they come, and places or folds nothing itself. `messages` and `components` stay, for apps from
