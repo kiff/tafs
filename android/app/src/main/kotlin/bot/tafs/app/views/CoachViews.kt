@@ -240,7 +240,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   var details by remember { mutableStateOf(false) }
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
     Eyebrow("Coach asks you to approve", Theme.amberText)
-    c.title?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
+    // A grant its vendor signed out reads as planque says it ("Signed out by Stripe · sign in again"), not as Coach titled it.
+    (grant?.takeIf { it.needsReconnect }?.statusWords ?: c.title)?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
     when {
       answered != null -> Text(answered, style = scaled(13, FontWeight.Medium, Theme.dim))
       !state.planqueReady -> Text(CoachWords.NOT_CONNECTABLE, style = scaled(14, color = Theme.soft))
@@ -263,7 +264,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           val biometry = LocalBiometry.current
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             OutlineButton(
-              if (state.connecting == grant.id) "Approving…" else "Approve with $biometry",
+              if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else "Approve with $biometry",
               { scope.launch { actions.approve(c, grant.digest, draft?.version) } },
               Modifier.weight(1f),
               enabled = !busy,
@@ -401,6 +402,8 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
 private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, actions: CoachActions) {
   val scope = rememberCoroutineScope()
   val vendor = c.service ?: "the vendor"
+  val grant = state.grants.firstOrNull { it.id == c.grant }
+  val again = grant?.needsReconnect == true
   when {
     answered != null -> Text("Sign in at $vendor · $answered", style = scaled(14, FontWeight.Medium, Theme.dim))
     else -> {
@@ -408,11 +411,12 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, ac
       val waiting = c.grant != null && state.connecting == c.grant
       Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
         Eyebrow("Needs you · sign in", Theme.amberText)
-        Text("Sign in at $vendor", style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
+        Text(grant?.takeIf { again }?.statusWords ?: "Sign in at $vendor", style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
         Text(c.note ?: CoachWords.SIGN_IN_NOTE, style = scaled(14, color = Theme.soft))
         PrimaryButton(
           when {
-            waiting -> "Opening the sign-in…"
+            waiting -> state.connectStep ?: "Opening the sign-in…"
+            again -> "Sign in again"
             else -> c.yes ?: "Open ${c.service ?: "the sign-in"}"
           },
           { scope.launch { actions.signInAgain(c) } },

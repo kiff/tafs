@@ -59,6 +59,20 @@ class OwnWordsTest {
     assertEquals(listOf("Listed your charges", null), wire.steps.map { it.words })
   }
 
+  // MARK: The home list's order
+
+  @Test fun aRefreshNeverMovesARowWhileTheListIsShown() {
+    val shown = bot.tafs.app.model.ListOrder.Shown(listOf("refunds", "refunds-5", "bills"), waiting = emptySet())
+    // Refunds 5 was used just now, so the list's own order would put it first: it stays where it was.
+    assertEquals(listOf("refunds", "refunds-5", "bills"), bot.tafs.app.model.ListOrder.hold(shown, listOf("refunds-5", "refunds", "bills"), emptySet()))
+    // A taf newly waiting on the owner goes to the top at once.
+    assertEquals(listOf("bills", "refunds", "refunds-5"), bot.tafs.app.model.ListOrder.hold(shown, listOf("bills", "refunds-5", "refunds"), setOf("bills")))
+    // A new taf goes last; one removed leaves.
+    assertEquals(listOf("refunds", "bills", "access"), bot.tafs.app.model.ListOrder.hold(shown, listOf("access", "refunds", "bills"), emptySet()))
+    // Nothing shown yet (first open, back in the app, a pull): the list's own order.
+    assertEquals(listOf("refunds-5", "refunds"), bot.tafs.app.model.ListOrder.hold(null, listOf("refunds-5", "refunds"), emptySet()))
+  }
+
   // MARK: Dictation's language
 
   @Test fun englishInFranceDictatesInBritishEnglishThenAmerican() {

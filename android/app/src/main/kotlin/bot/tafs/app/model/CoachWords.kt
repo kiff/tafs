@@ -157,6 +157,13 @@ object CoachWords {
   const val DIGEST_MISMATCH = "This request doesn't match what it asks for, so it can't be approved. Ask Coach to propose it again."
   const val WAITING_FOR_VENDOR = "If the vendor's sign-in page opened, finish it there and come back."
 
+  /** Back from the vendor's page, while planque says whether the connection took. */
+  const val CHECKING_SIGN_IN = "Checking the sign-in…"
+
+  /** The vendor's page came back, but planque doesn't hold the connection as connected. */
+  fun notConnected(vendor: String, status: String) =
+    "The sign-in at $vendor didn't connect: planque has it as ${status.replace('_', ' ')}. Nothing was connected. Try signing in again."
+
   const val INTRO = "Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it."
   const val SIGN_IN_NOTE = "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed."
   const val COACH_KNOWS = "Coach knows, and hands it over again."

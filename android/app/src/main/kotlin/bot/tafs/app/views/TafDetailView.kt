@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -104,9 +105,19 @@ fun TafDetailView(
   modifier: Modifier = Modifier,
 ) {
   val taf = state.taf(tafId)
+  // What sits above the tabs folds away while the page scrolls down, and comes back on the way up, so the chat has the screen.
+  var folded by remember { mutableStateOf(false) }
+  val folding = remember {
+    object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+      override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+        if (available.y < -4f) folded = true else if (available.y > 4f) folded = false
+        return androidx.compose.ui.geometry.Offset.Zero
+      }
+    }
+  }
   Column(modifier.fillMaxSize().statusBarsPadding()) {
-    if (showBack) BackBar(onBack)
     if (taf == null) {
+      if (showBack) BackBar(onBack)
       Text("This taf is gone.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(16.dp))
       return@Column
     }
@@ -128,20 +139,24 @@ fun TafDetailView(
     val side = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE &&
       section != Section.Card && section != Section.Doors && pageWidth - SIDE_WIDTH - 32 >= CHAT_AT_LEAST
 
-    Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Header(taf)
-      // Who it's shared with, and Share: the taf's manager's to see.
-      if (people != null && taf.cloudId != null) ShareLine(taf.id, state, people)
+    Header(taf, if (showBack) onBack else null)
+    Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      // Who it's shared with, and Share: the taf's manager's to see. It folds with the page.
+      if (people != null && taf.cloudId != null) {
+        androidx.compose.animation.AnimatedVisibility(visible = !folded) { ShareLine(taf.id, state, people) }
+      }
       Segmented(sections, section, { it.title }) { section = it }
-      // The Cards are one line above the chat and the activity; it opens the Card tab (kiff/tafs#211).
+      // The Cards are one line above the chat and the activity; it opens the Card tab (kiff/tafs#211), and folds with the page.
       if (section != Section.Card && !side) {
         (cards.firstOrNull { it.id == frontCard } ?: cards.firstOrNull())?.let {
-          CardBar(it, cards.size, Theme.tafColor(taf.colorIndex), taf.card.revoked) { section = Section.Card }
+          androidx.compose.animation.AnimatedVisibility(visible = !folded) {
+            CardBar(it, cards.size, Theme.tafColor(taf.colorIndex), taf.card.revoked) { section = Section.Card }
+          }
         }
       }
     }
 
-    Row(Modifier.weight(1f)) {
+    Row(Modifier.weight(1f).nestedScroll(folding)) {
     Column(Modifier.weight(1f).fillMaxHeight()) {
     if (section == Section.Chat) {
       // The thread scrolls on its own, with the field under it.
@@ -230,14 +245,24 @@ internal fun BackBar(onBack: () -> Unit) {
   }
 }
 
+/**
+ * The taf's header, one row: back (where the page isn't beside the list), its avatar and name, and its state. Its tools aren't
+ * listed here: the Card tab says what it may do, in KIFF's words.
+ */
 @Composable
-private fun Header(taf: Taf) {
-  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-    TafAvatar(taf, 52.dp)
-    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-      Text(taf.name, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
-      Text(if (taf.tools.isEmpty()) "No tools yet" else taf.tools.joinToString(" · "), style = scaled(13, color = Theme.dim))
+private fun Header(taf: Taf, onBack: (() -> Unit)?) {
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(start = if (onBack == null) 12.dp else 0.dp, end = 12.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    if (onBack != null) {
+      Box(Modifier.size(44.dp).clickable(onClickLabel = "Back", onClick = onBack), contentAlignment = Alignment.Center) {
+        Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = "Back", tint = Theme.amber, modifier = Modifier.size(20.dp))
+      }
     }
+    TafAvatar(taf, 30.dp)
+    Text(taf.name, style = scaled(18, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
     StateChip(taf.state)
   }
 }

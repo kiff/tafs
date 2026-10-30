@@ -106,13 +106,17 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
       },
     )
     Text(
-      door?.let { "Press ${taf.name} to ${if (it.open) "close" else "open"} ${it.label}" } ?: "Press ${taf.name} to add a door",
+      // tafs cloud's words for what a press does; the app's own only until it sends them.
+      door?.let { it.words?.tap ?: "Press ${taf.name} to ${if (it.open) "close" else "open"} ${it.label}" } ?: "Press ${taf.name} to add a door",
       style = scaled(12, color = Theme.dim),
       textAlign = TextAlign.Center,
       modifier = Modifier.fillMaxWidth(),
     )
   }
-  if (door != null) DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
+  if (door != null) {
+    door.words?.settings?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 4.dp)) }
+    DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
+  }
   else {
     Panel {
       Eyebrow("Add a door")
@@ -121,11 +125,18 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
       if (doors.loaded && doors.addable.isEmpty()) Text("No more doors can be added here.", style = scaled(13, color = Theme.dim))
     }
   }
-  val waiting = doors.openKnocks.filter { !it.isLine }
+  // Strangers' knocks wait on the owner; a paired sender's message, kept from its knock, waits for Do it or Ignore.
+  val (paired, waiting) = doors.openKnocks.filter { !it.isLine }.partition { it.paired }
   if (waiting.isNotEmpty()) {
     Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
       Eyebrow("Knocks · waiting on you", Theme.amber)
       waiting.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
+    }
+  }
+  if (paired.isNotEmpty()) {
+    Panel {
+      Eyebrow("Paired")
+      paired.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
     }
   }
   doors.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -175,7 +186,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
       DoorBadge(door.app, door.open, 34)
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Eyebrow("${door.label} door")
-        Text(DoorWords.status(door), style = scaled(13, FontWeight.Medium, Theme.soft))
+        Text(door.words?.state ?: DoorWords.status(door), style = scaled(13, FontWeight.Medium, Theme.soft))
       }
       Switch(
         checked = door.open,
@@ -356,16 +367,19 @@ internal fun Field(value: String, onValue: (String) -> Unit, hint: String, minHe
 fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = false, onAnswer: (String, String?) -> Unit) {
   var asking by remember { mutableStateOf(false) }
   val shape = RoundedCornerShape(16.dp)
+  // A paired sender's message waits too, but it isn't a stranger at the door: it reads calmly, not in amber.
+  val tone = if (knock.paired) Theme.ink.copy(alpha = 0.2f) else Theme.amber.copy(alpha = 0.45f)
   Column(
     Modifier
       .fillMaxWidth()
       .clip(shape)
-      .background(Theme.amber.copy(alpha = 0.07f))
-      .border(BorderStroke(1.dp, Theme.amber.copy(alpha = 0.45f)), shape)
+      .background(if (knock.paired) Theme.panel else Theme.amber.copy(alpha = 0.07f))
+      .border(BorderStroke(1.dp, tone), shape)
       .padding(8.dp),
     verticalArrangement = Arrangement.spacedBy(6.dp),
   ) {
-    Text(DoorWords.knockTitle(knock), style = scaled(10, FontWeight.SemiBold, Theme.amberText, mono = true))
+    Text(DoorWords.knockTitle(knock), style = scaled(10, FontWeight.SemiBold, if (knock.paired) Theme.soft else Theme.amberText, mono = true))
+    if (knock.paired) Text(DoorWords.PAIRED_LINE, style = scaled(12, color = Theme.dim))
     if (knock.rest != null) {
       Text(DoorWords.restLine(knock), style = scaled(14, color = Theme.ink))
       OutlineButton("OK", { onAnswer("ignore", null) }, Modifier.fillMaxWidth(), enabled = !busy)
@@ -421,17 +435,12 @@ private fun DoItDialog(knock: Knock, tafName: String?, busy: Boolean, onClose: (
   )
 }
 
-/** The knocks waiting in a taf's chat, read with the chat. */
+/** One knock in a taf's chat, at its time among the messages (docs/doors.md): the owner answers it there. */
 @Composable
-fun ChatKnocks(tafId: String, tafName: String?, state: AppState, actions: DoorActions) {
-  val doors = state.doors[tafId] ?: return
+fun ChatKnock(tafId: String, tafName: String?, knock: Knock, state: AppState, actions: DoorActions) {
   val scope = rememberCoroutineScope()
-  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    doors.openKnocks.forEach { knock ->
-      KnockCard(knock, tafName, doors.busy) { action, say -> scope.launch { actions.answer(tafId, knock, action, say) } }
-    }
-    // A read that fails in the background says nothing in the chat: the Doors tab says it, if it keeps failing.
-  }
+  val busy = state.doors[tafId]?.busy ?: false
+  KnockCard(knock, tafName, busy) { action, say -> scope.launch { actions.answer(tafId, knock, action, say) } }
 }
 
 /** The line over a door's message, and under its answer: where it came from, and how it went back. */

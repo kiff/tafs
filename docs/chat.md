@@ -130,6 +130,11 @@ changing under it doesn't move it. Scrolling hands control to the owner, and a "
 the latest" button (with a dot when something new came) goes to the end.
 `ChatPinUITests` holds this behaviour.
 
+A chat opens at its newest: the end of the thread, once it has loaded, never the top of
+whatever came last. On Android a door's knocks sit at their own times among the messages
+(`Chat.withKnocks`), so a reply newer than a knock comes after it, and the app's own scrolling
+to the end never counts as the owner reading back.
+
 ## Writing while the taf works
 
 A message written while the taf works goes to the run at work

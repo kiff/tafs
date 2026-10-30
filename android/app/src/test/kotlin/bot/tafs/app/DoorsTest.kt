@@ -75,6 +75,43 @@ class DoorsTest {
 
   private fun body(key: String) = KiffClient.json.parseToJsonElement(String(sent(key).single().body!!)).jsonObject
 
+  // MARK: Live updates (docs/approvals.md)
+
+  @Test fun aKnockPushReadsThatTafsDoorsAndOpenThreadAgain() = runTest {
+    reads()
+    transport.answer(doors, 200, doorsBody())
+    transport.answer("GET /v1/tafs/taf_1/conversation", 200, """{"messages":[]}""")
+    val m = model()
+    m.refresh()
+    m.loadChat("refunds-1")
+    val doorReads = sent(doors).size
+    val threadReads = sent("GET /v1/tafs/taf_1/conversation").size
+    m.readChange("knock", "taf_1")
+    assertEquals(doorReads + 1, sent(doors).size)
+    assertEquals(threadReads + 1, sent("GET /v1/tafs/taf_1/conversation").size)
+  }
+
+  @Test fun aTafOrHaltPushReadsTheListAgainAndAnUnknownTafReadsNoThread() = runTest {
+    reads()
+    val m = model()
+    m.refresh()
+    val homes = sent("GET /v1/home").size
+    m.readChange("halted", null)
+    assertEquals(homes + 1, sent("GET /v1/home").size)
+    m.readChange("taf", "taf_unknown")
+    assertEquals(homes + 2, sent("GET /v1/home").size)
+    assertTrue(sent("GET /v1/tafs/taf_unknown/conversation").isEmpty())
+  }
+
+  @Test fun aDoorsWordsAreTafsClouds() {
+    val withWords = doorJson.dropLast(1) + ""","words":{"state":"Open: messages from you and paired senders to refunds@tafs.example start work.","tap":"Tap to close the email door.","settings":"Paired senders and today's limits are below."}}"""
+    val door = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Door>(withWords)
+    assertEquals("Tap to close the email door.", door.words?.tap)
+    assertEquals("Paired senders and today's limits are below.", door.words?.settings)
+    // A tafs cloud that doesn't send them yet: the door still reads.
+    assertNull(KiffClient.json.decodeFromString<bot.tafs.app.kiff.Door>(doorJson).words)
+  }
+
   // MARK: Where doors show
 
   @Test fun doorsShowOnlyWhereTafsCloudOffersOneForATafThisPersonManages() = runTest {
@@ -351,6 +388,19 @@ class DoorsTest {
   private fun knock(proof: String = "pass", name: String? = "Mara", subject: String? = "Refund", rest: String? = null, dropped: Int = 0, attachments: Int = 0, paired: Boolean = false) =
     Knock("k", "d", "email", "mara@customer.example", name, proof, subject, "text", attachments, t0, "open", rest, dropped, paired)
 
+  @Test fun aChatsKnocksSitAtTheirTimeSoItsNewestIsLast() {
+    val msg = { at: Long, text: String -> bot.tafs.app.model.ChatItem.Message(bot.tafs.app.model.ChatMessage(t0.plusSeconds(at), bot.tafs.app.model.ChatMessage.From.taf, text, "s1")) }
+    val items = listOf(msg(0, "earlier"), msg(120, "the reply, newest"))
+    val k = knock().copy(id = "k1", at = t0.plusSeconds(60))
+    val rows = bot.tafs.app.model.Chat.withKnocks(items, listOf(k))
+    assertEquals(listOf("item", "knock", "item"), rows.map { if (it is bot.tafs.app.model.Chat.Row.Knock) "knock" else "item" })
+    // The newest message is last, not the older knock under it.
+    assertEquals(1, (rows.last() as bot.tafs.app.model.Chat.Row.Item).index)
+    // A knock newer than every message goes last.
+    val late = knock().copy(id = "k2", at = t0.plusSeconds(600))
+    assertTrue(bot.tafs.app.model.Chat.withKnocks(items, listOf(late)).last() is bot.tafs.app.model.Chat.Row.Knock)
+  }
+
   @Test fun appsAreNamedAndMarked() {
     assertEquals("email", DoorNames.label("email"))
     assertEquals("WhatsApp", DoorNames.label("whatsapp"))
@@ -391,6 +441,9 @@ class DoorsTest {
   @Test fun aKnockSaysWhoWroteAndWhatItAsksTheOwnerToDecide() {
     assertEquals("● KNOCK · BY EMAIL", DoorWords.knockTitle(knock()))
     assertEquals("● KNOCK · BY EMAIL · DIDN'T CHECK OUT", DoorWords.knockTitle(knock(proof = "fail")))
+    // A paired sender's message, kept from its knock, reads as paired, not as a stranger waiting on the owner.
+    assertEquals("PAIRED · BY EMAIL", DoorWords.knockTitle(knock(paired = true)))
+    assertEquals("Paired · Do it or Ignore this message", DoorWords.PAIRED_LINE)
     assertEquals("Mara (mara@customer.example) wrote about \"Refund\". Nothing was done.", DoorWords.wrote(knock()))
     assertEquals("mara@customer.example wrote. Nothing was done.", DoorWords.wrote(knock(name = null, subject = null)))
     assertEquals("It had 2 attachments, not opened.", DoorWords.attachments(knock(attachments = 2)))

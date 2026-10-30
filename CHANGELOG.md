@@ -7,6 +7,16 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, a taf's page:** a compact header (back, name, state) whose Share and Card line
+  fold as it scrolls; a chat opens at its newest message, with a door's knocks at their own
+  times; and a paired sender's waiting message reads "Paired · Do it or Ignore this message".
+  The app reads again what tafs cloud's live updates name, instead of polling an open chat,
+  and shows each door's words. A vendor sign-in reads "Signed in" only once planque says the
+  connection is connected, and says it's checking meanwhile. The home list's order holds while
+  it's on screen, so a refresh never moves a taf under the owner's finger. A connection its
+  vendor signed out (`needs_reconnect`) reads as planque says ("Signed out by Stripe · sign in
+  again") and is signed in again from its card, instead of being refused.
+
 - **Android, Coach's screen:** a compact header (back, Coach, a menu with its conversations),
   the plan in tafs cloud's one line that folds away as the thread scrolls, and one calm live
   line from tafs cloud's stream instead of the model's thinking and a list of steps. Alerts

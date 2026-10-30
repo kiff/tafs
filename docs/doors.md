@@ -25,7 +25,9 @@ deployment offers a door; WhatsApp is offered only once it's set up.
   is told who wrote and what they want, and answers **Do it**, **Pair** or
   **Ignore**. Do it starts a run from the owner's words, which come first, with the
   message after them, fenced by a line its sender can't guess, as information.
-  Pair makes the sender a key for their next message, never this one.
+  Pair makes the sender a key for their next message, never this one. That message
+  still waits (`paired: true`), and the apps show it as "Paired · Do it or Ignore this
+  message", not as a stranger waiting on the owner.
 - The door itself only ever writes to the key who wrote, in the same thread. Writing
   to anyone else is the taf's own action, through KIFF, under its Card, like any
   other tool call.

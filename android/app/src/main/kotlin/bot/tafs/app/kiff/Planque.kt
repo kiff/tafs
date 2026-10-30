@@ -59,8 +59,13 @@ data class GrantEvent(
 @Serializable
 data class Grant(
   val id: String,
-  /** pending, approved, signed_in, listed, connected, failed or disconnected. */
+  /**
+   * pending, approved, signed_in, listed, connected, failed, disconnected, or needs_reconnect: connected once, then signed out
+   * by its vendor, so it waits for a real sign-in again.
+   */
   val status: String = "",
+  /** planque's words for the status, shown as they are: "Signed out by Stripe · sign in again". */
+  @SerialName("status_words") val statusWords: String? = null,
   /** What the owner reads before approving: each tool in words. */
   val text: String = "",
   /** Each tool's exact terms, one line each, shown under Details; the phone signs the request they're built from. */
@@ -85,6 +90,9 @@ data class Grant(
   val vendor: String get() = vendorName ?: request.server
 
   val connected: Boolean get() = status == "connected" || connectedNow
+
+  /** Its vendor signed it out: the owner signs in again, and it's connected only once planque says so. */
+  val needsReconnect: Boolean get() = status == "needs_reconnect"
 
   /** Signed in and planque listed the vendor's tools for Setup to choose from; nothing is in KIFF yet. */
   val listed: Boolean get() = status == "listed"

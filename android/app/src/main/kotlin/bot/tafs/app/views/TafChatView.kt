@@ -117,25 +117,40 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   val thinking = state.thinking(tafId)
   // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
   val showKnocks = state.mode == Mode.kiff && state.doorsOffered.isNotEmpty() && !isTrialChat(tafId) && tafId != COACH_CHAT && taf?.cloudId != null
-  val knocking = showKnocks && state.doors[tafId]?.openKnocks.orEmpty().isNotEmpty()
+  val knocks = if (showKnocks) state.doors[tafId]?.openKnocks.orEmpty() else emptyList()
+  // Each knock at its time among the messages, so the thread's newest is last, whoever wrote it.
+  val rows = remember(items, knocks) { Chat.withKnocks(items, knocks) }
   val live = state.chatLive[tafId]
-  val total = items.size + (if (knocking) 1 else 0) + (if (thinking || live != null) 1 else 0)
+  val total = rows.size + (if (thinking || live != null) 1 else 0)
   // Read again when the thread changes.
   LaunchedEffect(items.size, showKnocks) { if (showKnocks) actions.doors.load(tafId) }
   val atBottom by remember { derivedStateOf { !listState.canScrollForward } }
   val scope = rememberCoroutineScope()
 
+  // The thread's own scrolling to its end isn't the owner reading back: only the owner's stops it following.
+  var autoScrolling by remember { mutableStateOf(false) }
   LaunchedEffect(listState) {
     snapshotFlow { listState.isScrollInProgress to listState.canScrollForward }.collect { (scrolling, more) ->
-      if (scrolling && more) following = false
+      if (scrolling && more && !autoScrolling) following = false
       if (!more) following = true
     }
   }
-  // It opens at the latest, and follows what arrives while the owner isn't reading back.
-  LaunchedEffect(tafId) { if (total > 0) listState.scrollToItem(total - 1) }
+  // It opens at its newest, the end of the thread, once the thread is there: not at the top of whatever is last.
+  var opened by remember(tafId) { mutableStateOf(false) }
   // Keyed by the last item and the dots too, not only the count: the answer takes the dots' place
   // at the same count, and is taller.
-  LaunchedEffect(total, items.lastOrNull()?.id, thinking, live?.text?.length, live?.steps?.size) { if (following && total > 0) listState.animateScrollToItem(total - 1) }
+  LaunchedEffect(total, rows.lastOrNull()?.key, thinking, live?.text?.length, live?.steps?.size) {
+    if (total == 0 || !(following || !opened)) return@LaunchedEffect
+    val last = listState.layoutInfo.totalItemsCount.coerceAtLeast(total) - 1
+    autoScrolling = true
+    try {
+      // The end of the last item, not its top: a tall one shows its last lines.
+      if (opened) listState.animateScrollToItem(last, Int.MAX_VALUE) else listState.scrollToItem(last, Int.MAX_VALUE)
+    } finally {
+      autoScrolling = false
+    }
+    opened = true
+  }
 
   Column(modifier.fillMaxSize()) {
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
@@ -158,7 +173,13 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
             )
           }
         }
-        items.forEachIndexed { i, item ->
+        rows.forEachIndexed { r, row ->
+          if (row is Chat.Row.Knock) {
+            item(key = row.key) { ChatKnock(tafId, taf?.name, row.knock, state, actions.doors) }
+            return@forEachIndexed
+          }
+          val i = (row as Chat.Row.Item).index
+          val item = items[i]
           item(key = item.id) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               // A time between parts of the thread that are far apart, not on every line.
@@ -185,7 +206,6 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
             }
           }
         }
-        if (knocking) item(key = "knocks") { ChatKnocks(tafId, taf?.name, state, actions.doors) }
         // News of the tasks Coach handed tafs, until Coach reads it: what came while the owner was away, together.
         if (tafId == COACH_CHAT && state.coachLines.isNotEmpty()) item(key = "coach-lines") { CoachLines(state.coachLines) }
         when {
