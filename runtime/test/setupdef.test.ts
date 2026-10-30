@@ -81,8 +81,16 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS).toContain("confirmed but not claimed means the taf didn't start");
   });
 
-  // What Coach answers about holds, usage and halting, in its base: it read none of these
-  // when they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218).
+  it("writes its closing message as text, never as a component", () => {
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A component (steps, plan, a notice) never stands in for it: after any component, write the closing message as text in the same turn.");
+  });
+
+  it("calls taf_results and lets it be held, never reading its 0 a day as forbidden", () => {
+    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(flat).toContain("version_install and taf_results tools see and act on them");
+    expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
+  });
+
   it("never writes an id to the owner", () => {
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's)");
   });
@@ -92,6 +100,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A grant that is needs_reconnect (its vendor signed planque out): show sign_in for that same grant, never a new planque request");
   });
 
+  // What Coach answers about holds, usage and halting, in its base: it read none of these
+  // when they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218).
   it("knows holds, tasks and packs, and halting", () => {
     const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
     expect(flat).toContain("Refused: nothing was sent, and nothing waits for anyone. Never say it waits for the owner, or that the owner refused it unless they did");

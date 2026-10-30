@@ -9,7 +9,6 @@ import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.SetupComponent
 import bot.tafs.app.kiff.VendorSignIn
 import bot.tafs.app.kiff.VendorSignInCancelled
-import bot.tafs.app.model.CoachAnswer
 import bot.tafs.app.model.CoachWords
 import java.time.Instant
 import kotlinx.coroutines.test.runTest

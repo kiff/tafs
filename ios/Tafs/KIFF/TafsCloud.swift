@@ -404,14 +404,21 @@ final class TafsCloud {
         var work: Work? = nil
         /// The files the person attached to their message (kiff/tafs#209).
         var attachments: [AttachmentRef] = []
+        /// tafs cloud's id for it: from the thread, or, on one being sent, the id its send
+        /// answered (a run's first owner message is `<run>.in`). None from an older tafs cloud,
+        /// and on a message that steers a run at work.
+        var serverID: String? = nil
+        /// The card this owner's message answered, by id: they wrote while it waited, and
+        /// their words were its answer.
+        var answers: String? = nil
 
         init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil, work: Work? = nil,
-             attachments: [AttachmentRef] = []) {
+             attachments: [AttachmentRef] = [], serverID: String? = nil, answers: String? = nil) {
             self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session; self.door = door; self.work = work
-            self.attachments = attachments
+            self.attachments = attachments; self.serverID = serverID; self.answers = answers
         }
 
-        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work, attachments }
+        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work, attachments, answers, serverID = "id" }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             at = try c.decode(Date.self, forKey: .at)
@@ -423,6 +430,8 @@ final class TafsCloud {
             door = try? c.decodeIfPresent(DoorMark.self, forKey: .door)
             work = try? c.decodeIfPresent(Work.self, forKey: .work)
             attachments = (try? c.decodeIfPresent([AttachmentRef].self, forKey: .attachments)) ?? []
+            serverID = try? c.decodeIfPresent(String.self, forKey: .serverID)
+            answers = try? c.decodeIfPresent(String.self, forKey: .answers)
         }
     }
 
@@ -612,7 +621,14 @@ final class TafsCloud {
     struct Sent: Decodable, Equatable {
         let session: String
         let newSession: Bool
-        enum CodingKeys: String, CodingKey { case session, newSession = "new_session" }
+        /// The message the send made, as the thread will name it: the app matches its send to
+        /// the thread by its id, never by its words. None from an older tafs cloud.
+        var message: SentMessage? = nil
+        enum CodingKeys: String, CodingKey { case session, message, newSession = "new_session" }
+    }
+
+    struct SentMessage: Decodable, Equatable {
+        let id: String
     }
 
     /// Which chat a message goes into (kiff/tafs#73): the live one, one the owner
@@ -737,7 +753,9 @@ final class TafsCloud {
     /// What a streamed message's run does, as tafs cloud relays it (#60).
     enum StreamEvent: Equatable {
         /// The chat the message went into, first, and the run that answers it.
-        case session(String, newSession: Bool, run: String? = nil)
+        /// `message`: tafs cloud's id for the owner's message this stream answers (as
+        /// `POST …/messages` gives it); none on a steer, or from an older tafs cloud.
+        case session(String, newSession: Bool, run: String? = nil, message: String? = nil)
         /// More of the answer, as it is written.
         case text(String)
         /// A tool the agent calls, by name, with what it's doing in a few words when tafs
@@ -836,7 +854,11 @@ final class TafsCloud {
     nonisolated static func streamEvent(_ name: String, data: Data) -> StreamEvent? {
         let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
         switch name {
-        case "session": return (o["session"] as? String).map { .session($0, newSession: o["new_session"] as? Bool ?? false, run: o["run"] as? String) }
+        case "session":
+            return (o["session"] as? String).map {
+                .session($0, newSession: o["new_session"] as? Bool ?? false, run: o["run"] as? String,
+                         message: (o["message"] as? [String: Any])?["id"] as? String)
+            }
         case "taken": return .taken
         case "text": return (o["text"] as? String).map(StreamEvent.text)
         case "activity": return (o["tool"] as? String).map { .activity($0, step: o["step"] as? String, call: o["call_id"] as? String) }

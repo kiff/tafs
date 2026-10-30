@@ -15,7 +15,7 @@ data class DoneCall(val tool: String, val resource: String? = null, val invocati
 /** What a streamed message's run does, as tafs cloud relays it (docs/chat.md, "The answer as it comes"). */
 sealed interface StreamEvent {
   /** The chat the message went into, first, and the run that answers it: for Stop and steering. */
-  data class Session(val session: String, val newSession: Boolean, val run: String?) : StreamEvent
+  data class Session(val session: String, val newSession: Boolean, val run: String?, val messageId: String? = null) : StreamEvent
   /** More of the answer, as it is written. */
   data class Text(val text: String) : StreamEvent
   /** More of what the taf is thinking. */
@@ -50,7 +50,10 @@ sealed interface StreamEvent {
       val o = runCatching { KiffClient.json.parseToJsonElement(data).jsonObject }.getOrNull() ?: JsonObject(emptyMap())
       fun str(key: String) = (o[key] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull
       return when (name) {
-        "session" -> str("session")?.let { Session(it, (o["new_session"] as? kotlinx.serialization.json.JsonPrimitive)?.booleanOrNull ?: false, str("run")) }
+        "session" -> str("session")?.let {
+          val message = (o["message"] as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull
+          Session(it, (o["new_session"] as? kotlinx.serialization.json.JsonPrimitive)?.booleanOrNull ?: false, str("run"), message)
+        }
         "text" -> str("text")?.let(::Text)
         "thinking" -> str("text")?.let(::Thinking)
         "activity" -> str("tool")?.let { Activity(it, str("step"), str("call_id")) }

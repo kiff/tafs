@@ -49,4 +49,30 @@ final class SentMessagesTests: XCTestCase {
         XCTAssertEqual(first.id, grown.id)
         XCTAssertNotEqual(owner("Sí", t0, "s1").id, owner("No", t0, "s1").id)
     }
+
+    /// With tafs cloud's id for it, a sent message is found by that id alone: an earlier "Sí"
+    /// in the thread, under another id, isn't it; its own copy is, whatever words came back.
+    func testASentMessageWithTafsCloudsIdIsFoundByItsIdNeverByItsWords() {
+        var sent = owner("Sí", t0)
+        sent.serverID = "run_2.in"
+        var earlier = owner("Sí", t0.addingTimeInterval(1), "s1")
+        earlier.serverID = "run_1.in"
+        let waits = SentMessages.merge([earlier], sent: [sent], now: t0.addingTimeInterval(5))
+        XCTAssertEqual(waits.waiting, [sent], "the other Sí isn't it")
+        XCTAssertEqual(waits.messages.count, 2)
+        var own = owner("Sí, gracias", t0.addingTimeInterval(2), "s1")
+        own.serverID = "run_2.in"
+        XCTAssertTrue(SentMessages.merge([earlier, own], sent: [sent], now: t0.addingTimeInterval(5)).waiting.isEmpty)
+    }
+
+    /// The thread's messages, the send's answer and the stream's first event carry tafs cloud's id.
+    func testTheIdsReadAsTafsCloudSendsThem() throws {
+        let m = try KIFFClient.decoder.decode(TafsCloud.ChatMessage.self, from: Data(#"{"id":"run_2.in","at":"2026-10-28T09:00:00Z","from":"owner","text":"Use live","session":"s1","answers":"limits"}"#.utf8))
+        XCTAssertEqual(m.serverID, "run_2.in")
+        XCTAssertEqual(m.answers, "limits")
+        let sent = try KIFFClient.decoder.decode(TafsCloud.Sent.self, from: Data(#"{"session":"s1","new_session":false,"run":"run_2","message":{"id":"run_2.in","at":"2026-10-28T09:00:00Z"}}"#.utf8))
+        XCTAssertEqual(sent.message?.id, "run_2.in")
+        let older = try KIFFClient.decoder.decode(TafsCloud.Sent.self, from: Data(#"{"session":"s1","new_session":false}"#.utf8))
+        XCTAssertNil(older.message)
+    }
 }

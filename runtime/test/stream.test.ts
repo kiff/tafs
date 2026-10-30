@@ -172,7 +172,9 @@ describe("a message streamed (kiff/tafs#60)", () => {
     const session = first.events[0]!.data.session;
     expect(first.events[0]!.data).toMatchObject({ new_session: true });
     const again = await stream(w, PATH, { token: "ana", body: { text: "and then?" } });
-    expect(again.events[0]!.data).toEqual({ session, new_session: false, run: expect.any(String) });
+    expect(again.events[0]!.data).toEqual({ session, new_session: false, run: expect.any(String), message: { id: expect.any(String), at: expect.any(String) } });
+    // The thread names the owner's message by that same id, so the app matches its send without guessing.
+    expect(again.events[0]!.data.message.id).toBe(`${again.events[0]!.data.run}.in`);
     const fresh = await stream(w, PATH, { token: "ana", body: { text: "another thing", new_chat: true } });
     expect(fresh.events[0]!.data).toMatchObject({ new_session: true });
     expect(fresh.events[0]!.data.session).not.toBe(session);

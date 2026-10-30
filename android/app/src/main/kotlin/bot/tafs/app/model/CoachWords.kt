@@ -16,7 +16,10 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
-/** The owner's answer to a card, as the contract has it: "[<type> <id>] <answer>". */
+/**
+ * An owner's answer to a card in the form the app sent before cards were answered as data, "[<type> <id>] <answer>": read only to
+ * show older Coach threads in the owner's words, since tafs cloud's thread still holds them as written. Nothing sends it now.
+ */
 data class CoachAnswer(val type: String, val id: String, val text: String) {
   val failed: Boolean get() = text.startsWith("failed")
 
@@ -30,9 +33,6 @@ data class CoachAnswer(val type: String, val id: String, val text: String) {
       if (head.size != 2 || head[0] !in SetupComponent.KINDS) return null
       return CoachAnswer(head[0], head[1], message.substring(close + 1).trim())
     }
-
-    /** The message that answers a card. */
-    fun message(type: String, id: String, answer: String): String = "[$type $id] $answer"
   }
 }
 

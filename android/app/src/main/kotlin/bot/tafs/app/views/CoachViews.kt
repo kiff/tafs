@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.design.LocalBiometry
-import bot.tafs.app.model.CoachAnswer
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import bot.tafs.app.design.Eyebrow
