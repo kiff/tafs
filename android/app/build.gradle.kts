@@ -35,7 +35,10 @@ android {
   buildTypes {
     release {
       if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
-      isMinifyEnabled = false
+      // R8 keeps only the code the app reaches: most of Bouncy Castle goes. app/proguard-rules.pro keeps what's
+      // looked up by name. A release build's receipt check on a phone is the test for these rules.
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }
