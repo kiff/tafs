@@ -59,3 +59,16 @@ describe("a plan in one line", () => {
     expect(withLine({ type: "notice", id: "n" })).toEqual({ type: "notice", id: "n" });
   });
 });
+
+describe("the thread as one ordered list", () => {
+  it("places messages and cards by time, a card shown again replacing its earlier version where it first was", async () => {
+    const { threadItems } = await import("../src/cloud/handler.js");
+    const msg = (id: string, at: string) => ({ id, at, from: "taf" as const, kind: "message" as const, text: id, session: "s" });
+    const card = (id: string, at: string, title: string, seq: number) => ({ at, session: "s", run: "r", seq, component: { type: "steps", id, title } });
+    const items = threadItems(
+      [msg("m1", "2026-10-30T10:00:00Z"), msg("m2", "2026-10-30T10:02:00Z")],
+      [card("plan", "2026-10-30T10:01:00Z", "first", 1), card("plan", "2026-10-30T10:03:00Z", "latest", 2)],
+    );
+    expect(items.map((i) => (i.type === "message" ? i.message.id : `card:${(i.card.component as { title: string }).title}`))).toEqual(["m1", "card:latest", "m2"]);
+  });
+});

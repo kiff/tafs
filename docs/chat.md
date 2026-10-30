@@ -220,3 +220,11 @@ or `done`. It's sent only when it changes, and a line holds at least a second (`
 so it doesn't flicker. Waiting for the person and the end go at once. The model's thinking text is
 never in it. An app shows this line and doesn't draw the `thinking` events. When the run ends, the
 line becomes the message's "Worked … · N steps".
+
+## The thread in one order
+
+The thread also comes as one ordered list, `items` (`threadItems` in `handler.ts`). Each entry
+is `{type: "message", message}` or `{type: "card", card}`, by time. A card shown again (the same id
+in the same run) replaces its earlier version where it first appeared. An app draws `items` as
+they come, and places or folds nothing itself. `messages` and `components` stay, for apps from
+before.

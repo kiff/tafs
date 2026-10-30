@@ -535,14 +535,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const { messages, components, sessions } = await conversation(me, taf, deps, undefined, doors, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
+    return { messages, components, items: threadItems(messages, components), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
     const { messages, components, sessions } = await conversation(me, taf, deps, only, false, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
+    return { messages, components, items: threadItems(messages, components), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -1649,6 +1649,28 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
 }
 
+/** One entry of the thread in order (#1425 item 3): a message, or a card at its place. */
+export type ThreadItem = { type: "message"; message: ThreadMessage } | { type: "card"; card: ThreadComponent };
+
+/**
+ * The thread as one ordered list, so neither app places or folds anything: messages and cards by
+ * time, a card shown again (the same id in the same run) replacing its earlier version in place, at
+ * the time it first appeared.
+ */
+export function threadItems(messages: ThreadMessage[], components: ThreadComponent[]): ThreadItem[] {
+  const cards = new Map<string, ThreadComponent & { first: string }>();
+  for (const c of components) {
+    const id = String((c.component as { id?: unknown })?.id ?? "");
+    const key = `${c.run}#${id}`;
+    const seen = cards.get(key);
+    cards.set(key, { ...c, first: seen?.first ?? c.at });
+  }
+  const items: Array<{ at: string; order: number; item: ThreadItem }> = [];
+  messages.forEach((m, i) => items.push({ at: m.at, order: i, item: { type: "message", message: m } }));
+  [...cards.values()].forEach(({ first, ...c }, i) => items.push({ at: first, order: messages.length + i, item: { type: "card", card: c } }));
+  return items.sort((a, b) => a.at.localeCompare(b.at) || a.order - b.order).map((x) => x.item);
+}
+
 /**
  * A plan (a `steps` component) with its one-line form, `line`: "Step 3 of 6 · Your rules", the step
  * at work or the first still to do, or "Done · 6 of 6". So an app shows the plan in one line, with no
@@ -1971,7 +1993,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const [only, titles] = await Promise.all([ownChat(me, taf, open.session, deps, "trial"), titlesOf(event, me, taf, deps)]);
     const { messages, components, sessions } = await conversation(me, taf, deps, only, false, titles);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
+    return { messages, components, items: threadItems(messages, components), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
   }
   await needTaf(event, me, taf, deps);
   const token = bearer(event);
