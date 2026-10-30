@@ -313,6 +313,8 @@ final class SetupTests: XCTestCase {
     func testStreamEventsAreRead() {
         func e(_ name: String, _ json: String) -> TafsCloud.StreamEvent? { TafsCloud.streamEvent(name, data: Data(json.utf8)) }
         XCTAssertEqual(e("session", #"{"session":"s1","new_session":true}"#), .session("s1", newSession: true))
+        XCTAssertEqual(e("session", #"{"session":"s1","new_session":false,"run":"r2","message":{"id":"r2.in","at":"2026-10-28T09:00:00Z"}}"#),
+                       .session("s1", newSession: false, run: "r2", message: "r2.in"))
         XCTAssertEqual(e("text", #"{"text":"a\nb"}"#), .text("a\nb"))
         XCTAssertEqual(e("activity", #"{"tool":"planque"}"#), .activity("planque"))
         // What Coach is doing, in tafs cloud's words (kiff/tafs#214).
