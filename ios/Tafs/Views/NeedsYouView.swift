@@ -166,8 +166,14 @@ struct HeldCallCard: View {
             // One sentence for VoiceOver (kiff/tafs#210): the taf, what it asks, when it lapses.
             VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
-                if let taf { TafAvatar(taf: taf, size: 32) }
-                Text(taf?.name ?? "A taf").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                if let taf {
+                    TafAvatar(taf: taf, size: 32)
+                } else if model.isCoach(call.tafID) {
+                    // Coach's own hold, with Coach's mark.
+                    Image(systemName: "sparkle").font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
+                        .frame(width: 32, height: 32).background(Circle().fill(Theme.coach))
+                }
+                Text(model.holderName(call.tafID) ?? "A taf").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer()
                 // The system counts it down, every second, wherever the card is (kiff/tafs#236,
                 // item 8); the timeline only turns it to "expired" at the end.
@@ -192,7 +198,7 @@ struct HeldCallCard: View {
                 .clipShape(Capsule())
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Self.sentence(call, taf: taf?.name))
+            .accessibilityLabel(Self.sentence(call, taf: model.holderName(call.tafID)))
 
             // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and
             // a vendor's own values aren't words for the card's face (kiff/tafs#236, item 7).
