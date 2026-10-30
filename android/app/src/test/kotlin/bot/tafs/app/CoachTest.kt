@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.model.CoachAnswer
 import bot.tafs.app.kiff.SetupStep
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
@@ -15,7 +16,6 @@ import bot.tafs.app.kiff.SetupChoice
 import bot.tafs.app.kiff.ShownComponent
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.ChatMessage
-import bot.tafs.app.model.CoachAnswer
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.model.QuestionAnswers
 import bot.tafs.app.model.QuestionSelection
@@ -207,14 +207,6 @@ class CoachTest {
   }
 
   // MARK: Answering
-
-  @Test fun anAnswerToACardIsOneMessageInTheContractsForm() = runTest {
-    val m = coach(thread(emptyList(), listOf(shown(confirm, "2026-10-28T08:00:01Z"))))
-    transport.answer("POST /v1/tafs/setup_1/messages", 200, """{"session":"s2","new_session":false}""")
-    assertTrue(m.deliverChat(CoachAnswer.message("confirm", "c1", "50"), COACH_CHAT))
-    val text = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/tafs/setup_1/messages").single().body!!)).jsonObject.getValue("text").jsonPrimitive.content
-    assertEquals("[confirm c1] 50", text)
-  }
 
   @Test fun theOwnersAnswerReadsAsWhatTheyChoseAndNeverAsTheContractsForm() = runTest {
     val m = coach(thread(

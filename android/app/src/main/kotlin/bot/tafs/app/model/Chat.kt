@@ -106,6 +106,10 @@ data class ChatMessage(
   val door: DoorMark? = null,
   /** The files the owner attached to it (docs/attachments.md). */
   val attachments: List<AttachmentRef> = emptyList(),
+  /** tafs cloud's id for it: from the thread, or, on one being sent, the id its send answered. Null from an older tafs cloud, and on a steer. */
+  val serverId: String? = null,
+  /** The card this owner's message answered: they wrote while it waited. */
+  val answers: String? = null,
 ) {
   enum class From { owner, taf }
   enum class Kind { kickoff, message }
@@ -134,7 +138,9 @@ object SentMessages {
       if (java.time.Duration.between(s.at, now) > KEPT) return@filter false
       val copy = messages.indices.firstOrNull { i ->
         val m = messages[i]
-        i !in taken && m.from == ChatMessage.From.owner && m.text == s.text && m.at >= s.at.minus(KEPT)
+        // By tafs cloud's id where the send has one; by its words only where it hasn't (a steer, or an older tafs cloud).
+        i !in taken && m.from == ChatMessage.From.owner &&
+          if (s.serverId != null) m.serverId == s.serverId else m.text == s.text && m.at >= s.at.minus(KEPT)
       } ?: return@filter true
       taken += copy
       false
@@ -175,6 +181,9 @@ sealed interface ChatItem {
 object Chat {
   /** What a message may be at most, as tafs cloud takes it. */
   const val LIMIT = 2000
+
+  /** Under an owner's message that answered a card they wrote it while (`answers`). */
+  const val ANSWERED_CARD = "Answered the card above"
 
   /** A row of a taf's work: a request, or a scheduled run that was skipped. */
   sealed interface WorkRow {

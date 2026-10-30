@@ -130,6 +130,8 @@ data class WireWork(val ms: Int = 0, val steps: List<WireStep> = emptyList())
 /** One line of a taf's thread: the owner's messages and the taf's replies and reports. */
 @Serializable
 data class WireChatMessage(
+  /** tafs cloud's id for the message: a run's first owner message is `<run>.in`, the id its send answered. */
+  val id: String? = null,
   @Serializable(with = InstantAsString::class) val at: Instant,
   val from: String,
   val kind: String? = null,
@@ -140,6 +142,8 @@ data class WireChatMessage(
   val attachments: JsonElement? = null,
   /** Read apart (as JSON), so a mark the app can't read leaves the message plain instead of the thread unread. */
   val door: JsonElement? = null,
+  /** The card this owner's message answered, by id: they wrote while it waited, and their words were its answer. */
+  val answers: String? = null,
 )
 
 /** The run at work in a session. */
@@ -163,7 +167,11 @@ data class WireThread(
 
 /** What tafs cloud says of a message it took: the chat it went into. */
 @Serializable
-data class Sent(val session: String, @SerialName("new_session") val newSession: Boolean = false)
+data class Sent(val session: String, @SerialName("new_session") val newSession: Boolean = false, val message: SentMessage? = null)
+
+/** The message a send made, as the thread will name it: the app matches its send to the thread by [id], never by its words. */
+@Serializable
+data class SentMessage(val id: String)
 
 /** The run's status after a message written to it. */
 @Serializable

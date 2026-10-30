@@ -10,6 +10,9 @@ version headings refer to releases, not merely to merged pull requests.
 - **iPhone and iPad, sent messages:** a sent message is matched to the thread by tafs cloud's id
   for it, from its send or its stream's first event, never by its words, except a steer or an
   older tafs cloud; a message that answered a card says "Answered the card above".
+- **Android, sent messages:** a sent message is matched to the thread by tafs cloud's id for it,
+  never by its words, except a steer; and a message that answered a card says so. The retired
+  `[type id] answer` form is no longer sent; older threads that hold it still read in words.
 
 - **iPhone and iPad, this round:** a taf's page has a compact header (avatar, name, state) whose
   version, Share and Card line fold as the chat scrolls down; a door's knocks sit in the chat at
