@@ -199,3 +199,10 @@ the latest run stopped at a cap (`capped`).
 The sample taf answers as a real one does, streamed into the live answer: it thinks,
 takes a step, then writes. Nothing reaches a model. `-sampleReplySeconds` slows it for
 UI tests ([ios-app.md](ios-app.md#launch-arguments)).
+
+## Message ids
+
+Every message in the thread has a stable `id` (`conversation` in `handler.ts`). A run's first
+owner message is `<run>.in`, and that's the id `POST …/messages` answers for the message just
+sent. Every other message is `<run>.<seq>`. An app matches what it sent to the thread by that id,
+and never by text or time.

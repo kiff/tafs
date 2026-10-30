@@ -305,8 +305,12 @@ describe("messages", () => {
     w.at(new Date(minutesAgo(20)));
     const chat = await w.agents.api.startRun("t_acme", RAE, "Hello", ANA);
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "And order 9?" } });
-    expect(r.body).toEqual({ session: chat.session, new_session: false });
+    expect(r.body).toMatchObject({ session: chat.session, new_session: false });
     expect(w.agents.runs[0]!.requester).toEqual(ANA.requester);
+    // The sent message's id is the one the thread gives it (#1425 item 5).
+    expect(r.body.message).toEqual({ id: `${r.body.run}.in`, at: expect.any(String) });
+    const thread = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(thread.body.messages.map((m: { id: string }) => m.id)).toContain(r.body.message.id);
   });
 
   it("starts a new chat when the latest is older, even after a newer job run", async () => {
@@ -856,7 +860,7 @@ describe("chats (kiff/tafs#73)", () => {
     expect(fresh.body.new_session).toBe(true);
     expect(fresh.body.session).not.toBe(live.session);
     const back = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Back to the first", session: old.session } });
-    expect(back.body).toEqual({ session: old.session, new_session: false });
+    expect(back.body).toMatchObject({ session: old.session, new_session: false });
     const theirs = await w.agents.api.startRun("t_other", MAX, "hi");
     expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "x", session: theirs.session } })).status).toBe(404);
   });

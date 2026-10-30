@@ -82,7 +82,7 @@ See [chat.md](chat.md) for how the app uses these.
 
 | Route | Who | What |
 |---|---|---|
-| `POST /v1/tafs/{id}/messages` | a person | `{text, attachments?, session?, new_chat?}`: a run in the person's live chat, a chosen one, or a new one. Text is 1 to 2,000 characters, or none with files. 429 past the flood guard |
+| `POST /v1/tafs/{id}/messages` | a person | `{text, attachments?, session?, new_chat?}`: a run in the person's live chat, a chosen one, or a new one. Text is 1 to 2,000 characters, or none with files. 429 past the flood guard. Answers `{session, new_session, run, message: {id, at}}`: the thread gives the same message that `id`, so the app matches its send without guessing |
 | `POST /v1/tafs/{id}/messages/stream` | a person | The same message, its answer streamed as server-sent events ([chat.md](chat.md#the-answer-as-it-comes)) |
 | `GET /v1/tafs/{id}/runs/{run}/stream?after=N` | a person, their own run | Pick a run back up: its recorded steps after event N (with `part` where it went on after a held call), then the rest until it stops |
 | `POST /v1/tafs/{id}/steer` | a person | `{run, text}`: to the run at work, read at its next step. 409 when it has ended: send it as a new message |

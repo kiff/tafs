@@ -1452,6 +1452,11 @@ export interface CardAnswer {
 }
 
 export interface ThreadMessage {
+  /**
+   * The message's stable id (#1425 item 5): a run's first owner message is `<run>.in`, which is what
+   * `POST …/messages` answers for the message it sent; every other is `<run>.<seq>`.
+   */
+  id: string;
   at: string;
   from: "owner" | "taf";
   kind: "kickoff" | "message";
@@ -1586,7 +1591,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (card) card.answer = cardAnswer(b, iso(e.time));
         // Words the owner wrote while the card waited answered it: they show as their message, as sent.
         if (typeof b.wrote === "string" && b.wrote.trim()) {
-          messages.push({ at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
+          messages.push({ id: `${e.run}.${e.seq}`, at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
         }
         continue;
       }
@@ -1598,12 +1603,14 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       const run = runOf(e.run, at);
       if (e.kind === "owner_message") {
         // Each job run opens with the job's instruction: not something the owner typed.
-        const kind = r.session.kind === "run" && !seenRun.has(e.run) ? "kickoff" : "message";
+        const first = !seenRun.has(e.run);
+        const kind = r.session.kind === "run" && first ? "kickoff" : "message";
         seenRun.add(e.run);
         // A message that came through a door is shown as written, marked with its door and sender.
         const door = parseDoorMessage(text);
         if (door) doorRuns.set(e.run, door.app);
         messages.push({
+          id: first ? inputID(e.run) : `${e.run}.${e.seq}`,
           at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : ownerWords(text), session: r.session.id,
           ...(door ? { door: { app: door.app, from: door.from, ...(door.subject ? { subject: door.subject } : {}) } } : {}),
           ...(attached.length ? { attachments: attached } : {}),
@@ -1612,7 +1619,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         const app = doorRuns.get(e.run);
         const reply = app ? sent.get(e.run) : undefined;
         const said: ThreadMessage = {
-          at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id,
+          id: `${e.run}.${e.seq}`, at: iso(e.time), from: "taf", kind: "message", text, session: r.session.id,
           ...(app ? { door: { app, reply: reply?.status ?? "pending", ...(reply?.why ? { why: reply.why } : {}) } } : {}),
         };
         messages.push(said);
@@ -1632,6 +1639,11 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
   return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
+}
+
+/** The id of a run's first owner message: what `POST …/messages` answers, so the app matches its send to the thread. */
+function inputID(run: string): string {
+  return `${run}.in`;
 }
 
 /** An `answered` event's body as the app shows it. */
@@ -1827,7 +1839,7 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   if (attached.length) at.attachments = attached;
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, text, at, ai));
-  return { session: run.session, new_session: newSession(at, run) };
+  return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created } };
 }
 
 /**
