@@ -259,7 +259,26 @@ final class AppModel: ObservableObject {
     /// Tafs with nothing yet keep tafs cloud's order, after the rest.
     /// The order is settled when the list changes or the app comes back, not on every reload:
     /// it moved while the owner looked at it (the 789 retest).
-    var listedTafs: [Taf] { Self.inOrder(tafs, listOrder, fallback: Self.byRecent(tafs, record: record, held: held, chats: chats)) }
+    /// A taf newly waiting on the owner still goes to the top at once.
+    var listedTafs: [Taf] {
+        let settled = Self.inOrder(tafs, listOrder, fallback: Self.byRecent(tafs, record: record, held: held, chats: chats, signedOut: signedOutTafs))
+        return Self.waitingFirst(settled, waiting: waitingOnOwner.subtracting(waitingWhenSettled))
+    }
+
+    /// The tafs waiting on the owner when the order was last settled: already placed by it.
+    private var waitingWhenSettled: Set<UUID> = []
+
+    /// The tafs waiting on the owner: a call held for an answer, or a connection its vendor
+    /// signed out, to sign in to again.
+    var waitingOnOwner: Set<UUID> { Set(held.map(\.tafID)).union(signedOutTafs) }
+
+    /// The tafs with a connection their vendor signed out.
+    private var signedOutTafs: Set<UUID> { Set(tafs.map(\.id).filter { signedOut($0) != nil }) }
+
+    /// The tafs newly waiting on the owner first, each part in the order it had.
+    nonisolated static func waitingFirst(_ tafs: [Taf], waiting: Set<UUID>) -> [Taf] {
+        tafs.filter { waiting.contains($0.id) } + tafs.filter { !waiting.contains($0.id) }
+    }
 
     /// The list in two (kiff/tafs#306): the tafs this person manages, and those shared with
     /// them to use, each in the list's order. Which is which is KIFF's answer; a taf whose
@@ -288,7 +307,8 @@ final class AppModel: ObservableObject {
 
     /// Settles the list's order now: when its tafs change, and when the app comes back.
     func settleListOrder() {
-        listOrder = Self.byRecent(tafs, record: record, held: held, chats: chats).map(\.id)
+        listOrder = Self.byRecent(tafs, record: record, held: held, chats: chats, signedOut: signedOutTafs).map(\.id)
+        waitingWhenSettled = waitingOnOwner
     }
 
     /// tafs in a settled order; a taf the order doesn't know yet comes after, as `fallback` has it.
@@ -300,11 +320,11 @@ final class AppModel: ObservableObject {
     }
 
     nonisolated static func byRecent(_ tafs: [Taf], record: [RecordEntry], held: [HeldCall],
-                                     chats: [UUID: [TafsCloud.ChatMessage]]) -> [Taf] {
+                                     chats: [UUID: [TafsCloud.ChatMessage]], signedOut: Set<UUID> = []) -> [Taf] {
         var latest: [UUID: Date] = [:]
         for e in record { latest[e.tafID] = max(latest[e.tafID] ?? .distantPast, e.at) }
         for (id, messages) in chats { if let at = messages.last?.at { latest[id] = max(latest[id] ?? .distantPast, at) } }
-        let waiting = Set(held.map(\.tafID))
+        let waiting = Set(held.map(\.tafID)).union(signedOut)
         return tafs.enumerated().sorted { a, b in
             let wa = waiting.contains(a.element.id), wb = waiting.contains(b.element.id)
             if wa != wb { return wa }
@@ -463,6 +483,7 @@ final class AppModel: ObservableObject {
         forgetApprovalKey()
         kiff.token = token
         cloud.token = token
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
         holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
@@ -479,7 +500,7 @@ final class AppModel: ObservableObject {
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
-        tafs = []; listOrder = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
+        tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         alertsReady = nil
         canAnswerHolds = nil
         mode = .kiff
@@ -714,6 +735,7 @@ final class AppModel: ObservableObject {
         cloudTafs = [:]; halts = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
         holderIDs = [:]
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         unfinishedRemovals = []
@@ -737,7 +759,7 @@ final class AppModel: ObservableObject {
         handoffInMemory = nil
         Keychain.delete(Self.alertHandoffAccount)
         store?.clear()
-        tafs = []; listOrder = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
+        tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         scriptPosition = [:]; templateOf = [:]
         mode = .signedOut
         notifyHeld()
@@ -3271,6 +3293,9 @@ final class AppModel: ObservableObject {
         case outcome(RecordEntry)
         /// Words of the answer streaming now (kiff/tafs#206), by their place in it.
         case streaming(id: String, TafsCloud.ChatMessage)
+        /// Someone wrote through a door (docs/doors.md), at its time among the messages: the
+        /// owner answers it there.
+        case knock(TafsCloud.Knock)
         var id: String {
             switch self {
             case .message(let m): return "m|" + m.id
@@ -3279,6 +3304,7 @@ final class AppModel: ObservableObject {
             case .held(let h): return "k|" + AppModel.heldKey(h)
             case .outcome(let e): return "k|" + e.id.uuidString
             case .streaming(let id, _): return id
+            case .knock(let k): return "d|" + k.id
             }
         }
         var at: Date {
@@ -3290,6 +3316,7 @@ final class AppModel: ObservableObject {
             // Without the answer's time, where its held card was: when the call was made.
             case .outcome(let e): return e.answer?.at ?? e.madeAt ?? e.at
             case .streaming(_, let m): return m.at
+            case .knock(let k): return k.at
             }
         }
     }
@@ -3309,6 +3336,8 @@ final class AppModel: ObservableObject {
         let messages = chats[tafID] ?? []
         let held = heldCalls(for: tafID)
         var items = messages.map(ChatItem.message) + held.map(ChatItem.held)
+        // A door's knocks sit at their own times, so a reply newer than a knock comes after it.
+        if mode == .kiff, !doorsOffered.isEmpty { items += (chatKnocks[tafID] ?? []).map(ChatItem.knock) }
         if let first = messages.first?.at {
             // What became of a call the owner approved shows too, done or not (kiff/tafs#115).
             items += entries(for: tafID).filter {
@@ -3728,6 +3757,92 @@ final class AppModel: ObservableObject {
         return (out.sorted { $0.at > $1.at }, settled)
     }
 
+    // MARK: Doors and live updates
+
+    /// Each taf's doors, one model per taf, shared by its Doors tab and its chat.
+    private var doorModels: [UUID: DoorsModel] = [:]
+    /// The open knocks of each taf whose doors were read, placed in its chat at their times.
+    @Published private(set) var chatKnocks: [UUID: [TafsCloud.Knock]] = [:]
+
+    /// The taf's doors, read with this person's session; none until tafs cloud runs the taf.
+    func doors(for tafID: UUID) -> DoorsModel? {
+        if let d = doorModels[tafID] { return d }
+        // The screenshots draw a sample's doors, with no taf on tafs cloud.
+        guard let id = cloudTaf(for: tafID)?.id ?? (Screenshots.enabled ? "sample" : nil) else { return nil }
+        let d = DoorsModel(cloud: cloud, tafID: id)
+        d.onKnocks = { [weak self] knocks in self?.chatKnocks[tafID] = knocks }
+        doorModels[tafID] = d
+        return d
+    }
+
+    /// A silent push from tafs cloud saying what changed (docs/approvals.md, "Live updates"):
+    /// only its kind and the taf. The phone reads again what the kind names, with its own
+    /// session, and trusts nothing from the push itself: the list for taf, halted and resumed,
+    /// the taf's doors for knock, and the taf's thread where it's been read. planque's grants
+    /// are read too, since tafs cloud never sees them: a connection its vendor signed out
+    /// shows after the next push, whatever it named.
+    func liveChange(_ change: String, cloudTafID: String?) async {
+        guard mode == .kiff, signedIn else { return }
+        let tafID = cloudTafID.flatMap { id in cloudTafs.first { $0.value.id == id }.flatMap { holderIDs[$0.key] } }
+        switch change {
+        case "knock":
+            if let tafID { await doorModels[tafID]?.load() }
+            await refreshConnections()
+        case "taf", "halted", "resumed":
+            // A refresh reads planque's grants too.
+            await refresh()
+        default:
+            return
+        }
+        if let tafID, change == "taf" || change == "knock", chats[tafID] != nil { await loadChat(tafID) }
+        // Its work too, where its page has read it.
+        if let tafID, change == "taf", works[tafID] != nil { await loadWork(tafID) }
+    }
+
+    // MARK: A taf's work (docs/reliability.md)
+
+    /// Where each taf's work stands, as tafs cloud says, once read; why it couldn't be read,
+    /// or a Send again didn't go; and the requests whose reply is being sent again, by run.
+    @Published private(set) var works: [UUID: TafsCloud.TafWork] = [:]
+    @Published private(set) var workErrors: [UUID: String] = [:]
+    @Published private(set) var sendingAgain: Set<String> = []
+
+    /// Reads where the taf's work stands: its requests and skipped firings, in tafs cloud's words.
+    func loadWork(_ tafID: UUID) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        do {
+            let work = try await cloud.work(c.id)
+            guard gen == accountGeneration else { return }
+            works[tafID] = work
+            workErrors[tafID] = nil
+        } catch is CancellationError {
+        } catch let error as URLError where error.code == .cancelled {
+        } catch {
+            guard gen == accountGeneration else { return }
+            workErrors[tafID] = "Its work couldn't be read: \(error.localizedDescription)"
+        }
+    }
+
+    /// Send again: a door reply given up on after its tries goes once more. It does no work
+    /// and signs nothing. The work is read again after, whatever came of it.
+    func sendAgain(_ tafID: UUID, run: String) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID), sendingAgain.insert(run).inserted else { return }
+        workErrors[tafID] = nil
+        let gen = accountGeneration
+        var failed: String?
+        do {
+            try await cloud.sendAgain(c.id, run: run)
+        } catch {
+            failed = "It wasn't sent again: \(error.localizedDescription)"
+        }
+        sendingAgain.remove(run)
+        guard gen == accountGeneration else { return }
+        await loadWork(tafID)
+        // Said after the work is read again, so the read doesn't clear it.
+        if let failed { workErrors[tafID] = failed }
+    }
+
     // MARK: Connections (planque, #51)
 
     /// The account's planque grants: connections, and connections waiting for the owner.
@@ -3765,12 +3880,39 @@ final class AppModel: ObservableObject {
         Keychain.save(tenant, for: Self.planqueAccount)
     }
 
-    /// A taf's connections: the grants made for its KIFF agent that are connected, or whose
-    /// sign-in planque holds while Setup chooses the tools, so the owner can end it.
+    /// A taf's connections: the grants made for its KIFF agent that are connected, whose
+    /// sign-in planque holds while Setup chooses the tools, so the owner can end it, or that
+    /// its vendor signed out, so the owner signs in again.
     func connections(for tafID: UUID) -> [PlanqueClient.Grant] {
         guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return [] }
-        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn) }
+        return grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect) }
     }
+
+    /// The taf's connection its vendor signed out, if one is: the taf can't use those tools
+    /// until the owner signs in again, so it waits on the owner in the list, in planque's words.
+    func signedOut(_ tafID: UUID) -> PlanqueClient.Grant? {
+        guard let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return nil }
+        return grants.first { $0.request.agent == agent && $0.needsReconnect }
+    }
+
+    /// Signs in again to a connection its vendor signed out, from the taf's page: the same
+    /// approval as Coach's card, behind one Face ID, then the vendor's own page. Signed in
+    /// only once planque answers connected; otherwise the connection says why.
+    func reconnect(_ grant: PlanqueClient.Grant) async {
+        lastError = nil
+        reconnectErrors[grant.id] = nil
+        shownTermsChanged = false
+        let done = await connect(grantID: grant.id, shown: grant.digest)
+        if done?.connected != true {
+            reconnectErrors[grant.id] = lastError ?? quietStop ?? "Nothing was signed in. Try again."
+            lastError = nil
+        }
+    }
+
+    /// Why a sign-in again from a taf's page didn't connect, by grant id.
+    @Published private(set) var reconnectErrors: [String: String] = [:]
+    /// Where an approval in progress is, once back from the vendor's page: "Checking the sign-in…".
+    @Published private(set) var connectStep: String?
 
     /// A connection none of whose tools is on the live version's Card (kiff/tafs#138): left
     /// over after a version moved its Card to a fixed tool. The taf doesn't use it now, but an
@@ -3937,7 +4079,8 @@ final class AppModel: ObservableObject {
             await keepCoachTools(tenant: tenant, gen: gen)
             return grant
         }
-        guard ["pending", "approved", "signed_in"].contains(grant.status) else {
+        // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
+        guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) else {
             failureIsTheRequests = grant.status == "failed"
             lastError = "This connection is \(grant.status.replacingOccurrences(of: "_", with: " "))\(grant.reason.map { ": \($0)" } ?? ".")"
             return nil
@@ -3990,6 +4133,10 @@ final class AppModel: ObservableObject {
                 return nil
             }
             guard gen == accountGeneration else { return nil }
+            // Back from the vendor: signed in only once planque says the grant is connected,
+            // never because the page closed.
+            connectStep = "Checking the sign-in…"
+            defer { connectStep = nil }
             connected = try await planque.confirm(grantID: grant.id, code: signedIn.code)
         } catch VendorSignIn.SignInError.cancelled {
             lastError = "The sign-in was closed. Nothing was connected."
@@ -4002,6 +4149,10 @@ final class AppModel: ObservableObject {
             return nil
         }
         await refreshConnections()
+        guard connected.connected || connected.listed else {
+            lastError = "The sign-in at \(grant.vendor) didn't connect: planque has it as \(connected.status.replacingOccurrences(of: "_", with: " ")). Nothing was connected. Try signing in again."
+            return nil
+        }
         return connected
     }
 

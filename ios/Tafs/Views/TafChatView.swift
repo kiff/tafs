@@ -7,6 +7,9 @@ import SwiftUI
 struct TafChatView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
+    /// The owner scrolled the thread: down (true), toward what's newer, or back up. The taf's
+    /// page folds its header's second line away going down, so the chat has the screen.
+    var onScroll: ((Bool) -> Void)? = nil
     @State private var draft = ""
     @FocusState private var typing: Bool
     /// Whether the bottom of the thread shows, and whether the thread follows what arrives.
@@ -137,6 +140,9 @@ struct TafChatView: View {
                                     OutcomeLine(text: Self.outcomeText(entry), tone: Self.outcomeTone(entry.kind), mark: Self.outcomeMark(entry.kind))
                                 case .streaming(_, let m):
                                     ChatBubble(message: m, taf: taf, fullWidth: true, steady: true)
+                                case .knock(let knock):
+                                    // Someone wrote through a door (docs/doors.md): the owner decides here.
+                                    if let doors = model.doors(for: tafID) { KnockCard(knock: knock, taf: taf, doors: doors) }
                                 }
                             }
                             .id(item.id)
@@ -174,11 +180,6 @@ struct TafChatView: View {
                             }
                         }
                         if !thinking { ended(taf) }
-                        // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
-                        if model.mode == .kiff, !model.doorsOffered.isEmpty, let cloudID = model.cloudTaf(for: tafID)?.id {
-                            ChatKnocks(taf: taf, cloud: model.cloud, cloudID: cloudID, refresh: items.count)
-                                .id(cloudID)
-                        }
                         if let queued = state.queued {
                             QueuedBubble(text: queued, who: taf?.name ?? "your taf") { _ = model.unqueueChat(tafID) }
                                 .id("queued")
@@ -213,6 +214,10 @@ struct TafChatView: View {
                 .frame(maxWidth: .infinity)
             }
             .accessibilityIdentifier("chat-thread")
+            // The taf's doors are read with its thread, so their knocks sit among the messages.
+            .task(id: model.chats[tafID]?.count ?? 0) {
+                if model.mode == .kiff, !model.doorsOffered.isEmpty { await model.doors(for: tafID)?.load() }
+            }
             // What the pin is doing, for the UI test that keeps the 845 test from coming back.
             .accessibilityValue(pinState)
             .dismissesKeyboardInteractively()
@@ -220,7 +225,11 @@ struct TafChatView: View {
             .background(GeometryReader { g in
                 Color.clear.onAppear { viewport = g.size.height }.onChange(of: g.size.height) { viewport = $0 }
             })
-            .simultaneousGesture(DragGesture().onChanged { _ in following = false; touched = true })
+            .simultaneousGesture(DragGesture().onChanged { drag in
+                following = false
+                touched = true
+                if abs(drag.translation.height) > 24 { onScroll?(drag.translation.height < 0) }
+            })
             .overlay(alignment: .bottom) {
                 VStack(spacing: 8) {
                     // The held call waiting for the owner, when it's out of view.
@@ -443,7 +452,7 @@ struct TafChatView: View {
             #if os(iOS)
             if model.filesTarget(key) != nil { AttachButton(key: key) }
             #endif
-            ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft)
+            ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft, cursor: { model.dictation.cursor = $0 })
                 .accessibilityIdentifier("chat-field")
                 .focused($typing)
                 .scaledFont(16)

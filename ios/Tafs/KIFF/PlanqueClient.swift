@@ -102,8 +102,12 @@ final class PlanqueClient {
             let what: String
         }
         let id: String
-        /// pending, approved, signed_in, listed, connected, failed or disconnected.
+        /// pending, approved, signed_in, listed, connected, failed, disconnected, or
+        /// needs_reconnect: connected once, then signed out by its vendor, so it waits for a
+        /// real sign-in again.
         let status: String
+        /// planque's words for the status, shown as they are: "Signed out by Stripe · sign in again".
+        var statusWords: String?
         /// What the owner reads before approving: each tool in words (kiff/planque#37).
         let text: String
         /// Each tool's exact terms, one line each, as planque gives them: its name, the
@@ -126,7 +130,7 @@ final class PlanqueClient {
         /// only then. Set by `grants()`, never read from planque.
         var digestMatches = false
 
-        enum CodingKeys: String, CodingKey { case id, status, text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor" }
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor" }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
@@ -147,6 +151,13 @@ final class PlanqueClient {
         /// Connected first (contract 5): signed in, and planque listed the vendor's tools for
         /// Setup to choose from. Nothing is in KIFF yet.
         var listed: Bool { status == "listed" }
+        /// Its vendor signed it out: the owner signs in again, and it's connected only once
+        /// planque says so.
+        var needsReconnect: Bool { status == "needs_reconnect" }
+        /// The signed-out connection in planque's words; before planque sends them, the app's.
+        var signedOutWords: String {
+            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? "Signed out by \(vendor) · sign in again"
+        }
         /// A sign-in planque holds that no taf uses yet: the owner can see and end it.
         var holdsSignIn: Bool { listed || (status == "pending" && signedIn == true) }
         /// `heldUntil` as a date: its fraction of a second dropped, which a formatter can't read past milliseconds.

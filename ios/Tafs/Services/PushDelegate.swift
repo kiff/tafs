@@ -9,6 +9,9 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
     var onToken: (@MainActor (Data) -> Void)?
     /// A held call changed elsewhere: reload what needs the owner.
     var onHeldChanged: (@MainActor () async -> Void)?
+    /// Something on the account changed (docs/approvals.md, "Live updates"): its kind
+    /// (`change`) and tafs cloud's id for the taf, read again with the phone's own session.
+    var onChange: (@MainActor (String, String?) async -> Void)?
     /// A hold's alert showed with tafs open: reload until Needs you has that hold.
     var onHoldAlert: (@MainActor (String) async -> Void)?
     /// Opens a screen ("needs-you"). A tap that launched the app waits here until it is set.
@@ -92,6 +95,14 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
 
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        if let change = userInfo["change"] as? String {
+            let taf = userInfo["taf_id"] as? String
+            Task {
+                await onChange?(change, taf)
+                completionHandler(.newData)
+            }
+            return
+        }
         guard let hold = userInfo["hold_id"] as? String else { completionHandler(.noData); return }
         if userInfo["answered"] as? Bool == true { Self.removeAlerts(forHold: hold) }
         Task {

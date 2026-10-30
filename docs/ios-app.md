@@ -41,8 +41,8 @@ call its methods; they hold only their own view state.
 - **Sections**, marked `// MARK:` in the file: Reading, Signing in with KIFF, People,
   Alerts while tafs is closed, The remembered list, Sample mode, Starting a taf, Runs,
   The owner answers, Stopping, Halt, Usage, Tasks and plans, Deleting the account,
-  Memory, Versions, Trying a version, Chat, Attachments, A taf's chat live, Connections,
-  Setup, Coach mode.
+  Memory, Versions, Trying a version, Chat, Attachments, A taf's chat live, Doors and live
+  updates, A taf's work, Connections, Setup, Coach mode.
 - **Errors:** `lastError` is the "Not done" alert, only for something the person did
   that didn't go through. A refresh the app makes by itself never sets it (the 930 test).
   It sets `unreachable` instead: "Can't reach KIFF" when the network failed, "Couldn't
@@ -54,6 +54,42 @@ call its methods; they hold only their own view state.
 - **Testing:** every client and the clock are injected (`init(signer:kiff:cloud:planque:…)`),
   and tests serve KIFF and tafs cloud from `StubProtocol`. A chat's stream can be given
   directly (`streamOpener`, `resumeOpener`).
+
+## Live updates
+
+A silent push from tafs cloud names what changed on the account (`change` and `taf_id`,
+[approvals.md](approvals.md#live-updates)). `PushDelegate` hands it to `AppModel.liveChange`,
+which reads that again with the phone's own session and takes nothing from the push:
+- `taf`: the home list, and that taf's thread and work where they've been read;
+- `halted` and `resumed`: the home list;
+- `knock`: that taf's doors, and its thread where it's been read.
+
+Every refresh and every push also reads planque's grants again: tafs cloud never sees them, so
+this is how a connection its vendor signed out reaches the list. A change of a kind the app
+doesn't know is ignored.
+
+Each taf has one `DoorsModel` (`AppModel.doors(for:)`), shared by its Doors tab and its chat,
+so a door's knocks sit in the chat at their own times (`ChatItem.knock`). A paired sender's
+message, kept from its knock, reads "Paired · Do it or Ignore this message", calmly, and sits
+apart from strangers' knocks in the Doors tab. A door shows tafs cloud's words for itself
+(`words`: `state`, `tap`, `settings`); the app's own lines stand in only where it sends none.
+
+**A connection its vendor signed out** (`needs_reconnect`): its taf waits on the owner at the
+top of the home list, its row reading planque's `status_words` ("Signed out by Stripe · sign in
+again"; `AppModel.signedOut`, `waitingOnOwner`). A taf newly waiting goes to the top at once;
+otherwise the list holds its settled order. The taf's Card tab offers **Sign in again**
+(`AppModel.reconnect`), and Coach's sign-in card says the same for such a grant. Either way it's
+one approval, then the vendor's own page, and it's signed in only once planque answers
+connected: "Checking the sign-in…" meanwhile (`connectStep`).
+
+**A taf's work:** the Activity tab shows `GET /v1/tafs/{id}/work`
+([reliability.md](reliability.md#the-tafs-view); `WorkPanel`, `AppModel.loadWork`): tafs
+cloud's line, then its recent requests and skipped firings, newest first, in tafs cloud's words.
+A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
+given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`).
+
+**Dictation** goes in at the box's insertion point, with what was after it kept after the words
+heard (`Dictation.cursor`, from iOS 18, which says where the point is); before that, at the end.
 
 ## Launch arguments
 

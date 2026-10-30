@@ -124,13 +124,36 @@ struct NavStack<Content: View>: View {
 struct ChatField: View {
     let title: String
     @Binding var text: String
+    /// Where the insertion point is, in characters, for dictation to put its words there;
+    /// told from iOS 18 and macOS 15, which say where it is.
+    var cursor: ((Int) -> Void)? = nil
 
     var body: some View {
-        if #available(iOS 16, macOS 13, *) {
+        if #available(iOS 18, macOS 15, *), let cursor {
+            SelectingField(title: title, text: $text, cursor: cursor)
+        } else if #available(iOS 16, macOS 13, *) {
             TextField(title, text: $text, axis: .vertical).lineLimit(1...6)
         } else {
             TextField(title, text: $text)
         }
+    }
+}
+
+/// A message box that says where its insertion point is.
+@available(iOS 18, macOS 15, *)
+private struct SelectingField: View {
+    let title: String
+    @Binding var text: String
+    let cursor: (Int) -> Void
+    @State private var selection: TextSelection?
+
+    var body: some View {
+        TextField(title, text: $text, selection: $selection, axis: .vertical).lineLimit(1...6)
+            .onChange(of: selection) { _, now in
+                // Gone when the box loses focus (the mic's tap): the last point stays.
+                guard let now, case .selection(let range) = now.indices, range.upperBound <= text.endIndex else { return }
+                cursor(text.distance(from: text.startIndex, to: range.upperBound))
+            }
     }
 }
 

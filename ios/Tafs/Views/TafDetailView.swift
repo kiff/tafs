@@ -20,6 +20,9 @@ struct TafDetailView: View {
     #endif
     @State private var width: CGFloat = 0
     @State private var height: CGFloat = 0
+    /// Share, the version and the Card's line folded away while the page scrolls down, so
+    /// the chat has the screen; they come back on the way up.
+    @State private var folded = false
 
     /// The side column's width, and the least the chat keeps beside it: the largest iPhone's
     /// width (kiff/tafs#211, the owner's 4A).
@@ -40,6 +43,7 @@ struct TafDetailView: View {
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 12) {
                     header(taf)
+                    if !folded { headerLine(taf) }
                     Picker("View", selection: $section) {
                         if model.canChat(taf.id) { Text("Chat").tag(0) }
                         Text("Activity").tag(1)
@@ -49,7 +53,7 @@ struct TafDetailView: View {
                     .pickerStyle(.segmented)
                     // Without the side column, the Cards are one line above the chat or the
                     // activity; it opens the Card tab (kiff/tafs#211).
-                    if section != 2 && !sideColumn, let front = shownFront(taf) {
+                    if section != 2 && !sideColumn && !folded, let front = shownFront(taf) {
                         CardBar(card: front, count: taf.shownCards.count, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked) {
                             section = 2
                         }
@@ -61,18 +65,21 @@ struct TafDetailView: View {
 
                 HStack(alignment: .top, spacing: 0) {
                     if section == 0 && model.canChat(taf.id) {
-                        TafChatView(tafID: taf.id)
+                        TafChatView(tafID: taf.id, onScroll: fold)
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
-                                if section == 3, hasDoors(taf), let cloudID = model.cloudTaf(for: taf.id)?.id ?? (Screenshots.enabled ? "sample" : nil) {
-                                    DoorsView(taf: taf, cloud: model.cloud, cloudID: cloudID, manages: model.manages(taf.id), myEmail: model.kiffAccount?.email)
+                                if section == 3, hasDoors(taf), let doors = model.doors(for: taf.id) {
+                                    DoorsView(taf: taf, doors: doors, manages: model.manages(taf.id), myEmail: model.kiffAccount?.email)
                                 } else if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                         }
                         .coachClearance()
+                        .simultaneousGesture(DragGesture().onChanged { drag in
+                            if abs(drag.translation.height) > 24 { fold(drag.translation.height < 0) }
+                        })
                     }
                     if sideColumn {
                         ScrollView { side(taf).padding(.horizontal, 16).padding(.vertical, 12) }
@@ -126,23 +133,37 @@ struct TafDetailView: View {
         return cards.first(where: { $0.id == frontCard }) ?? cards.first
     }
 
+    /// One row: avatar, name and state, under the back button. The taf's tools aren't listed:
+    /// what it may do is on its Card.
     private func header(_ taf: Taf) -> some View {
-        HStack(spacing: 12) {
-            TafAvatar(taf: taf, size: 52)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(taf.name).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                    .accessibilityIdentifier("taf-page-name")
-                Text(taf.tools.isEmpty ? "No tools yet" : taf.tools.joined(separator: " · "))
-                    .scaledFont(13).foregroundColor(Theme.dim)
-                versionLine(taf)
-                #if os(iOS)
-                // Who it's shared with, and Share: the taf's manager's to see (the 870 test).
-                if model.manages(taf.id) { ShareLine(tafID: taf.id) }
-                #endif
-            }
-            Spacer()
+        HStack(spacing: 10) {
+            TafAvatar(taf: taf, size: 34)
+            Text(taf.name).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title2).foregroundColor(Theme.ink)
+                .lineLimit(1)
+                .accessibilityIdentifier("taf-page-name")
+            Spacer(minLength: 8)
             StateChip(state: taf.state)
         }
+    }
+
+    /// Under the header, folded away while the page scrolls down: its version, and who it's
+    /// shared with.
+    @ViewBuilder
+    private func headerLine(_ taf: Taf) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            versionLine(taf)
+            #if os(iOS)
+            // Who it's shared with, and Share: the taf's manager's to see (the 870 test).
+            if model.manages(taf.id) { ShareLine(tafID: taf.id) }
+            #endif
+        }
+        .transition(.opacity)
+    }
+
+    /// Folds the header's second line going down, and brings it back going up.
+    private func fold(_ down: Bool) {
+        guard down != folded else { return }
+        withMotion(.easeOut(duration: 0.2)) { folded = down }
     }
 
     /// The ways into its versions (kiff/tafs#173): the live one, which opens Versions, and an
@@ -175,6 +196,7 @@ struct TafDetailView: View {
             Eyebrow(text: "The job")
             Text(taf.job).scaledFont(15).foregroundColor(Theme.ink)
         }
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil { WorkPanel(tafID: taf.id) }
         // How it does the job, beside the job: not part of its Card (kiff/tafs#96).
         if model.mode == .sample || model.cloudTaf(for: taf.id) != nil {
             MemoryPanel(tafID: taf.id)
@@ -294,6 +316,62 @@ struct TafDetailView: View {
     }
 }
 
+/// Where the taf's work stands, as tafs cloud says it (docs/reliability.md): its line, then its
+/// recent requests and skipped firings, newest first, each in tafs cloud's words. A request
+/// needing the owner is amber, a failed one red; a skipped firing isn't a failure, so it's dim.
+/// A door reply given up on offers Send again to whoever manages the taf.
+struct WorkPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+
+    var body: some View {
+        let work = model.works[tafID]
+        let error = model.workErrors[tafID]
+        Group {
+            if work != nil || error != nil {
+                Panel {
+                    Eyebrow(text: "Its work")
+                    if let line = work?.summary?.line, !line.isEmpty {
+                        Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    }
+                    ForEach(work?.rows ?? []) { row in
+                        switch row {
+                        case .skipped(let s):
+                            Text(s.words).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                                .fixedSize(horizontal: false, vertical: true)
+                        case .request(let r):
+                            request(r)
+                        }
+                    }
+                    if let error {
+                        Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+        .task(id: tafID) { await model.loadWork(tafID) }
+    }
+
+    private func request(_ r: TafsCloud.TafWork.Request) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(r.line).scaledFont(14)
+                .foregroundColor(r.state == "needs_you" ? Theme.amberText : r.state == "failed" ? Theme.no : Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+            ForEach(Array(r.deliveries.enumerated()), id: \.offset) { _, d in
+                Text(d.line).scaledFont(12, relativeTo: .caption).foregroundColor(d.sendAgain ? Theme.amberText : Theme.dim)
+                    .fixedSize(horizontal: false, vertical: true)
+                if d.sendAgain, model.manages(tafID) {
+                    let sending = model.sendingAgain.contains(r.id)
+                    Button(sending ? "Sending again…" : "Send again") { Task { await model.sendAgain(tafID, run: r.id) } }
+                        .buttonStyle(OutlineButtonStyle())
+                        .disabled(sending)
+                }
+            }
+        }
+    }
+}
+
 /// The vendors connected to the taf through planque (#51): whose keys, which tools, what
 /// happened last, and Disconnect, which revokes the sign-in at the vendor.
 struct ConnectionsPanel: View {
@@ -314,7 +392,12 @@ struct ConnectionsPanel: View {
                             Text(KIFFMapping.vendorWords(grant.vendor)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                             Text("Keys kept sealed\(grant.account.map { " · \($0)" } ?? "")")
                                 .scaledFont(12).foregroundColor(Theme.dim)
-                            if grant.connected {
+                            if grant.needsReconnect {
+                                // Its vendor signed it out: planque's words, and the owner signs in again.
+                                Text(grant.signedOutWords)
+                                    .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            } else if grant.connected {
                                 // What it may do, in words, not the tools' ids (kiff/tafs#138, item 52).
                                 Text(grant.request.tools.filter(\.tafs).map(\.words).joined(separator: " · "))
                                     .scaledFont(12).foregroundColor(Theme.soft)
@@ -343,6 +426,16 @@ struct ConnectionsPanel: View {
                         Button("Disconnect") { confirming = grant }
                             .scaledFont(14, weight: .semibold)
                             .foregroundColor(Theme.no)
+                    }
+                    if grant.needsReconnect {
+                        Button(model.connecting == grant.id ? model.connectStep ?? "Opening the sign-in…" : "Sign in again") {
+                            Task { await model.reconnect(grant) }
+                        }
+                        .buttonStyle(OutlineButtonStyle(color: Theme.ink))
+                        .disabled(model.connecting != nil)
+                        if let why = model.reconnectErrors[grant.id] {
+                            Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
             }

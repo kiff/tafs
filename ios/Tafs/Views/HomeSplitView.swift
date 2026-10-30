@@ -228,7 +228,11 @@ struct HomeSplitView: View {
                         .background(Theme.amber).clipShape(Capsule())
                     }
                 }
-                Text(taf.now).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim).oneLineUnlessLarge()
+                if let out = model.signedOut(taf.id) {
+                    Text(out.signedOutWords).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.amberText).oneLineUnlessLarge()
+                } else {
+                    Text(taf.now).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim).oneLineUnlessLarge()
+                }
             }
         }
         .padding(.vertical, 2)

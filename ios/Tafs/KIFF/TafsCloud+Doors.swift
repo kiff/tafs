@@ -42,9 +42,18 @@ extension TafsCloud {
         /// Today's messages from anyone else, and their own cap.
         var othersToday: Int? = nil
         var othersLimit: Int? = nil
+        /// tafs cloud's words for the door (docs/doors.md), shown as they are; none from an older tafs cloud.
+        var words: Words? = nil
+
+        /// Where the door stands, what a tap on it does, and that its settings are below.
+        struct Words: Decodable, Equatable {
+            let state: String
+            let tap: String
+            let settings: String
+        }
 
         enum CodingKeys: String, CodingKey {
-            case id, app, kind, label, open, address, proof, how, keys, today, limit, resting
+            case id, app, kind, label, open, address, proof, how, keys, today, limit, resting, words
             case othersToday = "others_today", othersLimit = "others_limit"
         }
 

@@ -125,4 +125,27 @@ final class DoorsTests: XCTestCase {
         XCTAssertNil(model.error)
         XCTAssertTrue(model.doors.isEmpty)
     }
+
+    /// Each door's words are tafs cloud's, shown as they are; an older tafs cloud sends none.
+    func testADoorsWordsReadAsTafsCloudSendsThem() throws {
+        let json = #"{"id":"email","app":"email","kind":"email","label":"Email","open":true,"address":"refunds@tafs.example","proof":"proven","how":"x","keys":[],"today":0,"limit":20,"resting":false,"words":{"state":"Open: messages from you and paired senders to refunds@tafs.example start work.","tap":"Tap to close the email door.","settings":"Paired senders and today's limits are below."}}"#
+        let door = try KIFFClient.decoder.decode(TafsCloud.Door.self, from: Data(json.utf8))
+        XCTAssertEqual(door.words?.tap, "Tap to close the email door.")
+        XCTAssertEqual(door.words?.settings, "Paired senders and today's limits are below.")
+        let older = try KIFFClient.decoder.decode(TafsCloud.Doors.self, from: Data(Self.doorsJSON.utf8))
+        XCTAssertNil(older.doors.first?.words)
+    }
+
+    /// The chat is told the open knocks each time they change, so it places them at their times.
+    func testTheChatIsToldTheOpenKnocks() async throws {
+        let cloud = stubbedCloud()
+        StubProtocol.responses["GET /v1/tafs/taf-1/doors"] = (200, Self.doorsJSON)
+        StubProtocol.responses["POST /v1/tafs/taf-1/doors/knocks/k-1"] = (200, #"{"knock":"k-1","state":"done"}"#)
+        let model = DoorsModel(cloud: cloud, tafID: "taf-1")
+        var told: [[String]] = []
+        model.onKnocks = { told.append($0.map(\.id)) }
+        await model.load()
+        await model.answer(model.openKnocks[0], "ignore")
+        XCTAssertEqual(told, [["k-1", "k-2"], ["k-2"]])
+    }
 }

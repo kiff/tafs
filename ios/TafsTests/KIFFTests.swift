@@ -3,16 +3,58 @@ import XCTest
 
 /// Answers requests from canned responses, and records what was sent.
 final class StubProtocol: URLProtocol {
-    nonisolated(unsafe) static var responses: [String: (Int, String)] = [:]   // "METHOD path" → (status, body)
-    nonisolated(unsafe) static var sent: [URLRequest] = []
+    // Each is read and written behind one lock: a test sets them while URL loading reads
+    // them on its own thread, and an unguarded dictionary crashed mid-change
+    // (testADroppedConnectionKeepsPolling: "unrecognized selector … objectForKey:").
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var _responses: [String: (Int, String)] = [:]
+    nonisolated(unsafe) private static var _sent: [URLRequest] = []
+    nonisolated(unsafe) private static var _holdOnce: String?
+    nonisolated(unsafe) private static var _thenRespond: [String: [String: (Int, String)]] = [:]
+    nonisolated(unsafe) private static var _dropped: [String: [URLError.Code]] = [:]
+
+    /// "METHOD path" → (status, body).
+    static var responses: [String: (Int, String)] {
+        get { lock.withLock { _responses } }
+        set { lock.withLock { _responses = newValue } }
+    }
+    static var sent: [URLRequest] {
+        get { lock.withLock { _sent } }
+        set { lock.withLock { _sent = newValue } }
+    }
     /// One request ("METHOD path") to hold until `release` is signalled; `arrived` says it came.
-    nonisolated(unsafe) static var holdOnce: String?
+    static var holdOnce: String? {
+        get { lock.withLock { _holdOnce } }
+        set { lock.withLock { _holdOnce = newValue } }
+    }
     /// Once a request ("METHOD path") is served, these responses replace others: what a
     /// server answers after it changed something.
-    nonisolated(unsafe) static var thenRespond: [String: [String: (Int, String)]] = [:]
+    static var thenRespond: [String: [String: (Int, String)]] {
+        get { lock.withLock { _thenRespond } }
+        set { lock.withLock { _thenRespond = newValue } }
+    }
     /// Requests ("METHOD path") whose next tries fail as the network does, in order: what
     /// iOS does to a socket while the app is in the background.
-    nonisolated(unsafe) static var dropped: [String: [URLError.Code]] = [:]
+    static var dropped: [String: [URLError.Code]] {
+        get { lock.withLock { _dropped } }
+        set { lock.withLock { _dropped = newValue } }
+    }
+
+    /// The answer to one request, chosen in one step under the lock: a dropped try, or the
+    /// response, after which `thenRespond` takes effect.
+    private static func answer(_ key: String) -> (dropped: URLError.Code?, status: Int, body: String) {
+        lock.withLock {
+            if var codes = _dropped[key], !codes.isEmpty {
+                let code = codes.removeFirst()
+                _dropped[key] = codes
+                return (code, 0, "")
+            }
+            // KIFF ends a session when asked, unless a test says otherwise.
+            let (status, body) = _responses[key] ?? (key == "POST /v1/auth/device/logout" ? (200, "{}") : (404, #"{"error":"not stubbed"}"#))
+            if let next = _thenRespond.removeValue(forKey: key) { _responses.merge(next) { $1 } }
+            return (nil, status, body)
+        }
+    }
     static let arrived = DispatchSemaphore(value: 0)
     static let release = DispatchSemaphore(value: 0)
 
@@ -33,7 +75,7 @@ final class StubProtocol: URLProtocol {
             stream.close()
             request.httpBody = data
         }
-        Self.sent.append(request)
+        Self.lock.withLock { Self._sent.append(request) }
         let path = request.url.map { $0.path + ($0.query.map { "?" + $0 } ?? "") } ?? ""
         let key = "\(request.httpMethod ?? "GET") \(path)"
         if Self.holdOnce == key {
@@ -41,15 +83,11 @@ final class StubProtocol: URLProtocol {
             Self.arrived.signal()
             Self.release.wait()
         }
-        if var codes = Self.dropped[key], !codes.isEmpty {
-            let code = codes.removeFirst()
-            Self.dropped[key] = codes
-            client?.urlProtocol(self, didFailWithError: URLError(code))
+        let (dropped, status, body) = Self.answer(key)
+        if let dropped {
+            client?.urlProtocol(self, didFailWithError: URLError(dropped))
             return
         }
-        // KIFF ends a session when asked, unless a test says otherwise.
-        let (status, body) = Self.responses[key] ?? (key == "POST /v1/auth/device/logout" ? (200, "{}") : (404, #"{"error":"not stubbed"}"#))
-        if let next = Self.thenRespond.removeValue(forKey: key) { Self.responses.merge(next) { $1 } }
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data(body.utf8))

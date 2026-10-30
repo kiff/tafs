@@ -547,4 +547,58 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").count, 1)
         Keychain.delete(AppModel.planqueAccount)
     }
+
+    // MARK: A connection its vendor signed out
+
+    private static func signedOutJSON(_ id: String = "g_01") -> String {
+        grantJSONFor(id, status: "needs_reconnect")
+            .replacingOccurrences(of: #""status":"needs_reconnect","#, with: #""status":"needs_reconnect","status_words":"Signed out by Stripe · sign in again","#)
+    }
+
+    func testASignedOutGrantReadsInPlanquesWords() throws {
+        let g = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(Self.signedOutJSON().utf8))
+        XCTAssertTrue(g.needsReconnect)
+        XCTAssertFalse(g.connected)
+        XCTAssertEqual(g.signedOutWords, "Signed out by Stripe · sign in again")
+        let bare = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(Self.grantJSONFor(status: "needs_reconnect").utf8))
+        XCTAssertEqual(bare.signedOutWords, "Signed out by Stripe · sign in again", "the app's words until planque sends its own")
+    }
+
+    /// A grant its vendor signed out is approved and signed in again, as a new one is: one
+    /// Face ID, the vendor's page, then planque's confirmation, on the same grant.
+    func testASignedOutGrantSignsInAgain() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(Self.signedOutJSON())]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, grantJSON(status: "connected"))
+        vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
+
+        let connected = await model.connect(grantID: "g_01", shown: Self.digest)
+        XCTAssertEqual(connected?.status, "connected", model.lastError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(Self.digest)"])
+        XCTAssertEqual(vendor.opened.count, 1)
+        XCTAssertNil(model.connectStep, "the check is over")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Back from the vendor, it's signed in only once planque says connected, never because
+    /// the page closed.
+    func testASignInPlanqueDoesntConnectIsNotSignedIn() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(Self.signedOutJSON())]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/authorize?x=1","expires_at":"2026-10-17T10:15:00Z"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, Self.signedOutJSON())
+        vendor.callback = URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")
+
+        let connected = await model.connect(grantID: "g_01", shown: Self.digest)
+        XCTAssertNil(connected)
+        XCTAssertEqual(model.lastError, "The sign-in at Stripe didn't connect: planque has it as needs reconnect. Nothing was connected. Try signing in again.")
+        Keychain.delete(AppModel.planqueAccount)
+    }
 }

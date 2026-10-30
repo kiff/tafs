@@ -581,7 +581,7 @@ struct SetupChatView: View {
             #if os(iOS)
             if model.filesTarget(key) != nil { AttachButton(key: key) }
             #endif
-            ChatField(title: thinking ? "Write the next message" : "Ask anything about your tafs", text: $model.setupDraft)
+            ChatField(title: thinking ? "Write the next message" : "Ask anything about your tafs", text: $model.setupDraft, cursor: { model.dictation.cursor = $0 })
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -1097,17 +1097,19 @@ struct SetupComponentView: View {
         default:
             let busy = model.connecting != nil
             let answered = model.answered.contains(c.id)
+            let signedOut = model.grants.first { $0.id == c.grant && $0.needsReconnect }
             Panel(stroke: state == .needsYou ? Theme.amber : Theme.ink) {
                 Eyebrow(text: state.isFailure ? "Didn't go through · sign in" : "Needs you · sign in",
                         color: state.isFailure ? Theme.no : Theme.amber)
-                Text("Sign in at \(vendor)").scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                // A connection its vendor signed out reads planque's words for it (needs_reconnect).
+                Text(signedOut?.signedOutWords ?? "Sign in at \(vendor)").scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 if case .failed(let why) = state {
                     Text(why.map { "It didn't go through: \($0)" } ?? "It didn't go through.")
                         .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                 }
                 Text(c.note ?? "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed.")
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                Button(state == .working ? "Opening the sign-in…" : state.isFailure ? "Try again" : c.yes ?? "Open \(c.service ?? "the sign-in")") {
+                Button(state == .working ? model.connectStep ?? "Opening the sign-in…" : state.isFailure ? "Try again" : signedOut != nil ? "Sign in again" : c.yes ?? "Open \(c.service ?? "the sign-in")") {
                     Task { await model.signInAgain(c) }
                 }
                 .buttonStyle(PrimaryButtonStyle())

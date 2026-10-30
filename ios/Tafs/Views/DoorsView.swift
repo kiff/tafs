@@ -5,7 +5,7 @@ import SwiftUI
 /// Below it, the door at the top: its address, who may give it work, and its day.
 struct DoorsView: View {
     let taf: Taf
-    @StateObject private var doors: DoorsModel
+    @ObservedObject private var doors: DoorsModel
     @State private var selected = 0
     @State private var adding = false
     @State private var pairing: TafsCloud.Door?
@@ -16,11 +16,12 @@ struct DoorsView: View {
     /// This person's sign-in: their own key, paired for them, reads "You"; anyone else's doesn't.
     let myEmail: String?
 
-    init(taf: Taf, cloud: TafsCloud, cloudID: String, manages: Bool = true, myEmail: String? = nil) {
+    /// `doors`: the taf's own, shared with its chat (`AppModel.doors(for:)`).
+    init(taf: Taf, doors: DoorsModel, manages: Bool = true, myEmail: String? = nil) {
         self.taf = taf
         self.manages = manages
         self.myEmail = myEmail
-        _doors = StateObject(wrappedValue: DoorsModel(cloud: cloud, tafID: cloudID))
+        self.doors = doors
     }
 
     private var door: TafsCloud.Door? { selected < doors.doors.count ? doors.doors[selected] : nil }
@@ -34,12 +35,25 @@ struct DoorsView: View {
                     .frame(height: 300)
                 Text(hint).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     .frame(maxWidth: .infinity)
+                if let settings = door?.words?.settings {
+                    Text(settings).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                        .frame(maxWidth: .infinity)
+                }
             }
             if let door { panel(door) } else if manages { addPanel } else {
                 Text("\(taf.name) has no door yet. Someone who manages it can add one.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
-            let waiting = doors.openKnocks.filter { !$0.isLine }
+            // Strangers' knocks wait on the owner; a paired sender's message, kept from its knock,
+            // waits for Do it or Ignore, apart and calmly.
+            let paired = doors.openKnocks.filter { !$0.isLine && $0.paired }
+            let waiting = doors.openKnocks.filter { !$0.isLine && !$0.paired }
+            if !paired.isEmpty {
+                Panel {
+                    Eyebrow(text: "Paired")
+                    ForEach(paired) { KnockCard(knock: $0, taf: taf, doors: doors, compact: true) }
+                }
+            }
             if !waiting.isEmpty {
                 Panel(stroke: Theme.amber.opacity(0.45)) {
                     Eyebrow(text: "Knocks · waiting on you", color: Theme.amber)
@@ -66,6 +80,7 @@ struct DoorsView: View {
 
     private var hint: String {
         guard let door else { return "Press \(taf.name) to add a door" }
+        if let tap = door.words?.tap { return tap }
         return "Press \(taf.name) to \(door.open ? "close" : "open") \(door.label)"
     }
 
@@ -95,8 +110,9 @@ struct DoorsView: View {
                     DoorBadge(app: door.app, open: door.open, size: 34)
                     VStack(alignment: .leading, spacing: 2) {
                         Eyebrow(text: "\(door.label) door")
-                        Text(door.open ? (door.resting ? "Resting until tomorrow" : "Open") : "Closed")
+                        Text(door.words?.state ?? (door.open ? (door.resting ? "Resting until tomorrow" : "Open") : "Closed"))
                             .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
                     if manages {
@@ -537,8 +553,11 @@ struct KnockCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("● KNOCK · BY \(DoorNames.label(knock.app).uppercased())\(knock.proof == "fail" ? " · DIDN'T CHECK OUT" : "")")
-                .scaledFont(10, weight: .semibold, design: .monospaced).foregroundColor(Theme.amberText)
+            Text("\(knock.paired ? "PAIRED · BY " : "● KNOCK · BY ")\(DoorNames.label(knock.app).uppercased())\(knock.proof == "fail" ? " · DIDN'T CHECK OUT" : "")")
+                .scaledFont(10, weight: .semibold, design: .monospaced).foregroundColor(knock.paired ? Theme.soft : Theme.amberText)
+            if knock.paired {
+                Text("Paired · Do it or Ignore this message").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+            }
             if let rest = knock.rest {
                 Text(rest == "keys"
                      ? "This door had its messages from you and paired senders for today. \(knock.dropped) more \(knock.dropped == 1 ? "was" : "were") dropped."
@@ -579,8 +598,10 @@ struct KnockCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.amber.opacity(0.07))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Theme.amber.opacity(0.45)))
+        // A paired sender's message waits too, but it isn't a stranger at the door: it reads
+        // calmly, not in amber.
+        .background(knock.paired ? Theme.panel : Theme.amber.opacity(0.07))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(knock.paired ? Theme.ink.opacity(0.2) : Theme.amber.opacity(0.45)))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .sheet(isPresented: $asking) { DoItSheet(knock: knock, taf: taf, doors: doors) }
     }
@@ -634,29 +655,6 @@ struct DoItSheet: View {
         .padding(20)
         .screenBackground()
         .onAppear { doors.error = nil }
-    }
-}
-
-/// The knocks waiting in a taf's chat, read with the chat.
-struct ChatKnocks: View {
-    let taf: Taf?
-    /// Read again when the thread changes.
-    let refresh: Int
-    @StateObject private var doors: DoorsModel
-
-    init(taf: Taf?, cloud: TafsCloud, cloudID: String, refresh: Int) {
-        self.taf = taf
-        self.refresh = refresh
-        _doors = StateObject(wrappedValue: DoorsModel(cloud: cloud, tafID: cloudID))
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ForEach(doors.openKnocks) { KnockCard(knock: $0, taf: taf, doors: doors) }
-            // A read that fails in the background says nothing in the chat: the Doors tab
-            // says it, in plain words, if it keeps failing (kiff/tafs#236, item 22).
-        }
-        .task(id: refresh) { await doors.load() }
     }
 }
 
