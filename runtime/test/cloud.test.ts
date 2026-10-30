@@ -1992,6 +1992,20 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(await sweepHandOvers(deps)).toEqual([]);
   });
 
+  it("a failed answer once the taf is made is kept: the sweep answers it, and there's still one taf", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("answerResult", new AgentsError(502, "bad gateway"));
+    await note();
+    expect(answer()).toBeUndefined();
+    expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: false }]);
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+    expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft"))).toHaveLength(1);
+    expect(await sweepHandOvers(deps)).toEqual([]);
+  });
+
   it("KIFF not answering is a blip: not told, and tried again on the sweep's backoff", async () => {
     const { w, note, answer, deps } = await paused();
     await note();

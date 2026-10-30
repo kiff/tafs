@@ -3531,9 +3531,13 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
       return undefined;
     });
     if (!outcome) continue;
-    await deps.agents.answerResult(tenant, coach.id, r.id, card.id, outcome).catch((err: unknown) => {
+    await deps.agents.answerResult(tenant, coach.id, r.id, card.id, outcome).catch(async (err: unknown) => {
       // Answered meanwhile (another note, or an app from before this): nothing more to do.
-      if (!refused(err, "card_not_waiting")) throw err;
+      if (refused(err, "card_not_waiting")) return;
+      // Not answered, as a failed make: the sweep tries again, and finds the taf made.
+      console.error(`handover ${r.id} ${card.id} answer: ${(err as Error).message}`);
+      await deps.coach!.remove(held).catch(() => undefined);
+      pending = true;
     });
   }
   return { took, pending };
