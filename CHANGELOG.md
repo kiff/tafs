@@ -159,6 +159,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Changed
 
+- On iPhone and iPad, a taf Coach hands over is set up by tafs cloud, not by the app. Its card
+  shows tafs cloud's answer: set up, with a button to open it; why it wasn't, with Coach handing
+  it over again; or "Setting up…" until the answer comes. The card no longer offers Try again.
 - Deleting the account the earlier way, where the app itself asks tafs cloud, planque and KIFF
   in turn, still works for installed builds. It goes one release after the build that signs one
   intent for tafs cloud to carry.

@@ -428,108 +428,57 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// The hand-over starts the taf Setup made, once: tafs cloud stores it from Setup's
-    /// draft (kiff/agents claims the key), and the phone refreshes to show it.
-    func testResultStartsTheTafOnce() async throws {
-        let model = await model(signer: FaceIDSigner())
-        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"taf-new","name":"Refunds","job":"refunds","kiff_agent":"refunds-x","status":"active","next_run":null,"last_run":null},"session":"s2"}"#)
-        let result = try SetupTests.component(#"{"type":"result","id":"done","taf":{"agent":"refunds-x","name":"Refunds","job":"refunds","draft":"drf_s1"},"text":"Refunds can refund within its Card.","tools":["refund_payment"]}"#)
-        StubProtocol.sent = []
-        await model.startSetupTaf(result)
-        let start = try XCTUnwrap(sent("POST", "cloud.test", "/v1/tafs").first)
-        XCTAssertEqual(body(start)["from_setup"] as? Bool, true)
-        XCTAssertEqual(body(start)["draft_id"] as? String, "drf_s1")
-        XCTAssertEqual(body(start)["job"] as? String, "refunds")
-        XCTAssertEqual(body(start)["name"] as? String, "Refunds")
-        XCTAssertNil(body(start)["claim_secret"], "the phone holds no claim secret for Setup's draft")
-        XCTAssertFalse(sent("GET", "cloud.test", "/v1/home").isEmpty, "then it refreshes")
-        XCTAssertNil(model.tafStartErrors["done"])
-
-        // A result without a job or a draft starts nothing.
-        StubProtocol.sent = []
-        let bare = try SetupTests.component(#"{"type":"result","id":"bare","taf":{"agent":"refunds-x","name":"Refunds"},"text":"Done."}"#)
-        await model.startSetupTaf(bare)
-        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs").isEmpty)
-        Keychain.delete(AppModel.planqueAccount)
-    }
-
-    /// A start tafs cloud refuses reaches Setup, once (kiff/tafs#183): it hears the taf
-    /// wasn't created and why, hands it over again, and the card stops offering the same
-    /// start. A server error may pass, so it keeps Try again and isn't told.
-    func testAFailedStartReachesSetupOnce() async throws {
-        let model = await model(signer: FaceIDSigner())
-        model.planqueSetUp(for: "t_01")
-        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
-        await model.loadSetup()
-        let result = try SetupTests.component(#"{"type":"result","id":"done","taf":{"agent":"refunds-x","name":"Refunds","job":"refunds","draft":"drf_s1"},"text":"Refunds can refund within its Card.","tools":["refund_payment"]}"#)
-
-        // A server error: Try again, and Setup isn't told.
-        StubProtocol.responses["POST /v1/tafs"] = (503, #"{"error":"try again"}"#)
-        StubProtocol.sent = []
-        await model.startSetupTaf(result)
-        XCTAssertNotNil(model.tafStartErrors["done"])
-        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty)
-        XCTAssertFalse(model.startFailureTold(result))
-
-        // tafs cloud refuses it: Setup hears it once, however often the start is tried.
-        StubProtocol.responses["POST /v1/tafs"] = (409, #"{"error":"you already have a taf named Refunds"}"#)
-        StubProtocol.sent = []
-        await model.startSetupTaf(result)
-        await model.startSetupTaf(result)
-        let told = sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages")
-        XCTAssertEqual(told.count, 1, "once")
-        XCTAssertEqual(body(told.first)["text"] as? String,
-                       "[result done] failed: the taf wasn't created: the account already has a taf named Refunds")
-        XCTAssertTrue(model.startFailureTold(result))
-        Keychain.delete(AppModel.planqueAccount)
-    }
-
-    /// A 401 is a sign-in to renew, not a refusal: Setup isn't told. And a failure Setup
-    /// couldn't be told of isn't marked told: the card keeps Try again (kiff/tafs#183).
-    func testAFailedStartIsToldOnlyOnceTheMessageWent() async throws {
-        let model = await model(signer: FaceIDSigner())
-        model.planqueSetUp(for: "t_01")
-        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
-        await model.loadSetup()
-        let result = try SetupTests.component(#"{"type":"result","id":"done","taf":{"agent":"refunds-x","name":"Refunds","job":"refunds","draft":"drf_s1"},"text":"Refunds can refund within its Card.","tools":["refund_payment"]}"#)
-
-        StubProtocol.responses["POST /v1/tafs"] = (401, #"{"error":"sign in again"}"#)
-        StubProtocol.sent = []
-        await model.startSetupTaf(result)
-        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "a 401 isn't a refusal")
-        XCTAssertFalse(model.startFailureTold(result))
-
-        // Refused, but the message to Setup doesn't go: not told, so it's tried again later.
-        StubProtocol.responses["POST /v1/tafs"] = (403, #"{"error":"only someone who manages Cards can start a taf"}"#)
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (500, #"{"error":"down"}"#)
-        await model.startSetupTaf(result)
-        XCTAssertFalse(model.startFailureTold(result), "the message didn't go")
-        XCTAssertNotNil(model.tafStartErrors["done"], "the card keeps Try again")
-
-        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
-        await model.startSetupTaf(result)
-        XCTAssertTrue(model.startFailureTold(result))
-        Keychain.delete(AppModel.planqueAccount)
-    }
-
-    /// The hand-over starts its taf when it arrives, wherever the owner is (kiff/tafs#96):
-    /// no result card on screen needed, so the new taf reaches the list.
-    func testAHandOverStartsItsTafWithoutTheCardOnScreen() async throws {
+    /// A new taf is tafs cloud's to set up: the phone never starts
+    /// one from Coach's result, and its card says it's setting up until tafs cloud answers.
+    func testTheHandOverIsTafsCloudsToMake() async throws {
         let model = await model(signer: FaceIDSigner())
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
-        StubProtocol.responses["POST /v1/tafs"] = (200, #"{"taf":{"id":"taf-new","name":"Refunds","job":"refunds","kiff_agent":"refunds-x","status":"active","next_run":null,"last_run":null},"session":"s2"}"#)
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
         {"messages":[],"components":[
           {"at":"2026-10-17T10:00:06.000Z","session":"s1","run":"r1","seq":6,"component":{"type":"result","id":"done","taf":{"agent":"refunds-x","name":"Refunds","job":"refunds","draft":"drf_s1"},"text":"Done."}}]}
         """)
         StubProtocol.sent = []
         await model.loadSetup()
-        for _ in 0..<50 where sent("POST", "cloud.test", "/v1/tafs").isEmpty { await Task.yield(); try await Task.sleep(nanoseconds: 20_000_000) }
-        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs").count, 1, "started once, by the model")
-        XCTAssertEqual(body(try XCTUnwrap(sent("POST", "cloud.test", "/v1/tafs").first))["draft_id"] as? String, "drf_s1")
+        for _ in 0..<10 { await Task.yield(); try await Task.sleep(nanoseconds: 20_000_000) }
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs").isEmpty, "the phone starts no taf")
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "nor tells Coach anything")
+        XCTAssertEqual(model.setupThread.handOver("done", listed: false), .settingUp)
         Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// The card draws tafs cloud's answer to the result: set up (the list is read again once
+    /// for a taf it set up that isn't listed yet), or why it wasn't, with no Try again: Coach
+    /// heard it from tafs cloud and hands it over again.
+    func testTheHandOverCardShowsTafsCloudsAnswer() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+        {"messages":[],"components":[
+          {"at":"2026-10-17T10:00:06.000Z","session":"s1","run":"r1","seq":6,"component":{"type":"result","id":"done","taf":{"agent":"refunds-x","name":"Refunds","job":"refunds","draft":"drf_s1"},"text":"Done."},
+           "answer":{"state":"answered","words":"Set up","at":"2026-10-17T10:00:09.000Z","by":"tafs cloud","outcome":{"taf_id":"taf-new"}}},
+          {"at":"2026-10-17T10:01:00.000Z","session":"s1","run":"r2","seq":9,"component":{"type":"result","id":"again","taf":{"agent":"orders-x","name":"Orders","job":"orders","draft":"drf_s2"},"text":"Done."},
+           "answer":{"state":"answered","words":"It didn't go through","at":"2026-10-17T10:01:02.000Z","by":"tafs cloud","outcome":{"failed":"the account already has a taf named Orders."}}}]}
+        """)
+        StubProtocol.sent = []
+        await model.loadSetup()
+        let shown = try XCTUnwrap(model.setupThread.components.first { $0.id == "done" })
+        XCTAssertEqual(shown.answer?.by, "tafs cloud")
+        XCTAssertEqual(shown.answer?.outcome?.tafID, "taf-new")
+        XCTAssertEqual(model.setupThread.handOver("done", listed: false), .setUp)
+        XCTAssertEqual(model.setupThread.handOver("again", listed: false), .failed("the account already has a taf named Orders."))
+        for _ in 0..<50 where sent("GET", "cloud.test", "/v1/home").isEmpty { await Task.yield(); try await Task.sleep(nanoseconds: 20_000_000) }
+        XCTAssertFalse(sent("GET", "cloud.test", "/v1/home").isEmpty, "the list is read again for the taf tafs cloud set up")
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs").isEmpty)
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "Coach hears a failure from tafs cloud, not the phone")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// An answer the app can't read leaves its card unanswered, never the card out.
+    func testAnUnreadableAnswerKeepsTheCard() throws {
+        let json = #"{"at":"2026-10-17T10:00:06.000Z","session":"s1","run":"r1","component":{"type":"result","id":"done","text":"Done."},"answer":{"outcome":"set up"}}"#
+        let shown = try KIFFClient.decoder.decode(TafsCloud.Shown.self, from: Data(json.utf8))
+        XCTAssertEqual(shown.component.id, "done")
+        XCTAssertNil(shown.answer?.outcome)
     }
 
     /// Stop cancels the run of the thread's session.

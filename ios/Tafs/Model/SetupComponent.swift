@@ -87,14 +87,15 @@ struct SetupComponent: Decodable, Equatable {
     var destination: String { service ?? "the vendor's page" }
 }
 
-/// A component as the thread holds it: where it first appeared, and its latest version
-/// (showing an id again replaces it in place).
+/// A component as the thread holds it: where it first appeared, its latest version
+/// (showing an id again replaces it in place), and its answer once kiff/agents recorded one.
 struct ShownComponent: Identifiable, Equatable {
     var id: String { component.id }
     let firstAt: Date
     let session: String
     let run: String
     var component: SetupComponent
+    var answer: TafsCloud.CardAnswer? = nil
 }
 
 /// Setup's thread: the messages, and the components where they first appeared.
@@ -226,6 +227,22 @@ struct SetupThread: Equatable {
         }
     }
 
+    /// Where a new taf's hand-over stands, from tafs cloud's answer to its result: set up, why
+    /// it wasn't (Coach hands it over again), or not answered yet. `listed`: the taf is
+    /// already on the account's list.
+    enum HandOver: Equatable {
+        case setUp
+        case failed(String)
+        case settingUp
+    }
+
+    func handOver(_ id: String, listed: Bool) -> HandOver {
+        let outcome = components.first { $0.component.id == id }?.answer?.outcome
+        if let why = outcome?.failed { return .failed(why) }
+        if outcome?.tafID != nil || listed { return .setUp }
+        return .settingUp
+    }
+
     /// The components that ask the owner to act, in the thread's order: an approval, a
     /// question or a sign-in.
     var asks: [ShownComponent] {
@@ -242,8 +259,10 @@ struct SetupThread: Equatable {
         for s in shown {
             if let i = out.firstIndex(where: { $0.component.id == s.component.id }) {
                 out[i].component = s.component
+                // tafs cloud puts an answer on the latest card with its id: a card shown again waits anew.
+                out[i].answer = s.answer
             } else {
-                out.append(ShownComponent(firstAt: s.at, session: s.session, run: s.run, component: s.component))
+                out.append(ShownComponent(firstAt: s.at, session: s.session, run: s.run, component: s.component, answer: s.answer))
             }
         }
         return out
