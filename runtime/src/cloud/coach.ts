@@ -70,6 +70,19 @@ export const TOOLS: ToolDef[] = [
     description: "Pauses a taf's schedule, or resumes it. A taf that works from its chat has no schedule to pause.",
   },
   {
+    name: "taf_results", line: "Set where a taf's results go",
+    properties: {
+      taf: TAF,
+      places: {
+        type: "array", minItems: 1, items: { type: "string", enum: ["door_reply", "app", "owner_email"] },
+        description: "Every place its results go: door_reply (the answer, through the door the work came in on), app (an alert in tafs), owner_email (an email to the owner).",
+      },
+    },
+    required: ["taf", "places"],
+    description: "Sets where a taf's results go, all places at once. KIFF holds each change for the owner, who approves it in tafs. " +
+      "Say \"Waiting for your approval\" once. tafs_state shows each taf's results.",
+  },
+  {
     name: "version_try", line: "Try a version of a taf, sending nothing",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 }, input: { type: "string", description: "What the trial works on; omitted, what each scheduled run asks." } },
     required: ["taf", "n"],
@@ -87,7 +100,7 @@ export const TOOLS: ToolDef[] = [
 
 /**
  * Coach's Cards: the reads share one, 500 a day; a task 50 a day and a trial 20, then asked;
- * stopping and pausing 50 a day each, then refused; every install held for the owner. Stable ids,
+ * stopping and pausing 50 a day each, then refused; every install, and every change of where results go, held for the owner. Stable ids,
  * so drafting them again revises the same Cards.
  */
 export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; asks: boolean }> = [
@@ -97,6 +110,7 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-run-stop", actions: ["run_stop"], limit: 50, asks: false },
   { id: "coach-taf-pause", actions: ["taf_pause"], limit: 50, asks: false },
   { id: "coach-version-install", actions: ["version_install"], limit: 0, asks: true },
+  { id: "coach-taf-results", actions: ["taf_results"], limit: 0, asks: true },
 ];
 
 /** A connection in KIFF's gateway, as tafs cloud reads it. */

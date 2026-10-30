@@ -17,7 +17,7 @@ describe("Setup's definition on kiff/agents", () => {
       ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "price", "price_fast", "show", "speed", "thinking"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
-    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"]);
+    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "version_try", "version_install"]);
   });
 
   it("runs as a taf runs, with its own cost cap and effort", () => {

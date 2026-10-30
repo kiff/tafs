@@ -3284,7 +3284,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         ]);
         const live = state.versions.find((v) => v.live);
         return {
-          id: t.id, name: t.name, job: t.job, kiff_agent: t.kiffAgent,
+          id: t.id, name: t.name, job: t.job, kiff_agent: t.kiffAgent, results: placesOf(t),
           ...(t.unscheduled ? { works_from_chat: true } : schedule
             ? { schedule: { cron: schedule.cron, time_zone: schedule.time_zone || "UTC", on: schedule.enabled, ...(schedule.next ? { next: iso(schedule.next) } : {}) } }
             : {}),
@@ -3370,6 +3370,13 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (taf.unscheduled) throw new ToolRefusal(`${taf.name} works from its chat: it has no schedule to ${on ? "resume" : "pause"}`);
     const s = await agentsCall(() => deps.agents.switchSchedule(call.tenant, taf.id, on));
     return { taf: taf.name, schedule: on ? "on" : "paused", ...(s.next ? { next: iso(s.next) } : {}) };
+  }
+  if (name === "taf_results") {
+    if (may && !may.manage) throw new ToolRefusal(`where ${taf.name}'s results go is for the people who manage it`);
+    let places: ResultPlace[];
+    try { places = resultPlaces(args.places); } catch (err) { throw new ToolRefusal((err as Error).message); }
+    await deps.tafs.put(call.tenant, { ...taf, results: places });
+    return { taf: taf.name, results: places };
   }
   if (may && !may.manage) throw new ToolRefusal(`changing ${taf.name}'s version is for the people who manage it`);
   if (!Number.isInteger(n) || n < 1) throw new ToolRefusal("n is a version number, from tafs_state");
