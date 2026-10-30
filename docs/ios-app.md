@@ -129,8 +129,8 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs \
 ## Conventions
 
 - The phone decides nothing in KIFF mode: it shows what KIFF and tafs cloud say.
-- What grants authority is signed by the approval key behind Face ID; what takes it away
-  is not ([approvals.md](approvals.md#how-an-answer-is-signed)).
+- What grants authority is signed by the approval key behind Face ID or Touch ID only, never
+  the passcode; what takes it away is not ([approvals.md](approvals.md#how-an-answer-is-signed)).
 - Words on screen are plain and short, and name things as the owner knows them: a tool by
   its connection's title, never its name in KIFF; a reason in words, never a code.
 - A comment says why, often with the issue or device test it comes from

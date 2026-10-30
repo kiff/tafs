@@ -7,6 +7,14 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, approvals by Face ID or Touch ID only:** what grants authority (Approve,
+  Extra room, a Card, a trial, Resume, sharing, connecting a tool) takes Face ID or Touch ID,
+  never the passcode, and the approval key itself requires the faces or fingerprints enrolled
+  when it was made. A new enrollment is found at refresh (a lockout never ends the key): the
+  home screen and Needs you say this phone can't approve until a new sign-in, with **Sign in
+  again**; Refuse stays. A prompt closed unrecognized says "Try again, or sign in again if your
+  Face ID or fingerprints changed". **Compatibility:** the earlier approval key also took the
+  passcode, so each iPhone and iPad signs in again once before it can approve.
 - **iPhone and iPad, Cards:** a limit says what happens past it. On a Card that asks the owner
   past its limits: "up to $40 each; more asks you first", "$300 in total a day, then it asks
   you", "20 calls a day, then it asks you", and a count of 0 reads "Each call asks you first",
