@@ -97,7 +97,8 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
     screen, Needs you and the approval cards say "Your fingerprints changed, or none was
     recognized, so this phone can't approve until you sign in again", with **Sign in again**,
     in place of a button that would fail; Refuse stays. A prompt closed without a recognized
-    finger says the same. The screen lock never approves, on either app.
+    finger, while the key is still good, says "Try again, or sign in again if your fingerprints
+    changed". The screen lock never approves, on either app.
 - KIFF holds both keys for the session: the current one from sign-in, the approval key
   registered once (`POST /v1/me/device/approval-key`). If KIFF holds an approval key
   that isn't this phone's, approving waits for a new sign-in.

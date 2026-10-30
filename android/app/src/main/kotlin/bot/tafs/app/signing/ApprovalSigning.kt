@@ -145,7 +145,8 @@ class DeviceSigner(
       throw SignerException(NO_FINGERPRINT)
     }
     val signature = keys.approvalSignature()
-    // A finger not recognized, or the prompt closed: the way on is the same as for a key that's gone, so the words are too.
+    // A finger not recognized, or the prompt closed, while the key is still good: trying again may do, and a new sign-in does if
+    // the fingerprints changed.
     if (!authenticator.authenticate(reason, signature)) throw SignerException(NOT_RECOGNIZED)
     return try {
       signature.update(built())
@@ -171,6 +172,6 @@ class DeviceSigner(
 
   companion object {
     const val NO_FINGERPRINT = "Add a fingerprint to this phone to approve from it. Refusing still works."
-    const val NOT_RECOGNIZED = ApprovalKeyRenewed.WORDS
+    const val NOT_RECOGNIZED = "Try again, or sign in again if your fingerprints changed."
   }
 }

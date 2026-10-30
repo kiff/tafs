@@ -277,8 +277,8 @@ class AnswerKiffTest {
     assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
     assertTrue(transport.requests.none { it.method == "POST" })
     assertEquals(1, m.state.value.held.size)
-    // A fingerprint not given says the way on: the same words as a key that's gone.
-    assertEquals(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, m.state.value.lastError)
+    // A fingerprint not given, with the key still good: try again, or sign in again if the fingerprints changed.
+    assertEquals(bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED, m.state.value.lastError)
     assertTrue(m.state.value.record.none { it.signature != null })
   }
 
