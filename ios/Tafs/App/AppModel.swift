@@ -2756,8 +2756,8 @@ final class AppModel: ObservableObject {
             return .sent
         }
         guard let c = cloudTaf(for: tafID) else {
-            chats[tafID]?.removeAll { $0 == pending }
-            chatSent[tafID]?.removeAll { $0 == pending }
+            chats[tafID]?.removeAll { $0.id == pending.id }
+            chatSent[tafID]?.removeAll { $0.id == pending.id }
             chatErrors[tafID] = "This taf isn't running on tafs cloud, so it can't be messaged."
             return .notTried
         }
@@ -2773,14 +2773,16 @@ final class AppModel: ObservableObject {
                 chatStates[tafID, default: ChatState()].awaiting = clock()
                 chatStates[tafID]?.live = LiveAnswer(started: clock())
                 chatStreamWorks = true
-                chatStreams[tafID] = Task { await self.followChatStream(events, tafID: tafID, text: text, gen: gen) }
+                let sent = pending.id
+                chatStreams[tafID] = Task { await self.followChatStream(events, tafID: tafID, text: text, gen: gen, sent: sent) }
                 clearBusyUnsent(tafID)
                 return .sent
             }
             if trialChats[tafID] != nil {
                 _ = try await cloud.trialMessage(c.id, text: text)
             } else {
-                _ = try await cloud.sendMessage(c.id, text: text, files: files)
+                let sent = try await cloud.sendMessage(c.id, text: text, files: files)
+                if current(), let id = sent.message?.id { markSent(pending.id, serverID: id, in: tafID) }
             }
             guard current() else { return .notTried }
             chatStates[tafID, default: ChatState()].awaiting = clock()
@@ -2789,8 +2791,8 @@ final class AppModel: ObservableObject {
             return .sent
         } catch let e as TafsCloud.CloudError where e.status == 429 {
             guard current() else { return .notTried }
-            chats[tafID]?.removeAll { $0 == pending }
-            chatSent[tafID]?.removeAll { $0 == pending }
+            chats[tafID]?.removeAll { $0.id == pending.id }
+            chatSent[tafID]?.removeAll { $0.id == pending.id }
             if !files.isEmpty {
                 chatErrors[tafID] = Self.busyWords(c.name)
                 return .notTried
@@ -2799,8 +2801,8 @@ final class AppModel: ObservableObject {
             return .kept
         } catch {
             guard current() else { return .notTried }
-            chats[tafID]?.removeAll { $0 == pending }
-            chatSent[tafID]?.removeAll { $0 == pending }
+            chats[tafID]?.removeAll { $0.id == pending.id }
+            chatSent[tafID]?.removeAll { $0.id == pending.id }
             if !files.isEmpty {
                 chatErrors[tafID] = error.localizedDescription
                 return .notTried
@@ -2808,6 +2810,21 @@ final class AppModel: ObservableObject {
             keepUnsent(text, tafID, why: error.localizedDescription)
             return .kept
         }
+    }
+
+    /// The message on its way takes tafs cloud's id for it, from its send or its stream: the
+    /// thread's copy is then found by that id alone (`SentMessages.merge`), never by its words.
+    private func markSent(_ localID: String, serverID: String, in tafID: UUID) {
+        func mark(_ m: inout TafsCloud.ChatMessage) { if m.id == localID, m.serverID == nil { m.serverID = serverID } }
+        if var list = chats[tafID] { for i in list.indices { mark(&list[i]) }; chats[tafID] = list }
+        if var list = chatSent[tafID] { for i in list.indices { mark(&list[i]) }; chatSent[tafID] = list }
+    }
+
+    /// Coach's message on its way takes tafs cloud's id, as a taf's does (`markSent`).
+    private func markSetupSent(_ localID: String, serverID: String) {
+        func mark(_ m: inout TafsCloud.ChatMessage) { if m.id == localID, m.serverID == nil { m.serverID = serverID } }
+        for i in setupSent.indices { mark(&setupSent[i]) }
+        for i in setupThread.messages.indices { mark(&setupThread.messages[i]) }
     }
 
     // MARK: Attachments (kiff/tafs#209)
@@ -3003,16 +3020,20 @@ final class AppModel: ObservableObject {
     /// Draws a taf's stream, as Setup's (#60): text into the live answer; at each tool
     /// call the turn's words are recorded, so the thread is reloaded and the answer
     /// starts again. A stream that drops leaves the thread to show the rest.
-    private func followChatStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, tafID: UUID, text: String, gen: Int) async {
+    /// `sent`: the local id of the owner's message this stream answers, marked with tafs
+    /// cloud's id once the stream names it.
+    private func followChatStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, tafID: UUID, text: String, gen: Int,
+                                  sent: String? = nil) async {
         var ended: String?
         var didBefore: [TafsCloud.DoneCall] = []
         do {
             for try await e in events {
                 guard gen == accountGeneration else { return }
                 switch e {
-                case .session(let session, _, let run):
+                case .session(let session, _, let run, let message):
                     chatStates[tafID]?.live?.session = session
                     chatStates[tafID]?.live?.run = run
+                    if let sent, let message { markSent(sent, serverID: message, in: tafID) }
                 case .taken:
                     // What the owner wrote while it went is read: the thread has it now.
                     await loadChat(tafID)
@@ -4521,6 +4542,7 @@ final class AppModel: ObservableObject {
                 }
                 guard gen == accountGeneration else { return .notTried }
                 setupImproving = nil
+                if let id = sent.message?.id { markSetupSent(mine.id, serverID: id) }
                 settleSetupChat(sent.session)
                 await loadSetupThread()
                 return .sent
@@ -4534,19 +4556,21 @@ final class AppModel: ObservableObject {
                 setupLiveBefore = Set(setupThread.items.map(\.id))
                 setupAnsweredCard = SetupThread.Answer(text)?.id
                 setupLive = LiveAnswer(started: clock())
-                setupStream = Task { await self.followSetupStream(events, text: text, gen: gen) }
+                let sentID = mine.id
+                setupStream = Task { await self.followSetupStream(events, text: text, gen: gen, sent: sentID) }
                 return .sent
             }
             let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget, files: files)
             settleSetupChat(sent.session)
             guard gen == accountGeneration else { return .notTried }
+            if let id = sent.message?.id { markSetupSent(mine.id, serverID: id) }
             setupAwaiting = clock()
             await loadSetupThread()
             return .sent
         } catch {
             guard gen == accountGeneration else { return .notTried }
-            setupSent.removeAll { $0 == mine }
-            setupThread.messages.removeAll { $0 == mine }
+            setupSent.removeAll { $0.id == mine.id }
+            setupThread.messages.removeAll { $0.id == mine.id }
             if !files.isEmpty {
                 // Left with the composer, files and all.
                 fileNotices[Self.setupFiles] = error.localizedDescription
@@ -4755,15 +4779,17 @@ final class AppModel: ObservableObject {
     /// Draws the stream: text into the live bubble; at each tool call or component the
     /// turn's words are recorded, so the thread is reloaded and the bubble starts again.
     /// A stream that drops leaves the conversation to show the rest, as it does without one.
-    private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int) async {
+    private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int,
+                                   sent: String? = nil) async {
         var ended: String?
         do {
             for try await e in events {
                 guard gen == accountGeneration else { return }
                 switch e {
-                case .session(let session, _, _):
+                case .session(let session, _, _, let message):
                     setupLive?.session = session
                     settleSetupChat(session)
+                    if let sent, let message { markSetupSent(sent, serverID: message) }
                 case .text(let t):
                     setupLive?.text += t
                     setupLive?.thinking = ""

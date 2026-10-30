@@ -4,10 +4,12 @@ import Foundation
 /// rule in both chats, Coach mode's and a taf's (kiff/tafs#138, item 48): a reload while the
 /// answer is on its way must never take the owner's message off the screen.
 ///
-/// A sent message goes once the thread has it (the same words, written about when it was
-/// sent), or after `kept`, when it either has it or the send says why not. One copy takes
-/// the place of one sent message, oldest first: two "Sí" sent close together stay two until
-/// the thread has both.
+/// A sent message goes once the thread has it, or after `kept`, when it either has it or the
+/// send says why not. The thread's copy is found by tafs cloud's id for it, which the send
+/// answered (`serverID`): an earlier message with the same words is never it. Only a send
+/// with no id (a steer, or an older tafs cloud) is matched by its words, written about when
+/// it was sent. One copy takes the place of one sent message, oldest first: two "Sí" sent
+/// close together stay two until the thread has both.
 enum SentMessages {
     static let kept: TimeInterval = 120
 
@@ -19,7 +21,9 @@ enum SentMessages {
             if now.timeIntervalSince(s.at) > kept { return false }
             let copy = messages.indices.first { i in
                 let m = messages[i]
-                return !taken.contains(i) && m.from == .owner && m.text == s.text && m.at >= s.at.addingTimeInterval(-kept)
+                guard !taken.contains(i), m.from == .owner else { return false }
+                if let id = s.serverID { return m.serverID == id }
+                return m.text == s.text && m.at >= s.at.addingTimeInterval(-kept)
             }
             guard let copy else { return true }
             taken.insert(copy)

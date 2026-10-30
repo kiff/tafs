@@ -118,8 +118,12 @@ struct TafChatView: View {
                             Group {
                                 switch item {
                                 case .message(let m) where m.from == .owner && m.kind != .kickoff && m.door == nil:
-                                    ChatBubble(message: m, taf: taf)
-                                        .contextMenu { askAgain(m.text) }
+                                    VStack(alignment: .trailing, spacing: 4) {
+                                        ChatBubble(message: m, taf: taf)
+                                            .contextMenu { askAgain(m.text) }
+                                        // Written while a card waited: these words were its answer (`answers`).
+                                        if m.answers != nil { AnsweredCardLine() }
+                                    }
                                 case .message(let m):
                                     VStack(alignment: .leading, spacing: 6) {
                                         // What it did before writing it, folded (kiff/tafs#285).
@@ -763,5 +767,13 @@ extension View {
         background(GeometryReader { g in
             Color.clear.preference(key: ThreadFootKey.self, value: g.frame(in: .named(PinnedTurn.space)).maxY)
         })
+    }
+}
+
+/// Under an owner's message written while a card waited: their words were the card's answer.
+struct AnsweredCardLine: View {
+    var body: some View {
+        Text("Answered the card above").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+            .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }
