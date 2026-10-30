@@ -36,7 +36,10 @@ import org.junit.Test
  * with a door's knocks at their own times, and a paired sender's message. Run with `-e hold 8` to keep each for a screenshot.
  */
 class TafPageScreenTest {
-  @get:Rule val rule = createComposeRule()
+  // Awake and unlocked before the activity launches: a just-booted emulator may not be yet.
+  @get:Rule(order = 0) val awake = AwakeDevice()
+
+  @get:Rule(order = 1) val rule = createComposeRule()
 
   private val t0 = Instant.parse("2026-10-30T09:00:00Z")
   private val taf = Taf(
