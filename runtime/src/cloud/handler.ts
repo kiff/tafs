@@ -4,7 +4,7 @@ import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
-import { alertTarget, type Device, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, type Change, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
@@ -377,6 +377,13 @@ class HTTPError extends Error {
 }
 
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
+  const began = Date.now();
+  const r = await answer(event, deps);
+  logRequest(event, r.statusCode, Date.now() - began);
+  return r;
+}
+
+async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   try {
     if (event.rawPath === "/v1/mcp") return await mcpRoute(event, deps);
     if (isDoorPath(event.rawPath)) return await doorWebhook(event, deps);
@@ -389,6 +396,16 @@ export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> 
     return json(500, { error: "something went wrong on tafs cloud" });
   }
 }
+
+/**
+ * One line per request, so a check can be confirmed from tafs cloud's own logs: the method, the
+ * route with its ids masked, the status and how long it took. Never a body, a token, a query or an id.
+ */
+export function logRequest(event: HTTPEvent, status: number, ms: number): void {
+  const route = event.rawPath.split("/").map((p) => (/^taf-/.test(p) || (/\d/.test(p) && p.length >= 6) || p.length > 32 ? ":id" : p)).join("/");
+  console.log(JSON.stringify({ event: "request", method: event.requestContext.http.method.toUpperCase(), route, status, ms }));
+}
+
 
 async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const method = event.requestContext.http.method.toUpperCase();
@@ -484,6 +501,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume")) {
     await needTaf(event, me, taf, deps);
     const s = await agentsCall(() => deps.agents.switchSchedule(me.tenantID, taf.id, action === "resume"));
+    await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(taf, me, deps, s) };
   }
   if (parts.length === 4 && method === "GET" && action === "work") {
@@ -514,6 +532,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await needTaf(event, me, taf, deps);
     const updated = { ...taf, results: resultPlaces(parseBody(event).places) };
     await deps.tafs.put(me.tenantID, updated);
+    await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(updated, me, deps) };
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
@@ -801,6 +820,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     // A halt interrupts (kiff/tafs#210): every phone that answers hears it, through a Focus.
     await tellPhones(deps, me.tenantID, haltNotification(taf, view.state === "halted"));
     await logEvent(deps.events, me.tenantID, { kind: "halted", ...(taf ? { taf: taf.id, name: taf.name } : {}) }, deps.now?.());
+    await tellChange(me.tenantID, "halted", taf?.id, deps);
     return { halt: view };
   }
   if (method === "DELETE") {
@@ -814,6 +834,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     // The halt's notification is replaced, quietly, so none says halted after a resume (kiff/tafs#236, item 21).
     await tellPhones(deps, me.tenantID, resumeNotification(taf));
     await logEvent(deps.events, me.tenantID, { kind: "resumed", ...(taf ? { taf: taf.id, name: taf.name } : {}) }, deps.now?.());
+    await tellChange(me.tenantID, "resumed", taf?.id, deps);
     return { halt: haltView({ status: "fulfilled", value: kiff }, runtime) };
   }
   throw new HTTPError(404, "not found");
@@ -992,6 +1013,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
       throw err;
     });
     await deps.tafs.put(me.tenantID, taf);
+    await tellChange(me.tenantID, "taf", tafID, deps);
   } catch (err) {
     // A failed write may still have landed, the record's included: all of it
     // is undone, and the name is freed only if every part is gone.
@@ -1259,6 +1281,7 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps) {
     await deps.tafs.remove(me.tenantID, taf.id);
     await deps.removals.done(me.tenantID, taf.id);
   }
+  await tellChange(me.tenantID, "taf", taf.id, deps);
   return { taf: taf.id, name: taf.name, kiff_agent: taf.kiffAgent || null, done: failed.length === 0, removed, failed };
 }
 
@@ -2219,6 +2242,7 @@ async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, d
   const cards = await liveCards(event, taf, deps);
   await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
   await keepNotes(me, taf, n, deps);
+  await tellChange(me.tenantID, "taf", taf.id, deps);
 }
 
 function sameCards(a: CardRevision[], b: CardRevision[]): boolean {

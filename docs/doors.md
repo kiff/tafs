@@ -197,3 +197,9 @@ country.
 
 **Size.** Large: a live voice layer, the hand-off to runs, holds in a call, and number
 registration country by country.
+
+## The door's words
+
+Each door carries `words` (`doorWords` in `doors.ts`): `state` (open, closed, or resting until
+tomorrow, with its address), `tap` (what a tap on it does), and `settings` (that paired senders and
+today's limits are below). The apps show them as they are.

@@ -126,7 +126,7 @@ See [doors.md](doors.md). Reading needs a session; changing, managing the taf.
 
 | Route | What |
 |---|---|
-| `GET /v1/tafs/{id}/doors` | The taf's doors, the apps a door can open on here, and its open knocks, each with its door's `label` |
+| `GET /v1/tafs/{id}/doors` | The taf's doors, each with its `words` (`state`, `tap`, `settings`), the apps a door can open on here, and its open knocks, each with its door's `label` |
 | `POST /v1/tafs/{id}/doors` | `{app, code?, phone_number_id?, waba_id?}`: turn a door on |
 | `PATCH /v1/tafs/{id}/doors/{door}` | `{open}` |
 | `DELETE /v1/tafs/{id}/doors/{door}` | Remove it |

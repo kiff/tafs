@@ -197,3 +197,17 @@ app's taps on that device (`Haptics.enabled`).
   device unlocked. It says what happened, and when it can't finish it opens tafs on Halt
   all. Resume stays in the app.
 - Halts and resumes show in Activity (`GET /v1/events`).
+
+## Live updates
+
+When something on the account changes, tafs cloud sends every phone of the account a silent push
+(`tellChange` in `runtime/src/cloud/push.ts`), on APNs and FCM alike. It carries only `change` and
+the taf's id (`taf_id`), never words, names or amounts:
+- `taf`: a taf was made, changed (its version, where its results go, its schedule) or removed;
+- `halted` and `resumed`: a halt, of one taf or the account;
+- `knock`: someone unpaired wrote to a door.
+
+A held call and its answer already arrive this way (`hold_id`, `answered`). The phone reads again
+what the kind names, with its own session, so a person who may not see the taf learns nothing from
+the push. The same change is told at most once every few seconds. While the app is open it also reads
+again when it comes to the front, which covers a push that came late or not at all.

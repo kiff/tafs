@@ -42,3 +42,10 @@ a green unit test is not a completed rollout.
    Do not close a rollout issue solely because a PR merged.
 
 Use [SECURITY.md](../SECURITY.md) for private reports and coordinated disclosure.
+
+## Request logs
+
+tafs cloud logs one line per request (`logRequest` in `handler.ts`): `{event: "request", method,
+route, status, ms}`, with every id in the route masked as `:id`. It never logs a body, a token, a
+query or an id. A check such as "did the phone register for alerts" is read from these lines in the
+function's CloudWatch logs.
