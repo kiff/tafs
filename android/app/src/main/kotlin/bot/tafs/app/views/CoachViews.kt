@@ -1,5 +1,8 @@
 package bot.tafs.app.views
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -54,13 +57,26 @@ import bot.tafs.app.model.QuestionSelection
 
 /**
  * Coach: where tafs are made, connected and changed (docs/coach.md). Its conversation is the taf's chat screen on Coach's own
- * chat, with its plan pinned above it and its cards in the thread. Before its first message, Coach is started once per account.
+ * chat, under a compact header: back, Coach, and a menu with its conversations; under it, the plan in one line, which folds away
+ * while the owner scrolls down the thread and comes back on the way up, so a card has the screen. Before its first message,
+ * Coach is started once per account.
  */
 @Composable
 fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> Unit, onBack: () -> Unit, chats: CoachChatActions = CoachChatActions()) {
   LaunchedEffect(Unit) { loadCoach() }
+  // Folded while the thread scrolls toward its end, shown again as soon as it scrolls back.
+  var folded by remember { mutableStateOf(false) }
+  val folding = remember {
+    object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+      override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+        if (available.y < -4f) folded = true else if (available.y > 4f) folded = false
+        return androidx.compose.ui.geometry.Offset.Zero
+      }
+    }
+  }
   Column(Modifier.fillMaxSize().statusBarsPadding()) {
-    BackBar(onBack)
+    val started = state.mayUseCoach && state.coachChecked && state.coachCloudId != null
+    if (started) CoachHeader(state, chats, onBack) else BackBar(onBack)
     when {
       !state.mayUseCoach -> Note(CoachWords.NOT_ALLOWED)
       !state.coachChecked -> Row(Modifier.fillMaxWidth().padding(24.dp), horizontalArrangement = Arrangement.Center) {
@@ -68,14 +84,50 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
       }
       state.coachCloudId == null -> CoachIntro(state, actions.coach.start)
       else -> {
-        Text("Coach", style = scaled(30, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
-        CoachChatBar(state, chats)
-        CoachToolsPanel(state, chats)
-        CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) }
-        TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f))
+        androidx.compose.animation.AnimatedVisibility(visible = !folded) {
+          Column {
+            CoachToolsPanel(state, chats)
+            CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
+          }
+        }
+        TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
       }
     }
   }
+}
+
+/** Coach's header, one row: back, its name, and a menu with a new conversation and the earlier ones. */
+@Composable
+private fun CoachHeader(state: AppState, chats: CoachChatActions, onBack: () -> Unit) {
+  var menu by remember { mutableStateOf(false) }
+  var listing by remember { mutableStateOf(false) }
+  Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Text(
+      "‹",
+      style = scaled(26, color = Theme.amber),
+      modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = "Back", onClick = onBack).padding(start = 10.dp, top = 4.dp),
+    )
+    Text("Coach", style = scaled(18, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
+    Box {
+      Text(
+        "⋯",
+        style = scaled(22, FontWeight.Bold, Theme.amberText),
+        modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = "Coach's conversations") { menu = true }.padding(top = 6.dp, start = 12.dp),
+      )
+      androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+        androidx.compose.material3.DropdownMenuItem(
+          text = { Text("New conversation", style = scaled(15, color = if (state.coachFresh) Theme.dim else Theme.ink)) },
+          enabled = !state.coachFresh,
+          onClick = { menu = false; chats.newChat() },
+        )
+        androidx.compose.material3.DropdownMenuItem(
+          text = { Text("Previous conversations", style = scaled(15, color = Theme.ink)) },
+          onClick = { menu = false; listing = true },
+        )
+      }
+    }
+  }
+  if (listing) PreviousConversations(state, chats) { listing = false }
 }
 
 @Composable
@@ -98,35 +150,29 @@ private fun CoachIntro(state: AppState, start: suspend () -> Unit) {
 }
 
 /**
- * The plan, pinned above the thread: the work ahead, each step pending, active, done, failed or skipped. Folded to the step in
- * progress until tapped, so the chat comes first (as iOS's SetupPlan).
+ * The plan, pinned above the thread in one line, tafs cloud's ("Step 3 of 6 · Your rules"); tapped, it opens to the steps, each
+ * pending, active, done, failed or skipped. The phone never counts the steps: the line says where the plan is.
  */
 @Composable
 fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
   var open by remember { mutableStateOf(false) }
   val steps = plan.steps.orEmpty()
-  val done = steps.count { it.status == "done" }
-  val now = CoachWords.currentStep(steps)
-  Panel(modifier) {
+  Column(modifier.fillMaxWidth()) {
     Row(
-      Modifier.fillMaxWidth().clickable(onClickLabel = if (open) "Fold the plan" else "Show the whole plan") { open = !open },
+      Modifier.fillMaxWidth().heightIn(min = 36.dp).clickable(onClickLabel = if (open) "Fold the plan" else "Show the whole plan") { open = !open },
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      if (!open && now != null) StepMark(now.status)
-      Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Eyebrow("Plan · $done of ${steps.size}")
-        if (!open) {
-          Text(now?.label ?: plan.title ?: "Plan", style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-      }
-      Text(if (open) "⌃" else "⌄", style = scaled(14, FontWeight.Bold, Theme.dim))
+      Text(CoachWords.planLine(plan), style = scaled(13, FontWeight.SemiBold, Theme.soft), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+      Text(if (open) "⌃" else "⌄", style = scaled(13, FontWeight.Bold, Theme.dim))
     }
     if (open) {
-      steps.forEach { step ->
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          StepMark(step.status)
-          Text(step.label, style = scaled(14, if (step.status == "active") FontWeight.SemiBold else FontWeight.Normal, if (step.status == "pending" || step.status == "skipped") Theme.dim else Theme.ink))
+      Panel {
+        steps.forEach { step ->
+          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StepMark(step.status)
+            Text(step.label, style = scaled(14, if (step.status == "active") FontWeight.SemiBold else FontWeight.Normal, if (step.status == "pending" || step.status == "skipped") Theme.dim else Theme.ink))
+          }
         }
       }
     }

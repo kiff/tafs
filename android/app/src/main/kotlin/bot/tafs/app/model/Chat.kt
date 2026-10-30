@@ -45,6 +45,8 @@ data class LiveAnswer(
   val thinking: String = "",
   val activity: String? = null,
   val steps: List<LiveStep> = emptyList(),
+  /** tafs cloud's live line, once its stream sends one: the only line shown while it works. */
+  val state: LiveState? = null,
 ) {
   /** A step begins. One the stream sends again (a run picked back up replays its steps) keeps the status it has. */
   fun began(tool: String, words: String, call: String?): LiveAnswer {
@@ -61,8 +63,11 @@ data class LiveAnswer(
   }
 
   /** It went on after the owner answered a held call: what it did before is the thread's, with its own work. */
-  fun newPart(): LiveAnswer = copy(text = "", thinking = "", activity = null, steps = emptyList())
+  fun newPart(): LiveAnswer = copy(text = "", thinking = "", activity = null, steps = emptyList(), state = null)
 }
+
+/** tafs cloud's live line: `thinking`, `working` with the step's words, `waiting_for_you` or `done`. */
+data class LiveState(val state: String, val words: String? = null)
 
 /** How the latest run of a chat ended, when the chat says so under it. */
 sealed interface ChatEnd {
@@ -171,6 +176,28 @@ object Chat {
   /** What a message may be at most, as tafs cloud takes it. */
   const val LIMIT = 2000
 
+  /**
+   * The live line to show now, or none: tafs cloud's while its stream sends one (none at `done`); before that, the step at work,
+   * else "Thinking…" until the words start.
+   */
+  fun liveLine(live: LiveAnswer): String? = when {
+    live.state != null -> stateLine(live.state)
+    live.activity != null -> live.activity
+    live.text.isBlank() -> "Thinking…"
+    else -> null
+  }
+
+  /**
+   * tafs cloud's live line in words: the step's own while working, else what the state is. Null at `done`, where the line folds
+   * into the message's "Worked …". A state the app doesn't know shows as thinking.
+   */
+  fun stateLine(s: LiveState): String? = when (s.state) {
+    "done" -> null
+    "working" -> s.words?.let { "$it…" } ?: "Working…"
+    "waiting_for_you" -> "Waiting for you"
+    else -> "Thinking…"
+  }
+
   /** How long a taf worked and how many steps it took, with those that failed. Which steps, only in tafs cloud's words ([steps]). */
   fun workLine(work: Work): String {
     val seconds = work.ms / 1000.0
@@ -184,23 +211,6 @@ object Chat {
   /** The steps tafs cloud has words for, in order, each with how it ended; a step without words is left out, never shown by its tool. */
   fun steps(work: Work): List<String> = work.steps.mapNotNull { step ->
     step.words?.let { it + if (step.error) " · failed" else if (step.notMade) " · not made" else "" }
-  }
-
-  /**
-   * One calm line of what the taf is thinking, as plain text: the last whole sentence while the next is still a fragment, else
-   * the one in progress; lists and code skipped; a long one cut at a word.
-   */
-  fun thinkingLine(text: String, max: Int = 140): String {
-    val sentences = text.lines()
-      .map { it.trim().replace(Regex("""[*_`#]+"""), "").trim() }
-      .filter { it.isNotEmpty() && !Regex("""^([-•+]|\d+[.)])\s""").containsMatchIn(it) && !it.any { c -> c in "{}[]<>=" } }
-      .flatMap { line -> Regex("""(?<=[.!?…])\s+""").split(line) }
-      .filter { it.split(" ").size >= 3 && !it.endsWith(":") }
-    var line = sentences.lastOrNull() ?: return ""
-    if (sentences.size > 1 && line.length < 40 && line.last() !in ".!?…") line = sentences[sentences.size - 2]
-    if (line.length <= max) return line
-    val cut = line.take(max)
-    return cut.substring(0, cut.lastIndexOf(' ').takeIf { it > 0 } ?: cut.length).trimEnd(' ', ',', ';', ':', '.', '–', '-') + "…"
   }
 
   /**

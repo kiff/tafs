@@ -34,6 +34,11 @@ sealed interface StreamEvent {
   data object Part : StreamEvent
   /** The agent showed a component: the thread has it. */
   data object Component : StreamEvent
+  /**
+   * The one line to show while it works (docs/chat.md, "The live line"): `thinking`, `working` with the step's [words],
+   * `waiting_for_you` or `done`. tafs cloud sends it only on a change and holds each a second, so the app draws it as it comes.
+   */
+  data class State(val state: String, val words: String?) : StreamEvent
   /** The run stopped: its status (COMPLETED, ERROR, CANCELLED…), why, and for a failed run what went through before it stopped. */
   data class End(val status: String, val stop: String, val done: List<DoneCall> = emptyList()) : StreamEvent
   /** The stream broke on tafs cloud's side; the thread has the rest. */
@@ -64,6 +69,7 @@ sealed interface StreamEvent {
             DoneCall(tool, call["resource"]?.jsonPrimitive?.contentOrNull, call["invocation"]?.jsonPrimitive?.contentOrNull)
           },
         )
+        "state" -> str("state")?.let { State(it, str("words")?.takeIf(String::isNotBlank)) }
         "error" -> Broken
         else -> null
       }

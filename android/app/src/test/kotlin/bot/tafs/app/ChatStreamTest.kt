@@ -7,6 +7,7 @@ import bot.tafs.app.kiff.StreamEvent
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatEnd
 import bot.tafs.app.model.LiveAnswer
+import bot.tafs.app.model.LiveState
 import bot.tafs.app.model.LiveStep
 import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -197,12 +198,23 @@ class ChatStreamTest {
     assertTrue(transport.requestsTo("GET /v1/tafs/taf_1/runs/run_1/stream").single().url.endsWith("?after=0"))
   }
 
-  // MARK: The thinking line
+  // MARK: The live line
 
-  @Test fun theThinkingLineIsTheLastWholeSentenceCutAtAWord() {
-    assertEquals("I should look the payment up first.", Chat.thinkingLine("Ana wants a refund.\nI should look the payment up first. Then"))
-    assertEquals("", Chat.thinkingLine("- a list\n{\"code\": 1}"))
-    val long = Chat.thinkingLine("This sentence goes on " + "and on ".repeat(40) + "until it ends.")
-    assertTrue(long.length <= 141 && long.endsWith("…"))
+  @Test fun theLiveLineIsTafsCloudsStateAndNoThinkingText() {
+    val live = LiveAnswer(started = t0, thinking = "Ana wants a refund. I should look it up.")
+    // Before tafs cloud sends its line: "Thinking…", never the model's thinking.
+    assertEquals("Thinking…", Chat.liveLine(live))
+    assertEquals("Listing your charges…", Chat.liveLine(live.copy(state = LiveState("working", "Listing your charges"))))
+    assertEquals("Waiting for you", Chat.liveLine(live.copy(state = LiveState("waiting_for_you"))))
+    assertEquals("Thinking…", Chat.liveLine(live.copy(state = LiveState("thinking"))))
+    // Done: the line folds into the message's "Worked …".
+    assertNull(Chat.liveLine(live.copy(state = LiveState("done"))))
+    // Writing with no line from tafs cloud: just the words.
+    assertNull(Chat.liveLine(live.copy(text = "Refunded.")))
+  }
+
+  @Test fun theStreamsStateEventIsRead() = runTest {
+    val events = StreamEvent.parse(flowOf("event: state", "data: {\"state\":\"working\",\"words\":\"Listing your charges\"}", "", "event: state", "data: {\"state\":\"done\"}", "")).toList()
+    assertEquals(listOf(StreamEvent.State("working", "Listing your charges"), StreamEvent.State("done", null)), events)
   }
 }

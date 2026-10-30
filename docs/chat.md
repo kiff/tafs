@@ -56,6 +56,12 @@ typing does. The microphone isn't required to install the app.
 
 ## The answer as it comes
 
+On Android, the block under the owner's message is one line (`LiveWork`, `Chat.liveLine`): the
+stream's `state` once tafs cloud sends it (`event: state {state, words?}`), "Working…" lines in
+the step's words, "Waiting for you", and nothing at `done`, where it folds into the message's
+"Worked … · N steps". Before tafs cloud sends `state`, the step at work stands in, else
+"Thinking…". The model's thinking text and a list of steps are never drawn.
+
 tafs cloud trims kiff/agents' stream to what the phone shows. Tool inputs and results
 never reach the phone.
 

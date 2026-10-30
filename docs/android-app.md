@@ -11,6 +11,23 @@ It asks for the microphone only to dictate, at the first tap of the mic, and doe
 one to install (`uses-feature android.hardware.microphone required="false"`): a phone or
 tablet without one installs tafs, and its mic says it can't dictate there.
 
+## Coach's screen
+
+Drawn by `CoachScreenTest` from synthetic data, at phone size: the compact header with the plan
+in tafs cloud's one line, the plan opened, the conversations menu, and the live line thinking,
+working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-as-it-comes)).
+
+<p>
+  <img src="screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">
+  <img src="screenshots/android/coach-plan-open.png" width="180" alt="Coach: the plan opened to its six steps">
+  <img src="screenshots/android/coach-menu.png" width="180" alt="Coach: the menu with New conversation and Previous conversations">
+</p>
+<p>
+  <img src="screenshots/android/coach-live-thinking.png" width="180" alt="The live line: Thinking">
+  <img src="screenshots/android/coach-live-working.png" width="180" alt="The live line: Drafting the Card">
+  <img src="screenshots/android/coach-live-waiting.png" width="180" alt="The live line: Waiting for you">
+</p>
+
 ## Building and testing
 
 ```bash

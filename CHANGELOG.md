@@ -7,6 +7,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, Coach's screen:** a compact header (back, Coach, a menu with its conversations),
+  the plan in tafs cloud's one line that folds away as the thread scrolls, and one calm live
+  line from tafs cloud's stream instead of the model's thinking and a list of steps. Alerts
+  that tafs cloud didn't take at first are handed over again at the next launch.
+
 - **tafs for Android** (`android/`, Android 11 and later), with what the iPhone app has
   ([docs/android-app.md](docs/android-app.md)):
   - tafs, Needs you and the Record, with KIFF's receipts checked on the phone;
