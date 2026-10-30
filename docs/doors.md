@@ -60,6 +60,20 @@ deployment offers a door; WhatsApp is offered only once it's set up.
   the doors, or a message comes in. Each reply is sent once, however many notes come.
 - Replies in one email thread, or from one WhatsApp number, go on in the same chat.
 
+## Where results go
+
+A taf's results go to the places set for it (`PUT /v1/tafs/{id}/results`):
+- **`door_reply`:** the answer to the sender, through the door it came in on, on the same thread.
+  A taf that never set its places has only this.
+- **`app`:** an alert to the phones of the people who manage the taf. It says who was answered
+  and through which door, never the taf's words.
+- **`owner_email`:** an email to the owner, at the address their email door pairs, with the
+  taf's answer. It isn't sent when the owner wrote the message, since they get the reply.
+
+Each place is sent once (`settle` in `doors.ts`). A place that fails is tried again alone on the
+same waits as the door's reply, so a reply already sent isn't sent again while the owner's email
+waits.
+
 ## What's kept
 
 The message's text is stored like a chat message, in kiff/agents. tafs cloud reads

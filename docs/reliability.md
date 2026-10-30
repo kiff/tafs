@@ -100,6 +100,8 @@ Every firing goes into the schedule's history: run, skipped as missed, or skippe
 
 ## Where results go
 
+**Landed:** the places and their sending, in [doors.md](doors.md#where-results-go). Still to come: kiff/agents keeping the note.
+
 A taf's settings list the places its results go:
 
 | Place | What it sends |

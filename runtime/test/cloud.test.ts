@@ -256,7 +256,7 @@ describe("tafs cloud", () => {
 
   it("lists only the caller's account's tafs, as the app reads them", async () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
-    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null }]);
+    expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"] }]);
     expect(r.body.removing).toEqual([]);
   });
 
@@ -483,7 +483,7 @@ describe("the home list", () => {
     // The owner is around (kiff/tafs#210): what isn't urgent is told quietly, not kept for later.
     expect(await w.slots.held(`present#t_acme`)).toBe(true);
     expect(r.body.tafs).toEqual([{
-      id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null,
+      id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"],
       // Its job in words, for its page (kiff/tafs#167).
       job_summary: "Answers refund requests and issues refunds and credits within the Card.",
       color: 0, state: "working", waiting: 0,

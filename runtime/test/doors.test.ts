@@ -417,6 +417,67 @@ describe("the email door", () => {
     expect(await sweepReplies(depsOf(w))).toEqual([]);
   });
 
+  /** Bea, paired from her first email's knock, then writing again: a run whose reply goes to her, not the owner. */
+  async function beaRun(w: World): Promise<Run> {
+    await emailHook(w, mail(w, { from: "Bea Ruiz <bea@northwind.example>", text: "Refund order 4471." }));
+    const knock = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0];
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/knocks/${knock.id}`, { token: "ana", body: { action: "pair" } })).status).toBe(200);
+    w.agents.runs.length = 0;
+    expect((await emailHook(w, mail(w, { from: "Bea Ruiz <bea@northwind.example>", text: "Refund order 4471, please." }))).body.outcome).toBe("run");
+    return w.agents.runs[0]!;
+  }
+
+  it("a result goes to every place the taf's results are set to: the door, the app, the owner's email", async () => {
+    const w = world();
+    await emailDoor(w);
+    const set = await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["owner_email", "app", "door_reply"] } });
+    expect(set.status).toBe(200);
+    expect(set.body.taf.results).toEqual(["door_reply", "app", "owner_email"]);
+    const run = await beaRun(w);
+    w.pushed.length = 0;
+    await finish(w, run, "Refunded.");
+    expect(w.outbox.map((o) => o.to)).toEqual(["bea@northwind.example", "ana@acme.example"]);
+    expect(w.outbox[1]!.subject).toBe("Refunds: answered Bea Ruiz");
+    expect(w.outbox[1]!.text).toContain("Refunded.");
+    // The alert says it was answered, never the taf's words.
+    expect(w.pushed.map((p) => (p.payload.aps as { alert: { body: string } }).alert.body)).toEqual(["Answered Bea Ruiz through its email door."]);
+    // Another note for the same run sends nothing more.
+    await finish(w, run, "Refunded.");
+    expect(w.outbox).toHaveLength(2);
+  });
+
+  it("a place that fails is tried again alone: the door's reply isn't sent twice", async () => {
+    const w = world();
+    await emailDoor(w);
+    await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["door_reply", "owner_email"] } });
+    const run = await beaRun(w);
+    const sendEmail = w.config.email!.send;
+    let down = 1;
+    w.config.email!.send = async (e) => {
+      if (e.to === "ana@acme.example" && down-- > 0) throw Object.assign(new Error("down"), { status: 503 });
+      return sendEmail(e);
+    };
+    await finish(w, run, "Refunded.");
+    expect(w.outbox.map((o) => o.to)).toEqual(["bea@northwind.example"]);
+    // The chat shows the door's reply sent already, while the owner's email waits.
+    const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
+    expect(chat.body.messages.at(-1).door).toMatchObject({ reply: "sent" });
+    w.at(new Date(NOW.getTime() + 5 * 60_000));
+    await sweepReplies(depsOf(w));
+    expect(w.outbox.map((o) => o.to)).toEqual(["bea@northwind.example", "ana@acme.example"]);
+    expect(await sweepReplies(depsOf(w))).toEqual([]);
+  });
+
+  it("only someone who manages the taf sets where its results go, to known places", async () => {
+    const w = world();
+    expect((await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "viewer", body: { places: ["app"] } })).status).toBe(403);
+    expect((await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: [] } })).status).toBe(400);
+    expect((await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "ana", body: { places: ["slack"] } })).status).toBe(400);
+    // A taf from before the setting answers through its door alone.
+    const list = (await send(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs as Array<{ id: string; results: string[] }>;
+    expect(list.find((t) => t.id === REFUNDS)!.results).toEqual(["door_reply"]);
+  });
+
   it("a reply the provider never takes is tried after 5, 20 and 60 minutes, then said to be not sent", async () => {
     const w = world();
     await emailDoor(w);

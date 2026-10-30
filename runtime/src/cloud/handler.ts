@@ -14,7 +14,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
-import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, settlePending, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 
@@ -249,6 +249,25 @@ export interface Taf {
    * words (kiff/tafs#247), by version: shown in the version's trial.
    */
   tries?: Record<string, string>;
+  /**
+   * Where its results go (docs/reliability.md): through the door the work came in on, a line
+   * in the app, an email to the owner. Absent: the door's reply alone, as before.
+   */
+  results?: ResultPlace[];
+}
+
+/** A place a taf's results go. */
+export type ResultPlace = "door_reply" | "app" | "owner_email";
+
+/** Every place a result can go, in the order they're sent. */
+export const RESULT_PLACES: readonly ResultPlace[] = ["door_reply", "app", "owner_email"];
+
+/** The places a request names, each once, in RESULT_PLACES' order: at least one, and only those. */
+export function resultPlaces(v: unknown): ResultPlace[] {
+  if (!Array.isArray(v) || !v.length || !v.every((p) => typeof p === "string" && (RESULT_PLACES as readonly string[]).includes(p))) {
+    throw new HTTPError(400, `places is one or more of ${RESULT_PLACES.join(", ")}`);
+  }
+  return RESULT_PLACES.filter((p) => v.includes(p));
 }
 
 export interface Tafs {
@@ -463,6 +482,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await needTaf(event, me, taf, deps);
     const s = await agentsCall(() => deps.agents.switchSchedule(me.tenantID, taf.id, action === "resume"));
     return { taf: await view(taf, me, deps, s) };
+  }
+  if (parts.length === 4 && method === "PUT" && action === "results") {
+    await needTaf(event, me, taf, deps);
+    const updated = { ...taf, results: resultPlaces(parseBody(event).places) };
+    await deps.tafs.put(me.tenantID, updated);
+    return { taf: await view(updated, me, deps) };
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
     await needTaf(event, me, taf, deps);
@@ -2939,6 +2964,8 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule)
     ...(taf.unscheduled ? { unscheduled: true } : {}),
     next_run: s?.enabled && s.next ? iso(s.next) : null,
     last_run: last ? iso(last.created) : null,
+    /** Where its results go (docs/reliability.md). */
+    results: placesOf(taf),
   };
 }
 

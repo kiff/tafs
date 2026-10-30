@@ -112,6 +112,8 @@ export interface Reply {
   tries?: number;
   /** When the next try is due, after one the provider didn't take. */
   next_at?: string;
+  /** The places its result has reached, or given up on, so a later try sends only the rest. */
+  done?: string[];
 }
 
 /** How a door's reply went, for the chat's stamp. */

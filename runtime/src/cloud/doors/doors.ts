@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { AgentsError, type AIBound, type Run } from "../agents.js";
 import { newRef, refTenant, type Note } from "../coach.js";
 import type { Device, PushStore, Sender } from "../push.js";
-import type { AgentsAPI, Taf, Tafs } from "../handler.js";
+import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
 import { type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
@@ -341,27 +341,71 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
   const door = taf && (await doorsOf(store, tenant, taf.id)).find((d) => d.id === reply.door);
   const app = door && appOf(cfg, door.app);
   const base = { run: runID, door: reply.door, app: door?.app ?? "", at: ctx.now.toISOString() };
-  let sent: Sent;
-  if (!taf || !door || !app) {
-    sent = { ...base, status: "not_sent", why: "the door was removed" };
-  } else {
-    const out = await sendReply(ctx, cfg, tenant, taf, door, { ...reply, run: runID }, replyText(taf, r, reply), ref);
-    const tries = reply.tries ?? 0;
-    if (out.retry && tries < DOOR.replyWaitsMinutes.length) {
-      const next = new Date(ctx.now.getTime() + DOOR.replyWaitsMinutes[tries]! * 60_000).toISOString();
-      await store.put(key, { ...reply, run: runID, tries: tries + 1, next_at: next }, addDays(ctx.now, DOOR.replyDays));
-      await update<{ items: Retrying[] }>(store, doorKeys.retrying(), (read) => {
-        const items = (read?.items ?? []).filter((i) => !(i.tenant === tenant && i.ref === ref));
-        return { items: [...items, { tenant, taf: reply.taf, ref }].slice(-MAX_RETRYING) };
-      });
-      await store.remove(doorKeys.sending(tenant, ref));
-      return;
+  const text = taf ? replyText(taf, r, reply) : "";
+  // Each place the taf's results go, once: a place done on an earlier try isn't sent again.
+  const done = new Set(reply.done ?? []);
+  let retry = false;
+  let sent: Sent | undefined;
+  // The chat's stamp for the door's reply, written as soon as it's settled, not after the other places.
+  const stamp = (x: Sent) => update<{ sent: Sent[] }>(store, doorKeys.sent(tenant, reply.taf),
+    (read) => ({ sent: [x, ...(read?.sent ?? [])].slice(0, 100) }), addDays(ctx.now, DOOR.threadDays));
+  for (const place of taf ? placesOf(taf) : ["door_reply" as const]) {
+    if (done.has(place)) continue;
+    if (place === "door_reply") {
+      if (!taf || !door || !app) { await stamp({ ...base, status: "not_sent", why: "the door was removed" }); done.add(place); continue; }
+      const out = await sendReply(ctx, cfg, tenant, taf, door, { ...reply, run: runID }, text, ref);
+      if (out.retry) { retry = true; sent = out.sent; continue; }
+      await stamp(out.sent);
+      done.add(place);
+    } else if (place === "app") {
+      // An alert says only that it was answered, never the taf's words; a phone that's off misses only the alert.
+      if (taf) await tellOwner(ctx, tenant, taf, `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`);
+      done.add(place);
+    } else if (place === "owner_email") {
+      const owner = door?.keys.find((k) => k.auto)?.id ?? (await ownerEmailOf(store, tenant, reply.taf));
+      // No address, or the owner wrote it themselves and has the reply already: nothing to send.
+      if (!taf || !owner || owner === reply.to || !cfg.email) { done.add(place); continue; }
+      const from = (await doorsOf(store, tenant, taf.id)).find((d) => d.kind === "email")?.address;
+      if (!from) { done.add(place); continue; }
+      try {
+        await cfg.email.send({
+          from: `${taf.name.replace(/[<>"\n]/g, "")} <${from}>`, to: owner, subject: `${taf.name}: answered ${reply.name || reply.to}`,
+          text: `${taf.name} answered ${reply.name || reply.to}${reply.subject ? ` about "${reply.subject}"` : ""}:\n\n${text}`,
+          idempotencyKey: hash("door-owner", ref),
+        });
+        done.add(place);
+      } catch (err) {
+        console.error("owner email not sent:", err instanceof Error ? err.message : "error");
+        const status = (err as { status?: unknown })?.status;
+        if (typeof status !== "number" || status >= 500 || status === 429) retry = true;
+        else done.add(place);
+      }
     }
-    sent = out.sent;
   }
-  await update<{ sent: Sent[] }>(store, doorKeys.sent(tenant, reply.taf),
-    (read) => ({ sent: [sent, ...(read?.sent ?? [])].slice(0, 100) }), addDays(ctx.now, DOOR.threadDays));
+  const tries = reply.tries ?? 0;
+  if (retry && tries < DOOR.replyWaitsMinutes.length) {
+    const next = new Date(ctx.now.getTime() + DOOR.replyWaitsMinutes[tries]! * 60_000).toISOString();
+    await store.put(key, { ...reply, run: runID, tries: tries + 1, next_at: next, done: [...done] }, addDays(ctx.now, DOOR.replyDays));
+    await update<{ items: Retrying[] }>(store, doorKeys.retrying(), (read) => {
+      const items = (read?.items ?? []).filter((i) => !(i.tenant === tenant && i.ref === ref));
+      return { items: [...items, { tenant, taf: reply.taf, ref }].slice(-MAX_RETRYING) };
+    });
+    await store.remove(doorKeys.sending(tenant, ref));
+    return;
+  }
+  // Given up on: the chat says the door's reply wasn't sent.
+  if (sent && !done.has("door_reply")) await stamp(sent);
   await forgetReply(ctx, tenant, reply.taf, ref);
+}
+
+/** Where a taf's results go: its settings, or, for a taf from before them, its door's reply alone. */
+export function placesOf(taf: Taf): ResultPlace[] {
+  return taf.results?.length ? taf.results : ["door_reply"];
+}
+
+/** The owner's own email, as their email door pairs it, when the reply came through another door. */
+async function ownerEmailOf(store: DoorStore, tenant: string, taf: string): Promise<string | undefined> {
+  return (await doorsOf(store, tenant, taf)).find((d) => d.kind === "email")?.keys.find((k) => k.auto)?.id;
 }
 
 /** A reply waiting for its next try, as the sweep's list keeps it. */
