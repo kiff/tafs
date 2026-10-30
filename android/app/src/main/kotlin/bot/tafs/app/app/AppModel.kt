@@ -150,6 +150,9 @@ data class ChatRun(val session: String, val run: String? = null)
 /** What a person may do, as KIFF says it: a KIFF that doesn't say leaves it to KIFF to decide. */
 internal fun allows(capabilities: List<String>?, capability: String): Boolean = capabilities?.contains(capability) ?: true
 
+/** An Approve again waiting for the browser: the code the phone shows, which KIFF's page shows too, and the page's link. */
+data class Relink(val userCode: String, val link: String)
+
 /** What the screens draw. */
 data class AppState(
   val mode: Mode = Mode.signedOut,
@@ -170,6 +173,12 @@ data class AppState(
    * phone turned its key off when a fingerprint was added. Refusing still works.
    */
   val approvalKeyLost: Boolean = false,
+  /** Approve again, waiting for the browser: the code to compare, and where to approve it. */
+  val relink: Relink? = null,
+  /** Why the last Approve again didn't go through. */
+  val relinkProblem: String? = null,
+  /** KIFF can't re-link a phone yet: where this phone can't approve, Sign in again is offered, as before. */
+  val relinkUnavailable: Boolean = false,
   /** Why Sign out of KIFF, or Sign in again, didn't go through: KIFF didn't end the session. */
   val signOutError: String? = null,
   /** The held calls KIFF said this person may not answer, by call, with its reason: they show words, not buttons. */
@@ -681,16 +690,25 @@ class AppModel(
 
   private var signInNudged = false
 
-  /** The app came back to the foreground: the sign-in asks KIFF again at once, so an approval made in the browser signs the phone in without a wait. */
+  /**
+   * The app came back to the foreground: a sign-in, or an Approve again, asks KIFF again at once, so an approval made in the
+   * browser counts without a wait.
+   */
   fun nudgeSignIn() {
     signInNudged = true
   }
 
-  /**
-   * Polls until the person approves the code in KIFF, then loads their account. It keeps polling
-   * through a dropped connection or a KIFF error until the code expires.
-   */
+  /** Polls until the person approves the code in KIFF, then loads their account. */
   suspend fun finishSignIn(start: DeviceStart) {
+    val token = untilApproved(start) { kiff.pollDeviceToken(start.deviceCode) }
+    useSession(token.accessToken, token.tenant)
+  }
+
+  /**
+   * Asks KIFF with [poll] until the person approves [start]'s code in their browser. It keeps asking through a dropped
+   * connection or a KIFF error until the code expires.
+   */
+  private suspend fun <T> untilApproved(start: DeviceStart, poll: suspend () -> T): T {
     var intervalMs = maxOf(start.interval, signInMinimumIntervalSeconds) * 1000L
     val deadline = clock().plusSeconds(start.expiresIn.toLong())
     while (clock() < deadline) {
@@ -702,9 +720,7 @@ class AppModel(
       }
       signInNudged = false
       try {
-        val token = kiff.pollDeviceToken(start.deviceCode)
-        useSession(token.accessToken, token.tenant)
-        return
+        return poll()
       } catch (_: KiffError.AuthorizationPending) {
         continue
       } catch (_: KiffError.SlowDown) {
@@ -740,6 +756,7 @@ class AppModel(
     cloud.token = token
     kiff.tenant = tenant
     accountGeneration += 1
+    relinkJob?.cancel()
     decided.clear()
     followers.values.forEach { it.cancel() }
     followers.clear()
@@ -978,6 +995,73 @@ class AppModel(
     secrets.delete(APPROVAL_KEYED)
   }
 
+  // MARK: Approve again
+
+  private var relinkJob: Job? = null
+
+  /**
+   * Approve again in your browser, where this phone can't approve: its approval key (made anew when the old one was turned off)
+   * takes the place of the one KIFF holds once the person approves it in their browser. No sign-out: the session, its alerts and
+   * its list stay. Run by the model, as [startApproval]; a tap while one is under way does nothing.
+   */
+  fun startRelink() {
+    if (relinkJob?.isActive == true) return
+    relinkJob = scope.launch { relink() }
+  }
+
+  /** Stops waiting for the browser. KIFF lets the code expire, and a new Approve again cancels it. */
+  fun cancelRelink() {
+    relinkJob?.cancel()
+    relinkJob = null
+    _state.update { it.copy(relink = null, relinkProblem = null) }
+  }
+
+  suspend fun relink() {
+    if (_state.value.mode != Mode.kiff || !_state.value.approvalKeyLost) return
+    val generation = accountGeneration
+    _state.update { it.copy(relink = null, relinkProblem = null) }
+    try {
+      val key = signer.approvalPublicKeyDER
+      // Never the screen lock alone: without a fingerprint there's no key to approve with, and no browser opens.
+      if (key.isEmpty()) throw SignerException(DeviceSigner.NO_FINGERPRINT)
+      val start = try {
+        kiff.startRelink(key, signer.publicKeyDER, { built -> signer.signApproval(RELINK_REASON, built) }) { signer.signConfirmed(it) }
+      } catch (e: KiffError.Server) {
+        // A KIFF without re-linking: Sign in again, as before.
+        if (e.status != 404) throw e
+        if (generation == accountGeneration) _state.update { it.copy(relinkUnavailable = true) }
+        return
+      }
+      if (generation != accountGeneration) return
+      _state.update { it.copy(relink = Relink(start.userCode, start.verificationUriComplete)) }
+      val held = untilApproved(start) { kiff.pollRelink(start.deviceCode) }
+      if (generation != accountGeneration) return
+      // KIFF's fingerprint says which key it holds now; a fingerprint added while the browser waited turned this one off.
+      if (!KiffClient.sameKey(held, key) || !signer.approvalKeyUsable()) {
+        _state.update { it.copy(relink = null, relinkProblem = RELINK_DIDNT_TAKE) }
+        return
+      }
+      secrets.save(KiffClient.fingerprint(key), APPROVAL_KEYED)
+      useApprovalKey()
+      _state.update { it.copy(relink = null, relinkProblem = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(relink = null, relinkProblem = relinkFailure(e)) }
+    }
+  }
+
+  /** Why Approve again didn't go through, in words the owner can act on. */
+  private fun relinkFailure(e: Exception): String = when {
+    e is KiffError.Expired -> "The code expired before it was approved in your browser. Try again."
+    e is KiffError.Server && e.message == "access_denied" -> "It wasn't approved in the browser."
+    e is KiffError.Server && e.message == "relink_in_progress" -> "KIFF is finishing the last one. Try again in a moment."
+    e is ApprovalKeyRenewed -> "Your fingerprints changed just now. Try again."
+    e is SignerException -> e.message ?: RELINK_FAILED
+    e is IOException -> "No connection. Try again."
+    else -> RELINK_FAILED
+  }
+
   /**
    * Sign out of KIFF, and Sign in again after this phone lost its approval key: the session ends at KIFF first, and its
    * keys with it, so a sign-in that should be over never stays listed in Devices, able to approve. Only then is the phone
@@ -1059,6 +1143,7 @@ class AppModel(
     kiff.tenant = null
     kiffTenant = null
     accountGeneration += 1
+    relinkJob?.cancel()
     decided.clear()
     followers.values.forEach { it.cancel() }
     followers.clear()
@@ -4252,6 +4337,14 @@ class AppModel(
     const val TENANT = "kiff.tenant"
     const val KEYED = "kiff.session-keyed"
     const val APPROVAL_KEYED = "kiff.session-approval-keyed"
+
+    /** What the fingerprint prompt says when Approve again proves this phone holds its new key. */
+    const val RELINK_REASON = "Approve again with this fingerprint"
+
+    /** KIFF answered, but holds another key, or this one was turned off while the browser waited. */
+    const val RELINK_DIDNT_TAKE = "This phone still can't approve. Try again, or sign in again in Settings."
+
+    const val RELINK_FAILED = "Approving again didn't work. Try again, or sign in again in Settings."
 
     // What alerts keep on this phone: a target's secret not yet handed to tafs cloud, whether alerts were turned on, and the sound.
     const val HANDOFF = "kiff.alert-handoff"

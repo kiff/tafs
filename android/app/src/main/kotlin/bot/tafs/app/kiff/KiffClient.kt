@@ -200,7 +200,47 @@ class KiffClient(
   }
 
   /** One poll. Throws [KiffError.AuthorizationPending] until the person approves. */
-  suspend fun pollDeviceToken(deviceCode: String): DeviceToken {
+  suspend fun pollDeviceToken(deviceCode: String): DeviceToken = pollToken(deviceCode)
+
+  // MARK: Approving again
+
+  /**
+   * Asks KIFF to make [approvalPublicKey] this session's approval key in place of the one it holds, once the person approves it in
+   * their browser: no new session, so the phone's alerts and list stay. [proof] signs, with the new key behind its fingerprint, that
+   * the phone holds it (`kiff.approval-key-relink.v1`); [signer] signs the request with the device key ([deviceKey], SPKI DER), which
+   * names the session. Answers a code to approve, as a sign-in does; a new one cancels the last.
+   */
+  suspend fun startRelink(
+    approvalPublicKey: ByteArray,
+    deviceKey: ByteArray,
+    proof: suspend (built: () -> ByteArray) -> String,
+    signer: (ByteArray) -> String,
+  ): DeviceStart {
+    val account = tenant ?: throw KiffError.Unauthorized
+    var signedAt = ""
+    // The time is taken once the fingerprint was given.
+    val signature = proof {
+      signedAt = signingTime.next()
+      relinkMessage(account, deviceKey, approvalPublicKey, signedAt)
+    }
+    val body = mapOf("approval_public_key" to base64(approvalPublicKey), "signed_at" to signedAt, "signature" to signature)
+    return call("POST", RELINK, body, signedBy = signer)
+  }
+
+  /**
+   * One poll of a re-link. Throws [KiffError.AuthorizationPending] until the person approves; then answers KIFF's fingerprint of
+   * the key it holds now. A sign-in's token here would be KIFF's mistake, and isn't taken as one.
+   */
+  suspend fun pollRelink(deviceCode: String): String? {
+    val answer = pollToken<Relinked>(deviceCode)
+    if (answer.status != "relinked") throw KiffError.Server(200, "KIFF didn't say this phone may approve again")
+    return answer.fingerprint
+  }
+
+  @Serializable
+  private data class Relinked(val status: String = "", val fingerprint: String? = null)
+
+  private suspend inline fun <reified T> pollToken(deviceCode: String): T {
     try {
       return call("POST", "/v1/auth/device/token", mapOf("device_code" to deviceCode), authorized = false)
     } catch (e: KiffError.Server) {
@@ -508,7 +548,7 @@ class KiffClient(
     if (payload != null) headers["Content-Type"] = "application/json"
 
     // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
-    val signed = if (gateway) path == "/v1/connections" || path == "/v1/connections/batch" else signsSetup(path) || path == "/v1/me/device/approval-key"
+    val signed = if (gateway) path == "/v1/connections" || path == "/v1/connections/batch" else signsSetup(path) || path == "/v1/me/device/approval-key" || path == RELINK
     // What grants authority is signed by the approval key, once the session has one, each request
     // behind its own fingerprint; KIFF picks the key by route, so the header is the same (kiff/tafs#233).
     val plain = (signedBy ?: setupSigner)?.let { s -> val signs: suspend (() -> ByteArray) -> String = { built -> s(built()) }; signs }
@@ -558,6 +598,9 @@ class KiffClient(
     const val APPROVAL_KEY_LOST = "Sign in with KIFF again to approve from this phone."
 
     private val WRITES = setOf("POST", "PUT", "PATCH", "DELETE")
+
+    /** Approve again: a new approval key for this session, approved in the browser. */
+    const val RELINK = "/v1/me/device/relink"
 
     internal val json = Json { ignoreUnknownKeys = true }
 
@@ -611,6 +654,13 @@ class KiffClient(
     /** What the phone signs for a setup call: KIFF's signed request message, `kiff.request.v1`. */
     fun requestMessage(tenant: String, method: String, uri: String, body: ByteArray, signedAt: String): ByteArray =
       listOf("kiff.request.v1", tenant, method, uri, sha256Hex(body), signedAt).joinToString("\n").toByteArray()
+
+    /**
+     * What the new approval key signs to ask for re-linking, `kiff.approval-key-relink.v1`: the account, the device key that names
+     * the session and the new key, each as the SHA-256 of its SPKI DER in lowercase hex, and the time.
+     */
+    fun relinkMessage(tenant: String, deviceKey: ByteArray, approvalKey: ByteArray, signedAt: String): ByteArray =
+      listOf("kiff.approval-key-relink.v1", tenant, sha256Hex(deviceKey), sha256Hex(approvalKey), signedAt).joinToString("\n").toByteArray()
 
     /** What the phone signs to answer a held call: KIFF's signed answer message, `kiff.answer.v1`, one field per line. */
     fun answerMessage(

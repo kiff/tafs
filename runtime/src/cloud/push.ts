@@ -128,6 +128,8 @@ const ANSWERED = "hold_answered";
 export const PACK_REQUESTED = "pack_requested";
 /** An admin answered a member's request: approved (a pack bought), declined or withdrawn. */
 export const PACK_REQUEST_ANSWERED = "pack_request_answered";
+/** A vendor ended the sign-in planque held for a taf's connection: the owner signs in again. */
+export const CONNECTION_SIGNED_OUT = "connection_signed_out";
 
 /**
  * Checks `KIFF-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, "<t>.<body>")>`
@@ -159,6 +161,8 @@ interface AlertBody {
   hold?: { id?: unknown; expires_at?: unknown } | null;
   /** On a pack request's alerts: the request, who asked (their sign-in subject) and an admin's note. */
   request?: { id?: unknown; pack?: unknown; status?: unknown; asked_by?: unknown; note?: unknown } | null;
+  /** On a signed-out connection's alert: its grant, the taf's agent and the vendor's name for people. */
+  connection?: { grant?: unknown; agent?: unknown; vendor?: unknown } | null;
   /**
    * On a held call's alerts, when KIFF names them: the people to tell, by sign-in
    * subject. KIFF leaves out whoever asked for the call, who may never answer it.
@@ -183,6 +187,8 @@ export interface AlertDeps {
   keep(key: string, until: Date): Promise<void>;
   release(key: string): Promise<void>;
   now: Date;
+  /** The taf a KIFF agent runs, by its agent id: its id and name, for a signed-out connection's alert. */
+  tafOf?(tenant: string, agent: string): Promise<{ id: string; name: string } | undefined>;
 }
 
 /**
@@ -203,11 +209,22 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   if (!signedByKIFF(signature, raw, secrets, deps.now)) throw new PushError(401, "not signed by KIFF");
 
   const outcome = typeof body.outcome === "string" ? body.outcome : "";
-  if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED && outcome !== PACK_REQUEST_ANSWERED) return { ignored: outcome };
+  if (outcome !== HELD && outcome !== ANSWERED && outcome !== PACK_REQUESTED && outcome !== PACK_REQUEST_ANSWERED && outcome !== CONNECTION_SIGNED_OUT) return { ignored: outcome };
   const eventID = typeof body.event_id === "string" ? body.event_id : "";
   let n: Notification;
   let to: (d: Device) => boolean;
-  if (outcome === PACK_REQUEST_ANSWERED) {
+  if (outcome === CONNECTION_SIGNED_OUT) {
+    const c = body.connection;
+    const grant = typeof c?.grant === "string" ? c.grant : "";
+    const agent = typeof c?.agent === "string" ? c.agent : "";
+    if (!eventID || !grant || !agent) throw new PushError(400, "a signed-out connection names its event, its grant and its agent");
+    const taf = deps.tafOf ? await deps.tafOf(tenant, agent) : undefined;
+    // An agent that no taf runs (removed since): nobody to tell.
+    if (!taf) return { ignored: `${outcome}: no taf runs ${agent}` };
+    n = signedOutNotification(taf, typeof c?.vendor === "string" ? c.vendor : "", grant);
+    // The people who may answer for the account's tafs: they sign in again.
+    to = (d) => d.answers;
+  } else if (outcome === PACK_REQUEST_ANSWERED) {
     const r = body.request;
     const requestID = typeof r?.id === "string" ? r.id : "";
     const askedBy = typeof r?.asked_by === "string" ? r.asked_by : "";
@@ -282,6 +299,29 @@ function heldNotification(body: AlertBody, holdID: string, now: Date): Notificat
     },
     collapseID: holdID.slice(0, 64),
     expiresAt: expires && !Number.isNaN(expires.getTime()) && expires > now ? expires : undefined,
+  };
+}
+
+/** Most of a vendor's or a taf's name an alert shows. */
+const MAX_NAME = 60;
+
+/**
+ * "Stripe signed Refunds out · sign in again": tapping it opens the taf, where its Card tab offers
+ * Sign in again. Neither the reason nor the grant's tools are said: only who, and what to do.
+ * It sounds, but isn't Time Sensitive: nothing waits on a deadline, the taf just can't use that vendor.
+ */
+function signedOutNotification(taf: { id: string; name: string }, vendor: string, grant: string): Notification {
+  const clip = (s: string) => { const t = s.replace(/\s+/g, " ").trim(); return t.length > MAX_NAME ? t.slice(0, MAX_NAME - 1) + "…" : t; };
+  const who = clip(vendor) || "A provider";
+  return {
+    kind: "alert",
+    payload: {
+      aps: { alert: { title: clip(taf.name), body: `${who} signed ${clip(taf.name)} out · sign in again` }, "thread-id": "connections", sound: "default" },
+      open: "taf",
+      taf_id: taf.id,
+    },
+    // One alert per connection: a later sign-out of the same one replaces it.
+    collapseID: `out-${grant}`.slice(0, 64),
   };
 }
 

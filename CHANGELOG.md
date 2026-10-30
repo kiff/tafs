@@ -11,6 +11,11 @@ version headings refer to releases, not merely to merged pull requests.
   **Approve again in your browser** lets the phone approve with its new key once the person
   approves it in KIFF, showing the same code on the phone and the page. The session, alerts and
   list stay. Sign in again remains the fallback.
+- **Android, approve again in your browser:** a phone whose fingerprints changed approves again
+  without signing out. **Approve again in your browser** proves its new approval key with one
+  fingerprint, shows KIFF's code to compare, and waits for the browser, with Cancel; the session,
+  its alerts and its list stay. **Sign in again instead** stays under it, and is what a KIFF
+  without re-linking offers.
 - **iPhone and iPad, approvals by Face ID or Touch ID only:** what grants authority (Approve,
   Extra room, a Card, a trial, Resume, sharing, connecting a tool) takes Face ID or Touch ID,
   never the passcode, and the approval key itself requires the faces or fingerprints enrolled
