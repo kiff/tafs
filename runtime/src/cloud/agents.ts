@@ -182,6 +182,15 @@ export interface Run {
   requester?: Requester;
   /** The run opened its session: a requester's live chat had gone quiet, or none was asked for. */
   new_session?: boolean;
+  /**
+   * Where its work stands when its status alone doesn't say (docs/reliability.md): "retrying", a run that stopped
+   * while it worked and waits for restart `try` of `of` at `next_at`; "needs_you", one past its last, with `reason`.
+   */
+  state?: "retrying" | "needs_you";
+  reason?: string;
+  try?: number;
+  of?: number;
+  next_at?: string;
   created: string;
   updated: string;
 }

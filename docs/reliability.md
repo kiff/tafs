@@ -137,6 +137,8 @@ The work of delivering is split in two:
 
 ## The taf's view
 
+**Landed:** `work` on `GET /v1/home`'s tafs and `GET /v1/tafs/{id}/work` (`runtime/src/cloud/work.ts`), from the runs' `state` as kiff/agents gives it, in the account's time zone from KIFF. Still to come: **Send again**.
+
 tafs cloud returns one view of a taf for both apps. The apps show it as it is.
 
 - **Words and fields both.** Each state comes with `line`, the words the app shows, with every

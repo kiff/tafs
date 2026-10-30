@@ -64,6 +64,7 @@ details go only to tafs cloud's own log.
 |---|---|---|
 | `DELETE /v1/tafs/{id}` | manages | Remove it for good, each step safe to repeat: `{done, removed, failed}`. The phone revokes its Cards in KIFF first |
 | `POST /v1/tafs/{id}/pause`, `resume` | manages | Its schedule off or on. 409 for a taf that works from its chat |
+| `GET /v1/tafs/{id}/work` | a person | Where its work stands ([reliability.md](reliability.md#the-tafs-view)): `{summary: {status, line, needs_you}, next_run, counts, requests: [{id, at, state, line, deliveries}]}`, every line and time written in the account's zone (`time_zone`) |
 | `PUT /v1/tafs/{id}/results` | manages | `{places}`: where its results go, one or more of `door_reply`, `app`, `owner_email` ([doors.md](doors.md#where-results-go)). The taf's view lists them as `results`; a taf that never set them answers through its door alone |
 | `POST /v1/tafs/{id}/run` | manages | Run it now: `{session}`. 409 for a taf that works from its chat |
 | `GET /v1/tafs/{id}/runs` | a person | Its recent job runs: `{runs: [{session, at, error}]}` |

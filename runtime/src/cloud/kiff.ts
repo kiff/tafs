@@ -13,6 +13,8 @@ export interface KIFFIdentity {
   capabilities: string[];
   /** The person's sign-in email, when KIFF gives it (sessions only). */
   email?: string;
+  /** The account's time zone (IANA), when KIFF gives it: the zone every time tafs cloud writes out is in. */
+  timeZone?: string;
 }
 
 export class KIFFError extends Error {
@@ -39,6 +41,7 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     agent_id?: string;
     capabilities?: string[];
     email?: string;
+    time_zone?: string;
   };
   if (!me.tenant_id) throw new KIFFError(502, "KIFF did not say which account this is");
   return {
@@ -48,6 +51,7 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     agentID: me.agent_id ?? "",
     capabilities: me.capabilities ?? [],
     ...(typeof me.email === "string" && me.email ? { email: me.email } : {}),
+    ...(typeof me.time_zone === "string" && me.time_zone ? { timeZone: me.time_zone } : {}),
   };
 }
 

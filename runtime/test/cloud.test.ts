@@ -254,6 +254,15 @@ describe("tafs cloud", () => {
     expect((await call(w, "GET", "/v1/tafs", { token: "key_rae" })).status).toBe(403);
   });
 
+  it("gives a taf's work for its page: its summary, counts and requests, with times in the account's zone", async () => {
+    const w = world();
+    await w.agents.api.startRun("t_acme", RAE, "go");
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ taf: RAE, time_zone: "UTC", summary: { status: "working" }, counts: { working: 1 } });
+    expect(r.body.requests).toHaveLength(1);
+  });
+
   it("lists only the caller's account's tafs, as the app reads them", async () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
     expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"] }]);
@@ -487,6 +496,8 @@ describe("the home list", () => {
       // Its job in words, for its page (kiff/tafs#167).
       job_summary: "Answers refund requests and issues refunds and credits within the Card.",
       color: 0, state: "working", waiting: 0,
+      // Where its work stands, in words (docs/reliability.md).
+      work: { status: "idle", line: "Nothing yet", needs_you: 0 },
       card: {
         ids: ["card_rae"], active: true, expires: "2026-12-31T00:00:00Z", tools: ["Create refund"],
         rules: [{

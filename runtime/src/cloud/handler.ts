@@ -11,6 +11,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
+import { summaryOf, workOf } from "./work.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
@@ -482,6 +483,17 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     await needTaf(event, me, taf, deps);
     const s = await agentsCall(() => deps.agents.switchSchedule(me.tenantID, taf.id, action === "resume"));
     return { taf: await view(taf, me, deps, s) };
+  }
+  if (parts.length === 4 && method === "GET" && action === "work") {
+    // Where its work stands, for its page (docs/reliability.md): every line and time written here.
+    const now = deps.now?.() ?? new Date();
+    const [runs, v, sent] = await Promise.all([
+      agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
+      view(taf, me, deps),
+      deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
+    ]);
+    const zone = me.timeZone ?? "UTC";
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, v.status === "paused", zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent) };
   }
   if (parts.length === 4 && method === "PUT" && action === "results") {
     await needTaf(event, me, taf, deps);
@@ -3013,6 +3025,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
+  // Where each taf's work stands (docs/reliability.md): one read of its recent runs. A read that fails leaves it out.
+  const now = deps.now?.() ?? new Date();
+  const recent = await Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => undefined)));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
@@ -3021,7 +3036,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
     const words = JOBS.find((j) => j.id === v.job)?.summary;
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
-    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}) };
+    const runs = recent[i];
+    const work = runs ? summaryOf(runs, v.status === "paused", me.timeZone ?? "UTC", now) : undefined;
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}), ...(work ? { work } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.
