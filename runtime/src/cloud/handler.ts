@@ -4,7 +4,7 @@ import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
-import { alertTarget, type Change, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, type Change, CONNECTION_SIGNED_OUT, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
@@ -655,8 +655,9 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (!signer) throw new HTTPError(401, "not signed by KIFF");
 
   let handedOn = true;
-  // A member's request for more tasks is the phones' alone: no run waits on it.
-  if (str(parsed.outcome) === PACK_REQUESTED) {
+  // A member's request for more tasks, and a vendor signing a connection out, are the phones' alone: no
+  // run waits on them.
+  if (str(parsed.outcome) === PACK_REQUESTED || str(parsed.outcome) === CONNECTION_SIGNED_OUT) {
     return receiveAlert(signature, raw, {
       push: deps.push,
       apns: deps.apns,
@@ -665,6 +666,10 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
       keep: (key, until) => deps.slots.keep(key, until),
       release: (key) => deps.slots.release(key),
       now,
+      tafOf: async (t, agent) => {
+        const taf = (await deps.tafs.list(t)).find((x) => x.kiffAgent === agent && !x.removing);
+        return taf ? { id: taf.id, name: taf.name } : undefined;
+      },
     });
   }
   try {

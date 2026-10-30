@@ -100,7 +100,7 @@ function fakeContinue(order: string[] = [], status = 202) {
   return c;
 }
 
-function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<ReadyRun | void>; accounts?: Map<string, { tenant: string; secret: string }>; agents?: object; androidPush?: boolean }) {
+function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<ReadyRun | void>; accounts?: Map<string, { tenant: string; secret: string }>; agents?: object; androidPush?: boolean; tafs?: Array<{ id: string; name: string; kiffAgent: string; removing?: boolean }> }) {
   const event: HTTPEvent = { rawPath: path, requestContext: { http: { method } }, headers: opts.headers ?? {}, body: opts.body };
   const accounts = opts.accounts ?? new Map();
   return handle(event, {
@@ -111,6 +111,7 @@ function call(method: string, path: string, opts: { body?: string; headers?: Rec
     slots: opts.slots ?? memorySlots(),
     claims: { get: async () => undefined, put: async () => undefined, remove: async () => undefined },
     push: opts.push,
+    tafs: { list: async () => opts.tafs ?? [] },
     apns: opts.apns ?? fakeAPNs(),
     ...(opts.androidPush === undefined ? {} : { androidPush: opts.androidPush }),
     fetch: kiffMe({ ana: ME, viewer: VIEWER }),
@@ -403,6 +404,33 @@ describe("KIFF's alerts", () => {
     expect(forward.tries).toBe(0);
     expect((await alert(request, push, { apns, forward, slots })).body).toEqual({ duplicate: true });
     expect(apns.sent).toHaveLength(1);
+  });
+
+  it("tells the people who answer when a vendor signs a taf's connection out, once, and opens that taf", async () => {
+    const push = account();
+    const apns = fakeAPNs();
+    const forward = fakeForward();
+    const slots = memorySlots();
+    const out = (event: string, agent = "refunds-1") => JSON.stringify({
+      schema_version: "1", type: "kiff.connection", tenant_id: "t_acme", action: "", outcome: "connection_signed_out",
+      entity_type: "connection", entity_id: "grt_1", decided_at: "2026-10-15T09:00:00Z", event_id: event,
+      connection: { grant: "grt_1", agent, vendor: "Stripe", reason: "refresh_refused", signed_out_at: "2026-10-15T09:00:00Z" },
+    });
+    const tafs = [{ id: "taf_1", name: "Refunds", kiffAgent: "refunds-1" }];
+    const r = await call("POST", "/v1/kiff/alerts", { body: out("conn-out:grt_1:1"), headers: { "KIFF-Signature": sig(out("conn-out:grt_1:1")) }, push, apns, slots, forward: forward.forward, tafs });
+    expect(r.body).toEqual({ sent: 2 });
+    expect(apns.sent[0]!.n).toMatchObject({ kind: "alert", payload: { aps: { alert: { title: "Refunds", body: "Stripe signed Refunds out · sign in again" }, sound: "default" }, open: "taf", taf_id: "taf_1" }, collapseID: "out-grt_1" });
+    // Never Time Sensitive, never the reason or the grant's tools.
+    expect(apns.sent[0]!.n.payload.aps).not.toHaveProperty("interruption-level");
+    expect(JSON.stringify(apns.sent[0]!.n.payload)).not.toContain("refresh_refused");
+    // No run waits on it, so kiff/agents never hears of it.
+    expect(forward.tries).toBe(0);
+    // KIFF's resend of the same event tells nobody again.
+    expect((await call("POST", "/v1/kiff/alerts", { body: out("conn-out:grt_1:1"), headers: { "KIFF-Signature": sig(out("conn-out:grt_1:1")) }, push, apns, slots, tafs })).body).toEqual({ duplicate: true });
+    // An agent no taf runs (removed since): nobody to tell.
+    expect((await call("POST", "/v1/kiff/alerts", { body: out("conn-out:grt_9:1", "gone-1"), headers: { "KIFF-Signature": sig(out("conn-out:grt_9:1", "gone-1")) }, push, apns, slots, tafs })).body)
+      .toEqual({ ignored: "connection_signed_out: no taf runs gone-1" });
+    expect(apns.sent).toHaveLength(2);
   });
 
   it("tells only the member who asked when their request is answered, and nobody when it was withdrawn", async () => {
