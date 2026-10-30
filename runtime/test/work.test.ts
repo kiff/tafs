@@ -71,4 +71,13 @@ describe("the thread as one ordered list", () => {
     );
     expect(items.map((i) => (i.type === "message" ? i.message.id : `card:${(i.card.component as { title: string }).title}`))).toEqual(["m1", "card:latest", "m2"]);
   });
+
+  it("puts a held call where KIFF held it, by KIFF's keys only", async () => {
+    const { threadItems } = await import("../src/cloud/handler.js");
+    const msg = (id: string, at: string) => ({ id, at, from: "taf" as const, kind: "message" as const, text: id, session: "s" });
+    const items = threadItems([msg("m1", "2026-10-30T10:00:00Z"), msg("m2", "2026-10-30T10:05:00Z")], [],
+      [{ at: "2026-10-30T10:02:00Z", session: "s", run: "r", exception: "ex_1", invocation: "inv_1" }]);
+    expect(items.map((i) => i.type)).toEqual(["message", "held", "message"]);
+    expect(items[1]).toEqual({ type: "held", held: { at: "2026-10-30T10:02:00Z", session: "s", run: "r", exception: "ex_1", invocation: "inv_1" } });
+  });
 });

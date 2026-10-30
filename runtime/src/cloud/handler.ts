@@ -532,17 +532,17 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // A door's reply a lost note left owed goes out now, and shows as sent.
     if (deps.doors) await settlePending(doorContext(deps), me.tenantID, taf.id).catch(() => undefined);
     const [doors, titles] = await Promise.all([managesTaf(event, me, taf, deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, sessions } = await conversation(me, taf, deps, undefined, doors, titles);
+    const { messages, components, held, sessions } = await conversation(me, taf, deps, undefined, doors, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
+    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
-    const { messages, components, sessions } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, sessions } = await conversation(me, taf, deps, only, false, titles);
     await handOverShown(me.tenantID, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
+    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -1525,7 +1525,7 @@ function titlesOf(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Pro
   return toolTitles(bearer(event), me.tenantID, me.subject, taf.kiffAgent, deps.fetch, deps.kiffBase);
 }
 
-async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; sessions: Session[] }> {
+async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Session, doors = false, titles: ToolTitles = new Map()): Promise<{ messages: ThreadMessage[]; components: ThreadComponent[]; held: ThreadHeld[]; sessions: Session[] }> {
   if (!only) await moveArchived(me, taf, deps);
   // The person's own sessions (with the job's runs and those from before owners), read by
   // owner so other people's chats never use up the scan; and, for `doors`, the door senders'
@@ -1545,6 +1545,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s)).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
   const components: ThreadComponent[] = [];
+  const held: ThreadHeld[] = [];
   /** Runs a door's message started, by run: their answers go back through it. */
   const doorRuns = new Map<string, string>();
   const sent = new Map((deps.doors ? await sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : []).map((x) => [x.run, x]));
@@ -1585,6 +1586,14 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         for (const t of turn?.waited ?? []) {
           const words = stepWords(t.tool, titles);
           part.tools.push({ tool: t.tool, ...(words ? { words } : {}), ...(t.notMade ? { not_made: true as const } : t.error ? { error: true as const } : {}) });
+        }
+        continue;
+      }
+      if (e.kind === "tool_result") {
+        // A call KIFF held, where it was held (#1425 item 4): the app reads the call itself from KIFF.
+        const b = (e.body ?? {}) as { state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
+        if (b.state === "held" && typeof b.hold?.exception === "string" && b.hold.exception) {
+          held.push({ at: iso(e.time), session: r.session.id, run: e.run, exception: b.hold.exception, ...(typeof b.invocation === "string" ? { invocation: b.invocation } : {}) });
         }
         continue;
       }
@@ -1646,18 +1655,31 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   }
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
-  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
+  held.sort((a, b) => a.at.localeCompare(b.at));
+  return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), sessions: picked };
 }
 
 /** One entry of the thread in order (#1425 item 3): a message, or a card at its place. */
-export type ThreadItem = { type: "message"; message: ThreadMessage } | { type: "card"; card: ThreadComponent };
+export type ThreadItem = { type: "message"; message: ThreadMessage } | { type: "card"; card: ThreadComponent } | { type: "held"; held: ThreadHeld };
+
+/**
+ * A call KIFF held for the owner, at its place in the thread (#1425 item 4): only KIFF's keys for
+ * it. The app reads the call itself, its words and its answer, from KIFF with the person's session.
+ */
+export interface ThreadHeld {
+  at: string;
+  session: string;
+  run: string;
+  exception: string;
+  invocation?: string;
+}
 
 /**
  * The thread as one ordered list, so neither app places or folds anything: messages and cards by
  * time, a card shown again (the same id in the same run) replacing its earlier version in place, at
  * the time it first appeared.
  */
-export function threadItems(messages: ThreadMessage[], components: ThreadComponent[]): ThreadItem[] {
+export function threadItems(messages: ThreadMessage[], components: ThreadComponent[], held: ThreadHeld[] = []): ThreadItem[] {
   const cards = new Map<string, ThreadComponent & { first: string }>();
   for (const c of components) {
     const id = String((c.component as { id?: unknown })?.id ?? "");
@@ -1668,6 +1690,7 @@ export function threadItems(messages: ThreadMessage[], components: ThreadCompone
   const items: Array<{ at: string; order: number; item: ThreadItem }> = [];
   messages.forEach((m, i) => items.push({ at: m.at, order: i, item: { type: "message", message: m } }));
   [...cards.values()].forEach(({ first, ...c }, i) => items.push({ at: first, order: messages.length + i, item: { type: "card", card: c } }));
+  held.forEach((h, i) => items.push({ at: h.at, order: messages.length + cards.size + i, item: { type: "held", held: h } }));
   return items.sort((a, b) => a.at.localeCompare(b.at) || a.order - b.order).map((x) => x.item);
 }
 
@@ -1991,9 +2014,9 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     const open = await openTrialOf(me, taf, deps);
     if (!open.session) return { messages: [], components: [], working: false, steering: [] };
     const [only, titles] = await Promise.all([ownChat(me, taf, open.session, deps, "trial"), titlesOf(event, me, taf, deps)]);
-    const { messages, components, sessions } = await conversation(me, taf, deps, only, false, titles);
+    const { messages, components, held, sessions } = await conversation(me, taf, deps, only, false, titles);
     const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
+    return { messages, components, items: threadItems(messages, components, held), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}) };
   }
   await needTaf(event, me, taf, deps);
   const token = bearer(event);
