@@ -1977,7 +1977,8 @@ class AppModel(
         }
         return Connected.Done(grant)
       }
-      if (grant.status !in setOf("pending", "approved", "signed_in")) {
+      // A grant its vendor signed out (needs_reconnect) is approved and signed in again, as a new one is.
+      if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect")) {
         return Connected.Failed("This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."))
       }
       if (!grant.digestMatches) return Connected.Failed(PlanqueError.DigestMismatch.message!!)

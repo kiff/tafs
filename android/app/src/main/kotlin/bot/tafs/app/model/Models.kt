@@ -628,3 +628,21 @@ data class RunReport(
 ) {
   val finished: Boolean get() = status != null && status != "running"
 }
+
+/**
+ * The home list's order while it's on screen: a refresh updates each row in place and never moves one under the owner's finger.
+ * A taf newly waiting on the owner still goes to the top at once, which is what the list is for; a new taf goes last; one gone
+ * leaves. The list's own order (waiting first, then the latest used) applies again when the owner comes back or pulls.
+ */
+object ListOrder {
+  /** What the list showed: its tafs' ids in order, and which were waiting on the owner. */
+  data class Shown(val ids: List<String>, val waiting: Set<String>)
+
+  fun hold(shown: Shown?, listed: List<String>, waiting: Set<String>): List<String> {
+    if (shown == null) return listed
+    val newlyWaiting = listed.filter { it in waiting && it !in shown.waiting }
+    val kept = shown.ids.filter { it in listed && it !in newlyWaiting }
+    val added = listed.filter { it !in shown.ids && it !in newlyWaiting }
+    return newlyWaiting + kept + added
+  }
+}

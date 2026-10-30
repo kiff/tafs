@@ -104,7 +104,11 @@ A taf's state (`stateOf`):
 | working | otherwise, for a taf tafs cloud runs |
 | idle | an agent with a Card that tafs doesn't run |
 
-The list is ordered with the taf a call waits on first, then by when each was last used.
+The list is ordered with the taf a call waits on first, then by when each was last used. On
+Android the order holds while the list is on screen (`ListOrder`): a refresh updates each row
+in place and never moves one under the owner's finger, except that a taf newly waiting on the
+owner goes to the top at once. The order is worked out again on a pull and when the app comes
+back.
 On an iPad, the app opens on the list's first taf until the owner picks another
 (`HomeSplitView.opening`). A tap anywhere on a row picks it, and a tap on the taf
 already open counts as a pick too. On an Android tablet, either way up, or any screen 720 dp

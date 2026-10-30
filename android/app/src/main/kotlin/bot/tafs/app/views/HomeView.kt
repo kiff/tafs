@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.ListOrder
+import androidx.compose.runtime.SideEffect
 import bot.tafs.app.model.shortTime
 import bot.tafs.app.model.dayTitle
 import bot.tafs.app.model.localDate
@@ -79,12 +81,21 @@ fun HomeView(
   val sample = state.mode == Mode.sample
   var refreshing by remember { mutableStateOf(false) }
   val pullScope = rememberCoroutineScope()
+  // The order the list last showed, held while it's on screen (ListOrder): starting afresh on a pull, and when the app comes back.
+  val shownOrder = remember { mutableStateOf<ListOrder.Shown?>(null) }
+  val waiting = state.held.map { it.tafId }.toSet()
+  val order = ListOrder.hold(shownOrder.value, state.listedTafs.map { it.id }, waiting)
+  SideEffect { shownOrder.value = ListOrder.Shown(order, waiting) }
+  androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { shownOrder.value = null }
   PullToRefreshBox(
     isRefreshing = refreshing,
     onRefresh = {
       pullScope.launch {
         refreshing = true
-        try { onPlayNext() } finally { refreshing = false }
+        try { onPlayNext() } finally {
+          refreshing = false
+          shownOrder.value = null
+        }
       }
     },
     modifier = modifier.fillMaxSize(),
@@ -129,7 +140,12 @@ fun HomeView(
         state.held.firstOrNull()?.let { first ->
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }
         }
-        item { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { state.listedTafs.forEach { taf -> TafRow(taf) { onOpenTaf(taf.id) } } } }
+        item {
+          Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val byId = state.listedTafs.associateBy { it.id }
+            order.forEach { id -> byId[id]?.let { taf -> TafRow(taf) { onOpenTaf(taf.id) } } }
+          }
+        }
         if (state.otherAgents.isNotEmpty()) {
           // Agents made through KIFF's API, not run by tafs: their Cards, apart.
           item {

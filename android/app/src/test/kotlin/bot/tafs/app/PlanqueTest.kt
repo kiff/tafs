@@ -337,6 +337,20 @@ class PlanqueTest {
     assertEquals(AppModel.Connected.Failed("Not connected. " + bot.tafs.app.model.ErrorWords.CHANGED, "Not connected: this request was already approved"), m.connect("a1", "g1", digest))
   }
 
+  @Test fun aGrantItsVendorSignedOutIsSignedInAgainNotRefused() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant(status = "needs_reconnect", extra = ""","status_words":"Signed out by Stripe · sign in again"""")}]}""")
+    transport.answer(approve, 409, """{"error":"stop here"}""")
+    val m = model()
+    m.refreshConnections()
+    val g = m.state.value.grants.single()
+    assertTrue(g.needsReconnect)
+    assertEquals("Signed out by Stripe · sign in again", g.statusWords)
+    // It goes to planque's approve, as a new grant does, rather than stopping at "This connection is needs reconnect".
+    m.connect("a1", "g1", digest)
+    assertEquals(1, transport.requestsTo(approve).size)
+  }
+
   @Test fun aPhonePlanqueDoesNotKnowCannotApproveAndSaysWhereToStart() = runTest {
     reads()
     val m = model()
