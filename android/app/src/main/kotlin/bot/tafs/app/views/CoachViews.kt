@@ -263,7 +263,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           val biometry = LocalBiometry.current
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             OutlineButton(
-              if (state.connecting == grant.id) "Approving…" else "Approve with $biometry",
+              if (state.connecting == grant.id) state.connectStep ?: "Approving…" else "Approve with $biometry",
               { scope.launch { actions.approve(c, grant.digest, draft?.version) } },
               Modifier.weight(1f),
               enabled = !busy,
@@ -412,7 +412,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, ac
         Text(c.note ?: CoachWords.SIGN_IN_NOTE, style = scaled(14, color = Theme.soft))
         PrimaryButton(
           when {
-            waiting -> "Opening the sign-in…"
+            waiting -> state.connectStep ?: "Opening the sign-in…"
             else -> c.yes ?: "Open ${c.service ?: "the sign-in"}"
           },
           { scope.launch { actions.signInAgain(c) } },

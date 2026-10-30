@@ -10,6 +10,9 @@ version headings refer to releases, not merely to merged pull requests.
 - **Android, a taf's page:** a compact header (back, name, state) whose Share and Card line
   fold as it scrolls; a chat opens at its newest message, with a door's knocks at their own
   times; and a paired sender's waiting message reads "Paired · Do it or Ignore this message".
+  The app reads again what tafs cloud's live updates name, instead of polling an open chat,
+  and shows each door's words. A vendor sign-in reads "Signed in" only once planque says the
+  connection is connected, and says it's checking meanwhile.
 
 - **Android, Coach's screen:** a compact header (back, Coach, a menu with its conversations),
   the plan in tafs cloud's one line that folds away as the thread scrolls, and one calm live

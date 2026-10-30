@@ -106,13 +106,17 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
       },
     )
     Text(
-      door?.let { "Press ${taf.name} to ${if (it.open) "close" else "open"} ${it.label}" } ?: "Press ${taf.name} to add a door",
+      // tafs cloud's words for what a press does; the app's own only until it sends them.
+      door?.let { it.words?.tap ?: "Press ${taf.name} to ${if (it.open) "close" else "open"} ${it.label}" } ?: "Press ${taf.name} to add a door",
       style = scaled(12, color = Theme.dim),
       textAlign = TextAlign.Center,
       modifier = Modifier.fillMaxWidth(),
     )
   }
-  if (door != null) DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
+  if (door != null) {
+    door.words?.settings?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 4.dp)) }
+    DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
+  }
   else {
     Panel {
       Eyebrow("Add a door")
@@ -182,7 +186,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
       DoorBadge(door.app, door.open, 34)
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Eyebrow("${door.label} door")
-        Text(DoorWords.status(door), style = scaled(13, FontWeight.Medium, Theme.soft))
+        Text(door.words?.state ?: DoorWords.status(door), style = scaled(13, FontWeight.Medium, Theme.soft))
       }
       Switch(
         checked = door.open,

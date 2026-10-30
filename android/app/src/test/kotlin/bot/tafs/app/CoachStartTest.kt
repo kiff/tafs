@@ -338,6 +338,22 @@ class CoachStartTest {
     assertEquals(1, auth.asked.size)
   }
 
+  @Test fun aSignInThatCameBackButDidNotConnectIsNeverSignedIn() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    // The page closed at once and came back with a code, but planque doesn't hold the connection as connected.
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("needs_reconnect"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.signInAgain(KiffClient.json.decodeFromString(signInCard))
+    assertTrue(answered("s1").startsWith("failed: "))
+    assertEquals(CoachWords.notConnected("mcp.stripe.com", "needs_reconnect"), m.state.value.coachNotes["s1"])
+    assertNull(m.state.value.connectStep)
+  }
+
   @Test fun aSignInClosedAtTheVendorIsToldToCoachAsFailed() = runTest {
     reads()
     coachThread(signInCard)

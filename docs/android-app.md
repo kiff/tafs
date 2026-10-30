@@ -28,9 +28,15 @@ working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-
   <img src="screenshots/android/coach-live-waiting.png" width="180" alt="The live line: Waiting for you">
 </p>
 
-A taf's page, under its compact header (the sample's Refunds):
+A taf's page, under its compact header: the sample's Refunds; a chat opening at its newest, with a
+stranger's knock and a paired sender's message at their times; and the page folded as the chat
+scrolls (the last two drawn by `TafPageScreenTest`, from synthetic data):
 
-<p><img src="screenshots/android/taf-page.png" width="180" alt="A taf's page: one header row, the tabs and the Card's line, then the chat"></p>
+<p>
+  <img src="screenshots/android/taf-page.png" width="180" alt="A taf's page: one header row, the tabs and the Card's line, then the chat">
+  <img src="screenshots/android/taf-chat-newest.png" width="180" alt="A chat opening at its newest message, with a knock and a paired message above it">
+  <img src="screenshots/android/taf-page-folded.png" width="180" alt="The page folded: the Card's line gone, the header and tabs kept">
+</p>
 
 ## Building and testing
 
@@ -74,6 +80,23 @@ until KIFF names Google Play products for the account.
 | `voice/` | `Dictation` and `DeviceSpeech`: dictation, recognised on the phone |
 | `views/` | One file per screen or feature: `HomeView`, `TafDetailView`, `TafChatView`, `CoachViews`, `CoachChats`, `NeedsYouView`, `RecordView`, `ReceiptSheet`, `UsageViews`, `TaskRequestViews`, `SettingsView`, `PeopleViews`, `ShareViews`, `DevicesView`, `DoorViews`, `DoorDial`, `VersionViews`, `HaltViews`, `AttachViews`, `MicButton`… |
 | `design/` | `Theme` (colours, the amber accent, type), `Components`, `MarkdownText` |
+
+## Live updates
+
+A silent push from tafs cloud names what changed on the account (`kind: background` with
+`change` and `taf_id`, [approvals.md](approvals.md)), and the app reads that again with its own
+session (`AppModel.changed`, `readChange`). Nothing is shown and nothing is taken from the push:
+- `taf`: the home list, and that taf's thread where it's been read;
+- `halted` and `resumed`: the home list;
+- `knock`: that taf's doors, and its thread where it's been read.
+
+A change of a kind the app doesn't know is ignored; coming back to the app reads everything
+again. Opening a chat no longer reads it on a timer: a run at work is followed on its stream, and
+the timer is left only where nothing else tells the phone (a trial's chat, a run whose stream
+can't open).
+
+A door shows tafs cloud's words for itself (`words`: `state`, `tap`, `settings`) as they come; the
+app's own lines stand in only where tafs cloud sends none.
 
 ## When something doesn't go through
 

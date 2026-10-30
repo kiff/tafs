@@ -39,9 +39,15 @@ data class Door(
   /** Today's messages from anyone else, and their own cap. */
   @SerialName("others_today") val othersToday: Int? = null,
   @SerialName("others_limit") val othersLimit: Int? = null,
+  /** tafs cloud's words for the door, shown as they are: where it stands, what a tap on it does, and where its settings are. */
+  val words: DoorText? = null,
 ) {
   val holdsKeys: Boolean get() = proof == "proven"
 }
+
+/** A door's words from tafs cloud (docs/doors.md, "The door's words"). */
+@Serializable
+data class DoorText(val state: String? = null, val tap: String? = null, val settings: String? = null)
 
 /** An app a door can open on here. */
 @Serializable

@@ -14,6 +14,8 @@ class TafsMessagingService : FirebaseMessagingService() {
     when (val alert = AlertPayload.parse(message.data)) {
       is Alert.Show -> notifier.show(alert)
       is Alert.Clear -> notifier.clear(alert.tag)
+      // Nothing to show: the app, if it's up, reads again what changed.
+      is Alert.Changed -> (application as TafsApplication).changeArrived(alert)
       null -> Unit
     }
   }

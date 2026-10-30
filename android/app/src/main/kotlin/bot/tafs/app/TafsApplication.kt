@@ -67,6 +67,13 @@ class TafsApplication : Application() {
     tokenListener?.invoke(token)
   }
 
+  /** The app's model, while one is alive: told what changed on the account, to read it again. */
+  @Volatile var changeListener: ((bot.tafs.app.push.Alert.Changed) -> Unit)? = null
+
+  fun changeArrived(change: bot.tafs.app.push.Alert.Changed) {
+    changeListener?.invoke(change)
+  }
+
   /** What KIFF's device list calls this phone, so the owner can tell it from their other devices. */
   val deviceName: String
     get() = "tafs on Android " + if (resources.configuration.smallestScreenWidthDp >= 600) "tablet" else "phone"

@@ -7,7 +7,9 @@ import java.time.Instant
  * builds the notification itself. It carries no request parameters, as on iOS: a held call's taf, amount and deadline are read
  * from KIFF with the phone's own session when it is opened.
  *
- *   kind        "alert" shows a notification; "answered" takes one away (a held call someone answered)
+ *   kind        "alert" shows a notification; "answered" takes one away (a held call someone answered); "background" with
+ *               change says what changed on the account, for the app to read again
+ *   change      what changed (docs/approvals.md, "Live updates"): "taf", "halted", "resumed" or "knock", with taf_id
  *   title,body  what an alert says
  *   open        where tapping it goes: "needs-you", "usage", or "taf" (a door's alert) with taf_id, the taf's id in tafs cloud
  *   hold_id, request_id   what the alert is about: a later alert with the same one replaces it
@@ -20,6 +22,12 @@ sealed interface Alert {
 
   /** A notification to take away: its call was answered. */
   data class Clear(val tag: String) : Alert
+
+  /**
+   * Something changed on the account, silently: what to read again, never what changed. [tafId] is the taf's id in tafs cloud,
+   * when the change is about one.
+   */
+  data class Changed(val change: String, val tafId: String?) : Alert
 }
 
 object AlertPayload {
@@ -27,6 +35,9 @@ object AlertPayload {
   const val USAGE = "usage"
   private const val TAF = "taf"
   private val OPEN = setOf(NEEDS_YOU, USAGE)
+
+  /** The changes tafs cloud tells the phones of; one of a newer kind is ignored, and the next return to the app reads it. */
+  val CHANGES = setOf("taf", "halted", "resumed", "knock")
 
   /** Where a door's alert goes: the taf, by its id in tafs cloud. */
   fun taf(cloudId: String) = "$TAF:$cloudId"
@@ -39,6 +50,7 @@ object AlertPayload {
     val tag = data["hold_id"]?.takeIf { it.isNotBlank() } ?: data["request_id"]?.takeIf { it.isNotBlank() } ?: ""
     return when (data["kind"]) {
       "answered" -> if (tag.isEmpty()) null else Alert.Clear(tag)
+      "background" -> data["change"]?.takeIf { it in CHANGES }?.let { Alert.Changed(it, data["taf_id"]?.takeIf(String::isNotBlank)) }
       "alert" -> {
         val tafId = data["taf_id"]?.takeIf { it.isNotBlank() }
         val open = if (data["open"] == TAF && tafId != null) taf(tafId) else data["open"]?.takeIf { it in OPEN } ?: NEEDS_YOU

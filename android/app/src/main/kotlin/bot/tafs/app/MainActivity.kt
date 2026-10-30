@@ -131,7 +131,11 @@ class MainActivity : FragmentActivity() {
         // Firebase gave the phone a new token: the model tells tafs cloud.
         DisposableEffect(model) {
           app.tokenListener = model::tokenArrived
-          onDispose { app.tokenListener = null }
+          app.changeListener = { model.changed(it.change, it.tafId) }
+          onDispose {
+            app.tokenListener = null
+            app.changeListener = null
+          }
         }
         LaunchedEffect(openFromAlert, model) {
           model.requestOpen(openFromAlert)

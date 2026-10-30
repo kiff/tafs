@@ -249,6 +249,8 @@ data class AppState(
   val startingCoach: Boolean = false,
   val coachStartError: String? = null,
   /** Coach's cards whose answer is on its way to tafs cloud, and why one wasn't taken. A card's answer is the thread's, not the phone's. */
+  /** Where an approval in progress is, once past opening the vendor's page: "Checking the sign-in…". */
+  val connectStep: String? = null,
   val cardsAnswering: Set<String> = emptySet(),
   val cardErrors: Map<String, String> = emptyMap(),
   /** The version each improvement result made, by its key; those being made, and those that failed (with why). */
@@ -1424,8 +1426,10 @@ class AppModel(
   suspend fun loadChat(tafId: String) {
     val taf = _state.value.taf(tafId) ?: return
     if (_state.value.mode == Mode.kiff) {
+      // A run at work is followed on its stream (readThread picks it up), and what changes otherwise comes as a live update:
+      // only a trial's chat, which has no stream, is read again on a timer.
       readThread(tafId)
-      followChat(tafId)
+      if (isTrialChat(tafId)) followChat(tafId)
       return
     }
     if (_state.value.chats.containsKey(tafId)) return
@@ -1535,6 +1539,26 @@ class AppModel(
   fun tokenArrived(token: String) {
     pushToken = token
     viewModelScope.launch { syncPush() }
+  }
+
+  /**
+   * tafs cloud said something changed on the account (docs/approvals.md, "Live updates"): what it names is read again, with this
+   * phone's own session, and nothing is taken from the push itself. `taf`: the list, and that taf's thread where it's been read;
+   * `halted` and `resumed`: the list; `knock`: that taf's doors and thread. [cloudId] is the taf's id in tafs cloud.
+   */
+  fun changed(change: String, cloudId: String?) {
+    viewModelScope.launch { readChange(change, cloudId) }
+  }
+
+  /** Reads again what a live update names (see [changed]). */
+  suspend fun readChange(change: String, cloudId: String?) {
+    if (_state.value.mode != Mode.kiff) return
+    val tafId = cloudId?.let { id -> _state.value.tafs.firstOrNull { it.cloudId == id }?.id }
+    when (change) {
+      "taf", "halted", "resumed" -> refresh()
+      "knock" -> tafId?.let { loadDoors(it) }
+    }
+    if ((change == "taf" || change == "knock") && tafId != null && tafId in _state.value.chats) readThread(tafId)
   }
 
   /** Where a tapped alert goes: the screen takes it once. */
@@ -1987,8 +2011,11 @@ class AppModel(
           return Connected.Failed("The sign-in at ${grant.vendor} came back without its confirmation code. Nothing was connected.")
         }
         if (generation != accountGeneration) return Connected.Stopped
+        // Back from the vendor: signed in only once planque says the grant is connected, never because the page closed.
+        _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
         val connected = planque.confirm(grant.id, signedIn.code)
         refreshConnections()
+        if (!connected.connected) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}")
         return Connected.Done(connected)
       } catch (e: VendorSignInCancelled) {
         refreshConnections()
@@ -2002,7 +2029,7 @@ class AppModel(
     } finally {
       planque.signer = null
       kiff.setupSigner = null
-      if (generation == accountGeneration) _state.update { it.copy(connecting = null) }
+      if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
     }
   }
 
@@ -2518,9 +2545,9 @@ class AppModel(
   private val resumedRuns = mutableSetOf<String>()
 
   /**
-   * Back in a chat whose run is at work: its stream is picked back up once, its steps so far, then the rest. [again]: a run the
-   * owner just set going again (a card answered) is followed in place of whatever followed the chat, and read on a timer when
-   * its stream can't open.
+   * Back in a chat whose run is at work: its stream is picked back up once, its steps so far, then the rest, and the thread is
+   * read on a timer when the stream can't open. [again]: a run the owner just set going again (a card answered) is followed in
+   * place of whatever followed the chat.
    */
   private suspend fun resumeChat(tafId: String, cloudId: String, run: String, again: Boolean = false) {
     if (isTrialChat(tafId)) return
@@ -2531,7 +2558,8 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (_: Exception) {
-      if (again) followChat(tafId)
+      // Its stream can't open: the thread is read on a timer while the run works, as before the stream.
+      followChat(tafId)
       return
     }
     val working = _state.value.chatWorking[tafId]

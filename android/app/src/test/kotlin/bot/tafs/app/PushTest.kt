@@ -77,6 +77,14 @@ class PushTest {
     assertEquals(Instant.parse("2026-10-28T09:10:00Z"), alert.expiresAt)
   }
 
+  @Test fun aSilentChangePushNamesWhatToReadAndNeverShows() {
+    assertEquals(Alert.Changed("knock", "taf_9"), AlertPayload.parse(mapOf("kind" to "background", "change" to "knock", "taf_id" to "taf_9"), now))
+    assertEquals(Alert.Changed("halted", null), AlertPayload.parse(mapOf("kind" to "background", "change" to "halted"), now))
+    // A change of a kind this build doesn't know, or none, is ignored.
+    assertNull(AlertPayload.parse(mapOf("kind" to "background", "change" to "weather"), now))
+    assertNull(AlertPayload.parse(mapOf("kind" to "background"), now))
+  }
+
   @Test fun aRequestForTasksOpensUsageAndIsQuiet() {
     val alert = AlertPayload.parse(mapOf("kind" to "alert", "title" to "More tasks asked for", "body" to "Open Usage.", "open" to "usage", "request_id" to "r1", "level" to "quiet"), now) as Alert.Show
     assertEquals(AlertPayload.USAGE, alert.open)

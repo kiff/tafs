@@ -75,6 +75,43 @@ class DoorsTest {
 
   private fun body(key: String) = KiffClient.json.parseToJsonElement(String(sent(key).single().body!!)).jsonObject
 
+  // MARK: Live updates (docs/approvals.md)
+
+  @Test fun aKnockPushReadsThatTafsDoorsAndOpenThreadAgain() = runTest {
+    reads()
+    transport.answer(doors, 200, doorsBody())
+    transport.answer("GET /v1/tafs/taf_1/conversation", 200, """{"messages":[]}""")
+    val m = model()
+    m.refresh()
+    m.loadChat("refunds-1")
+    val doorReads = sent(doors).size
+    val threadReads = sent("GET /v1/tafs/taf_1/conversation").size
+    m.readChange("knock", "taf_1")
+    assertEquals(doorReads + 1, sent(doors).size)
+    assertEquals(threadReads + 1, sent("GET /v1/tafs/taf_1/conversation").size)
+  }
+
+  @Test fun aTafOrHaltPushReadsTheListAgainAndAnUnknownTafReadsNoThread() = runTest {
+    reads()
+    val m = model()
+    m.refresh()
+    val homes = sent("GET /v1/home").size
+    m.readChange("halted", null)
+    assertEquals(homes + 1, sent("GET /v1/home").size)
+    m.readChange("taf", "taf_unknown")
+    assertEquals(homes + 2, sent("GET /v1/home").size)
+    assertTrue(sent("GET /v1/tafs/taf_unknown/conversation").isEmpty())
+  }
+
+  @Test fun aDoorsWordsAreTafsClouds() {
+    val withWords = doorJson.dropLast(1) + ""","words":{"state":"Open: messages from you and paired senders to refunds@tafs.example start work.","tap":"Tap to close the email door.","settings":"Paired senders and today's limits are below."}}"""
+    val door = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Door>(withWords)
+    assertEquals("Tap to close the email door.", door.words?.tap)
+    assertEquals("Paired senders and today's limits are below.", door.words?.settings)
+    // A tafs cloud that doesn't send them yet: the door still reads.
+    assertNull(KiffClient.json.decodeFromString<bot.tafs.app.kiff.Door>(doorJson).words)
+  }
+
   // MARK: Where doors show
 
   @Test fun doorsShowOnlyWhereTafsCloudOffersOneForATafThisPersonManages() = runTest {
