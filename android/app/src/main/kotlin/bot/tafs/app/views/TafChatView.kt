@@ -39,7 +39,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -104,7 +103,9 @@ private val Readable = 720.dp
 fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: Modifier = Modifier) {
   val taf = state.taf(tafId)
   LaunchedEffect(tafId) { actions.loadChat(tafId) }
-  var draft by rememberSaveable { mutableStateOf("") }
+  // What the owner wrote and hasn't sent, kept by the app, not the screen: leaving the chat and coming back keeps it, as iOS does.
+  val draft = state.drafts[tafId].orEmpty()
+  val setDraft = { text: String -> actions.setDraft(tafId, text) }
   // Dictation into the box, recognised on the phone; it stops when the chat closes.
   val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
   val dictation = remember(tafId) { bot.tafs.app.voice.Dictation(bot.tafs.app.voice.DeviceSpeech(appContext)) }
@@ -162,7 +163,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       ) {
         if (items.isEmpty() && tafId == COACH_CHAT && !thinking) {
           // Coach's empty chat: what it's about, and ways to start (kiff/tafs#138, #107).
-          item(key = "empty") { CoachStarts(state) { example -> following = true; actions.sendChat(example, tafId, false) { } } }
+          item(key = "empty") { CoachStarts(state, actions.coach.improve) { example -> following = true; actions.sendChat(example, tafId, false) { } } }
         } else if (items.isEmpty()) {
           item(key = "empty") {
             Text(
@@ -196,7 +197,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                   item.message,
                   tafId = tafId,
                   files = actions.files,
-                  onEdit = { text -> draft = text },
+                  onEdit = { text -> setDraft(text) },
                   onResend = { text -> following = true; actions.sendChat(text, tafId, false) { } },
                 )
                 is ChatItem.Held -> HeldCallCard(item.call, state, actions.answer)
@@ -261,7 +262,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
     Composer(
       name = taf?.name ?: "your taf",
       draft = draft,
-      onDraft = { draft = it },
+      onDraft = { setDraft(it) },
       // A message is on its way: one at a time. While the taf works, what's written goes to its run.
       sending = tafId in state.chatSending,
       thinking = thinking,
@@ -277,10 +278,10 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         ?.let { { scope.launch { actions.stopChat(tafId) } } },
     ) {
       val text = draft
-      draft = ""
+      setDraft("")
       following = true
       // As sent: if it didn't go (too long), it comes back to the box.
-      actions.sendChat(text, tafId, true) { notSent -> if (draft.isEmpty()) draft = notSent }
+      actions.sendChat(text, tafId, true) { notSent -> if (state.drafts[tafId].isNullOrEmpty()) setDraft(notSent) }
     }
   }
 }

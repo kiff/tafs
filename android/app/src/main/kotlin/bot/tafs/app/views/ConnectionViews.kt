@@ -35,7 +35,7 @@ class ConnectionActions(
   val refresh: suspend () -> Unit,
   val disconnect: suspend (String) -> Boolean,
   /** Signs in again to a connection its vendor signed out: one approval, then the vendor's page. */
-  val reconnect: suspend (Grant) -> Unit = {},
+  val reconnect: (Grant) -> Unit = {},
 )
 
 /**
@@ -62,7 +62,7 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
           val busy = state.connecting != null
           OutlineButton(
             if (state.connecting == grant.id) state.connectStep ?: "Opening the sign-in…" else "Sign in again",
-            { scope.launch { actions.reconnect(grant) } },
+            { actions.reconnect(grant) },
             Modifier.fillMaxWidth(),
             enabled = !busy,
           )

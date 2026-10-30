@@ -36,7 +36,20 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
   plan line folds away while the thread scrolls down and comes back on the way up, so a card
   has the screen. The phone never counts the plan's steps.
-- **No taf-page offer.** A new conversation offers no taf to improve. A
+- **Improve a taf:** a new conversation offers **Improve <name>** for each taf the person
+  manages (`CoachWords.improvable`), and a taf's Activity tab has **Improve in Coach**; both open a
+  new conversation about it (`AppModel.improveTaf`, `improveInCoach`), as iOS's start choice does.
+- **What the owner wrote and didn't send** stays while they go elsewhere in the app, in Coach and
+  in each taf's chat (`AppState.drafts`, as iOS's `setupDraft`); it goes at sign-out or a switch
+  of account.
+- **A card's answer tafs cloud took** reads answered at once ("Answered."), until the thread
+  brings kiff/agents' words for it. An approval and a sign-in run in the model, not the screen
+  (`startApproval`, `startSignInAgain`, `startReconnect`), so the vendor's sign-in page opening
+  never cuts the flow short: planque's confirm, the answer to Coach, reading the thread and
+  following the run all go on.
+- **Coach's tools in one tap:** when tafs cloud sends the connect batch before Coach's Card (the
+  Card is drafted over tools KIFF holds), the app reads the tools again after the batch and gives
+  the Card in the same flow: one tap, still two fingerprints (the batch, then the Card). A
   taf is improved from a hold's **Change the limit in Coach mode**, which opens Coach on a
   new conversation about it (`AppModel.improveInCoach`).
 - **Previous conversations** lists them newest first. A long press archives one, and
@@ -57,8 +70,10 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    key, so the key never reaches the phone (`POST /v1/setup`).
 3. The phone gives Coach its tools, as tafs cloud says them (`GET /v1/setup`'s `tools`).
    With `to_give`, it signs and sends the `connect` batch to KIFF's gateway
-   (`POST /v1/connections/batch`), then, under its own fingerprint, Coach's Cards' draft
-   (`POST /v1/me/agent-drafts`), each body exactly as it came. The phone builds neither:
+   (`POST /v1/connections/batch`). Then, on the next read and under its own fingerprint,
+   it sends Coach's Cards' draft (`POST /v1/me/agent-drafts`), each body exactly as it came.
+   The Cards come only once every tool is connected, because KIFF refuses a Card naming an
+   action no tool declares yet. The phone builds neither:
    the tools' names, addresses and Cards are tafs cloud's, and the words the owner reads
    are its `lines` and KIFF's own preview of the Cards. `given` sends nothing; `taken`
    names the vendor's tool that holds one of Coach's names, and `unknown` asks to try

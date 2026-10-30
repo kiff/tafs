@@ -815,24 +815,27 @@ describe("Setup (kiff/agents#91)", () => {
     const coachCards = (active: boolean) => COACH_CARDS.map((c) => ({ id: c.id, subject: "setup-acme", active }) as Mandate);
     const first = await tools();
     expect(first.state).toBe("to_give");
-    // Coach's Cards to sign and submit as they are, worded by KIFF's preview, passed through unchanged.
-    expect(first.card.body).toMatchObject({ agent_id: "setup-acme", label: "Coach" });
-    expect(first.card.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
-    expect(first.card.body.cards[1]).toEqual({ id: "coach-taf-task", subject: "setup-acme", domain: "gateway", on_exceed: "owner", hold_expiry: "10m", grants: [{ action: "taf_task" }], aggregates: [{ quantity: "count", limit: 50, window: "calendar_day" }] });
-    expect(first.card.body.cards[0]).not.toHaveProperty("hold_expiry");
-    expect(first.card.card_title).toBe("Coach's Card");
-    expect(first.card.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
-    expect(w.account.previewed).toEqual([first.card.body]);
+    // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
+    // so the Cards come on the read after the tools are connected, and nothing is previewed now.
+    expect(first.card).toBeUndefined();
+    expect(w.account.previewed ?? []).toEqual([]);
     expect(first.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
     expect(first.connect.body.connections[0]).toEqual({ name: "tafs_state", url: mcp, tool: "tafs_state", mode: "verify", audience: mcp, control: true, idempotency_argument: "tafs_op", read_only: true });
     expect(first.connect.body.connections[2]).not.toHaveProperty("read_only");
     expect(first.connect.lines).toEqual(TOOLS.map((t) => t.line));
     expect(first.connect.lines[0]).toBe("See your tafs, their versions and their runs");
-    // Connected, Cards still to issue: no batch left, only the Cards.
+    // Connected, Cards still to issue: no batch left, only the Cards, to sign and submit as they
+    // are, worded by KIFF's preview, passed through unchanged.
     w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
     const cardsOnly = await tools();
     expect(cardsOnly.connect).toBeUndefined();
-    expect(cardsOnly.card.body.label).toBe("Coach");
+    expect(cardsOnly.card.body).toMatchObject({ agent_id: "setup-acme", label: "Coach" });
+    expect(cardsOnly.card.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+    expect(cardsOnly.card.body.cards[1]).toEqual({ id: "coach-taf-task", subject: "setup-acme", domain: "gateway", on_exceed: "owner", hold_expiry: "10m", grants: [{ action: "taf_task" }], aggregates: [{ quantity: "count", limit: 50, window: "calendar_day" }] });
+    expect(cardsOnly.card.body.cards[0]).not.toHaveProperty("hold_expiry");
+    expect(cardsOnly.card.card_title).toBe("Coach's Card");
+    expect(cardsOnly.card.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
+    expect(w.account.previewed).toEqual([cardsOnly.card.body]);
     // A revoked Card is still listed by KIFF, not in force: that Card alone is asked for again.
     w.account.mandates = coachCards(true).map((m, i) => (i === 2 ? { ...m, active: false } : m));
     const again = await tools();

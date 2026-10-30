@@ -220,7 +220,14 @@ object CoachWords {
     else -> a.words.ifEmpty { "Answered." }
   }
 
+  /** The tafs a new Coach conversation can start on, to improve one: those tafs cloud runs that this person manages. */
+  fun improvable(state: bot.tafs.app.app.AppState): List<bot.tafs.app.model.Taf> =
+    state.tafs.filter { it.cloudId != null && state.manages(it.id) }
+
   const val ANSWERING = "Sending your answer…"
+
+  /** Taken by tafs cloud, before the thread shows it in kiff/agents' words. */
+  const val TAKEN = "Answered."
 
   /** Folds components as the conversation lists them, oldest first: the latest version of each id, at the time it first appeared. */
   fun fold(shown: List<ShownComponent>): List<ShownComponent> {

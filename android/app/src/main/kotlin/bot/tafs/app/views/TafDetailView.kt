@@ -85,6 +85,8 @@ class TafActions(
   val runNow: suspend (String) -> Unit = {},
   /** Reads its latest run and report. */
   val loadReport: suspend (String) -> Unit = {},
+  /** What the owner wrote in a chat and hasn't sent, kept by the app: the chat, and its words. */
+  val setDraft: (String, String) -> Unit = { _, _ -> },
   /** Reads where its work stands (docs/reliability.md), and sends a door reply again by its run. */
   val loadWork: suspend (String) -> Unit = {},
   val sendAgain: suspend (String, String) -> Unit = { _, _ -> },
@@ -281,6 +283,10 @@ private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
   if (state.mode == Mode.sample || taf.cloudId != null) MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions)
   if (state.mode == Mode.kiff && taf.cloudId != null) {
     RunsPanel(taf, taf.id in state.runsInFlight, actions)
+    // Change how it works: Coach opens on a new conversation about it, for whoever manages it.
+    LocalImproveInCoach.current?.takeIf { state.manages(taf.id) }?.let { improve ->
+      OutlineButton("Improve in Coach", { improve(taf.id) }, Modifier.fillMaxWidth())
+    }
     WorkPanel(taf, state, actions)
     RunReportPanel(taf.id, state.reports[taf.id], actions)
   }

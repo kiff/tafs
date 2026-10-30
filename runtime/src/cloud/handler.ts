@@ -1137,8 +1137,10 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
     const issued = missingCards.size === 0;
     if (!plan.missing.length && issued) return { state: "given" };
     // Coach's Cards it doesn't hold in force, with KIFF's own words for them: never tafs cloud's copy.
+    // Only once every tool is connected: KIFF refuses a Card naming an action no tool declares yet, so
+    // with tools missing the phone gets the batch alone, and the Cards on its next read.
     let card: Record<string, unknown> | undefined;
-    if (!issued) {
+    if (!issued && !plan.missing.length) {
       const body = coachCardsDraft(setup.kiffAgent, missingCards);
       card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
     }
