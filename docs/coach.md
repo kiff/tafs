@@ -182,3 +182,10 @@ cloud to a new URL means updating that list too. The app shows
 these as lines in Coach's chat ("coach lines"). While the owner is away, what isn't
 urgent waits there as one "While you were away" message instead of a notification
 ([approvals.md](approvals.md#notifications)).
+
+## The plan in one line
+
+A plan (`steps` component) comes with `line`, its one-line form (`withLine` in `handler.ts`):
+"Step 3 of 6 · Your rules", for the step at work or the first still to do, or "Done · 6 of 6". It's
+in the thread and on the stream alike. An app shows the plan folded to that line in Coach's header,
+and opens it to the steps.

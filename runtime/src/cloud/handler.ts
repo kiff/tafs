@@ -1589,7 +1589,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         continue;
       }
       if (e.kind === "component") {
-        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: e.body });
+        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: withLine(e.body) });
         continue;
       }
       if (e.kind === "answered") {
@@ -1647,6 +1647,23 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
   return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), sessions: picked };
+}
+
+/**
+ * A plan (a `steps` component) with its one-line form, `line`: "Step 3 of 6 · Your rules", the step
+ * at work or the first still to do, or "Done · 6 of 6". So an app shows the plan in one line, with no
+ * counting of its own. Any other component is as it came.
+ */
+export function withLine(component: unknown): unknown {
+  const c = component as { type?: unknown; steps?: unknown } | null | undefined;
+  if (!c || c.type !== "steps" || !Array.isArray(c.steps) || !c.steps.length) return component;
+  const steps = c.steps as Array<{ label?: unknown; status?: unknown }>;
+  const n = steps.length;
+  const at = steps.findIndex((s) => s.status === "active");
+  const next = at >= 0 ? at : steps.findIndex((s) => s.status !== "done" && s.status !== "skipped");
+  if (next < 0) return { ...c, line: `Done · ${n} of ${n}` };
+  const label = typeof steps[next]!.label === "string" ? (steps[next]!.label as string).trim() : "";
+  return { ...c, line: `Step ${next + 1} of ${n}${label ? ` · ${label}` : ""}` };
 }
 
 /** The id of a run's first owner message: what `POST …/messages` answers, so the app matches its send to the thread. */
@@ -2833,7 +2850,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
         if (d.kind === "thinking" && typeof d.text === "string") return sse("thinking", { text: d.text });
         if (d.kind === "tool_call" && typeof d.tool === "string") return call(d.tool, d.input, d.call_id);
-        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: d.component });
+        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: withLine(d.component) });
         if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
         if (d.kind === "tool_result") return ended(d.call_id, (d.result ?? {}) as Record<string, unknown>, d.not_made === true);
         return undefined;
@@ -2845,7 +2862,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "tool_call" && typeof b.tool === "string") return call(b.tool, b.input, b.call_id);
         if (d.kind === "tool_result") return ended(b.call_id, b, b.not_made === true);
         if (d.kind === "agent_message" || d.kind === "report") return sse("said", {});
-        if (d.kind === "component") return sse("component", { component: d.body });
+        if (d.kind === "component") return sse("component", { component: withLine(d.body) });
         if (d.kind === "usage") {
           // The first turn after a pause starts a part: what came before it is in the
           // conversation, with its own work, and isn't shown as this part's (the 859 test).

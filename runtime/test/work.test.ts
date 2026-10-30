@@ -47,3 +47,15 @@ describe("a taf's work, as both apps show it", () => {
     expect(w.requests[1]!.deliveries).toEqual([]);
   });
 });
+
+describe("a plan in one line", () => {
+  it("names the step at work, or the first still to do, or says it's done", async () => {
+    const { withLine } = await import("../src/cloud/handler.js");
+    const plan = (statuses: string[]) => ({ type: "steps", id: "p", steps: statuses.map((status, i) => ({ label: `Step ${i + 1} words`, status })) });
+    expect((withLine(plan(["done", "done", "active", "pending"])) as { line: string }).line).toBe("Step 3 of 4 · Step 3 words");
+    expect((withLine(plan(["done", "skipped", "pending"])) as { line: string }).line).toBe("Step 3 of 3 · Step 3 words");
+    expect((withLine(plan(["done", "done"])) as { line: string }).line).toBe("Done · 2 of 2");
+    // Any other card is left as it came.
+    expect(withLine({ type: "notice", id: "n" })).toEqual({ type: "notice", id: "n" });
+  });
+});
