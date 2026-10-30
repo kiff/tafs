@@ -38,6 +38,13 @@ A sent message's menu offers **Send again**, **Edit and send** and **Copy**. The
 the message bar dictates into the box, recognised on the device: no audio leaves the
 phone, and nothing is sent until the owner sends it (`Dictation`).
 
+On Android the mic (`MicButton`, `voice/Dictation.kt`) uses the phone's on-device
+recognizer (`createOnDeviceSpeechRecognizer`, Android 12 and later), in the phone's
+language. The microphone is asked for at the first tap. A phone without an on-device
+recognizer doesn't dictate and says so, rather than use one that sends the voice away.
+Words go into the box as they're heard; listening goes on after a pause and stops after
+two quiet ones, a tap on the mic, or Send. iOS's language switch isn't on Android yet.
+
 ## The answer as it comes
 
 tafs cloud trims kiff/agents' stream to what the phone shows. Tool inputs and results

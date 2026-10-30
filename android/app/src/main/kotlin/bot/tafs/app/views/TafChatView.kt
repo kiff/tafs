@@ -106,6 +106,10 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   val taf = state.taf(tafId)
   LaunchedEffect(tafId) { actions.loadChat(tafId) }
   var draft by rememberSaveable { mutableStateOf("") }
+  // Dictation into the box, recognised on the phone; it stops when the chat closes.
+  val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
+  val dictation = remember(tafId) { bot.tafs.app.voice.Dictation(bot.tafs.app.voice.DeviceSpeech(appContext)) }
+  androidx.compose.runtime.DisposableEffect(dictation) { onDispose { dictation.stop() } }
   // Whether the thread follows what arrives: it stops when the owner reads back, and starts again
   // at the bottom.
   var following by remember { mutableStateOf(true) }
@@ -246,6 +250,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       hasFiles = canAttach && state.files(tafId).any { it.ref != null },
       holdsSend = canAttach && state.holdsSend(tafId),
       attach = if (canAttach) ({ AttachButton(tafId, state, actions.files) }) else null,
+      dictation = dictation,
       // Stop, in Send's place, while a run is at work in this chat (as iOS): in a taf's chat for whoever manages Cards; in
       // Coach's, for whoever is talking to it.
       onStop = (live?.session ?: state.chatWorking[tafId]?.session)
@@ -272,6 +277,8 @@ private fun Composer(
   holdsSend: Boolean = false,
   /** The paperclip, where the chat takes files. */
   attach: (@Composable () -> Unit)? = null,
+  /** Dictation into the box, on the phone only (docs/chat.md); sending stops it. */
+  dictation: bot.tafs.app.voice.Dictation? = null,
   onStop: (() -> Unit)?,
   onSend: () -> Unit,
 ) {
@@ -305,6 +312,7 @@ private fun Composer(
           }
         },
       )
+      dictation?.let { MicButton(it, draft, onDraft) }
       if (onStop != null && empty) {
         // While the taf works and the box is empty, Send is Stop: its run is cancelled.
         Box(
@@ -321,6 +329,7 @@ private fun Composer(
           .clip(CircleShape)
           .brandBackground()
           .clickable(enabled = !empty && !sending && !holdsSend) {
+            dictation?.stop()
             focus.clearFocus()
             onSend()
           }
