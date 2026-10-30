@@ -142,11 +142,13 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
-        if (items.isEmpty()) {
+        if (items.isEmpty() && tafId == COACH_CHAT && !thinking) {
+          // Coach's empty chat: what it's about, and ways to start (kiff/tafs#138, #107).
+          item(key = "empty") { CoachStarts(state) { example -> following = true; actions.sendChat(example, tafId, false) { } } }
+        } else if (items.isEmpty()) {
           item(key = "empty") {
             Text(
-              if (tafId == COACH_CHAT) "Tell Coach what you want to make or change. It asks what it needs, shows its plan, and nothing it proposes counts until you approve it."
-              else "Ask ${taf?.name ?: "it"} what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.",
+              "Ask ${taf?.name ?: "it"} what it did, or tell it what to do differently. It stays inside its Card. A call it needs you to approve, from a chat or a scheduled run, shows here too.",
               style = scaled(14, color = Theme.dim),
               textAlign = TextAlign.Center,
               modifier = Modifier.fillMaxWidth().padding(vertical = 30.dp),
@@ -181,6 +183,8 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
           }
         }
         if (knocking) item(key = "knocks") { ChatKnocks(tafId, taf?.name, state, actions.doors) }
+        // News of the tasks Coach handed tafs, until Coach reads it: what came while the owner was away, together.
+        if (tafId == COACH_CHAT && state.coachLines.isNotEmpty()) item(key = "coach-lines") { CoachLines(state.coachLines) }
         when {
           // The answer as it's written, under the work that led to it (docs/chat.md, the work block).
           live != null -> item(key = "live") { LiveWork(live) }
@@ -242,9 +246,10 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       hasFiles = canAttach && state.files(tafId).any { it.ref != null },
       holdsSend = canAttach && state.holdsSend(tafId),
       attach = if (canAttach) ({ AttachButton(tafId, state, actions.files) }) else null,
-      // Stop, in Send's place: for whoever manages Cards, while a run is at work in this chat (as iOS).
+      // Stop, in Send's place, while a run is at work in this chat (as iOS): in a taf's chat for whoever manages Cards; in
+      // Coach's, for whoever is talking to it.
       onStop = (live?.session ?: state.chatWorking[tafId]?.session)
-        ?.takeIf { thinking && state.mode == Mode.kiff && state.canManageCards }
+        ?.takeIf { thinking && state.mode == Mode.kiff && (state.canManageCards || tafId == COACH_CHAT) }
         ?.let { { scope.launch { actions.stopChat(tafId) } } },
     ) {
       val text = draft

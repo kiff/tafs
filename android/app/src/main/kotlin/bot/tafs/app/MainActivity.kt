@@ -57,6 +57,7 @@ import bot.tafs.app.design.scaled
 import bot.tafs.app.signing.Biometry
 import bot.tafs.app.views.AccountActions
 import bot.tafs.app.views.CoachActions
+import bot.tafs.app.views.CoachChatActions
 import bot.tafs.app.views.ConnectionActions
 import bot.tafs.app.views.FileActions
 import bot.tafs.app.views.CoachScreen
@@ -74,6 +75,7 @@ import bot.tafs.app.views.VersionsSheet
 import bot.tafs.app.views.UsageSheet
 import bot.tafs.app.views.CoachInstalls
 import bot.tafs.app.views.LocalAnswerPage
+import bot.tafs.app.views.LocalImproveInCoach
 import bot.tafs.app.views.LocalReceipt
 import bot.tafs.app.views.LocalCoachInstalls
 import bot.tafs.app.views.NeedsYouView
@@ -173,6 +175,7 @@ fun RootView(model: AppModel) {
       !state.signedIn -> OnboardingView(onSignIn = { signingIn = true }, onSample = model::startSample)
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
+        LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
         LocalCoachInstalls provides remember(model) {
@@ -343,6 +346,14 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   BackHandler(enabled = tab == Tab.Tafs && openTaf != null) { openTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && trialTaf != null) { trialTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && coachOpen) { coachOpen = false }
+  // Coach asked for from another screen (a hold's "Change the limit in Coach mode"): it opens here, on the Tafs tab.
+  LaunchedEffect(state.coachRequested) {
+    if (state.coachRequested) {
+      tab = Tab.Tafs
+      coachOpen = true
+      model.coachOpened()
+    }
+  }
 
   // The keyboard pushes the screen up, and the tab bar leaves while it is up, as iOS's does.
   val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -356,7 +367,15 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           if (trying != null) {
             TrialScreen(trying, state, versionActions, actions, onBack = { trialTaf = null })
           } else if (coachOpen) {
-            CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false })
+            CoachScreen(
+              state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false },
+              chats = remember(model) {
+                CoachChatActions(
+                  newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
+                  loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
+                )
+              },
+            )
           } else if (id == null) {
             HomeView(
               state,

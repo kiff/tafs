@@ -137,6 +137,17 @@ data class QuestionSelection(
 /** What Coach's chat says, and how its thread is laid out. */
 object CoachWords {
   const val NOT_ALLOWED = "Coach is for the people KIFF lets use it, by default the account's admins."
+
+  /** Where a new conversation can start (kiff/tafs#138), as iOS offers them. */
+  val EXAMPLES = listOf("Make sure customers can get their refunds", "Answer customer questions about orders", "Connect my payment provider")
+
+  /** Ways to start improving a taf (kiff/tafs#107). */
+  val IMPROVE_EXAMPLES = listOf("How is it going?", "Why was something refused or held?", "It can't find the work it should do")
+
+  const val ASK_ANYTHING = "Ask anything about your tafs"
+  const val ASK_ANYTHING_LINE = "Set up a new taf, connect a tool, or change how one works. Each connection and each Card waits for your approval."
+
+  fun improveLine(name: String) = "Say what should change, or ask how it's going. Coach mode starts from what $name did and what its Card allows."
   const val NOT_CONNECTABLE = "Connecting tools isn't set up for this account from this phone. Open Coach to start it."
   const val DIGEST_MISMATCH = "This request doesn't match what it asks for, so it can't be approved. Ask Coach to propose it again."
   const val WAITING_FOR_VENDOR = "If the vendor's sign-in page opened, finish it there and come back."

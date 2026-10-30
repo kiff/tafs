@@ -155,6 +155,8 @@ data class WireThread(
   val capped: WireCapped? = null,
   /** Coach's cards, each read apart: one the app can't read is left out. */
   val components: List<JsonElement>? = null,
+  /** News of the tasks Coach handed tafs (kiff/tafs#206), each read apart: one the app can't read is left out. */
+  @SerialName("coach_lines") val coachLines: List<JsonElement>? = null,
 )
 
 /** What tafs cloud says of a message it took: the chat it went into. */

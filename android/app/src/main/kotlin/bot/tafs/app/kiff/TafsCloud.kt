@@ -41,6 +41,8 @@ class TafsCloud(
     val capped: WireCapped?,
     /** Coach's cards, folded: the latest version of each id, where it first appeared. */
     val components: List<ShownComponent> = emptyList(),
+    /** News of the tasks Coach handed tafs, until Coach reads it on its next turn (kiff/tafs#206). */
+    val coachLines: List<CoachLine> = emptyList(),
   )
 
   /** The account's Setup (Coach), or null before it is started. */
@@ -92,8 +94,9 @@ class TafsCloud(
       kotlinx.serialization.json.JsonObject(fields.associate { (k, v) -> k to JsonPrimitive(v) }),
     ).toByteArray()
 
-  /** The taf's thread. A message the app can't read as the owner's or the taf's is left out, never the thread with it. */
-  suspend fun conversation(id: String): Thread = thread("/v1/tafs/${escaped(id)}/conversation")
+  /** The taf's thread. A message the app can't read as the owner's or the taf's is left out, never the thread with it. With [session], that one chat only (kiff/tafs#73). */
+  suspend fun conversation(id: String, session: String? = null): Thread =
+    thread("/v1/tafs/${escaped(id)}/conversation" + (session?.let { "/${escaped(it)}" } ?: ""))
 
   /** The trial's chat, read as a taf's thread is. */
   suspend fun trialConversation(id: String): Thread = thread("/v1/tafs/${escaped(id)}/trial/conversation")
@@ -125,6 +128,7 @@ class TafsCloud(
       workingRun = wire.working?.run,
       capped = wire.capped,
       components = CoachWords.fold(wire.components.orEmpty().mapNotNull { shown(it) }),
+      coachLines = wire.coachLines.orEmpty().mapNotNull { runCatching { KiffClient.json.decodeFromJsonElement(CoachLine.serializer(), it) }.getOrNull() },
     )
   }
 
@@ -135,15 +139,62 @@ class TafsCloud(
     if (component.type !in SetupComponent.KINDS) null else ShownComponent(wire.at, wire.session, wire.run, component)
   }.getOrNull()
 
-  /** Sends the owner's message, with the files they attached (docs/attachments.md): into the taf's live chat, which starts a run, or a new one. */
-  suspend fun sendMessage(id: String, text: String, files: List<AttachmentRef> = emptyList()): Sent =
-    KiffClient.json.decodeFromString(String(sendJson("POST", "/v1/tafs/${escaped(id)}/messages", messageBody(text, files))))
+  /**
+   * Sends the owner's message, with the files they attached (docs/attachments.md): into the taf's live chat, which starts a
+   * run; into [session], a chat the owner reopened; or, with [newChat], a new one (kiff/tafs#73).
+   */
+  suspend fun sendMessage(id: String, text: String, files: List<AttachmentRef> = emptyList(), session: String? = null, newChat: Boolean = false): Sent =
+    KiffClient.json.decodeFromString(String(sendJson("POST", "/v1/tafs/${escaped(id)}/messages", messageBody(text, files, session, newChat))))
 
-  /** A message's body: its words, and its files by id when it has any. */
-  private fun messageBody(text: String, files: List<AttachmentRef>) = kotlinx.serialization.json.buildJsonObject {
+  /** A message's body: its words, its files by id when it has any, and the chat it goes into when it isn't the live one. */
+  private fun messageBody(text: String, files: List<AttachmentRef>, session: String? = null, newChat: Boolean = false) = kotlinx.serialization.json.buildJsonObject {
     put("text", text)
     if (files.isNotEmpty()) put("attachments", kotlinx.serialization.json.JsonArray(files.map { JsonPrimitive(it.id) }))
+    if (newChat) put("new_chat", true) else session?.let { put("session", it) }
   }
+
+  // MARK: Conversations (kiff/tafs#73, #82, #97)
+
+  /** One of a taf's chats, to reopen: named by its first words. */
+  @kotlinx.serialization.Serializable
+  data class Chat(
+    val session: String,
+    @kotlinx.serialization.Serializable(with = InstantAsString::class) val started: Instant,
+    @kotlinx.serialization.Serializable(with = InstantAsString::class) val updated: Instant,
+    val title: String = "",
+  )
+
+  @kotlinx.serialization.Serializable
+  private data class Chats(val chats: List<Chat> = emptyList())
+
+  /** The taf's chats, newest first. */
+  suspend fun chats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats").chats
+
+  /** The chats the owner archived, to find and reopen one. */
+  suspend fun archivedChats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats/archived").chats
+
+  /** Archives a chat: it leaves the list and the thread, on every device. */
+  suspend fun archiveChat(id: String, session: String) {
+    send("POST", "/v1/tafs/${escaped(id)}/chats/${escaped(session)}/archive", jsonBody())
+  }
+
+  /** Puts an archived chat back in the list. */
+  suspend fun unarchiveChat(id: String, session: String) {
+    send("POST", "/v1/tafs/${escaped(id)}/chats/${escaped(session)}/unarchive", jsonBody())
+  }
+
+  /** Opens a new conversation with the account's Coach on this taf (kiff/tafs#107): tafs cloud puts the taf's job, Card and latest calls in front of the owner's words. */
+  suspend fun improve(id: String, text: String): Sent = post("/v1/tafs/${escaped(id)}/improve", mapOf("text" to text))
+
+  /** How a task Coach handed a taf went (kiff/tafs#206), shown in Coach's chat until Coach reads it on its next turn. */
+  @kotlinx.serialization.Serializable
+  data class CoachLine(
+    @kotlinx.serialization.Serializable(with = InstantAsString::class) val at: Instant,
+    val taf: String,
+    val said: String,
+    /** Kept while the owner was away (kiff/tafs#210): shown under "While you were away". */
+    val away: Boolean? = null,
+  )
 
   // MARK: Photos and files on a message (docs/attachments.md)
 
@@ -493,8 +544,8 @@ class TafsCloud(
   private val streamUrl: String get() = if (baseUrl == DEFAULT_URL) DEFAULT_STREAM_URL else baseUrl
 
   /** Sends the owner's message with its run streamed: once tafs cloud took it, the run's events follow. A refusal throws, as [sendMessage] does. */
-  suspend fun streamMessage(id: String, text: String, files: List<AttachmentRef> = emptyList()): kotlinx.coroutines.flow.Flow<StreamEvent> =
-    events("POST", "/v1/tafs/${escaped(id)}/messages/stream", KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), messageBody(text, files)).toByteArray())
+  suspend fun streamMessage(id: String, text: String, files: List<AttachmentRef> = emptyList(), session: String? = null, newChat: Boolean = false): kotlinx.coroutines.flow.Flow<StreamEvent> =
+    events("POST", "/v1/tafs/${escaped(id)}/messages/stream", KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), messageBody(text, files, session, newChat)).toByteArray())
 
   /** Picks a run of the person's back up: its steps so far after event [after], then the rest as it goes, until it stops. */
   suspend fun resumeRun(id: String, run: String, after: Int = 0): kotlinx.coroutines.flow.Flow<StreamEvent> =

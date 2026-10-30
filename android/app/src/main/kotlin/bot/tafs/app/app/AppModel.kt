@@ -258,6 +258,19 @@ data class AppState(
   val improveErrors: Map<String, String> = emptyMap(),
   /** Coach's cards in its thread, folded. */
   val coachComponents: List<ShownComponent> = emptyList(),
+  /** The Coach conversation shown (kiff/tafs#73): one the owner reopened or started here, or null for the latest ones together. */
+  val coachChat: String? = null,
+  /** The owner asked for a new conversation: the next message starts one. */
+  val coachFresh: Boolean = false,
+  /** The taf a new Coach conversation improves (kiff/tafs#107), by its id here: its first message goes to the improve route. */
+  val coachImproving: String? = null,
+  /** Coach's past conversations, newest first, and the archived ones (kiff/tafs#97). */
+  val coachChats: List<TafsCloud.Chat> = emptyList(),
+  val coachArchived: List<TafsCloud.Chat> = emptyList(),
+  /** News of the tasks Coach handed tafs, until Coach reads it (kiff/tafs#206). */
+  val coachLines: List<TafsCloud.CoachLine> = emptyList(),
+  /** Coach was asked to open, from a screen without it: the tab screen opens it, then says so. */
+  val coachRequested: Boolean = false,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
   val planqueReady: Boolean = false,
@@ -470,7 +483,10 @@ data class AppState(
   fun thinking(tafId: String): Boolean = tafId in chatSending || (mode == Mode.kiff && (tafId in chatWorking || tafId in chatAwaiting || tafId in chatLive))
 
   /** Whether the chat takes photos and files: a taf (or Coach) on tafs cloud, signed in; not the sample, nor a trial's chat. */
-  fun canAttach(tafId: String): Boolean = mode == Mode.kiff && !isTrialChat(tafId) && taf(tafId)?.cloudId != null
+  fun canAttach(tafId: String): Boolean =
+    mode == Mode.kiff && !isTrialChat(tafId) && taf(tafId)?.cloudId != null &&
+      // A new Coach conversation on a taf starts with the improve route, which takes words only.
+      !(tafId == COACH_CHAT && coachFresh && coachImproving != null)
 
   /** The files picked for the chat's next message, as they go up. */
   fun files(tafId: String): List<PendingFile> = chatFiles[tafId].orEmpty()
@@ -1143,6 +1159,107 @@ class AppModel(
     save()
   }
 
+  // MARK: Coach's conversations (kiff/tafs#73, #82, #97, #107)
+
+  /** A new Coach conversation: an empty chat, and the next message starts it. */
+  fun newCoachChat() {
+    _state.update { s ->
+      s.copy(
+        coachChat = null, coachFresh = true, coachImproving = null, coachComponents = emptyList(), coachLines = emptyList(),
+        chats = s.chats - COACH_CHAT, chatSent = s.chatSent - COACH_CHAT, chatAwaiting = s.chatAwaiting - COACH_CHAT,
+        chatEnded = s.chatEnded - COACH_CHAT, chatLive = s.chatLive - COACH_CHAT, chatWorking = s.chatWorking - COACH_CHAT,
+        chatErrors = s.chatErrors - COACH_CHAT,
+      )
+    }
+  }
+
+  /** A new Coach conversation on one taf, to improve it: its first message goes to the improve route. */
+  fun improveTaf(tafId: String) {
+    newCoachChat()
+    if (_state.value.taf(tafId)?.cloudId != null) _state.update { it.copy(coachImproving = tafId) }
+  }
+
+  /** Improves a taf from wherever its hold is ("Change the limit in Coach mode"): Coach opens on a new conversation about it. */
+  fun improveInCoach(tafId: String) {
+    improveTaf(tafId)
+    _state.update { it.copy(coachRequested = true) }
+  }
+
+  /** The tab screen opened Coach. */
+  fun coachOpened() = _state.update { it.copy(coachRequested = false) }
+
+  /** Reopens one of Coach's conversations: it's shown alone, and messages go on in it. */
+  suspend fun openCoachChat(session: String) {
+    _state.update { s ->
+      s.copy(
+        coachChat = session, coachFresh = false, coachImproving = null,
+        chatSent = s.chatSent - COACH_CHAT, chatEnded = s.chatEnded - COACH_CHAT, chatErrors = s.chatErrors - COACH_CHAT,
+      )
+    }
+    readThread(COACH_CHAT)
+  }
+
+  /** The conversation a message went into is the one shown from then on, once a new one is started. */
+  private fun settleCoachChat(session: String) {
+    _state.update { if (it.coachFresh) it.copy(coachChat = session, coachFresh = false, coachImproving = null) else it }
+  }
+
+  /** Reads Coach's past conversations, for the list to reopen. */
+  suspend fun loadCoachChats() {
+    val cloudId = _state.value.coachCloudId ?: return
+    val generation = accountGeneration
+    val chats = attempt { cloud.chats(cloudId) } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(coachChats = chats) }
+  }
+
+  /** Reads the conversations the owner archived, under Archived. */
+  suspend fun loadArchivedCoachChats() {
+    val cloudId = _state.value.coachCloudId ?: return
+    val generation = accountGeneration
+    val chats = attempt { cloud.archivedChats(cloudId) } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(coachArchived = chats) }
+  }
+
+  /**
+   * Archives one of Coach's conversations: it leaves the list and the thread, on every device. The one shown gives way to a
+   * new conversation. False, saying why, when tafs cloud didn't take it.
+   */
+  suspend fun archiveCoachChat(session: String): Boolean {
+    val cloudId = _state.value.coachCloudId ?: return false
+    val generation = accountGeneration
+    try {
+      cloud.archiveChat(cloudId, session)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail("Not archived: ${e.message}")
+      return false
+    }
+    if (generation != accountGeneration) return false
+    val shown = _state.value.coachChat == session
+    _state.update { s -> s.copy(coachChats = s.coachChats.filterNot { it.session == session }) }
+    if (shown) newCoachChat()
+    return true
+  }
+
+  /** Puts an archived conversation back in the list. False, saying why, when tafs cloud didn't take it. */
+  suspend fun unarchiveCoachChat(session: String): Boolean {
+    val cloudId = _state.value.coachCloudId ?: return false
+    val generation = accountGeneration
+    try {
+      cloud.unarchiveChat(cloudId, session)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail("Not put back: ${e.message}")
+      return false
+    }
+    if (generation != accountGeneration) return false
+    _state.update { s -> s.copy(coachArchived = s.coachArchived.filterNot { it.session == session }) }
+    loadCoachChats()
+    return true
+  }
+
   // MARK: Runs, pausing and removing a taf on tafs cloud
 
   /** Runs a taf now, outside its schedule. The run's session; null when it didn't start, or a Run now for it is on its way. */
@@ -1341,9 +1458,12 @@ class AppModel(
   /** Reads a taf's thread from tafs cloud and shows it; what the owner sent that it doesn't have yet stays, dimmed. */
   private suspend fun readThread(tafId: String) {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    // A new Coach conversation has nothing to read until its first message is sent.
+    if (tafId == COACH_CHAT && _state.value.coachFresh) return
     val generation = accountGeneration
     val thread = try {
-      if (isTrialChat(tafId)) cloud.trialConversation(cloudId) else cloud.conversation(cloudId)
+      if (isTrialChat(tafId)) cloud.trialConversation(cloudId)
+      else cloud.conversation(cloudId, session = if (tafId == COACH_CHAT) _state.value.coachChat else null)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -1367,6 +1487,7 @@ class AppModel(
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
         chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
+        coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
       )
     }
     if (tafId == COACH_CHAT) {
@@ -2136,20 +2257,30 @@ class AppModel(
         // A trial's turn runs in the background, and its chat is read again as it goes.
         cloud.trialMessage(cloudId, words)
       } else {
-        val run = _state.value.chatLive[tafId]?.run ?: _state.value.chatWorking[tafId]?.run
-        var steered = false
-        if (run != null && refs.isEmpty()) {
-          try {
-            cloud.steer(cloudId, run, words)
-            steered = true
-          } catch (e: CloudError) {
-            // A run that has ended throws 409, and the message goes as a new one.
-            if (e.status != 409) throw e
+        // Coach's conversations (kiff/tafs#73): the one shown, or a new one the owner asked for. A new one on a taf starts
+        // with the improve route, which puts the taf's job, Card and latest calls in front of the owner's words.
+        val coach = tafId == COACH_CHAT
+        val fresh = coach && _state.value.coachFresh
+        val improving = if (fresh) _state.value.coachImproving?.let { _state.value.taf(it)?.cloudId } else null
+        val session = if (coach && !fresh) _state.value.coachChat else null
+        if (improving != null) {
+          settleCoachChat(cloud.improve(improving, words).session)
+        } else {
+          val run = if (fresh) null else _state.value.chatLive[tafId]?.run ?: _state.value.chatWorking[tafId]?.run
+          var steered = false
+          if (run != null && refs.isEmpty()) {
+            try {
+              cloud.steer(cloudId, run, words)
+              steered = true
+            } catch (e: CloudError) {
+              // A run that has ended throws 409, and the message goes as a new one.
+              if (e.status != 409) throw e
+            }
           }
+          // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
+          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh)
+          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh).also { if (coach) settleCoachChat(it.session) }
         }
-        // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
-        if (!steered) streamed = openStream(cloudId, words, refs)
-        if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs)
       }
     } catch (e: CancellationException) {
       throw e
@@ -2270,8 +2401,14 @@ class AppModel(
    * Opens the streamed send. Null when the stream couldn't open and the plain send should take the message (no network to it,
    * tafs cloud without the route, or failing); a refusal (the flood guard, the role) throws, as the plain send's would.
    */
-  private suspend fun openStream(cloudId: String, text: String, files: List<AttachmentRef> = emptyList()): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
-    cloud.streamMessage(cloudId, text, files)
+  private suspend fun openStream(
+    cloudId: String,
+    text: String,
+    files: List<AttachmentRef> = emptyList(),
+    session: String? = null,
+    newChat: Boolean = false,
+  ): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
+    cloud.streamMessage(cloudId, text, files, session, newChat)
   } catch (e: CancellationException) {
     throw e
   } catch (e: CloudError) {
@@ -2301,6 +2438,8 @@ class AppModel(
           when (e) {
             is StreamEvent.Session -> {
               live { it.copy(session = e.session, run = e.run ?: it.run) }
+              // A new Coach conversation is the one shown once it has begun.
+              if (tafId == COACH_CHAT) settleCoachChat(e.session)
               // At work in that chat, for steering and Stop.
               _state.update { it.copy(chatWorking = it.chatWorking + (tafId to ChatRun(e.session, e.run))) }
             }

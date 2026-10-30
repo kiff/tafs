@@ -57,7 +57,7 @@ import bot.tafs.app.model.QuestionSelection
  * chat, with its plan pinned above it and its cards in the thread. Before its first message, Coach is started once per account.
  */
 @Composable
-fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> Unit, onBack: () -> Unit) {
+fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> Unit, onBack: () -> Unit, chats: CoachChatActions = CoachChatActions()) {
   LaunchedEffect(Unit) { loadCoach() }
   Column(Modifier.fillMaxSize().statusBarsPadding()) {
     BackBar(onBack)
@@ -69,6 +69,7 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
       state.coachCloudId == null -> CoachIntro(state, actions.coach.start)
       else -> {
         Text("Coach", style = scaled(30, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+        CoachChatBar(state, chats)
         CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) }
         TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f))
       }
@@ -271,6 +272,15 @@ private fun ConfirmCard(c: SetupComponent, answered: String?, onAnswer: (String,
 private fun QuestionsCard(c: SetupComponent, answered: String?, onAnswer: (String, String, String) -> Unit) {
   val questions = c.questions.orEmpty()
   var selection by remember(c.id) { mutableStateOf(QuestionSelection()) }
+  // "Chat about this": the card folds away, and the owner talks the questions through in the chat instead (docs/coach.md).
+  var chatting by remember(c.id) { mutableStateOf(false) }
+  if (answered == null && chatting) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+      Text("You're talking these questions through with Coach.", style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f, fill = false))
+      Text("Show them again", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = false }.padding(top = 12.dp))
+    }
+    return
+  }
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
     c.title?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
     c.text?.let { Text(it, style = scaled(14, color = Theme.soft)) }
@@ -293,6 +303,11 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, onAnswer: (Strin
       }
     }
     PrimaryButton("Send answers", { onAnswer("questions", c.id, selection.message(questions)) }, enabled = selection.complete(questions))
+    Text(
+      "Chat about this",
+      style = scaled(15, FontWeight.SemiBold, Theme.amberText),
+      modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = true }.padding(top = 12.dp),
+    )
   }
 }
 

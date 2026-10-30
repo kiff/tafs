@@ -59,6 +59,9 @@ const val NOTHING_SENT = "Nothing is sent until you approve."
 /** Where a held call is answered in KIFF today, for a call KIFF holds; null for the sample's, which this phone answers. */
 val LocalAnswerPage = staticCompositionLocalOf<(HeldCall) -> String?> { { null } }
 
+/** Opens Coach on a new conversation about a taf, by its id: for a hold over a total, to change the limit. Null where Coach isn't there. */
+val LocalImproveInCoach = staticCompositionLocalOf<((String) -> Unit)?> { null }
+
 /**
  * Coach's held installs (kiff/tafs#206): approving one is installing its version. The switch begins, what's in the way stopped;
  * a Card to change is read first; then one confirmation confirms it, makes the version live, and approves the held call.
@@ -223,6 +226,7 @@ private fun installTaf(call: HeldCall, state: AppState): String? {
 @Composable
 private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sending: Boolean, send: (Answer) -> Unit, install: (() -> Unit)?) {
   val biometry = LocalBiometry.current
+  val improveInCoach = LocalImproveInCoach.current
   Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     if (!state.mayAnswerHolds) {
       // A viewer uses the taf but doesn't answer for the account.
@@ -230,7 +234,10 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
     } else if (state.canAnswer(call)) {
       if (refuseOnly) {
         // KIFF takes this person's refusal but not their approval (they asked for the call): Refuse and the next
-        // steps stay, approving and extra room go.
+        // steps stay, approving and extra room go. Over a total, the limit itself can still be changed with Coach.
+        if (!call.approvableOnce) improveInCoach?.let { improve ->
+          OutlineButton("Change the limit in Coach mode", { improve(call.tafId) }, Modifier.fillMaxWidth(), enabled = !sending)
+        }
       } else if (call.install != null) {
         // Installing is approving: the version goes live, then Coach hears. Not offered where it can't be done.
         if (install != null) PrimaryButton(if (sending) "Installing…" else "Install with $biometry", install, enabled = !sending)
@@ -253,6 +260,10 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         )
         refusedLine(state.refusedToday(call.tafId))?.let { Text(it, style = scaled(13, color = Theme.soft)) }
         if (state.canManageCards) PrimaryButton("Extra room with $biometry", { send(Answer.ExtraRoom) }, enabled = !sending)
+        // A lasting change is Coach's: a new conversation about this taf (kiff/tafs#107).
+        improveInCoach?.let { improve ->
+          OutlineButton("Change the limit in Coach mode", { improve(call.tafId) }, Modifier.fillMaxWidth(), enabled = !sending)
+        }
       }
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         call.nextSteps.forEach { step -> OutlineButton(step, { send(Answer.NextStep(step)) }, Modifier.weight(1f), enabled = !sending) }

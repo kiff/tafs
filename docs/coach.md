@@ -29,6 +29,19 @@ improve with one tap. Starting a new taf is a new Coach conversation.
 Who may use Coach is KIFF's answer for the account's Setup agent; by default, an
 account admin (`AppModel.mayUseCoach`).
 
+On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
+(`CoachScreen`). It has what's below, with these differences:
+- **No taf-page offer.** Above the chat are **New conversation** and **Previous
+  conversations** (`CoachChats.kt`), but a new conversation offers no taf to improve. A
+  taf is improved from a hold's **Change the limit in Coach mode**, which opens Coach on a
+  new conversation about it (`AppModel.improveInCoach`).
+- **Previous conversations** lists them newest first. A long press archives one, and
+  Archived puts one back.
+- **The empty chat** shows the same starts as iOS (`CoachWords.EXAMPLES`,
+  `IMPROVE_EXAMPLES`).
+- **Coach's news** of the tasks it handed tafs shows under the thread, with "While you
+  were away" together (`CoachLines`).
+
 ## Starting Coach, once per account
 
 Before the first message, one Face ID (`AppModel.startSetup`):
