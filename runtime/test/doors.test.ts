@@ -773,7 +773,10 @@ describe("knocks and keys", () => {
     await emailHook(w, mail(w, { from: "Ana Lima <ana@northwind.example>" }));
     const home = await send(w, "GET", "/v1/home", { token: "ana" });
     expect(home.status).toBe(200);
-    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", open: true, resting: false, knocks: 1 }]);
+    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", label: "Email", open: true, resting: false, knocks: 1 }]);
+    // Knocks name their door, and the list says the limits the apps check (#1425 items 9, 11).
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0]).toMatchObject({ app: "email", label: "Email" });
+    expect(home.body.limits).toEqual({ text: 2000, trial_idle_days: 7 });
   });
 
   it("removing the taf removes its doors", async () => {

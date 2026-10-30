@@ -3068,7 +3068,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
-  return { tafs: listed, others, removing, ...(doors.length ? { doors_offered: doors } : {}) };
+  // The limits the apps check before sending (#1425 item 9): tafs cloud's, never a copy on the phone.
+  const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
+  return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}) };
 }
 
 /** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */

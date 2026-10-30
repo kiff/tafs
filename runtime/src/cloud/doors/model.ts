@@ -73,6 +73,8 @@ export interface Arrival {
 
 /** Someone without a key wrote: the owner decides. */
 export interface Knock {
+  /** The door's name, as the app shows it (`APPS`): added on reading, never stored. */
+  label?: string;
   id: string;
   door: string;
   app: string;

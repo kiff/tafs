@@ -89,7 +89,8 @@ async function changeDoors(store: DoorStore, tenant: string, taf: string, change
 
 export async function knocksOf(store: DoorStore, tenant: string, taf: string): Promise<Knock[]> {
   const v = (await store.get(doorKeys.knocks(tenant, taf))) as { knocks?: Knock[] } | undefined;
-  return Array.isArray(v?.knocks) ? v.knocks : [];
+  // Each with its door's name (`label`), so the apps name the door without their own copy.
+  return Array.isArray(v?.knocks) ? v.knocks.map((k) => ({ ...k, label: APPS.find((x) => x.id === k.app)?.label ?? k.app })) : [];
 }
 
 async function changeKnocks(store: DoorStore, tenant: string, taf: string, now: Date, change: (knocks: Knock[]) => Knock[]): Promise<void> {
@@ -802,7 +803,7 @@ export async function doorLights(store: DoorStore, tenant: string, taf: string, 
     knocksOf(store, tenant, taf),
   ]);
   return doors.map((d, i) => ({
-    app: d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
+    app: d.app, label: APPS.find((x) => x.id === d.app)?.label ?? d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
     knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
   }));
 }

@@ -34,13 +34,13 @@ details go only to tafs cloud's own log.
 | Route | Who | What |
 |---|---|---|
 | `GET /v1/jobs` | anyone | The five jobs: `{jobs: [{id, name, summary, cron}]}` |
-| `GET /v1/home` | a person | The app's list: each taf's state, colour, Card summary, doors and open trial, and the account's other agents with Cards ([tafs.md](tafs.md#the-home-list)) |
+| `GET /v1/home` | a person | The app's list: each taf's state, colour, Card summary, doors (each with its `label`) and open trial, and the account's other agents with Cards ([tafs.md](tafs.md#the-home-list)). Also `limits: {text, trial_idle_days}`, the longest message and how long a trial waits unused, which the apps check and keep no copy of |
 | `GET /v1/tafs` | a person | The account's tafs the person may use or oversee, and removals not finished |
 | `POST /v1/tafs` | `cards.manage` | Start a taf: `{name, job, draft_id + claim_secret \| from_setup + draft_id \| agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}` ([tafs.md](tafs.md#starting-a-taf)) |
 | `GET /v1/setup` | a person | `{setup, tools}`: the account's Coach (Setup), or `null`; and Coach's tools as KIFF has them. `tools.state` is `given` (every tool connected here and each of Coach's Cards in force; a revoked Card doesn't count), `to_give`, `taken` (`taken`: the name a vendor's tool holds; one of Coach's tools at tafs cloud's earlier address is connected again instead, its entry marked `replace: true` and its line saying it replaces the earlier connection) or `unknown`. With `to_give`: `connect {body, lines[]}`, the batch for KIFF's `POST /v1/connections/batch`, and `card {body, card_title, cards[]}`, Coach's Cards' draft for `POST /v1/me/agent-drafts` with KIFF's own words for it from its preview, unchanged. The phone signs and sends each body as it is; the signed submit is the owner's one confirmation |
 | `POST /v1/setup` | `cards.manage` | Start Coach once: `{draft_id, claim_secret}` from a draft with no tools ([coach.md](coach.md#starting-coach-once-per-account)) |
 | `GET /v1/events` | a person | Halts, resumes and door events, newest first, for Activity. Who wrote to a door shows only for the tafs the person manages |
-| `GET /v1/usage/ai` | a person | The period's AI use as a share of the bound, where the tafs ask next, and whether they're asking now ([accounts.md](accounts.md#ai-use)) |
+| `GET /v1/usage/ai` | a person | The period's AI use as a share of the bound, where the tafs ask next, whether they're asking now, and `words` saying all that for the apps to show ([accounts.md](accounts.md#ai-use)) |
 | `POST /v1/account/delete` | `account.delete` | `{intent, signature}`: delete the account from the phone's one signed intent. KIFF accepts it first, within its 10 minutes, or nothing is deleted; planque accepts on KIFF's word. tafs cloud then erases its own, planque's, then KIFF's, and what doesn't finish now its sweep finishes. Answers `{done, failed, pending}`. Without an intent, it erases only tafs cloud's and kiff/agents' (the app's earlier way) ([accounts.md](accounts.md#deleting-the-account)) |
 | `GET /v1/halt` | a person | The whole account's halt, as KIFF and kiff/agents hold it |
 | `POST /v1/halt` | `cards.manage` | Halt every taf, in KIFF and kiff/agents at once ([approvals.md](approvals.md#halting)) |
@@ -126,7 +126,7 @@ See [doors.md](doors.md). Reading needs a session; changing, managing the taf.
 
 | Route | What |
 |---|---|
-| `GET /v1/tafs/{id}/doors` | The taf's doors, the apps a door can open on here, and its open knocks |
+| `GET /v1/tafs/{id}/doors` | The taf's doors, the apps a door can open on here, and its open knocks, each with its door's `label` |
 | `POST /v1/tafs/{id}/doors` | `{app, code?, phone_number_id?, waba_id?}`: turn a door on |
 | `PATCH /v1/tafs/{id}/doors/{door}` | `{open}` |
 | `DELETE /v1/tafs/{id}/doors/{door}` | Remove it |
