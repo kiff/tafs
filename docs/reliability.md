@@ -75,8 +75,8 @@ Today a run whose Lambda stopped is marked failed after a few minutes. Instead:
 
 ## Never twice
 
-Each step that acts sends KIFF an **operation id** made from the request's id and the step.
-It's the same every time that step is tried, after a crash too, never a new one. So:
+Each call a run makes sends KIFF an **operation id**, made from the run and the model's id for that call.
+It's the same every time that call is made, after a crash too, because a crashed run is picked up as the same run. A request that arrives twice returns its first run, never a new one. So:
 - a step that had already gone through gets its first outcome back from KIFF, and nothing is
   done again;
 - a step KIFF never sent goes through once;
