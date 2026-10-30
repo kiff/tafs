@@ -7,6 +7,20 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **tafs for Android** (`android/`, Android 11 and later), with what the iPhone app has
+  ([docs/android-app.md](docs/android-app.md)):
+  - tafs, Needs you and the Record, with KIFF's receipts checked on the phone;
+  - a taf's page, with its runs, last report, memory, Revoke and Remove;
+  - the live chat, with photos, files and dictation;
+  - Coach, with its conversations;
+  - Doors, Versions and trials, Halt, Usage and asking an admin for tasks;
+  - People and groups, Devices, the time zone and Delete account.
+
+  Every approval is signed with an approval key that needs a fingerprint for each
+  signature. A new fingerprint turns it off until the next sign-in. Signing out ends the
+  session at KIFF before the phone shows signed out. Buying through Google Play is built
+  but off. On a tablet, the list sits beside what's open. There's no Overview, and no
+  second column on a taf's page, yet.
 - tafs cloud can alert Android phones through Firebase Cloud Messaging. `POST /v1/push` takes
   `platform: "android"` with the phone's Firebase token; an iPhone registers as before.
   Android alerts are data messages the phone builds its notification from, with no call
