@@ -8,7 +8,10 @@ import type { Sent } from "./doors/model.js";
  */
 
 /** A taf's status, the most pressing first. */
-export type WorkStatus = "needs_you" | "retrying" | "working" | "paused" | "idle";
+export type WorkStatus = "halted" | "needs_you" | "retrying" | "working" | "paused" | "idle";
+
+/** What else says where a taf stands: halted, its schedule off, no schedule at all, its next run. */
+export interface TafNow { paused?: boolean; halted?: boolean; unscheduled?: boolean; next?: string | null }
 
 /** What the home list shows of a taf's work. */
 export interface WorkSummary {
@@ -83,7 +86,10 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
 }
 
 /** A taf's status and line on the list, from its recent runs, newest first. */
-export function summaryOf(runs: Run[], paused: boolean, zone: string, now: Date): WorkSummary {
+export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now: Date): WorkSummary {
+  const { paused = false, halted = false, unscheduled = false, next = null } = typeof how === "boolean" ? { paused: how } : how;
+  // Halted stops everything, its holds included: that comes first (#1425 item 10).
+  if (halted) return { status: "halted", line: "Halted · resume it from Halt", needs_you: 0 };
   const recent = runs.filter((r) => now.getTime() - Date.parse(r.updated) < NEEDS_YOU_DAYS * 86_400_000);
   const needs = recent.filter((r) => r.state === "needs_you" || (r.status === "PAUSED" && r.requirements?.some((q) => q.exception && !q.answered)));
   if (needs.length) {
@@ -94,6 +100,8 @@ export function summaryOf(runs: Run[], paused: boolean, zone: string, now: Date)
   if (retrying) return { status: "retrying", line: requestOf(retrying, zone, now).line, needs_you: 0 };
   if (runs.some((r) => r.status === "RUNNING" || r.status === "PENDING")) return { status: "working", line: "Working on it", needs_you: 0 };
   if (paused) return { status: "paused", line: "Paused", needs_you: 0 };
+  if (unscheduled) return { status: "idle", line: "Works from its chat", needs_you: 0 };
+  if (next) return { status: "idle", line: `Next run ${timeIn(next, zone, now)}`, needs_you: 0 };
   const last = runs.find((r) => r.status === "COMPLETED");
   return { status: "idle", line: last ? `Last done at ${timeIn(last.updated, zone, now)}` : "Nothing yet", needs_you: 0 };
 }

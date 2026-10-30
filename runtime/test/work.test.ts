@@ -33,6 +33,10 @@ describe("a taf's work, as both apps show it", () => {
     expect(summaryOf([run({ status: "RUNNING" })], true, "UTC", NOW)).toEqual({ status: "working", line: "Working on it", needs_you: 0 });
     expect(summaryOf([], true, "UTC", NOW)).toEqual({ status: "paused", line: "Paused", needs_you: 0 });
     expect(summaryOf([run({})], false, "UTC", NOW)).toEqual({ status: "idle", line: "Last done at 11:05", needs_you: 0 });
+    // Halted comes before anything; a taf with no schedule says it works from its chat; one with a schedule, its next run.
+    expect(summaryOf([run({ status: "RUNNING" })], { halted: true }, "UTC", NOW)).toEqual({ status: "halted", line: "Halted · resume it from Halt", needs_you: 0 });
+    expect(summaryOf([], { unscheduled: true }, "UTC", NOW).line).toBe("Works from its chat");
+    expect(summaryOf([], { next: "2026-10-31T07:00:00Z" }, "Europe/Tallinn", NOW).line).toBe("Next run Sat 09:00");
   });
 
   it("counts the taf's requests by state, each with what was sent through its door", () => {

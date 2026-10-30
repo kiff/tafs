@@ -495,7 +495,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const zone = me.timeZone ?? "UTC";
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, v.status === "paused", zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again) };
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again) };
   }
   if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
     // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
@@ -3062,7 +3062,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const words = JOBS.find((j) => j.id === v.job)?.summary;
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
-    const work = runs ? summaryOf(runs, v.status === "paused", me.timeZone ?? "UTC", now) : undefined;
+    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now) : undefined;
     return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}), ...(work ? { work } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.

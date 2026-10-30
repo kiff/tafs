@@ -497,7 +497,7 @@ describe("the home list", () => {
       job_summary: "Answers refund requests and issues refunds and credits within the Card.",
       color: 0, state: "working", waiting: 0,
       // Where its work stands, in words (docs/reliability.md).
-      work: { status: "idle", line: "Nothing yet", needs_you: 0 },
+      work: { status: "idle", line: "Next run Fri 12:30", needs_you: 0 },
       card: {
         ids: ["card_rae"], active: true, expires: "2026-12-31T00:00:00Z", tools: ["Create refund"],
         rules: [{
