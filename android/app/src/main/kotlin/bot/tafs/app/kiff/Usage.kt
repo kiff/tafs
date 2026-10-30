@@ -6,7 +6,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // The account's usage this period, as KIFF sends it and the phone reads it: what the Usage screens show, and what can be
-// bought through Google Play (the store). Members' requests are read apart.
+// bought through Google Play (the store), and members' requests for tasks.
 
 @Serializable
 data class UsagePeriod(
@@ -130,6 +130,8 @@ data class Usage(
   /** Whether this person may add tasks (an admin), and what can be bought. */
   @SerialName("can_add_tasks") val canAddTasks: Boolean? = null,
   val store: UsageStore? = null,
+  /** Requests for tasks: a member's own, newest first; for someone who may add tasks, the members' too. */
+  val requests: List<PackRequest>? = null,
 )
 
 /** One counted task: the Record behind it, which taf, which tool, and when. */
@@ -188,3 +190,17 @@ internal data class HaltResponse(val halt: Halt)
 /** What deleting the account in tafs cloud did (kiff/tafs#185): done, or the step that failed, which asking again goes on from. */
 @Serializable
 data class AccountDeletion(val done: Boolean = false, val failed: String? = null)
+
+/** A member's request for a pack of tasks, which an admin approves by buying it, or declines with a note. */
+@Serializable
+data class PackRequest(
+  val id: String,
+  @SerialName("asked_by") val askedBy: String,
+  val pack: String,
+  val reason: String = "",
+  /** open, approved, declined, withdrawn or expired. */
+  val status: String,
+  @SerialName("created_at") @Serializable(with = InstantAsString::class) val createdAt: Instant,
+  @SerialName("expires_at") @Serializable(with = InstantAsString::class) val expiresAt: Instant,
+  val note: String? = null,
+)

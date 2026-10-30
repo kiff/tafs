@@ -3838,6 +3838,73 @@ class AppModel(
     _state.update { it.copy(storeProducts = purchases.products.value) }
   }
 
+  // MARK: Asking an admin for tasks
+
+  /** Asks the account's admins for a pack. False, saying why, when KIFF didn't take it. */
+  suspend fun askForPack(pack: String, reason: String): Boolean {
+    _state.update { it.copy(tasksMessage = null) }
+    if (_state.value.mode != Mode.kiff) return false
+    return try {
+      kiff.askForPack(pack, reason.trim())
+      refreshUsage()
+      true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      _state.update { it.copy(tasksMessage = "The request didn't go: ${e.message}") }
+      false
+    }
+  }
+
+  /** Takes back this person's request. */
+  suspend fun withdrawRequest(id: String) {
+    _state.update { it.copy(tasksMessage = null) }
+    if (_state.value.mode != Mode.kiff) return
+    try {
+      kiff.withdrawRequest(id)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      _state.update { it.copy(tasksMessage = "The request wasn't withdrawn: ${e.message}") }
+    }
+    refreshUsage()
+  }
+
+  /** Declines a member's request, with a note they'll read: the admin's answer, behind one confirmation, signed. */
+  suspend fun declineRequest(id: String, note: String): Boolean {
+    _state.update { it.copy(tasksMessage = null) }
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null) return false
+    if (!_state.value.sessionHasKey) {
+      _state.update { it.copy(tasksMessage = "Sign in with KIFF again: this sign-in can't sign for the phone.") }
+      return false
+    }
+    val generation = accountGeneration
+    try {
+      signer.sign("tafs.decline-request.v1|$tenant|$id".toByteArray(), "Decline the request")
+    } catch (_: SignerException) {
+      return false
+    }
+    if (generation != accountGeneration) return false
+    val signer = signer
+    kiff.tenant = tenant
+    kiff.setupSigner = { signer.signConfirmed(it) }
+    try {
+      kiff.declineRequest(id, note.trim())
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return false
+      _state.update { it.copy(tasksMessage = "The request wasn't declined: ${e.message}") }
+      refreshUsage()
+      return false
+    } finally {
+      kiff.setupSigner = null
+    }
+    refreshUsage()
+    return true
+  }
+
   /** Buys Solo or a pack for the account, answering a member's request when there is one. */
   suspend fun buy(product: String, requestId: String? = null) {
     _state.update { it.copy(tasksMessage = null) }

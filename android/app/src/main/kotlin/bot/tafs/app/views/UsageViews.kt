@@ -74,6 +74,8 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
         }
       }
       if (state.offersPurchases) AddTasksPanel(usage, state, actions)
+      // Members ask an admin for tasks; an admin answers their requests (as iOS's Usage).
+      if (state.mode == Mode.kiff && UsageWords.asksForTasks(usage)) TaskRequests(usage, state, actions)
       usage.packList?.takeIf { it.isNotEmpty() }?.let { packs ->
         Panel {
           Eyebrow("Packs")

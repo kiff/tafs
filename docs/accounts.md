@@ -128,6 +128,12 @@ reason (`AskAdminView`, `POST /v1/me/pack-requests`). The admins are alerted; on
 it, which answers the request, or declines it with a note, behind Face ID. The member can
 take their request back.
 
+On Android the same is on Usage (`TaskRequests`, `UsageWords.waiting`, `lastAnswer`,
+`openRequests`). Decline is signed, behind one confirmation
+(`tafs.decline-request.v1|{tenant}|{request}`). Approve buys the pack through Google
+Play for that request, so it shows only where the app offers buying; until then, an
+admin on Android declines, or approves on an iPhone.
+
 ### AI use
 
 What chats with the tafs and Coach cost the model is bounded per period at half the

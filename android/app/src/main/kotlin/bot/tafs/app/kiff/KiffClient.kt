@@ -483,6 +483,15 @@ class KiffClient(
   /** KIFF's receipt for a call, as KIFF wrote it: its bytes are what [ReceiptCheck] checks, never decoded and written again. */
   suspend fun receipt(traceId: String): ByteArray = send("GET", "/v1/receipts/${escaped(traceId)}")
 
+  /** Asks the account's admins for a pack, with a reason. */
+  suspend fun askForPack(pack: String, reason: String): PackRequest = call("POST", "/v1/me/pack-requests", mapOf("pack" to pack, "reason" to reason))
+
+  /** Takes back this person's request. */
+  suspend fun withdrawRequest(id: String): PackRequest = call("POST", "/v1/me/pack-requests/${escaped(id)}/withdraw", mapOf())
+
+  /** Declines a member's request, with a note: a signed call from a phone. */
+  suspend fun declineRequest(id: String, note: String): PackRequest = call("POST", "/v1/me/pack-requests/${escaped(id)}/decline", mapOf("note" to note))
+
   /** Revokes one of a taf's Cards: no new action under it goes through. It takes authority away, so it isn't signed. */
   suspend fun revoke(cardId: String) {
     send("POST", "/v1/me/mandates/${escaped(cardId)}/revoke", mapOf<String, String>())

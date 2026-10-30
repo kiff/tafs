@@ -2,6 +2,7 @@ package bot.tafs.app.model
 
 import bot.tafs.app.kiff.CountedTask
 import bot.tafs.app.kiff.Halt
+import bot.tafs.app.kiff.PackRequest
 import bot.tafs.app.kiff.Usage
 import bot.tafs.app.kiff.UsagePack
 import java.time.Instant
@@ -129,4 +130,34 @@ object UsageWords {
   }
 
   const val AI_ASKING = "This month's AI use is high: your tafs ask before going on."
+
+  // MARK: Asking an admin for tasks, as iOS's Usage says it
+
+  /** A pack's line, "Rayo · 70 tasks", from what's on sale; its id, capitalised, when it isn't. */
+  fun packLine(id: String, u: Usage?): String =
+    u?.store?.packs?.firstOrNull { it.id == id }?.line?.takeIf { it.isNotEmpty() } ?: id.replaceFirstChar { it.uppercase() }
+
+  /** The member's own request still waiting. */
+  fun waiting(u: Usage): PackRequest? = if (u.canAddTasks == true) null else u.requests?.firstOrNull { it.status == "open" }
+
+  /** The member's latest answered request, said plainly. */
+  fun lastAnswer(u: Usage): String? {
+    if (u.canAddTasks == true) return null
+    val r = u.requests?.firstOrNull() ?: return null
+    val pack = packLine(r.pack, u)
+    return when (r.status) {
+      "approved" -> "An admin added $pack."
+      "declined" -> r.note?.takeIf { it.isNotEmpty() }?.let { "An admin declined $pack: $it" } ?: "An admin declined $pack."
+      "expired" -> "Your request for $pack ended with the period."
+      else -> null
+    }
+  }
+
+  /** Open requests, for someone who may add tasks. */
+  fun openRequests(u: Usage): List<PackRequest> = if (u.canAddTasks != true) emptyList() else u.requests.orEmpty().filter { it.status == "open" }
+
+  /** Asking or answering is offered only where tasks have a limit and there's a store. */
+  fun asksForTasks(u: Usage): Boolean = u.tasks.left != null && u.store != null
+
+  const val ASK_LINE = "Your account's admins get your request. When one adds the pack, your tafs go on."
 }

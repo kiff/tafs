@@ -261,6 +261,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       refreshTafUsage = model::refreshTafUsage,
       buy = { model.buy(it) },
       restorePurchases = model::restorePurchases,
+      askForPack = model::askForPack,
+      withdrawRequest = model::withdrawRequest,
+      approveRequest = { product, request -> model.buy(product, request) },
+      declineRequest = model::declineRequest,
     )
   }
   val people = remember(model) {
