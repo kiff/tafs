@@ -174,3 +174,40 @@ data class CoachCardDraft(
       (title ?: "") to lines
     }
 }
+
+/**
+ * Where a taf's work stands, as tafs cloud says it (`GET /v1/tafs/{id}/work`): its summary line, its next run, and its recent
+ * requests and skipped firings, newest first. Every line and time is tafs cloud's, in the account's zone: the app formats none.
+ */
+@Serializable
+data class TafWork(
+  val summary: WorkSummary? = null,
+  val requests: List<WorkRequest> = emptyList(),
+  /** Scheduled runs that didn't happen: the last one was still working (busy), or the time passed (missed). */
+  val skipped: List<SkippedFiring> = emptyList(),
+)
+
+@Serializable
+data class WorkSummary(val status: String = "idle", val line: String = "", @SerialName("needs_you") val needsYou: Int = 0)
+
+/** One request: done, working, retrying, needs_you, waiting, stopped or failed, in tafs cloud's words, with where it went. */
+@Serializable
+data class WorkRequest(
+  val id: String,
+  @Serializable(with = bot.tafs.app.model.InstantAsString::class) val at: Instant,
+  val state: String = "",
+  val line: String = "",
+  val deliveries: List<WorkDelivery> = emptyList(),
+)
+
+/** Where a request's result went, and whether it can be sent again (a reply given up on after its tries). */
+@Serializable
+data class WorkDelivery(val place: String = "door_reply", val state: String = "", val line: String = "", @SerialName("send_again") val sendAgain: Boolean = false)
+
+/** A scheduled run that was skipped: when it was due, why (missed or busy), and tafs cloud's words for it. */
+@Serializable
+data class SkippedFiring(
+  @Serializable(with = bot.tafs.app.model.InstantAsString::class) val due: Instant,
+  val why: String = "",
+  val words: String = "",
+)

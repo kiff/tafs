@@ -191,6 +191,11 @@ data class AppState(
   val memoryErrors: Map<String, String> = emptyMap(),
   /** Each taf's latest run and its report, by the taf's id. */
   val reports: Map<String, RunReport> = emptyMap(),
+  /** Where each taf's work stands, as tafs cloud says, once read; and why it couldn't be read, or a Send again didn't go. */
+  val works: Map<String, bot.tafs.app.kiff.TafWork> = emptyMap(),
+  val workErrors: Map<String, String> = emptyMap(),
+  /** The requests whose reply is being sent again, by run. */
+  val sendingAgain: Set<String> = emptySet(),
   /** The tafs whose Run now is on its way, so a second tap starts nothing. */
   val runsInFlight: Set<String> = emptySet(),
   /** Each taf's thread, oldest first; the sample's lives here, not between launches. */
@@ -1288,6 +1293,47 @@ class AppModel(
   }
 
   /** Reads the taf's latest run and, once it has stopped, its report. */
+  /** Reads where the taf's work stands, from tafs cloud (docs/reliability.md): its requests and skipped firings, in its words. */
+  suspend fun loadWork(tafId: String) {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    val work = try {
+      cloud.work(cloudId)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(workErrors = it.workErrors + (tafId to "Its work couldn't be read. ${ErrorWords.of(e)}")) }
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(works = it.works + (tafId to work), workErrors = it.workErrors - tafId) }
+  }
+
+  /**
+   * Send again: a door reply given up on after its tries goes once more (`POST …/deliveries/door_reply/send`). It does no work
+   * and signs nothing. The work is read again after, whatever came of it.
+   */
+  suspend fun sendAgain(tafId: String, run: String) {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    if (run in _state.value.sendingAgain) return
+    _state.update { it.copy(sendingAgain = it.sendingAgain + run, workErrors = it.workErrors - tafId) }
+    val generation = accountGeneration
+    val failed = try {
+      cloud.sendAgain(cloudId, run)
+      null
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      "It wasn't sent again. ${ErrorWords.of(e)}"
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(sendingAgain = it.sendingAgain - run) }
+    }
+    if (generation != accountGeneration) return
+    loadWork(tafId)
+    // Said after the work is read again, so the read doesn't clear it.
+    failed?.let { why -> _state.update { it.copy(workErrors = it.workErrors + (tafId to why)) } }
+  }
+
   suspend fun loadReport(tafId: String) {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     val generation = accountGeneration
@@ -1559,6 +1605,8 @@ class AppModel(
       "knock" -> tafId?.let { loadDoors(it) }
     }
     if ((change == "taf" || change == "knock") && tafId != null && tafId in _state.value.chats) readThread(tafId)
+    // Its work too, where its page has read it.
+    if (change == "taf" && tafId != null && tafId in _state.value.works) loadWork(tafId)
   }
 
   /** Where a tapped alert goes: the screen takes it once. */

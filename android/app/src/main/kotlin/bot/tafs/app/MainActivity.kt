@@ -330,6 +330,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
       loadReport = model::loadReport,
+      loadWork = model::loadWork,
+      sendAgain = model::sendAgain,
       setPaused = model::setPaused,
       remove = model::removeTaf,
       coach = CoachActions(

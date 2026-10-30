@@ -42,6 +42,64 @@ class TafPageTest {
     return testModel(auth = auth, transport = transport, secrets = secrets, clock = { t0 }, start = false).also { it.restore() }
   }
 
+  // MARK: Its work (docs/reliability.md, "The taf's view")
+
+  private val work =
+    """{"taf":"taf_1","time_zone":"Europe/Paris","summary":{"status":"needs_you","line":"1 needs you","needs_you":1},"next_run":"2026-10-28T12:00:00Z",
+        "counts":{"done":1,"needs_you":1},
+        "requests":[
+          {"id":"run_2","at":"2026-10-28T08:40:00Z","state":"done","line":"Answered Mara: refund of €15 done.","deliveries":[{"place":"door_reply","state":"not_sent","line":"The reply to Mara didn't go after 3 tries.","send_again":true}]},
+          {"id":"run_1","at":"2026-10-28T07:00:00Z","state":"needs_you","line":"Waits for your answer on a €900 refund.","deliveries":[]}],
+        "skipped":[{"due":"2026-10-28T08:00:00Z","why":"busy","words":"Skipped the 9:00 run: the last one was still working"}]}"""
+
+  @Test fun itsWorkReadsAsTafsCloudSaysWithSkippedFiringsInTheirPlaceByTime() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/taf_1/work", 200, work)
+    val m = model()
+    m.refresh()
+    m.loadWork("refunds-1")
+    val read = m.state.value.works["refunds-1"]!!
+    assertEquals("1 needs you", read.summary?.line)
+    // Newest first, the skipped firing between the two requests by its time.
+    val rows = bot.tafs.app.model.Chat.workRows(read)
+    assertEquals(listOf("run_2", "skipped", "run_1"), rows.map { (it as? bot.tafs.app.model.Chat.WorkRow.Request)?.request?.id ?: "skipped" })
+    assertEquals("Skipped the 9:00 run: the last one was still working", (rows[1] as bot.tafs.app.model.Chat.WorkRow.Skipped).firing.words)
+    assertTrue(read.requests.first().deliveries.single().sendAgain)
+  }
+
+  @Test fun sendAgainSendsThatRunsReplyOnceAndReadsTheWorkAgain() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/taf_1/work", 200, work)
+    transport.answer("POST /v1/tafs/taf_1/requests/run_2/deliveries/door_reply/send", 200, """{"state":"sent"}""")
+    val m = model()
+    m.refresh()
+    m.loadWork("refunds-1")
+    m.sendAgain("refunds-1", "run_2")
+    assertEquals(1, transport.requestsTo("POST /v1/tafs/taf_1/requests/run_2/deliveries/door_reply/send").size)
+    assertEquals(2, transport.requestsTo("GET /v1/tafs/taf_1/work").size)
+    assertFalse(m.state.value.sendingAgain.contains("run_2"))
+  }
+
+  @Test fun aSendAgainTafsCloudRefusesSaysSoInTheAppsWords() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/taf_1/work", 200, work)
+    transport.answer("POST /v1/tafs/taf_1/requests/run_2/deliveries/door_reply/send", 409, """{"error":"it's being sent"}""")
+    val m = model()
+    m.refresh()
+    m.sendAgain("refunds-1", "run_2")
+    assertEquals("It wasn't sent again. " + bot.tafs.app.model.ErrorWords.CHANGED, m.state.value.workErrors["refunds-1"])
+  }
+
+  @Test fun aTafPushReadsItsWorkAgainWhereItsBeenRead() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/taf_1/work", 200, work)
+    val m = model()
+    m.refresh()
+    m.loadWork("refunds-1")
+    m.readChange("taf", "taf_1")
+    assertEquals(2, transport.requestsTo("GET /v1/tafs/taf_1/work").size)
+  }
+
   // MARK: Its schedule, from the list
 
   @Test fun theListSaysWhetherItsPausedWhenItRunsNextAndWhetherItWorksFromItsChat() = runTest {
