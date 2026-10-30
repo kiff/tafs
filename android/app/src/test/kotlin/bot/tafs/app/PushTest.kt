@@ -84,6 +84,17 @@ class PushTest {
     assertFalse(alert.loud)
   }
 
+  @Test fun aDoorsAlertOpensItsTafAndReplacesThatTafsLastOne() {
+    val alert = AlertPayload.parse(mapOf("kind" to "alert", "title" to "Refunds", "body" to "A new email at the door.", "open" to "taf", "taf_id" to "taf_9", "level" to "quiet"), now) as Alert.Show
+    assertEquals("taf_9", AlertPayload.tafOf(alert.open))
+    assertEquals(AlertPayload.taf("taf_9"), alert.tag)
+    assertFalse(alert.loud)
+    // Without its taf, it goes to Needs you, as an alert with no destination does.
+    val bare = AlertPayload.parse(mapOf("kind" to "alert", "open" to "taf"), now) as Alert.Show
+    assertEquals(AlertPayload.NEEDS_YOU, bare.open)
+    assertEquals(null, AlertPayload.tafOf(AlertPayload.USAGE))
+  }
+
   @Test fun anAlertWithoutWordsOrADestinationSaysWhatItIs() {
     val alert = AlertPayload.parse(mapOf("kind" to "alert", "hold_id" to "h1"), now) as Alert.Show
     assertEquals("A taf needs you", alert.title)

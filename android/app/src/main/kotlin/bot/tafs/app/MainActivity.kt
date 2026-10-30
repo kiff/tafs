@@ -340,13 +340,21 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       ),
     )
   }
-  // A tapped alert goes where it said: a held call to Needs you, a request for tasks to Usage.
-  LaunchedEffect(state.requestedOpen) {
-    when (state.requestedOpen) {
-      AlertPayload.NEEDS_YOU -> { tab = Tab.NeedsYou; showingSettings = false }
-      AlertPayload.USAGE -> { usageTaf = null; usageOpen = true }
+  // A tapped alert goes where it said: a held call to Needs you, a request for tasks to Usage, a door's alert to its taf.
+  LaunchedEffect(state.requestedOpen, state.tafs) {
+    val open = state.requestedOpen ?: return@LaunchedEffect
+    val cloudId = AlertPayload.tafOf(open)
+    when {
+      open == AlertPayload.NEEDS_YOU -> { tab = Tab.NeedsYou; showingSettings = false }
+      open == AlertPayload.USAGE -> { usageTaf = null; usageOpen = true }
+      cloudId != null -> {
+        // The list may not be read yet: the taf opens once it's there, and an alert for a taf no longer listed opens the list.
+        val taf = state.tafs.firstOrNull { it.cloudId == cloudId }
+        if (taf == null && state.tafs.isEmpty()) return@LaunchedEffect
+        tab = Tab.Tafs; showingSettings = false; coachOpen = false; openTaf = taf?.id
+      }
     }
-    if (state.requestedOpen != null) model.openRequestTaken()
+    model.openRequestTaken()
   }
   // Back in the app, KIFF is read again: a hold made meanwhile shows, and a failed refresh's tries start over. The first
   // resume is the launch, which reads already.

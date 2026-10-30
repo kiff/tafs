@@ -13,7 +13,8 @@ import type { Device, Notification, Sender } from "./push.js";
  *
  *   kind        "alert" shows a notification; "answered" takes one away
  *   title,body  what an alert says
- *   open        where tapping it goes ("needs-you", "usage")
+ *   open        where tapping it goes ("needs-you", "usage", "taf")
+ *   taf_id      the taf a door's alert opens (`open: "taf"`)
  *   hold_id, request_id, expires_at   what the alert is about
  *   level       "interrupt" (a hold, a halt) or "quiet" (no sound)
  */
@@ -76,6 +77,7 @@ export function fcmMessage(n: Notification, now: Date): { data: Record<string, s
     set("title", str(alert?.title));
     set("body", str(alert?.body));
     set("open", str(p.open));
+    set("taf_id", str(p.taf_id));
     set("hold_id", str(p.hold_id));
     set("request_id", str(p.request_id));
     set("expires_at", str(p.expires_at));

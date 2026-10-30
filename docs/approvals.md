@@ -140,7 +140,9 @@ they may hand over the target's secret.
 
 **On Android** the push is a Firebase data message the phone builds its notification from:
 `kind` (`alert` shows one, `answered` takes it away), the words, where tapping it goes
-(`open`), the call or request it is about, and how loud it is (`level`). It carries no
+(`open`), the call or request it is about, and how loud it is (`level`). A door's alert
+opens its taf (`open: "taf"` with `taf_id`, the taf's id in tafs cloud); the phone opens it
+once the list has it, and a door's later alert for the same taf replaces the earlier one. It carries no
 amount and no argument, as an iPhone's push doesn't. A phone whose Sound is off gets
 `level: "quiet"`. Google refusing a token it no longer knows forgets that phone; any other
 failure answers KIFF 502, so it sends the alert again. tafs cloud sends to Android only

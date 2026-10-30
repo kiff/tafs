@@ -25,7 +25,7 @@ version headings refer to releases, not merely to merged pull requests.
 - tafs cloud can alert Android phones through Firebase Cloud Messaging. `POST /v1/push` takes
   `platform: "android"` with the phone's Firebase token; an iPhone registers as before.
   Android alerts are data messages the phone builds its notification from, with no call
-  parameters. They are off until `FCM_PROJECT_ID` and `FCM_SECRET_ID` are set, and an Android
+  parameters; a door's alert carries its taf (`taf_id`) and opens it. They are off until `FCM_PROJECT_ID` and `FCM_SECRET_ID` are set, and an Android
   phone's registration is refused (503) until then.
 
 ### Fixed

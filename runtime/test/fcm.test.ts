@@ -46,6 +46,12 @@ describe("the message an Android phone gets", () => {
     expect(m.android).toEqual({ priority: "NORMAL", collapse_key: "req_1" });
   });
 
+  it("carries the taf a door's alert opens, so Android opens the taf", () => {
+    const door: Notification = { kind: "alert", payload: { aps: { alert: { title: "Refunds", body: "A new email at the door." }, sound: "default" }, open: "taf", taf_id: "taf_9", door_knock: { taf: "taf_9", knock: "k_1" } } };
+    const m = fcmMessage(door, NOW);
+    expect(m.data).toEqual({ kind: "alert", title: "Refunds", body: "A new email at the door.", open: "taf", taf_id: "taf_9", level: "quiet" });
+  });
+
   it("is quiet for a phone whose Sound for alerts is off, as it is for an iPhone", () => {
     const quiet = quietFor({ ...phone, silent: true }, hold);
     expect(fcmMessage(quiet, NOW).data.level).toBe("quiet");
