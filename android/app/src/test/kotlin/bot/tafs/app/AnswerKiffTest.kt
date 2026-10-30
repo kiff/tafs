@@ -69,13 +69,16 @@ class AnswerKiffTest {
   private fun answeredOk(id: String = "ce_1", route: String = "approve-once") =
     transport.answer("POST /v1/me/card-exceptions/$id/$route", 200, """{}""")
 
-  /** Signed in with this phone's key, and its approval key the one KIFF holds. */
-  private suspend fun model(approvalKey: Boolean = true, keyed: Boolean = true): AppModel {
+  /**
+   * Signed in with this phone's key, and its approval key the one KIFF holds. The model's background work (a held run asked
+   * to go on) runs on the test's own scheduler, so it never runs on another thread while the test reads what was sent.
+   */
+  private suspend fun kotlinx.coroutines.test.TestScope.model(approvalKey: Boolean = true, keyed: Boolean = true): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     if (keyed) secrets.save("1", AppModel.KEYED)
     if (approvalKey) secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
-    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, start = false).also { it.restore() }
+    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, start = false, scope = backgroundScope).also { it.restore() }
   }
 
   private fun verifies(publicDER: ByteArray, message: ByteArray, signatureBase64: String): Boolean {

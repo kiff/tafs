@@ -50,7 +50,13 @@ class FakeAuthenticator(var confirms: Boolean = true, var available: Boolean = t
  */
 class FakeTransport : Transport {
   /** Kept from any thread: a model's own background work may be sending while a test reads. */
-  val requests: MutableList<HttpRequest> = java.util.Collections.synchronizedList(mutableListOf())
+  private val log: MutableList<HttpRequest> = mutableListOf()
+
+  /**
+   * Every request so far, as a copy taken under the lock: a test reads it while the model's background work may still be
+   * sending, and iterating the live list then throws (ConcurrentModificationException).
+   */
+  val requests: List<HttpRequest> get() = synchronized(log) { log.toList() }
   private val queued = mutableMapOf<String, MutableList<Any>>()
   private val used = mutableMapOf<String, Int>()
 
@@ -63,7 +69,7 @@ class FakeTransport : Transport {
     queued.getOrPut(key) { mutableListOf() } += what
   }
 
-  fun requestsTo(key: String): List<HttpRequest> = synchronized(requests) { requests.filter { key(it) == key } }
+  fun requestsTo(key: String): List<HttpRequest> = synchronized(log) { log.filter { key(it) == key } }
 
   private val held = mutableMapOf<String, kotlinx.coroutines.CompletableDeferred<Unit>>()
 
@@ -77,7 +83,7 @@ class FakeTransport : Transport {
   override suspend fun send(request: HttpRequest): HttpResponse {
     synchronized(this) { held[key(request)] }?.await()
     val next = synchronized(this) {
-      requests += request
+      synchronized(log) { log += request }
       val key = key(request)
       val list = queued[key] ?: return HttpResponse(404, """{"error":"not_found"}""".toByteArray())
       val i = used.getOrDefault(key, 0)
