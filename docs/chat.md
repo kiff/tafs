@@ -150,6 +150,26 @@ taf wrote before it, never by clock alone (`chatItems`, `placed`, `heldAfterItsW
   continue it at once (`POST /v1/tafs/{id}/holds/{exception}/continue`), and shows the
   taf working again.
 
+## Cards that wait for an answer
+
+A `confirm`, `questions`, `approval` or `sign_in` card waits for the person's answer: the
+run pauses on it, and the answer comes back to the run as data, never as text in the chat.
+
+- The app answers it with `POST /v1/tafs/{id}/components/{component}/answer` `{answer}`.
+  Each type takes its own answer: confirm, one of its options' values; questions,
+  `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `approved`, `declined` or
+  `failed: <why>`; sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
+- Writing a message instead while a card waits answers it with those words: the run that
+  waits goes on, and no second run starts beside it.
+- In the thread, each answered card carries `answer` `{state: answered|wrote|no_answer,
+  words, at}`: what was chosen, as the card shows it; what was written instead; or that it
+  stopped waiting with no answer. Words written instead also show as the owner's message,
+  with `answers` naming the card, so they never vanish from the thread.
+- The app's earlier form, a message `[<type> <id>] <answer>` from the person's own app, is
+  still taken as the card's answer when that card waits. Any other text, a door's message, or
+  a card that doesn't wait goes as a message. This form goes one release after the app build
+  that uses the route.
+
 ## Coming back to a run at work
 
 When the owner leaves the chat or the app and comes back while a run works, the app

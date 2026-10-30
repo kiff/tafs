@@ -31,10 +31,26 @@ export interface AgentsConfig {
 }
 
 export class AgentsError extends Error {
-  constructor(readonly status: number, message: string, readonly blocking?: BlockingRun[]) {
+  /** code is kiff/agents' typed code for the refusal (`halted`, `run_ended`, …): what to switch on, never the words. */
+  constructor(readonly status: number, message: string, readonly blocking?: BlockingRun[], readonly code?: string) {
     super(message);
   }
 }
+
+/**
+ * Whether err is kiff/agents refusing with a 409 for one of codes. A refusal
+ * from before typed codes carries none and counts as any of them, as every
+ * 409 did then.
+ */
+export function refused(err: unknown, ...codes: string[]): err is AgentsError {
+  return err instanceof AgentsError && err.status === 409 && (err.code === undefined || codes.includes(err.code));
+}
+
+/** The name tafs cloud answers a result in. */
+export const ANSWERED_BY = "tafs cloud";
+
+/** What came of handing the owner over to a taf: exactly one is set. */
+export type ResultOutcome = { taf_id: string } | { version: number } | { failed: string };
 
 /** A run that keeps a switch from beginning, as kiff/agents names it in the 409 (kiff/tafs#206). */
 export interface BlockingRun {
@@ -140,6 +156,10 @@ export interface Requirement {
   expires: string;
   answered?: string;
   answer?: string;
+  /** "card" for a card shown to the owner that waits for their answer; none for a call KIFF holds. */
+  kind?: string;
+  /** A card's answer as the run reads it, once answered. */
+  result?: unknown;
 }
 
 export interface Run {
@@ -173,6 +193,8 @@ export interface AgentVersion {
   note: string;
   /** Who made it: the owner's subject, or "setup". */
   by: string;
+  /** Which kind of author that is: a person or an agent (Coach). */
+  by_kind?: "person" | "agent";
   created: string;
   digest: string;
   live: boolean;
@@ -195,8 +217,11 @@ export interface Trial {
   /** Its chat, which kiff/agents opens with the trial (kiff/agents#215). */
   session?: string;
   started: string;
-  /** When the owner last wrote in it: unused for 7 days, it ends. */
+  /** When the owner last wrote in it: unused for idle_days, it ends. */
   used: string;
+  /** How many days unused end it, and when it ends if it stays unused: kiff/agents' own. */
+  idle_days?: number;
+  ends?: string;
 }
 
 /** What a version keeps of an ended trial. */
@@ -351,9 +376,10 @@ export interface SessionEvent {
   time: string;
   /**
    * A kind the keep rules name, a `component` the agent showed (kiff/agents#91), or
-   * a `call_ref`: what a call through KIFF acted on, kept like messages (kiff/tafs#167).
+   * a `call_ref`: what a call through KIFF acted on, kept like messages (kiff/tafs#167), or
+   * `answered`: the owner's answer to a card, as data ({id, type, answer?, words?, wrote?, unanswered?}).
    */
-  kind: EventKind | "component" | "call_ref";
+  kind: EventKind | "component" | "call_ref" | "answered";
   body: unknown;
 }
 
@@ -435,7 +461,7 @@ export class Agents {
    * changed, who made it, and the KIFF draft revising its Cards, if any.
    * What's live doesn't change. Returns its number.
    */
-  async createVersion(tenant: string, id: string, v: { definition: AgentDefinition; note: string; by: string; draft?: string }): Promise<number> {
+  async createVersion(tenant: string, id: string, v: { definition: AgentDefinition; note: string; by: string; by_kind?: "person" | "agent"; draft?: string }): Promise<number> {
     return (await this.call<{ n: number }>("POST", tenant, ["agents", id, "versions"], v)).n;
   }
 
@@ -547,8 +573,8 @@ export class Agents {
    * A refusal before the stream begins throws, as `startRun` does. The run is
    * kiff/agents' invocation's, not this reader's: stopping reading stops none of it.
    */
-  async *streamRun(tenant: string, agent: string, input: string, at: RunAt = {}, ai?: AIBound): AsyncGenerator<RunStreamEvent> {
-    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...runAt(at), ...(ai ? { ai } : {}) },
+  async *streamRun(tenant: string, agent: string, input: string, at: RunAt = {}, ai?: AIBound, notify?: Notify): AsyncGenerator<RunStreamEvent> {
+    const res = await this.send("POST", tenant, ["agents", agent, "runs"], { input, ...runAt(at), ...(ai ? { ai } : {}), ...(notify ? { notify } : {}) },
       at.requester || at.grant ? undefined : { ...AS_SERVICE }, "text/event-stream");
     if (!res.ok) throw await failure(res);
     if (!res.body) throw new AgentsError(502, "kiff/agents answered with no stream");
@@ -586,6 +612,36 @@ export class Agents {
    */
   steerRun(tenant: string, agent: string, run: string, text: string, requester?: Requester): Promise<Run> {
     return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}) }, requester ? undefined : { ...AS_SERVICE });
+  }
+
+  /**
+   * Answers a card the run waits on, as data (kiff/agents' cards wait for their answer):
+   * checked against the card there, and the run goes on in the background once nothing
+   * else holds it. Only the person whose run it is answers: 404 for another's, 409 for a
+   * card that doesn't wait (answered, stopped waiting, or the run went on), 400 for an
+   * answer the card doesn't take.
+   */
+  answerCard(tenant: string, agent: string, run: string, card: string, answer: unknown, requester: Requester): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "cards", card, "answer"], { answer, requester, background: true });
+  }
+
+  /**
+   * Answers a `result` card in tafs cloud's own name (`answered_by`), never the
+   * person's: what came of handing the owner over to the taf, `{taf_id}`,
+   * `{version}` or `{failed}`. Only a result takes it, and only tafs cloud sends it;
+   * a person's answer never carries it. The run goes on in the background.
+   */
+  answerResult(tenant: string, agent: string, run: string, card: string, outcome: ResultOutcome): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "cards", card, "answer"], { answer: outcome, answered_by: ANSWERED_BY, background: true });
+  }
+
+  /**
+   * What the person who asked for the run may do now, as KIFF says, asked afresh with
+   * the run's agent key: `cards_manage` only when KIFF said it. 409 `no_requester` for
+   * a run no person asked for, 502 `kiff_unanswered` when KIFF didn't answer.
+   */
+  requesterAccess(tenant: string, agent: string, run: string): Promise<{ requester: Requester; use: boolean; cards_manage?: boolean }> {
+    return this.call("GET", tenant, ["agents", agent, "runs", run, "requester", "access"]);
   }
 
   /**
@@ -754,14 +810,17 @@ export class Agents {
 /** kiff/agents' refusal, as an error with its status and words. */
 async function failure(res: Response): Promise<AgentsError> {
   const text = await res.text().catch(() => "");
+  let code: unknown;
   let msg: unknown;
   let blocking: unknown;
-  try { ({ error: msg, blocking } = JSON.parse(text) as { error?: unknown; blocking?: unknown }); } catch { msg = undefined; }
+  try { ({ error: code, message: msg, blocking } = JSON.parse(text) as { error?: unknown; message?: unknown; blocking?: unknown }); } catch { code = undefined; }
+  // Before typed codes, `error` was the words.
+  if (typeof msg !== "string" || !msg) [msg, code] = [code, undefined];
   const runs = Array.isArray(blocking)
     ? blocking.filter((b): b is BlockingRun => typeof b?.id === "string" && typeof b?.session === "string")
       .map(({ id, session, status, trigger }) => ({ id, session, status, trigger }))
     : undefined;
-  return new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`, runs);
+  return new AgentsError(res.status, typeof msg === "string" && msg ? msg : `kiff/agents answered ${res.status}`, runs, typeof code === "string" && code ? code : undefined);
 }
 
 /**

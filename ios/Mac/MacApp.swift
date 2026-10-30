@@ -247,6 +247,7 @@ struct MacSettingsView: View {
             }
             if model.signedIn {
                 Button("Sign out of KIFF", role: .destructive) { Task { await model.signOut() } }
+                if let why = model.signOutError { Text(why).font(.system(size: 12)).foregroundColor(Theme.no) }
             }
             Divider()
             Eyebrow(text: "How it works")

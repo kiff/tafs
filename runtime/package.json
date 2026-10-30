@@ -13,8 +13,8 @@
     "@smithy/signature-v4": "5.7.4"
   },
   "devDependencies": {
-    "@aws-sdk/client-dynamodb": "3.1153.0",
-    "@aws-sdk/client-secrets-manager": "3.1153.0",
+    "@aws-sdk/client-dynamodb": "3.1156.0",
+    "@aws-sdk/client-secrets-manager": "3.1156.0",
     "@types/node": "26.6.5",
     "esbuild": "0.28.2",
     "typescript": "7.0.2",

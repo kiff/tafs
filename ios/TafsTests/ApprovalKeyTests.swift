@@ -285,6 +285,26 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertNil(Keychain.load(AppModel.approvalKeyedAccount))
     }
 
+    /// Signing out ends the session at KIFF first: when KIFF doesn't confirm, the phone stays signed
+    /// in, with its key, and says why; a session KIFF had already ended counts as ended.
+    func testSigningOutWaitsForKIFF() async {
+        let model = await signedIn(TwoKeySigner())
+        StubProtocol.responses["POST /v1/auth/device/logout"] = (503, #"{"error":"down"}"#)
+        let first = await model.signOut()
+        XCTAssertFalse(first)
+        XCTAssertEqual(model.mode, .kiff)
+        XCTAssertTrue(model.sessionHasApprovalKey)
+        XCTAssertNotNil(model.kiff.token)
+        XCTAssertTrue(model.signOutError?.hasPrefix("Not signed out at KIFF yet") == true)
+        XCTAssertEqual(sent("POST", "/v1/auth/device/logout").count, 1)
+        StubProtocol.responses["POST /v1/auth/device/logout"] = (401, #"{"error":"session ended"}"#)
+        let second = await model.signOut()
+        XCTAssertTrue(second)
+        XCTAssertNil(model.signOutError)
+        XCTAssertFalse(model.sessionHasApprovalKey)
+        XCTAssertNil(model.kiff.token)
+    }
+
     /// The key KIFF holds isn't this phone's: approving waits for a new sign-in, and says so.
     private func assertCantApprove(_ model: AppModel, _ signer: TwoKeySigner, file: StaticString = #filePath, line: UInt = #line) async throws {
         XCTAssertTrue(model.approvalKeyLost, file: file, line: line)

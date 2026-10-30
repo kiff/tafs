@@ -674,9 +674,36 @@ final class AppModel: ObservableObject {
         return true
     }
 
-    func signOut() async {
-        if mode == .kiff, let pushToken { try? await cloud.unregisterPush(deviceToken: pushToken) }
-        if mode == .kiff { try? await kiff.signOut() }
+    /// Why the last sign-out didn't happen: KIFF didn't end this session.
+    @Published var signOutError: String?
+
+    /// Signs this device out: the session ends at KIFF first, so a device shown as signed out never
+    /// holds a session KIFF still accepts. When KIFF doesn't confirm, nothing changes here and
+    /// `signOutError` says so; false then. A session KIFF already ended (401) counts as ended.
+    @discardableResult
+    func signOut() async -> Bool {
+        signOutError = nil
+        if mode == .kiff {
+            // Alerts are unregistered with the session, so before KIFF ends it; registered again
+            // at once when KIFF doesn't, so a device still signed in never goes without them.
+            if let pushToken { try? await cloud.unregisterPush(deviceToken: pushToken) }
+            do {
+                try await kiff.signOut()
+            } catch KIFFClient.KIFFError.unauthorized {
+                // KIFF had already ended it.
+            } catch {
+                signOutError = "Not signed out at KIFF yet: \(error.localizedDescription). Try again, or sign this \(ThisDevice.kind) out from another device's Devices."
+                await syncPush()
+                return false
+            }
+        }
+        forgetSession()
+        return true
+    }
+
+    /// Forgets this device's session and everything read with it, without asking KIFF: for a
+    /// session KIFF has already ended (a 401, the account deleted), and after `signOut`.
+    func forgetSession() {
         Keychain.delete(Self.tokenAccount)
         Keychain.delete(Self.tenantAccount)
         Keychain.delete(Self.keyedAccount)
@@ -1132,7 +1159,7 @@ final class AppModel: ObservableObject {
             }
             await refreshConnections()
         } catch KIFFClient.KIFFError.unauthorized {
-            await signOut()
+            forgetSession()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
         } catch is CancellationError {
             // A refresh the app itself dropped (a newer one, a view that went away): not an
@@ -2027,7 +2054,8 @@ final class AppModel: ObservableObject {
             deleteAccountError = "Your tafs and connections are erased, but KIFF didn't delete the account: \(error.localizedDescription). Try again."
             return false
         }
-        await signOut()
+        // KIFF deleted the account, and its sessions with it.
+        forgetSession()
         return true
     }
 
@@ -2351,6 +2379,12 @@ final class AppModel: ObservableObject {
         }
         await loadVersions(tafID)
         guard gen == accountGeneration else { return false }
+        // A version that brought a Card changed the taf's limits: the list is read again, so
+        // its page shows the new Card at once, not after the app is reopened.
+        if sw.draft != nil {
+            await refresh()
+            guard gen == accountGeneration else { return false }
+        }
         // Live: now Coach's held call is approved, with the Face ID just given.
         if let approving { await answer(approving, with: .approveOnce, confirmed: true) }
         return gen == accountGeneration

@@ -37,11 +37,11 @@ details go only to tafs cloud's own log.
 | `GET /v1/home` | a person | The app's list: each taf's state, colour, Card summary, doors and open trial, and the account's other agents with Cards ([tafs.md](tafs.md#the-home-list)) |
 | `GET /v1/tafs` | a person | The account's tafs the person may use or oversee, and removals not finished |
 | `POST /v1/tafs` | `cards.manage` | Start a taf: `{name, job, draft_id + claim_secret \| from_setup + draft_id \| agent_key, cron?, timezone?, budget_cents?, notes?, unscheduled?}` ([tafs.md](tafs.md#starting-a-taf)) |
-| `GET /v1/setup` | a person | The account's Coach (Setup), or `null` |
+| `GET /v1/setup` | a person | `{setup, tools}`: the account's Coach (Setup), or `null`; and Coach's tools as KIFF has them. `tools.state` is `given` (every tool connected here and each of Coach's Cards in force; a revoked Card doesn't count), `to_give`, `taken` (`taken`: the name a vendor's tool holds; one of Coach's tools at tafs cloud's earlier address is connected again instead, its entry marked `replace: true` and its line saying it replaces the earlier connection) or `unknown`. With `to_give`: `connect {body, lines[]}`, the batch for KIFF's `POST /v1/connections/batch`, and `card {body, card_title, cards[]}`, Coach's Cards' draft for `POST /v1/me/agent-drafts` with KIFF's own words for it from its preview, unchanged. The phone signs and sends each body as it is; the signed submit is the owner's one confirmation |
 | `POST /v1/setup` | `cards.manage` | Start Coach once: `{draft_id, claim_secret}` from a draft with no tools ([coach.md](coach.md#starting-coach-once-per-account)) |
 | `GET /v1/events` | a person | Halts, resumes and door events, newest first, for Activity. Who wrote to a door shows only for the tafs the person manages |
 | `GET /v1/usage/ai` | a person | The period's AI use as a share of the bound, where the tafs ask next, and whether they're asking now ([accounts.md](accounts.md#ai-use)) |
-| `POST /v1/account/delete` | `account.delete` | Erase everything tafs cloud and kiff/agents keep for the account. A step that fails stops the rest and says which ([accounts.md](accounts.md#deleting-the-account)) |
+| `POST /v1/account/delete` | `account.delete` | `{intent, signature}`: delete the account from the phone's one signed intent. KIFF accepts it first, within its 10 minutes, or nothing is deleted; planque accepts on KIFF's word. tafs cloud then erases its own, planque's, then KIFF's, and what doesn't finish now its sweep finishes. Answers `{done, failed, pending}`. Without an intent, it erases only tafs cloud's and kiff/agents' (the app's earlier way) ([accounts.md](accounts.md#deleting-the-account)) |
 | `GET /v1/halt` | a person | The whole account's halt, as KIFF and kiff/agents hold it |
 | `POST /v1/halt` | `cards.manage` | Halt every taf, in KIFF and kiff/agents at once ([approvals.md](approvals.md#halting)) |
 | `DELETE /v1/halt` | `cards.manage` | Resume kiff/agents, once KIFF says it runs again (409 until the phone resumed it in KIFF) |
@@ -85,6 +85,7 @@ See [chat.md](chat.md) for how the app uses these.
 | `POST /v1/tafs/{id}/steer` | a person | `{run, text}`: to the run at work, read at its next step. 409 when it has ended: send it as a new message |
 | `POST /v1/tafs/{id}/stop` | `cards.manage` | `{session}`: cancel the session's latest run |
 | `POST /v1/tafs/{id}/holds/{exception}/continue` | `holds.answer` | The run paused on that held call goes on now, once KIFF has answered it. `waiting` when KIFF still holds a call of the run |
+| `POST /v1/tafs/{id}/components/{component}/answer` | a person, their own card | `{answer, session?}`: the answer to a card that waits for it, as data ([chat.md](chat.md#cards-that-wait-for-an-answer)). 404 for no card of theirs by that id, 409 once it doesn't wait, 400 for an answer the card doesn't take |
 | `GET /v1/tafs/{id}/conversation` | a person | The thread: messages, components, `working`, `steering`, `capped`, Coach's lines, and the open knocks for someone who manages it ([chat.md](chat.md#the-thread-and-the-chats-list)) |
 | `GET /v1/tafs/{id}/conversation/{session}` | a person, their own chat | One chat of it |
 | `GET /v1/tafs/{id}/chats` | a person | Their chats, newest first, each named by what they asked |

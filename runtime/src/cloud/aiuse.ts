@@ -91,5 +91,7 @@ export function view(p: Plan | undefined, spent: number): AIView {
 
 /** Whether kiff/agents refused a chat for AI fair use. */
 export function refusedForAI(err: unknown): boolean {
-  return err instanceof Error && (err as { status?: number }).status === 409 && err.message.startsWith("ai_fair_use");
+  if (!(err instanceof Error) || (err as { status?: number }).status !== 409) return false;
+  const code = (err as { code?: string }).code;
+  return code !== undefined ? code === "ai_fair_use" : err.message.startsWith("ai_fair_use");
 }

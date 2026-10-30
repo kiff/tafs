@@ -198,6 +198,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("try: one task to try it with that uses the change, in the owner's words");
     expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
     expect(flat).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
+    // Option values are ids, the words go in the label: show refuses "EUR" (kiff/tafs#323).
+    expect(flat).toContain(`An option's value is a lower-case id (a-z 0-9 - _) and its label carries the words: value eur, label "EUR".`);
     // A change that can add or replace asks which (kiff/tafs#236, item 31).
     expect(flat).toContain("A change that can add or replace (dollars next to euros, or instead of them) asks which first, in a confirm, with what each does");
     // The revision is confirmed at the switch, never in the chat (finding 1 on #107).

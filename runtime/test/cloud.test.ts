@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf, upgradeDefinitions } from "../src/cloud/handler.js";
+import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions } from "../src/cloud/handler.js";
+import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
+import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, recentCalls } from "../src/cloud/improve.js";
 import { jobById } from "../src/jobs.js";
-import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -34,6 +36,12 @@ interface Account {
   acksAtOnce?: boolean;
   /** The person's answer per agent (GET /v1/me/access); by default they may use every agent there is. */
   access?: Record<string, { use: boolean; oversee: boolean; manage: boolean }>; accessStatus?: number;
+  /** The account's tool connections in KIFF's gateway. */
+  connections?: Array<{ name: string; url?: string; control?: boolean }>; gatewayStatus?: number;
+  /** The draft bodies KIFF was asked to preview. */
+  previewed?: unknown[];
+  /** Every URL KIFF was asked for, when set. */
+  asked?: string[];
 }
 
 /**
@@ -42,6 +50,7 @@ interface Account {
  */
 function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[], account: Account = { mandates: [], held: [] }, agentsOf: () => string[] = () => []) {
   return (async (url: string, init?: RequestInit) => {
+    account.asked?.push(url);
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     if (url.endsWith("/v1/me/access")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -96,6 +105,17 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
         (account.drafts ??= {})[id] = { status: "draft", agent_id: "rae" };
       }
       return new Response(JSON.stringify(t), { status: 200 });
+    }
+    if (url.endsWith("/v1/me/agent-drafts/preview")) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      const body = JSON.parse(String(init?.body)) as { cards: Array<{ id: string }> };
+      (account.previewed ??= []).push(body);
+      return new Response(JSON.stringify({ agent_id: "x", label: "Coach", card_title: "Coach's Card", cards: body.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
+    }
+    if (url === "https://mcp.kiff.dev/v1/connections") {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.gatewayStatus) return new Response(JSON.stringify({ error: "down" }), { status: account.gatewayStatus });
+      return new Response(JSON.stringify({ connections: account.connections ?? [] }), { status: 200 });
     }
     const statement = /\/v1\/me\/mandates\/([^/?]+)\/statement$/.exec(url);
     if (statement) {
@@ -155,6 +175,9 @@ function world() {
     /** The accounts whose own records tafs cloud erased; `eraseFails` makes the next erase throw. */
     erased: [] as string[], eraseFails: false,
     account: { mandates: [], held: [] } as Account,
+    /** Deletions driven by tafs cloud: those kept, those finished, and what planque and KIFF were asked (the fakes' `refuse` and `down` make the next call fail). */
+    deletions: new Map<string, Deletion>(), finishedDeletions: [] as string[],
+    peerCalls: [] as string[], peerRefuse: new Map<string, PeerError>(), now: new Date("2026-10-29T10:00:00Z"),
   };
   for (const [tenant, id, name] of [["t_acme", RAE, "Rae"], ["t_other", MAX, "Max"]] as const) {
     const taf: Taf = { id, name, job: "refunds", kiffAgent: name.toLowerCase(), nameClaim: `claim-${id}`, created: "2026-10-15T09:00:00Z" };
@@ -169,11 +192,11 @@ function world() {
 }
 type World = ReturnType<typeof world>;
 
-async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown } = {}) {
+async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; headers?: Record<string, string> } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
     requestContext: { http: { method } },
-    headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : {},
+    headers: { ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}), ...opts.headers },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   };
   const r = await handle(event, depsOf(w));
@@ -195,6 +218,18 @@ function depsOf(w: World): Deps {
       add: async (_tenant, e, now) => { w.events.unshift({ at: (now ?? new Date()).toISOString(), ...e }); },
       list: async () => w.events,
     },
+    now: () => w.now,
+    deletions: {
+      get: async (tenant) => w.deletions.get(tenant),
+      put: async (d) => { w.deletions.set(d.tenant, structuredClone(d)); },
+      pending: async () => [...w.deletions.values()].map((d) => structuredClone(d)),
+      finished: async (tenant, _at, outcome) => { w.deletions.delete(tenant); w.finishedDeletions.push(outcome === "deleted" ? tenant : `${tenant} dropped`); },
+    },
+    deletionPeers: Object.fromEntries((["planque", "kiff"] as const).map((name) => [name, {
+      accept: async (_i: string, _s: string, bearer?: string) => { w.peerCalls.push(`${name} accept${bearer ? ` as ${bearer}` : ""}`); const e = w.peerRefuse.get(`${name} accept`); if (e) { w.peerRefuse.delete(`${name} accept`); throw e; } },
+      finish: async () => { w.peerCalls.push(`${name} finish`); const e = w.peerRefuse.get(`${name} finish`); if (e) { w.peerRefuse.delete(`${name} finish`); throw e; } },
+      accepted: async () => { w.peerCalls.push(`${name} accepted?`); const e = w.peerRefuse.get(`${name} accepted?`); if (e) { w.peerRefuse.delete(`${name} accepted?`); if (e.code === "not_accepted") return false; throw e; } return true; },
+    }])) as Deps["deletionPeers"],
     accountData: {
       erase: async (tenant) => {
         if (w.eraseFails) { w.eraseFails = false; throw new Error("timeout"); }
@@ -728,7 +763,7 @@ describe("Setup (kiff/agents#91)", () => {
 
   it("starts once from the phone's no-tools draft: its key claimed here, its definition, no schedule", async () => {
     const w = world();
-    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null });
+    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null, tools: null });
     const r = await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
     expect(r.status).toBe(200);
     expect(r.body.setup).toMatchObject({ id: NEW, name: "Setup", job: "setup", kiff_agent: "setup-acme" });
@@ -741,6 +776,66 @@ describe("Setup (kiff/agents#91)", () => {
     // It's not listed with the tafs, and its chat uses the taf routes by its id.
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
     expect((await call(w, "GET", `/v1/tafs/${NEW}/conversation`, { token: "ana" })).status).toBe(200);
+  });
+
+  it("says what giving Coach its tools still needs, from KIFF", async () => {
+    const w = world();
+    await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
+    const mcp = "https://tafs.test/v1/mcp";
+    const tools = async () => (await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test" } })).body.tools;
+    // Nothing connected and no Card: the whole batch, in the owner's words, for the phone to sign as it is.
+    const coachCards = (active: boolean) => COACH_CARDS.map((c) => ({ id: c.id, subject: "setup-acme", active }) as Mandate);
+    const first = await tools();
+    expect(first.state).toBe("to_give");
+    // Coach's Cards to sign and submit as they are, worded by KIFF's preview, passed through unchanged.
+    expect(first.card.body).toMatchObject({ agent_id: "setup-acme", label: "Coach" });
+    expect(first.card.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+    expect(first.card.body.cards[1]).toEqual({ id: "coach-taf-task", subject: "setup-acme", domain: "gateway", on_exceed: "owner", hold_expiry: "10m", grants: [{ action: "taf_task" }], aggregates: [{ quantity: "count", limit: 50, window: "calendar_day" }] });
+    expect(first.card.body.cards[0]).not.toHaveProperty("hold_expiry");
+    expect(first.card.card_title).toBe("Coach's Card");
+    expect(first.card.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
+    expect(w.account.previewed).toEqual([first.card.body]);
+    expect(first.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
+    expect(first.connect.body.connections[0]).toEqual({ name: "tafs_state", url: mcp, tool: "tafs_state", mode: "verify", audience: mcp, control: true, idempotency_argument: "tafs_op", read_only: true });
+    expect(first.connect.body.connections[2]).not.toHaveProperty("read_only");
+    expect(first.connect.lines).toEqual(TOOLS.map((t) => t.line));
+    expect(first.connect.lines[0]).toBe("See your tafs, their versions and their runs");
+    // Connected, Cards still to issue: no batch left, only the Cards.
+    w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
+    const cardsOnly = await tools();
+    expect(cardsOnly.connect).toBeUndefined();
+    expect(cardsOnly.card.body.label).toBe("Coach");
+    // A revoked Card is still listed by KIFF, not in force: the Cards are asked for again.
+    w.account.mandates = coachCards(true).map((m, i) => (i === 2 ? { ...m, active: false } : m));
+    expect((await tools()).card.body.label).toBe("Coach");
+    // Both: given, the same for every phone of the account, from one read of the Cards.
+    w.account.mandates = coachCards(true);
+    w.account.asked = [];
+    expect(await tools()).toEqual({ state: "given" });
+    expect(w.account.asked.filter((u) => u.endsWith("/v1/me/mandates"))).toHaveLength(1);
+    expect(w.account.asked.filter((u) => u.includes("/statement"))).toEqual([]);
+    w.account.asked = undefined;
+    // Coach's tools connected at tafs cloud's earlier address: connected again here, each replacing
+    // the earlier one, and each one's line says so before the owner signs.
+    const old = "https://old.tafs.test/v1/mcp";
+    w.account.connections = TOOLS.map((t) => ({ name: t.name, url: t.name === "taf_run" ? mcp : old, control: true }));
+    const moved = await tools();
+    expect(moved.state).toBe("to_give");
+    const sent = moved.connect.body.connections as Array<{ name: string; url: string; replace?: boolean }>;
+    expect(sent.map((c) => c.name)).toEqual(TOOLS.filter((t) => t.name !== "taf_run").map((t) => t.name));
+    expect(sent.every((c) => c.url === mcp && c.replace === true)).toBe(true);
+    sent.forEach((c, i) => expect(moved.connect.lines[i]).toBe(`${TOOLS.find((t) => t.name === c.name)!.line} · ${REPLACES_LINE}`));
+    // A batch with nothing to replace marks none, and no line says it replaces.
+    expect(first.connect.body.connections.some((c: { replace?: boolean }) => c.replace)).toBe(false);
+    expect(first.connect.lines.some((l: string) => l.includes(REPLACES_LINE))).toBe(false);
+    // One of Coach's names held by a vendor's tool (not the control server) stops it before any Card.
+    w.account.connections = [{ name: "taf_task", url: "https://vendor.test/mcp", control: false }];
+    expect(await tools()).toEqual({ state: "taken", taken: "taf_task" });
+    // KIFF's gateway down: unknown, and Setup still answers.
+    w.account.gatewayStatus = 503;
+    const r = await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test" } });
+    expect(r.status).toBe(200);
+    expect(r.body.tools).toEqual({ state: "unknown" });
   });
 
   it("starts once, needs the right to manage Cards and a draft, and never takes a taf's name", async () => {
@@ -759,7 +854,7 @@ describe("Setup (kiff/agents#91)", () => {
     const r = await call(w, "POST", "/v1/setup", { token: "ana", body: { draft_id: "drf_other", claim_secret: "dcs_o" } });
     expect(r.status).toBe(400);
     expect(w.tafs.held.size).toBe(2);
-    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null });
+    expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body).toEqual({ setup: null, tools: null });
   });
 });
 
@@ -1638,6 +1733,136 @@ describe("halting", () => {
   });
 });
 
+describe("deleting the account from one signed intent", () => {
+  const NOW = new Date("2026-10-29T10:00:00Z");
+  const intent = (o: { tenant?: string; issued?: string; expires?: string; nonce?: string } = {}) => [
+    "tafs.delete-account.v2", `tenant=${o.tenant ?? "t_acme"}`, "device=dev_1",
+    `issued=${o.issued ?? "2026-10-29T09:59:00Z"}`, `expires=${o.expires ?? "2026-10-29T10:09:00Z"}`, `nonce=${o.nonce ?? "0123456789abcdef0123456789abcdef"}`,
+  ].join("\n");
+  const send = (w: World, body: object, token = "owner") => call(w, "POST", "/v1/account/delete", { token, body });
+
+  it("is accepted by KIFF first, then finished in order: tafs cloud's own, planque, KIFF last", async () => {
+    const w = world();
+    const r = await send(w, { intent: intent(), signature: "c2ln" });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ done: ["tafs", "planque", "kiff"], failed: [], pending: false });
+    expect(w.peerCalls).toEqual(["kiff accept as owner", "planque accept", "planque finish", "kiff finish"]);
+    // Halted at KIFF's accept, before anything is erased: nothing of the account runs from then.
+    expect(w.agents.calls).toEqual(["halt all", `deleteAgent ${RAE}`, "eraseTenant"]);
+    expect(w.erased).toEqual(["t_acme"]);
+    // Finished: its intent and signature aren't kept.
+    expect(w.deletions.has("t_acme")).toBe(false);
+    expect(w.finishedDeletions).toEqual(["t_acme"]);
+    expect(w.tafs.held.has(`t_other#${MAX}`)).toBe(true);
+  });
+
+  it("refuses, before asking planque or KIFF anything, an intent that's expired, malformed, too long-lived, for another account, or from someone who can't delete", async () => {
+    const w = world();
+    const refused: Array<[object, number, string?]> = [
+      [{ intent: intent({ expires: "2026-10-29T09:59:30Z" }), signature: "c2ln" }, 409],
+      [{ intent: intent({ expires: "2026-10-29T10:30:00Z" }), signature: "c2ln" }, 400],
+      [{ intent: intent({ issued: "2026-10-29T10:05:00Z", expires: "2026-10-29T10:10:00Z" }), signature: "c2ln" }, 400],
+      [{ intent: intent({ tenant: "t_other" }), signature: "c2ln" }, 403],
+      [{ intent: intent({ nonce: "short" }), signature: "c2ln" }, 400],
+      [{ intent: intent().replace("tafs.delete-account.v2", "tafs.delete-account.v1"), signature: "c2ln" }, 400],
+      [{ intent: intent() }, 400],
+      [{ intent: intent(), signature: "c2ln" }, 403, "ana"],
+    ];
+    for (const [body, status, token] of refused) expect([body, (await send(w, body, token)).status]).toEqual([body, status]);
+    expect(w.peerCalls).toEqual([]);
+    expect(w.erased).toEqual([]);
+    expect(w.agents.calls).toEqual([]);
+  });
+
+  it("deletes nothing when KIFF refuses to accept (a reused nonce, another account's device, a bad signature)", async () => {
+    for (const peer of ["kiff"]) {
+      const w = world();
+      w.peerRefuse.set(`${peer} accept`, new PeerError(409, "this intent's nonce was used"));
+      const r = await send(w, { intent: intent(), signature: "c2ln" });
+      expect(r.status).toBe(409);
+      expect(r.body.error).toContain("Nothing was deleted");
+      expect(w.erased).toEqual([]);
+      expect(w.agents.calls).toEqual([]);
+      expect(w.deletions.size).toBe(0);
+      // A refusal leaves the account usable.
+      expect((await call(w, "GET", "/v1/home", { token: "owner" })).status).not.toBe(410);
+    }
+  });
+
+  it("keeps an accepted deletion when a step fails, and the sweep finishes it later with no session or new signature", async () => {
+    const w = world();
+    w.peerRefuse.set("planque finish", new PeerError(502, "planque is down"));
+    const r = await send(w, { intent: intent(), signature: "c2ln" });
+    expect(r.body).toEqual({ done: ["tafs"], failed: [{ step: "planque", why: "planque is down" }, { step: "kiff", why: "not done yet" }], pending: true });
+    // KIFF is never finished before planque.
+    expect(w.peerCalls).toEqual(["kiff accept as owner", "planque accept", "planque finish"]);
+    expect(w.deletions.get("t_acme")).toMatchObject({ done: ["tafs"], tries: 1, intent: intent(), signature: "c2ln" });
+
+    // The phone is gone. Before its backoff the sweep leaves it; after, it finishes it.
+    w.now = new Date(NOW.getTime() + 60_000);
+    expect(await sweepDeletions(depsOf(w))).toEqual([]);
+    w.now = new Date(NOW.getTime() + 6 * 60_000);
+    expect(await sweepDeletions(depsOf(w))).toEqual([{ tenant: "t_acme", done: ["tafs", "planque", "kiff"], pending: false }]);
+    expect(w.peerCalls.slice(3)).toEqual(["planque accept", "planque finish", "kiff finish"]);
+    expect(w.deletions.size).toBe(0);
+    // tafs cloud's own erase ran once: done steps aren't done again.
+    expect(w.erased).toEqual(["t_acme"]);
+  });
+
+  it("goes on with the deletion already accepted when the phone asks again, never accepting a second", async () => {
+    const w = world();
+    w.peerRefuse.set("kiff finish", new PeerError(503, "KIFF is busy"));
+    await send(w, { intent: intent(), signature: "c2ln" });
+    const again = await send(w, { intent: intent({ nonce: "fedcba9876543210fedcba9876543210" }), signature: "b3RoZXI=" });
+    expect(again.body).toEqual({ done: ["tafs", "planque", "kiff"], failed: [], pending: false });
+    expect(w.peerCalls.filter((c) => c.startsWith("kiff accept"))).toEqual(["kiff accept as owner"]);
+  });
+
+  it("from acceptance on, the account can't be used: no session's route, no door's run, nothing scheduled", async () => {
+    const w = world();
+    w.peerRefuse.set("planque finish", new PeerError(502, "planque is down"));
+    await send(w, { intent: intent(), signature: "c2ln" });
+    // Between accept and finish: a session is refused everywhere but the deletion.
+    for (const [method, path] of [["GET", "/v1/home"], ["POST", `/v1/tafs/${RAE}/messages`], ["GET", `/v1/tafs/${RAE}/conversation`]] as const) {
+      expect([path, (await call(w, method, path, { token: "owner", body: { text: "hi" } })).status]).toEqual([path, 410]);
+    }
+    // kiff/agents was halted at KIFF's accept, so no scheduled run starts (its schedules hold while halted).
+    expect(w.agents.halts.get("t_acme|")?.on).toBe(true);
+    // The deletion itself still goes on.
+    expect((await send(w, { intent: intent(), signature: "c2ln" })).status).toBe(200);
+  });
+
+  it("when KIFF's answer to accept is lost, the sweep asks KIFF and finishes, or drops one KIFF never took", async () => {
+    for (const took of [true, false]) {
+      const w = world();
+      w.peerRefuse.set("kiff accept", new PeerError(502, "timeout"));
+      const r = await send(w, { intent: intent(), signature: "c2ln" });
+      expect(r.status).toBe(200);
+      expect(r.body.pending).toBe(true);
+      expect(w.deletions.get("t_acme")?.accepting).toBe(true);
+      expect(w.erased).toEqual([]);
+      if (!took) w.peerRefuse.set("kiff accepted?", new PeerError(403, "KIFF finishes only a deletion it accepted", "not_accepted"));
+      w.now = new Date(NOW.getTime() + 60_000);
+      await sweepDeletions(depsOf(w));
+      expect(w.peerCalls).toContain("kiff accepted?");
+      if (took) {
+        expect(w.erased).toEqual(["t_acme"]);
+        expect(w.peerCalls.slice(-2)).toEqual(["planque finish", "kiff finish"]);
+      } else {
+        expect(w.erased).toEqual([]);
+        expect(w.peerCalls).not.toContain("kiff finish");
+      }
+      expect(w.deletions.size).toBe(0);
+    }
+  });
+
+  it("leaves the earlier way, with no intent, as it was", async () => {
+    const w = world();
+    expect((await call(w, "POST", "/v1/account/delete", { token: "owner" })).body).toEqual({ done: true, removed: 1 });
+    expect(w.peerCalls).toEqual([]);
+  });
+});
+
 describe("deleting the account (kiff/tafs#185)", () => {
   it("takes the right to delete the account, and erases nothing without it", async () => {
     const w = world();
@@ -1686,5 +1911,158 @@ describe("deleting the account (kiff/tafs#185)", () => {
     expect(r.body).toEqual({ done: false, failed: "tafs", taf: RAE, steps: ["schedule", "history", "memory"] });
     expect(w.agents.calls).not.toContain("eraseTenant");
     expect(w.erased).toEqual([]);
+  });
+});
+
+describe("Coach's result, handed over by tafs cloud", () => {
+  const COACH = "taf-c0ac4000000000000000";
+  const RESULT = { type: "result", id: "done", text: "Refunds is ready.", taf: { agent: "refunds-x", name: "Refunds", job: "refunds", draft: "drf_s1" } };
+
+  /** A world with the account's Coach, its run paused on a result Ana's chat showed, and the deps that hand it over. */
+  async function paused(card: Record<string, unknown> = RESULT, requester: { kind: string; id: string } | undefined = { kind: "member", id: "u_ana" }) {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds");
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, {
+      status: "PAUSED", ...(requester ? { requester } : {}),
+      requirements: [{ call_id: "s1", tool: "show", input: card, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }],
+    });
+    w.agents.calls.length = 0;
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now), publicURL: "https://cloud.test" };
+    const note = (cards: Array<{ id: string; type: string }> = [{ id: String(card.id), type: String(card.type) }]) => handle({
+      rawPath: "/v1/runs/ended", requestContext: { http: { method: "POST" } }, headers: {},
+      body: JSON.stringify({ run: run.id, agent: COACH, status: "PAUSED", ref: `${Buffer.from("t_acme").toString("base64url")}.abcdefghijklmnopqrstuvwx`, cards }),
+    }, deps);
+    const answer = () => w.agents.runs.find((r) => r.id === run.id)!.requirements![0]!.result as { answer?: unknown; answered_by?: string } | undefined;
+    return { w, run: run.id, note, answer, deps };
+  }
+
+  it("makes the taf for the person whose run it is, once, and answers in its own name", async () => {
+    const { w, run, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Refunds", kiffAgent: "refunds-x" });
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(w.agents.calls).toContain(`requesterAccess ${COACH} ${run}`);
+    // A repeat note, or one from a second phone, makes nothing more.
+    w.agents.calls.length = 0;
+    await note();
+    expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft") || c.startsWith("answerResult"))).toEqual([]);
+  });
+
+  it("claims only a draft KIFF says is confirmed: one waiting is answered so, and nothing is made", async () => {
+    const { w, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    await note();
+    expect(answer()).toEqual({ answer: { failed: "waiting for your confirmation" }, answered_by: "tafs cloud" });
+    expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+  });
+
+  it("acts only while KIFF says the person may manage Cards now, and never on old rights", async () => {
+    for (const [said, why] of [[{ cards_manage: false }, "your role on this KIFF account can't manage Cards now"], [{}, "KIFF didn't say whether you may manage Cards now; try again"]] as const) {
+      const { w, note, answer } = await paused();
+      w.agents.access.set("u_ana", said);
+      await note();
+      expect(answer()).toEqual({ answer: { failed: why }, answered_by: "tafs cloud" });
+      expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
+    }
+  });
+
+  it("answers a taf an installed app already made from the same draft as done, never failed", async () => {
+    const { w, note, answer } = await paused();
+    w.tafs.held.set(`t_acme#${NEW2}`, { id: NEW2, name: "Refunds", job: "refunds", kiffAgent: "refunds-x", nameClaim: "x", created: "2026-10-29T09:00:00Z" });
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW2 }, answered_by: "tafs cloud" });
+    expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft") || c.startsWith("requesterAccess"))).toBe(false);
+  });
+
+  it("never tells Coach of a server error: the card stays open, and the sweep makes it once", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("claimTafDraft", new Error("timed out"));
+    await note();
+    expect(answer()).toBeUndefined();
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: false }]);
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerResult"))).toHaveLength(1);
+    // Done: nothing is left for the next sweep.
+    expect(await sweepHandOvers(deps)).toEqual([]);
+  });
+
+  it("a failed answer once the taf is made is kept: the sweep answers it, and there's still one taf", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("answerResult", new AgentsError(502, "bad gateway"));
+    await note();
+    expect(answer()).toBeUndefined();
+    expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: false }]);
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+    expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft"))).toHaveLength(1);
+    expect(await sweepHandOvers(deps)).toEqual([]);
+  });
+
+  it("KIFF not answering is a blip: not told, and tried again on the sweep's backoff", async () => {
+    const { w, note, answer, deps } = await paused();
+    await note();
+    expect(answer()).toBeUndefined();
+    expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
+    // Still silent: kept, its tries counted; then KIFF answers, past the backoff.
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: true }]);
+    expect(await sweepHandOvers(deps)).toEqual([]);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.now = new Date(w.now.getTime() + 60 * 60_000);
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: false }]);
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+  });
+
+  it("does nothing for a note that names no result, a run that isn't Coach's, or a result no longer waiting", async () => {
+    const { w, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note([{ id: "which", type: "confirm" }]);
+    expect(answer()).toBeUndefined();
+    w.agents.runs.forEach((r) => { if (r.agent === COACH) r.requirements![0]!.answered = "2026-10-29T10:00:00Z"; });
+    await note();
+    expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft") || c.startsWith("answerResult"))).toBe(false);
+  });
+
+  it("a result a lost note left waiting is handed over when the person next reads Coach's chat", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    w.agents.show(stored, RESULT);
+    Object.assign(stored, { status: "PAUSED", requirements: [{ call_id: "s1", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }] });
+    const r = await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...depsOf(w), coach: memoryCoach(() => w.now) });
+    expect(r.statusCode).toBe(200);
+    expect(stored.requirements![0]!.result).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // The next read shows what came of it on the card, and who answered: the app only draws it.
+    const again = JSON.parse((await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...depsOf(w), coach: memoryCoach(() => w.now) })).body) as { components: Array<{ component: { id: string }; answer?: unknown }> };
+    expect(again.components.find((c) => c.component.id === "done")?.answer).toMatchObject({ state: "answered", words: "Refunds is set up", by: "tafs cloud", outcome: { taf_id: NEW } });
+  });
+
+  it("refuses answered_by from a person's own answer", async () => {
+    const w = world();
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: { taf_id: "x" }, answered_by: "tafs cloud" } });
+    expect(r.status).toBe(400);
+    expect(r.body.error).toContain("answered_by is tafs cloud's alone");
+  });
+});
+
+describe("a trial's end", () => {
+  const taf: Taf = { id: RAE, name: "Rae", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
+  const t = { id: "tr1", n: 2, draft: "drf_2", started: "2026-10-20T09:00:00Z", used: "2026-10-21T09:00:00Z" };
+  it("is kiff/agents' own when it says it, and the week it kept before when it doesn't", () => {
+    expect(trialView({ ...t, idle_days: 3, ends: "2026-10-24T09:00:00.000Z" }, taf, undefined)).toMatchObject({ idle_days: 3, ends: "2026-10-24T09:00:00.000Z" });
+    expect(trialView(t, taf, undefined)).toMatchObject({ idle_days: 7, ends: "2026-10-28T09:00:00.000Z" });
   });
 });

@@ -28,6 +28,11 @@
 #                              Developer portal; a person puts it there.
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update both functions' code, nothing else.
+#   tafs-android-release       the role the Android release job assumes, only from
+#                              the android-release environment: read the upload key
+#                              (its secret id in UPLOAD_KEY_SECRET_ID).
+#   FCM_SECRET_ID              the secret holding the Firebase service account key for
+#                              Android alerts; a person puts it there.
 #
 # Everything is named tafs-* and touches nothing of KIFF's own. The functions run in
 # eu-west-1 since 26 Oct 2026, with their data (the table and the push key), which
@@ -144,6 +149,25 @@ if [ -n "$DOORS_SECRET_ID" ]; then
   DOORS_READ=",
     {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$DOORS_SECRET_ARN\"]}"
 fi
+# Alerts to Android phones through FCM, off unless a deployment sets them up:
+# the Firebase project and the secret holding its service account key, kept
+# from tafs-cloud on a rerun like the doors' settings.
+FCM_ENV=""
+for v in FCM_PROJECT_ID FCM_SECRET_ID; do
+  if [ -z "${!v:-}" ]; then
+    kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
+    [ "$kept" = None ] && kept=""
+    printf -v "$v" '%s' "$kept"
+  fi
+  [ -n "${!v}" ] && FCM_ENV="$FCM_ENV,$v=${!v}"
+done
+# tafs cloud may read that one secret, nothing more.
+FCM_READ=""
+if [ -n "$FCM_SECRET_ID" ]; then
+  FCM_SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$FCM_SECRET_ID" --query ARN --output text)
+  FCM_READ=",
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$FCM_SECRET_ARN\"]}"
+fi
 aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-access --policy-document "{
   \"Version\": \"2012-10-17\",
   \"Statement\": [
@@ -154,7 +178,7 @@ aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-acce
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$AGENTS_FN_ARN\",
      \"Condition\": {\"Bool\": {\"lambda:InvokedViaFunctionUrl\": \"true\"}}},
     {\"Effect\": \"Allow\", \"Action\": [\"secretsmanager:CreateSecret\", \"secretsmanager:PutSecretValue\", \"secretsmanager:DeleteSecret\", \"secretsmanager:DescribeSecret\"],
-     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}$DOORS_READ
+     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}$DOORS_READ$FCM_READ
   ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)
@@ -162,7 +186,7 @@ LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn -
 # The function.
 AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
 AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
-ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV}"
+ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \
@@ -262,6 +286,53 @@ aws iam put-role-policy --role-name "$DEPLOY_ROLE" --policy-name deploy-tafs-clo
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$FN_ARN\"}
   ]
 }"
+
+# The Android release role: the release job in android.yml signs the app bundle
+# with the upload key, and may read that key and nothing else. It is trusted only
+# from the android-release GitHub environment, whose required reviewer approves
+# each release run before it starts; the environment admits only main and
+# android-app. The key and the environment are made by hand.
+RELEASE_ROLE=tafs-android-release
+UPLOAD_KEY_SECRET_ID=${UPLOAD_KEY_SECRET_ID:?set UPLOAD_KEY_SECRET_ID to the secret id of the upload key}
+UPLOAD_KEY_ARN=$(aws secretsmanager describe-secret --secret-id "$UPLOAD_KEY_SECRET_ID" --query ARN --output text)
+RELEASE_TRUST="{
+  \"Version\": \"2012-10-17\",
+  \"Statement\": [{
+    \"Effect\": \"Allow\",
+    \"Principal\": {\"Federated\": \"$OIDC_ARN\"},
+    \"Action\": \"sts:AssumeRoleWithWebIdentity\",
+    \"Condition\": {
+      \"StringEquals\": {
+        \"token.actions.githubusercontent.com:aud\": \"sts.amazonaws.com\",
+        \"token.actions.githubusercontent.com:sub\": \"$REPO_SUB:environment:android-release\"
+      }
+    }
+  }]
+}"
+if ! aws iam get-role --role-name "$RELEASE_ROLE" >/dev/null 2>&1; then
+  aws iam create-role --role-name "$RELEASE_ROLE" --assume-role-policy-document "$RELEASE_TRUST" >/dev/null
+  echo "created role $RELEASE_ROLE"
+else
+  aws iam update-assume-role-policy --role-name "$RELEASE_ROLE" --policy-document "$RELEASE_TRUST"
+fi
+aws iam put-role-policy --role-name "$RELEASE_ROLE" --policy-name read-upload-key --policy-document "{
+  \"Version\": \"2012-10-17\",
+  \"Statement\": [
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\",
+     \"Resource\": \"$UPLOAD_KEY_ARN\"}
+  ]
+}"
+
+# The deletion sweep: every 5 minutes, EventBridge invokes tafs-cloud directly
+# with {"sweep":"deletions"}, so an accepted account deletion cut short (the
+# phone gone, planque or KIFF down) is finished without the phone. A URL
+# request can't take that shape, as for the upgrade.
+aws events put-rule --name tafs-cloud-deletions --schedule-expression "rate(5 minutes)" --state ENABLED >/dev/null
+RULE_ARN=$(aws events describe-rule --name tafs-cloud-deletions --query Arn --output text)
+aws lambda add-permission --function-name "$FN" --statement-id deletions-sweep --action lambda:InvokeFunction \
+  --principal events.amazonaws.com --source-arn "$RULE_ARN" >/dev/null 2>&1 || true
+aws events put-targets --rule tafs-cloud-deletions \
+  --targets "[{\"Id\":\"tafs-cloud\",\"Arn\":\"$FN_ARN\",\"Input\":\"{\\\"sweep\\\":\\\"deletions\\\"}\"}]" >/dev/null
 
 echo "deploy role $(aws iam get-role --role-name "$DEPLOY_ROLE" --query Role.Arn --output text)"
 echo "url $URL"

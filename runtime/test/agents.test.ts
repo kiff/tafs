@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { Agents, AgentsError } from "../src/cloud/agents.js";
 
@@ -110,6 +111,17 @@ describe("kiff/agents client", () => {
     expect(sent.slice(1).map((s) => `${s.method} ${s.url.pathname} ${s.url.searchParams.get("owner")}`)).toEqual([
       "POST /sessions/s1/archive member:u_ana", "POST /sessions/s1/unarchive member:u_ana",
     ]);
+  });
+
+  it("sends a card's answer as the shared fixture's body says, to the card's own path", async () => {
+    // The same file is kiff/agents' server/testdata/card-answers.json, which posts these bodies.
+    const fixture = JSON.parse(readFileSync(new URL("./fixtures/card-answers.json", import.meta.url), "utf8")) as
+      { cases: Array<{ card: { id: string }; body: { answer: unknown; requester: { kind: "member"; id: string } } }> };
+    for (const c of fixture.cases) {
+      const { agents, sent } = server(() => new Response(JSON.stringify({ id: "r1" }), { status: 202 }));
+      await agents.answerCard("t_acme", "taf1", "r1", c.card.id, c.body.answer, c.body.requester);
+      expect([sent[0]!.method, sent[0]!.url.pathname, JSON.parse(sent[0]!.body!)]).toEqual(["POST", `/agents/taf1/runs/r1/cards/${c.card.id}/answer`, c.body]);
+    }
   });
 
   it("names the person on a person's content, or says the service acts, never neither nor both", async () => {

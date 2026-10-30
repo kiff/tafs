@@ -14,6 +14,8 @@ import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal
  * method throw.
  */
 export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00Z")) {
+  /** What KIFF says each person may do now, for Coach's key: `{cards_manage}` or `{}` (it didn't say). */
+  const access = new Map<string, { cards_manage?: boolean }>();
   const calls: string[] = [];
   /** AI fair use (kiff/tafs#193): each period's spend by `tenant period`, and the bound each chat came with. */
   const spent = new Map<string, number>();
@@ -333,7 +335,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
      * A foreground run's stream: the run, then `streamed` (what the test says the
      * agent does), then its end. `failing("streamRun")` refuses before it begins.
      */
-    async *streamRun(tenant, agent, input, at = {}, ai) {
+    async *streamRun(tenant, agent, input, at = {}, ai, notify) {
       calls.push(`streamRun ${agent} ${at.session ?? (at.live ? "live" : "new")}`);
       failing("streamRun");
       if (!agents.has(k(tenant, agent))) throw gone();
@@ -342,6 +344,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const { session, opened } = place(tenant, agent, at);
       const r = newRun(tenant, agent, session, "owner", input, undefined, attached);
       if (at.requester) r.requester = { ...at.requester };
+      if (notify) notified.set(r.id, notify);
       yield { event: "run", data: { ...r, new_session: opened } };
       for (const e of streamed) {
         if (e instanceof Error) throw e;
@@ -460,6 +463,56 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       r.steering = [...(r.steering ?? []), { text, at: now().toISOString() }];
       return r;
     },
+    /**
+     * A card's answer, as kiff/agents takes it: only the person whose run it is (else 404),
+     * only a card of the paused run that still waits (else 409), a confirm's answer one of
+     * its options (else 400). Recorded as an `answered` event, and the run goes on.
+     */
+    async answerCard(tenant, agent, id, card, answer, requester) {
+      calls.push(`answerCard ${agent} ${id} ${card} ${JSON.stringify(answer)}`);
+      failing("answerCard");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      if (!r || !r.requester || r.requester.kind !== requester.kind || r.requester.id !== requester.id) throw gone();
+      const q = r.status === "PAUSED" ? (r.requirements ?? []).find((x) => x.kind === "card" && !x.answered && (x.input as { id?: string })?.id === card) : undefined;
+      if (!q) throw new AgentsError(409, "no card of this run waits for an answer by that id");
+      const shown = q.input as { type?: string; options?: Array<{ value: string; label: string }> };
+      const option = shown.options?.find((o) => o.value === answer);
+      if (shown.type === "confirm" && !option) throw new AgentsError(400, `${JSON.stringify(answer)} isn't one of the card's options`);
+      const words = option?.label ?? (typeof answer === "string" ? answer : JSON.stringify(answer));
+      q.answered = now().toISOString();
+      q.result = { answer, words };
+      const list = events.get(r.session) ?? [];
+      list.push({ session: r.session, run: r.id, seq: list.length + 1, time: now().toISOString(), kind: "answered", body: { id: card, type: shown.type, answer, words } });
+      events.set(r.session, list);
+      r.status = "RUNNING";
+      return r;
+    },
+    /** A result answered in tafs cloud's name, as kiff/agents takes it: only a result card of the paused run that still waits (else 409). */
+    async answerResult(tenant, agent, id, card, outcome) {
+      calls.push(`answerResult ${agent} ${id} ${card} ${JSON.stringify(outcome)}`);
+      failing("answerResult");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      const q = r?.status === "PAUSED" ? (r.requirements ?? []).find((x) => x.kind === "card" && !x.answered && (x.input as { id?: string; type?: string })?.id === card && (x.input as { type?: string }).type === "result") : undefined;
+      if (!r || !q) throw new AgentsError(409, "no card of this run waits for an answer by that id", undefined, "card_not_waiting");
+      q.answered = now().toISOString();
+      q.result = { answer: outcome, answered_by: "tafs cloud" };
+      const words = "taf_id" in outcome ? "Refunds is set up" : "version" in outcome ? `Version ${outcome.version} is ready to try` : `It didn't go through: ${outcome.failed}`;
+      const list = events.get(r.session) ?? [];
+      list.push({ session: r.session, run: r.id, seq: list.length + 1, time: now().toISOString(), kind: "answered", body: { id: card, type: "result", answer: outcome, words, answered_by: "tafs cloud" } });
+      events.set(r.session, list);
+      return r;
+    },
+    /** What the run's requester may do now: `access` by subject, as KIFF would answer Coach's key; a subject missing from it is KIFF not answering. */
+    async requesterAccess(tenant, agent, id) {
+      calls.push(`requesterAccess ${agent} ${id}`);
+      failing("requesterAccess");
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      if (!r) throw gone();
+      if (r.requester?.kind !== "member") throw new AgentsError(409, "no person asked for this run", undefined, "no_requester");
+      const a = access.get(r.requester.id);
+      if (!a) throw new AgentsError(502, "KIFF didn't say what this person may do now", undefined, "kiff_unanswered");
+      return { requester: r.requester, use: true, ...a };
+    },
     async continueHeld(tenant, agent, exception) {
       calls.push(`continueHeld ${agent} ${exception}`);
       failing("continueHeld");
@@ -502,7 +555,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     events.set(run.session, list);
     s.updated = time;
   };
-  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, setupDrafts, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials };
+  /** A card the run shows and waits on for the owner's answer (kiff/agents' cards wait for their answer). */
+  const ask = (run: Run, component: { id: string; type: string } & Record<string, unknown>, at?: string) => {
+    show(run, component, at);
+    run.status = "PAUSED";
+    run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
+  };
+  return { api, calls, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

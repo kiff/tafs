@@ -28,7 +28,12 @@ Sign in with KIFF's device flow (`AppModel.startSignIn`, `finishSignIn`):
    is registered next ([approvals.md](approvals.md#how-an-answer-is-signed)).
 
 Signing out (`POST /v1/auth/device/logout`) or switching account clears everything of the
-earlier session on the phone, including files opened from a chat. Work still running for
+earlier session on the phone, including files opened from a chat. The session ends at KIFF
+first: when KIFF doesn't confirm, the phone stays signed in and says so ("Not signed out at
+KIFF yet…"), so a device shown as signed out never holds a session KIFF still accepts.
+Its alerts are unregistered just before the logout (the call needs the session) and
+registered again at once when KIFF doesn't end it, so a device still signed in keeps them. A
+session KIFF already ended (a 401, or the account deleted) is cleared on the phone at once. Work still running for
 the old session is dropped when it finishes (`accountGeneration`).
 
 **The session ends at KIFF first.** Sign out, Switch account and Sign in again ask KIFF to
@@ -165,5 +170,14 @@ behind Face ID:
 3. The app signs out.
 
 A step that fails stops the rest and says which; asking again goes on from there, since
-every step is safe to repeat. [data.md](data.md#deleting-the-account-185) lists what
+every step is safe to repeat.
+
+**From one signed intent.** The phone signs `tafs.delete-account.v2` once, with its approval
+key (the tenant, the device, when it was made, when it expires, at most 10 minutes later, and a
+nonce), and sends it to `POST /v1/account/delete` `{intent, signature}`. KIFF checks the
+signature itself and accepts the deletion first, with the person's session, deleting nothing yet;
+from KIFF's accept on, the account can't be used. planque then accepts on KIFF's word, in its
+finish step. tafs cloud then erases its own, then planque's, then KIFF's, and
+keeps the intent until all three are done: what fails is tried again every 5 minutes (backing
+off to 6 hours) with no phone. There is no undo. [data.md](data.md#deleting-the-account-185) lists what
 each step deletes.

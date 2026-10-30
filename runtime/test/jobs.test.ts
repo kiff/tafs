@@ -52,7 +52,7 @@ describe("jobs", () => {
     // T-5005 and T-5003: the look-up and the refund went in one turn, then the taf said it
     // had checked the payment. kiff/agents refuses an act beside a read now; this line
     // keeps the taf from paying a turn for it.
-    expect(jobById("refunds")!.instructions).toContain("Look up the payment and read its result before asking for a refund.");
+    expect(jobById("refunds")!.instructions.replace(/\n/g, " ")).toContain("Look up the payment before asking for a refund: read it with your payment tool (its get or list call) and read its result. That read is the look-up.");
   });
 
   it("has every taf say an AI agent wrote what it sends outside the company", () => {
@@ -66,9 +66,9 @@ describe("jobs", () => {
   it("answers the owner briefly, in their words, and acts on their own request (kiff/tafs#102)", () => {
     for (const j of JOBS) {
       const flat = systemPrompt(j).replace(/\s+/g, " ");
-      expect(flat).toContain("A request the owner makes in the chat (\"refund this payment\") is enough to act on: do it within your Card, without the checks your job runs on work you find yourself");
+      expect(flat).toContain("A request the owner makes in the chat (\"refund this payment\") is enough to act on: do it within your Card, without the decisions your job makes on work you find yourself (whether it qualifies, what to offer instead)");
       // Even then it reads what it acts on first (kiff/tafs#236, item 10).
-      expect(flat).toContain("Still read what you act on before you ask for it: that it's the one meant, and nothing already settles it (a dispute, an earlier refund, what's left on it).");
+      expect(flat).toContain("You still look up what you act on before you ask for it, as your job says (that read is the look-up, made once it's in your record): that it's the one meant, and nothing already settles it (a dispute, an earlier refund, what's left on it).");
       // The owner's request skips the job's checks, never its "Never" rules (review on #103).
       expect(flat).toContain("since the owner has decided. Your job's \"Never\" rules still hold for the owner's requests too.");
       expect(j.instructions).toMatch(/Never /);
