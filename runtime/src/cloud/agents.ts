@@ -162,6 +162,17 @@ export interface Requirement {
   result?: unknown;
 }
 
+/**
+ * One firing of a schedule, as its history keeps it (kiff/agents
+ * schedule.Fired): when it was due and came, and what came of it.
+ */
+export interface Fired {
+  due: string;
+  at: string;
+  outcome: "run" | "skipped_missed" | "skipped_busy";
+  run?: string;
+}
+
 export interface Run {
   id: string;
   agent: string;
@@ -773,6 +784,11 @@ export class Agents {
   /** The runs the schedule started, newest first. */
   async scheduleRuns(tenant: string, id: string, limit = 20): Promise<Run[]> {
     return (await this.call<{ runs: Run[] }>("GET", tenant, ["schedules", id, "runs"], undefined, { limit: String(limit), ...AS_SERVICE })).runs;
+  }
+
+  /** The schedule's firings, newest first: each one run, or skipped as missed or busy. */
+  async scheduleFirings(tenant: string, id: string, limit = 20): Promise<Fired[]> {
+    return (await this.call<{ firings: Fired[] | null }>("GET", tenant, ["schedules", id, "firings"], undefined, { limit: String(limit), ...AS_SERVICE })).firings ?? [];
   }
 
   /**

@@ -152,6 +152,11 @@ tafs cloud returns one view of a taf for both apps. The apps show it as it is.
   many of its requests need the owner. The list needs no read per taf.
 - **On the taf's page:** `GET /v1/tafs/{id}/work` gives the counts per state, the next run, and
   the recent requests, newest first, each with its `line` and its deliveries.
+- **A firing its schedule skipped** is in `skipped` on the same view: up to 5 from the last 7
+  days, newest first, each `{due, why: missed | busy, words}` ("Skipped the 09:00 run: the last
+  one was still working"). The schedule skips a firing that comes more than an hour late, or one
+  that comes while its last run is still working (kiff/agents' schedule history). It isn't a
+  failure, because nothing ran.
 - **A delivery that needs you** is a request whose work is done but whose result didn't reach
   one place after its tries. Its line says where and why. Its action is **Send again**
   (`POST /v1/tafs/{id}/requests/{request}/deliveries/{place}/send`, for someone who manages the

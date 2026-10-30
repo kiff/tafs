@@ -148,6 +148,7 @@ describe("kiff/agents client", () => {
     await agents.continueHeld("t_acme", "taf1", "x1");
     await agents.trial("t_acme", "taf1", "r1");
     await agents.scheduleRuns("t_acme", "taf1");
+    await agents.scheduleFirings("t_acme", "taf1");
     await agents.forget("t_acme", "taf1", "tone");
     for (const [i, s] of sent.entries()) {
       const body = JSON.parse(s.body ?? "{}") as { requester?: unknown };

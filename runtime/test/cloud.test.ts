@@ -263,6 +263,23 @@ describe("tafs cloud", () => {
     expect(r.body.requests).toHaveLength(1);
   });
 
+  it("shows the firings a taf's schedule skipped lately, in words, and none it ran", async () => {
+    const w = world();
+    const at = (iso: string) => ({ due: iso, at: iso });
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T09:00:00.000Z"), outcome: "skipped_busy" },
+      { ...at("2026-10-29T08:00:00.000Z"), outcome: "run", run: "r1" },
+      { ...at("2026-10-28T09:00:00.000Z"), outcome: "skipped_missed" },
+      { ...at("2026-10-01T09:00:00.000Z"), outcome: "skipped_busy" },
+    ]);
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body.skipped).toEqual([
+      { due: "2026-10-29T09:00:00.000Z", why: "busy", words: "Skipped the 09:00 run: the last one was still working" },
+      { due: "2026-10-28T09:00:00.000Z", why: "missed", words: "Skipped the Wed 09:00 run: it came too late to run" },
+    ]);
+  });
+
   it("lists only the caller's account's tafs, as the app reads them", async () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
     expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"] }]);
