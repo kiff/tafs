@@ -31,8 +31,12 @@ account admin (`AppModel.mayUseCoach`).
 
 On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
 (`CoachScreen`). It has what's below, with these differences:
-- **No taf-page offer.** Above the chat are **New conversation** and **Previous
-  conversations** (`CoachChats.kt`), but a new conversation offers no taf to improve. A
+- **A compact header,** one row: back, Coach, and a menu with **New conversation** and
+  **Previous conversations** (`CoachHeader`). Under it, the plan in tafs cloud's one line
+  (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
+  plan line folds away while the thread scrolls down and comes back on the way up, so a card
+  has the screen. The phone never counts the plan's steps.
+- **No taf-page offer.** A new conversation offers no taf to improve. A
   taf is improved from a hold's **Change the limit in Coach mode**, which opens Coach on a
   new conversation about it (`AppModel.improveInCoach`).
 - **Previous conversations** lists them newest first. A long press archives one, and
@@ -78,10 +82,10 @@ those services, and the phone signs there.
 | `result` | The hand-over: a new taf to start, or a taf's new version to try |
 
 The owner's answer to a card goes as data, one answer per card
-([chat.md](chat.md#cards-that-wait-for-an-answer)). Android answers through
+([chat.md](chat.md#cards-that-wait-for-an-answer)). Both apps answer through
 `POST /v1/tafs/{id}/components/{component}/answer`, and each card shows the answer the thread
-holds, in kiff/agents' words. The iPhone app still sends the earlier message form,
-`"[<type> <id>] <answer>"`, which tafs cloud takes as the card's answer, until it follows.
+holds, in kiff/agents' words; the iPhone app does the same. tafs cloud still takes the
+earlier message form, `"[<type> <id>] <answer>"`, from an older build.
 
 Coach's chat behaves as a taf's ([chat.md](chat.md)). What starts an answer goes to the top
 and stays there: a typed message, or the card the owner just answered. While Coach works,
@@ -113,8 +117,7 @@ then shows its plan. Then, each step behind the owner's yes:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". The app starts nothing itself
    (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
-   set up that isn't listed yet). The iPhone app still starts it itself
-   (`POST /v1/tafs` with `from_setup`) until it follows in its own pull request.
+   set up that isn't listed yet). The iPhone app does the same.
    A taf's next version is still made by the app, from an improvement's result.
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works
@@ -220,4 +223,4 @@ urgent waits there as one "While you were away" message instead of a notificatio
 A plan (`steps` component) comes with `line`, its one-line form (`withLine` in `handler.ts`):
 "Step 3 of 6 · Your rules", for the step at work or the first still to do, or "Done · 6 of 6". It's
 in the thread and on the stream alike. An app shows the plan folded to that line in Coach's header,
-and opens it to the steps.
+and opens it to the steps. Android shows the plan's title where a plan has no `line`.

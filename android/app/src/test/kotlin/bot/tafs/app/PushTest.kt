@@ -266,6 +266,23 @@ class PushTest {
     assertNull(secrets.load(AppModel.HANDOFF))
   }
 
+  @Test fun aHandOffTafsCloudDidNotTakeIsHandedOverAtLaunchWithNoNewConfirmation() = runTest {
+    reads()
+    transport.answer(alertTarget, 200, target)
+    transport.answer(register, 400, """{"error":"send the phone's push token, in hex"}""")
+    val m = model()
+    assertFalse(m.turnOnAlerts())
+    val asked = auth.asked.size
+    // tafs cloud takes it now: the next launch hands the same target over, with no fingerprint and no second target.
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    m.syncPush()
+    assertEquals(asked, auth.asked.size)
+    assertEquals(1, transport.requestsTo(alertTarget).size)
+    assertEquals("tgt_1", body(register, 1).getValue("alert_target").jsonObject.getValue("id").jsonPrimitive.content)
+    assertNull(secrets.load(AppModel.HANDOFF))
+    assertEquals("1", secrets.load(AppModel.ALERTS_ON))
+  }
+
   // MARK: Staying registered
 
   @Test fun aPhoneThatNeverTurnedAlertsOnIsNeverRegistered() = runTest {

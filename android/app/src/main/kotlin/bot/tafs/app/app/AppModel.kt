@@ -1556,13 +1556,17 @@ class AppModel(
    * whether the account's alerts are set up. Only for a phone whose owner turned alerts on.
    */
   suspend fun syncPush() {
-    if (_state.value.mode != Mode.kiff || !push.available || !alertsWanted()) return
+    // A hand-off tafs cloud didn't take is the owner's yes already given: it's handed over again here, with no new confirmation.
+    if (_state.value.mode != Mode.kiff || !push.available || !(alertsWanted() || pendingHandoff() != null)) return
     val token = pushToken ?: push.token()?.also { pushToken = it } ?: return
     val generation = accountGeneration
     val handoff = pendingHandoff()
     val status = attempt { cloud.registerPush(token, _state.value.alertSound, handoff?.target) } ?: return
     if (generation != accountGeneration) return
-    if (handoff != null) keepHandoff(null)
+    if (handoff != null) {
+      keepHandoff(null)
+      secrets.save("1", ALERTS_ON)
+    }
     applyPush(status)
   }
 
@@ -2435,6 +2439,7 @@ class AppModel(
             }
             is StreamEvent.Text -> live { it.copy(text = it.text + e.text, activity = null, thinking = "") }
             is StreamEvent.Thinking -> live { it.copy(thinking = it.thinking + e.text) }
+            is StreamEvent.State -> live { it.copy(state = bot.tafs.app.model.LiveState(e.state, e.words)) }
             is StreamEvent.Activity -> live { a ->
               // The words written so far stay, and the answer goes on below them.
               val kept = if (a.text.isNotEmpty() && !a.text.endsWith("\n\n")) a.copy(text = a.text + "\n\n") else a

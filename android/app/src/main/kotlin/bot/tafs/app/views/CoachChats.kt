@@ -59,29 +59,10 @@ class CoachChatActions(
   val giveTools: suspend () -> Boolean = { false },
 )
 
-/** Above Coach's chat: a new conversation, and the earlier ones to reopen. */
-@Composable
-fun CoachChatBar(state: AppState, actions: CoachChatActions) {
-  var listing by remember { mutableStateOf(false) }
-  Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-    Text(
-      "+ New conversation",
-      style = scaled(14, FontWeight.SemiBold, if (state.coachFresh) Theme.dim else Theme.amberText),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !state.coachFresh) { actions.newChat() }.padding(top = 12.dp),
-    )
-    Text(
-      "Previous conversations",
-      style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-      modifier = Modifier.heightIn(min = 44.dp).clickable { listing = true }.padding(top = 12.dp),
-    )
-  }
-  if (listing) PreviousConversations(state, actions) { listing = false }
-}
-
 /** Coach's earlier conversations, newest first: each reopens; one can be archived, and the archived ones put back. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PreviousConversations(state: AppState, actions: CoachChatActions, onClose: () -> Unit) {
+internal fun PreviousConversations(state: AppState, actions: CoachChatActions, onClose: () -> Unit) {
   val scope = rememberCoroutineScope()
   var archived by remember { mutableStateOf(false) }
   // The conversation waiting for the owner's yes: archiving takes it off every device's list.

@@ -130,7 +130,9 @@ through Apple push for an iPhone and Firebase Cloud Messaging for an Android pho
 2. The phone hands tafs cloud its push token and that secret (`POST /v1/push`; an Android phone says `platform: "android"` and gives Firebase's token). The
    secret checks KIFF's deliveries; the token is where they go. An account gets alerts on
    50 phones at most. A phone can also hand over the target alone (`POST /v1/alerts`), so a
-   paused run hears the answer whether or not a phone turned on alerts.
+   paused run hears the answer whether or not a phone turned on alerts. A secret tafs cloud
+   didn't take is kept on the phone and handed over again with no new confirmation: by Turn on
+   alerts, and on Android also at the next launch (`AppModel.syncPush`).
 3. KIFF posts each held call, signed. tafs cloud checks the signature against the
    account's secrets, then pushes a visible alert when a call is held, and a silent one
    when it is answered so the phone clears its alert.
