@@ -222,7 +222,7 @@ describe("the email door", () => {
     expect(r.body).toEqual({ outcome: "run" });
     const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
     const input = w.agents.events.get(run.session)![0]!.body as { text: string };
-    expect(input.text).toContain("[door email · from Ana <ana@acme.example> · your answer goes back by email to someone outside the company:");
+    expect(input.text).toContain("[door email · from Ana <ana@acme.example> · your answer goes back by email to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for");
     // The sender is outside: no error, code, tool or id goes back to them.
     expect(input.text).toContain("never an error, a code, a tool, an id or how things are connected]");
     expect(input.text).toContain("Please refund order 4471");
