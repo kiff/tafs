@@ -32,7 +32,7 @@ function world() {
 type World = ReturnType<typeof world>;
 
 /** Streams a message; the status, and the events the phone gets, parsed. */
-async function stream(w: World, path: string, opts: { token?: string; body?: unknown; method?: string; publicURL?: string } = {}) {
+async function stream(w: World, path: string, opts: { token?: string; body?: unknown; method?: string; publicURL?: string; fetch?: typeof fetch } = {}) {
   const [rawPath, rawQueryString] = path.split("?");
   const event: HTTPEvent = {
     rawPath: rawPath!,
@@ -47,7 +47,7 @@ async function stream(w: World, path: string, opts: { token?: string; body?: unk
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: kiff({ ana: ME, viewer: VIEWER, luis: { ...ME, subject: "u_luis" } }),
+    fetch: opts.fetch ?? kiff({ ana: ME, viewer: VIEWER, luis: { ...ME, subject: "u_luis" } }),
     now: () => NOW,
     ...(opts.publicURL ? { publicURL: opts.publicURL } : {}),
   });
@@ -100,11 +100,29 @@ describe("a message streamed (kiff/tafs#60)", () => {
       { tool: "planque", step: "Preparing the connection to Stripe…", call_id: "c1" },
       { tool: "planque", step: "Checking your Stripe connection…", call_id: "c2" },
       { tool: "kiff_draft", step: "Drafting the Card…", call_id: "c3" },
-      { tool: "show", call_id: "c4" },
+      { tool: "show", step: "Showing you a card…", call_id: "c4" },
     ]);
     expect(r.raw).not.toContain("grt_AbC123xyz");
     expect(r.raw).not.toContain("refunds-k3f9");
     expect(r.raw).not.toContain("mcp.stripe.com");
+  });
+
+  it("says a taf's tool through KIFF by KIFF's title for it, and nothing for one without a title, never its name", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "list_charges_ijkp", input: { limit: 5 } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "get_charge_ijkp", input: { charge: "ch_1" } } },
+    );
+    const people = kiff({ ana: ME });
+    const withCards = (async (url: string, init?: RequestInit) =>
+      String(url).endsWith("/v1/me/mandates")
+        ? new Response(JSON.stringify({ mandates: [{ id: "m1", subject: "rae", active: true, grants: [{ action: "list_charges_ijkp", title: "List your charges" }] }] }), { status: 200 })
+        : people(url, init)) as typeof fetch;
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Refund ch_1" }, fetch: withCards });
+    expect(r.events.filter((e) => e.event === "activity").map((e) => e.data)).toEqual([
+      { tool: "list_charges_ijkp", step: "List your charges…", call_id: "c1" },
+      { tool: "get_charge_ijkp", call_id: "c2" },
+    ]);
   });
 
   it("says where KIFF held a call, by KIFF's keys only (kiff/tafs#206)", async () => {

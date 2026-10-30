@@ -22,21 +22,43 @@ export function vendorName(server: unknown): string {
   return /^[a-z][a-z0-9-]{1,30}$/.test(name) ? name.charAt(0).toUpperCase() + name.slice(1) : "";
 }
 
+/**
+ * A taf's tools through KIFF, by action, with KIFF's title for each: the title the vendor
+ * gave the tool, as the taf's Cards carry it (`grants[].title`). The words a step says for
+ * the call, never its name.
+ */
+export type ToolTitles = ReadonlyMap<string, string>;
+
+/**
+ * A step's words where only its tool is known (a finished run's steps, from its usage
+ * records): the same words as while it went, without the "…". Undefined for a tool
+ * nothing names: the app says it worked, and shows no tool name.
+ */
+export function stepWords(tool: string, titles: ToolTitles = new Map()): string | undefined {
+  return new Steps(titles).call(tool, undefined)?.replace(/…$/, "");
+}
+
 /** A run's steps: it remembers which vendor each grant is with, from the requests it saw. */
 export class Steps {
   private vendors = new Map<string, string>();
   private asked = new Map<string, string>(); // call id → vendor, for a request whose grant id comes in its result
 
+  constructor(private readonly titles: ToolTitles = new Map()) {}
+
   /**
-   * The words for a call; undefined for one the phone shows itself (show), or has its
-   * own words for (a taf's own tools).
+   * The words for a call: Coach's and the agents' own tools by what they do, a tool
+   * through KIFF by KIFF's title for it. Undefined for a tool nothing names.
    */
   call(tool: string, input: unknown, callID?: string): string | undefined {
     const i = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
     const your = (vendor: string) => (vendor ? `your ${vendor}` : "your");
     switch (tool) {
       case "show":
-        return undefined;
+        return "Showing you a card…";
+      case "memory":
+        return "Going through its notes…";
+      case "workspace":
+        return "Working in its workspace…";
       case "planque": {
         const grant = typeof i.grant === "string" ? this.vendors.get(i.grant) ?? "" : "";
         switch (i.action) {
@@ -64,7 +86,10 @@ export class Steps {
       case "taf_pause": return "Pausing the taf…";
       case "version_try": return "Trying the new version…";
       case "version_install": return "Preparing the update…";
-      default: return undefined;
+      default: {
+        const title = this.titles.get(tool)?.trim();
+        return title ? `${title}…` : undefined;
+      }
     }
   }
 
