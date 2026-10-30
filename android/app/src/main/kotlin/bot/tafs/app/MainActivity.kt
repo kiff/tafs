@@ -83,6 +83,8 @@ import bot.tafs.app.views.CoachInstalls
 import bot.tafs.app.views.LocalAnswerPage
 import bot.tafs.app.views.LocalImproveInCoach
 import bot.tafs.app.views.LocalSignInAgain
+import bot.tafs.app.views.ApproveAgain
+import bot.tafs.app.views.LocalApproveAgain
 import bot.tafs.app.views.LocalReceipt
 import bot.tafs.app.views.OverviewView
 import bot.tafs.app.views.LocalCoachInstalls
@@ -190,6 +192,14 @@ fun RootView(model: AppModel) {
         LocalAnswerPage provides model::answerPage,
         LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
         LocalSignInAgain provides { rootScope.launch { model.signOutAtKiff() } },
+        // Approve again in the browser, signed in to a KIFF that can re-link the phone; else the line offers Sign in again.
+        LocalApproveAgain provides (
+          if (state.mode == Mode.kiff && !state.relinkUnavailable) {
+            ApproveAgain(state.relink, state.relinkProblem, model::startRelink, model::cancelRelink, model::nudgeSignIn)
+          } else {
+            null
+          }
+        ),
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
         LocalCoachInstalls provides remember(model) {

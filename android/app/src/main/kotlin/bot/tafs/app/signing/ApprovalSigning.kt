@@ -18,6 +18,9 @@ class ApprovalKeyRenewed(cause: Throwable? = null) : SignerException(WORDS, caus
      * so the way on is a new sign-in, which registers a new key. Said where the owner would approve, before any tap.
      */
     const val WORDS = "Your fingerprints changed, or none was recognized, so this phone can't approve until you sign in again."
+
+    /** The same, where KIFF can re-link the phone: its new key is approved in the browser, with no sign-out. */
+    const val APPROVE_AGAIN_WORDS = "Your fingerprints changed, or none was recognized, so this phone can't approve until you approve it again in your browser."
   }
 }
 
