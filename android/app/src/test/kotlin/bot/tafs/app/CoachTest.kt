@@ -131,7 +131,7 @@ class CoachTest {
     val m = model()
     m.loadCoach()
     assertTrue(m.state.value.coachChecked)
-    assertEquals("Coach couldn't be reached: later", m.state.value.chatErrors[COACH_CHAT])
+    assertEquals("Coach couldn't be reached. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.chatErrors[COACH_CHAT])
   }
 
   // MARK: Its thread
@@ -237,15 +237,12 @@ class CoachTest {
     )
   }
 
-  @Test fun theLatestAnswerToACardIsFoundByItsId() {
-    val messages = listOf(
-      ChatMessage(t0, ChatMessage.From.owner, "[confirm c1] 50", "s1"),
-      ChatMessage(t0.plusSeconds(1), ChatMessage.From.taf, "ok", "s1"),
-      ChatMessage(t0.plusSeconds(2), ChatMessage.From.owner, "[confirm c2] yes", "s1"),
-    )
-    assertEquals("50", CoachWords.answerTo("c1", messages)!!.text)
-    assertEquals("yes", CoachWords.answerTo("c2", messages)!!.text)
-    assertNull(CoachWords.answerTo("c3", messages))
+  @Test fun aCardsAnswerReadsInKiffAgentsWordsWrittenInsteadOrNone() {
+    assertEquals("Approved", CoachWords.answered(bot.tafs.app.kiff.CardAnswer(state = "answered", words = "Approved")))
+    assertEquals("Approve · it didn't go through: closed", CoachWords.answered(bot.tafs.app.kiff.CardAnswer(words = "Approve · it didn't go through: closed")))
+    assertEquals("You answered in your own words.", CoachWords.answered(bot.tafs.app.kiff.CardAnswer(state = "wrote", words = "Use live")))
+    assertEquals("It stopped waiting, with no answer.", CoachWords.answered(bot.tafs.app.kiff.CardAnswer(state = "no_answer")))
+    assertEquals("Answered.", CoachWords.answered(bot.tafs.app.kiff.CardAnswer()))
   }
 
   @Test fun anAnswerIsParsedByItsTypeAndId() {

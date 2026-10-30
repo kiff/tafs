@@ -82,7 +82,7 @@ class UsageTest {
     val m = model()
     m.refreshUsage()
     assertNull(m.state.value.usage)
-    assertEquals("Usage couldn't be read: later", m.state.value.usageError)
+    assertEquals("Usage couldn't be read. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.usageError)
   }
 
   @Test fun theCountedTasksOrAiUseMissingDoNotHideTheRest() = runTest {

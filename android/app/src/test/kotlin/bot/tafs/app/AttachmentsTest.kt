@@ -132,7 +132,7 @@ class AttachmentsTest {
     transport.answer(declare, 400, """{"error":"that type of file can't be attached"}""")
     val m = model()
     m.attach(pdf, "refunds-1")
-    assertEquals(PendingFile.State.Failed("that type of file can't be attached"), m.state.value.files("refunds-1").single().state)
+    assertEquals(PendingFile.State.Failed(bot.tafs.app.model.FilePrep.NOT_TAKEN), m.state.value.files("refunds-1").single().state)
     assertTrue(transport.requests.none { it.method == "PUT" })
   }
 
@@ -292,6 +292,6 @@ class AttachmentsTest {
     transport.answer("GET /v1/tafs/taf_1/attachments/$att2", 404, """{"error":"not found"}""")
     val m = model()
     assertNull(m.openFile(bot.tafs.app.model.AttachmentRef(att2, "pdf", "application/pdf", "receipt.pdf", 11), "refunds-1"))
-    assertEquals("receipt.pdf couldn't be opened: not found", m.state.value.fileNotices["refunds-1"])
+    assertEquals("receipt.pdf couldn't be opened. This phone and the server didn't understand each other. Nothing to do on your side; we're on it.", m.state.value.fileNotices["refunds-1"])
   }
 }

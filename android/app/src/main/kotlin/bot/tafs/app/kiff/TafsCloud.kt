@@ -217,14 +217,14 @@ class TafsCloud(
   /** Uploads a file's bytes where [attach] said: no KIFF session goes with them. */
   suspend fun upload(data: ByteArray, to: Upload) {
     val response = transport.send(HttpRequest(to.method, to.url, to.headers, data))
-    if (response.status !in 200..299) throw CloudError(response.status, "The file didn't upload. Try attaching it again.")
+    if (response.status !in 200..299) throw bot.tafs.app.model.OwnWords("The file didn't upload. Try attaching it again.")
   }
 
   /** A file the person attached, downloaded: only their own; another's is a 404. */
   suspend fun attachment(id: String, file: String): ByteArray {
     val url = get<Download>("/v1/tafs/${escaped(id)}/attachments/${escaped(file)}").url
     val response = transport.send(HttpRequest("GET", url))
-    if (response.status !in 200..299) throw CloudError(response.status, "The file couldn't be opened.")
+    if (response.status !in 200..299) throw bot.tafs.app.model.OwnWords("Nothing to do on your side; we're on it.")
     return response.body
   }
 
@@ -232,6 +232,18 @@ class TafsCloud(
    * Writes to the run at work (kiff/tafs#64): it reads the message at its next step. A run that has ended throws
    * 409, and the message goes as a new one. Returns the run's status: a paused run reads it when it carries on.
    */
+  /**
+   * The owner's answer to a card that waits for it, as data (docs/chat.md): the run that paused on it goes on with it. [session] is
+   * the chat that shows the card. 409 once the card doesn't wait any more.
+   */
+  suspend fun answerCard(id: String, component: String, answer: kotlinx.serialization.json.JsonElement, session: String? = null): CardAnswered {
+    val body = kotlinx.serialization.json.buildJsonObject {
+      put("answer", answer)
+      session?.let { put("session", it) }
+    }
+    return KiffClient.json.decodeFromString(String(sendJson("POST", "/v1/tafs/${escaped(id)}/components/${escaped(component)}/answer", body)))
+  }
+
   suspend fun steer(id: String, run: String, text: String): String =
     post<Steered>("/v1/tafs/${escaped(id)}/steer", mapOf("run" to run, "text" to text)).status
 

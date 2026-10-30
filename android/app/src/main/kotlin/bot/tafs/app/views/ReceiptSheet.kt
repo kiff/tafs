@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.ErrorWords
 import android.content.ClipData
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
@@ -90,7 +91,7 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
     } catch (e: Exception) {
-      problem = "KIFF's receipt couldn't be loaded: ${e.message}"
+      problem = "KIFF's receipt couldn't be loaded. ${ErrorWords.of(e)}"
     }
   }
   LaunchedEffect(trace) { if (state.mode == Mode.kiff) loadReceipt() }

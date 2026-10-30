@@ -77,8 +77,11 @@ those services, and the phone signs there.
 | `sign_in` | The vendor's sign-in page, for a connection the owner approved |
 | `result` | The hand-over: a new taf to start, or a taf's new version to try |
 
-The owner's answer to a card is a message, `"[<type> <id>] <answer>"`, one answer per
-card.
+The owner's answer to a card goes as data, one answer per card
+([chat.md](chat.md#cards-that-wait-for-an-answer)). Android answers through
+`POST /v1/tafs/{id}/components/{component}/answer`, and each card shows the answer the thread
+holds, in kiff/agents' words. The iPhone app still sends the earlier message form,
+`"[<type> <id>] <answer>"`, which tafs cloud takes as the card's answer, until it follows.
 
 Coach's chat behaves as a taf's ([chat.md](chat.md)). What starts an answer goes to the top
 and stays there: a typed message, or the card the owner just answered. While Coach works,

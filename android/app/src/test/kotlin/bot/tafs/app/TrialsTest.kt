@@ -129,7 +129,7 @@ class TrialsTest {
     val m = trying()
     transport.answer(trialGet, 500, """{"error":"later"}""")
     m.loadTrial("refunds-1")
-    assertEquals("The trial couldn't be read: later", m.state.value.trialErrors["refunds-1"])
+    assertEquals("The trial couldn't be read. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.trialErrors["refunds-1"])
     assertNotNull(m.state.value.openTrials["refunds-1"])
   }
 
@@ -167,7 +167,7 @@ class TrialsTest {
     transport.answer(tryDraft, 409, """{"error":"no card to try"}""")
     val m = model()
     assertNull(m.trialCard(version2, "refunds-1"))
-    assertEquals("Version 2's trial Card couldn't be read: no card to try", m.state.value.trialErrors["refunds-1"])
+    assertEquals("Version 2's trial Card couldn't be read. It changed in the meantime. What's shown now is how it is.", m.state.value.trialErrors["refunds-1"])
   }
 
   @Test fun startingATrialIsConfirmedInKiffAsATrialByTheApprovalKeyThenOpened() = runTest {
@@ -265,7 +265,7 @@ class TrialsTest {
     transport.answer(openPut, 409, """{"error":"KIFF has no trial yet"}""")
     val m = model()
     assertNull(m.startTrying(version2, "refunds-1", "v3"))
-    assertEquals("Trying version 2 didn't start: KIFF has no trial yet", m.state.value.trialErrors["refunds-1"])
+    assertEquals("Trying version 2 didn't start. It changed in the meantime. What's shown now is how it is.", m.state.value.trialErrors["refunds-1"])
     assertNull(m.state.value.openTrials["refunds-1"])
   }
 
@@ -336,7 +336,7 @@ class TrialsTest {
     transport.answer(confirm, 200, draft("confirmed"))
     transport.answer(install, 409, """{"error":"KIFF hasn't confirmed it"}""")
     assertFalse(m.installTrial("refunds-1"))
-    assertEquals("Installing version 2 didn't finish: KIFF hasn't confirmed it", m.state.value.trialErrors["refunds-1"])
+    assertEquals("Installing version 2 didn't finish. It changed in the meantime. What's shown now is how it is.", m.state.value.trialErrors["refunds-1"])
     assertNotNull(m.state.value.openTrials["refunds-1"])
   }
 
@@ -369,7 +369,7 @@ class TrialsTest {
     val m = trying()
     transport.answer(kiffEnd, 500, """{"error":"kiff is down"}""")
     assertFalse(m.goBackFromTrial("refunds-1"))
-    assertEquals("The trial didn't end: kiff is down", m.state.value.trialErrors["refunds-1"])
+    assertEquals("The trial didn't end. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.trialErrors["refunds-1"])
     assertTrue(sent(cloudEnd).isEmpty())
     assertNotNull(m.state.value.openTrials["refunds-1"])
   }

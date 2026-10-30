@@ -334,7 +334,7 @@ class PlanqueTest {
     transport.answer(approve, 409, """{"error":"this request was already approved"}""")
     val m = model()
     m.refreshConnections()
-    assertEquals(AppModel.Connected.Failed("Not connected: this request was already approved"), m.connect("a1", "g1", digest))
+    assertEquals(AppModel.Connected.Failed("Not connected. " + bot.tafs.app.model.ErrorWords.CHANGED, "Not connected: this request was already approved"), m.connect("a1", "g1", digest))
   }
 
   @Test fun aPhonePlanqueDoesNotKnowCannotApproveAndSaysWhereToStart() = runTest {
@@ -393,7 +393,7 @@ class PlanqueTest {
     transport.answer("POST /v1/me/agent-drafts/dr_1/confirm", 409, """{"error":"a Card moved on","reason":"card_revised"}""")
     val m = model()
     m.refreshConnections()
-    assertEquals(AppModel.Connected.Failed("KIFF didn't issue the taf's Cards: a Card moved on"), m.connect("a1", "g1", digest, "dr_1", "v3"))
+    assertEquals(AppModel.Connected.Failed("KIFF didn't issue the taf's Cards. " + bot.tafs.app.model.ErrorWords.CHANGED, "KIFF didn't issue the taf's Cards: a Card moved on"), m.connect("a1", "g1", digest, "dr_1", "v3"))
   }
 
   @Test fun aSecondApprovalWaitsForTheOneGoingThrough() = runTest {
@@ -425,7 +425,11 @@ class PlanqueTest {
     m.loadChat(COACH_CHAT)
   }
 
-  private fun told() = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/tafs/setup_1/messages").last().body!!)).jsonObject.getValue("text").jsonPrimitive.content
+  private val answerRoute = "POST /v1/tafs/setup_1/components/a1/answer"
+
+  /** The answer the phone gave Coach's card, as data through tafs cloud's route: never a message in the chat. */
+  private fun told(): String =
+    KiffClient.json.parseToJsonElement(String(transport.requestsTo(answerRoute).last().body!!)).jsonObject.getValue("answer").jsonPrimitive.content
 
   @Test fun readingCoachsThreadReadsWhatItsApprovalsNeed() = runTest {
     reads()
@@ -442,8 +446,10 @@ class PlanqueTest {
     transport.answer(approve, 200, """{"status":"connected"}""")
     val m = model()
     coachWithCard(m)
+    transport.answer(answerRoute, 200, """{"session":"s1","run":"r1","status":"running"}""")
     m.approveCoach(approvalComponent(), digest, null)
-    assertEquals("[approval a1] approved", told())
+    assertEquals("approved", told())
+    assertTrue(transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
   }
 
   @Test fun anApprovalThatFailedIsToldToCoachWithWhyAndOneNotConfirmedIsNotTold() = runTest {
@@ -452,13 +458,15 @@ class PlanqueTest {
     transport.answer(approve, 409, """{"error":"already approved"}""")
     val m = model()
     coachWithCard(m)
+    transport.answer(answerRoute, 200, """{"session":"s1","run":"r1","status":"running"}""")
     m.approveCoach(approvalComponent(), digest, null)
-    assertEquals("[approval a1] failed: Not connected: already approved", told())
-    assertEquals("Not connected: already approved", m.state.value.coachNotes["a1"])
+    // Coach hears the server's reason, so it can say what went wrong; the owner reads the app's words.
+    assertEquals("failed: Not connected: already approved", told())
+    assertEquals("Not connected. " + bot.tafs.app.model.ErrorWords.CHANGED, m.state.value.coachNotes["a1"])
     auth.confirms = false
-    val before = transport.requestsTo("POST /v1/tafs/setup_1/messages").size
+    val before = transport.requestsTo(answerRoute).size
     m.approveCoach(approvalComponent(), digest, null)
-    assertEquals("nothing told: the owner didn't confirm", before, transport.requestsTo("POST /v1/tafs/setup_1/messages").size)
+    assertEquals("nothing told: the owner didn't confirm", before, transport.requestsTo(answerRoute).size)
   }
 
   private fun approvalComponent() = KiffClient.json.decodeFromString<SetupComponent>(approvalCard)
@@ -478,11 +486,7 @@ class PlanqueTest {
     assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
   }
 
-  @Test fun anApprovalCardReadsAsApprovedDeclinedOrWhyItFailed() {
-    assertEquals("You approved", bot.tafs.app.model.CoachWords.approvalResult(bot.tafs.app.model.CoachAnswer("approval", "a1", "approved")))
-    assertEquals("You declined", bot.tafs.app.model.CoachWords.approvalResult(bot.tafs.app.model.CoachAnswer("approval", "a1", "declined")))
-    assertEquals("It didn't go through: nope", bot.tafs.app.model.CoachWords.approvalResult(bot.tafs.app.model.CoachAnswer("approval", "a1", "failed: nope")))
-    assertEquals("It didn't go through: nothing was approved", bot.tafs.app.model.CoachWords.approvalResult(bot.tafs.app.model.CoachAnswer("approval", "a1", "failed")))
+  @Test fun planquesOwnRefusalsSayWhatHappened() {
     assertNotNull(PlanqueError.NotSigning.message)
   }
 }

@@ -125,7 +125,7 @@ class ChatKiffTest {
     m.loadChat("refunds-1")
     transport.answer(conversation, 500, """{"error":"boom"}""")
     m.loadChat("refunds-1")
-    assertEquals("The thread couldn't be loaded: boom", m.state.value.chatErrors["refunds-1"])
+    assertEquals("The thread couldn't be loaded. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.chatErrors["refunds-1"])
     assertEquals(listOf("Hi"), m.messages().map { it.text })
   }
 
@@ -318,7 +318,7 @@ class ChatKiffTest {
     assertFalse(m.deliverChat("hello", "refunds-1"))
     assertTrue(m.messages().isEmpty())
     assertTrue(m.state.value.chatSent.isEmpty())
-    assertEquals("The message wasn't sent: boom", m.state.value.chatErrors["refunds-1"])
+    assertEquals("The message wasn't sent. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.chatErrors["refunds-1"])
     assertFalse(m.state.value.thinking("refunds-1"))
   }
 

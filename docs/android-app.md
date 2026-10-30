@@ -7,6 +7,10 @@ screen: the backends give its names, words, limits and rules. This page is a map
 code; what each feature does is on its own page ([README.md](README.md)), with a line
 where Android differs.
 
+It asks for the microphone only to dictate, at the first tap of the mic, and doesn't need
+one to install (`uses-feature android.hardware.microphone required="false"`): a phone or
+tablet without one installs tafs, and its mic says it can't dictate there.
+
 ## Building and testing
 
 ```bash
@@ -49,6 +53,17 @@ until KIFF names Google Play products for the account.
 | `voice/` | `Dictation` and `DeviceSpeech`: dictation, recognised on the phone |
 | `views/` | One file per screen or feature: `HomeView`, `TafDetailView`, `TafChatView`, `CoachViews`, `CoachChats`, `NeedsYouView`, `RecordView`, `ReceiptSheet`, `UsageViews`, `TaskRequestViews`, `SettingsView`, `PeopleViews`, `ShareViews`, `DevicesView`, `DoorViews`, `DoorDial`, `VersionViews`, `HaltViews`, `AttachViews`, `MicButton`… |
 | `design/` | `Theme` (colours, the amber accent, type), `Components`, `MarkdownText` |
+
+## When something doesn't go through
+
+The owner reads the app's own words for what happened and what, if anything, they can do
+(`ErrorWords`): offline, try again online; signed out, sign in; not allowed by their
+role; changed in the meantime; too many tries, wait a minute; down on our side, nothing to
+do but try later; anything else, nothing to do on their side. A server's error text never
+reaches the screen, and "try again" is said only where trying again can help. The app's own
+failures (signing, signing in, a file that didn't upload) keep their words (`OwnWords`).
+Coach still hears the server's reason for an approval that failed, as the card's answer,
+so it can say what went wrong and ask again.
 
 ## Signing
 

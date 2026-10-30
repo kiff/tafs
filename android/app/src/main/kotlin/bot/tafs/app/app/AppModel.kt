@@ -1,5 +1,6 @@
 package bot.tafs.app.app
 
+import bot.tafs.app.model.ErrorWords
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -247,6 +248,9 @@ data class AppState(
   /** Coach is being started on this account, and why it wasn't, when it wasn't. */
   val startingCoach: Boolean = false,
   val coachStartError: String? = null,
+  /** Coach's cards whose answer is on its way to tafs cloud, and why one wasn't taken. A card's answer is the thread's, not the phone's. */
+  val cardsAnswering: Set<String> = emptySet(),
+  val cardErrors: Map<String, String> = emptyMap(),
   /** The version each improvement result made, by its key; those being made, and those that failed (with why). */
   val improvedVersions: Map<String, Int> = emptyMap(),
   val makingVersions: Set<String> = emptySet(),
@@ -1140,7 +1144,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("KIFF didn't revoke the Card: ${e.message}")
+      if (generation == accountGeneration) fail("KIFF didn't revoke the Card. ${ErrorWords.of(e)}")
       return false
     }
     if (generation != accountGeneration) return false
@@ -1231,7 +1235,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("Not archived: ${e.message}")
+      if (generation == accountGeneration) fail("Not archived. ${ErrorWords.of(e)}")
       return false
     }
     if (generation != accountGeneration) return false
@@ -1250,7 +1254,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("Not put back: ${e.message}")
+      if (generation == accountGeneration) fail("Not put back. ${ErrorWords.of(e)}")
       return false
     }
     if (generation != accountGeneration) return false
@@ -1274,7 +1278,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("The run didn't start: ${e.message}")
+      if (generation == accountGeneration) fail("The run didn't start. ${ErrorWords.of(e)}")
       return null
     } finally {
       _state.update { it.copy(runsInFlight = it.runsInFlight - tafId) }
@@ -1298,7 +1302,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      (_state.value.reports[tafId] ?: RunReport()).copy(error = "Its runs couldn't be loaded: ${e.message}")
+      (_state.value.reports[tafId] ?: RunReport()).copy(error = "Its runs couldn't be loaded. ${ErrorWords.of(e)}")
     }
     if (generation == accountGeneration) _state.update { it.copy(reports = it.reports + (tafId to report)) }
   }
@@ -1312,7 +1316,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("tafs cloud didn't ${if (paused) "pause" else "resume"} it: ${e.message}")
+      if (generation == accountGeneration) fail("tafs cloud didn't ${if (paused) "pause" else "resume"} it. ${ErrorWords.of(e)}")
       return
     }
     if (generation != accountGeneration) return
@@ -1365,7 +1369,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return null
-      return "$cards tafs cloud didn't answer (${e.message}). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again."
+      return "$cards ${ErrorWords.of(e)} If the removal began, tafs finishes it the next time it refreshes."
     }
     if (generation != accountGeneration) return null
     if (cardsLeft == 0) _state.value.taf(tafId)?.let { update(it.copy(card = it.card.copy(revoked = true), state = TafState.revoked, now = "Removed")) }
@@ -1466,7 +1470,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "The thread couldn't be loaded: ${e.message}")) }
+      if (generation == accountGeneration) _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "The thread couldn't be loaded. ${ErrorWords.of(e)}")) }
       return
     }
     if (generation != accountGeneration || _state.value.mode != Mode.kiff) return
@@ -1617,11 +1621,11 @@ class AppModel(
               else "Your role on this KIFF account can't turn on alerts.",
             )
           } else {
-            fail("Alerts aren't on: ${e.message}")
+            fail("Alerts aren't on. " + ErrorWords.of(e))
           }
           return false
         } catch (e: Exception) {
-          fail("Alerts aren't on: ${e.message}")
+          fail("Alerts aren't on. " + ErrorWords.of(e))
           return false
         } finally {
           kiff.setupSigner = null
@@ -1638,7 +1642,7 @@ class AppModel(
         throw e
       } catch (e: Exception) {
         if (generation == accountGeneration) {
-          fail("Alerts are almost on: tafs cloud didn't answer (${e.message}). Tap Turn on alerts again.")
+          fail("Alerts aren't on for this phone yet. " + ErrorWords.of(e))
           _state.update { it.copy(alertsReady = false) }
         }
         false
@@ -1659,7 +1663,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(coachChecked = true, chatErrors = it.chatErrors + (COACH_CHAT to "Coach couldn't be reached: ${e.message}")) }
+      if (generation == accountGeneration) _state.update { it.copy(coachChecked = true, chatErrors = it.chatErrors + (COACH_CHAT to "Coach couldn't be reached. ${ErrorWords.of(e)}")) }
       return
     }
     if (generation == accountGeneration) {
@@ -1714,10 +1718,10 @@ class AppModel(
           } catch (e: CancellationException) {
             throw e
           } catch (e: KiffError.Server) {
-            startFailed(if (e.status == 403) "Only an admin of this KIFF account can connect tools." else "Connecting tools isn't set up: ${e.message}")
+            startFailed(if (e.status == 403) "Only an admin of this KIFF account can connect tools." else "Connecting tools isn't set up. ${ErrorWords.of(e)}")
             return false
           } catch (e: PlanqueError.Server) {
-            startFailed(if (e.status == 409) "Another device connects this account's tools for now. Connect them from that one." else "Connecting tools isn't set up: ${e.message}")
+            startFailed(if (e.status == 409) "Another device connects this account's tools for now. Connect them from that one." else "Connecting tools isn't set up. ${ErrorWords.of(e)}")
             return false
           }
           if (generation != accountGeneration) return false
@@ -1728,7 +1732,7 @@ class AppModel(
           val secret = draft.claimSecret
           if (generation != accountGeneration) return false
           if (secret == null) {
-            startFailed("KIFF didn't answer as expected. Try again.")
+            startFailed("Coach didn't start. " + ErrorWords.OURS)
             return false
           }
           setup = cloud.startSetup(draft.id, secret)
@@ -1739,7 +1743,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) startFailed("Couldn't start: ${e.message}")
+        if (generation == accountGeneration) startFailed("Couldn't start. ${ErrorWords.of(e)}")
         return false
       }
       if (generation != accountGeneration) return false
@@ -1781,7 +1785,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = "Couldn't read Coach's tools: ${e.message}") }
+      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = "Couldn't read Coach's tools. ${ErrorWords.of(e)}") }
       return false
     } ?: return false
     if (generation != accountGeneration) return false
@@ -1814,7 +1818,7 @@ class AppModel(
       if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { words -> _state.update { it.copy(coachToolsError = words) } }
       return false
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = "Coach's tools weren't given: ${e.message}") }
+      if (generation == accountGeneration) _state.update { it.copy(coachToolsError = "Coach's tools weren't given. ${ErrorWords.of(e)}") }
       return false
     } finally {
       kiff.setupSigner = null
@@ -1834,8 +1838,11 @@ class AppModel(
     /** Nothing was done and nothing is to be told: the owner didn't confirm, the terms changed on the screen, or another approval is going through. */
     data object Stopped : Connected
 
-    /** It didn't go through, and why. */
-    data class Failed(val why: String) : Connected
+    /**
+     * It didn't go through: [why] for the owner, in the app's words; [told] for Coach, the card's answer, which keeps the server's own
+     * reason so Coach can say what went wrong and ask again.
+     */
+    data class Failed(val why: String, val told: String = why) : Connected
   }
 
   private fun note(cardId: String, words: String?) =
@@ -1916,7 +1923,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        return Connected.Failed("Couldn't read what to approve: ${e.message}")
+        return Connected.Failed("Couldn't read what to approve. ${ErrorWords.of(e)}", "couldn't read what to approve: ${e.message}")
       }
       if (grant.connected) {
         // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a draft. One confirmation confirms them.
@@ -1938,7 +1945,7 @@ class AppModel(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          return Connected.Failed("KIFF didn't issue the taf's Cards: ${e.message}")
+          return Connected.Failed("KIFF didn't issue the taf's Cards. ${ErrorWords.of(e)}", "KIFF didn't issue the taf's Cards: ${e.message}")
         }
         return Connected.Done(grant)
       }
@@ -1986,7 +1993,7 @@ class AppModel(
         throw e
       } catch (e: Exception) {
         refreshConnections()
-        return Connected.Failed("Not connected: ${e.message}")
+        return Connected.Failed("Not connected. ${ErrorWords.of(e)}", "Not connected: ${e.message}")
       }
     } finally {
       planque.signer = null
@@ -2003,10 +2010,10 @@ class AppModel(
   suspend fun approveCoach(c: SetupComponent, shownDigest: String?, shownDraft: String?) {
     val grantId = c.grant ?: return
     when (val result = connect(c.id, grantId, shownDigest, c.draft, shownDraft)) {
-      is Connected.Done -> deliverChat(CoachAnswer.message("approval", c.id, "approved"), COACH_CHAT)
+      is Connected.Done -> answerCard("approval", c.id, "approved")
       is Connected.Failed -> {
         note(c.id, result.why)
-        deliverChat(CoachAnswer.message("approval", c.id, "failed: " + result.why), COACH_CHAT)
+        answerCard("approval", c.id, "failed: " + result.told)
       }
       Connected.Stopped -> Unit
     }
@@ -2021,10 +2028,10 @@ class AppModel(
     // The sign-in card shows no terms: it approves the grant as the app last showed it.
     note(c.id, null)
     when (val result = connect(c.id, grantId, _state.value.grants.firstOrNull { it.id == grantId }?.digest)) {
-      is Connected.Done -> deliverChat(CoachAnswer.message("sign_in", c.id, "signed in"), COACH_CHAT)
+      is Connected.Done -> answerCard("sign_in", c.id, "signed in")
       is Connected.Failed -> {
         note(c.id, result.why)
-        deliverChat(CoachAnswer.message("sign_in", c.id, "failed: " + result.why), COACH_CHAT)
+        answerCard("sign_in", c.id, "failed: " + result.told)
       }
       Connected.Stopped -> Unit
     }
@@ -2086,7 +2093,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(improveErrors = it.improveErrors + (key to "${taf.name}'s new version isn't ready: ${e.message}")) }
+      if (generation == accountGeneration) _state.update { it.copy(improveErrors = it.improveErrors + (key to "${taf.name}'s new version isn't ready. ${ErrorWords.of(e)}")) }
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(makingVersions = it.makingVersions - key) }
     }
@@ -2113,7 +2120,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      fail("Not disconnected: ${e.message}")
+      fail("Not disconnected. ${ErrorWords.of(e)}")
       return false
     } finally {
       planque.signer = null
@@ -2122,9 +2129,48 @@ class AppModel(
     return true
   }
 
-  /** The owner's answer to one of Coach's cards: a message, "[<type> <id>] <answer>", one answer per card. */
+  /** The owner's answer to one of Coach's cards. */
   fun answerCoach(type: String, id: String, answer: String) {
-    viewModelScope.launch { deliverChat(CoachAnswer.message(type, id, answer), COACH_CHAT) }
+    viewModelScope.launch { answerCard(type, id, answer) }
+  }
+
+  /**
+   * Answers one of Coach's cards as data (docs/chat.md): tafs cloud hands it to the run that waits on the card, which goes on.
+   * The card shows the answer once the thread has it, in kiff/agents' words; until then it says the answer is on its way. The
+   * run that goes on is followed like any run at work, so Coach's next words show without leaving it. A questions card's
+   * answer is its JSON. A card that no longer waits (409) is read again as it is. The sample has no Coach run: there the answer
+   * is a message, as before.
+   */
+  suspend fun answerCard(type: String, id: String, answer: String): Boolean {
+    if (_state.value.mode != Mode.kiff) return deliverChat(CoachAnswer.message(type, id, answer), COACH_CHAT)
+    val cloudId = _state.value.coachCloudId ?: return false
+    if (id in _state.value.cardsAnswering) return false
+    val value: kotlinx.serialization.json.JsonElement =
+      if (type == "questions") runCatching { KiffClient.json.parseToJsonElement(answer) }.getOrElse { kotlinx.serialization.json.JsonPrimitive(answer) }
+      else kotlinx.serialization.json.JsonPrimitive(answer)
+    _state.update { it.copy(cardsAnswering = it.cardsAnswering + id, cardErrors = it.cardErrors - id) }
+    val generation = accountGeneration
+    val answered = try {
+      cloud.answerCard(cloudId, id, value, _state.value.coachComponents.firstOrNull { it.id == id }?.session?.ifEmpty { null } ?: _state.value.coachChat)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return false
+      val gone = e is CloudError && e.status == 409
+      if (!gone) _state.update { it.copy(cardErrors = it.cardErrors + (id to "Your answer wasn't sent. ${ErrorWords.of(e)}")) }
+      readThread(COACH_CHAT)
+      _state.update { it.copy(cardsAnswering = it.cardsAnswering - id) }
+      return false
+    }
+    if (generation != accountGeneration) return false
+    answered.session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
+    // Coach is at work again: it reads as thinking until its run is followed, and the run's end reads the thread again.
+    _state.update { it.copy(chatAwaiting = it.chatAwaiting + (COACH_CHAT to clock()), chatEnded = it.chatEnded - COACH_CHAT) }
+    readThread(COACH_CHAT)
+    _state.update { it.copy(cardsAnswering = it.cardsAnswering - id) }
+    // The run paused on the card and goes on now: its stream is followed to its end, which reads the thread again.
+    answered.run?.let { resumeChat(COACH_CHAT, cloudId, it, again = true) } ?: followChat(COACH_CHAT)
+    return true
   }
 
   /**
@@ -2283,7 +2329,12 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      PendingFile.State.Failed(e.message ?: "It didn't upload.")
+      PendingFile.State.Failed(
+        // tafs cloud refused the file itself: the owner can pick another.
+        if (e is CloudError && e.status in 400..499 && e.status !in listOf(401, 403, 409, 429)) FilePrep.NOT_TAKEN
+        else if (e is bot.tafs.app.model.OwnWords) ErrorWords.of(e)
+        else "It didn't upload. " + ErrorWords.of(e),
+      )
     }
     if (generation != accountGeneration) return
     _state.update { s -> s.copy(chatFiles = s.chatFiles + (tafId to s.files(tafId).map { if (it.id == pending.id) it.copy(state = state) else it })) }
@@ -2331,7 +2382,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      refuseFile("${ref.name} couldn't be opened: ${e.message}", tafId)
+      refuseFile("${ref.name} couldn't be opened. ${ErrorWords.of(e)}", tafId)
       null
     }
   }
@@ -2387,7 +2438,8 @@ class AppModel(
             is StreamEvent.Activity -> live { a ->
               // The words written so far stay, and the answer goes on below them.
               val kept = if (a.text.isNotEmpty() && !a.text.endsWith("\n\n")) a.copy(text = a.text + "\n\n") else a
-              kept.began(e.tool, e.step ?: KiffMapping.toolWords(e.tool), e.call)
+              // Only tafs cloud's words for a step: a call it gives none for (show, whose card shows itself) has no line.
+              kept.began(e.tool, e.step.orEmpty(), e.call)
             }
             is StreamEvent.Step -> live { it.ended(e.call, LiveStep.Status.of(e.status)) }
             is StreamEvent.Held -> {
@@ -2446,7 +2498,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("Not stopped: ${e.message}")
+      if (generation == accountGeneration) fail("Not stopped. ${ErrorWords.of(e)}")
       return
     }
     if (generation != accountGeneration) return
@@ -2460,15 +2512,21 @@ class AppModel(
   /** Runs this phone picked back up, so each is picked up once. */
   private val resumedRuns = mutableSetOf<String>()
 
-  /** Back in a chat whose run is at work: its stream is picked back up once, its steps so far, then the rest. */
-  private suspend fun resumeChat(tafId: String, cloudId: String, run: String) {
-    if (followers[tafId]?.isActive == true || run in resumedRuns || isTrialChat(tafId)) return
+  /**
+   * Back in a chat whose run is at work: its stream is picked back up once, its steps so far, then the rest. [again]: a run the
+   * owner just set going again (a card answered) is followed in place of whatever followed the chat, and read on a timer when
+   * its stream can't open.
+   */
+  private suspend fun resumeChat(tafId: String, cloudId: String, run: String, again: Boolean = false) {
+    if (isTrialChat(tafId)) return
+    if (!again && (followers[tafId]?.isActive == true || run in resumedRuns)) return
     resumedRuns += run
     val events = try {
       cloud.resumeRun(cloudId, run)
     } catch (e: CancellationException) {
       throw e
     } catch (_: Exception) {
+      if (again) followChat(tafId)
       return
     }
     val working = _state.value.chatWorking[tafId]
@@ -2479,7 +2537,7 @@ class AppModel(
   /** Why a message wasn't sent, in words. */
   private fun sendFailure(e: Exception, name: String): String =
     if (e is CloudError && e.status == 429) "That's a lot of messages in a few minutes. Give $name a moment, then try again."
-    else "The message wasn't sent: ${e.message}"
+    else "The message wasn't sent. ${ErrorWords.of(e)}"
 
   private fun nextStamp(tafId: String): Instant = Chat.stamp(_state.value.chats[tafId]?.maxOfOrNull { it.at }, clock())
 
@@ -2534,7 +2592,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(memoryErrors = it.memoryErrors + (tafId to "Its notes couldn't be loaded: ${e.message}")) }
+      if (generation == accountGeneration) _state.update { it.copy(memoryErrors = it.memoryErrors + (tafId to "Its notes couldn't be loaded. ${ErrorWords.of(e)}")) }
       return
     }
     if (generation == accountGeneration) _state.update { it.copy(memories = it.memories + (tafId to notes), memoryErrors = it.memoryErrors - tafId) }
@@ -2570,7 +2628,7 @@ class AppModel(
     if (generation != accountGeneration) return
     _state.update { s ->
       val notes = (s.memories[tafId].orEmpty().filterNot { it.id == note.id } + note).sortedByDescending { it.updatedAt }
-      s.copy(memories = s.memories + (tafId to notes), memoryErrors = s.memoryErrors + (tafId to "It wasn't forgotten: ${e.message}"))
+      s.copy(memories = s.memories + (tafId to notes), memoryErrors = s.memoryErrors + (tafId to "It wasn't forgotten. ${ErrorWords.of(e)}"))
     }
   }
 
@@ -2795,7 +2853,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) versionError(tafId, "Its versions couldn't be loaded: ${e.message}")
+      if (generation == accountGeneration) versionError(tafId, "Its versions couldn't be loaded. ${ErrorWords.of(e)}")
       return
     }
     if (generation != accountGeneration || _state.value.mode != Mode.kiff) return
@@ -2823,7 +2881,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) versionError(tafId, "Couldn't read this version's Card: ${e.message}")
+      if (generation == accountGeneration) versionError(tafId, "Couldn't read this version's Card. ${ErrorWords.of(e)}")
       null
     }
   }
@@ -2851,11 +2909,11 @@ class AppModel(
         _state.update { it.copy(blockedInstalls = it.blockedInstalls + (tafId to version.n)) }
         versionError(tafId, VersionWords.blockedWords(version.n, e.blocking, stopBlocking))
       } else {
-        versionError(tafId, "Version ${version.n} can't go live now: ${e.message}")
+        versionError(tafId, "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
       }
       null
     } catch (e: Exception) {
-      if (generation == accountGeneration) versionError(tafId, "Version ${version.n} can't go live now: ${e.message}")
+      if (generation == accountGeneration) versionError(tafId, "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
       null
     }
   }
@@ -2936,7 +2994,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) versionError(tafId, "Version ${version.n} can't go live now: ${e.message}")
+      if (generation == accountGeneration) versionError(tafId, "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
       return false
     }
     if (generation != accountGeneration) return false
@@ -2953,7 +3011,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) versionError(tafId, "Couldn't read this version's Card: ${e.message}")
+        if (generation == accountGeneration) versionError(tafId, "Couldn't read this version's Card. ${ErrorWords.of(e)}")
         return false
       }
     }
@@ -2991,7 +3049,7 @@ class AppModel(
           _state.update { it.copy(staleVersionCards = it.staleVersionCards + (tafId to version.n)) }
           versionError(tafId, "Version ${version.n}'s Card is out of date: a Card changed since it was drafted. Draft it again, then read it before you approve.")
         } else {
-          versionError(tafId, "Installing version ${version.n} didn't finish: KIFF didn't confirm its Card (${e.message}). Your taf doesn't run until you finish or cancel it.")
+          versionError(tafId, "Installing version ${version.n} didn't finish: KIFF didn't confirm its Card. ${ErrorWords.of(e)} Your taf doesn't run until you finish or cancel it.")
         }
         return false
       }
@@ -3015,8 +3073,8 @@ class AppModel(
       if (generation == accountGeneration) {
         versionError(
           tafId,
-          if (sw.draft == null) "Version ${version.n} isn't live: ${e.message}"
-          else "Installing version ${version.n} didn't finish (${e.message}). Your taf doesn't run until you finish or cancel it.",
+          if (sw.draft == null) "Version ${version.n} isn't live. ${ErrorWords.of(e)}"
+          else "Installing version ${version.n} didn't finish. ${ErrorWords.of(e)} Your taf doesn't run until you finish or cancel it.",
         )
       }
       return false
@@ -3048,7 +3106,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return
-      versionError(tafId, "The switch wasn't cancelled: ${e.message}")
+      versionError(tafId, "The switch wasn't cancelled. ${ErrorWords.of(e)}")
     }
     loadVersions(tafId)
   }
@@ -3100,7 +3158,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = e.message ?: "tafs cloud didn't answer.") }
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = ErrorWords.of(e)) }
       null
     } finally {
       if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
@@ -3156,7 +3214,7 @@ class AppModel(
     } catch (e: Exception) {
       if (generation != accountGeneration) return
       // In the app's words, as the chat says it, not tafs cloud's.
-      val words = if (e is CloudError && e.status == 429) "That's a lot of messages in a few minutes. Wait a little, then send it again: nothing was sent." else e.message ?: "tafs cloud didn't answer."
+      val words = if (e is CloudError && e.status == 429) "That's a lot of messages in a few minutes. Wait a little, then send it again: nothing was sent." else "Nothing was sent. " + ErrorWords.of(e)
       updateDoors(tafId) { it.copy(error = words) }
     } finally {
       if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
@@ -3210,7 +3268,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) trialError(tafId, "The trial couldn't be read: ${e.message}")
+      if (generation == accountGeneration) trialError(tafId, "The trial couldn't be read. ${ErrorWords.of(e)}")
       return
     }
     if (generation == accountGeneration) setTrial(open, tafId)
@@ -3231,7 +3289,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) trialError(tafId, "Version ${version.n}'s trial Card couldn't be read: ${e.message}")
+      if (generation == accountGeneration) trialError(tafId, "Version ${version.n}'s trial Card couldn't be read. ${ErrorWords.of(e)}")
       null
     }
   }
@@ -3264,7 +3322,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) trialError(tafId, "Version ${version.n} can't be tried now: ${e.message}")
+        if (generation == accountGeneration) trialError(tafId, "Version ${version.n} can't be tried now. ${ErrorWords.of(e)}")
         return null
       }
       if (generation != accountGeneration) return null
@@ -3298,7 +3356,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) trialError(tafId, "Trying version ${version.n} didn't start: ${e.message}")
+        if (generation == accountGeneration) trialError(tafId, "Trying version ${version.n} didn't start. ${ErrorWords.of(e)}")
         return null
       }
     } finally {
@@ -3344,7 +3402,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) trialError(tafId, "Installing version ${open.n} didn't finish: ${e.message}")
+        if (generation == accountGeneration) trialError(tafId, "Installing version ${open.n} didn't finish. ${ErrorWords.of(e)}")
         return false
       }
       if (generation != accountGeneration) return false
@@ -3377,7 +3435,7 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        if (generation == accountGeneration) trialError(tafId, "The trial didn't end: ${e.message}")
+        if (generation == accountGeneration) trialError(tafId, "The trial didn't end. ${ErrorWords.of(e)}")
         return false
       }
       if (generation != accountGeneration) return false
@@ -3409,7 +3467,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("tafs couldn't halt ${if (tafId == null) "your tafs" else "it"}: ${e.message}. Try again.")
+      if (generation == accountGeneration) fail("tafs couldn't halt ${if (tafId == null) "your tafs" else "it"}. ${ErrorWords.of(e)}")
       return
     }
     if (generation != accountGeneration) return
@@ -3477,7 +3535,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(timeZoneError = "The time zone didn't change: ${e.message}") }
+      if (generation == accountGeneration) _state.update { it.copy(timeZoneError = "The time zone didn't change. ${ErrorWords.of(e)}") }
     } finally {
       kiff.setupSigner = null
     }
@@ -3511,7 +3569,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(peopleError = "People and groups couldn't be read: ${e.message}") }
+      if (generation == accountGeneration) _state.update { it.copy(peopleError = "People and groups couldn't be read. ${ErrorWords.of(e)}") }
     }
   }
 
@@ -3543,7 +3601,7 @@ class AppModel(
       if (generation != accountGeneration) return false
       // Read again first: a read that works clears the error, and this one must stay on screen.
       refreshPeople()
-      val words = if (e is SignerException) notSigned(e, "$what didn't go through: it wasn't confirmed.") else "$what didn't go through: ${e.message}"
+      val words = if (e is SignerException) notSigned(e, "$what didn't go through: it wasn't confirmed.") else "$what didn't go through. ${ErrorWords.of(e)}"
       if (generation == accountGeneration) _state.update { it.copy(peopleError = words) }
       return false
     } finally {
@@ -3590,7 +3648,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = "Couldn't load your devices: ${e.message}") }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = "Couldn't load your devices. ${ErrorWords.of(e)}") }
     }
   }
 
@@ -3612,7 +3670,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = "$what didn't go through: ${e.message}") }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = "$what didn't go through. ${ErrorWords.of(e)}") }
       return false
     }
     refreshDevices()
@@ -3658,9 +3716,9 @@ class AppModel(
       } catch (e: CancellationException) {
         throw e
       } catch (e: CloudError) {
-        return stopped(if (e.status == 403) "Only the account's owner can delete it." else "tafs couldn't erase your tafs: ${e.message}. Your KIFF account isn't deleted. Try again.")
+        return stopped(if (e.status == 403) "Only the account's owner can delete it." else "tafs couldn't erase your tafs. Your KIFF account isn't deleted. ${ErrorWords.of(e)}.")
       } catch (e: Exception) {
-        return stopped("tafs couldn't erase your tafs: ${e.message}. Your KIFF account isn't deleted. Try again.")
+        return stopped("tafs couldn't erase your tafs. Your KIFF account isn't deleted. ${ErrorWords.of(e)}.")
       }
       if (generation != accountGeneration) return false
       val signer = signer
@@ -3675,14 +3733,14 @@ class AppModel(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          return stopped("Your tafs are erased, but your connections aren't yet: ${e.message}. Try again.")
+          return stopped("Your tafs are erased, but your connections aren't yet. ${ErrorWords.of(e)}")
         }
         try {
           kiff.deleteAccount()
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          return stopped("Your tafs and connections are erased, but KIFF didn't delete the account: ${e.message}. Try again.")
+          return stopped("Your tafs and connections are erased, but KIFF didn't delete the account. ${ErrorWords.of(e)}")
         }
       } finally {
         kiff.setupSigner = null
@@ -3727,7 +3785,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("KIFF didn't resume ${name ?: "your tafs"}: ${e.message}")
+      if (generation == accountGeneration) fail("KIFF didn't resume ${name ?: "your tafs"}. ${ErrorWords.of(e)}")
       return false
     } finally {
       kiff.setupSigner = null
@@ -3738,7 +3796,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("KIFF resumed ${name ?: "your tafs"}, but tafs cloud didn't yet: ${e.message}. Try again.")
+      if (generation == accountGeneration) fail("KIFF resumed ${name ?: "your tafs"}, but tafs cloud didn't yet. ${ErrorWords.of(e)}")
       return false
     }
     if (generation != accountGeneration) return false
@@ -3790,7 +3848,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      _state.update { it.copy(tasksMessage = "The request didn't go: ${e.message}") }
+      _state.update { it.copy(tasksMessage = "The request didn't go. ${ErrorWords.of(e)}") }
       false
     }
   }
@@ -3804,7 +3862,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      _state.update { it.copy(tasksMessage = "The request wasn't withdrawn: ${e.message}") }
+      _state.update { it.copy(tasksMessage = "The request wasn't withdrawn. ${ErrorWords.of(e)}") }
     }
     refreshUsage()
   }
@@ -3834,7 +3892,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return false
-      _state.update { it.copy(tasksMessage = "The request wasn't declined: ${e.message}") }
+      _state.update { it.copy(tasksMessage = "The request wasn't declined. ${ErrorWords.of(e)}") }
       refreshUsage()
       return false
     } finally {
@@ -3901,7 +3959,7 @@ class AppModel(
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
-          if (generation == accountGeneration) _state.update { it.copy(usageError = "Usage couldn't be read: ${e.message}") }
+          if (generation == accountGeneration) _state.update { it.copy(usageError = "Usage couldn't be read. ${ErrorWords.of(e)}") }
         }
       }
     }

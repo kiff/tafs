@@ -51,6 +51,9 @@ class FileProblem(message: String) : Exception(message)
 object FilePrep {
   const val PER_MESSAGE = 5
 
+  /** tafs cloud doesn't take the file: its kind or its size. Another file may go. */
+  const val NOT_TAKEN = "tafs can't attach this file: it isn't a kind or size it takes. Pick another one."
+
   /** A photo's long edge, at most: the most the model reads. */
   const val LONG_EDGE = 2576
 

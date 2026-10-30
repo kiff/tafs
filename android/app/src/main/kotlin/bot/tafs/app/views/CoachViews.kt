@@ -169,14 +169,14 @@ class CoachActions(
 @Composable
 fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
   val c = shown.component
-  val messages = state.chats[COACH_CHAT].orEmpty()
-  val answer = CoachWords.answerTo(c.id, messages)
+  // Answered once the thread says so, in kiff/agents' words; on its way while tafs cloud takes it.
+  val answered = shown.answer?.let(CoachWords::answered) ?: if (c.id in state.cardsAnswering) CoachWords.ANSWERING else null
   when (c.type) {
     "notice" -> NoticeCard(c)
-    "confirm" -> ConfirmCard(c, answered = answer?.text, actions.answer)
-    "questions" -> QuestionsCard(c, answered = answer?.text, actions.answer)
-    "approval" -> ApprovalCard(c, state, answer, actions)
-    "sign_in" -> SignInCard(c, state, answer, actions)
+    "confirm" -> ConfirmCard(c, answered, state.cardErrors[c.id], actions.answer)
+    "questions" -> QuestionsCard(c, answered, state.cardErrors[c.id], actions.answer)
+    "approval" -> ApprovalCard(c, state, answered, actions)
+    "sign_in" -> SignInCard(c, state, answered, actions)
     "result" -> if (c.taf?.improves != null) ImprovementCard(c, state, actions) else HandOverCard(shown, state, actions)
   }
 }
@@ -186,7 +186,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
  * reads it, and the one confirmation signs exactly what is shown. Coach's own description of it is never what is approved.
  */
 @Composable
-private fun ApprovalCard(c: SetupComponent, state: AppState, answer: CoachAnswer?, actions: CoachActions) {
+private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, actions: CoachActions) {
   val scope = rememberCoroutineScope()
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val draft = c.draft?.let { state.setupDrafts[it] }
@@ -196,7 +196,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answer: CoachAnswer
     Eyebrow("Coach asks you to approve", Theme.amberText)
     c.title?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
     when {
-      answer != null -> Text(CoachWords.approvalResult(answer), style = scaled(13, FontWeight.Medium, if (answer.failed) Theme.no else Theme.dim))
+      answered != null -> Text(answered, style = scaled(13, FontWeight.Medium, Theme.dim))
       !state.planqueReady -> Text(CoachWords.NOT_CONNECTABLE, style = scaled(14, color = Theme.soft))
       grant == null -> Text("Reading what it asks for…", style = scaled(14, color = Theme.soft))
       else -> {
@@ -232,6 +232,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answer: CoachAnswer
       }
     }
     state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+    state.cardErrors[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
 
@@ -252,13 +253,14 @@ private fun NoticeCard(c: SetupComponent) {
 
 /** A choice between a few answers: once chosen, its buttons go quiet and say what was picked. */
 @Composable
-private fun ConfirmCard(c: SetupComponent, answered: String?, onAnswer: (String, String, String) -> Unit) {
+private fun ConfirmCard(c: SetupComponent, answered: String?, error: String?, onAnswer: (String, String, String) -> Unit) {
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
     c.title?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
     c.text?.let { Text(it, style = scaled(14, color = Theme.soft)) }
     val options = c.options.orEmpty()
+    error?.let { Text(it, style = scaled(13, color = Theme.no)) }
     if (answered != null) {
-      Text("You chose: " + (options.firstOrNull { it.value == answered }?.label ?: answered), style = scaled(13, FontWeight.Medium, Theme.dim))
+      Text(answered, style = scaled(13, FontWeight.Medium, Theme.dim))
     } else {
       options.forEach { option -> OutlineButton(option.label, { onAnswer("confirm", c.id, option.value) }, Modifier.fillMaxWidth()) }
     }
@@ -268,7 +270,7 @@ private fun ConfirmCard(c: SetupComponent, answered: String?, onAnswer: (String,
 /** Several questions at once: every word is Coach's, and the owner may answer any in their own words. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun QuestionsCard(c: SetupComponent, answered: String?, onAnswer: (String, String, String) -> Unit) {
+private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, onAnswer: (String, String, String) -> Unit) {
   val questions = c.questions.orEmpty()
   var selection by remember(c.id) { mutableStateOf(QuestionSelection()) }
   // "Chat about this": the card folds away, and the owner talks the questions through in the chat instead (docs/coach.md).
@@ -284,9 +286,10 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, onAnswer: (Strin
     c.title?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
     c.text?.let { Text(it, style = scaled(14, color = Theme.soft)) }
     if (answered != null) {
-      Text(QuestionAnswers.words(answered, questions) ?: answered, style = scaled(13, FontWeight.Medium, Theme.dim))
+      Text(answered, style = scaled(13, FontWeight.Medium, Theme.dim))
       return@Panel
     }
+    error?.let { Text(it, style = scaled(13, color = Theme.no)) }
     questions.forEach { q ->
       Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(q.text, style = scaled(15, FontWeight.SemiBold, Theme.ink))
@@ -344,33 +347,26 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
   )
 }
 
-/** Why an answer that didn't go through didn't, as the app wrote it after "failed: ". */
-private fun why(answer: CoachAnswer): String? = answer.text.removePrefix("failed").trimStart(':', ' ').ifEmpty { null }
-
 /**
  * The vendor's sign-in, for a connection the owner approved and whose sign-in was left: one confirmation opens the vendor's own
  * page. Where it goes is always the app's own words (the card's service), whatever Coach's button says.
  */
 @Composable
-private fun SignInCard(c: SetupComponent, state: AppState, answer: CoachAnswer?, actions: CoachActions) {
+private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, actions: CoachActions) {
   val scope = rememberCoroutineScope()
   val vendor = c.service ?: "the vendor"
-  when (CoachWords.signInOutcome(answer)) {
-    "done" -> Text("✓ Signed in at $vendor", style = scaled(14, FontWeight.Medium, Theme.ok))
-    "declined" -> Text("– Not now: no sign-in at $vendor", style = scaled(14, color = Theme.dim))
+  when {
+    answered != null -> Text("Sign in at $vendor · $answered", style = scaled(14, FontWeight.Medium, Theme.dim))
     else -> {
-      val failed = answer?.failed == true
       val busy = state.connecting != null
       val waiting = c.grant != null && state.connecting == c.grant
-      Panel(stroke = (if (failed) Theme.no else Theme.amber).copy(alpha = 0.45f)) {
-        Eyebrow(if (failed) "Didn't go through · sign in" else "Needs you · sign in", if (failed) Theme.no else Theme.amberText)
+      Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
+        Eyebrow("Needs you · sign in", Theme.amberText)
         Text("Sign in at $vendor", style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
-        if (failed) Text(answer?.let(::why)?.let { "It didn't go through: $it" } ?: "It didn't go through.", style = scaled(14, color = Theme.no))
         Text(c.note ?: CoachWords.SIGN_IN_NOTE, style = scaled(14, color = Theme.soft))
         PrimaryButton(
           when {
             waiting -> "Opening the sign-in…"
-            failed -> "Try again"
             else -> c.yes ?: "Open ${c.service ?: "the sign-in"}"
           },
           { scope.launch { actions.signInAgain(c) } },
@@ -380,7 +376,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answer: CoachAnswer?,
         if (waiting) {
           Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
           Text("Cancel", style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
-        } else if (!failed) {
+        } else {
           Text(
             c.no ?: "Not now",
             style = scaled(14, color = Theme.dim),
@@ -388,6 +384,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answer: CoachAnswer?,
           )
         }
         state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+        state.cardErrors[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
       }
     }
   }
@@ -408,7 +405,7 @@ private fun HandOverCard(shown: ShownComponent, state: AppState, actions: CoachA
   Panel(stroke = Theme.ok.copy(alpha = 0.45f)) {
     Eyebrow("Set up · $name", Theme.ok)
     c.text?.let { Text(it, style = scaled(15, color = Theme.ink)) }
-    c.tools?.takeIf { it.isNotEmpty() }?.let { Text(it.joinToString(" · "), style = scaled(13, color = Theme.soft)) }
+    // Coach's list of the taf's tools names them by id only: the taf's page has its Card in KIFF's words.
     when (val h = CoachWords.handOver(shown.answer, listed != null)) {
       CoachWords.HandOver.SetUp ->
         if (listed != null) PrimaryButton(if (listed.name != taf.name) "Open $name" else c.yes ?: "See it on $name", { actions.openTaf(listed.id) })

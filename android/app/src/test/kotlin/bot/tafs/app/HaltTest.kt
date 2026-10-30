@@ -85,7 +85,7 @@ class HaltTest {
     transport.answer("POST /v1/tafs/taf_1/halt", 502, """{"error":"kiff/agents is unreachable"}""")
     val m = model()
     m.halt("refunds-1")
-    assertEquals("tafs couldn't halt it: kiff/agents is unreachable. Try again.", m.state.value.lastError)
+    assertEquals("tafs couldn't halt it. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.lastError)
     assertTrue(m.state.value.haltOf("refunds-1").running)
   }
 
@@ -94,7 +94,7 @@ class HaltTest {
     transport.answer("POST /v1/halt", 500, """{"error":"nope"}""")
     val m = model()
     m.halt(null)
-    assertEquals("tafs couldn't halt your tafs: nope. Try again.", m.state.value.lastError)
+    assertEquals("tafs couldn't halt your tafs. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.lastError)
   }
 
   @Test fun anAgentTafsDoesNotRunCannotBeHaltedHere() = runTest {
@@ -186,7 +186,7 @@ class HaltTest {
     transport.answer("POST /v1/agents/refunds-1/resume", 403, """{"error":"not allowed"}""")
     val m = model()
     assertFalse(m.resumeHalt("refunds-1"))
-    assertEquals("KIFF didn't resume Refunds: not allowed", m.state.value.lastError)
+    assertEquals("KIFF didn't resume Refunds. Your role on this account doesn't allow this.", m.state.value.lastError)
     assertTrue(transport.requests.none { it.method == "DELETE" })
   }
 
@@ -196,7 +196,7 @@ class HaltTest {
     transport.answer("DELETE /v1/tafs/taf_1/halt", 409, """{"error":"KIFF still halts it"}""")
     val m = model()
     assertFalse(m.resumeHalt("refunds-1"))
-    assertEquals("KIFF resumed Refunds, but tafs cloud didn't yet: KIFF still halts it. Try again.", m.state.value.lastError)
+    assertEquals("KIFF resumed Refunds, but tafs cloud didn't yet. It changed in the meantime. What's shown now is how it is.", m.state.value.lastError)
   }
 
   @Test fun aSessionWithNoKeyOfThisPhonesCannotSignAResume() = runTest {

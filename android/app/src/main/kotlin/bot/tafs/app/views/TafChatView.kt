@@ -415,25 +415,13 @@ private fun MessageBody(message: ChatMessage, tafId: String, files: FileActions,
   }
 }
 
-/** How long the taf worked and the tools it called, in order, folded: "Worked 4 s · list payments, look up one payment". */
+/**
+ * How long the taf worked and how many steps it took: "Worked 4 s · 3 steps, 1 failed". The thread names a step only by its
+ * tool's id, never in words, so no step is listed: a tool's id is never shown.
+ */
 @Composable
 private fun WorkSummary(work: Work) {
-  var open by remember { mutableStateOf(false) }
-  val seconds = work.ms / 1000.0
-  val took = if (seconds < 10) "%.1f s".format(java.util.Locale.ROOT, seconds) else "${Math.round(seconds)} s"
-  Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-    Text(
-      (if (open) "▾ " else "▸ ") + "Worked $took" + if (work.steps.isEmpty()) "" else " · ${work.steps.size} ${if (work.steps.size == 1) "step" else "steps"}",
-      style = scaled(12, FontWeight.Medium, Theme.dim),
-      modifier = Modifier.heightIn(min = 28.dp).clickable(enabled = work.steps.isNotEmpty()) { open = !open }.padding(vertical = 4.dp),
-    )
-    if (open) {
-      work.steps.forEach { step ->
-        val note = if (step.error) " · failed" else if (step.notMade) " · not made" else ""
-        Text("• " + KiffMapping.toolWords(step.tool) + note, style = scaled(12, color = if (step.error) Theme.no else Theme.soft))
-      }
-    }
-  }
+  Text(Chat.workLine(work), style = scaled(12, FontWeight.Medium, Theme.dim), modifier = Modifier.padding(vertical = 4.dp))
 }
 
 /**
@@ -451,13 +439,13 @@ private fun LiveWork(live: LiveAnswer) {
     if (running != null || live.activity != null || !writing) {
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         androidx.compose.material3.CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Theme.dim)
-        Text(live.activity ?: running?.words ?: if (writing) "Writing…" else "Thinking…", style = scaled(13, color = Theme.dim))
+        Text(live.activity ?: running?.words?.ifEmpty { null } ?: if (writing) "Writing…" else "Thinking…", style = scaled(13, color = Theme.dim))
       }
     }
     if (!writing && thoughtAWhile) {
       Chat.thinkingLine(live.thinking).takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(13, color = Theme.soft), maxLines = 2) }
     }
-    live.steps.filter { it.status != LiveStep.Status.running }.forEach { step ->
+    live.steps.filter { it.status != LiveStep.Status.running && it.words.isNotEmpty() }.forEach { step ->
       val (mark, note, tone) = when (step.status) {
         LiveStep.Status.error -> Triple("✗", " · failed", Theme.no)
         LiveStep.Status.notMade -> Triple("↩", " · not made · read first", Theme.dim)

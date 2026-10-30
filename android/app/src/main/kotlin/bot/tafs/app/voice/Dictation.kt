@@ -93,7 +93,7 @@ class Dictation(private val engine: SpeechEngine) {
 
   companion object {
     const val QUIET_ENDS = 2
-    const val NOT_ON_DEVICE = "This phone can't recognise speech on the phone itself, so tafs doesn't dictate: your voice would have to leave it."
+    const val NOT_ON_DEVICE = "This phone can't recognise speech on the phone itself, so the mic doesn't work here: your voice would have to leave it. You can type instead."
     const val NO_MICROPHONE = "Allow tafs to use the microphone to dictate. Your voice becomes text on this phone and isn't sent anywhere."
 
     /** What's been heard after what the box had: a space between, unless one is there already. */
@@ -104,6 +104,45 @@ class Dictation(private val engine: SpeechEngine) {
       return "$before $words"
     }
   }
+}
+
+/**
+ * Which language the phone's own recognizer dictates in. Its models are per variant (en-US, en-GB…), and a phone set to a
+ * locale with none of its own (English in France, en-FR) still dictates in a variant of its language. Ready now beats
+ * downloading: the phone's own locale, then its language's main variant (fr-FR for fr), then en-GB before en-US, then any.
+ */
+object SpeechLanguage {
+  sealed interface Choice {
+    /** A language whose model is on the phone: dictation starts with it. */
+    data class Use(val tag: String) : Choice
+
+    /** A language the recognizer offers but hasn't downloaded: the phone gets it first. */
+    data class Download(val tag: String) : Choice
+
+    /** Nothing in the phone's language. */
+    data object None : Choice
+  }
+
+  fun choose(locale: java.util.Locale, installed: List<String>, supported: List<String>): Choice {
+    best(locale, installed)?.let { return Choice.Use(it) }
+    best(locale, supported)?.let { return Choice.Download(it) }
+    return Choice.None
+  }
+
+  private fun best(locale: java.util.Locale, tags: List<String>): String? {
+    tags.firstOrNull { it.equals(locale.toLanguageTag(), ignoreCase = true) }?.let { return it }
+    val language = locale.language.lowercase()
+    val same = tags.filter { java.util.Locale.forLanguageTag(it).language.lowercase() == language }
+    if (same.isEmpty()) return null
+    val order = listOf("$language-${language.uppercase()}", "en-GB", "en-US", language)
+    return order.firstNotNullOfOrNull { want -> same.firstOrNull { it.equals(want, ignoreCase = true) } } ?: same.sorted().first()
+  }
+
+  /** The owner's words when the phone gets its language first: it can't dictate yet, and the mic works once it's done. */
+  fun downloading(language: String) = "This phone is getting $language for dictation. The mic works once it's ready, in a minute or two."
+
+  /** The owner's words when the phone has nothing in their language: nothing to do but type. */
+  fun cannot(language: String) = "This phone can't recognise $language on the phone itself, so the mic doesn't work here. You can type instead."
 }
 
 /** The phone's speech recognizer, on the phone only: tests use a fake. */

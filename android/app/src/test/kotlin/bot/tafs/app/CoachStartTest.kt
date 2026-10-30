@@ -214,12 +214,14 @@ class CoachStartTest {
       """{"messages":$messages,"components":[{"at":"2026-10-28T08:00:00Z","session":"s1","run":"r1","component":$component$answered}]}""",
     )
     transport.answer("POST /v1/tafs/setup_1/messages", 200, """{"session":"s1","new_session":false}""")
+    transport.answer("POST /v1/tafs/setup_1/components/s1/answer", 200, """{"session":"s1","run":"r1","status":"running"}""")
   }
 
   private val handOver = """{"type":"result","id":"r1","text":"Refunds is ready.","taf":{"agent":"refunds-2","name":"Refunds","job":"refunds","draft":"dr_t","unscheduled":true}}"""
   private val refunds = """{"tafs":[{"id":"c_9","name":"Refunds","kiff_agent":"refunds-2","job":"refunds","state":"idle"}],"others":[],"removing":[]}"""
 
-  private fun told() = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/tafs/setup_1/messages").last().body!!)).jsonObject.getValue("text").jsonPrimitive.content
+  /** The answer the phone gave a card, as data through tafs cloud's route: never a message in the chat. */
+  private fun answered(card: String) = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/tafs/setup_1/components/$card/answer").last().body!!)).jsonObject.getValue("answer").jsonPrimitive.content
 
   private fun handOver(m: AppModel) = m.state.value.coachComponents.single { it.id == "r1" }.let { CoachWords.handOver(it.answer, m.state.value.tafs.any { t -> t.id == "refunds-2" }) }
 
@@ -331,7 +333,8 @@ class CoachStartTest {
     m.loadChat(COACH_CHAT)
     m.signInAgain(KiffClient.json.decodeFromString(signInCard))
     assertEquals("https://mcp.stripe.com/oauth", vendor.opened)
-    assertEquals("[sign_in s1] signed in", told())
+    assertEquals("signed in", answered("s1"))
+    assertTrue(transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
     assertEquals(1, auth.asked.size)
   }
 
@@ -344,13 +347,7 @@ class CoachStartTest {
     m.loadCoach()
     m.loadChat(COACH_CHAT)
     m.signInAgain(KiffClient.json.decodeFromString(signInCard))
-    assertEquals("[sign_in s1] failed: The sign-in was closed. Nothing was connected.", told())
+    assertEquals("failed: The sign-in was closed. Nothing was connected.", answered("s1"))
   }
 
-  @Test fun aSignInCardReadsAsDoneNotNowOrFailedFromItsAnswer() {
-    assertNull(CoachWords.signInOutcome(null))
-    assertEquals("done", CoachWords.signInOutcome(CoachAnswer.parse("[sign_in s1] signed in")))
-    assertEquals("declined", CoachWords.signInOutcome(CoachAnswer.parse("[sign_in s1] not now")))
-    assertEquals("failed", CoachWords.signInOutcome(CoachAnswer.parse("[sign_in s1] failed: closed")))
-  }
 }

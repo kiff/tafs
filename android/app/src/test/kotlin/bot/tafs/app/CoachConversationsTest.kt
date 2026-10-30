@@ -118,7 +118,7 @@ class CoachConversationsTest {
     transport.answer("POST /v1/tafs/setup_1/chats/s4/archive", 503, """{"error":"unavailable"}""")
     val m = model()
     assertFalse(m.archiveCoachChat("s4"))
-    assertEquals("Not archived: unavailable", m.state.value.lastError)
+    assertEquals("Not archived. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.lastError)
   }
 
   @Test fun anArchivedConversationIsPutBack() = runTest {

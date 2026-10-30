@@ -256,7 +256,7 @@ class PushTest {
     transport.answer(register, 502, """{"error":"later"}""")
     val m = model()
     assertFalse(m.turnOnAlerts())
-    assertEquals("Alerts are almost on: tafs cloud didn't answer (later). Tap Turn on alerts again.", m.state.value.lastError)
+    assertEquals("Alerts aren't on for this phone yet. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.lastError)
     assertNotNull("kept: KIFF already signs with it", secrets.load(AppModel.HANDOFF))
     transport.answer(register, 200, """{"answers":true,"alerts":true}""")
     m.dismissError()

@@ -82,7 +82,7 @@ class TaskRequestsTest {
     transport.answer("POST /v1/me/pack-requests", 409, """{"error":"you already asked"}""")
     val m = model()
     assertFalse(m.askForPack("rayo", ""))
-    assertEquals("The request didn't go: you already asked", m.state.value.tasksMessage)
+    assertEquals("The request didn't go. It changed in the meantime. What's shown now is how it is.", m.state.value.tasksMessage)
   }
 
   @Test fun aMemberTakesTheirRequestBack() = runTest {

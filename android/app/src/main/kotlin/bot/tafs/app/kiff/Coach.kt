@@ -107,6 +107,10 @@ data class WireShown(
 @Serializable
 data class CardAnswer(val state: String = "answered", val words: String = "", val by: String? = null, val outcome: ResultOutcome? = null)
 
+/** What answering a card gives back: the run that goes on with it. */
+@Serializable
+data class CardAnswered(val session: String? = null, val run: String? = null, val status: String? = null)
+
 @Serializable
 data class ResultOutcome(@SerialName("taf_id") val tafId: String? = null, val version: Int? = null, val failed: String? = null)
 

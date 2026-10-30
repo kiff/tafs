@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.speech.RecognitionListener
+import android.speech.RecognitionSupport
+import android.speech.RecognitionSupportCallback
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import androidx.core.content.ContextCompat
@@ -15,7 +17,7 @@ import java.util.Locale
 /**
  * The phone's own speech recognizer, on the phone only (`createOnDeviceSpeechRecognizer`, Android 12 and later): no audio
  * leaves it. A phone without one doesn't dictate, rather than fall back to a recognizer that sends the voice away. It
- * dictates in the phone's language.
+ * dictates in the phone's language, in the variant the recognizer has ([SpeechLanguage]), and gets it first when it can.
  */
 class DeviceSpeech(private val context: Context) : SpeechEngine {
   override val available: Boolean
@@ -26,9 +28,45 @@ class DeviceSpeech(private val context: Context) : SpeechEngine {
 
   private var recognizer: SpeechRecognizer? = null
 
+  /** The language chosen for this phone, once known: it's asked of the recognizer once. */
+  private var language: String? = null
+
   override fun listen(listener: SpeechEngine.Listener) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return listener.failed(Dictation.NOT_ON_DEVICE)
     val r = recognizer ?: SpeechRecognizer.createOnDeviceSpeechRecognizer(context).also { recognizer = it }
+    val known = language
+    // Before Android 13 the recognizer can't say which languages it has: it's asked for the phone's own.
+    if (known != null || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return start(r, known ?: Locale.getDefault().toLanguageTag(), listener)
+    r.checkRecognitionSupport(
+      intent(null),
+      ContextCompat.getMainExecutor(context),
+      object : RecognitionSupportCallback {
+        override fun onSupportResult(support: RecognitionSupport) {
+          val name = Locale.getDefault().displayLanguage
+          when (val choice = SpeechLanguage.choose(Locale.getDefault(), support.installedOnDeviceLanguages, support.supportedOnDeviceLanguages)) {
+            is SpeechLanguage.Choice.Use -> {
+              language = choice.tag
+              start(r, choice.tag, listener)
+            }
+            is SpeechLanguage.Choice.Download -> {
+              r.triggerModelDownload(intent(choice.tag))
+              listener.failed(SpeechLanguage.downloading(name))
+            }
+            SpeechLanguage.Choice.None -> listener.failed(SpeechLanguage.cannot(name))
+          }
+        }
+
+        override fun onError(error: Int) = start(r, Locale.getDefault().toLanguageTag(), listener)
+      },
+    )
+  }
+
+  private fun intent(tag: String?) = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+    .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+    .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+    .apply { tag?.let { putExtra(RecognizerIntent.EXTRA_LANGUAGE, it) } }
+
+  private fun start(r: SpeechRecognizer, tag: String, listener: SpeechEngine.Listener) {
     r.setRecognitionListener(object : RecognitionListener {
       override fun onPartialResults(partialResults: Bundle?) = listener.heard(first(partialResults))
       override fun onResults(results: Bundle?) = listener.finished(first(results))
@@ -38,7 +76,7 @@ class DeviceSpeech(private val context: Context) : SpeechEngine {
         SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> listener.finished("")
         SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> listener.failed(Dictation.NO_MICROPHONE)
         SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED, SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE ->
-          listener.failed("This phone can't dictate in ${Locale.getDefault().displayLanguage} on the phone itself.")
+          listener.failed(SpeechLanguage.cannot(Locale.getDefault().displayLanguage))
         else -> listener.failed("Dictation stopped. Tap the mic to start again.")
       }
 
@@ -49,12 +87,7 @@ class DeviceSpeech(private val context: Context) : SpeechEngine {
       override fun onEndOfSpeech() {}
       override fun onEvent(eventType: Int, params: Bundle?) {}
     })
-    r.startListening(
-      Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        .putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag()),
-    )
+    r.startListening(intent(tag))
   }
 
   override fun stop() {

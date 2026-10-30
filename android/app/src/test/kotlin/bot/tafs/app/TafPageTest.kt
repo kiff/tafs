@@ -93,7 +93,7 @@ class TafPageTest {
     transport.answer("POST /v1/tafs/taf_1/run", 409, """{"error":"it's halted"}""")
     val m = model()
     assertNull(m.runNow("refunds-1"))
-    assertEquals("The run didn't start: it's halted", m.state.value.lastError)
+    assertEquals("The run didn't start. It changed in the meantime. What's shown now is how it is.", m.state.value.lastError)
   }
 
   @Test fun theLastRunsReportIsWhatItWroteOnceItStopped() = runTest {
@@ -154,7 +154,7 @@ class TafPageTest {
     val m = model()
     assertFalse(m.revokeCards("refunds-1"))
     assertEquals(TafState.working, m.state.value.taf("refunds-1")!!.state)
-    assertEquals("KIFF didn't revoke the Card: not yours", m.state.value.lastError)
+    assertEquals("KIFF didn't revoke the Card. Your role on this account doesn't allow this.", m.state.value.lastError)
   }
 
   // MARK: Remove for good
@@ -240,7 +240,7 @@ class TafPageTest {
     val note: MemoryNote = m.state.value.memories["refunds-1"]!!.single()
     assertFalse(m.forgetAtCloud(note, "refunds-1"))
     assertEquals(listOf("n1"), m.state.value.memories["refunds-1"]!!.map { it.id })
-    assertEquals("It wasn't forgotten: unavailable", m.state.value.memoryErrors["refunds-1"])
+    assertEquals("It wasn't forgotten. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.memoryErrors["refunds-1"])
   }
 
   @Test fun notesThatCantBeReadSaySo() = runTest {
@@ -249,6 +249,6 @@ class TafPageTest {
     val m = model()
     m.readMemory("refunds-1")
     assertNull(m.state.value.memories["refunds-1"])
-    assertEquals("Its notes couldn't be loaded: down", m.state.value.memoryErrors["refunds-1"])
+    assertEquals("Its notes couldn't be loaded. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.memoryErrors["refunds-1"])
   }
 }

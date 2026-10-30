@@ -157,13 +157,6 @@ object CoachWords {
   const val DIGEST_MISMATCH = "This request doesn't match what it asks for, so it can't be approved. Ask Coach to propose it again."
   const val WAITING_FOR_VENDOR = "If the vendor's sign-in page opened, finish it there and come back."
 
-  /** What an approval card says once it has an answer: approved, declined, or why it didn't go through. */
-  fun approvalResult(answer: CoachAnswer): String = when {
-    answer.failed -> "It didn't go through: " + (answer.text.removePrefix("failed").trimStart(':', ' ').ifEmpty { "nothing was approved" })
-    answer.text == "declined" -> "You declined"
-    else -> "You approved"
-  }
-
   const val INTRO = "Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it."
   const val SIGN_IN_NOTE = "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed."
   const val COACH_KNOWS = "Coach knows, and hands it over again."
@@ -197,14 +190,6 @@ object CoachWords {
     return "${c.id}|$what"
   }
 
-  /** A sign-in card's state: where the owner is in it, from what the thread holds. */
-  fun signInOutcome(answer: CoachAnswer?): String? = when {
-    answer == null -> null
-    answer.failed -> "failed"
-    answer.text == "not now" -> "declined"
-    else -> "done"
-  }
-
   /** An owner's message in their own words: an answer to a card reads as what they chose, never as the contract's form. */
   fun ownerWords(text: String, components: List<ShownComponent>): String {
     val a = CoachAnswer.parse(text) ?: return text
@@ -218,9 +203,17 @@ object CoachWords {
     }
   }
 
-  /** The owner's latest answer to a card, as the thread has it. */
-  fun answerTo(id: String, messages: List<ChatMessage>): CoachAnswer? =
-    messages.asReversed().filter { it.from == ChatMessage.From.owner }.mapNotNull { CoachAnswer.parse(it.text) }.firstOrNull { it.id == id }
+  /**
+   * A card's answer as the thread has it (`answer` on the card), in kiff/agents' own words: what was chosen, that the owner
+   * wrote instead, or that it stopped waiting with none. The phone keeps no answer of its own.
+   */
+  fun answered(a: bot.tafs.app.kiff.CardAnswer): String = when (a.state) {
+    "wrote" -> "You answered in your own words."
+    "no_answer" -> "It stopped waiting, with no answer."
+    else -> a.words.ifEmpty { "Answered." }
+  }
+
+  const val ANSWERING = "Sending your answer…"
 
   /** Folds components as the conversation lists them, oldest first: the latest version of each id, at the time it first appeared. */
   fun fold(shown: List<ShownComponent>): List<ShownComponent> {

@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Confirms an approval with a fingerprint, face or the screen lock. -->
+    <!-- Confirms each approval with a strong biometric, never the screen lock. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Shows an alert when a taf needs you (Android 13 and later asks first). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Dictating a message (docs/chat.md): recognised on the phone, asked at the first tap of the mic. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Dictation is optional: a phone without a microphone still installs tafs, and its mic says it can't dictate. -->
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <!-- Finds the phone's own speech recognizer for dictation. -->
     <queries>

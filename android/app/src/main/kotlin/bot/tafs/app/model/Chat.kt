@@ -45,9 +45,11 @@ data class LiveAnswer(
   val steps: List<LiveStep> = emptyList(),
 ) {
   /** A step begins. One the stream sends again (a run picked back up replays its steps) keeps the status it has. */
-  fun began(tool: String, words: String, call: String?): LiveAnswer =
-    if (call != null && steps.any { it.call == call }) copy(activity = words)
-    else copy(activity = words, steps = steps + LiveStep(call, tool, words))
+  fun began(tool: String, words: String, call: String?): LiveAnswer {
+    val activity = words.ifEmpty { null }
+    return if (call != null && steps.any { it.call == call }) copy(activity = activity)
+    else copy(activity = activity, steps = steps + LiveStep(call, tool, words))
+  }
 
   /** A call ended: the step it began, or the latest still running when the stream didn't say which (a held call). */
   fun ended(call: String?, status: LiveStep.Status): LiveAnswer {
@@ -166,6 +168,16 @@ sealed interface ChatItem {
 object Chat {
   /** What a message may be at most, as tafs cloud takes it. */
   const val LIMIT = 2000
+
+  /** How long a taf worked and how many steps it took, with those that failed; never which tools, which the thread names only by id. */
+  fun workLine(work: Work): String {
+    val seconds = work.ms / 1000.0
+    val took = if (seconds < 10) "%.1f s".format(java.util.Locale.ROOT, seconds) else "${Math.round(seconds)} s"
+    val n = work.steps.size
+    if (n == 0) return "Worked $took"
+    val failed = work.steps.count { it.error }
+    return "Worked $took · $n ${if (n == 1) "step" else "steps"}" + if (failed > 0) ", $failed failed" else ""
+  }
 
   /**
    * One calm line of what the taf is thinking, as plain text: the last whole sentence while the next is still a fragment, else

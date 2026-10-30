@@ -197,12 +197,12 @@ class DoorsTest {
   @Test fun aChangeTafsCloudRefusesSaysWhyAndLeavesTheDoorAsItWas() = runTest {
     reads()
     transport.answer(doors, 200, doorsBody())
-    transport.answer("PATCH $base/door_1", 403, """{"error":"only someone who manages it can"}""")
+    transport.answer("PATCH $base/door_1", 403, """{"error":"Your role on this account doesn't allow this."}""")
     val m = model()
     m.loadDoors("refunds-1")
     m.setDoorOpen("refunds-1", m.state.value.doors["refunds-1"]!!.doors.single(), false)
     val d = m.state.value.doors["refunds-1"]!!
-    assertEquals("only someone who manages it can", d.error)
+    assertEquals("Your role on this account doesn't allow this.", d.error)
     assertTrue(d.doors.single().open)
     assertFalse(d.busy)
     m.dismissDoorsError("refunds-1")
