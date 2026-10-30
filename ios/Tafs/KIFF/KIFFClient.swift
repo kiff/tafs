@@ -1271,7 +1271,8 @@ final class KIFFClient {
             request.httpBody = try JSONEncoder().encode(body)
         }
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
-        let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key") : (base == gatewayURL && path == "/v1/connections")
+        let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key" || path == "/v1/me/device/relink")
+            : (base == gatewayURL && path == "/v1/connections")
         // What grants authority is signed by the approval key, once the session has one,
         // within a step the owner confirmed; KIFF picks the key by route, so the header is
         // the same (kiff/tafs#233).
