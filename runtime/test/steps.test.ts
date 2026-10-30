@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Steps, vendorName } from "../src/cloud/steps.js";
+import { stepWords, Steps, vendorName } from "../src/cloud/steps.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
   it("names a vendor from its server's host, and none from a cloud's own URL", () => {
@@ -23,7 +23,23 @@ describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
     expect(s.call("kiff_draft", { action: "submit" })).toBe("Drafting the Card…");
     expect(s.call("kiff_card", { agent: "a" })).toBe("Reading the taf's Card…");
     expect(s.call("taf_task", {})).toBe("Handing the task over…");
-    expect(s.call("show", {})).toBeUndefined();
+    expect(s.call("show", {})).toBe("Showing you a card…");
     expect(s.call("create_refund", null)).toBeUndefined();
+  });
+
+  it("says a taf's tool through KIFF by KIFF's title for it, and an own tool by what it does; never a tool's name", () => {
+    const titles = new Map([["list_charges_ijkp", "List your charges"], ["refund_charge", "Refund a charge"]]);
+    const s = new Steps(titles);
+    expect(s.call("list_charges_ijkp", { limit: 10 })).toBe("List your charges…");
+    expect(s.call("refund_charge", { charge: "ch_1" })).toBe("Refund a charge…");
+    expect(s.call("get_charge_ijkp", {})).toBeUndefined(); // no title: no words, never its name
+    expect(s.call("memory", {})).toBe("Going through its notes…");
+    expect(s.call("workspace", {})).toBe("Working in its workspace…");
+    // A finished run's steps: the same words, without the "…".
+    expect(stepWords("list_charges_ijkp", titles)).toBe("List your charges");
+    expect(stepWords("planque")).toBe("Working on the connection");
+    expect(stepWords("kiff_draft")).toBe("Drafting the Card");
+    expect(stepWords("show")).toBe("Showing you a card");
+    expect(stepWords("get_charge_ijkp", titles)).toBeUndefined();
   });
 });

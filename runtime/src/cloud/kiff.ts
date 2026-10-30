@@ -279,3 +279,38 @@ export async function previewDraft(token: string, body: unknown, doFetch: Fetch 
   if (!Array.isArray(out.cards)) throw new KIFFError(502, "KIFF's preview sent no Cards");
   return { ...(out.card_title === undefined ? {} : { card_title: out.card_title }), cards: out.cards };
 }
+
+/** How long a taf's tool titles are kept between reads of its thread, which the app reads often. */
+const TITLES_KEPT_MS = 60_000;
+/** Kept per fetch: one for the function's own, and apart for each test's KIFF. */
+const titlesKept = new WeakMap<Fetch, Map<string, { at: number; titles: Map<string, string> }>>();
+
+/**
+ * KIFF's title for each of an agent's tools, by action, from its Cards (`grants[].title`), as
+ * the person may read them: the words a step says for the call. Kept a minute per person and
+ * agent, since a thread is read every few seconds while a taf works. An agent with no titles,
+ * or a KIFF that can't be read, has none: its steps say nothing rather than a tool's name.
+ */
+export async function toolTitles(token: string, tenant: string, subject: string, agent: string, doFetch: Fetch = fetch, base = KIFF_API, now = Date.now()): Promise<Map<string, string>> {
+  if (!agent) return new Map();
+  const key = `${tenant}|${subject}|${agent}`;
+  let keptHere = titlesKept.get(doFetch);
+  if (!keptHere) titlesKept.set(doFetch, (keptHere = new Map()));
+  const kept = keptHere.get(key);
+  if (kept && now - kept.at < TITLES_KEPT_MS) return kept.titles;
+  const titles = new Map<string, string>();
+  try {
+    const out = await ask<{ mandates?: Array<{ subject?: unknown; grants?: Array<{ action?: unknown; title?: unknown }> | null }> }>(token, "GET", "/v1/me/mandates", undefined, doFetch, base);
+    for (const m of out.mandates ?? []) {
+      if (m.subject !== agent) continue;
+      for (const g of m.grants ?? []) {
+        if (typeof g.action === "string" && typeof g.title === "string" && g.title.trim() && !titles.has(g.action)) titles.set(g.action, g.title.trim());
+      }
+    }
+  } catch {
+    return titles; // not kept: the next read asks again
+  }
+  keptHere.set(key, { at: now, titles });
+  if (keptHere.size > 1000) keptHere.delete(keptHere.keys().next().value!);
+  return titles;
+}
