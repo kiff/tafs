@@ -197,13 +197,13 @@ class CoachActions(
   /** The owner's answer to a card: its type, its id and the answer. */
   val answer: (String, String, String) -> Unit,
   /** Approves a card's connection or Cards, as shown: its grant's digest and its draft's version. */
-  val approve: suspend (SetupComponent, String?, String?) -> Unit,
+  val approve: (SetupComponent, String?, String?) -> Unit,
   /** The owner gave up waiting on the vendor's sign-in page. */
   val cancelSignIn: () -> Unit,
   /** Starts Coach on this account, behind one confirmation. */
   val start: suspend () -> Unit = {},
   /** Signs in again at the vendor, for a sign-in card: a new approval, one confirmation. */
-  val signInAgain: suspend (SetupComponent) -> Unit = {},
+  val signInAgain: (SetupComponent) -> Unit = {},
   /** A new conversation about improving one taf, by its id: Coach starts from what it did and what its Card allows. */
   val improve: (String) -> Unit = {},
   /** Tries again to make the version an improvement names. */
@@ -236,7 +236,6 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
  */
 @Composable
 private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, actions: CoachActions) {
-  val scope = rememberCoroutineScope()
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val draft = c.draft?.let { state.setupDrafts[it] }
   val busy = state.connecting != null
@@ -268,7 +267,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             OutlineButton(
               if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else "Approve with $biometry",
-              { scope.launch { actions.approve(c, grant.digest, draft?.version) } },
+              { actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f),
               enabled = !busy,
             )
@@ -403,7 +402,6 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
  */
 @Composable
 private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, actions: CoachActions) {
-  val scope = rememberCoroutineScope()
   val vendor = c.service ?: "the vendor"
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val again = grant?.needsReconnect == true
@@ -422,7 +420,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, ac
             again -> "Sign in again"
             else -> c.yes ?: "Open ${c.service ?: "the sign-in"}"
           },
-          { scope.launch { actions.signInAgain(c) } },
+          { actions.signInAgain(c) },
           enabled = !busy && c.grant != null,
         )
         Text("Opens ${c.destination}", style = scaled(12, color = Theme.dim, mono = true))

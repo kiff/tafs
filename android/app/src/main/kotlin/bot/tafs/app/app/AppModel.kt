@@ -2129,6 +2129,24 @@ class AppModel(
    * card's answer: "approved", or "failed: why" so Coach can say what went wrong and ask again. Nothing is told for a step the
    * owner didn't confirm or whose terms changed on the screen.
    */
+  /**
+   * The card's approval, run by the model, not the screen: opening the vendor's page can tear the screen down, and the flow
+   * (planque's confirm, the answer to Coach, reading the thread, following the run) goes on whatever happens to it.
+   */
+  fun startApproval(c: SetupComponent, shownDigest: String?, shownDraft: String?) {
+    scope.launch { approveCoach(c, shownDigest, shownDraft) }
+  }
+
+  /** The sign-in card's Sign in again, run by the model for the same reason as [startApproval]. */
+  fun startSignInAgain(c: SetupComponent) {
+    scope.launch { signInAgain(c) }
+  }
+
+  /** A taf page's Sign in again (a connection its vendor signed out), run by the model for the same reason. */
+  fun startReconnect(grant: Grant) {
+    scope.launch { reconnect(grant) }
+  }
+
   suspend fun approveCoach(c: SetupComponent, shownDigest: String?, shownDraft: String?) {
     val grantId = c.grant ?: return
     when (val result = connect(c.id, grantId, shownDigest, c.draft, shownDraft)) {

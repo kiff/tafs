@@ -43,11 +43,13 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   in each taf's chat (`AppState.drafts`, as iOS's `setupDraft`); it goes at sign-out or a switch
   of account.
 - **A card's answer tafs cloud took** reads answered at once ("Answered."), until the thread
-  brings kiff/agents' words for it; never "Sending your answer…" after tafs cloud answered, even if
-  the screen was torn down meanwhile (a vendor's sign-in page opening).
+  brings kiff/agents' words for it. An approval and a sign-in run in the model, not the screen
+  (`startApproval`, `startSignInAgain`, `startReconnect`), so the vendor's sign-in page opening
+  never cuts the flow short: planque's confirm, the answer to Coach, reading the thread and
+  following the run all go on.
 - **Coach's tools in one tap:** when tafs cloud sends the connect batch before Coach's Card (the
   Card is drafted over tools KIFF holds), the app reads the tools again after the batch and gives
-  the Card in the same flow. A
+  the Card in the same flow: one tap, still two fingerprints (the batch, then the Card). A
   taf is improved from a hold's **Change the limit in Coach mode**, which opens Coach on a
   new conversation about it (`AppModel.improveInCoach`).
 - **Previous conversations** lists them newest first. A long press archives one, and

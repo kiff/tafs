@@ -1,5 +1,7 @@
 package bot.tafs.app
 
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.kiff.InMemorySecretStore
@@ -43,12 +45,12 @@ class CoachStartTest {
     transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
   }
 
-  private suspend fun model(signIn: VendorSignIn = FakeSignIn()): AppModel {
+  private suspend fun model(signIn: VendorSignIn = FakeSignIn(), scope: kotlinx.coroutines.CoroutineScope? = null): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
     secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
-    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, vendorSignIn = signIn).also { it.restore() }
+    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, vendorSignIn = signIn, scope = scope).also { it.restore() }
   }
 
   private fun body(key: String, i: Int = 0): JsonObject = KiffClient.json.parseToJsonElement(String(transport.requestsTo(key)[i].body!!)).jsonObject
@@ -339,6 +341,31 @@ class CoachStartTest {
   private val signInCard = """{"type":"sign_in","id":"s1","grant":"g1","service":"mcp.stripe.com"}"""
   private fun grant(status: String) =
     """{"id":"g1","status":"$status","text":"Connect Stripe.","digest":"${digest.first}","request":${digest.second},"events":[]}"""
+
+  @Test fun aSignInGoesOnWhenTheScreenThatStartedItIsTornDown() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("connected"))
+    // planque's confirm is held: the screen goes away while the flow is at it, as when the vendor's page opens.
+    transport.hold("POST /v1/accounts/t_01/grants/g1/confirm")
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"), scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    val screen = kotlinx.coroutines.CoroutineScope(coroutineContext + kotlinx.coroutines.Job())
+    screen.launch { m.startSignInAgain(KiffClient.json.decodeFromString(signInCard)) }
+    testScheduler.runCurrent()
+    screen.cancel()
+    transport.release("POST /v1/accounts/t_01/grants/g1/confirm")
+    repeat(20) { testScheduler.advanceTimeBy(100); testScheduler.runCurrent() }
+    // The flow went on: planque confirmed, Coach got its answer, and the card isn't left sending.
+    assertEquals(1, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/confirm").size)
+    assertEquals("signed in", answered("s1"))
+    assertTrue(m.state.value.cardsTaken.contains("s1"))
+    assertTrue(m.state.value.cardsAnswering.isEmpty())
+    assertTrue(transport.requestsTo("GET /v1/tafs/setup_1/conversation").size >= 2)
+  }
 
   @Test fun signingInAgainApprovesOpensTheVendorAndTellsCoach() = runTest {
     reads()
