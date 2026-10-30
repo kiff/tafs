@@ -125,6 +125,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Every message's first sentence is the outcome, or what waits on the owner, or the question asked.");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("What you checked on the way comes after it, briefly, or not at all.");
     expect(SETUP_INSTRUCTIONS).toContain("Falta que apruebes las herramientas de Reembolsos");
+    // No closing offer of more help (Eval 41024236766: "Si quieres cambiarlos, dímelo aquí.").
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("End when it's said: no offer of more help");
     expect(SETUP_INSTRUCTIONS).not.toMatch(/\d+ words/);
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
     expect(SETUP_INSTRUCTIONS).toContain("as a notice (tone info");
