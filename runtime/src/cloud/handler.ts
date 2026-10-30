@@ -2696,7 +2696,7 @@ export interface StreamResult {
  * foreground so the agent's words reach the phone as they are written. What
  * the phone gets is trimmed to what it shows:
  *
- *   event: session    {session, new_session, run}, first
+ *   event: session    {session, new_session, run, message: {id, at}}, first
  *   event: taken      {}: the run read a message the owner wrote while it went (steer)
  *   event: thinking   {text}: more of the summary of what the taf is thinking (kiff/tafs#285)
  *   event: text       {text}: more of the answer
@@ -2937,7 +2937,9 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     const d = (e.data ?? {}) as Record<string, unknown>;
     switch (e.event) {
       case "run":
-        return at ? sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id }) : undefined;
+        // The owner's message as the thread will name it, so the app matches its send by id, as POST …/messages answers it.
+        return at ? sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id,
+          ...(typeof d.id === "string" ? { message: { id: inputID(d.id), at: d.created } } : {}) }) : undefined;
       case "delta":
         if (!at) return undefined;
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
