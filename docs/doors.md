@@ -72,7 +72,9 @@ A taf's results go to the places set for it (`PUT /v1/tafs/{id}/results`):
 
 Each place is sent once (`settle` in `doors.ts`). A place that fails is tried again alone on the
 same waits as the door's reply, so a reply already sent isn't sent again while the owner's email
-waits.
+waits. A door's reply given up on after its last try is kept for 30 days, and the owner can
+send it again from the taf's page (**Send again**). That sends the taf's answer once more, with new
+tries, and does no work.
 
 ## What's kept
 

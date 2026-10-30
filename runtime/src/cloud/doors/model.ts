@@ -193,6 +193,8 @@ export const doorKeys = {
   pending: (tenant: string, taf: string) => `${tenant}#door-pending#${taf}`,
   /** The replies waiting for their next try, on every account: what the sweep reads. */
   retrying: () => "door-retrying",
+  /** A door reply given up on after its tries, by its run: kept so the owner can send it again. */
+  unsent: (tenant: string, taf: string, run: string) => `${tenant}#door-unsent#${taf}#${run}`,
   sent: (tenant: string, taf: string) => `${tenant}#door-sent#${taf}`,
   knocks: (tenant: string, taf: string) => `${tenant}#door-knocks#${taf}`,
   bound: (tenant: string) => `${tenant}#door-ai`,

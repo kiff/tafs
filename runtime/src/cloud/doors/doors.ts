@@ -394,9 +394,46 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
     await store.remove(doorKeys.sending(tenant, ref));
     return;
   }
-  // Given up on: the chat says the door's reply wasn't sent.
-  if (sent && !done.has("door_reply")) await stamp(sent);
+  // Given up on: the chat says the door's reply wasn't sent, and it's kept for Send again.
+  if (sent && !done.has("door_reply")) {
+    await stamp(sent);
+    if (taf && door && app) {
+      await store.put(doorKeys.unsent(tenant, reply.taf, runID), { ref, reply: { ...reply, run: runID } }, addDays(ctx.now, DOOR.replyDays));
+    }
+  }
   await forgetReply(ctx, tenant, reply.taf, ref);
+}
+
+/**
+ * Send again (docs/reliability.md): the door reply of the run that was given up on, sent once more, now, with a
+ * fresh set of tries. It sends what the taf already wrote and does no work. The door's provider sends one email per
+ * idempotency key, so the key is new for this send. 404 when there's nothing of that run to send.
+ */
+/** Which of these runs have a door reply that can be sent again. */
+export async function unsentOf(store: DoorStore, tenant: string, taf: string, runs: string[]): Promise<Set<string>> {
+  const have = await Promise.all(runs.map(async (r) => ((await store.get(doorKeys.unsent(tenant, taf, r))) ? r : undefined)));
+  return new Set(have.filter((r): r is string => !!r));
+}
+
+export async function sendAgain(ctx: DoorsContext, tenant: string, taf: string, run: string): Promise<{ state: Sent["status"] | "waiting" }> {
+  const { store } = ctx.doors;
+  const key = doorKeys.unsent(tenant, taf, run);
+  const kept = (await store.get(key)) as { ref: string; reply: Reply } | undefined;
+  if (!kept) throw new DoorError(404, "this request has no reply waiting to be sent again");
+  // Claimed first, so two taps send it once.
+  if (!(await store.create(doorKeys.sending(tenant, `again#${taf}#${run}`), 1, new Date(ctx.now.getTime() + 10 * 60_000)))) {
+    throw new DoorError(409, "this reply is being sent already");
+  }
+  await store.remove(key);
+  const ref = `${kept.ref}~again${ctx.now.getTime().toString(36)}`;
+  const { tries: _t, next_at: _n, done: _d, ...reply } = kept.reply;
+  await store.put(doorKeys.reply(tenant, ref), { ...reply, done: ["app", "owner_email"] }, addDays(ctx.now, DOOR.replyDays));
+  await settle(ctx, tenant, ref, run, taf);
+  await store.remove(doorKeys.sending(tenant, `again#${taf}#${run}`));
+  const left = (await store.get(doorKeys.reply(tenant, ref))) as Reply | undefined;
+  if (left) return { state: "waiting" };
+  const last = (await sentOf(store, tenant, taf)).find((s) => s.run === run);
+  return { state: last?.status ?? "not_sent" };
 }
 
 /** Where a taf's results go: its settings, or, for a taf from before them, its door's reply alone. */

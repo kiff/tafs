@@ -471,6 +471,36 @@ describe("the email door", () => {
     expect(await sweepReplies(depsOf(w))).toEqual([]);
   });
 
+  it("a reply given up on can be sent again by the owner, once, doing no work", async () => {
+    const w = world();
+    await emailDoor(w);
+    await emailHook(w, mail(w, {}));
+    const run = w.agents.runs[0]!;
+    const sendEmail = w.config.email!.send;
+    w.config.email!.send = async () => { throw Object.assign(new Error("down"), { status: 503 }); };
+    await finish(w, run, "Refunded.");
+    let at = NOW.getTime();
+    for (const wait of [5, 20, 60]) { at += wait * 60_000; w.at(new Date(at)); await sweepReplies(depsOf(w)); }
+    // Given up on: the taf's page offers Send again for it.
+    const page = await send(w, "GET", `/v1/tafs/${REFUNDS}/work`, { token: "ana" });
+    expect(page.body.requests[0].deliveries).toEqual([expect.objectContaining({ place: "door_reply", state: "not_sent", send_again: true })]);
+    // Only someone who manages the taf sends it, and only a door's reply.
+    const path = `/v1/tafs/${REFUNDS}/requests/${run.id}/deliveries/door_reply/send`;
+    expect((await send(w, "POST", path, { token: "viewer" })).status).toBe(403);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/requests/${run.id}/deliveries/app/send`, { token: "ana" })).status).toBe(400);
+    w.config.email!.send = sendEmail;
+    const runs = w.agents.runs.length;
+    const again = await send(w, "POST", path, { token: "ana" });
+    expect(again.status).toBe(200);
+    expect(again.body).toEqual({ state: "sent" });
+    expect(w.outbox).toHaveLength(1);
+    expect(w.agents.runs).toHaveLength(runs);
+    const after = await send(w, "GET", `/v1/tafs/${REFUNDS}/work`, { token: "ana" });
+    expect(after.body.requests[0].deliveries).toEqual([expect.objectContaining({ state: "sent" })]);
+    // Sent: there's nothing left to send again.
+    expect((await send(w, "POST", path, { token: "ana" })).status).toBe(404);
+  });
+
   it("only someone who manages the taf sets where its results go, to known places", async () => {
     const w = world();
     expect((await send(w, "PUT", `/v1/tafs/${REFUNDS}/results`, { token: "viewer", body: { places: ["app"] } })).status).toBe(403);

@@ -15,7 +15,7 @@ import { summaryOf, workOf } from "./work.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
-import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, settlePending, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 
@@ -493,7 +493,20 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
     ]);
     const zone = me.timeZone ?? "UTC";
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, v.status === "paused", zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent) };
+    const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
+    const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, v.status === "paused", zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again) };
+  }
+  if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
+    // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
+    await needTaf(event, me, taf, deps);
+    if (parts[6] !== "door_reply") throw new HTTPError(400, "only a door's reply is sent again");
+    try {
+      return await sendAgain(doorContext(deps), me.tenantID, taf.id, parts[4] ?? "");
+    } catch (err) {
+      if (err instanceof DoorError) throw new HTTPError(err.status, err.message);
+      throw err;
+    }
   }
   if (parts.length === 4 && method === "PUT" && action === "results") {
     await needTaf(event, me, taf, deps);

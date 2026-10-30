@@ -25,7 +25,7 @@ export interface RequestView {
   state: "done" | "working" | "retrying" | "needs_you" | "waiting" | "stopped" | "failed";
   line: string;
   /** Where its result went, as far as tafs cloud sent it. */
-  deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string }>;
+  deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true }>;
 }
 
 /** A needs_you older than this no longer counts on the list: it stays on the taf's page. */
@@ -52,11 +52,14 @@ function validZone(zone: string): string {
 }
 
 /** One run as a request: its state and the words for it. */
-export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = []): RequestView {
-  const deliveries = sent.filter((s) => s.run === r.id).map((s) => ({
-    place: "door_reply" as const, state: s.status,
-    line: s.status === "sent" ? `Replied at ${timeIn(s.at, zone, now)}` : `Reply not sent: ${s.why ?? "the provider didn't take it"}`,
-  }));
+export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], again = new Set<string>()): RequestView {
+  // The newest stamp per run: a reply sent again replaces the one that wasn't.
+  const last = sent.find((s) => s.run === r.id);
+  const deliveries = last ? [{
+    place: "door_reply" as const, state: last.status,
+    line: last.status === "sent" ? `Replied at ${timeIn(last.at, zone, now)}` : `Reply not sent: ${last.why ?? "the provider didn't take it"}`,
+    ...(last.status === "not_sent" && again.has(r.id) ? { send_again: true as const } : {}),
+  }] : [];
   const base = { id: r.id, at: r.created, deliveries };
   if (r.state === "needs_you") return { ...base, state: "needs_you", line: r.reason ?? "It needs you to look at it." };
   if (r.state === "retrying") {
@@ -96,8 +99,8 @@ export function summaryOf(runs: Run[], paused: boolean, zone: string, now: Date)
 }
 
 /** The taf's page: counts per state, and the recent requests with what was sent. */
-export function workOf(runs: Run[], zone: string, now: Date, sent: Sent[]): { counts: Record<RequestView["state"], number>; requests: RequestView[] } {
-  const requests = runs.map((r) => requestOf(r, zone, now, sent));
+export function workOf(runs: Run[], zone: string, now: Date, sent: Sent[], again = new Set<string>()): { counts: Record<RequestView["state"], number>; requests: RequestView[] } {
+  const requests = runs.map((r) => requestOf(r, zone, now, sent, again));
   const counts = { done: 0, working: 0, retrying: 0, needs_you: 0, waiting: 0, stopped: 0, failed: 0 };
   for (const q of requests) counts[q.state]++;
   return { counts, requests };
