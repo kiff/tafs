@@ -88,6 +88,8 @@ final class OwnerWordsTests: XCTestCase {
         rule.perAction = .bare(50)
         rule.perWindow = .bare(10)
         rule.countPerWindow = 20
+        XCTAssertEqual(rule.summary, "up to 50 (no currency) each; more asks you first · 10 (no currency) in total a day, then it asks you · 20 calls a day, then it asks you")
+        rule.outside = .refuse
         XCTAssertEqual(rule.summary, "≤ 50 (no currency) each · 10 (no currency) in total a day · 20 calls a day")
 
         rule.perWindow = Money(minor: 100000, currency: "EUR", scale: 2)
@@ -262,5 +264,62 @@ final class ToolWordsTests: XCTestCase {
         XCTAssertEqual(KIFFMapping.vendorWords("mcp.stripe.com"), "Stripe")
         XCTAssertEqual(KIFFMapping.vendorWords("Stripe"), "Stripe")
         XCTAssertEqual(KIFFMapping.vendorWords("access.stripe.com"), "Access")
+    }
+
+    private func card(_ onExceed: String?, count: Int64, window: String = "calendar_day") throws -> KIFFClient.DraftCard {
+        let policy = onExceed.map { #","on_exceed":"\#($0)""# } ?? ""
+        return try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(#"""
+        {"grants":[{"action":"create_refund","title":"Refund a payment","per_action_max":[{"quantity":"sum(amount)","max":4000,"unit":"USD","scale":2}]}],
+         "aggregates":[{"quantity":"sum(amount)","limit":30000,"window":"\#(window)","unit":"USD","scale":2},{"quantity":"count","limit":\#(count),"window":"\#(window)"}]\#(policy)}
+        """#.utf8))
+    }
+
+    /// A Card that asks the owner past its limits says so on every limit, in the words KIFF's
+    /// Cards and both apps use; a count of 0 never reads "0 calls a day".
+    func testADraftCardThatAsksPastItsLimitsSaysSo() throws {
+        let each = Money(minor: 4000, currency: "USD", scale: 2).formatted
+        let total = Money(minor: 30000, currency: "USD", scale: 2).formatted
+        XCTAssertEqual(try card("owner", count: 0).lines,
+                       ["Refund a payment: up to \(each) each; more asks you first", "\(total) in total a day, then it asks you", "Each call asks you first"])
+        XCTAssertEqual(try card("owner", count: 1).lines.last, "1 call a day, then it asks you")
+        XCTAssertEqual(try card("owner", count: 20).lines.last, "20 calls a day, then it asks you")
+        XCTAssertEqual(try card("owner", count: 20, window: "rolling_1h").lines,
+                       ["Refund a payment: up to \(each) each; more asks you first", "\(total) in any hour, then it asks you", "20 calls in any hour, then it asks you"])
+        for policy in ["refuse", nil, "something_new"] {
+            XCTAssertEqual(try card(policy, count: 0).lines,
+                           ["Refund a payment: up to \(each) each", "\(total) in total a day", "0 calls a day"], policy ?? "none")
+        }
+    }
+
+    /// KIFF's own lines are shown as they come, on each side of a revision; without them,
+    /// each side reads its own policy.
+    func testKIFFsOwnLinesWinAndARevisionReadsEachSidesPolicy() throws {
+        let sent = try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(#"""
+        {"on_exceed":"owner","aggregates":[{"quantity":"count","limit":0,"window":"calendar_day"}],"lines":["In KIFF's words"],
+         "current":{"aggregates":[{"quantity":"count","limit":20,"window":"calendar_day"}],"lines":["Now, in KIFF's words"]}}
+        """#.utf8))
+        XCTAssertEqual(sent.lines, ["In KIFF's words"])
+        XCTAssertEqual(sent.lines(alike: ["anything"]), ["In KIFF's words"])
+        XCTAssertEqual(sent.current?.lines, ["Now, in KIFF's words"])
+
+        let own = try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(#"""
+        {"revises":"c1","on_exceed":"owner","aggregates":[{"quantity":"count","limit":0,"window":"calendar_day"}],
+         "current":{"on_exceed":"refuse","aggregates":[{"quantity":"count","limit":20,"window":"calendar_day"}]}}
+        """#.utf8))
+        XCTAssertEqual(own.lines, ["Each call asks you first"])
+        XCTAssertEqual(own.current?.lines, ["20 calls a day"])
+    }
+
+    /// A taf's Card reads a rule held past its limits in the same words (its `outside`).
+    func testARuleThatAsksPastItsLimitsSaysSo() {
+        let usd = { (minor: Int64) in Money(minor: minor, currency: "USD", scale: 2) }
+        var rule = CardRule(action: "refund", label: "Refunds", perAction: usd(4000), perWindow: usd(30000), countPerWindow: 20)
+        XCTAssertEqual(rule.summary, "up to \(usd(4000).formatted) each; more asks you first · \(usd(30000).formatted) in total a day, then it asks you · 20 calls a day, then it asks you")
+        XCTAssertEqual(CardRule(action: "list", label: "Lists", countPerWindow: 0).summary, "Each call asks you first")
+        XCTAssertEqual(CardRule(action: "list", label: "Lists", countPerWindow: 1).summary, "1 call a day, then it asks you")
+        rule.outside = .refuse
+        XCTAssertEqual(rule.summary, "≤ \(usd(4000).formatted) each · \(usd(30000).formatted) a day · 20 calls a day")
+        let card = TafCard(id: "c", title: "Refunds", rules: [rule], total: CardTotal(limit: usd(30000), used: usd(0), window: .day))
+        XCTAssertEqual(card.facts, ["≤ \(usd(4000).formatted) each · refused above"])
     }
 }

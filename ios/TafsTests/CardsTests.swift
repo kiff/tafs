@@ -41,7 +41,7 @@ final class CardsTests: XCTestCase {
                            total: CardTotal(limit: eur(80000), used: eur(18000), window: .day))
         XCTAssertEqual(card.hero?.figure, eur(62000).formatted)
         XCTAssertEqual(card.hero?.words, "left today of \(eur(80000).formatted)")
-        XCTAssertEqual(card.facts, ["≤ \(eur(5000).formatted) each · asks you above"])
+        XCTAssertEqual(card.facts, ["up to \(eur(5000).formatted) each; more asks you first"])
     }
 
     /// kiff/tafs#309: a total with no currency (the tool that tells it gone) read "30 000 left
@@ -54,7 +54,7 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(card.hero?.figure, thirty)
         XCTAssertEqual(card.hero?.words, "left today of \(thirty) · no currency")
         XCTAssertEqual(card.leftLine, "\(thirty) (no currency) left")
-        XCTAssertEqual(card.facts, ["≤ \(Money.bare(5000).figure) (no currency) each · asks you above"])
+        XCTAssertEqual(card.facts, ["up to \(Money.bare(5000).figure) (no currency) each; more asks you first"])
         let said = TafCardFace.spoken(card, issuedBy: "Ana", revoked: false)
         XCTAssertTrue(said.contains("no currency"), said)
 

@@ -72,9 +72,25 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
   - the **current key** has no access control. It signs what reads or takes authority
     away: Refuse, Halt all, Coach's and planque's requests.
   - the **approval key** signs only what grants authority: Approve, Extra room, issuing a
-    Card, starting a trial, Resume. Its own access control requires Face ID, Touch ID or
-    the passcode, so the key checks the prompt, not the app's code. One confirmed Face ID
-    covers one confirmed step.
+    Card, starting a trial, Resume, sharing, connecting a tool, starting Coach. Its own
+    access control requires the faces or fingerprints enrolled when it was made
+    (`.biometryCurrentSet`), never the passcode, so the key checks the prompt, not the app's
+    code; each of those steps' prompts offers Face ID or Touch ID only. One confirmed Face ID
+    covers one confirmed step. The screen lock never approves.
+  - a face or fingerprint enrolled since the key was made ends it for good. The app finds
+    that with no prompt, at each refresh: the enrolled set (`evaluatedPolicyDomainState`,
+    saved with the key) differs. Only two known values that differ count, so a lockout after
+    a few misses, or a face not available, leaves a good key alone. It then makes a new key
+    and says so on the home screen and in Needs you: "Your Face ID or fingerprints changed,
+    or weren't recognized, so this phone can't approve until you sign in again", with
+    **Sign in again**, in place of Approve; Refuse stays. KIFF holds the old key for the
+    session, so the new one counts after the next sign-in. A prompt closed unrecognized,
+    while the key is still good, says "Try again, or sign in again if your Face ID or
+    fingerprints changed".
+  - the approval key is kept under `tafs.approval-key.v2`. The first key, under
+    `tafs.approval-key`, also took the passcode; the app deletes it, so each iPhone and iPad
+    signs in again once before approving. Its first launch finds that KIFF holds the old key
+    (`registerApprovalKey` gets 409 with another fingerprint) and says so before any tap.
 - On an Android phone the two keys are in the Android Keystore (StrongBox, else the TEE),
   and the approval key is stricter (`KeystoreKeys`, `DeviceSigner`):
   - it signs **once per fingerprint**: timeout 0, a strong biometric only, unlocked through
