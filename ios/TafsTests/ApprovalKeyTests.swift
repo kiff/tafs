@@ -398,6 +398,15 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertEqual(ApprovalSigner.approvalKeyFlags, [.privateKeyUsage, .biometryCurrentSet])
     }
 
+    func testOnlyTwoKnownDomainsThatDifferEndTheKey() {
+        let a = Data([1]), b = Data([2])
+        XCTAssertTrue(ApprovalSigner.biometricsChanged(made: a, now: b))
+        XCTAssertFalse(ApprovalSigner.biometricsChanged(made: a, now: a))
+        // A lockout after a few misses, or a face not available, reads no domain: the key stays.
+        XCTAssertFalse(ApprovalSigner.biometricsChanged(made: a, now: nil))
+        XCTAssertFalse(ApprovalSigner.biometricsChanged(made: nil, now: b))
+    }
+
     func testTheFingerprintIsKIFFs() {
         let fp = KIFFClient.fingerprint(Data([0x30, 0x59, 0x02]))
         XCTAssertEqual(fp.count, 19)

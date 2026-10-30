@@ -49,6 +49,15 @@ extension ApprovalSigning {
 extension ApprovalSigning {
     /// Signers without an approval key sign everything with the one key they have.
     var approvalPublicKeyDER: Data { Data() }
+    /// Whether the enrolled faces or fingerprints changed since the key was made. Only two
+    /// known domains that differ say so: none now also means a lockout after a few misses, or
+    /// a face not available, and those leave a good key alone. A key whose biometrics are truly
+    /// gone fails at signing, which says to sign in again.
+    nonisolated static func biometricsChanged(made: Data?, now: Data?) -> Bool {
+        guard let made, let now else { return false }
+        return made != now
+    }
+
     func renewApprovalKeyIfBiometricsChanged() -> Bool { false }
     func sign(_ message: Data, reason: String, grants: Bool) async throws -> String { try await sign(message, reason: reason) }
     func signApproval(_ message: Data, reason: String) async throws -> String { try await sign(message, reason: reason) }
@@ -203,9 +212,8 @@ final class ApprovalSigner: ApprovalSigning {
         #if os(iOS)
         guard approvalHandle != nil, SecureEnclave.isAvailable else { return false }
         let made = Keychain.load(Self.approvalDomainAccount).flatMap { Data(base64Encoded: $0) }
-        let now = Self.biometricsDomain()
-        guard made != now else { return false }
-        // A key made under other biometrics, or with none enrolled now: it can't sign again.
+        guard Self.biometricsChanged(made: made, now: Self.biometricsDomain()) else { return false }
+        // A key made under other biometrics: it can't sign again.
         Keychain.delete(Self.approvalKeyAccount)
         Keychain.delete(Self.approvalDomainAccount)
         endStep()
