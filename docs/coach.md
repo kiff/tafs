@@ -57,8 +57,10 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    key, so the key never reaches the phone (`POST /v1/setup`).
 3. The phone gives Coach its tools, as tafs cloud says them (`GET /v1/setup`'s `tools`).
    With `to_give`, it signs and sends the `connect` batch to KIFF's gateway
-   (`POST /v1/connections/batch`), then, under its own fingerprint, Coach's Cards' draft
-   (`POST /v1/me/agent-drafts`), each body exactly as it came. The phone builds neither:
+   (`POST /v1/connections/batch`). Then, on the next read and under its own fingerprint,
+   it sends Coach's Cards' draft (`POST /v1/me/agent-drafts`), each body exactly as it came.
+   The Cards come only once every tool is connected, because KIFF refuses a Card naming an
+   action no tool declares yet. The phone builds neither:
    the tools' names, addresses and Cards are tafs cloud's, and the words the owner reads
    are its `lines` and KIFF's own preview of the Cards. `given` sends nothing; `taken`
    names the vendor's tool that holds one of Coach's names, and `unknown` asks to try

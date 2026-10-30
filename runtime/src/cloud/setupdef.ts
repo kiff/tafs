@@ -369,6 +369,8 @@ field it asks for) and show the approval of a new planque request: the same
 request fails the same way, and the app won't send it again.
 Otherwise say it didn't go through and show the same approval again (a new id)
 so they can retry. Never tell the owner to install, open or set up another app.
+Never write an id to the owner (a run's, a grant's, a session's, a Card's): name
+the taf, the vendor or what happened instead.
 If planque answers that the owner's phone isn't set up yet, show a notice
 (warning) asking them to start again from this screen, which sets the phone up
 once; don't retry.
