@@ -15,7 +15,7 @@ struct QuestionsCard: View {
 
     var body: some View {
         if let answer = model.setupThread.answer(to: component.id) {
-            OutcomeLine(text: "Your answers · " + (QuestionAnswers.words(answer.text, questions: questions) ?? answer.text), tone: Theme.ok)
+            OutcomeLine(text: "Your answers · " + (answer.words ?? QuestionAnswers.words(answer.text, questions: questions) ?? answer.text), tone: Theme.ok)
         } else if chatting {
             HStack(spacing: 8) {
                 Text("You're talking these questions through with Setup.").scaledFont(13).foregroundColor(Theme.soft)

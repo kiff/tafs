@@ -51,12 +51,24 @@ final class Dictation: ObservableObject {
                 let code = Language(id: p).code
                 if let exact = have.first(where: { $0.caseInsensitiveCompare(p) == .orderedSame }) {
                     add(exact)
-                } else if let same = have.filter({ Language(id: $0).code == code }).sorted().first {
+                } else if let same = bestForm(of: code, among: have) {
                     add(same)
                 }
             }
             for id in have.sorted() { add(id) }
             return out
+        }
+
+        /// The form of a language to dictate in when the owner's own isn't on the device (both
+        /// apps choose alike): for English, British then American; for another language, its
+        /// own country's (fr-FR, de-DE); else the first of its forms, alphabetically.
+        static func bestForm(of code: String, among have: [String]) -> String? {
+            let forms = have.filter { Language(id: $0).code == code }.sorted()
+            let preferred = code == "en" ? ["en-GB", "en-US"] : ["\(code)-\(code.uppercased())"]
+            for p in preferred {
+                if let f = forms.first(where: { $0.caseInsensitiveCompare(p) == .orderedSame }) { return f }
+            }
+            return forms.first
         }
 
         /// The owner's own languages among them, theirs first: the keyboards they set up

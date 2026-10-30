@@ -217,6 +217,14 @@ final class DictationTests: XCTestCase {
                        ["es-ES", "fr-CA", "de-DE", "en-GB"])
         XCTAssertEqual(Dictation.Language.ordered(supported: ["fr-FR"], preferred: ["es-CO", "en-US"]).map(\.id), ["fr-FR"])
         XCTAssertEqual(Dictation.Language.ordered(supported: [], preferred: ["es-CO"]), [])
+        // The owner's own form missing: the same language's best form, as Android chooses it
+        // (English: British, then American; another: its own country's; else alphabetical).
+        XCTAssertEqual(Dictation.Language.bestForm(of: "en", among: ["en-AU", "en-GB", "en-US"]), "en-GB")
+        XCTAssertEqual(Dictation.Language.bestForm(of: "en", among: ["en-AU", "en-US"]), "en-US")
+        XCTAssertEqual(Dictation.Language.bestForm(of: "fr", among: ["fr-CA", "fr-FR"]), "fr-FR")
+        XCTAssertEqual(Dictation.Language.bestForm(of: "pt", among: ["pt-BR"]), "pt-BR")
+        XCTAssertNil(Dictation.Language.bestForm(of: "fr", among: ["en-US"]))
+        XCTAssertEqual(Dictation.Language.ordered(supported: ["en-AU", "en-GB", "en-US"], preferred: ["en-FR"]).map(\.id), ["en-GB"])
         // The owner's own: their keyboards first, then the device's languages; only those, so
         // the switch goes EN, ES, FR, not every language the device has (kiff/tafs#236, item 23).
         XCTAssertEqual(Dictation.Language.owners(supported: supported, keyboards: ["es-ES", "fr-FR"], preferred: ["en-US"]).map(\.id),
