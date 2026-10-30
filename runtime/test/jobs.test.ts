@@ -93,6 +93,8 @@ describe("jobs", () => {
       expect(flat).toContain("with no closing summary of what was or wasn't done: that's a scheduled run's report");
       // What was checked comes after what waits on the owner (Eval 41026186869, rule 1).
       expect(flat).toContain("What you checked on the way comes after, in a few words.");
+      // No closing offer (Eval 41043640507: "If you still want this refund, ask me again…").
+      expect(flat).toContain("end when it's said: no offer of more help");
       // Each outcome said once (Eval 41015204757: "it was sent once. The refund went through.").
       expect(flat).toContain("each thing once: after a held call the owner approved, one sentence says what went through");
       // The scheduled run's report still names each item by its reference.
