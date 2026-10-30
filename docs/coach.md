@@ -31,8 +31,12 @@ account admin (`AppModel.mayUseCoach`).
 
 On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
 (`CoachScreen`). It has what's below, with these differences:
-- **No taf-page offer.** Above the chat are **New conversation** and **Previous
-  conversations** (`CoachChats.kt`), but a new conversation offers no taf to improve. A
+- **A compact header,** one row: back, Coach, and a menu with **New conversation** and
+  **Previous conversations** (`CoachHeader`). Under it, the plan in tafs cloud's one line
+  (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
+  plan line folds away while the thread scrolls down and comes back on the way up, so a card
+  has the screen. The phone never counts the plan's steps.
+- **No taf-page offer.** A new conversation offers no taf to improve. A
   taf is improved from a hold's **Change the limit in Coach mode**, which opens Coach on a
   new conversation about it (`AppModel.improveInCoach`).
 - **Previous conversations** lists them newest first. A long press archives one, and
@@ -213,3 +217,10 @@ cloud to a new URL means updating that list too. The app shows
 these as lines in Coach's chat ("coach lines"). While the owner is away, what isn't
 urgent waits there as one "While you were away" message instead of a notification
 ([approvals.md](approvals.md#notifications)).
+
+## The plan in one line
+
+A plan (`steps` component) comes with `line`, its one-line form: "Step 3 of 6 · Your rules",
+for the step at work or the first still to do, or "Done · 6 of 6". It's in the thread and on
+the stream alike. An app shows the plan folded to that line in Coach's header, and opens it
+to the steps. Until tafs cloud sends `line`, Android shows the plan's title.

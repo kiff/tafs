@@ -79,7 +79,6 @@ import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatEnd
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.LiveAnswer
-import bot.tafs.app.model.LiveStep
 import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.Work
 import bot.tafs.app.kiff.KiffMapping
@@ -434,34 +433,20 @@ private fun WorkSummary(work: Work) {
 }
 
 /**
- * The work of the answer streaming now: the step in progress, or what it's at ("Thinking…", "Writing…"); the line of what it's
- * thinking while it hasn't started writing; the steps done so far; then the words as they're written.
+ * The work of the answer streaming now: one calm line of what it's at, tafs cloud's (docs/chat.md, "The live line"), then the
+ * words as they're written. No thinking text and no list of steps: when the run ends, the line folds into the message's
+ * "Worked … · N steps". Before tafs cloud sends the line, the step at work stands in for it.
  */
 @Composable
 private fun LiveWork(live: LiveAnswer) {
   val writing = live.text.isNotBlank()
-  // A quick answer's thinking is noise: the line shows once it has thought for a few seconds.
-  var thoughtAWhile by remember(live.started) { mutableStateOf(false) }
-  LaunchedEffect(live.started) { kotlinx.coroutines.delay(3_000); thoughtAWhile = true }
   Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    val running = live.steps.lastOrNull { it.status == LiveStep.Status.running }
-    if (running != null || live.activity != null || !writing) {
+    val line = Chat.liveLine(live)
+    if (line != null) {
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         androidx.compose.material3.CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Theme.dim)
-        Text(live.activity ?: running?.words?.ifEmpty { null } ?: if (writing) "Writing…" else "Thinking…", style = scaled(13, color = Theme.dim))
+        Text(line, style = scaled(13, color = if (live.state?.state == "waiting_for_you") Theme.amberText else Theme.dim))
       }
-    }
-    if (!writing && thoughtAWhile) {
-      Chat.thinkingLine(live.thinking).takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(13, color = Theme.soft), maxLines = 2) }
-    }
-    live.steps.filter { it.status != LiveStep.Status.running && it.words.isNotEmpty() }.forEach { step ->
-      val (mark, note, tone) = when (step.status) {
-        LiveStep.Status.error -> Triple("✗", " · failed", Theme.no)
-        LiveStep.Status.notMade -> Triple("↩", " · not made · read first", Theme.dim)
-        LiveStep.Status.held -> Triple("⏸", " · held for you", Theme.amberText)
-        else -> Triple("✓", "", Theme.soft)
-      }
-      Text("$mark ${step.words}$note", style = scaled(13, color = tone))
     }
     if (writing) MarkdownText(live.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
   }

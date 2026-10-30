@@ -81,6 +81,8 @@ data class SetupComponent(
   val yes: String? = null,
   val no: String? = null,
   val note: String? = null,
+  /** A plan's one-line form, from tafs cloud: "Step 3 of 6 · Your rules", or "Done · 6 of 6". */
+  val line: String? = null,
 ) {
   /** Where a sign-in goes, as the app shows it: from the card's service, never from Coach's words, so a label can't stand in for the destination. */
   val destination: String get() = service ?: "the vendor's page"

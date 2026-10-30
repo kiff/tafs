@@ -227,6 +227,9 @@ object CoachWords {
 
   private val ASKING = setOf("confirm", "questions", "approval", "sign_in", "result")
 
+  /** A plan's one line, as tafs cloud writes it; before it does, the plan's own title. Never counted on the phone. */
+  fun planLine(plan: SetupComponent): String = plan.line?.takeIf { it.isNotBlank() } ?: plan.title?.takeIf { it.isNotBlank() } ?: "Plan"
+
   /** The plan, shown pinned above the thread rather than in it. */
   fun plan(components: List<ShownComponent>): ShownComponent? = components.lastOrNull { it.component.type == "steps" }
 
