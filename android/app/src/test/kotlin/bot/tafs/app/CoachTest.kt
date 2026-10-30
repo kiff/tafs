@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.model.CoachAnswer
 import bot.tafs.app.kiff.SetupStep
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
@@ -207,10 +208,25 @@ class CoachTest {
 
   // MARK: Answering
 
-  @Test fun theOwnersWordsShowAsTafsCloudGivesThem() = runTest {
-    // tafs cloud gives the owner's own words (its ownerWords): the app shows them as they are, with no form of its own to read.
-    val m = coach(thread(listOf(msg("owner", "Use live", "2026-10-28T08:01:00Z"), msg("owner", "[confirm c1] 100", "2026-10-28T08:02:00Z")), emptyList()))
-    assertEquals(listOf("Use live", "[confirm c1] 100"), m.state.value.chatItems(COACH_CHAT).filterIsInstance<ChatItem.Message>().map { it.message.text })
+  @Test fun theOwnersAnswerReadsAsWhatTheyChoseAndNeverAsTheContractsForm() = runTest {
+    val m = coach(thread(
+      listOf(
+        msg("owner", "[confirm c1] 100", "2026-10-28T08:01:00Z"),
+        msg("owner", """[questions q1] {"mode":{"value":"test"},"which":{"values":["small","big"]}}""", "2026-10-28T08:02:00Z"),
+        msg("owner", "[approval a1] approved", "2026-10-28T08:03:00Z"),
+        msg("owner", "[approval a1] declined", "2026-10-28T08:04:00Z"),
+        msg("owner", "[approval a1] failed: planque said no", "2026-10-28T08:05:00Z"),
+        msg("owner", "[sign_in s1] signed in", "2026-10-28T08:06:00Z"),
+        msg("owner", "[sign_in s1] not now", "2026-10-28T08:07:00Z"),
+        msg("owner", "plain words", "2026-10-28T08:08:00Z"),
+      ),
+      listOf(shown(confirm, "2026-10-28T08:00:01Z"), shown(questions, "2026-10-28T08:00:02Z")),
+    ))
+    val words = m.state.value.chatItems(COACH_CHAT).filterIsInstance<ChatItem.Message>().map { it.message.text }
+    assertEquals(
+      listOf("100 a refund", "Test mode · Small, Big", "Approve", "Decline", "Approve · it didn't go through", "Signed in", "Not now", "plain words"),
+      words,
+    )
   }
 
   @Test fun aCardsAnswerReadsInKiffAgentsWordsWrittenInsteadOrNone() {
@@ -219,6 +235,16 @@ class CoachTest {
     assertEquals("You answered in your own words.", CoachWords.answered(bot.tafs.app.kiff.CardAnswer(state = "wrote", words = "Use live")))
     assertEquals("It stopped waiting, with no answer.", CoachWords.answered(bot.tafs.app.kiff.CardAnswer(state = "no_answer")))
     assertEquals("Answered.", CoachWords.answered(bot.tafs.app.kiff.CardAnswer()))
+  }
+
+  @Test fun anAnswerIsParsedByItsTypeAndId() {
+    assertEquals(CoachAnswer("confirm", "c1", "50"), CoachAnswer.parse("[confirm c1] 50"))
+    assertEquals(CoachAnswer("questions", "q 1", "{}"), CoachAnswer.parse("[questions q 1] {}"))
+    assertNull("not a card's type", CoachAnswer.parse("[hologram h1] x"))
+    assertNull(CoachAnswer.parse("[confirm] x"))
+    assertNull(CoachAnswer.parse("hello"))
+    assertTrue(CoachAnswer.parse("[approval a1] failed: no")!!.failed)
+    assertFalse(CoachAnswer.parse("[approval a1] approved")!!.failed)
   }
 
   // MARK: Questions

@@ -533,7 +533,8 @@ data class AppState(
     val messages = chats[tafId] ?: emptyList()
     // Coach's thread has its cards in it, and the owner's answers to them read as what they chose.
     if (tafId == COACH_CHAT) {
-      return CoachWords.items(messages, coachComponents)
+      // An older thread's answers, sent as text before cards were answered as data, read as what the owner chose.
+      return CoachWords.items(messages.map { if (it.from == ChatMessage.From.owner) it.copy(text = CoachWords.ownerWords(it.text, coachComponents)) else it }, coachComponents)
     }
     val items = mutableListOf<ChatItem>()
     items += messages.map { ChatItem.Message(it) }

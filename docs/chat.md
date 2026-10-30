@@ -34,7 +34,9 @@ tafs cloud's id for it: `POST …/messages` answers `message: {id}`, and so does
 event, and each thread message carries its `id` (Android: `SentMessages.merge`). Only a message
 that steers a run at work, which has no id, or one from an older tafs cloud, is matched by its
 words. An owner's message written while a card waited carries `answers`, and shows "Answered the
-card above" under it. A message that didn't go
+card above" under it. An older Coach thread still holds answers in the form the apps once sent,
+"[<type> <id>] <answer>"; Android reads them only to show them in the owner's words
+(`CoachWords.ownerWords`), and sends nothing in that form. A message that didn't go
 stays where it was written, with why and Retry (`UnsentBubble`). kiff/agents allows each
 person 10 messages in 10 minutes. Past that, the message is kept with "That's a lot of
 messages in a few minutes. Give {taf} a moment, then try again."
