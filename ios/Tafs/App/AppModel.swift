@@ -117,7 +117,7 @@ final class AppModel: ObservableObject {
     private(set) var sessionHasApprovalKey = false
     /// KIFF holds an approval key for the session that isn't this phone's (it changed after
     /// registering, or another was registered): approving waits for a new sign-in.
-    private(set) var approvalKeyLost = false
+    @Published private(set) var approvalKeyLost = false
     private let signer: ApprovalSigning
     private let store: SampleStore?
     private let clock: () -> Date
@@ -674,7 +674,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let tenant = kiffTenant else { return false }
         let gen = accountGeneration
         peopleError = nil
-        do { _ = try await signer.sign(Data("tafs.people.v1|\(tenant)|\(what)".utf8), reason: what) } catch { return false }
+        do { _ = try await signer.sign(Data("tafs.people.v1|\(tenant)|\(what)".utf8), reason: what, grants: true) } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
         kiff.tenant = tenant
@@ -1114,6 +1114,9 @@ final class AppModel: ObservableObject {
     func refresh(retry: Bool = false) async {
         guard mode == .kiff else { playNextDemoActions(); return }
         if !retry { retries = 0 }
+        // Faces or fingerprints changed since the approval key was made: it can't sign again,
+        // so the phone says so now, not after a tap. Its new key counts after a new sign-in.
+        if signer.renewApprovalKeyIfBiometricsChanged() { lostApprovalKey() }
         refreshing = true
         let gen = accountGeneration
         // Dropped before its answer: the list wasn't read, so it isn't shown as loaded (and
@@ -1578,7 +1581,9 @@ final class AppModel: ObservableObject {
                 signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)
             }
         } catch {
-            lastError = "Not sent: it wasn't confirmed."
+            // A prompt closed without a recognized face or finger, while the key is still good.
+            lastError = sessionHasApprovalKey && (answer == .approveOnce || answer == .extraRoom)
+                ? KIFFClient.notRecognized : "Not sent: it wasn't confirmed."
             return
         }
 
@@ -1996,7 +2001,7 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         do {
             _ = try await signer.sign(Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
-                                      reason: name.map { "Resume \($0)" } ?? "Resume all your tafs")
+                                      reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", grants: true)
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
@@ -2353,7 +2358,7 @@ final class AppModel: ObservableObject {
         if let draft, !draft.confirmed, draft.status != "claimed" {
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                          reason: "Use version \(version.n) of \(taf.name), with its Card")
+                                          reason: "Use version \(version.n) of \(taf.name), with its Card", grants: true)
             } catch {
                 // The owner backed out before the Card changed: the taf runs again as it was.
                 guard gen == accountGeneration else { return false }
@@ -2539,7 +2544,7 @@ final class AppModel: ObservableObject {
         }
         do {
             _ = try await signer.sign(Data("tafs.trial.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                      reason: "Try version \(version.n) of \(taf.name), with its own Card")
+                                      reason: "Try version \(version.n) of \(taf.name), with its own Card", grants: true)
         } catch { return nil }
         guard gen == accountGeneration else { return nil }
         kiff.setupSigner = { try signer.signConfirmed($0) }
@@ -2585,7 +2590,7 @@ final class AppModel: ObservableObject {
             if !draft.confirmed {
                 do {
                     _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                              reason: "Install version \(open.n) of \(taf.name), with its Card")
+                                              reason: "Install version \(open.n) of \(taf.name), with its Card", grants: true)
                 } catch { return false }
                 guard gen == accountGeneration else { return false }
                 kiff.setupSigner = { try signer.signConfirmed($0) }
@@ -4083,7 +4088,7 @@ final class AppModel: ObservableObject {
             }
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                          reason: "Give \(draft.agentID) its Card")
+                                          reason: "Give \(draft.agentID) its Card", grants: true)
             } catch {
                 quietStop = Self.notConfirmed
                 return nil
@@ -4118,7 +4123,7 @@ final class AppModel: ObservableObject {
 
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
-                                      reason: "Connect \(grant.vendor) to \(grant.request.agent)")
+                                      reason: "Connect \(grant.vendor) to \(grant.request.agent)", grants: true)
         } catch {
             quietStop = Self.notConfirmed
             return nil
@@ -4452,7 +4457,7 @@ final class AppModel: ObservableObject {
         defer { startingSetup = false }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: "Connect your tools")
+            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: "Connect your tools", grants: true)
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer

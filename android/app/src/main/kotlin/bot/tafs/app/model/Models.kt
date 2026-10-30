@@ -162,6 +162,14 @@ data class CardRule(
       if (never) return "never"
       if (alwaysAsk) return "always asks you"
       val parts = mutableListOf<String>()
+      if (outside == Outside.hold) {
+        // Past a limit the call asks the owner, in the words KIFF's Cards use: "up to $40 each; more asks you first".
+        perAction?.let { parts += "up to ${it.formatted} each; more asks you first" }
+        ownTotal?.let { parts += "${it.formatted} in total ${window.label}, then it asks you" }
+        roomWords?.let { parts += it }
+        countPerWindow?.let { parts += if (it == 0) "Each call asks you first" else "$it ${if (it == 1) "call" else "calls"} ${window.label}, then it asks you" }
+        return parts.joinToString(" · ")
+      }
       perAction?.let { parts += "≤ ${it.formatted} each" }
       // A bare total and a count read apart (kiff/tafs#94): "10 in total a day · 20 calls a day".
       ownTotal?.let { parts += if (it.hasUnit) "${it.formatted} ${window.label}" else "${it.formatted} in total ${window.label}" }
@@ -267,7 +275,7 @@ data class TafCard(
         return out
       }
       rules.firstOrNull { it.perAction != null }?.let { rule ->
-        out += "≤ ${rule.perAction!!.formatted} each · ${if (rule.outside == Outside.hold) "asks you above" else "refused above"}"
+        out += if (rule.outside == Outside.hold) "up to ${rule.perAction!!.formatted} each; more asks you first" else "≤ ${rule.perAction!!.formatted} each · refused above"
       }
       if (rules.size > 1) out += "${rules.size} tools"
       return out

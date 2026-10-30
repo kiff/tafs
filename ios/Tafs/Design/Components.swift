@@ -265,3 +265,33 @@ struct UnreachableLine: View {
         .accessibilityIdentifier("unreachable")
     }
 }
+
+/// This phone can't approve until a new sign-in (its approval key is gone, or KIFF holds
+/// another): said with the way out, in place of a button that would fail. Refuse stays.
+struct ApprovalKeyLostLine: View {
+    @EnvironmentObject private var model: AppModel
+    @State private var signingOut = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(KIFFClient.approvalKeyLost)
+                .scaledFont(13).foregroundColor(Theme.soft)
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                signingOut = true
+                // Signing out ends the session at KIFF, the old approval key with it; the
+                // sign-in screen follows, and the next sign-in registers the new key.
+                Task { _ = await model.signOut(); signingOut = false }
+            } label: {
+                Text("Sign in again")
+            }
+            .buttonStyle(OutlineButtonStyle())
+            .disabled(signingOut)
+            if let why = model.signOutError {
+                Text(why).scaledFont(12).foregroundColor(Theme.amber)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .accessibilityIdentifier("approval-key-lost")
+    }
+}

@@ -13,6 +13,7 @@ import bot.tafs.app.model.CardRule
 import bot.tafs.app.model.Money
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.TafState
+import bot.tafs.app.model.Outside
 import bot.tafs.app.model.Window
 import java.time.Instant
 import org.junit.Assert.assertEquals
@@ -264,7 +265,21 @@ class MappingTest {
     )
     assertEquals(eur(30000), rule.ownTotal)
     assertTrue(rule.roomWords!!.startsWith("+${eur(3000).formatted} extra room until "))
-    assertEquals("${eur(30000).formatted} a day · ${rule.roomWords}", rule.summary)
+    assertEquals("${eur(30000).formatted} in total a day, then it asks you · ${rule.roomWords}", rule.summary)
+    assertEquals("${eur(30000).formatted} a day · ${rule.roomWords}", rule.copy(outside = Outside.refuse).summary)
+  }
+
+  @Test fun aRuleThatAsksPastItsLimitsSaysSoInTheCardsWords() {
+    val hold = CardRule(action = "refund", label = "Refunds", perAction = eur(4000), perWindow = eur(30000), countPerWindow = 20, window = Window.day)
+    assertEquals(
+      "up to ${eur(4000).formatted} each; more asks you first · ${eur(30000).formatted} in total a day, then it asks you · 20 calls a day, then it asks you",
+      hold.summary,
+    )
+    assertEquals("1 call a week, then it asks you", CardRule(action = "list", label = "Lists", countPerWindow = 1, window = Window.week).summary)
+    assertEquals("Each call asks you first", CardRule(action = "list", label = "Lists", countPerWindow = 0).summary)
+    val refuse = hold.copy(outside = Outside.refuse)
+    assertEquals("≤ ${eur(4000).formatted} each · ${eur(30000).formatted} a day · 20 calls a day", refuse.summary)
+    assertEquals("0 calls a day", CardRule(action = "list", label = "Lists", countPerWindow = 0, outside = Outside.refuse).summary)
   }
 
   @Test fun whatsLeftOfATotalIsSaidInTheSameUnitOnly() {
