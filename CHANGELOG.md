@@ -5,6 +5,34 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+### Added
+
+- **tafs for Android** (`android/`, Android 11 and later), with what the iPhone app has
+  ([docs/android-app.md](docs/android-app.md)):
+  - tafs, Needs you and the Record, with KIFF's receipts checked on the phone;
+  - a taf's page, with its runs, last report, memory, Revoke and Remove;
+  - the live chat, with photos, files and dictation;
+  - Coach, with its conversations, given its tools and Card exactly as tafs cloud drafts them.
+    A taf Coach hands over is set up by tafs cloud, and its card shows tafs cloud's answer.
+    Coach's cards are answered through tafs cloud's route and show the answer the thread
+    holds; after an answer, Coach's next words show without leaving the conversation;
+  - Doors, Versions and trials, Halt, Usage and asking an admin for tasks;
+  - People and groups, Devices, the time zone and Delete account.
+
+  Every approval is signed with an approval key that needs a fingerprint for each
+  signature. What didn't go through is said in the app's own words, with what the owner can
+  do, never a server's error text, and no tool's id is shown. Dictation works in a variant of
+  the phone's language (English in France dictates in British English), and a phone without a
+  microphone can install the app. A new fingerprint turns it off until the next sign-in. Signing out ends the
+  session at KIFF before the phone shows signed out. Buying through Google Play is built
+  but off. On a tablet, the list sits beside what's open, with Overview, and a taf's page
+  has its second column in landscape.
+- tafs cloud can alert Android phones through Firebase Cloud Messaging. `POST /v1/push` takes
+  `platform: "android"` with the phone's Firebase token; an iPhone registers as before.
+  Android alerts are data messages the phone builds its notification from, with no call
+  parameters; a door's alert carries its taf (`taf_id`) and opens it. They are off until `FCM_PROJECT_ID` and `FCM_SECRET_ID` are set, and an Android
+  phone's registration is refused (503) until then.
+
 ### Fixed
 
 - A taf's work steps say what it did, in words, both while it works and after: KIFF's title for

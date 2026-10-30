@@ -38,6 +38,22 @@ A sent message's menu offers **Send again**, **Edit and send** and **Copy**. The
 the message bar dictates into the box, recognised on the device: no audio leaves the
 phone, and nothing is sent until the owner sends it (`Dictation`).
 
+On Android the mic (`MicButton`, `voice/Dictation.kt`) uses the phone's on-device
+recognizer (`createOnDeviceSpeechRecognizer`, Android 12 and later), in the phone's
+language. The microphone is asked for at the first tap. A phone without an on-device
+recognizer doesn't dictate and says so, rather than use one that sends the voice away.
+Words go into the box as they're heard; listening goes on after a pause and stops after
+two quiet ones, a tap on the mic, or Send. iOS's language switch isn't on Android yet.
+
+The recognizer's models are per variant, so a phone set to English in France (`en-FR`)
+dictates in a variant of its language (`SpeechLanguage.choose`, from Android 13
+`checkRecognitionSupport`), in the same order as iOS: the phone's own locale; else, for
+English, `en-GB` then `en-US`; for another language, its own country's (`fr-FR`); then
+alphabetically. One on the phone now comes before one to download. A language the
+recognizer offers but hasn't downloaded is fetched (`triggerModelDownload`) and the mic
+says so; a phone with nothing in its language says the mic doesn't work there, and that
+typing does. The microphone isn't required to install the app.
+
 ## The answer as it comes
 
 tafs cloud trims kiff/agents' stream to what the phone shows. Tool inputs and results
@@ -76,7 +92,10 @@ steps again. tafs cloud puts a run's work on its first message: the time from th
 start to its last words, and the tools it called, in order, with the ones that failed
 (`conversation`, from kiff/agents' usage records). Each step is `{tool, words?, error?,
 not_made?}`: the app shows `words`, the same as the live step's without the "…", and never
-`tool`.
+`tool`. On Android the block says how long and how many steps, with how many failed
+("Worked 4.2 s · 3 steps, 1 failed", `Chat.workLine`), and opens to the steps that have
+words (`Chat.steps`); a step without words is left out, and a live step without `step`
+words has no line.
 
 Tries of the same step after a failed one are one row, "3 tries", with the last try's
 outcome, and a failed step is left out once something worked (`WorkLog.rows`).
@@ -153,7 +172,11 @@ taf wrote before it, never by clock alone (`chatItems`, `placed`, `heldAfterItsW
 A `confirm`, `questions`, `approval` or `sign_in` card waits for the person's answer: the
 run pauses on it, and the answer comes back to the run as data, never as text in the chat.
 
-- The app answers it with `POST /v1/tafs/{id}/components/{component}/answer` `{answer}`.
+- The app answers it with `POST /v1/tafs/{id}/components/{component}/answer` `{answer}`
+  (Android: `AppModel.answerCard`, with the card's own chat as `session`). Until the thread
+  shows the answer, the card says it's on its way; the run that goes on is followed on its
+  stream to its end, which reads the thread again, so Coach's next words show in the open
+  view. A card that doesn't wait any more (409) is read again as it is.
   Each type takes its own answer: confirm, one of its options' values; questions,
   `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `approved`, `declined` or
   `failed: <why>`; sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
@@ -161,7 +184,8 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   waits goes on, and no second run starts beside it.
 - In the thread, each answered card carries `answer` `{state: answered|wrote|no_answer,
   words, at}`: what was chosen, as the card shows it; what was written instead; or that it
-  stopped waiting with no answer. Words written instead also show as the owner's message,
+  stopped waiting with no answer. Each card draws its answered state from this alone, in
+  kiff/agents' words (Android: `CoachWords.answered`); the app keeps no answer of its own. Words written instead also show as the owner's message,
   with `answers` naming the card, so they never vanish from the thread.
 - The app's earlier form, a message `[<type> <id>] <answer>` from the person's own app, is
   still taken as the card's answer when that card waits. Any other text, a door's message, or

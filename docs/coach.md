@@ -29,6 +29,19 @@ improve with one tap. Starting a new taf is a new Coach conversation.
 Who may use Coach is KIFF's answer for the account's Setup agent; by default, an
 account admin (`AppModel.mayUseCoach`).
 
+On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
+(`CoachScreen`). It has what's below, with these differences:
+- **No taf-page offer.** Above the chat are **New conversation** and **Previous
+  conversations** (`CoachChats.kt`), but a new conversation offers no taf to improve. A
+  taf is improved from a hold's **Change the limit in Coach mode**, which opens Coach on a
+  new conversation about it (`AppModel.improveInCoach`).
+- **Previous conversations** lists them newest first. A long press archives one, and
+  Archived puts one back.
+- **The empty chat** shows the same starts as iOS (`CoachWords.EXAMPLES`,
+  `IMPROVE_EXAMPLES`).
+- **Coach's news** of the tasks it handed tafs shows under the thread, with "While you
+  were away" together (`CoachLines`).
+
 ## Starting Coach, once per account
 
 Before the first message, one Face ID (`AppModel.startSetup`):
@@ -38,6 +51,15 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    on the phone.
 2. The phone submits a KIFF agent draft with no tools for Coach. tafs cloud claims its
    key, so the key never reaches the phone (`POST /v1/setup`).
+3. The phone gives Coach its tools, as tafs cloud says them (`GET /v1/setup`'s `tools`).
+   With `to_give`, it signs and sends the `connect` batch to KIFF's gateway
+   (`POST /v1/connections/batch`), then, under its own fingerprint, Coach's Cards' draft
+   (`POST /v1/me/agent-drafts`), each body exactly as it came. The phone builds neither:
+   the tools' names, addresses and Cards are tafs cloud's, and the words the owner reads
+   are its `lines` and KIFF's own preview of the Cards. `given` sends nothing; `taken`
+   names the vendor's tool that holds one of Coach's names, and `unknown` asks to try
+   again, both sending nothing. A replaced connection's line says what it replaces.
+   (Android: `AppModel.giveCoachTools`, `CoachToolsPanel`.)
 
 ## What Coach shows
 
@@ -55,8 +77,11 @@ those services, and the phone signs there.
 | `sign_in` | The vendor's sign-in page, for a connection the owner approved |
 | `result` | The hand-over: a new taf to start, or a taf's new version to try |
 
-The owner's answer to a card is a message, `"[<type> <id>] <answer>"`, one answer per
-card.
+The owner's answer to a card goes as data, one answer per card
+([chat.md](chat.md#cards-that-wait-for-an-answer)). Android answers through
+`POST /v1/tafs/{id}/components/{component}/answer`, and each card shows the answer the thread
+holds, in kiff/agents' words. The iPhone app still sends the earlier message form,
+`"[<type> <id>] <answer>"`, which tafs cloud takes as the card's answer, until it follows.
 
 Coach's chat behaves as a taf's ([chat.md](chat.md)). What starts an answer goes to the top
 and stays there: a typed message, or the card the owner just answered. While Coach works,
@@ -80,10 +105,17 @@ then shows its plan. Then, each step behind the owner's yes:
 3. **Approve the Card.** The owner reads the Card on its approval card and confirms it
    with one Face ID, which signs exactly the draft version shown. An editor's draft
    waits for an admin to confirm it in KIFF.
-4. **Start the taf.** The result card hands over the taf. The app asks tafs cloud to
-   start it once (`POST /v1/tafs` with `from_setup`): kiff/agents claims the key from
-   Coach's draft, and the taf joins the account's list ([tafs.md](tafs.md#starting-a-taf)).
-   A start that failed is told to Coach, which shows a new result.
+4. **Start the taf.** The result card hands over the taf. tafs cloud starts it as the
+   person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
+   claims the key from Coach's draft, and the taf joins the account's list
+   ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
+   (`answer.by`, `answer.outcome`: `{taf_id}` or `{failed}`), and the card shows it:
+   set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
+   itself; and until the answer comes, "Setting up…". The app starts nothing itself
+   (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
+   set up that isn't listed yet). The iPhone app still starts it itself
+   (`POST /v1/tafs` with `from_setup`) until it follows in its own pull request.
+   A taf's next version is still made by the app, from an improvement's result.
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works
 from its chat.

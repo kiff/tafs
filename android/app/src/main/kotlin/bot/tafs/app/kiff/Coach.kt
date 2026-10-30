@@ -1,0 +1,174 @@
+package bot.tafs.app.kiff
+
+import bot.tafs.app.model.InstantAsString
+import java.time.Instant
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+
+// Coach, the account's Setup agent (docs/coach.md): it runs on tafs cloud like a taf, and its thread carries cards, which the
+// phone reads leniently: one it doesn't know is left out, never the thread with it.
+
+@Serializable
+data class SetupStep(
+  val label: String,
+  /** pending, active, done, failed or skipped. */
+  val status: String = "pending",
+)
+
+@Serializable
+data class SetupOption(val value: String, val label: String)
+
+/** One choice of a question: every word is the agent's. */
+@Serializable
+data class SetupChoice(val value: String, val label: String, val description: String? = null)
+
+/** One of several questions an agent asks at once: the app adds the owner's own answer to each. */
+@Serializable
+data class SetupQuestion(
+  val id: String,
+  val text: String,
+  val options: List<SetupChoice> = emptyList(),
+  /** Several may be picked. */
+  val multi: Boolean? = null,
+  val note: String? = null,
+)
+
+/** The taf a hand-over names: a new one to start, or the next version of one (an improvement). */
+@Serializable
+data class SetupTaf(
+  val agent: String = "",
+  val name: String = "",
+  val job: String? = null,
+  /** The taf's KIFF draft, the one the owner confirmed: its key is claimed from it. For an improvement, the draft revising its Cards, confirmed only at the switch. */
+  val draft: String? = null,
+  /** The tafs id of the taf this is the next version of: an improvement, never a new taf. */
+  val improves: String? = null,
+  /** What changed, in the owner's language (an improvement). */
+  val note: String? = null,
+  /** The task to try the new version with, in the owner's words: its trial shows it. */
+  @SerialName("try") val tryWith: String? = null,
+  /** The taf's full new instructions from the owner; null keeps them (an improvement). */
+  val notes: String? = null,
+  /** Its tools can't find its work by themselves: it works from its chat. */
+  val unscheduled: Boolean? = null,
+)
+
+/**
+ * One thing Coach shows in its chat: its plan, a notice, a question, an approval, a vendor sign-in or the hand-over. A card
+ * grants nothing: an approval names planque's grant and KIFF's draft, which the owner reads and signs there.
+ */
+@Serializable
+data class SetupComponent(
+  /** steps, notice, confirm, questions, approval, sign_in or result. */
+  val type: String,
+  val id: String,
+  val title: String? = null,
+  val text: String? = null,
+  /** info, success, warning or error. */
+  val tone: String? = null,
+  val steps: List<SetupStep>? = null,
+  val options: List<SetupOption>? = null,
+  val questions: List<SetupQuestion>? = null,
+  /** planque's grant id. */
+  val grant: String? = null,
+  /** KIFF's agent draft id: the taf's Cards. */
+  val draft: String? = null,
+  /** The vendor's host, such as mcp.stripe.com. */
+  val service: String? = null,
+  val taf: SetupTaf? = null,
+  val tools: List<String>? = null,
+  val yes: String? = null,
+  val no: String? = null,
+  val note: String? = null,
+) {
+  /** Where a sign-in goes, as the app shows it: from the card's service, never from Coach's words, so a label can't stand in for the destination. */
+  val destination: String get() = service ?: "the vendor's page"
+
+  companion object {
+    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result")
+  }
+}
+
+/** A component as the conversation lists it, read apart so one the app can't read is skipped. */
+@Serializable
+data class WireShown(
+  @Serializable(with = InstantAsString::class) val at: Instant,
+  val session: String = "",
+  val run: String = "",
+  val component: JsonElement,
+  val answer: JsonElement? = null,
+)
+
+/**
+ * A card's answer as kiff/agents recorded it. [by] is "tafs cloud" when tafs cloud answered a result itself, with its [outcome]:
+ * the taf it set up, the version it made, or why it didn't.
+ */
+@Serializable
+data class CardAnswer(val state: String = "answered", val words: String = "", val by: String? = null, val outcome: ResultOutcome? = null)
+
+/** What answering a card gives back: the run that goes on with it. */
+@Serializable
+data class CardAnswered(val session: String? = null, val run: String? = null, val status: String? = null)
+
+@Serializable
+data class ResultOutcome(@SerialName("taf_id") val tafId: String? = null, val version: Int? = null, val failed: String? = null)
+
+/** A component as the thread holds it: where it first appeared, its latest version (showing an id again replaces it in place), and its answer. */
+data class ShownComponent(val firstAt: Instant, val session: String, val run: String, val component: SetupComponent, val answer: CardAnswer? = null) {
+  val id: String get() = component.id
+}
+
+/** The account's Setup, as tafs cloud runs it: its id there. */
+@Serializable
+data class CloudSetup(
+  val id: String,
+  val name: String = "Coach",
+  /** The KIFF agent Coach acts as: the holder of its Cards. */
+  @SerialName("kiff_agent") val kiffAgent: String? = null,
+)
+
+@Serializable
+internal data class SetupResponse(val setup: CloudSetup? = null, val tools: CoachTools? = null)
+
+@Serializable
+internal data class CreatedVersion(val version: Int)
+
+/**
+ * Coach's tools as KIFF has them, from tafs cloud (`GET /v1/setup`'s `tools`), read each time so every phone of the account
+ * agrees: `given`, `to_give` with what's left, `taken` (a vendor's tool holds one of Coach's names) or `unknown` (KIFF didn't
+ * answer). The phone signs and sends each body exactly as it comes: it builds none of it.
+ */
+@Serializable
+data class CoachTools(
+  val state: String = "unknown",
+  val taken: String? = null,
+  val connect: CoachConnect? = null,
+  val card: CoachCardDraft? = null,
+) {
+  val toGive: Boolean get() = state == "to_give"
+}
+
+/** The batch for KIFF's `POST /v1/connections/batch`, and a line per tool for the owner to read before signing. */
+@Serializable
+data class CoachConnect(val body: kotlinx.serialization.json.JsonObject, val lines: List<String> = emptyList())
+
+/** Coach's Cards' draft for `POST /v1/me/agent-drafts`, with KIFF's own words for it from its preview, unchanged. */
+@Serializable
+data class CoachCardDraft(
+  val body: kotlinx.serialization.json.JsonObject,
+  @SerialName("card_title") val cardTitle: String? = null,
+  val cards: List<kotlinx.serialization.json.JsonElement> = emptyList(),
+) {
+  /** Each Card in KIFF's words, its title and lines; one the app can't read is left out. */
+  val words: List<Pair<String, List<String>>>
+    get() = cards.mapNotNull { element ->
+      val card = element as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+      fun text(key: String) = (card[key] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
+      val lines = (card["lines"] as? kotlinx.serialization.json.JsonArray).orEmpty()
+        .mapNotNull { (it as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { p -> p.isString }?.content }
+      val title = text("title") ?: text("card_title") ?: text("label")
+      if (title == null && lines.isEmpty()) return@mapNotNull null
+      (title ?: "") to lines
+    }
+}

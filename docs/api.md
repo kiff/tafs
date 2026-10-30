@@ -50,8 +50,8 @@ details go only to tafs cloud's own log.
 
 | Route | Who | What |
 |---|---|---|
-| `POST /v1/push` | a person | `{device_token, environment, sound?, alert_target?}`: this phone gets the account's alerts; `sound: false` sends them to it quietly, with no sound or banner. Only someone with `holds.answer` may hand over the target's secret, and only their phones are alerted. 50 phones an account at most |
-| `DELETE /v1/push/{token}` | a person | That phone stops: a person removes their own; someone with `cards.manage`, any of the account's |
+| `POST /v1/push` | a person | `{device_token, platform?, environment, sound?, alert_target?}`: this phone gets the account's alerts. `platform` is `ios` (the default; `device_token` is APNs's, in hex, with its `environment`) or `android` (`device_token` is Firebase's registration token, case kept; `environment` is `production` or left out; 503 where Google push isn't set up); `sound: false` sends them to it quietly, with no sound or banner. Only someone with `holds.answer` may hand over the target's secret, and only their phones are alerted. 50 phones an account at most |
+| `DELETE /v1/push/{token}` | a person | That phone stops (an Android phone's token comes percent-encoded, and keeps its case): a person removes their own; someone with `cards.manage`, any of the account's |
 | `GET /v1/alerts` | a person | Whether tafs cloud holds KIFF's alert secret for the account |
 | `POST /v1/alerts` | `holds.answer` | `{alert_target}`: the account's alert target, with no phone's alerts |
 | `POST /v1/kiff/alerts` | KIFF, signed | A held call or its answer. The `KIFF-Signature` is checked against the account's secrets, the alert handed to kiff/agents, then pushed to the phones. 502 asks KIFF to send it again ([approvals.md](approvals.md#after-the-answer)) |

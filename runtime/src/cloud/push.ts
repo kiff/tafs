@@ -20,11 +20,16 @@ import { apsFor, levelOf } from "./levels.js";
  * reads the held call itself from KIFF, with its own session.
  */
 
+/** Which push service a phone's token belongs to. */
+export type Platform = "ios" | "android";
+
 /** A phone that gets an account's alerts. */
 export interface Device {
-  /** The APNs device token, hex. */
+  /** The push token: APNs's, hex, for an iPhone; Firebase Cloud Messaging's registration token for an Android phone. */
   token: string;
-  /** Which APNs a build's token belongs to: Xcode builds sandbox, TestFlight and the App Store production. */
+  /** Which push service the token belongs to. A phone registered before Android is an iPhone. */
+  platform?: Platform;
+  /** Which APNs a build's token belongs to: Xcode builds sandbox, TestFlight and the App Store production. An Android phone is always production. */
   environment: "sandbox" | "production";
   /** The KIFF person who registered it. */
   subject: string;
@@ -84,6 +89,18 @@ export function quietFor(device: Device, n: Notification): Notification {
   if (!device.silent || n.kind !== "alert" || !aps) return n;
   const { sound: _sound, ...rest } = aps;
   return { ...n, payload: { ...n.payload, aps: { ...rest, ...apsFor("quiet") } } };
+}
+
+/**
+ * A sender that sends each phone's alert through its own push service: Apple's, or Google's for an Android phone. An
+ * Android phone with no Google sender is never alerted ("failed", so KIFF tries again): registration refuses one there.
+ */
+export function routing(senders: { ios: Sender; android?: Sender }): Sender {
+  return {
+    send: (device, n) => device.platform === "android"
+      ? (senders.android ? senders.android.send(device, n) : Promise.resolve("failed" as const))
+      : senders.ios.send(device, n),
+  };
 }
 
 export class PushError extends Error {
@@ -322,24 +339,38 @@ function capitalize(s: string): string {
 }
 
 /**
- * Validates a phone's registration: `{device_token, environment, sound?, alert_target?: {id, signing_secret}}`.
+ * Validates a phone's registration: `{device_token, platform?, environment, sound?, alert_target?: {id, signing_secret}}`.
+ * `platform` is "ios" (the default) or "android". An iPhone's token is APNs's, in hex, with its environment; an Android
+ * phone's is Firebase's registration token, case kept, and its environment is production (or left out).
  * `sound: false` is the phone's Sound for alerts turned off; left out, alerts sound as before.
  */
 export function registration(body: Record<string, unknown>): {
   token: string;
+  platform: Platform;
   environment: Device["environment"];
   silent: boolean;
   target?: { id: string; secret: string };
 } {
-  const token = typeof body.device_token === "string" ? body.device_token.trim().toLowerCase() : "";
-  if (!/^[0-9a-f]{64,200}$/.test(token)) throw new PushError(400, "send the phone's push token, in hex");
-  const environment = body.environment;
-  if (environment !== "sandbox" && environment !== "production") throw new PushError(400, "environment is sandbox or production");
+  const platform = body.platform === undefined ? "ios" : body.platform;
+  if (platform !== "ios" && platform !== "android") throw new PushError(400, "platform is ios or android");
+  let token: string;
+  let environment: Device["environment"];
+  if (platform === "android") {
+    token = typeof body.device_token === "string" ? body.device_token.trim() : "";
+    if (!/^[A-Za-z0-9_:-]{20,4096}$/.test(token)) throw new PushError(400, "send the phone's Firebase registration token");
+    if (body.environment !== undefined && body.environment !== "production") throw new PushError(400, "an Android phone's environment is production");
+    environment = "production";
+  } else {
+    token = typeof body.device_token === "string" ? body.device_token.trim().toLowerCase() : "";
+    if (!/^[0-9a-f]{64,200}$/.test(token)) throw new PushError(400, "send the phone's push token, in hex");
+    if (body.environment !== "sandbox" && body.environment !== "production") throw new PushError(400, "environment is sandbox or production");
+    environment = body.environment;
+  }
   if (body.sound !== undefined && typeof body.sound !== "boolean") throw new PushError(400, "sound is true or false");
   const silent = body.sound === false;
   const t = body.alert_target;
-  if (t === undefined) return { token, environment, silent };
-  return { token, environment, silent, target: alertTarget(t) };
+  if (t === undefined) return { token, platform, environment, silent };
+  return { token, platform, environment, silent, target: alertTarget(t) };
 }
 
 /** Validates KIFF's alert target as the phone hands it over: `{id, signing_secret}`. */

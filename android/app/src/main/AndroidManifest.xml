@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Confirms each approval with a strong biometric, never the screen lock. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Shows an alert when a taf needs you (Android 13 and later asks first). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Dictating a message (docs/chat.md): recognised on the phone, asked at the first tap of the mic. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Dictation is optional: a phone without a microphone still installs tafs, and its mic says it can't dictate. -->
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
+    <!-- Finds the phone's own speech recognizer for dictation. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".TafsApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Tafs">
+        <!-- adjustResize: the app moves itself above the keyboard (imePadding), so the window must not pan as well. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Where a vendor's sign-in comes back to, from planque. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tafs" android:host="planque" android:path="/signed-in" />
+            </intent-filter>
+        </activity>
+
+        <!-- Firebase Cloud Messaging delivers tafs cloud's alerts here. -->
+        <service
+            android:name=".push.TafsMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Photos and files on a message (docs/attachments.md): the camera writes its photo here, and a file opened full size
+             is handed to the app that shows it. Only the app's own cache folders, never shared storage. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+
+</manifest>

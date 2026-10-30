@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older. The KIFF session never leaves this phone: its file stays out of backups. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="tafs_secrets.xml" />
+</full-backup-content>

@@ -4,7 +4,7 @@ import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
-import { alertTarget, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, type Device, MAX_DEVICES, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
@@ -76,7 +76,7 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
  *   GET  /v1/tafs/{id}/calls            what its calls through KIFF acted on (kiff/tafs#167)
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
- *   POST /v1/push                       {device_token, environment, sound?, alert_target?}: this phone gets the account's alerts
+ *   POST /v1/push                       {device_token, platform?, environment, sound?, alert_target?}: this phone gets the account's alerts (platform ios, the default, or android)
  *   DELETE /v1/push/{token}             it stops
  *   POST /v1/alerts                     {alert_target}: KIFF's alert target for the account, with no phone's alerts (kiff/tafs#206)
  *   GET  /v1/alerts                     whether tafs cloud holds KIFF's alert secret for the account
@@ -138,8 +138,10 @@ export interface Deps {
   claims: Claims;
   /** Phones that get each account's alerts, and the secrets that check KIFF's deliveries. */
   push: PushStore;
-  /** Apple push. */
+  /** Push: Apple's for an iPhone, Google's for an Android phone (see `routing`). */
   apns: Sender;
+  /** Whether Android phones can be alerted here: false when Google push isn't set up, and an Android phone's registration is refused. Left out, they can. */
+  androidPush?: boolean;
   /** Removals begun and not finished, so the app can finish them after a refresh. */
   removals: Removals;
   /** The chats each taf's owner archived before kiff/agents kept archives, to move there. */
@@ -670,6 +672,7 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
   const me = await person(event, deps);
   if (method === "POST" && parts.length === 2) {
     const r = registration(parseBody(event));
+    if (r.platform === "android" && deps.androidPush === false) throw new HTTPError(503, "alerts on Android phones aren't set up on this tafs cloud");
     const answers = me.capabilities.includes("holds.answer");
     const addsTasks = me.capabilities.includes("billing.manage");
     const manages = me.capabilities.includes("cards.manage");
@@ -684,15 +687,19 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     // handed over now or, for a phone that registered before, the one kept.
     const newest = r.target?.secret ?? secrets[0];
     if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
-    await deps.push.addDevice(me.tenantID, { token: r.token, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, at });
+    await deps.push.addDevice(me.tenantID, { token: r.token, platform: r.platform, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, at });
     return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0 };
   }
   if (method === "DELETE" && parts.length === 3) {
-    const token = (parts[2] ?? "").toLowerCase();
+    // The token as the phone wrote it in the path: Firebase's has colons, which come percent-encoded.
+    let given = parts[2] ?? "";
+    try { given = decodeURIComponent(given); } catch { /* as it is */ }
     const { devices } = await deps.push.get(me.tenantID);
-    // A person removes their own phones; someone who manages Cards, any of the account's.
-    const mine = devices.find((d) => d.token === token && (d.subject === me.subject || me.capabilities.includes("cards.manage")));
-    if (mine) await deps.push.removeDevice(me.tenantID, token);
+    // A person removes their own phones; someone who manages Cards, any of the account's. An iPhone's token is hex in
+    // lower case, whichever case it is written in; an Android phone's keeps its case.
+    const allowed = (d: Device) => d.subject === me.subject || me.capabilities.includes("cards.manage");
+    const mine = devices.find((d) => allowed(d) && (d.token === given || (d.platform !== "android" && d.token === given.toLowerCase())));
+    if (mine) await deps.push.removeDevice(me.tenantID, mine.token);
     return { removed: Boolean(mine) };
   }
   throw new HTTPError(404, "not found");

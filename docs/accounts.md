@@ -36,6 +36,15 @@ registered again at once when KIFF doesn't end it, so a device still signed in k
 session KIFF already ended (a 401, or the account deleted) is cleared on the phone at once. Work still running for
 the old session is dropped when it finishes (`accountGeneration`).
 
+**The session ends at KIFF first.** Sign out, Switch account and Sign in again ask KIFF to
+end the session before anything changes on the phone, so a phone that shows signed out
+never holds a session KIFF still accepts. If KIFF doesn't confirm, the phone stays signed
+in and says "Not signed out at KIFF yet. Try again, or sign this phone out from another
+device's Devices." It keeps trying by itself: after 2, 10, 30 and 60 seconds, then every 2
+minutes, until KIFF ends the session (Android: `AppModel.signOutAtKiff`). The phone's alerts are
+unregistered with tafs cloud just before KIFF is asked, since that needs the live session,
+and registered again at once if KIFF didn't end it: a phone still signed in keeps its alerts.
+
 **Devices**, in Settings (`DevicesView`): the devices signed in as this person on the
 account (`GET /v1/me/devices`), each with when it was last used, and "This device" on
 this one. **Sign out** on another device, behind Face ID, removes it
@@ -123,6 +132,12 @@ Each taf's own part is a row on its Card tab (`TafUsageView`).
 reason (`AskAdminView`, `POST /v1/me/pack-requests`). The admins are alerted; one buys
 it, which answers the request, or declines it with a note, behind Face ID. The member can
 take their request back.
+
+On Android the same is on Usage (`TaskRequests`, `UsageWords.waiting`, `lastAnswer`,
+`openRequests`). Decline is signed, behind one confirmation
+(`tafs.decline-request.v1|{tenant}|{request}`). Approve buys the pack through Google
+Play for that request, so it shows only where the app offers buying; until then, an
+admin on Android declines, or approves on an iPhone.
 
 ### AI use
 
