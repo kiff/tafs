@@ -96,11 +96,13 @@ fun TafDetailView(
   onUsage: (String) -> Unit,
   onVersions: (String) -> Unit,
   people: PeopleActions? = null,
+  /** Back to the list; not shown beside it, on a tablet. */
+  showBack: Boolean = true,
   modifier: Modifier = Modifier,
 ) {
   val taf = state.taf(tafId)
   Column(modifier.fillMaxSize().statusBarsPadding()) {
-    BackBar(onBack)
+    if (showBack) BackBar(onBack)
     if (taf == null) {
       Text("This taf is gone.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(16.dp))
       return@Column

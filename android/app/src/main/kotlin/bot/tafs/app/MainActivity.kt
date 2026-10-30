@@ -13,6 +13,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -361,45 +364,69 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
 
   // The keyboard pushes the screen up, and the tab bar leaves while it is up, as iOS's does.
   val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+  // A tablet's width, or a phone's landscape on a large one: the list and what's open side by side (Material's expanded width).
+  val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= WIDE_DP
 
   Column(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
     Box(Modifier.weight(1f)) {
       when (tab) {
         Tab.Tafs -> {
-          val id = openTaf
           val trying = trialTaf
-          if (trying != null) {
-            TrialScreen(trying, state, versionActions, actions, onBack = { trialTaf = null })
-          } else if (coachOpen) {
-            CoachScreen(
-              state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false },
-              chats = remember(model) {
-                CoachChatActions(
-                  newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
-                  loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
-                )
-              },
-            )
-          } else if (id == null) {
+          val home: @Composable () -> Unit = {
             HomeView(
               state,
               onNeedsYou = { tab = Tab.NeedsYou },
               // The sample plays its next round; signed in, KIFF is read again.
               onPlayNext = { if (state.mode == Mode.sample) model.playNextDemoActions() else model.refresh() },
-              onOpenTaf = { openTaf = it },
+              onOpenTaf = { coachOpen = false; trialTaf = null; openTaf = it },
               onNewTaf = { showingNew = true },
               onSettings = { showingSettings = true },
               onHaltAll = { haltTaf = null; haltOpen = true },
               onCoach = { coachOpen = true },
             )
-          } else {
+          }
+          val detail: @Composable (String) -> Unit = { id ->
             TafDetailView(
               id, state, actions, onBack = { openTaf = null },
               onHalt = { haltTaf = it; haltOpen = true },
               onUsage = { usageTaf = it; usageOpen = true },
               onVersions = { versionsTaf = it },
               people = people,
+              showBack = !wide,
             )
+          }
+          // What's open: a trial, Coach, or a taf; null for the list alone.
+          val open: (@Composable () -> Unit)? = when {
+            trying != null -> ({ TrialScreen(trying, state, versionActions, actions, onBack = { trialTaf = null }) })
+            coachOpen -> ({
+              CoachScreen(
+                state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false },
+                chats = remember(model) {
+                  CoachChatActions(
+                    newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
+                    loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
+                  )
+                },
+              )
+            })
+            else -> openTaf?.let { id -> ({ detail(id) }) }
+          }
+          if (wide) {
+            // A tablet (as iOS's HomeSplitView): the list beside what's open. It opens on the list's first taf until another is
+            // picked.
+            Row(Modifier.fillMaxSize()) {
+              Box(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight()) { home() }
+              Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
+              Box(Modifier.weight(1f).fillMaxHeight()) {
+                when {
+                  open != null -> open()
+                  state.tafs.isNotEmpty() -> detail(state.tafs.first().id)
+                  else -> Unit
+                }
+              }
+            }
+          } else {
+            (open ?: home)()
           }
         }
         Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() })
@@ -485,3 +512,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     }
   }
 }
+
+/** From this width the Tafs tab shows the list beside what's open, as iOS on an iPad. */
+private const val WIDE_DP = 840
+
+/** The list's width beside what's open: iOS's sidebar. */
+private val SIDEBAR_WIDTH = 360.dp
