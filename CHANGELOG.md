@@ -7,6 +7,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, Coach:** **Improve <taf>** as a start in a new conversation and on a taf's Activity
+  tab; what the owner wrote and didn't send stays, in Coach and each taf's chat; a card answer
+  tafs cloud took never stays on "Sending your answer…"; and Coach's tools and Card go in one tap
+  when the Card comes after the batch.
+
 - **Android, a connection its vendor signed out:** its taf waits on the owner at the top of the
   home list, its row in planque's words ("Signed out by Stripe · sign in again"), and its Card
   tab offers **Sign in again**. planque's grants are read on every refresh and live update.

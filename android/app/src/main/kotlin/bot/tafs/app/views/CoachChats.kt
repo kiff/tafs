@@ -140,12 +140,22 @@ private fun ChatRow(chat: TafsCloud.Chat, action: String, onOpen: () -> Unit, on
  * taf and starts from what it did; otherwise it's anything about the account's tafs.
  */
 @Composable
-fun CoachStarts(state: AppState, send: (String) -> Unit) {
+fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, send: (String) -> Unit) {
   val improving = state.coachImproving?.let { state.taf(it)?.name }
   val sending = COACH_CHAT in state.chatSending
   Column(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
     Text(improving?.let { "Improve $it" } ?: CoachWords.ASK_ANYTHING, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
     Text(improving?.let(CoachWords::improveLine) ?: CoachWords.ASK_ANYTHING_LINE, style = scaled(15, color = Theme.soft))
+    // Or start on one taf, as iOS does: each taf this person manages, its own conversation.
+    if (improving == null) {
+      CoachWords.improvable(state).forEach { taf ->
+        Text(
+          "Improve ${taf.name}",
+          style = scaled(15, FontWeight.SemiBold, Theme.amberText),
+          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !sending) { improve(taf.id) }.padding(vertical = 10.dp),
+        )
+      }
+    }
     (if (improving != null) CoachWords.IMPROVE_EXAMPLES else CoachWords.EXAMPLES).forEach { example ->
       val shape = RoundedCornerShape(14.dp)
       Text(
