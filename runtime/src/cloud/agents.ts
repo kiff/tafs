@@ -182,6 +182,15 @@ export interface Run {
   requester?: Requester;
   /** The run opened its session: a requester's live chat had gone quiet, or none was asked for. */
   new_session?: boolean;
+  /**
+   * Where its work stands when its status alone doesn't say (docs/reliability.md): "retrying", a run that stopped
+   * while it worked and waits for restart `try` of `of` at `next_at`; "needs_you", one past its last, with `reason`.
+   */
+  state?: "retrying" | "needs_you";
+  reason?: string;
+  try?: number;
+  of?: number;
+  next_at?: string;
   created: string;
   updated: string;
 }
@@ -313,6 +322,12 @@ export interface RunAt {
    * not sent before. Only a person's own chat message carries any.
    */
   attachments?: string[];
+  /**
+   * The request's name at its origin (a door message's id) and where it came from (docs/reliability.md): one key
+   * starts one run, however often it's sent, and a second send gets the first run.
+   */
+  dedupKey?: string;
+  source?: string;
 }
 
 /** A file as a message records it (kiff/tafs#209): never its bytes. */
@@ -366,6 +381,7 @@ function runAt(at: RunAt): Record<string, unknown> {
     ...(at.live && !at.session ? { chat: "live" } : {}),
     ...(at.grant ? { run_grant: at.grant } : {}),
     ...(at.attachments?.length ? { attachments: at.attachments } : {}),
+    ...(at.dedupKey ? { dedup_key: at.dedupKey, ...(at.source ? { source: at.source } : {}) } : {}),
   };
 }
 

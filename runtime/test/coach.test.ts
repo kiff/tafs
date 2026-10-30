@@ -92,12 +92,12 @@ function world() {
 }
 
 describe("Coach's tools (kiff/tafs#206)", () => {
-  it("speak MCP, and list the seven tools, each with KIFF's operation argument", async () => {
+  it("speak MCP, and list the eight tools, each with KIFF's operation argument", async () => {
     const w = world();
     const init = await w.rpc("initialize", { protocolVersion: "2025-06-18" });
     expect(init.result).toMatchObject({ protocolVersion: "2025-06-18", serverInfo: { name: "tafs" } });
     const list = await w.rpc("tools/list");
-    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"]);
+    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "version_try", "version_install"]);
     for (const t of list.result?.tools ?? []) expect(t.inputSchema.required).toContain(OP_ARG);
     expect(TOOLS.map((t) => t.name)).not.toContain("hold_answer");
   });
@@ -199,6 +199,14 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect((await w.tool("taf_task", { taf: RAE, text: "Skip order 7", run: run.id })).json).toMatchObject({ run: run.id });
     w.agents.runs.find((x) => x.id === run.id)!.status = "COMPLETED";
     expect(await w.tool("taf_task", { taf: RAE, text: "And 8", run: run.id })).toMatchObject({ isError: true, text: expect.stringContaining("ended") });
+  });
+
+  it("taf_results sets where a taf's results go, all at once, and only to known places", async () => {
+    const w = world();
+    expect((await w.tool("taf_results", { taf: RAE, places: ["owner_email", "door_reply"] })).json).toEqual({ taf: "Refunds", results: ["door_reply", "owner_email"] });
+    expect((await w.tool("tafs_state", {})).json).toMatchObject({ tafs: [expect.objectContaining({ id: RAE, results: ["door_reply", "owner_email"] })] });
+    expect(await w.tool("taf_results", { taf: RAE, places: [] })).toMatchObject({ isError: true, text: expect.stringContaining("places is one or more of") });
+    expect(await w.tool("taf_results", { taf: RAE, places: ["sms"] })).toMatchObject({ isError: true });
   });
 
   it("run_stop and taf_pause act through kiff/agents; an unknown taf is refused", async () => {

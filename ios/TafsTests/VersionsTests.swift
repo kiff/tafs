@@ -245,8 +245,6 @@ final class VersionsTests: XCTestCase {
         XCTAssertEqual(body["from"], "v2|d_02")
         XCTAssertEqual(body["agent"], "rae-k3f9", "the result's agent, which tafs cloud checks is this taf's")
         XCTAssertNotNil(model.versions[id], "its versions read again")
-
-        await model.startSetupTaf(c)
         XCTAssertTrue(sent("POST", "/v1/tafs").isEmpty, "an improvement never starts a new taf")
     }
 

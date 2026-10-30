@@ -53,12 +53,6 @@ final class TafsCloud {
         var paused: Bool { status == "paused" }
     }
 
-    struct Started: Decodable, Equatable {
-        let taf: CloudTaf
-        /// Its first run's chat; none for a taf that works from its chat (kiff/tafs#138).
-        let session: String?
-    }
-
     struct Run: Decodable, Equatable {
         let session: String?
         let at: Date
@@ -653,6 +647,43 @@ final class TafsCloud {
         try await send("POST", "/v1/tafs/\(escaped(id))/improve", body: ["text": text])
     }
 
+    /// A card's answer, as tafs cloud takes it: the run that waited on it goes on.
+    struct CardAnswered: Decodable, Equatable {
+        let session: String
+        let run: String
+        let status: String
+    }
+
+    /// A card's answer as data: a string (a confirm's option value, an approval's or a
+    /// sign-in's outcome), or a questions card's answer to each question.
+    enum CardAnswerValue: Encodable, Equatable {
+        case text(String)
+        case questions([String: QuestionAnswer])
+
+        struct QuestionAnswer: Codable, Equatable {
+            var value: String?
+            var values: [String]?
+            var own: String?
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.singleValueContainer()
+            switch self {
+            case .text(let s): try c.encode(s)
+            case .questions(let q): try c.encode(q)
+            }
+        }
+    }
+
+    /// The owner's answer to a card of theirs that waits for it, as data
+    /// (`POST /v1/tafs/{id}/components/{component}/answer`): kiff/agents checks it against the
+    /// card, and the run goes on with it. A 409 says the card doesn't wait any more.
+    func answerCard(_ id: String, component: String, answer: CardAnswerValue, session: String?) async throws -> CardAnswered {
+        struct Body: Encodable { let answer: CardAnswerValue; let session: String? }
+        return try await send("POST", "/v1/tafs/\(escaped(id))/components/\(escaped(component))/answer",
+                              body: Body(answer: answer, session: session))
+    }
+
     /// Sends the owner's message: into the taf's current run, or a new one.
     func sendMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> Sent {
         try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target, files: files))
@@ -827,12 +858,67 @@ final class TafsCloud {
 
     // MARK: Setup (kiff/agents#91)
 
-    /// A component as the conversation lists it. One the app doesn't know is skipped.
+    /// A component as the conversation lists it, with its answer once kiff/agents recorded one.
+    /// One the app doesn't know is skipped.
     struct Shown: Decodable, Equatable {
         let at: Date
         let session: String
         let run: String
         let component: SetupComponent
+        var answer: CardAnswer?
+
+        enum CodingKeys: String, CodingKey { case at, session, run, component, answer }
+
+        init(at: Date, session: String, run: String, component: SetupComponent, answer: CardAnswer? = nil) {
+            self.at = at
+            self.session = session
+            self.run = run
+            self.component = component
+            self.answer = answer
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            at = try c.decode(Date.self, forKey: .at)
+            session = try c.decode(String.self, forKey: .session)
+            run = try c.decode(String.self, forKey: .run)
+            component = try c.decode(SetupComponent.self, forKey: .component)
+            // An answer the app can't read leaves the card unanswered, never the card out.
+            answer = try? c.decodeIfPresent(CardAnswer.self, forKey: .answer)
+        }
+    }
+
+    /// A card's answer as kiff/agents recorded it: `by` is "tafs cloud" when tafs cloud answered a
+    /// result itself, with its `outcome`: the taf it set up, the version it made, or why it didn't.
+    struct CardAnswer: Decodable, Equatable {
+        var state = "answered"
+        var words = ""
+        var by: String?
+        var outcome: Outcome?
+
+        struct Outcome: Decodable, Equatable {
+            var tafID: String?
+            var version: Int?
+            var failed: String?
+            enum CodingKeys: String, CodingKey { case version, failed, tafID = "taf_id" }
+        }
+
+        enum CodingKeys: String, CodingKey { case state, words, by, outcome }
+
+        init(state: String = "answered", words: String = "", by: String? = nil, outcome: Outcome? = nil) {
+            self.state = state
+            self.words = words
+            self.by = by
+            self.outcome = outcome
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            state = try c.decodeIfPresent(String.self, forKey: .state) ?? "answered"
+            words = try c.decodeIfPresent(String.self, forKey: .words) ?? ""
+            by = try c.decodeIfPresent(String.self, forKey: .by)
+            outcome = try? c.decodeIfPresent(Outcome.self, forKey: .outcome)
+        }
     }
 
     private struct LenientShown: Decodable {
@@ -857,21 +943,6 @@ final class TafsCloud {
         struct Response: Decodable { let setup: CloudTaf }
         let r: Response = try await send("POST", "/v1/setup", body: Body(draftID: draftID, claimSecret: claimSecret))
         return r.setup
-    }
-
-    /// Starts a taf Setup made (kiff/agents#91): kiff/agents claims its key from the draft
-    /// Setup submitted, so it never reaches the phone or tafs cloud. Runs it once now, unless
-    /// Setup said its tools can't find its work (kiff/tafs#138): then it works from its chat.
-    func startFromSetup(name: String, job: String, draftID: String, unscheduled: Bool = false,
-                        timezone: String = TimeZone.current.identifier) async throws -> Started {
-        struct Body: Encodable {
-            let name: String, job: String, draftID: String, timezone: String
-            let fromSetup = true
-            let unscheduled: Bool?
-            enum CodingKeys: String, CodingKey { case name, job, timezone, unscheduled, draftID = "draft_id", fromSetup = "from_setup" }
-        }
-        return try await send("POST", "/v1/tafs", body: Body(name: name, job: job, draftID: draftID, timezone: timezone,
-                                                              unscheduled: unscheduled ? true : nil))
     }
 
     /// Setup's thread: its messages and the components it showed. With `session`, that

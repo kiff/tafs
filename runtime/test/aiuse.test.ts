@@ -38,11 +38,11 @@ describe("the bound", () => {
   });
 
   it("shows the use as a share of the base, where the tafs ask, and when they're asking", () => {
-    expect(view(SOLO, HALF / 2)).toEqual({ used_pct: 50, asks_at_pct: 100, paused: false });
-    expect(view(SOLO, HALF)).toEqual({ used_pct: 100, asks_at_pct: 100, paused: true });
-    expect(view({ ...SOLO, goOns: 1 }, HALF + 1)).toEqual({ used_pct: 100, asks_at_pct: 200, paused: false });
-    expect(view({ ...SOLO, plan: "internal" }, 10 * HALF)).toEqual({ used_pct: null, asks_at_pct: null, paused: false });
-    expect(view(undefined, 0)).toEqual({ used_pct: null, asks_at_pct: null, paused: false });
+    expect(view(SOLO, HALF / 2)).toEqual({ used_pct: 50, asks_at_pct: 100, paused: false, words: "Your tafs used 50% of this period's AI. They ask you before going past 100%." });
+    expect(view(SOLO, HALF)).toEqual({ used_pct: 100, asks_at_pct: 100, paused: true, words: "Your tafs used 100% of this period's AI and are waiting for you: go on, and they ask again at 200%." });
+    expect(view({ ...SOLO, goOns: 1 }, HALF + 1)).toMatchObject({ used_pct: 100, asks_at_pct: 200, paused: false });
+    expect(view({ ...SOLO, plan: "internal" }, 10 * HALF)).toEqual({ used_pct: null, asks_at_pct: null, paused: false, words: "Your plan sets no AI limit for your tafs." });
+    expect(view(undefined, 0)).toEqual({ used_pct: null, asks_at_pct: null, paused: false, words: "Your plan sets no AI limit for your tafs." });
   });
 });
 
@@ -146,14 +146,14 @@ describe("GET /v1/usage/ai", () => {
   it("answers the share used, where the tafs ask, and whether they're asking", async () => {
     const w = world(usage("solo", 1));
     w.agents.spent.set(`t_acme ${PERIOD}`, Math.round(HALF * 0.42));
-    expect((await call(w, "GET", "/v1/usage/ai")).body).toEqual({ used_pct: 42, asks_at_pct: 100, paused: false });
+    expect((await call(w, "GET", "/v1/usage/ai")).body).toMatchObject({ used_pct: 42, asks_at_pct: 100, paused: false, words: expect.stringContaining("42%") });
     w.agents.spent.set(`t_acme ${PERIOD}`, HALF);
-    expect((await call(w, "GET", "/v1/usage/ai")).body).toEqual({ used_pct: 100, asks_at_pct: 100, paused: true });
+    expect((await call(w, "GET", "/v1/usage/ai")).body).toMatchObject({ used_pct: 100, asks_at_pct: 100, paused: true });
   });
 
   it("answers nulls with no bound, without asking kiff/agents", async () => {
     const w = world(usage("internal", 0));
-    expect((await call(w, "GET", "/v1/usage/ai")).body).toEqual({ used_pct: null, asks_at_pct: null, paused: false });
+    expect((await call(w, "GET", "/v1/usage/ai")).body).toEqual({ used_pct: null, asks_at_pct: null, paused: false, words: "Your plan sets no AI limit for your tafs." });
     expect(w.agents.calls).toEqual([]);
   });
 });

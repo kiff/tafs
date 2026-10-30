@@ -17,7 +17,7 @@ describe("Setup's definition on kiff/agents", () => {
       ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "price", "price_fast", "show", "speed", "thinking"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
-    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"]);
+    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "version_try", "version_install"]);
   });
 
   it("runs as a taf runs, with its own cost cap and effort", () => {
@@ -120,6 +120,13 @@ describe("Setup's definition on kiff/agents", () => {
     // as taps, and never an id asked of them.
     expect(SETUP_INSTRUCTIONS).toContain("In the owner's language: every message, and every component's title");
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Concisely: say what you did and what the owner does next, first, then stop.");
+    // The first sentence leads: the outcome, what waits on the owner, or the question; what was
+    // checked comes after, if at all, with an example in the owner's language (Eval 41013084238).
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Every message's first sentence is the outcome, or what waits on the owner, or the question asked.");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("What you checked on the way comes after it, briefly, or not at all.");
+    expect(SETUP_INSTRUCTIONS).toContain("Falta que apruebes las herramientas de Reembolsos");
+    // No closing offer of more help (Eval 41024236766: "Si quieres cambiarlos, dímelo aquí.").
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("End when it's said: no offer of more help");
     expect(SETUP_INSTRUCTIONS).not.toMatch(/\d+ words/);
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
     expect(SETUP_INSTRUCTIONS).toContain("as a notice (tone info");

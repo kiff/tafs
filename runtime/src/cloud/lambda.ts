@@ -9,7 +9,7 @@ import { fcmSender } from "./fcm.js";
 import { KIFF_API } from "./kiff.js";
 import { PLANQUE } from "./setupdef.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
-import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, sweepHandOvers, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, sweepHandOvers, sweepReplies, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import { routing, silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
 import type { DoorsConfig, DoorsDeps } from "./doors/doors.js";
@@ -683,11 +683,11 @@ function isUpgrade(event: unknown): event is UpgradeEvent {
   return typeof event === "object" && event !== null && !("requestContext" in event) && "upgrade" in event;
 }
 
-export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] } | { swept: unknown[]; handovers?: unknown[] }> {
+export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] } | { swept: unknown[]; handovers?: unknown[]; replies?: unknown[] }> {
   if (isSweep(event)) {
-    // The same schedule retries Coach's hand-overs a server error left undone.
+    // The same schedule retries Coach's hand-overs a server error left undone, and door replies a provider didn't take.
     const d = deps();
-    return { swept: await sweepDeletions(d), handovers: await sweepHandOvers(d) };
+    return { swept: await sweepDeletions(d), handovers: await sweepHandOvers(d), replies: await sweepReplies(d) };
   }
   if (isUpgrade(event)) {
     try {
