@@ -7,6 +7,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, a connection its vendor signed out:** its taf waits on the owner at the top of the
+  home list, its row in planque's words ("Signed out by Stripe · sign in again"), and its Card
+  tab offers **Sign in again**. planque's grants are read on every refresh and live update.
+
 - **Android, a taf's page:** a compact header (back, name, state) whose Share and Card line
   fold as it scrolls; a chat opens at its newest message, with a door's knocks at their own
   times; and a paired sender's waiting message reads "Paired · Do it or Ignore this message".

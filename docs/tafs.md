@@ -104,7 +104,9 @@ A taf's state (`stateOf`):
 | working | otherwise, for a taf tafs cloud runs |
 | idle | an agent with a Card that tafs doesn't run |
 
-The list is ordered with the taf a call waits on first, then by when each was last used. On
+The list is ordered with the taf a call waits on first, then by when each was last used.
+On Android a taf whose connection its vendor signed out waits on the owner too, first, its row
+reading planque's words ([android-app.md](android-app.md#live-updates)). On
 Android the order holds while the list is on screen (`ListOrder`): a refresh updates each row
 in place and never moves one under the owner's finger, except that a taf newly waiting on the
 owner goes to the top at once. The order is worked out again on a pull and when the app comes
