@@ -39,6 +39,15 @@ taf's own message about the hold leaves that out: it's said where the owner answ
 | A **next step** | When the hold offers some | Refuses it, with the step for the taf |
 | **Extra room** | The call is over a total the Card keeps across calls (a day's), and the person manages the account's Cards | Gives the Card just the room this call needs, until that total resets |
 
+**Over a total and a limit for one call, it takes two answers,** as KIFF keeps them: extra
+room raises the total and doesn't itself pass the limit for one call. KIFF keeps the hold's
+id: after extra room it's `changed`, and when the taf tries the call again it's back as
+`held`, over the limit for one call only. The card then says plainly that the first step
+went through and why one more is needed, in KIFF's own words (`reason_text`): "Extra room
+went through. This call is held again for a limit of its own: $60 is over the $50 limit
+for one call. Approve it once to let it go, or refuse it." (Android: `SecondStep`,
+`roomGiven`). A held call's reason is KIFF's `reason_text` wherever KIFF sends it.
+
 Over a total, approving once can't pass it, and the card says so. Someone who may use
 Coach also gets "Change the limit in Coach mode", which opens Coach on that taf
 ([coach.md](coach.md#improving-a-taf)).
@@ -66,6 +75,23 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
     Card, starting a trial, Resume. Its own access control requires Face ID, Touch ID or
     the passcode, so the key checks the prompt, not the app's code. One confirmed Face ID
     covers one confirmed step.
+- On an Android phone the two keys are in the Android Keystore (StrongBox, else the TEE),
+  and the approval key is stricter (`KeystoreKeys`, `DeviceSigner`):
+  - it signs **once per fingerprint**: timeout 0, a strong biometric only, unlocked through
+    `BiometricPrompt` with the signature as its `CryptoObject`. Unlocking the phone counts
+    for nothing, and the screen lock never approves.
+  - every request that grants authority asks for its own fingerprint, with the step's
+    words. Approve, Resume, sharing a taf, starting a trial and installing a version with
+    its Card each take one. Installing Coach's held version takes two (the Card, then
+    Coach's call), and starting Coach the first time takes its "Connect your tools"
+    confirmation and a fingerprint for each of its two drafts, then signs the connect batch
+    tafs cloud gave and asks a fingerprint for Coach's Card ("Give Coach its Card").
+  - a phone with no strong biometric enrolled has no approval key and approves nothing: it
+    says to add a fingerprint. Refusing still works.
+  - adding a fingerprint turns the key off for good. The phone makes a new one and says it
+    can't approve until a new sign-in. **Sign in again** in Settings ends the session at
+    KIFF first, the old approval key with it, then signs out; the next sign-in, approved
+    in the browser, registers the new key as a new device.
 - KIFF holds both keys for the session: the current one from sign-in, the approval key
   registered once (`POST /v1/me/device/approval-key`). If KIFF holds an approval key
   that isn't this phone's, approving waits for a new sign-in.
@@ -96,12 +122,12 @@ for production.
 ## Alerts while tafs is closed
 
 KIFF tells tafs cloud when a call is held, and tafs cloud tells the account's phones
-through Apple push (`runtime/src/cloud/push.ts`):
+through Apple push for an iPhone and Firebase Cloud Messaging for an Android phone (`runtime/src/cloud/push.ts`, `apns.ts`, `fcm.ts`):
 
 1. The phone registers the account's **alert target** in KIFF, pointed at
    `/v1/kiff/alerts`, with a signed setup call (one Face ID). KIFF shows the target's
    signing secret once, to the phone.
-2. The phone hands tafs cloud its push token and that secret (`POST /v1/push`). The
+2. The phone hands tafs cloud its push token and that secret (`POST /v1/push`; an Android phone says `platform: "android"` and gives Firebase's token). The
    secret checks KIFF's deliveries; the token is where they go. An account gets alerts on
    50 phones at most. A phone can also hand over the target alone (`POST /v1/alerts`), so a
    paused run hears the answer whether or not a phone turned on alerts.
@@ -111,6 +137,17 @@ through Apple push (`runtime/src/cloud/push.ts`):
 
 Only phones of people who may answer held calls (`holds.answer`) are alerted, and only
 they may hand over the target's secret.
+
+**On Android** the push is a Firebase data message the phone builds its notification from:
+`kind` (`alert` shows one, `answered` takes it away), the words, where tapping it goes
+(`open`), the call or request it is about, and how loud it is (`level`). A door's alert
+opens its taf (`open: "taf"` with `taf_id`, the taf's id in tafs cloud); the phone opens it
+once the list has it, and a door's later alert for the same taf replaces the earlier one. It carries no
+amount and no argument, as an iPhone's push doesn't. A phone whose Sound is off gets
+`level: "quiet"`. Google refusing a token it no longer knows forgets that phone; any other
+failure answers KIFF 502, so it sends the alert again. tafs cloud sends to Android only
+where `FCM_PROJECT_ID` and `FCM_SECRET_ID` are set (the Firebase project's service-account
+key in Secrets Manager); without them an Android phone's registration is refused (503).
 
 **What an alert says.** KIFF's alert carries no request parameters, so the push says only
 "A taf needs you" and the action. On the phone, the notification service extension reads

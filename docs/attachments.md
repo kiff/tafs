@@ -10,6 +10,11 @@ Attachments section of `AppModel`; `TafsCloud.attach`, `upload` and `attachment`
 tafs cloud, `attachFile`, `readFile` and `files` in `handler.ts`. kiff/agents keeps the
 files and checks them again.
 
+On Android: `views/AttachViews.kt` (the paperclip, `FileTray`, `MessageFiles`),
+`model/Attachments.kt` (`FilePrep`, `PendingFile`), `files/PhotoPrep.kt` (redrawing a
+photo), the Photos and files section of `AppModel`, and `TafsCloud.attach`, `upload` and
+`attachment`. It works as below, with the differences noted.
+
 ## What can be attached
 
 At most 5 files a message (`FilePrep`):
@@ -26,7 +31,8 @@ with why, and never goes up. kiff/agents checks the same types and limits.
 
 **Every image is redrawn as a JPEG** before it goes, whether from the camera, Photos or
 Files: its long edge at most 2,576 pixels, drawn on white so a transparent PNG isn't
-black. Only its pixels are kept, so it carries no location or other metadata.
+black. Only its pixels are kept, so it carries no location or other metadata. On Android,
+`ImageDecoder` reads it (HEIC included) turned the way it was taken.
 
 ## Attaching
 
@@ -57,6 +63,14 @@ A sent message shows its files; each opens full size in Quick Look. The app asks
 cloud for a download link (`GET /v1/tafs/{id}/attachments/{att}`), which works for a
 minute, only for the person who attached it. The copy goes into the app's temporary
 folder (`tmp/attachments`) and is removed on sign-out and on an account switch.
+
+On Android a sent file opens in the phone's own app for its kind (Photos, a PDF viewer),
+handed over read-only through the app's FileProvider. The copy goes into the app's cache
+(`cache/attachments`, under its own name only) and is removed on sign-out. The
+paperclip's photos come from the system photo picker, which gives the app only the
+photos the person picks, so the app asks for no photo permission; a chosen photo is
+named "Photo 1", as on iOS. A photo from the camera is written to the app's cache, and
+that copy is removed once it's redrawn.
 
 ## What's kept
 

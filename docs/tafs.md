@@ -107,7 +107,11 @@ A taf's state (`stateOf`):
 The list is ordered with the taf a call waits on first, then by when each was last used.
 On an iPad, the app opens on the list's first taf until the owner picks another
 (`HomeSplitView.opening`). A tap anywhere on a row picks it, and a tap on the taf
-already open counts as a pick too.
+already open counts as a pick too. On an Android tablet, either way up, or any screen 720 dp
+wide or more, the Tafs tab shows the list (360 dp, as iOS's sidebar) beside what's open, a taf, Coach
+or a trial, and opens on the list's first taf the same way (`MainActivity`, `WIDE_DP`). Overview
+is at the foot of the list (`OverviewView`), without who uses each taf yet. In landscape, a
+taf's page has the second column where the chat keeps 430 dp beside it (`SideColumn`).
 The order settles when the tafs change, when the app comes back, and once more when a
 session first reads KIFF's record, so it doesn't move under the owner's finger. The last
 list is remembered on the phone, in its order, and shown at the next launch before KIFF
@@ -138,6 +142,14 @@ theirs. Someone with only shared tafs sees just "Shared with you".
 On a wide screen in landscape, a second column beside the chat or activity shows what
 waits for the owner and the Cards. Otherwise one line above shows the front Card and
 opens the Card tab.
+
+On Android the page is `views/TafDetailView.kt`, with the same tabs and parts
+(`RunsPanel`, `RunReportPanel`, `MemoryPanel`), and no second column yet. Revoke asks KIFF
+to revoke each of the taf's Cards (`POST /v1/me/mandates/{id}/revoke`, unsigned, since it
+takes authority away) and shows the taf stopped only once KIFF has. Remove for good takes
+one confirmation, revokes its Cards, then asks tafs cloud to remove the rest
+(`DELETE /v1/tafs/{id}`). A removal left half way is finished on the next refresh, from
+the home list's `removing`.
 
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
@@ -180,6 +192,14 @@ moved, Stopped, Waiting.
   (`GET /v1/tafs/{id}/calls`), checked against KIFF's signed hash of it.
 - An answer the owner gave that KIFF hasn't recorded yet shows as answered until KIFF's
   record has it (`withDecisions`).
+
+On Android the sheet is `views/ReceiptSheet.kt` and the check `kiff/ReceiptCheck.kt`, the
+same digest, the same chain bytes as KIFF wrote them, and the same pinned signer as iOS.
+Keccak-256 and the secp256k1 key recovery come from Bouncy Castle's lightweight API;
+iOS's test receipt and vectors are Android's tests too. A verified receipt whose line
+names another payment, amount or answer than the one KIFF signed doesn't check out
+(`ReceiptSteps.mismatch`). Each line's payment comes from tafs cloud's call references,
+read after each refresh and kept only where its hash is KIFF's (`KiffMapping.naming`).
 
 ## Pausing, revoking and removing
 

@@ -21,6 +21,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
 | [ios-app.md](ios-app.md) | The app's code: its model, screens, services, launch arguments and tests |
+| [android-app.md](android-app.md) | The Android app's code: building and testing it, its packages, signing, releases |
 | [data.md](data.md) | Where every piece of data lives, for how long, and who deletes it |
 | [kiff-decides.md](kiff-decides.md) | How KIFF decides every taf action, with the first held calls on a phone |
 | [needs-from-kiff.md](needs-from-kiff.md) | What tafs needs from KIFF, and where each need stands |
@@ -29,7 +30,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 ## How tafs fits together
 
 ```
-            ┌──────────── the owner's iPhone or iPad (ios/) ────────────┐
+            ┌── the owner's iPhone, iPad (ios/) or Android (android/) ──┐
             │  reads Cards and held calls, signs every answer, never    │
             │  holds an agent key or a vendor token                     │
             └─────┬───────────────────┬────────────────────┬────────────┘
