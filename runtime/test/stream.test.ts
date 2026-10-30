@@ -53,15 +53,40 @@ async function stream(w: World, path: string, opts: { token?: string; body?: unk
   });
   let raw = "";
   for await (const chunk of r.body) raw += chunk;
-  if (r.statusCode !== 200) return { status: r.statusCode, events: [], error: JSON.parse(raw).error as string, raw };
+  if (r.statusCode !== 200) return { status: r.statusCode, events: [], states: [], error: JSON.parse(raw).error as string, raw };
   const events: Array<{ event: string; data: Record<string, unknown> }> = [];
-  for await (const e of readEvents(new Response(raw).body!)) events.push(e as { event: string; data: Record<string, unknown> });
-  return { status: r.statusCode, events, error: "", raw };
+  // The paced `state` line is read apart (its own tests): the rest is the stream as it was.
+  const states: Array<Record<string, unknown>> = [];
+  for await (const e of readEvents(new Response(raw).body!)) {
+    const ev = e as { event: string; data: Record<string, unknown> };
+    if (ev.event === "state") states.push(ev.data);
+    else events.push(ev);
+  }
+  return { status: r.statusCode, events, states, error: "", raw };
 }
 
 const PATH = `/v1/tafs/${RAE}/messages/stream`;
 
 describe("a message streamed (kiff/tafs#60)", () => {
+  it("sends one calm line: thinking, the step in its words, waiting for you, done; never the thinking text", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "thinking", text: "Let me look at the charge first" } },
+      { event: "delta", data: { kind: "text", text: "Checking." } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "show", input: { type: "approval" } } },
+      { event: "delta", data: { kind: "component", component: { type: "approval", id: "a1", grant: "g_1" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Refund order 42" } });
+    const lines = r.states.map((s) => s.state);
+    expect(lines[0]).toBe("thinking");
+    // Waiting for the person and the end go at once, whatever the hold.
+    expect(lines).toContain("waiting_for_you");
+    expect(lines.at(-1)).toBe("done");
+    // Sent only on a change, and the model's thinking text is never in the line.
+    expect(lines.every((l, i) => i === 0 || l !== lines[i - 1])).toBe(true);
+    expect(JSON.stringify(r.states)).not.toContain("Let me look");
+  });
+
   it("relays the answer as it's written, the tools by name only, and where it stopped", async () => {
     const w = world();
     w.agents.streamed.push(

@@ -211,3 +211,12 @@ Every message in the thread has a stable `id` (`conversation` in `handler.ts`). 
 owner message is `<run>.in`, and that's the id `POST …/messages` answers for the message just
 sent. Every other message is `<run>.<seq>`. An app matches what it sent to the thread by that id,
 and never by text or time.
+
+## The live line
+
+While a taf works, the stream sends one line for the app to show (`event: state`, `relay` in
+`handler.ts`). It has one `state`: `thinking`, `working` with the step's `words`, `waiting_for_you`,
+or `done`. It's sent only when it changes, and a line holds at least a second (`STATE_HOLD_MS`),
+so it doesn't flicker. Waiting for the person and the end go at once. The model's thinking text is
+never in it. An app shows this line and doesn't draw the `thinking` events. When the run ends, the
+line becomes the message's "Worked … · N steps".

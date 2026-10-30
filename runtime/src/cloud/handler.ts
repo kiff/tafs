@@ -2596,6 +2596,11 @@ export interface StreamResult {
  *   event: held       {exception, invocation}: KIFF holds the call just made for the
  *                     owner, at this point of the answer (kiff/tafs#206)
  *   event: component  {component}: a component the agent showed
+ *   event: state      {state, words?}: the one line the app shows while the taf works, as tafs
+ *                     cloud paces it: "thinking", "working" with the step's words, "waiting_for_you",
+ *                     then "done". Sent only when it changes, a line held at least a second
+ *                     (STATE_HOLD_MS) unless it waits for the person or ends. The model's thinking
+ *                     text is never in it: an app shows this line, and draws no `thinking` text
  *   event: end        {status, stop}: where the run stopped
  *   event: error      {error}: the stream broke; the conversation has the rest
  *
@@ -2758,8 +2763,45 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
  * (`at` set) shows what the agent does as it does it; a resumed one's, its
  * recorded steps.
  */
-async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map()): AsyncGenerator<string> {
+/** How long the stream's `state` line holds before it changes, unless it waits for the person or ends. */
+export const STATE_HOLD_MS = 1000;
+
+/** The card types a run waits on the person for: while one shows, the line says it waits for them. */
+const WAITS_FOR_YOU = new Set(["confirm", "questions", "approval", "sign_in"]);
+
+/**
+ * The stream's one calm line (`state`): what the taf does now, sent only on a change, and held at
+ * least STATE_HOLD_MS so it doesn't flicker. A line the hold kept back goes with the next event
+ * once the hold is over, or is replaced by a newer one.
+ */
+class Pace {
+  private sent?: { key: string; at: number };
+  private pending?: { state: string; words?: string };
+  constructor(private readonly now: () => number) {}
+
+  /** The `state` event to send now for this line, if any. */
+  set(state: string, words?: string): string | undefined {
+    this.pending = { state, ...(words ? { words } : {}) };
+    return this.flush(state === "waiting_for_you" || state === "done");
+  }
+
+  /** The line held back, once its hold is over (or at once, when `now`). */
+  flush(now = false): string | undefined {
+    const p = this.pending;
+    if (!p) return undefined;
+    const key = `${p.state}|${p.words ?? ""}`;
+    if (this.sent?.key === key) { this.pending = undefined; return undefined; }
+    const t = this.now();
+    if (!now && this.sent && t - this.sent.at < STATE_HOLD_MS) return undefined;
+    this.sent = { key, at: t };
+    this.pending = undefined;
+    return sse("state", p);
+  }
+}
+
+async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult<RunStreamEvent> | undefined, at: RunAt | undefined, titles: ToolTitles = new Map(), now: () => number = Date.now): AsyncGenerator<string> {
   const steps = new Steps(titles);
+  const pace = new Pace(now);
   let turns = 0; // a resumed run's model turns so far
   // What it's doing, in a few words: only these, never the call's arguments.
   const call = (tool: string, input: unknown, callID: unknown): string => {
@@ -2822,14 +2864,40 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         return undefined;
     }
   };
+  // The line each event puts the taf on: thinking while the model writes or thinks, working on a
+  // step in its words, waiting for the person on a card that waits or a held call, done at the end.
+  const line = (e: RunStreamEvent): string | undefined => {
+    const d = (e.data ?? {}) as Record<string, unknown>;
+    const b = (e.event === "event" ? (d.body ?? {}) : d) as Record<string, unknown>;
+    const kind = d.kind;
+    if (e.event === "end") return pace.set("done");
+    if (e.event === "run") return pace.set("thinking");
+    if (kind === "thinking" || kind === "text") return pace.set("thinking");
+    if (kind === "tool_call" && typeof b.tool === "string") {
+      return pace.set("working", steps.call(b.tool, b.input)?.replace(/…$/, ""));
+    }
+    if (kind === "tool_result") {
+      const r = (e.event === "event" ? b : (d.result ?? {})) as { state?: unknown };
+      return pace.set(r.state === "held" ? "waiting_for_you" : "thinking");
+    }
+    if (kind === "component") {
+      const c = (e.event === "event" ? d.body : d.component) as { type?: unknown } | undefined;
+      return typeof c?.type === "string" && WAITS_FOR_YOU.has(c.type) ? pace.set("waiting_for_you") : undefined;
+    }
+    return pace.flush();
+  };
   try {
     if (first && !first.done) {
       const s = out(first.value);
       if (s) yield s;
+      const l = line(first.value);
+      if (l) yield l;
     }
     for await (const e of run) {
       const s = out(e);
       if (s) yield s;
+      const l = line(e);
+      if (l) yield l;
     }
   } catch (err) {
     console.error(err);
