@@ -816,16 +816,33 @@ final class KIFFClient {
         /// it, the Card reads now → after.
         var unchanged: Bool?
         var isUnchanged: Bool { unchanged == true && current != nil }
+        /// What KIFF does with a call past a limit: "owner" holds it for the owner, "refuse"
+        /// refuses it; nil from a KIFF that doesn't say.
+        var onExceed: String?
+        /// KIFF's own words for the Card, shown as they come: the app words it only for a KIFF
+        /// that doesn't send them, so the two apps and KIFF never word a Card apart.
+        var kiffLines: [String]?
+        enum CodingKeys: String, CodingKey {
+            case grants, aggregates, revises, current, unchanged, onExceed = "on_exceed", kiffLines = "lines"
+        }
 
         /// A Card's terms alone: what `current` holds.
         struct Terms: Decodable, Equatable {
             let grants: [Grant]?
             let aggregates: [Aggregate]?
-            var lines: [String] { DraftCard(grants: grants, aggregates: aggregates).lines }
+            var onExceed: String?
+            var kiffLines: [String]?
+            enum CodingKeys: String, CodingKey { case grants, aggregates, onExceed = "on_exceed", kiffLines = "lines" }
+            var lines: [String] { DraftCard(grants: grants, aggregates: aggregates, onExceed: onExceed, kiffLines: kiffLines).lines }
         }
 
+        /// Past a limit, the call asks the owner first: the lines say so.
+        var asksPastLimits: Bool { onExceed == "owner" }
+
         /// The lines the owner approves, in their words (kiff/tafs#94): "Refund a payment: up
-        /// to €100.00 each", "€1,000.00 in total a day", "20 calls a day". Each action by its
+        /// to €100.00 each", "€1,000.00 in total a day", "20 calls a day"; on a Card that asks
+        /// past its limits, "…; more asks you first", "…, then it asks you", and a count of 0
+        /// is "Each call asks you first". KIFF's own `lines` win when sent. Each action by its
         /// title, never its name (kiff/tafs#138). Where two read alike (a vendor's shared label,
         /// "Write Stripe API data"), each adds its action in words, never a grant prefix. An
         /// amount's unit is KIFF's, or the number stays bare: never a guessed name or currency,
@@ -845,6 +862,7 @@ final class KIFFClient {
         /// The lines, where a grant whose name is in `alike` (from every Card the owner reads
         /// together) adds its action in words.
         func lines(alike: Set<String>) -> [String] {
+            if let kiffLines, !kiffLines.isEmpty { return kiffLines }
             var out: [String] = []
             for g in grants ?? [] {
                 let name = KIFFMapping.name(g.action, title: g.title)
@@ -854,14 +872,20 @@ final class KIFFClient {
                         : "up to \(cap.max) each"
                 }
                 let action = alike.contains(name.lowercased()) ? "\(name) · \(KIFFMapping.toolWords(g.action))" : name
-                out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", "))
+                let more = asksPastLimits ? "; more asks you first" : ""
+                out.append(caps.isEmpty ? action : "\(action): " + caps.joined(separator: ", ") + more)
             }
+            let then = asksPastLimits ? ", then it asks you" : ""
             for a in aggregates ?? [] {
                 // KIFF's own window, exactly: never a lifetime or hourly total read as a day's.
                 let window = Window(a.window)
-                out.append(KIFFMapping.isSum(a.quantity)
-                    ? "\(KIFFMapping.money(a.limit, unit: a.unit, scale: a.scale).formatted) \(window.sumLabel)"
-                    : "\(a.limit) \(a.limit == 1 ? "call" : "calls") \(window.label)")
+                if KIFFMapping.isSum(a.quantity) {
+                    out.append("\(KIFFMapping.money(a.limit, unit: a.unit, scale: a.scale).formatted) \(window.sumLabel)\(then)")
+                } else if asksPastLimits && a.limit == 0 {
+                    out.append("Each call asks you first")
+                } else {
+                    out.append("\(a.limit) \(a.limit == 1 ? "call" : "calls") \(window.label)\(then)")
+                }
             }
             return out
         }

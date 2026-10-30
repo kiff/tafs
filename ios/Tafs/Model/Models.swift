@@ -168,6 +168,18 @@ struct CardRule: Identifiable, Hashable, Codable {
         if never { return "never" }
         if alwaysAsk { return "always asks you" }
         var parts: [String] = []
+        if outside == .hold {
+            // Past a limit the call asks the owner, in the words KIFF's Cards use, the same on
+            // both apps: "up to $40 each; more asks you first".
+            if let perAction { parts.append("up to \(perAction.formatted) each; more asks you first") }
+            if let own = ownTotal { parts.append("\(own.formatted) \(window.sumLabel), then it asks you") }
+            if let roomWords { parts.append(roomWords) }
+            if let countPerWindow {
+                parts.append(countPerWindow == 0 ? "Each call asks you first"
+                             : "\(countPerWindow) \(countPerWindow == 1 ? "call" : "calls") \(window.label), then it asks you")
+            }
+            return parts.joined(separator: " · ")
+        }
         if let perAction { parts.append("≤ \(perAction.formatted) each") }
         // A bare total and a count read apart (kiff/tafs#94): "10 in total a day · 20 calls a day".
         if let own = ownTotal { parts.append(own.hasUnit ? "\(own.formatted) \(window.label)" : "\(own.formatted) \(window.sumLabel)") }
@@ -266,7 +278,7 @@ struct TafCard: Identifiable, Hashable, Codable {
             return out
         }
         if let rule = rules.first(where: { $0.perAction != nil }), let each = rule.perAction {
-            out.append("≤ \(each.formatted) each · \(rule.outside == .hold ? "asks you above" : "refused above")")
+            out.append(rule.outside == .hold ? "up to \(each.formatted) each; more asks you first" : "≤ \(each.formatted) each · refused above")
         }
         if rules.count > 1 { out.append("\(rules.count) tools") }
         return out

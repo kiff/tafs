@@ -35,7 +35,7 @@ final class Retest755Tests: XCTestCase {
         let rule = CardRule(action: "refund", label: "Refunds", perAction: usd(5000), perWindow: usd(33000), window: .day,
                             extraRoom: usd(3000), baseLimit: usd(30000), roomEnds: ends)
         XCTAssertEqual(rule.ownTotal, usd(30000))
-        XCTAssertEqual(rule.summary, "≤ \(usd(5000).formatted) each · \(usd(30000).formatted) a day · +\(usd(3000).formatted) extra room until \(ends.endsWords)")
+        XCTAssertEqual(rule.summary, "up to \(usd(5000).formatted) each; more asks you first · \(usd(30000).formatted) in total a day, then it asks you · +\(usd(3000).formatted) extra room until \(ends.endsWords)")
         XCTAssertEqual(rule.left(used: usd(28000)), "\(usd(5000).formatted) left today", "what's left counts the extra room")
 
         let card = TafCard(id: "c", title: "Refunds", rules: [rule],
@@ -45,7 +45,7 @@ final class Retest755Tests: XCTestCase {
 
         // Nothing is worked out: no word of extra room unless KIFF gives its own limit with it.
         let plain = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000))
-        XCTAssertEqual(plain.summary, "\(usd(33000).formatted) a day")
+        XCTAssertEqual(plain.summary, "\(usd(33000).formatted) in total a day, then it asks you")
         let half = CardRule(action: "refund", label: "Refunds", perWindow: usd(33000), extraRoom: usd(3000))
         XCTAssertEqual(half.ownTotal, usd(33000))
         XCTAssertNil(half.roomWords)
