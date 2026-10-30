@@ -53,9 +53,11 @@ deployment offers a door; WhatsApp is offered only once it's set up.
   again later starts nothing.
 - A removed email address is retired for a year, never given to another taf, so mail
   from its old senders can't reach someone else.
-- A reply the provider doesn't take is tried again, up to three times, when the owner
-  next reads the chat or the doors or a message comes in. So is one whose run's note
-  was lost. Each reply is sent once, however many notes come.
+- A reply the provider doesn't take is tried again after 5, 20 and 60 minutes, by the
+  sweep that runs every 5 minutes (`sweepDoorReplies`). After the last try the chat
+  says it wasn't sent. A try isn't sent before its time, even when the owner reads the
+  chat. A reply whose run's note was lost is sent when the owner next reads the chat or
+  the doors, or a message comes in. Each reply is sent once, however many notes come.
 - Replies in one email thread, or from one WhatsApp number, go on in the same chat.
 
 ## What's kept

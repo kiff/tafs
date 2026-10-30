@@ -328,6 +328,8 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
   const reply = (await store.get(key)) as Reply | undefined;
   // Gone (expired, or settled elsewhere): nothing is owed.
   if (!reply) return void (await dropPending(ctx, tenant, tafID, ref));
+  // A try the provider didn't take waits its turn: the sweep sends it when it's due.
+  if (reply.next_at && Date.parse(reply.next_at) > ctx.now.getTime()) return;
   const runID = reply.run || noted;
   if (!runID) return;
   // The note says what kiff/agents knows; the run, read back, says what happened.
@@ -344,8 +346,14 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
     sent = { ...base, status: "not_sent", why: "the door was removed" };
   } else {
     const out = await sendReply(ctx, cfg, tenant, taf, door, { ...reply, run: runID }, replyText(taf, r, reply), ref);
-    if (out.retry && (reply.tries ?? 0) + 1 < DOOR.replyTries) {
-      await store.put(key, { ...reply, run: runID, tries: (reply.tries ?? 0) + 1 }, addDays(ctx.now, DOOR.replyDays));
+    const tries = reply.tries ?? 0;
+    if (out.retry && tries < DOOR.replyWaitsMinutes.length) {
+      const next = new Date(ctx.now.getTime() + DOOR.replyWaitsMinutes[tries]! * 60_000).toISOString();
+      await store.put(key, { ...reply, run: runID, tries: tries + 1, next_at: next }, addDays(ctx.now, DOOR.replyDays));
+      await update<{ items: Retrying[] }>(store, doorKeys.retrying(), (read) => {
+        const items = (read?.items ?? []).filter((i) => !(i.tenant === tenant && i.ref === ref));
+        return { items: [...items, { tenant, taf: reply.taf, ref }].slice(-MAX_RETRYING) };
+      });
       await store.remove(doorKeys.sending(tenant, ref));
       return;
     }
@@ -354,6 +362,39 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
   await update<{ sent: Sent[] }>(store, doorKeys.sent(tenant, reply.taf),
     (read) => ({ sent: [sent, ...(read?.sent ?? [])].slice(0, 100) }), addDays(ctx.now, DOOR.threadDays));
   await forgetReply(ctx, tenant, reply.taf, ref);
+}
+
+/** A reply waiting for its next try, as the sweep's list keeps it. */
+interface Retrying { tenant: string; taf: string; ref: string }
+
+/** The most replies the sweep's list keeps waiting, across accounts. */
+const MAX_RETRYING = 500;
+
+/**
+ * The replies a provider didn't take, each tried again once its wait is over,
+ * by the sweep's schedule: a reply no longer needs a note or the owner reading
+ * the chat to be tried. One still waiting, or still owed, stays in the list;
+ * one sent, given up on, or gone leaves it.
+ */
+export async function sweepDoorReplies(ctx: DoorsContext): Promise<Array<{ ref: string; waiting: boolean }>> {
+  const { store } = ctx.doors;
+  const list = (await store.get(doorKeys.retrying())) as { items?: Retrying[] } | undefined;
+  const out: Array<{ ref: string; waiting: boolean }> = [];
+  const done = new Set<string>();
+  for (const i of list?.items ?? []) {
+    await settle(ctx, i.tenant, i.ref, undefined, i.taf).catch((err) => console.error("door reply not settled:", err instanceof Error ? err.message : "error"));
+    const reply = (await store.get(doorKeys.reply(i.tenant, i.ref))) as Reply | undefined;
+    const waiting = !!reply?.next_at;
+    if (!waiting) done.add(`${i.tenant}#${i.ref}`);
+    out.push({ ref: i.ref, waiting });
+  }
+  if (done.size) {
+    await update<{ items: Retrying[] }>(store, doorKeys.retrying(), (read) => {
+      const items = (read?.items ?? []).filter((i) => !done.has(`${i.tenant}#${i.ref}`));
+      return items.length ? { items } : undefined;
+    });
+  }
+  return out;
 }
 
 async function forgetReply(ctx: DoorsContext, tenant: string, taf: string, ref: string): Promise<void> {

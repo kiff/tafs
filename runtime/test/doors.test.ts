@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
-import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { type Deps, handle, type HTTPEvent, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
 import { localPart, parseDoorMessage } from "../src/cloud/doors/doors.js";
@@ -138,7 +138,15 @@ async function send(w: World, method: string, path: string, opts: { token?: stri
     headers: { ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}), ...(opts.headers ?? {}) },
     body: opts.raw ?? (opts.body === undefined ? undefined : JSON.stringify(opts.body)),
   };
-  const r = await handle(event, {
+  const r = await handle(event, depsOf(w));
+  let body: unknown;
+  try { body = JSON.parse(r.body); } catch { body = r.body; }
+  return { status: r.statusCode, body: body as Record<string, any>, headers: r.headers };
+}
+
+/** What tafs cloud runs with in this world. */
+function depsOf(w: World): Deps {
+  return {
     agents: w.agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs: w.tafs,
     names: memoryNames(), slots: w.slots, claims: memoryClaims(), removals: memoryRemovals(), archived: memoryArchived(),
     push: { get: async () => ({ devices: w.devices, secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
@@ -149,10 +157,7 @@ async function send(w: World, method: string, path: string, opts: { token?: stri
     events: eventLog(w.store),
     now: w.now,
     ...(w.deleting ? { deletions: { get: async (t: string) => (t === "t_acme" ? { tenant: t, intent: "", signature: "", accepted: "", done: [] } : undefined), put: async () => undefined, pending: async () => [], finished: async () => undefined } } : {}),
-  });
-  let body: unknown;
-  try { body = JSON.parse(r.body); } catch { body = r.body; }
-  return { status: r.statusCode, body: body as Record<string, any>, headers: r.headers };
+  };
 }
 
 /** The email provider's signed delivery of a received email. */
@@ -397,10 +402,39 @@ describe("the email door", () => {
     w.config.email!.send = async (e) => { if (down-- > 0) throw Object.assign(new Error("down"), { status: 503 }); return sendEmail(e); };
     await finish(w, run, "Refunded.");
     expect(w.outbox).toHaveLength(0);
+    // Not due yet: neither reading the doors nor the sweep tries it again.
     await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    expect(await sweepReplies(depsOf(w))).toEqual([{ ref: expect.any(String), waiting: true }]);
     expect(w.outbox).toHaveLength(0);
-    await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    // After 5 minutes the sweep tries it, and it fails again; after 20 more, it goes.
+    w.at(new Date(NOW.getTime() + 5 * 60_000));
+    await sweepReplies(depsOf(w));
+    expect(w.outbox).toHaveLength(0);
+    w.at(new Date(NOW.getTime() + 26 * 60_000));
+    expect(await sweepReplies(depsOf(w))).toEqual([{ ref: expect.any(String), waiting: false }]);
     expect(w.outbox).toHaveLength(1);
+    // Sent: nothing is left for the sweep.
+    expect(await sweepReplies(depsOf(w))).toEqual([]);
+  });
+
+  it("a reply the provider never takes is tried after 5, 20 and 60 minutes, then said to be not sent", async () => {
+    const w = world();
+    await emailDoor(w);
+    await emailHook(w, mail(w, {}));
+    const run = w.agents.runs[0]!;
+    let tries = 0;
+    w.config.email!.send = async () => { tries++; throw Object.assign(new Error("down"), { status: 503 }); };
+    await finish(w, run, "Refunded.");
+    let at = NOW.getTime();
+    for (const wait of [5, 20, 60]) {
+      at += wait * 60_000;
+      w.at(new Date(at));
+      await sweepReplies(depsOf(w));
+    }
+    expect(tries).toBe(4);
+    expect(await sweepReplies(depsOf(w))).toEqual([]);
+    const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
+    expect(chat.body.messages.at(-1).door).toMatchObject({ reply: "not_sent" });
   });
 
   it("a display name holding an address doesn't pass for that sender", async () => {

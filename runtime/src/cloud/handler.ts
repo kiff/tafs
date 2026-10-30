@@ -14,7 +14,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { Steps } from "./steps.js";
-import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, settlePending, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 
@@ -3541,6 +3541,12 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     });
   }
   return { took, pending };
+}
+
+/** The door replies a provider didn't take, tried again by the sweep once their wait is over. */
+export async function sweepReplies(deps: Deps): Promise<Array<{ ref: string; waiting: boolean }>> {
+  if (!deps.doors) return [];
+  return sweepDoorReplies(doorContext(deps));
 }
 
 /** Where the hand-overs a server error left undone wait for the sweep: one list for all accounts. */

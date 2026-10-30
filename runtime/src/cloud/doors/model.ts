@@ -110,6 +110,8 @@ export interface Reply {
   at: string;
   /** Tries the provider didn't take. */
   tries?: number;
+  /** When the next try is due, after one the provider didn't take. */
+  next_at?: string;
 }
 
 /** How a door's reply went, for the chat's stamp. */
@@ -165,8 +167,8 @@ export const DOOR = {
   threadDays: 30,
   /** A reply waits this long for its run to end (a run can wait on the owner for days). */
   replyDays: 30,
-  /** A reply the provider didn't take is tried this many times. */
-  replyTries: 3,
+  /** A reply is sent once and, when the provider doesn't take it, tried again after each of these waits. */
+  replyWaitsMinutes: [5, 20, 60],
   /** A message older than this is refused: a delivery captured and sent again later starts nothing. */
   staleHours: 48,
   /** A removed email address isn't given to another taf for this long, so its old senders never reach someone else. */
@@ -187,6 +189,8 @@ export const doorKeys = {
   reply: (tenant: string, ref: string) => `${tenant}#door-reply#${ref}`,
   sending: (tenant: string, ref: string) => `${tenant}#door-sending#${ref}`,
   pending: (tenant: string, taf: string) => `${tenant}#door-pending#${taf}`,
+  /** The replies waiting for their next try, on every account: what the sweep reads. */
+  retrying: () => "door-retrying",
   sent: (tenant: string, taf: string) => `${tenant}#door-sent#${taf}`,
   knocks: (tenant: string, taf: string) => `${tenant}#door-knocks#${taf}`,
   bound: (tenant: string) => `${tenant}#door-ai`,
