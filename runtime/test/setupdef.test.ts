@@ -85,6 +85,12 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A component (steps, plan, a notice) never stands in for it: after any component, write the closing message as text in the same turn.");
   });
 
+  it("calls taf_results and lets it be held, never reading its 0 a day as forbidden", () => {
+    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(flat).toContain("version_install and taf_results tools see and act on them");
+    expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
+  });
+
   it("never writes an id to the owner", () => {
     expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's)");
   });
