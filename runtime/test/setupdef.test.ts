@@ -83,6 +83,11 @@ describe("Setup's definition on kiff/agents", () => {
 
   // What Coach answers about holds, usage and halting, in its base: it read none of these
   // when they were skills it could read on demand, 0 of 8 in the Eval (kiff/tafs#218).
+  it("signs a signed-out grant in again, never with a new request", () => {
+    const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(flat).toContain("A grant that is needs_reconnect (its vendor signed planque out): show sign_in for that same grant, never a new planque request");
+  });
+
   it("knows holds, tasks and packs, and halting", () => {
     const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
     expect(flat).toContain("Refused: nothing was sent, and nothing waits for anyone. Never say it waits for the owner, or that the owner refused it unless they did");
