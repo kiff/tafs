@@ -674,7 +674,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let tenant = kiffTenant else { return false }
         let gen = accountGeneration
         peopleError = nil
-        do { _ = try await signer.sign(Data("tafs.people.v1|\(tenant)|\(what)".utf8), reason: what) } catch { return false }
+        do { _ = try await signer.sign(Data("tafs.people.v1|\(tenant)|\(what)".utf8), reason: what, grants: true) } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
         kiff.tenant = tenant
@@ -1996,7 +1996,7 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         do {
             _ = try await signer.sign(Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
-                                      reason: name.map { "Resume \($0)" } ?? "Resume all your tafs")
+                                      reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", grants: true)
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
@@ -2353,7 +2353,7 @@ final class AppModel: ObservableObject {
         if let draft, !draft.confirmed, draft.status != "claimed" {
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                          reason: "Use version \(version.n) of \(taf.name), with its Card")
+                                          reason: "Use version \(version.n) of \(taf.name), with its Card", grants: true)
             } catch {
                 // The owner backed out before the Card changed: the taf runs again as it was.
                 guard gen == accountGeneration else { return false }
@@ -2539,7 +2539,7 @@ final class AppModel: ObservableObject {
         }
         do {
             _ = try await signer.sign(Data("tafs.trial.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                      reason: "Try version \(version.n) of \(taf.name), with its own Card")
+                                      reason: "Try version \(version.n) of \(taf.name), with its own Card", grants: true)
         } catch { return nil }
         guard gen == accountGeneration else { return nil }
         kiff.setupSigner = { try signer.signConfirmed($0) }
@@ -2585,7 +2585,7 @@ final class AppModel: ObservableObject {
             if !draft.confirmed {
                 do {
                     _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                              reason: "Install version \(open.n) of \(taf.name), with its Card")
+                                              reason: "Install version \(open.n) of \(taf.name), with its Card", grants: true)
                 } catch { return false }
                 guard gen == accountGeneration else { return false }
                 kiff.setupSigner = { try signer.signConfirmed($0) }
@@ -4083,7 +4083,7 @@ final class AppModel: ObservableObject {
             }
             do {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
-                                          reason: "Give \(draft.agentID) its Card")
+                                          reason: "Give \(draft.agentID) its Card", grants: true)
             } catch {
                 quietStop = Self.notConfirmed
                 return nil
@@ -4118,7 +4118,7 @@ final class AppModel: ObservableObject {
 
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
-                                      reason: "Connect \(grant.vendor) to \(grant.request.agent)")
+                                      reason: "Connect \(grant.vendor) to \(grant.request.agent)", grants: true)
         } catch {
             quietStop = Self.notConfirmed
             return nil
@@ -4452,7 +4452,7 @@ final class AppModel: ObservableObject {
         defer { startingSetup = false }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: "Connect your tools")
+            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: "Connect your tools", grants: true)
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
