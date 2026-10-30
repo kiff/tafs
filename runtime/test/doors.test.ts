@@ -392,6 +392,27 @@ describe("the email door", () => {
     expect(chat.body.messages.at(-1).door).toMatchObject({ reply: "sent" });
   });
 
+  it("a message sent again after its answer was lost on the way starts one run, and gets one reply", async () => {
+    const w = world();
+    await emailDoor(w);
+    const id = mail(w, {});
+    // kiff/agents takes the first send, but its answer never reaches tafs cloud.
+    const start = w.agents.api.startRun;
+    let lose = true;
+    w.agents.api.startRun = async (...a) => {
+      const r = await start(...a);
+      if (lose) { lose = false; throw Object.assign(new Error("kiff/agents didn't answer"), { status: 502 }); }
+      return r;
+    };
+    expect((await emailHook(w, id)).status).toBeGreaterThanOrEqual(500);
+    // The provider sends it again: the same request, so the first run.
+    expect((await emailHook(w, id)).body.outcome).toBe("run");
+    expect(w.agents.runs).toHaveLength(1);
+    expect(w.agents.runs[0]).toMatchObject({ source: "email" });
+    await finish(w, w.agents.runs[0]!, "Refunded.");
+    expect(w.outbox).toHaveLength(1);
+  });
+
   it("a reply the provider didn't take is tried again, then said to be not sent", async () => {
     const w = world();
     await emailDoor(w);

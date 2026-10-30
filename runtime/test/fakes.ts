@@ -22,6 +22,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const aiSent: Array<AIBound | undefined> = [];
   /** Where each run asked to be announced (kiff/tafs#206), by run. */
   const notified = new Map<string, Notify>();
+  /** The runs requests with a key started, by tenant, agent and key. */
+  const requests = new Map<string, Run>();
   const fairUse = (tenant: string, ai: AIBound | undefined) => {
     aiSent.push(ai);
     if (ai && ai.bound_micro_usd > 0 && (spent.get(`${tenant} ${ai.period}`) ?? 0) >= ai.bound_micro_usd) {
@@ -323,10 +325,15 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       fairUse(tenant, ai);
       // A run grant names its person, as kiff/agents resolves it with KIFF: here "krg_<subject>".
       if (at.grant) at = { ...at, requester: { kind: "member", id: at.grant.replace(/^krg_/, "") } };
+      // A request with a key, sent before: the run it started, as kiff/agents answers it.
+      const keyed = at.dedupKey ? requests.get(`${tenant}#${agent}#${at.dedupKey}`) : undefined;
+      if (keyed) return keyed;
       const attached = take(tenant, agent, at);
       const { session, opened } = place(tenant, agent, at);
       const run = newRun(tenant, agent, session, "owner", input, undefined, attached);
       if (at.requester) run.requester = { ...at.requester };
+      if (at.source) run.source = at.source;
+      if (at.dedupKey) requests.set(`${tenant}#${agent}#${at.dedupKey}`, run);
       if (notify) notified.set(run.id, notify);
       // The run as stored, so a test that changes it changes kiff/agents' copy.
       return Object.assign(run, { new_session: opened });

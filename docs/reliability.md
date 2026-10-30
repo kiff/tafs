@@ -38,7 +38,9 @@ A request is one piece of work for a taf, from one source:
 
 - `source` is a door message (`door`, `thread`, `message_id`) or a schedule firing
   (`schedule`, `due`).
-- `dedup_key` is the door's message id, or the firing's key. A second request with the same
+- `dedup_key` is the door's message id, or the firing's key. A door sends it, with `source`, on every
+  message (`startDoorRun` in `doors.ts`), and makes the run's note ref from it, so a message sent
+  again after an answer lost on the way gets the first run, and its one reply. A second request with the same
   key is the same request: it's accepted once and starts nothing new.
 - A request is stored before it runs. If kiff/agents can't store it, the door or the
   schedule is told so and tries again. It isn't dropped. A door message is tafs cloud's until

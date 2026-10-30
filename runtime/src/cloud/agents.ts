@@ -322,6 +322,12 @@ export interface RunAt {
    * not sent before. Only a person's own chat message carries any.
    */
   attachments?: string[];
+  /**
+   * The request's name at its origin (a door message's id) and where it came from (docs/reliability.md): one key
+   * starts one run, however often it's sent, and a second send gets the first run.
+   */
+  dedupKey?: string;
+  source?: string;
 }
 
 /** A file as a message records it (kiff/tafs#209): never its bytes. */
@@ -375,6 +381,7 @@ function runAt(at: RunAt): Record<string, unknown> {
     ...(at.live && !at.session ? { chat: "live" } : {}),
     ...(at.grant ? { run_grant: at.grant } : {}),
     ...(at.attachments?.length ? { attachments: at.attachments } : {}),
+    ...(at.dedupKey ? { dedup_key: at.dedupKey, ...(at.source ? { source: at.source } : {}) } : {}),
   };
 }
 

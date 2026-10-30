@@ -53,6 +53,8 @@ deployment offers a door; WhatsApp is offered only once it's set up.
   again later starts nothing.
 - A removed email address is retired for a year, never given to another taf, so mail
   from its old senders can't reach someone else.
+- A message is one request in kiff/agents (`dedup_key`, `source`): sent again after tafs cloud lost
+  kiff/agents' answer, it gets the run it started, never a second, and one reply.
 - A reply the provider doesn't take is tried again after 5, 20 and 60 minutes, by the
   sweep that runs every 5 minutes (`sweepDoorReplies`). After the last try the chat
   says it wasn't sent. A try isn't sent before its time, even when the owner reads the

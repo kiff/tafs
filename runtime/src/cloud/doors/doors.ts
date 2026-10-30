@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { AgentsError, type AIBound, type Run } from "../agents.js";
-import { newRef, refTenant, type Note } from "../coach.js";
+import { refTenant, type Note } from "../coach.js";
 import type { Device, PushStore, Sender } from "../push.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
@@ -202,7 +202,10 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   const threadKey = doorKeys.thread(tenant, taf.id, door.id, hash(a.from, a.threadKey));
   const prior = (await store.get(threadKey)) as { session?: string } | undefined;
   const ai = (await store.get(doorKeys.bound(tenant))) as AIBound | undefined;
-  const ref = newRef(tenant);
+  // One message, one request (docs/reliability.md): its key names it in kiff/agents, and its ref is made from it,
+  // so a message sent again, after an answer lost on the way, gets the first run and the reply its note names.
+  const key = hash(a.route, a.from, a.id);
+  const ref = `${Buffer.from(tenant).toString("base64url")}.${createHash("sha256").update(`door-ref|${key}`).digest("base64url").slice(0, 24)}`;
   const notify = { url: `${cfg.publicURL}/v1/runs/ended`, ref };
   // Owed before the run starts, so a run that ends at once still finds where its answer goes.
   const reply: Reply = {
@@ -217,11 +220,11 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   let run: Run;
   try {
     try {
-      run = await ctx.agents.startRun(tenant, taf.id, input, { session: prior?.session, requester }, ai?.period ? ai : undefined, notify);
+      run = await ctx.agents.startRun(tenant, taf.id, input, { session: prior?.session, requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
     } catch (err) {
       // The thread's chat is gone or busy: a new chat takes the message.
       if (!(prior?.session && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429)) throw err;
-      run = await ctx.agents.startRun(tenant, taf.id, input, { requester }, ai?.period ? ai : undefined, notify);
+      run = await ctx.agents.startRun(tenant, taf.id, input, { requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
     }
   } catch (err) {
     await forgetReply(ctx, tenant, taf.id, ref).catch(() => undefined);
