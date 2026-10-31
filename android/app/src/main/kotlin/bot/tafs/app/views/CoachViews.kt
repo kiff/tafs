@@ -242,12 +242,16 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   val draft = c.draft?.let { state.setupDrafts[it] }
   val busy = state.connecting != null
   var details by remember { mutableStateOf(false) }
+  // Answered, it keeps one line saying what it was: several in a row each say what was approved.
+  if (answered != null) {
+    Text(CoachWords.answeredApproval(answered, c, grant?.text, draft?.label), style = scaled(14, FontWeight.Medium, Theme.dim))
+    return
+  }
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
     Eyebrow("Coach asks you to approve", Theme.amberText)
     // A grant its vendor signed out reads as planque says it ("Signed out by Stripe · sign in again"), not as Coach titled it.
     (grant?.takeIf { it.needsReconnect }?.statusWords ?: c.title)?.let { Text(it, style = scaled(15, FontWeight.SemiBold, Theme.ink)) }
     when {
-      answered != null -> Text(answered, style = scaled(13, FontWeight.Medium, Theme.dim))
       state.approvalKeyLost -> ApprovalKeyLine()
       !state.planqueReady -> Text(CoachWords.NOT_CONNECTABLE, style = scaled(14, color = Theme.soft))
       grant == null -> Text("Reading what it asks for…", style = scaled(14, color = Theme.soft))

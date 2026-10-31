@@ -229,6 +229,18 @@ object CoachWords {
 
   const val ANSWERING = "Sending your answer…"
 
+  /**
+   * An answered approval, in one line: the answer, then what it was ("Approved · Connect Stripe"). What it was is Coach's
+   * title for the card, else planque's words for the connection, else KIFF's name for the draft's Card, else its service.
+   */
+  fun answeredApproval(answer: String, c: SetupComponent, grantText: String?, draftLabel: String?): String {
+    val what = c.title?.takeIf { it.isNotBlank() }
+      ?: grantText?.takeIf { it.isNotBlank() }
+      ?: draftLabel?.takeIf { it.isNotBlank() }?.let { (if (it.endsWith("s")) "$it'" else "$it's") + " Card" }
+      ?: c.service?.let { "Connect $it" }
+    return if (what == null) answer else "$answer · $what"
+  }
+
   /** Taken by tafs cloud, before the thread shows it in kiff/agents' words. */
   const val TAKEN = "Answered."
 
@@ -261,13 +273,13 @@ object CoachWords {
   fun plan(components: List<ShownComponent>): ShownComponent? = components.lastOrNull { it.component.type == "steps" }
 
   /**
-   * The thread in order, the plan left out. As it happened, with one exception: a card that asks the owner to act comes after
-   * what Coach wrote with it, so its words lead to the card: Coach's messages in the same session after the card, up to the
-   * owner's next message.
+   * The thread in order, the plan left out. As it happened, with one exception: a card that waits for the owner to act comes
+   * after what Coach wrote with it, so its words lead to the card: Coach's messages in the same session after the card, up to
+   * the owner's next message. Once answered, it goes back to its own time, in line with what Coach said around it.
    */
   fun items(messages: List<ChatMessage>, components: List<ShownComponent>): List<ChatItem> {
     fun placedAt(c: ShownComponent): java.time.Instant {
-      if (c.component.type !in ASKING) return c.firstAt
+      if (c.component.type !in ASKING || c.answer != null) return c.firstAt
       val nextOwner = messages.firstOrNull { it.from == ChatMessage.From.owner && it.at > c.firstAt }?.at
       val after = messages.filter { it.from == ChatMessage.From.taf && it.session == c.session && it.at >= c.firstAt && (nextOwner == null || it.at < nextOwner) }
       return after.lastOrNull()?.at ?: c.firstAt

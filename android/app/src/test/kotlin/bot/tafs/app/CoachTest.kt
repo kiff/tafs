@@ -61,8 +61,8 @@ class CoachTest {
   private fun msg(from: String, text: String, at: String, session: String = "s1") =
     """{"at":"$at","from":"$from","text":${kotlinx.serialization.json.JsonPrimitive(text)},"session":"$session"}"""
 
-  private fun shown(component: String, at: String, session: String = "s1", run: String = "r1") =
-    """{"at":"$at","session":"$session","run":"$run","component":$component}"""
+  private fun shown(component: String, at: String, session: String = "s1", run: String = "r1", answer: String? = null) =
+    """{"at":"$at","session":"$session","run":"$run","component":$component${answer?.let { ""","answer":$it""" } ?: ""}}"""
 
   private fun thread(messages: List<String>, components: List<String> = emptyList()) =
     """{"messages":[${messages.joinToString(",")}],"components":[${components.joinToString(",")}]}"""
@@ -195,6 +195,28 @@ class CoachTest {
     ))
     val kinds = m.state.value.chatItems(COACH_CHAT).map { if (it is ChatItem.Card) "card" else (it as ChatItem.Message).message.text }
     assertEquals(listOf("hello", "Which limit?", "card"), kinds)
+  }
+
+  @Test fun anAnsweredCardGoesBackToItsOwnTimeInLine() = runTest {
+    // The same card, answered: it sits where it happened, before what Coach wrote after it, not under the reply.
+    val m = coach(thread(
+      listOf(msg("taf", "Which limit?", "2026-10-28T08:00:05Z"), msg("owner", "hello", "2026-10-28T07:59:00Z")),
+      listOf(shown(confirm, "2026-10-28T08:00:01Z", answer = """{"state":"answered","words":"100 a refund"}""")),
+    ))
+    val kinds = m.state.value.chatItems(COACH_CHAT).map { if (it is ChatItem.Card) "card" else (it as ChatItem.Message).message.text }
+    assertEquals(listOf("hello", "card", "Which limit?"), kinds)
+  }
+
+  @Test fun anAnsweredApprovalSaysInOneLineWhatWasApproved() {
+    fun card(json: String) = KiffClient.json.decodeFromString<SetupComponent>(json)
+    // Coach's title for it first; else planque's words for the connection; else the draft's Card; else its service.
+    assertEquals("Approved · Connect Stripe", CoachWords.answeredApproval("Approved", card(approval), "Read your Stripe charges", null))
+    val untitled = card("""{"type":"approval","id":"a2","grant":"g2","service":"mcp.stripe.com"}""")
+    assertEquals("Approved · Read your Stripe charges", CoachWords.answeredApproval("Approved", untitled, "Read your Stripe charges", "Refunds"))
+    assertEquals("Approved · Refunds' Card", CoachWords.answeredApproval("Approved", untitled, null, "Refunds"))
+    assertEquals("Approved · Coach's Card", CoachWords.answeredApproval("Approved", untitled, null, "Coach"))
+    assertEquals("Declined · Connect mcp.stripe.com", CoachWords.answeredApproval("Declined", untitled, null, null))
+    assertEquals("Approved", CoachWords.answeredApproval("Approved", card("""{"type":"approval","id":"a3"}"""), null, null))
   }
 
   @Test fun aNoticeKeepsItsOwnTimeAndAnOwnersAnswerBetweenSplitsTheWords() = runTest {
