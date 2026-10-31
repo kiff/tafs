@@ -84,6 +84,10 @@ apart. tafs cloud builds it from its records and KIFF's Cards and held calls, re
 the owner's session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists
 only what KIFF says the person may use or oversee.
 
+Each taf's `job_summary` is what Coach said it does, one line in the owner's language, kept
+from Coach's result (`summary`); a taf from before, or one Coach didn't make, shows its job's
+fixed line. Its `last_run` is its own latest run, scheduled or from its chat, never a trial's.
+
 A Card's totals carry KIFF's own `window` and its words, `window_words: {each, now}`, which
 the app shows as they are:
 
