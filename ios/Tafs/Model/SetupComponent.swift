@@ -280,6 +280,27 @@ struct SetupThread: Equatable {
         return .settingUp
     }
 
+    /// What became of an improvement's result, from tafs cloud's answer: the version it made,
+    /// why it made none (Coach hears it from tafs cloud), or not answered yet.
+    enum Improvement: Equatable {
+        case made(Int)
+        case failed(String)
+        case preparing
+    }
+
+    func improvement(_ id: String) -> Improvement {
+        let outcome = components.first { $0.component.id == id }?.answer?.outcome
+        if let why = outcome?.failed { return .failed(why) }
+        if let n = outcome?.version { return .made(n) }
+        return .preparing
+    }
+
+    /// "Refunds' new version wasn't made: why."
+    static func notImproved(_ name: String, _ why: String) -> String {
+        let whose = name.hasSuffix("s") ? "\(name)'" : "\(name)'s"
+        return "\(whose) new version wasn't made: \(why.trimmingCharacters(in: CharacterSet(charactersIn: ". ")))."
+    }
+
     /// The components that ask the owner to act, in the thread's order: an approval, a
     /// question or a sign-in.
     var asks: [ShownComponent] {

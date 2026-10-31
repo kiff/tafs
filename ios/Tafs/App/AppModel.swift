@@ -488,7 +488,7 @@ final class AppModel: ObservableObject {
         kiff.token = token
         cloud.token = token
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
-        holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -829,7 +829,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]; halts = [:]
-        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         holderIDs = [:]
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
         listLoaded = false; listUnread = false
@@ -5281,18 +5281,21 @@ final class AppModel: ObservableObject {
     /// is read for once.
     private var setUpTafs: Set<String> = []
 
-    /// Coach's results. A new taf is tafs cloud's to set up: it answers the card itself, and the
-    /// phone only shows the answer, reading the list again once for a taf it set up. An
-    /// improvement makes the taf's next version here, once (kiff/tafs#107).
+    /// The versions tafs cloud said it made from an improvement, by taf and number, that the
+    /// taf's Versions were read again for.
+    private var versionsRead: Set<String> = []
+
+    /// Coach's results, each tafs cloud's to hand over: it sets up a new taf, or makes an
+    /// improved taf's next version, and answers the card itself; the phone only shows the
+    /// answer. It reads the list again once for a taf it set up, and a taf's Versions once for
+    /// a version it made, so it's there to try.
     private func followHandOvers() {
         var readList = false
         for shown in setupThread.components where shown.component.type == .result {
             let c = shown.component
             if c.taf?.improves != nil {
-                let key = improvementKey(c)
-                if improvedVersions[key] == nil, !makingVersions.contains(key), improveErrors[key] == nil {
-                    Task { await makeImprovedVersion(c) }
-                }
+                guard let n = shown.answer?.outcome?.version, let tafID = improvedTaf(c) else { continue }
+                if versionsRead.insert("\(tafID)#\(n)").inserted { Task { await loadVersions(tafID) } }
                 continue
             }
             guard let id = shown.answer?.outcome?.tafID, let agent = c.taf?.agent else { continue }
@@ -5302,45 +5305,13 @@ final class AppModel: ObservableObject {
         if readList { Task { await refresh() } }
     }
 
-    /// The version each improvement result made, by `improvementKey`, and those being made
-    /// or that failed (with why).
-    @Published private(set) var improvedVersions: [String: Int] = [:]
-    @Published private(set) var makingVersions: Set<String> = []
-    @Published private(set) var improveErrors: [String: String] = [:]
-
-    /// An improvement result, by its card and what it carries (its draft, else its note). The
-    /// card's id is Setup's to pick and comes back in another conversation ("result"): keyed by
-    /// the id alone, a new conversation's card showed the version an earlier one made, and
-    /// its own was never made (the 755 retest: "See version 2" when 2 was already live).
-    func improvementKey(_ component: SetupComponent) -> String {
-        let taf = component.taf
-        let what = taf?.draft ?? SHA256.hash(data: Data((taf?.note ?? "").utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
-        return "\(component.id)|\(what)"
-    }
-
-    /// Makes the version an improvement result hands over, once: tafs cloud builds it from
-    /// Setup's words and keeps one per result, so a repeat gives the same version. Nothing
-    /// goes live: the owner tries it and switches from the taf's Versions.
-    func makeImprovedVersion(_ component: SetupComponent) async {
-        guard mode == .kiff, let taf = component.taf, let named = taf.improves else { return }
-        let key = improvementKey(component)
-        // The taf it improves, by its tafs id, or by its agent's when Coach changed a taf it
-        // set up or found in this conversation (kiff/tafs#247).
-        let improves = cloudTafs.values.contains(where: { $0.id == named }) ? named : (cloudTafs[named]?.id ?? cloudTafs[taf.agent]?.id ?? named)
-        guard !makingVersions.contains(key) else { return }
-        makingVersions.insert(key)
-        defer { makingVersions.remove(key) }
-        improveErrors[key] = nil
-        let gen = accountGeneration
-        do {
-            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: key, agent: taf.agent, tryWith: taf.`try`)
-            guard gen == accountGeneration else { return }
-            improvedVersions[key] = n
-            if let tafID = self.taf(forAgent: taf.agent) { await loadVersions(tafID) }
-        } catch {
-            guard gen == accountGeneration else { return }
-            improveErrors[key] = "\(taf.name)'s new version isn't ready: \(error.localizedDescription)"
-        }
+    /// The taf an improvement result improves, as this phone lists it: by its tafs id, else
+    /// by its agent's, when Coach changed a taf it set up or found in this conversation
+    /// (kiff/tafs#247).
+    func improvedTaf(_ component: SetupComponent) -> UUID? {
+        guard let taf = component.taf else { return nil }
+        if let agent = cloudTafs.first(where: { $0.value.id == taf.improves })?.key, let id = self.taf(forAgent: agent) { return id }
+        return taf.improves.flatMap { self.taf(forAgent: $0) } ?? self.taf(forAgent: taf.agent)
     }
 }
 

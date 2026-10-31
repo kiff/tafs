@@ -1138,29 +1138,37 @@ struct SetupComponentView: View {
         if c.taf?.improves != nil { improvement(c) } else { handOver(c) }
     }
 
-    /// An improvement's result (kiff/tafs#107): the taf's next version, made once, to try
-    /// and switch to from its Versions. The card is whole from the start: its button is there
-    /// while the version is made, and says what it opens, the version, never the taf
-    /// (kiff/tafs#138, item 46).
+    /// An improvement's result (kiff/tafs#107): the taf's next version, which tafs cloud makes
+    /// and answers the card with, to try and switch to from its Versions. Nothing goes live.
+    /// The card is whole from the start: its button is there while the version is made, and
+    /// says what it opens, the version, never the taf (kiff/tafs#138, item 46).
     private func improvement(_ c: SetupComponent) -> some View {
-        Panel(stroke: Theme.ok) {
+        let tafID = model.improvedTaf(c)
+        let name = tafID.flatMap { model.cloudTaf(for: $0) }?.name ?? c.taf?.name ?? ""
+        return Panel(stroke: Theme.ok) {
             Eyebrow(text: "New version · \(c.taf?.name ?? "")", color: Theme.ok)
             Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             if let note = c.taf?.note, !note.isEmpty {
                 Text(note).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
-            if let n = model.improvedVersions[model.improvementKey(c)], let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent) {
-                NavigationLink {
-                    VersionsScreen(tafID: tafID)
-                } label: {
-                    Text("See version \(n)").frame(maxWidth: .infinity)
+            switch model.setupThread.improvement(c.id) {
+            case .made(let n):
+                if let tafID {
+                    NavigationLink {
+                        VersionsScreen(tafID: tafID)
+                    } label: {
+                        Text("See version \(n)").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    Text("Version \(n) is made.").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-            } else if let error = model.improveErrors[model.improvementKey(c)] {
-                Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
-                Button("Try again") { Task { await model.makeImprovedVersion(c) } }
-                    .buttonStyle(OutlineButtonStyle())
-            } else {
+            case .failed(let why):
+                // tafs cloud told Coach, which hands it over again: no Try again here.
+                Text(SetupThread.notImproved(name, why)).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                Text("Coach knows, and hands it over again.")
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            case .preparing:
                 Button {} label: {
                     HStack(spacing: 8) {
                         ProgressView().tint(.white)
