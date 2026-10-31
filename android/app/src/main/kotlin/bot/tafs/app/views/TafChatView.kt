@@ -95,6 +95,9 @@ import kotlinx.coroutines.launch
 /** The chat's widest column: about 75 characters of text. */
 private val Readable = 720.dp
 
+/** The row a run at work is drawn in: the dots, then its answer as it's written. */
+private const val WORKING = "working"
+
 /**
  * A taf's thread: what it reports and asks, and what the owner tells it. A message steers the
  * taf within its job; it can't widen its Card, and every action it takes is still checked.
@@ -138,20 +141,23 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   }
   // It opens at its newest, the end of the thread, once the thread is there: not at the top of whatever is last.
   var opened by remember(tafId) { mutableStateOf(false) }
-  // Keyed by the last item and the dots too, not only the count: the answer takes the dots' place
-  // at the same count, and is taller.
-  LaunchedEffect(total, rows.lastOrNull()?.key, thinking, live?.text?.length, live?.steps?.size) {
-    if (total == 0 || !(following || !opened)) return@LaunchedEffect
+  // The end of the last item, not its top: a tall one shows its last lines.
+  suspend fun toEnd(animated: Boolean) {
+    if (total == 0 || !(following || !opened)) return
     val last = listState.layoutInfo.totalItemsCount.coerceAtLeast(total) - 1
     autoScrolling = true
     try {
-      // The end of the last item, not its top: a tall one shows its last lines.
-      if (opened) listState.animateScrollToItem(last, Int.MAX_VALUE) else listState.scrollToItem(last, Int.MAX_VALUE)
+      if (animated && opened) listState.animateScrollToItem(last, Int.MAX_VALUE) else listState.scrollToItem(last, Int.MAX_VALUE)
     } finally {
       autoScrolling = false
     }
     opened = true
   }
+  // A new item at the end: the thread glides to it.
+  LaunchedEffect(total, rows.lastOrNull()?.key) { toEnd(animated = true) }
+  // The answer growing in its own row, a few words at a time: kept at its end without an animation. An animation started on
+  // every word was cut off by the next before it finished, and the thread jumped about while Coach wrote.
+  LaunchedEffect(thinking, live?.text?.length, live?.steps?.size, live?.state) { toEnd(animated = false) }
 
   Column(modifier.fillMaxSize()) {
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
@@ -209,10 +215,14 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         }
         // News of the tasks Coach handed tafs, until Coach reads it: what came while the owner was away, together.
         if (tafId == COACH_CHAT && state.coachLines.isNotEmpty()) item(key = "coach-lines") { CoachLines(state.coachLines) }
-        when {
-          // The answer as it's written, under the work that led to it (docs/chat.md, the work block).
-          live != null -> item(key = "live") { LiveWork(live) }
-          thinking -> item(key = "thinking") { TypingDots() }
+        // The answer as it's written, under the work that led to it (docs/chat.md, the work block); the dots until it begins.
+        // One row with one key: when the answer takes the dots' place, the list keeps it where it is rather than dropping one
+        // row and adding another at its end, which moved the thread back.
+        // At least as tall as the dots and the live line, so neither taking the other's place shortens the thread's end.
+        if (live != null || thinking) item(key = WORKING) {
+          Box(Modifier.fillMaxWidth().heightIn(min = 28.dp), contentAlignment = Alignment.CenterStart) {
+            if (live != null) LiveWork(live) else TypingDots()
+          }
         }
         // How the latest run ended, when it says so here: stopped part-way (with Retry), stopped by the owner, or at a cap.
         if (!thinking) state.chatEnded[tafId]?.let { end ->
