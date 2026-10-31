@@ -269,8 +269,9 @@ struct TafDetailView: View {
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
         // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13), in
-        // KIFF's words for what's pending.
-        ForEach(shown?.pending ?? [], id: \.self) { line in
+        // KIFF's words for what's pending: for a live, active Card only, since a test Card's
+        // totals aren't what the taf may do for real.
+        ForEach(shown.flatMap { $0.countsForReal ? $0.pending : nil } ?? [], id: \.self) { line in
             Text(line)
                 .scaledFont(13).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)

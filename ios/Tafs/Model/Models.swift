@@ -226,6 +226,9 @@ struct TafCard: Identifiable, Hashable, Codable {
     /// until KIFF can confirm nothing moved (kiff-cloud's limit lines).
     var pending: [String] { [total?.pending, calls?.pending].compactMap { $0 } }
 
+    /// Whether its totals are what the taf may do for real: live, and active.
+    var countsForReal: Bool { live && active }
+
     /// The pill on the face: LIVE, or the environment it's scoped to ("TEST").
     /// The environment a Card is scoped to, when it isn't every one or production: nothing for
     /// a Card that acts for real, since "Live" read as live money beside a test-mode connection
