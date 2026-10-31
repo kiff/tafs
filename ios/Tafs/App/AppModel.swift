@@ -118,6 +118,10 @@ final class AppModel: ObservableObject {
     /// KIFF holds an approval key for the session that isn't this phone's (it changed after
     /// registering, or another was registered): approving waits for a new sign-in.
     @Published private(set) var approvalKeyLost = false
+    /// A re-link waiting for the person's browser: the code to check there, and the page.
+    struct Relink: Equatable { let userCode: String; let url: URL }
+    @Published private(set) var relink: Relink?
+    private var relinkTask: Task<Void, Never>?
     private let signer: ApprovalSigning
     private let store: SampleStore?
     private let clock: () -> Date
@@ -132,7 +136,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var listUnread = false
 
     /// Called whenever the held calls change, so the lock screen can follow.
-    var onHeldChanged: (@MainActor ([HeldCall], [Taf]) -> Void)?
+    var onHeldChanged: (@MainActor ([HeldCall], [Taf], [UUID: String]) -> Void)?
 
     /// This phone's push token (hex), once iOS gives it (`pushTokenArrived`).
     @Published private(set) var pushToken: String?
@@ -555,6 +559,7 @@ final class AppModel: ObservableObject {
     }
 
     private func forgetApprovalKey() {
+        cancelRelink()
         sessionHasApprovalKey = false
         approvalKeyLost = false
         kiff.approvalSigner = nil
@@ -567,6 +572,97 @@ final class AppModel: ObservableObject {
         approvalKeyLost = true
         kiff.approvalSigner = nil
         Keychain.delete(Self.approvalKeyedAccount)
+    }
+
+    /// Lets this phone approve again after its faces or fingerprints changed, with no
+    /// sign-out (kiff/tafs#233, case 2). The new approval key signs KIFF's re-link message
+    /// under Face ID or Touch ID, the device key signs the request, and the person approves
+    /// the new key in their browser; the session, its alerts and its list stay. Returns the
+    /// page to open, or nil when it couldn't start (`lastError` says why).
+    @discardableResult
+    func startRelink() async -> URL? {
+        guard mode == .kiff, approvalKeyLost, sessionHasKey, relink == nil, let tenant = kiffTenant else { return nil }
+        let key = signer.approvalPublicKeyDER
+        guard !key.isEmpty else {
+            lastError = "Add Face ID or a fingerprint in Settings first: this \(ThisDevice.kind) approves with one."
+            return nil
+        }
+        let gen = accountGeneration
+        let signedAt = ISO8601DateFormatter().string(from: clock())
+        let message = KIFFClient.relinkMessage(tenant: tenant, deviceKey: signer.publicKeyDER, newKey: key, signedAt: signedAt)
+        let proof: String
+        do {
+            proof = try await signer.signApproval(message, reason: "Approve with this \(ThisDevice.kind) again")
+        } catch {
+            lastError = KIFFClient.notRecognized
+            return nil
+        }
+        guard gen == accountGeneration else { return nil }
+        let signer = self.signer
+        kiff.tenant = tenant
+        let start: KIFFClient.DeviceStart
+        do {
+            start = try await kiff.startRelink(approvalPublicKey: key, signedAt: signedAt, signature: proof,
+                                               signer: { try signer.signConfirmed($0) })
+        } catch KIFFClient.KIFFError.server(404, _, _) {
+            lastError = "KIFF can't do this yet: sign in again from Settings to approve from this \(ThisDevice.kind)."
+            return nil
+        } catch {
+            lastError = "Couldn't start: \(error.localizedDescription). Try again."
+            return nil
+        }
+        guard gen == accountGeneration, let url = URL(string: start.verificationURIComplete) else { return nil }
+        relink = Relink(userCode: start.userCode, url: url)
+        relinkTask = Task { [weak self] in await self?.finishRelink(start, key: key, generation: gen) }
+        return url
+    }
+
+    /// Polls a re-link until the browser approves it, or it expires or is cancelled.
+    private func finishRelink(_ start: KIFFClient.DeviceStart, key: Data, generation gen: Int) async {
+        defer { if gen == accountGeneration { relink = nil; relinkTask = nil } }
+        var interval = UInt64(max(start.interval, signInMinimumInterval)) * 1_000_000_000
+        let deadline = clock().addingTimeInterval(TimeInterval(start.expiresIn))
+        while clock() < deadline {
+            var waited: UInt64 = 0
+            while waited < interval && !signInNudged {
+                guard (try? await Task.sleep(nanoseconds: min(signInSlice, interval - waited))) != nil else { return }
+                waited += signInSlice
+            }
+            signInNudged = false
+            guard !Task.isCancelled, gen == accountGeneration else { return }
+            do {
+                let held = try await kiff.pollRelink(deviceCode: start.deviceCode)
+                guard gen == accountGeneration else { return }
+                // KIFF's fingerprint says which key it holds now: only ours lets this phone approve.
+                guard KIFFClient.sameKey(held, key) else {
+                    lastError = KIFFClient.approvalKeyLost
+                    return
+                }
+                Keychain.save(KIFFClient.fingerprint(key), for: Self.approvalKeyedAccount)
+                useApprovalKey()
+                return
+            } catch KIFFClient.KIFFError.authorizationPending {
+                continue
+            } catch KIFFClient.KIFFError.slowDown {
+                interval += 5_000_000_000
+            } catch KIFFClient.KIFFError.expired {
+                break
+            } catch where Self.transient(error) {
+                continue
+            } catch {
+                lastError = "Couldn't finish: \(error.localizedDescription). Try again."
+                return
+            }
+        }
+        lastError = "The code expired before it was approved in your browser. Try again."
+    }
+
+    /// The person gave up waiting for the browser: nothing changes, and a new re-link
+    /// can start (KIFF lets the last one go when it does).
+    func cancelRelink() {
+        relinkTask?.cancel()
+        relinkTask = nil
+        relink = nil
     }
 
     // MARK: People, groups and sharing
@@ -1229,6 +1325,16 @@ final class AppModel: ObservableObject {
     }
 
     /// The app's id for a KIFF agent's taf, the same for the whole session.
+    /// Who holds a call, as the owner reads it: its taf's name, or **Coach** for a call from
+    /// Coach's own agent, which no taf in the list is; nil when neither.
+    func holderName(_ tafID: UUID) -> String? {
+        if let name = taf(tafID)?.name { return name }
+        return holderIDs[Self.setupAgent] == tafID ? "Coach" : nil
+    }
+
+    /// Whether `tafID` is Coach's own agent.
+    func isCoach(_ tafID: UUID) -> Bool { holderIDs[Self.setupAgent] == tafID }
+
     private func holderID(_ agent: String) -> UUID {
         if let id = holderIDs[agent] { return id }
         let id = UUID()
@@ -3707,7 +3813,11 @@ final class AppModel: ObservableObject {
         return a.id == b.id
     }
 
-    private func notifyHeld() { onHeldChanged?(held, tafs + otherAgents) }
+    private func notifyHeld() {
+        // Coach's own holds are named Coach where no taf names them.
+        let coach = holderIDs[Self.setupAgent].map { [$0: "Coach"] } ?? [:]
+        onHeldChanged?(held, tafs + otherAgents, coach)
+    }
 
     private func amountLine(_ p: ProposedAction, _ tail: String) -> String {
         if let amount = p.amount { return "\(amount.formatted), \(tail)" }

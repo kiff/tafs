@@ -7,6 +7,15 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, held calls:** a call Coach's own agent holds is titled **Coach**, with
+  Coach's mark, on its card, its alert and the lock screen, never "A taf". Why a call is held
+  reads KIFF's own words when sent; a count of calls without them reads "Each call asks you
+  first" for a limit of 0, otherwise "20 calls a day: this would be the 21st", never the
+  machine's reason.
+- **iPhone and iPad, approve again without signing out:** after a face or fingerprint is added,
+  **Approve again in your browser** lets the phone approve with its new key once the person
+  approves it in KIFF, showing the same code on the phone and the page. The session, alerts and
+  list stay. Sign in again remains the fallback.
 - **Android, approve again in your browser:** a phone whose fingerprints changed approves again
   without signing out. **Approve again in your browser** proves its new approval key with one
   fingerprint, shows KIFF's code to compare, and waits for the browser, with Cancel; the session,
@@ -107,10 +116,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, switching accounts:** after signing in to another account without closing the app,
+  connecting tools and starting Coach work there. The phone used to sign planque's requests with
+  the last account's device id, which planque refused, and the app said it was signed out.
 - **Android, starting Coach:** when the tools can't be connected because planque couldn't check
   the phone, Coach says "Connecting your tools didn't work. Tap Start to try again", not that
   you're signed out, since the session still works.
-
 - A taf's work steps say what it did, in words, both while it works and after: KIFF's title for
   a tool through KIFF ("List your charges"), and what Coach's and the agents' own tools do
   ("Showing you a card"). A step showed the tool's name before ("show", "list_charges_ijkp").

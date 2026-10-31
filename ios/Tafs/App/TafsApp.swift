@@ -23,8 +23,8 @@ struct TafsApp: App {
                         return
                     }
                     // Once tafs cloud pushes held calls, the app doesn't post its own alert as well.
-                    model.onHeldChanged = { [lockScreen, weak model] held, tafs in
-                        lockScreen.update(held: held, tafs: tafs, notify: model?.alertsReady != true)
+                    model.onHeldChanged = { [lockScreen, weak model] held, tafs, names in
+                        lockScreen.update(held: held, tafs: tafs, names: names, notify: model?.alertsReady != true)
                     }
                     model.requestPushToken = { PushDelegate.register() }
                     model.askNotificationPermission = { await PushDelegate.askPermission() }
@@ -42,6 +42,8 @@ struct TafsApp: App {
         }
         .onChange(of: scenePhase) { phase in
             if phase == .background { wasAway = true }
+            // Back from the browser: a re-link waiting there asks KIFF again at once.
+            if phase == .active, model.relink != nil { model.nudgeSignIn() }
             if phase == .active, model.mode == .kiff { Task { await model.refresh(); model.settleListOrder() } }
             if phase == .active, wasAway { wasAway = false; model.settleSampleOnReturn() }
         }

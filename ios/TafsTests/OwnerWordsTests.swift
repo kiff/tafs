@@ -323,3 +323,50 @@ final class ToolWordsTests: XCTestCase {
         XCTAssertEqual(card.facts, ["≤ \(usd(4000).formatted) each · refused above"])
     }
 }
+
+/// Why a call is held, as the owner reads it (phone check 4): KIFF's own `reason_text` when it
+/// sends one; for a count of calls without it, the Card's words; never the machine's reason.
+@MainActor
+final class HeldReasonWordsTests: XCTestCase {
+    private func held(breach: String, extra: String = "") throws -> HeldCall {
+        let json = """
+        {"id":"exc-1","proposal_id":"tc-1","subject":"setup","action":"taf_results","entity_id":"x","status":"held",
+         "breaches":[\(breach)],\(extra)
+         "created_at":"2026-10-30T22:00:00Z"}
+        """
+        return KIFFMapping.held(try KIFFClient.decoder.decode(KIFFClient.CardException.self, from: Data(json.utf8)), tafID: UUID())
+    }
+
+    private func count(_ limit: Int, used: Int, window: String? = "calendar_day") -> String {
+        #"{"mandate_id":"m","outcome":"limit_reached","quantity":"count","limit":\#(limit),"used":\#(used),"draw":1,"# +
+            (window.map { #""window":"\#($0)","# } ?? "") +
+            #""reason":"count limit \#(limit) per calendar_day reached: \#(used) used, this action draws 1"}"#
+    }
+
+    func testKIFFsOwnWordsComeFirst() throws {
+        XCTAssertEqual(try held(breach: count(0, used: 0), extra: #""reason_text":"Each call asks you first, in KIFF's words","#).reason,
+                       "Each call asks you first, in KIFF's words")
+    }
+
+    func testACountWithoutKIFFsWordsSaysTheCards() throws {
+        XCTAssertEqual(try held(breach: count(0, used: 0)).reason, "Each call asks you first")
+        XCTAssertEqual(try held(breach: count(20, used: 20)).reason, "20 calls a day: this would be the 21st")
+        XCTAssertEqual(try held(breach: count(1, used: 1, window: "rolling_1h")).reason, "1 call in any hour: this would be the 2nd")
+        XCTAssertEqual(try held(breach: count(5, used: 5, window: nil)).reason, "Over its limit of 5 calls: this would be the 6th")
+        XCTAssertFalse(try held(breach: count(0, used: 0)).reason.contains("calendar_day"))
+    }
+
+    func testOrdinals() {
+        let got = [1, 2, 3, 4, 11, 12, 13, 21, 22, 101, 111].map { KIFFMapping.ordinal(Int64($0)) }
+        XCTAssertEqual(got, ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "101st", "111th"])
+    }
+
+    func testACoachHoldIsNamedCoachInItsAlert() throws {
+        let e = try KIFFClient.decoder.decode(KIFFClient.CardException.self, from: Data("""
+        {"id":"exc-1","subject":"setup","action":"taf_results","entity_id":"x","status":"held","breaches":[],
+         "created_at":"2026-10-30T22:00:00Z","expires_at":"2026-10-30T22:10:00Z"}
+        """.utf8))
+        // The extension names it from tafs cloud's list, where Coach isn't: "setup" is Coach.
+        XCTAssertEqual(HoldNotification.words(e, taf: "Coach", zone: TimeZone(identifier: "UTC")!).title, "Coach needs you")
+    }
+}

@@ -756,6 +756,7 @@ class AppModel(
     cloud.token = token
     kiff.tenant = tenant
     accountGeneration += 1
+    forgetPlanqueDevice()
     relinkJob?.cancel()
     decided.clear()
     followers.values.forEach { it.cancel() }
@@ -995,6 +996,16 @@ class AppModel(
     secrets.delete(APPROVAL_KEYED)
   }
 
+  /**
+   * The session changed: this phone's id in KIFF is another account's now, or none. planque reads it again before its next
+   * signature; kept, it would name the last account's device, and KIFF would answer planque that the device is unknown.
+   */
+  private fun forgetPlanqueDevice() {
+    planque.deviceId = null
+    planque.tenant = null
+    planque.signer = null
+  }
+
   // MARK: Approve again
 
   private var relinkJob: Job? = null
@@ -1143,6 +1154,7 @@ class AppModel(
     kiff.tenant = null
     kiffTenant = null
     accountGeneration += 1
+    forgetPlanqueDevice()
     relinkJob?.cancel()
     decided.clear()
     followers.values.forEach { it.cancel() }

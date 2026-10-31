@@ -27,7 +27,10 @@ import org.junit.Test
  * can't re-link it. Run with `-e hold 8` to keep each for a screenshot.
  */
 class ApprovalKeyLineTest {
-  @get:Rule val rule = createComposeRule()
+  // Awake and unlocked before the activity launches: a just-booted emulator may not be yet.
+  @get:Rule(order = 0) val awake = AwakeDevice()
+
+  @get:Rule(order = 1) val rule = createComposeRule()
 
   private val taps = mutableListOf<String>()
 

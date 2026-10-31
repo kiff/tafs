@@ -160,7 +160,7 @@ final class KIFFClient {
     }
 
     /// What the person reads when this phone can't approve until they sign in again.
-    nonisolated static let approvalKeyLost = "Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you sign in again."
+    nonisolated static let approvalKeyLost = "Your Face ID or fingerprints changed, or weren't recognized, so this phone can't approve until you approve it again in your browser."
     /// What they read when an approval's prompt closed unrecognized while the key is still good.
     nonisolated static let notRecognized = "Try again, or sign in again if your Face ID or fingerprints changed."
 
@@ -189,6 +189,44 @@ final class KIFFClient {
         let out: Fingerprint = try await send("POST", "/v1/me/device/approval-key", body: ["public_key": publicKey.base64EncodedString()],
                                               signedBy: signer)
         return out.fingerprint
+    }
+
+    /// What a re-link's new key signs, under its biometric prompt, so KIFF knows it works
+    /// before it replaces the old one (kiff/tafs#233, case 2): one field per line, the
+    /// session named by its device key.
+    nonisolated static func relinkMessage(tenant: String, deviceKey: Data, newKey: Data, signedAt: String) -> Data {
+        let hex = { (d: Data) in SHA256.hash(data: d).map { String(format: "%02x", $0) }.joined() }
+        return Data(["kiff.approval-key-relink.v1", tenant, hex(deviceKey), hex(newKey), signedAt].joined(separator: "\n").utf8)
+    }
+
+    /// Asks KIFF to let this phone approve again with `approvalPublicKey`, after its faces or
+    /// fingerprints changed: signed by the device key with `signer`, and by the new key itself
+    /// (`signature` over `relinkMessage`). The person approves it in their browser, as for a
+    /// sign-in, and the session goes on. A KIFF without it answers 404.
+    func startRelink(approvalPublicKey: Data, signedAt: String, signature: String,
+                     signer: @escaping @MainActor (Data) throws -> String) async throws -> DeviceStart {
+        try await send("POST", "/v1/me/device/relink",
+                       body: ["approval_public_key": approvalPublicKey.base64EncodedString(), "signed_at": signedAt, "signature": signature],
+                       signedBy: signer)
+    }
+
+    /// One poll of a re-link: the fingerprint of the key KIFF now holds, once approved.
+    /// Throws as `pollDeviceToken` does until then.
+    func pollRelink(deviceCode: String) async throws -> String? {
+        struct Relinked: Decodable { let status: String; let fingerprint: String? }
+        do {
+            let out: Relinked = try await send("POST", "/v1/auth/device/token", body: ["device_code": deviceCode], authorized: false)
+            // A token here would be a KIFF bug: a re-link never signs in.
+            guard out.status == "relinked" else { throw KIFFError.server(status: 200, message: "not a re-link") }
+            return out.fingerprint
+        } catch KIFFError.server(400, let message, _) {
+            switch message {
+            case "authorization_pending": throw KIFFError.authorizationPending
+            case "slow_down": throw KIFFError.slowDown
+            case "expired_token": throw KIFFError.expired
+            default: throw KIFFError.server(status: 400, message: message)
+            }
+        }
     }
 
     /// Called when KIFF answers that an act needs the approval key this phone doesn't hold.
@@ -275,9 +313,13 @@ final class KIFFClient {
             let scale: Int?
             let unitUnavailable: Bool?
             let unitAmbiguous: Bool?
+            /// For a total: what it had used, what this call carries, and its window.
+            var used: Int64? = nil
+            var draw: Int64? = nil
+            var window: String? = nil
 
             enum CodingKeys: String, CodingKey {
-                case outcome, reason, limit, quantity, unit, scale
+                case outcome, reason, limit, quantity, unit, scale, used, draw, window
                 case unitUnavailable = "unit_unavailable", unitAmbiguous = "unit_ambiguous"
             }
         }
@@ -340,12 +382,15 @@ final class KIFFClient {
         /// The proposal KIFF held: what its activity files the call under, so the owner's
         /// answer and KIFF's outcome are one line (kiff/tafs#138, item 51).
         var proposalID: String? = nil
+        /// Why it's held, in KIFF's own words for people: shown as it comes, so the apps never
+        /// word a hold apart. Absent from an older KIFF.
+        var reasonText: String? = nil
         /// KIFF's answer to whether approving once can pass this call (kiff/tafs#138, item 49).
         /// Absent from an older response: then the app offers it, as before.
         var canApproveOnce: Bool? = nil
 
         enum CodingKeys: String, CodingKey {
-            case proposalID = "proposal_id", canApproveOnce = "can_approve_once"
+            case proposalID = "proposal_id", canApproveOnce = "can_approve_once", reasonText = "reason_text"
             case id, subject, action, title, arguments, status, breaches, parameters, reason
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"
@@ -1233,7 +1278,8 @@ final class KIFFClient {
             request.httpBody = try JSONEncoder().encode(body)
         }
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
-        let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key") : (base == gatewayURL && path == "/v1/connections")
+        let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key" || path == "/v1/me/device/relink")
+            : (base == gatewayURL && path == "/v1/connections")
         // What grants authority is signed by the approval key, once the session has one,
         // within a step the owner confirmed; KIFF picks the key by route, so the header is
         // the same (kiff/tafs#233).
