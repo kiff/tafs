@@ -30,7 +30,7 @@ class MicButtonTest {
 
   @Test fun theSwitchShowsTheLanguageAndATapGoesToTheNext() {
     val dictation = Dictation(TwoLanguages(listOf("en-GB", "fr-FR")))
-    rule.setContent { TafsTheme { MicButton(dictation, "") {} } }
+    rule.setShown { TafsTheme { MicButton(dictation, "") {} } }
     rule.onNodeWithText("EN").assertIsDisplayed()
     rule.onNodeWithContentDescription("Dictation in English. Switch language").performClick()
     rule.onNodeWithText("FR").assertIsDisplayed()
@@ -38,7 +38,7 @@ class MicButtonTest {
   }
 
   @Test fun oneLanguageShowsNoSwitch() {
-    rule.setContent { TafsTheme { MicButton(Dictation(TwoLanguages(listOf("en-GB"))), "") {} } }
+    rule.setShown { TafsTheme { MicButton(Dictation(TwoLanguages(listOf("en-GB"))), "") {} } }
     rule.onNodeWithContentDescription("Dictate a message").assertIsDisplayed()
     assertTrue(rule.onAllNodesWithTextCount("EN") == 0)
   }

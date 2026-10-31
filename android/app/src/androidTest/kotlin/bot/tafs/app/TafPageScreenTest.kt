@@ -82,7 +82,7 @@ class TafPageScreenTest {
     connections = ConnectionActions({}, { false }),
   )
 
-  private fun show() = rule.setContent {
+  private fun show() = rule.setShown {
     TafsTheme {
       CompositionLocalProvider(LocalBiometry provides "your fingerprint") {
         TafDetailView("refunds-1", state(), actions, onBack = {}, onHalt = {}, onUsage = {}, onVersions = {})
