@@ -564,7 +564,7 @@ class TafsCloud(
     val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer")
     if (body != null) headers["Content-Type"] = "application/json"
     val response = transport.stream(HttpRequest(method, streamUrl + path, headers, body))
-    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: "tafs cloud answered ${response.status}")
+    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: "tafs cloud answered ${response.status}", blockingRuns(response.refusal), field(response.refusal, "words"))
     return StreamEvent.parse(response.lines)
   }
 

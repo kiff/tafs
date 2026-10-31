@@ -2812,10 +2812,15 @@ class AppModel(
     followStream(tafId, events, retry = null)
   }
 
-  /** Why a message wasn't sent, in words. */
-  private fun sendFailure(e: Exception, name: String): String =
-    if (e is CloudError && e.status == 429) "That's a lot of messages in a few minutes. Give $name a moment, then try again."
-    else "The message wasn't sent. ${ErrorWords.of(e)}"
+  /**
+   * Why a message wasn't sent, in words: tafs cloud's own where it says why (a run kiff/agents refused: the AI use spent, the taf
+   * halted), else the app's for the status.
+   */
+  private fun sendFailure(e: Exception, name: String): String = when {
+    e is CloudError && e.words != null -> "The message wasn't sent. ${e.words}"
+    e is CloudError && e.status == 429 -> "That's a lot of messages in a few minutes. Give $name a moment, then try again."
+    else -> "The message wasn't sent. ${ErrorWords.of(e)}"
+  }
 
   private fun nextStamp(tafId: String): Instant = Chat.stamp(_state.value.chats[tafId]?.maxOfOrNull { it.at }, clock())
 

@@ -22,7 +22,10 @@ Capabilities are KIFF's: `cards.manage`, `holds.answer`, `members.manage`,
 `billing.manage`, `account.delete` ([accounts.md](accounts.md#roles-and-what-a-person-may-do)).
 
 **Errors** are JSON, `{"error": "<words for a person>"}`, sometimes with more fields
-(a version switch blocked by a run names it: `blocking`). 404 also covers what isn't the
+(a version switch blocked by a run names it: `blocking`). A refusal kiff/agents gave carries
+its `code` (`ai_fair_use`, `halted`, `switching`, `run_changed`) and `words`, what it means and
+what to do, for the app to show as they are: an AI fair use refusal says the day the AI use
+starts again, in the account's zone. 404 also covers what isn't the
 caller's; 409 a state that doesn't allow it now; 429 a flood guard; 502 KIFF or kiff/agents
 not answering. An unexpected error is 500, "something went wrong on tafs cloud", and the
 details go only to tafs cloud's own log.
