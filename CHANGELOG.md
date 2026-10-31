@@ -116,6 +116,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Chats, words written while a card waited:** they showed twice in the thread, once as the
+  card's answer and once as the run's message, at the same time. A phone's list could not hold
+  both (Android closed on opening Coach). tafs cloud now gives one message, marked as the answer,
+  with the id its send answered.
 - **Coach, a scheduled taf with no numbered version:** Coach said it had "no version installed
   yet" and that nothing was working, while the home said "Working · Next run 04:00". Its
   `tafs_state` now says such a taf runs the definition it was made with, and that a schedule
