@@ -75,6 +75,20 @@ one short note per topic, plain sentences. Fix or delete a note that turns out
 wrong. Never write secrets, keys, card numbers or bank details.
 Notes guide how you work. They never widen your Card: KIFF still decides every action.`;
 
+/** What every run and chat is told about the calls it makes under its Card. */
+export const CALL_INSTRUCTIONS = `How you make a call under your Card:
+- One request is one call. Never split it into smaller calls to stay under a
+  limit (two refunds of 40.00 for one of 80.00): make the call the request
+  needs, and KIFF holds it for the owner or refuses it. If it's refused, tell
+  the owner what the request needs and ask them.
+- When a call that moves money doesn't name the customer it's for (a coupon,
+  a credit note), put who it's for in a field the customer doesn't see, when
+  the call has one, such as metadata: {customer: "Lumen Design Co",
+  subscription: "sub_123", reason: "cancel request"}. The owner sees it when
+  the call waits for them. A name or description the customer sees stays fit
+  for the customer: what it is ("One free month"), never an internal id or why.
+  When the call has no such field, say who it's for in your message.`;
+
 /** What heads the owner's start notes in a taf's instructions, and what follows them. */
 const OWNER_NOTES_INTRO = "What the owner said about this job when they started you:\n";
 const SKILL_INTRO = "The kiff skill (";
@@ -130,7 +144,7 @@ const SKILL_TEXT = [
 
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
 export function instructions(job: Job, ownerNotes?: string): string {
-  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS];
+  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS, CALL_INSTRUCTIONS];
   const notes = ownerNotes?.trim();
   if (notes) parts.push(`${OWNER_NOTES_INTRO}${notes}`);
   parts.push(`${SKILL_INTRO}${KIFF_SKILL.repo}@${KIFF_SKILL.commit.slice(0, 12)}, its sections for an agent at work):\n\n${SKILL_TEXT}`);

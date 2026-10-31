@@ -44,7 +44,8 @@ stays where it was written, with why and Retry (`UnsentBubble`). kiff/agents all
 person 10 messages in 10 minutes. Past that, the message is kept with "That's a lot of
 messages in a few minutes. Give {taf} a moment, then try again." A run kiff/agents refused
 (the period's AI use spent, the taf halted, a version switching) says why in tafs cloud's
-`words`, on the plain route and the streamed one alike (Android: `sendFailure`); the app's
+`words`, on the plain route and the streamed one alike, and so does any other refusal that
+carries them, such as Run now or Send again (Android: `ErrorWords.of`); the app's
 own line for the status is only for a refusal that comes without them.
 
 A sent message's menu offers **Send again**, **Edit and send** and **Copy**. The mic in

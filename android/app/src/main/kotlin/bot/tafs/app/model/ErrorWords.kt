@@ -7,14 +7,15 @@ import bot.tafs.app.signing.SignerException
 
 /**
  * Why something didn't go through, in the app's own words: what happened, then what the owner can do, if anything. A server's
- * text never reaches the screen, and "try again" is said only where trying again can help: offline, busy, or briefly down. A
+ * text never reaches the screen, except tafs cloud's `words`, which it writes for the owner (a run kiff/agents refused, a switch
+ * a run blocks): those show as they come, on every path, and "try again" is said only where trying again can help: offline, busy, or briefly down. A
  * refusal the owner can't change says there's nothing to do on their side. The app's own errors (signing, signing in, a request
  * that doesn't match) keep their words, which already say this.
  */
 object ErrorWords {
   fun of(e: Throwable): String {
     val status = when (e) {
-      is CloudError -> e.status
+      is CloudError -> e.words?.let { return it } ?: e.status
       is KiffError.Server -> e.status
       is PlanqueError.Server -> e.status
       is SignerException, is KiffError, is PlanqueError, is OwnWords -> return e.message.orEmpty()

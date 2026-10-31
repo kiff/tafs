@@ -60,7 +60,9 @@ it has alerts off and says so in Settings.
 **Releases** are signed bundles for Google Play, built by `android.yml`'s release job on a
 manual dispatch, in the `android-release` environment, which the owner approves each time.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
-it once into the secrets store, and `android/release.sh` builds with it.
+it once into the secrets store, and `android/release.sh` builds with it. A release bundle
+carries the symbol tables of its libraries' native code (`ndk.debugSymbolLevel`), so a native
+crash reads by function name in Play's crash view; the app on the phone carries none.
 
 **Buying through Google Play** is built but off: `res/values/flags.xml`'s `play_billing`,
 until KIFF names Google Play products for the account.

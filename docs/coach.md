@@ -125,14 +125,17 @@ then shows its plan. Then, each step behind the owner's yes:
    planque keeps the vendor's credentials; KIFF lists the connection's tools.
 2. **Choose the tools and draft the Card.** Coach picks the tools the job needs and
    submits a KIFF draft of the taf's Cards: what each tool may do, how much each time,
-   how much a day. KIFF takes a Card only for a tool that is connected.
+   how much a day. The limits are the owner's: Coach proposes them, and its rules say
+   for each action exactly what asks the owner first and what is refused. Each card
+   Coach shows has an id no earlier card in the conversation had. KIFF takes a Card only for a tool that is connected.
 3. **Approve the Card.** The owner reads the Card on its approval card and confirms it
    with one Face ID, which signs exactly the draft version shown. Each draft Card's lines
    are KIFF's `lines` for it, as they come. For a KIFF that doesn't send them, the app words
    them from the Card's terms and its `on_exceed`, with the same words as a taf's Card tab
    ([tafs.md](tafs.md)): an `owner` Card says what asks the owner past each limit. An editor's draft
    waits for an admin to confirm it in KIFF.
-4. **Start the taf.** The result card hands over the taf. tafs cloud starts it as the
+4. **Start the taf.** The result card hands over the taf, with `summary`: one line on
+   what this taf does, in the owner's words. tafs cloud starts it as the
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
    claims the key from Coach's draft, and the taf joins the account's list
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
