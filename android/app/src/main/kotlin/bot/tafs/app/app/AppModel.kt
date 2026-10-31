@@ -453,8 +453,18 @@ data class AppState(
   private fun coachTaf(chatId: String): Taf? {
     if (chatId != COACH_CHAT) return null
     val cloudId = coachCloudId ?: return null
-    return Taf(id = COACH_CHAT, name = "Coach", job = "", tools = emptyList(), colorIndex = 2, card = Card(rules = emptyList(), issuedBy = ""), now = "", cloudId = cloudId)
+    return coach(cloudId)
   }
+
+  private fun coach(cloudId: String?) =
+    Taf(id = COACH_CHAT, name = "Coach", job = "", tools = emptyList(), colorIndex = 2, card = Card(rules = emptyList(), issuedBy = ""), now = "", cloudId = cloudId)
+
+  /**
+   * Who holds a call, as the owner reads it: its taf, or Coach for a call from Coach's own KIFF agent, which no taf in the list
+   * is, drawn with Coach's mark; null when neither.
+   */
+  fun holder(agentId: String): Taf? =
+    taf(agentId) ?: coachAgent?.takeIf { it.isNotEmpty() && it == agentId }?.let { coach(coachCloudId) }
 
   /**
    * A trial's chat drawn as its taf, named as the lists name it: "Refunds · v2". The chat is the taf's chat view on the
@@ -820,8 +830,10 @@ class AppModel(
       // The account read began under this generation: a sign-out or another sign-in meanwhile moves it
       // on, and the old account's data is dropped here.
       if (generation != accountGeneration) return
-      // A held install is Coach's only from Coach's own agent: read which that is, once, when one is held.
-      if (_state.value.coachAgent == null && read.exceptions.any { it.action == "version_install" }) {
+      // A held install is Coach's only from Coach's own agent, and a hold from an agent no taf is may be Coach's: read which
+      // agent is Coach's, once, when either is held.
+      val unnamed = read.exceptions.any { _state.value.holder(it.subject) == null }
+      if (_state.value.coachAgent == null && (unnamed || read.exceptions.any { it.action == "version_install" })) {
         attempt { cloud.setup() }?.let { setup ->
           if (generation == accountGeneration) _state.update { it.copy(coachAgent = setup.kiffAgent, coachCloudId = it.coachCloudId ?: setup.id) }
         }

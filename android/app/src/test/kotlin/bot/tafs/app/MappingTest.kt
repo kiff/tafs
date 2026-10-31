@@ -124,6 +124,32 @@ class MappingTest {
     assertEquals("50 is above the 30 limit for one call", held.reason)
   }
 
+  /** A hold over a count of calls, as KIFF keeps it: the machine's reason, and KIFF's own words when [reasonText] is sent. */
+  private fun countHold(limit: Long, used: Long, window: String? = "calendar_day", reasonText: String? = null) = exceptions(
+    """{"exceptions":[{"id":"ce_5","subject":"setup-acme","action":"taf_results","created_at":"2026-10-30T22:50:00Z",
+       ${reasonText?.let { "\"reason_text\":\"$it\"," } ?: ""}"can_approve_once":false,
+       "breaches":[{"outcome":"limit_reached","quantity":"count","limit":$limit,"used":$used,"draw":1,${window?.let { "\"window\":\"$it\"," } ?: ""}
+         "reason":"count limit $limit per calendar_day reached: $used used, this action draws 1"}]}]}""",
+  )[0]
+
+  @Test fun aCountOfCallsReadsInTheCardsWordsNeverTheMachines() {
+    assertEquals("Each call asks you first", KiffMapping.held(countHold(0, 0)).reason)
+    assertEquals("20 calls a day: this would be the 21st", KiffMapping.held(countHold(20, 20)).reason)
+    assertEquals("1 call in any hour: this would be the 2nd", KiffMapping.held(countHold(1, 1, "rolling_1h")).reason)
+    assertEquals("12 calls in any 24 hours: this would be the 13th", KiffMapping.held(countHold(12, 12, "rolling_24h")).reason)
+    assertEquals("3 calls in total: this would be the 4th", KiffMapping.held(countHold(3, 3, "lifetime")).reason)
+    // A window KIFF adds later shows as sent, never as a day; none at all says the limit alone.
+    assertEquals("5 calls rolling_7d: this would be the 6th", KiffMapping.held(countHold(5, 5, "rolling_7d")).reason)
+    assertEquals("Over its limit of 10 calls: this would be the 11th", KiffMapping.held(countHold(10, 10, null)).reason)
+    // KIFF's own words come first.
+    assertEquals("Each call asks you first, in KIFF's words", KiffMapping.held(countHold(0, 0, reasonText = "Each call asks you first, in KIFF's words")).reason)
+  }
+
+  @Test fun ordinalsReadAsWords() {
+    assertEquals(listOf("1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "101st", "111th"),
+      listOf(1L, 2, 3, 4, 11, 12, 13, 21, 22, 101, 111).map(KiffMapping::ordinal))
+  }
+
   @Test fun aCallWithNoArgumentsSaysWhatItIsByItsEntity() {
     val e = exceptions("""{"exceptions":[{"id":"ce_4","subject":"a","action":"stripe.create_refund","entity_id":"tc-9","created_at":"2026-10-24T19:00:00Z"}]}""")[0]
     assertEquals("create refund tc-9", KiffMapping.held(e).proposed.summary)

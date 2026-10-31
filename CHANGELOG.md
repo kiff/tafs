@@ -116,6 +116,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, held calls:** a call Coach's own agent holds is titled **Coach**, with Coach's mark,
+  never "A taf". Why a call is held reads KIFF's own words when sent. A count of calls without
+  them reads "Each call asks you first" for a limit of 0, otherwise "20 calls a day: this would
+  be the 21st", never the machine's reason.
 - **Android, Coach crash:** opening Coach no longer crashes when a chat holds the same message
   twice. An owner's message is told apart by tafs cloud's id for it, and a chat shows each item
   once.

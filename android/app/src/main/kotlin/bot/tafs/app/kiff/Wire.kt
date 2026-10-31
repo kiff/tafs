@@ -203,6 +203,10 @@ data class Breach(
   val scale: Int? = null,
   @SerialName("unit_unavailable") val unitUnavailable: Boolean? = null,
   @SerialName("unit_ambiguous") val unitAmbiguous: Boolean? = null,
+  /** For a total: what it had used, what this call carries, and its window ("calendar_day"). */
+  val used: Long? = null,
+  val draw: Long? = null,
+  val window: String? = null,
 )
 
 /** A parameter's declared unit and decimal places ("EUR", 2). */
