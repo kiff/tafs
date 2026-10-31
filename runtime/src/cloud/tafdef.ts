@@ -82,10 +82,12 @@ export const CALL_INSTRUCTIONS = `How you make a call under your Card:
   needs, and KIFF holds it for the owner or refuses it. If it's refused, tell
   the owner what the request needs and ask them.
 - When a call that moves money doesn't name the customer it's for (a coupon,
-  a credit note), put who it's for and why in a field the call carries, such
-  as its name or description: the customer, the subscription or order, and
-  what it is ("Lumen Design Co · sub_123 · one free month"). The owner sees
-  that when the call waits for them.`;
+  a credit note), put who it's for in a field the customer doesn't see, when
+  the call has one, such as metadata: {customer: "Lumen Design Co",
+  subscription: "sub_123", reason: "cancel request"}. The owner sees it when
+  the call waits for them. A name or description the customer sees stays fit
+  for the customer: what it is ("One free month"), never an internal id or why.
+  When the call has no such field, say who it's for in your message.`;
 
 /** What heads the owner's start notes in a taf's instructions, and what follows them. */
 const OWNER_NOTES_INTRO = "What the owner said about this job when they started you:\n";

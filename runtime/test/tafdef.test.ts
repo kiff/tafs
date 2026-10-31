@@ -123,6 +123,7 @@ describe("a section of the kiff skill", () => {
 
   it("tells the taf never to split a request to stay under a limit, and to name who a money call is for", () => {
     expect(CALL_INSTRUCTIONS).toContain("Never split it into smaller calls to stay under a\n  limit");
-    expect(CALL_INSTRUCTIONS).toContain("put who it's for and why in a field the call carries");
+    expect(CALL_INSTRUCTIONS).toContain("put who it's for in a field the customer doesn't see");
+    expect(CALL_INSTRUCTIONS).toContain("never an internal id or why");
   });
 });

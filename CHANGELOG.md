@@ -9,8 +9,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 - **Tafs and Coach, calls under a Card:** a taf makes one call for one request, never smaller
   ones to stay under a limit, and asks the owner when it's refused. A money call that doesn't
-  name its customer, such as a coupon, carries who it's for in its name, so the held call says
-  it. Coach says the limits are the owner's, says for each action what asks first and what is
+  name its customer, such as a coupon, carries who it's for in a field the customer doesn't
+  see, such as metadata, so the held call says it. Coach says the limits are the owner's, says for each action what asks first and what is
   refused, gives each card an id no earlier card in the conversation had, and hands over
   each taf with a one-line `summary` of what it does.
 - **Android, dictation's language:** where the phone dictates in more than one of the owner's
