@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -131,11 +132,12 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   val atBottom by remember { derivedStateOf { !listState.canScrollForward } }
   val scope = rememberCoroutineScope()
 
-  // The thread's own scrolling to its end isn't the owner reading back: only the owner's stops it following.
-  var autoScrolling by remember { mutableStateOf(false) }
+  // The thread's own scrolling to its end isn't the owner reading back: only the owner's stops it following. Counted, not a
+  // flag: a new item and the answer growing can both scroll at once, and the first to end mustn't make the other the owner's.
+  var autoScrolls by remember { mutableIntStateOf(0) }
   LaunchedEffect(listState) {
     snapshotFlow { listState.isScrollInProgress to listState.canScrollForward }.collect { (scrolling, more) ->
-      if (scrolling && more && !autoScrolling) following = false
+      if (scrolling && more && autoScrolls == 0) following = false
       if (!more) following = true
     }
   }
@@ -145,11 +147,11 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   suspend fun toEnd(animated: Boolean) {
     if (total == 0 || !(following || !opened)) return
     val last = listState.layoutInfo.totalItemsCount.coerceAtLeast(total) - 1
-    autoScrolling = true
+    autoScrolls += 1
     try {
       if (animated && opened) listState.animateScrollToItem(last, Int.MAX_VALUE) else listState.scrollToItem(last, Int.MAX_VALUE)
     } finally {
-      autoScrolling = false
+      autoScrolls -= 1
     }
     opened = true
   }
