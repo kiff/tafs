@@ -1662,6 +1662,14 @@ class AppModel(
     // A new Coach conversation has nothing to read until its first message is sent.
     if (tafId == COACH_CHAT && _state.value.coachFresh) return
     val generation = accountGeneration
+    // No conversation chosen yet (at launch): Coach opens on its newest alone, the earlier ones under Previous conversations,
+    // never several together. Without the list, or with none yet, the thread reads as before.
+    if (tafId == COACH_CHAT && _state.value.coachChat == null) {
+      val chats = attempt { cloud.chats(cloudId) }
+      if (generation != accountGeneration) return
+      chats?.let { list -> _state.update { it.copy(coachChats = list) } }
+      chats?.maxByOrNull { it.updated }?.let { newest -> _state.update { if (it.coachChat == null && !it.coachFresh) it.copy(coachChat = newest.session) else it } }
+    }
     val thread = try {
       if (isTrialChat(tafId)) cloud.trialConversation(cloudId)
       else cloud.conversation(cloudId, session = if (tafId == COACH_CHAT) _state.value.coachChat else null)

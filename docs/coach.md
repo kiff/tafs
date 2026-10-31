@@ -52,6 +52,9 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   the Card in the same flow: one tap, still two fingerprints (the batch, then the Card). A
   taf is improved from a hold's **Change the limit in Coach mode**, which opens Coach on a
   new conversation about it (`AppModel.improveInCoach`).
+- **At launch** Coach opens on its newest conversation alone, the one updated last, read with
+  `GET /v1/tafs/{id}/chats`, never the latest ones together; the earlier ones are under
+  Previous conversations. With none yet, the thread reads as before (`AppModel.readThread`).
 - **Previous conversations** lists them newest first. A long press archives one, and
   Archived puts one back.
 - **The empty chat** shows the same starts as iOS (`CoachWords.EXAMPLES`,
