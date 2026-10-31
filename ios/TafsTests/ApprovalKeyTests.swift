@@ -422,4 +422,74 @@ final class ApprovalKeyTests: XCTestCase {
         let signed = try await signer.signApproval(Data("x".utf8), reason: "test")
         XCTAssertEqual(signed, "stub-signature")
     }
+
+    /// A start of a re-link as KIFF answers it, polled at once.
+    private static let relinkStart = #"{"device_code":"rl","user_code":"WXYZ-BCDF","verification_uri":"https://app.test/auth/device","verification_uri_complete":"https://app.test/auth/device?code=WXYZ-BCDF","expires_in":600,"interval":0}"#
+
+    /// A phone whose faces or fingerprints changed approves again through the browser, with
+    /// no sign-out (kiff/tafs#233, case 2): the new key proves itself under Face ID, the
+    /// device key signs the request, and the session, its token and its list stay.
+    func testARelinkLetsThePhoneApproveAgainWithoutSigningOut() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, held: Self.heldJSON)
+        model.signInSlice = 1_000_000
+        model.signInMinimumInterval = 0
+        signer.biometricsChanged = true
+        await model.refresh()
+        XCTAssertTrue(model.approvalKeyLost)
+        let newKey = signer.approvalKey
+
+        StubProtocol.responses["POST /v1/me/device/relink"] = (200, Self.relinkStart)
+        StubProtocol.responses["POST /v1/auth/device/token"] = (400, #"{"error":"authorization_pending"}"#)
+        StubProtocol.thenRespond["POST /v1/auth/device/token"] =
+            ["POST /v1/auth/device/token": (200, #"{"status":"relinked","fingerprint":""# + KIFFClient.fingerprint(newKey) + #""}"#)]
+        signer.approvalPrompted = []
+        let url = await model.startRelink()
+        XCTAssertEqual(url?.absoluteString, "https://app.test/auth/device?code=WXYZ-BCDF")
+
+        // The new key signed KIFF's message, after Face ID; the device key signed the request.
+        let proof = try XCTUnwrap(signer.approvalPrompted.first)
+        XCTAssertTrue(proof.hasPrefix("kiff.approval-key-relink.v1\nt_01\n"), proof)
+        let request = try XCTUnwrap(sent("POST", "/v1/me/device/relink").first)
+        let body = try JSONDecoder().decode([String: String].self, from: try XCTUnwrap(request.httpBody))
+        XCTAssertEqual(body["approval_public_key"], newKey.base64EncodedString())
+        XCTAssertEqual(body["signature"], "approval")
+        XCTAssertTrue(request.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=current") == true)
+
+        for _ in 0..<200 where model.approvalKeyLost { try await Task.sleep(nanoseconds: 5_000_000) }
+        XCTAssertFalse(model.approvalKeyLost)
+        XCTAssertTrue(model.sessionHasApprovalKey)
+        XCTAssertNil(model.relink)
+        XCTAssertEqual(model.kiff.token, "kiff_dev_x", "the session goes on")
+        XCTAssertTrue(sent("POST", "/v1/auth/device/logout").isEmpty, "no sign-out")
+    }
+
+    func testARelinkThatKIFFDoesntHaveSaysToSignInAgain() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, registration: (409, Self.holds(Data([0x30, 0x59, 0x09]))))
+        XCTAssertTrue(model.approvalKeyLost)
+        StubProtocol.responses["POST /v1/me/device/relink"] = (404, #"{"error":"not found"}"#)
+        let url = await model.startRelink()
+        XCTAssertNil(url)
+        XCTAssertNil(model.relink)
+        XCTAssertTrue(model.lastError?.contains("sign in again from Settings") == true, model.lastError ?? "")
+        XCTAssertTrue(model.approvalKeyLost)
+    }
+
+    func testARelinkWhosePromptIsntRecognizedAsksNothingOfKIFF() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, registration: (409, Self.holds(Data([0x30, 0x59, 0x09]))))
+        signer.approvalUnrecognized = true
+        let url = await model.startRelink()
+        XCTAssertNil(url)
+        XCTAssertEqual(model.lastError, KIFFClient.notRecognized)
+        XCTAssertTrue(sent("POST", "/v1/me/device/relink").isEmpty)
+    }
+
+    func testTheRelinkMessageIsKIFFs() {
+        let message = String(decoding: KIFFClient.relinkMessage(tenant: "t_01", deviceKey: Data([1]), newKey: Data([2]), signedAt: "2026-10-30T22:00:00Z"), as: UTF8.self)
+        XCTAssertEqual(message, "kiff.approval-key-relink.v1\nt_01\n" +
+                       "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a\n" +
+                       "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986\n2026-10-30T22:00:00Z")
+    }
 }

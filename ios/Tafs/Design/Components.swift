@@ -266,30 +266,58 @@ struct UnreachableLine: View {
     }
 }
 
-/// This phone can't approve until a new sign-in (its approval key is gone, or KIFF holds
-/// another): said with the way out, in place of a button that would fail. Refuse stays.
+/// This phone can't approve until its person approves it again in their browser (its
+/// approval key is gone, or KIFF holds another): said with the way out, in place of a button
+/// that would fail. Refuse stays. While the browser hasn't answered, it shows the code to
+/// check there, with Cancel. Sign in again stays as the fallback, for a KIFF without re-link.
 struct ApprovalKeyLostLine: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.openURL) private var openURL
+    @State private var starting = false
     @State private var signingOut = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(KIFFClient.approvalKeyLost)
-                .scaledFont(13).foregroundColor(Theme.soft)
-                .fixedSize(horizontal: false, vertical: true)
-            Button {
-                signingOut = true
-                // Signing out ends the session at KIFF, the old approval key with it; the
-                // sign-in screen follows, and the next sign-in registers the new key.
-                Task { _ = await model.signOut(); signingOut = false }
-            } label: {
-                Text("Sign in again")
-            }
-            .buttonStyle(OutlineButtonStyle())
-            .disabled(signingOut)
-            if let why = model.signOutError {
-                Text(why).scaledFont(12).foregroundColor(Theme.amber)
+            if let relink = model.relink {
+                Text("Waiting for your browser… Check that it shows \(relink.userCode), and approve only with this \(ThisDevice.kind) in your hands.")
+                    .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) {
+                    Button("Open the browser again") { openURL(relink.url) }
+                        .buttonStyle(OutlineButtonStyle())
+                    Button("Cancel") { model.cancelRelink() }
+                        .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                }
+            } else {
+                Text(KIFFClient.approvalKeyLost)
+                    .scaledFont(13).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    starting = true
+                    Task {
+                        if let url = await model.startRelink() { openURL(url) }
+                        starting = false
+                    }
+                } label: {
+                    Label("Approve again in your browser", systemImage: Biometry.symbol)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(starting)
+                Button {
+                    signingOut = true
+                    // Signing out ends the session at KIFF, the old approval key with it; the
+                    // sign-in screen follows, and the next sign-in registers the new key.
+                    Task { _ = await model.signOut(); signingOut = false }
+                } label: {
+                    Text("Sign in again instead").scaledFont(13)
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(Theme.soft)
+                .disabled(signingOut || starting)
+                if let why = model.signOutError {
+                    Text(why).scaledFont(12).foregroundColor(Theme.amber)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
         .accessibilityIdentifier("approval-key-lost")
