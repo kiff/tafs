@@ -10,8 +10,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -32,7 +37,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.R
 import bot.tafs.app.design.Theme
+import bot.tafs.app.design.scaled
+import androidx.compose.ui.text.font.FontWeight
 import bot.tafs.app.voice.Dictation
+import bot.tafs.app.voice.SpeechLanguage
 
 /**
  * The mic in a chat's message bar (kiff/tafs#208, as iOS's `MicButton`), the same in a taf's chat and in Coach: tap to
@@ -47,6 +55,27 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
   val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
     // Allowed: it dictates at once. Refused: it says so, with the way to the phone's settings.
     dictation.start(text, onText)
+  }
+  val languages by dictation.languages.collectAsState()
+  val chosen by dictation.language.collectAsState()
+  Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+  // The language, a switch among the owner's own (their keyboards', then the phone's), before dictating or while, as on iOS.
+  if (languages.size > 1) {
+    val now = chosen?.takeIf { it in languages } ?: languages.first()
+    Box(
+      Modifier
+        .sizeIn(minWidth = 40.dp, minHeight = 40.dp)
+        .clickable { dictation.switchLanguage(text, onText) }
+        .semantics { contentDescription = "Dictation in ${SpeechLanguage.name(now)}. Switch language" },
+      contentAlignment = Alignment.Center,
+    ) {
+      Box(
+        Modifier.height(28.dp).border(BorderStroke(1.dp, Theme.line), CircleShape).padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center,
+      ) {
+        Text(SpeechLanguage.label(now), style = scaled(12, FontWeight.SemiBold, Theme.ink, mono = true))
+      }
+    }
   }
   Box(
     Modifier
@@ -67,6 +96,7 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
     } else {
       Icon(painterResource(R.drawable.ic_mic), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(18.dp))
     }
+  }
   }
   (state as? Dictation.State.Blocked)?.let { blocked ->
     AlertDialog(

@@ -11,8 +11,11 @@ import android.speech.RecognitionSupport
 import android.speech.RecognitionSupportCallback
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import java.util.Locale
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * The phone's own speech recognizer, on the phone only (`createOnDeviceSpeechRecognizer`, Android 12 and later): no audio
@@ -28,13 +31,49 @@ class DeviceSpeech(private val context: Context) : SpeechEngine {
 
   private var recognizer: SpeechRecognizer? = null
 
-  /** The language chosen for this phone, once known: it's asked of the recognizer once. */
-  private var language: String? = null
+  private val owned = MutableStateFlow<List<String>>(emptyList())
 
-  override fun listen(listener: SpeechEngine.Listener) {
+  /** The owner's languages the phone dictates in, known once the recognizer says what it has (Android 13 and later). */
+  override val languages: StateFlow<List<String>> = owned
+
+  init {
+    // Asked once: which languages are on the phone, of the owner's (their keyboards', then the phone's).
+    if (available && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      val asking = SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
+      asking.checkRecognitionSupport(
+        intent(null),
+        ContextCompat.getMainExecutor(context),
+        object : RecognitionSupportCallback {
+          override fun onSupportResult(support: RecognitionSupport) {
+            owned.value = SpeechLanguage.owners(support.installedOnDeviceLanguages, keyboards(), preferred())
+            asking.destroy()
+          }
+
+          override fun onError(error: Int) = asking.destroy()
+        },
+      )
+    }
+  }
+
+  /** The languages of the keyboards the owner set up. */
+  private fun keyboards(): List<String> = runCatching {
+    val imm = context.getSystemService(InputMethodManager::class.java)
+    imm.enabledInputMethodList.flatMap { imm.getEnabledInputMethodSubtypeList(it, true) }
+      .mapNotNull { it.languageTag.takeIf(String::isNotEmpty) }
+  }.getOrDefault(emptyList())
+
+  /** The phone's own languages, in its order. */
+  private fun preferred(): List<String> = android.os.LocaleList.getDefault().let { list -> (0 until list.size()).map { list[it].toLanguageTag() } }
+
+  /** The language chosen for this phone, once known: it's asked of the recognizer once. */
+  private var phoneLanguage: String? = null
+
+  override fun listen(listener: SpeechEngine.Listener, language: String?) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return listener.failed(Dictation.NOT_ON_DEVICE)
     val r = recognizer ?: SpeechRecognizer.createOnDeviceSpeechRecognizer(context).also { recognizer = it }
-    val known = language
+    // One of the owner's languages, chosen with the switch: it's on the phone already.
+    if (language != null) return start(r, language, listener)
+    val known = phoneLanguage
     // Before Android 13 the recognizer can't say which languages it has: it's asked for the phone's own.
     if (known != null || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return start(r, known ?: Locale.getDefault().toLanguageTag(), listener)
     r.checkRecognitionSupport(
@@ -45,7 +84,7 @@ class DeviceSpeech(private val context: Context) : SpeechEngine {
           val name = Locale.getDefault().displayLanguage
           when (val choice = SpeechLanguage.choose(Locale.getDefault(), support.installedOnDeviceLanguages, support.supportedOnDeviceLanguages)) {
             is SpeechLanguage.Choice.Use -> {
-              language = choice.tag
+              phoneLanguage = choice.tag
               start(r, choice.tag, listener)
             }
             is SpeechLanguage.Choice.Download -> {
@@ -99,4 +138,13 @@ class DeviceSpeech(private val context: Context) : SpeechEngine {
   }
 
   private fun first(results: Bundle?): String = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull().orEmpty()
+}
+
+/** The dictation language chosen last, in the app's own preferences. */
+class SavedLanguage(context: Context) : LanguageMemory {
+  private val prefs = context.getSharedPreferences("dictation", Context.MODE_PRIVATE)
+
+  override fun load(): String? = prefs.getString("language", null)
+
+  override fun save(tag: String) = prefs.edit().putString("language", tag).apply()
 }

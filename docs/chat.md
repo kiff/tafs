@@ -53,7 +53,12 @@ recognizer (`createOnDeviceSpeechRecognizer`, Android 12 and later), in the phon
 language. The microphone is asked for at the first tap. A phone without an on-device
 recognizer doesn't dictate and says so, rather than use one that sends the voice away.
 Words go into the box as they're heard; listening goes on after a pause and stops after
-two quiet ones, a tap on the mic, or Send. iOS's language switch isn't on Android yet.
+two quiet ones, a tap on the mic, or Send. As on iOS, where the phone dictates in more than
+one of the owner's languages, a switch before the mic shows the one in use ("FR"); each tap
+goes to the next, and while dictating, listening starts again in it after what was heard.
+The owner's languages are their keyboards', then the phone's, among those its recognizer has
+on the phone (`SpeechLanguage.owners`, Android 13 and later), and the one chosen is kept for
+next time.
 
 The recognizer's models are per variant, so a phone set to English in France (`en-FR`)
 dictates in a variant of its language (`SpeechLanguage.choose`, from Android 13
