@@ -1995,7 +1995,9 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   const [, , , action, rawN, sub] = parts;
   if (action === "versions" && parts.length === 4 && method === "GET") {
     const state = await settleSwitch(event, me, taf, deps);
-    return { versions: state.versions, ...(state.switching ? { switching: state.switching } : {}) };
+    // Who made each, in words (kiff/tafs#1425 item 8): the apps show them, never their own copy.
+    const versions = state.versions.map((v) => { const by = versionBy(v, me); return by ? { ...v, by_words: by } : v; });
+    return { versions, ...(state.switching ? { switching: state.switching } : {}) };
   }
   if (action === "versions" && parts.length === 4 && method === "POST") {
     await needTaf(event, me, taf, deps);
@@ -2827,6 +2829,24 @@ function sse(name: string, data: unknown): string {
   return `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
+/** Who made a version, in words; none for one kiff/agents wrote itself (the first, or an Upgrade's). */
+export function versionBy(v: { by: string; by_kind?: "person" | "agent" }, me: { subject: string }): string | undefined {
+  if (!v.by) return undefined;
+  if (v.by_kind === "agent" || v.by === "setup") return "By Coach mode";
+  return v.by === me.subject ? "By you" : "By someone on your account";
+}
+
+/** Which run is in the way of installing version n, in the owner's words. */
+export function blockedWords(n: number, runs: Array<{ status: string; trigger: string }>, stopping: boolean): string {
+  const waiting = runs.some((r) => r.status === "PAUSED");
+  const what = runs.length === 1
+    ? (waiting ? "a task waits on your answer" : runs[0]!.trigger === "schedule" ? "its scheduled run is at work" : "a task is at work")
+    : waiting ? `${runs.length} tasks are going, one waiting on your answer` : `${runs.length} tasks are at work`;
+  return stopping
+    ? `Version ${n} isn't installed yet: ${what} and hasn't stopped. Try again in a moment.`
+    : `Version ${n} can't go live while ${what}. Stop it and install, or wait until it's done.`;
+}
+
 /** How long a switch asked to stop what blocks it waits for a running run's checkpoint, and how often it looks. */
 export const STOP_WAIT = { tries: 8, everyMs: 1500 };
 
@@ -2848,7 +2868,10 @@ async function beginSwitch(me: KIFFIdentity, taf: Taf, n: number, draft: string 
       if (!(err instanceof AgentsError) || err.status !== 409 || !err.blocking?.length) return agentsCall(() => Promise.reject(err));
       blocking = err.blocking;
       if (!stopBlocking || tries >= STOP_WAIT.tries) {
-        throw new HTTPError(409, err.message, { blocking: blocking.map((b) => ({ run: b.id, session: b.session, status: b.status, trigger: b.trigger })) });
+        throw new HTTPError(409, err.message, {
+          blocking: blocking.map((b) => ({ run: b.id, session: b.session, status: b.status, trigger: b.trigger })),
+          words: blockedWords(n, blocking, stopBlocking),
+        });
       }
     }
     for (const b of blocking) {

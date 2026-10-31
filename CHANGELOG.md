@@ -116,6 +116,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Versions, in tafs cloud's words:** each version says who made it (`by_words`), and a switch a
+  run blocks says what's in the way (`words`), so the apps show tafs cloud's words, not their own.
 - **Chats, words written while a card waited:** they showed twice in the thread, once as the
   card's answer and once as the run's message, at the same time. A phone's list could not hold
   both (Android closed on opening Coach). tafs cloud now gives one message, marked as the answer,
