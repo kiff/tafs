@@ -3475,6 +3475,9 @@ final class AppModel: ObservableObject {
             a.element.at != b.element.at ? a.element.at < b.element.at : a.offset < b.offset
         }.map(\.element), anchors: state.anchors)
         if let live { timeline += streamingItems(live, held: held, tafID: tafID) }
+        // Each once, by id: the same message twice in a thread shows once.
+        var seen = Set<String>()
+        timeline = timeline.filter { seen.insert($0.id).inserted }
         return Self.withheldUntilWords(Self.heldAfterItsWords(timeline), now: clock())
     }
 

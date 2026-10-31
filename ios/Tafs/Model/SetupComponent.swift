@@ -153,10 +153,13 @@ struct SetupThread: Equatable {
     var items: [Item] {
         let placed: [(Item, Date)] = messages.map { (Item.message($0), $0.at) } +
             components.filter { $0.component.type != .steps }.map { c in (Item.component(c), placedAt(c)) }
-        return placed.enumerated().sorted { a, b in
+        let sorted = placed.enumerated().sorted { a, b in
             if a.element.1 != b.element.1 { return a.element.1 < b.element.1 }
             return a.offset < b.offset // a message before a component placed at its time
         }.map(\.element.0)
+        // Each once, by id: the same message twice in a thread shows once.
+        var seen = Set<String>()
+        return sorted.filter { seen.insert($0.id).inserted }
     }
 
     private static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result]

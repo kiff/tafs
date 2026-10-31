@@ -230,6 +230,21 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Two owner messages with the same words at the same moment, each with tafs cloud's own
+    /// id, are two; the same message twice shows once, so the list never has an id twice
+    /// (kiff/tafs#374).
+    func testAnOwnersMessageIsKeyedByTafsCloudsIdAndShowsOnce() {
+        let at = Date(timeIntervalSince1970: 1_800_000_000)
+        let a = TafsCloud.ChatMessage(at: at, from: .owner, text: "yes", session: "s1", serverID: "m_1")
+        let b = TafsCloud.ChatMessage(at: at, from: .owner, text: "yes", session: "s1", serverID: "m_2")
+        XCTAssertNotEqual(a.id, b.id)
+        var thread = SetupThread()
+        thread.messages = [a, b, a]
+        let ids = thread.items.map(\.id)
+        XCTAssertEqual(ids.count, 2)
+        XCTAssertEqual(Set(ids).count, ids.count)
+    }
+
     /// While Setup works, the chat shows it thinking and Send is Stop (#58 B1): from the
     /// owner's message until tafs cloud says the run ended; Stop cancels that run.
     func testThinkingUntilSetupAnswersAndStopCancels() async throws {

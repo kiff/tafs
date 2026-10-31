@@ -391,11 +391,13 @@ final class TafsCloud {
         /// A taf's (or Setup's) message is the same message while its text grows: tafs cloud
         /// writes a turn's words as one message, so a reload can bring more of it. Keyed by its
         /// words, it would show as a new message and be revealed again from nothing, its cards
-        /// held back meanwhile (kiff/tafs#138, item 48). An owner's message keeps its words in
-        /// its id: two sent at once stay two.
+        /// held back meanwhile (kiff/tafs#138, item 48). An owner's message is tafs cloud's id
+        /// for it where there is one, so two with the same words at the same moment stay two;
+        /// else (a steer, an older tafs cloud) its words are in its id.
         var id: String {
-            from == .taf ? "\(session)|\(at.timeIntervalSince1970)|taf|\(kind.rawValue)"
-                : "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)|\(attachments.map(\.id).joined(separator: ","))"
+            if from == .taf { return "\(session)|\(at.timeIntervalSince1970)|taf|\(kind.rawValue)" }
+            if let serverID { return "\(session)|owner|\(serverID)" }
+            return "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)|\(attachments.map(\.id).joined(separator: ","))"
         }
         let at: Date
         let from: From
