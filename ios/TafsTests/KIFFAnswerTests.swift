@@ -221,6 +221,10 @@ final class KIFFAnswerTests: XCTestCase {
         let card = TafCard(id: "m1", title: "Refunds", rules: [], total: CardTotal(limit: Money(minor: 50000, currency: "EUR", scale: 2), used: Money(minor: 9800, currency: "EUR", scale: 2), window: .day, pending: total.pendingText))
         XCTAssertEqual(card.pending, [total.pendingText!])
         XCTAssertTrue(TafCard(id: "m2", title: "x", rules: []).pending.isEmpty)
+        // A test Card's totals aren't what the taf may do for real: its line isn't shown.
+        XCTAssertTrue(card.countsForReal)
+        XCTAssertFalse(TafCard(id: "m3", title: "Refunds (test)", environment: "test", live: false, rules: []).countsForReal)
+        XCTAssertFalse(TafCard(id: "m4", title: "Refunds", active: false, rules: []).countsForReal)
     }
 
     func testASessionWithoutThePhonesKeyCannotAnswer() async throws {

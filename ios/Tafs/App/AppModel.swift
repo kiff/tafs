@@ -1586,7 +1586,7 @@ final class AppModel: ObservableObject {
     /// What of the taf's live Cards' totals is from calls the tool refused, in KIFF's words:
     /// they count until KIFF can confirm nothing moved.
     func pendingLines(_ tafID: UUID) -> [String] {
-        (taf(tafID)?.shownCards ?? []).filter { $0.live && $0.active }.flatMap(\.pending)
+        (taf(tafID)?.shownCards ?? []).filter(\.countsForReal).flatMap(\.pending)
     }
 
     /// Whether this person may give a Card extra room (KIFF's cards.manage): Extra room on
