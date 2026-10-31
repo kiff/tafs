@@ -150,7 +150,9 @@ version's Card is shown as left over: the taf doesn't use it now, but an older v
 may.
 
 Reading connections asks for no Face ID; it is signed so planque shows them only to the
-enrolled phone.
+enrolled phone. Each signature names this device's id in KIFF (`d=`), which planque checks
+with KIFF. The id is the signed-in account's: Android reads it again after any sign-in or
+sign-out, so after switching accounts planque never gets the last account's device.
 
 ## Improving a taf
 

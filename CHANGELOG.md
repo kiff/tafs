@@ -120,6 +120,9 @@ version headings refer to releases, not merely to merged pull requests.
   yet" and that nothing was working, while the home said "Working · Next run 04:00". Its
   `tafs_state` now says such a taf runs the definition it was made with, and that a schedule
   that's on is working, with its next run, though nothing runs this minute.
+- **Android, switching accounts:** after signing in to another account without closing the app,
+  connecting tools and starting Coach work there. The phone used to sign planque's requests with
+  the last account's device id, which planque refused, and the app said it was signed out.
 - A taf's work steps say what it did, in words, both while it works and after: KIFF's title for
   a tool through KIFF ("List your charges"), and what Coach's and the agents' own tools do
   ("Showing you a card"). A step showed the tool's name before ("show", "list_charges_ijkp").
