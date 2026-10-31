@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, type Deps, handle, type HTTPEvent, oneLine, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -284,6 +284,19 @@ describe("tafs cloud", () => {
     const r = await call(world(), "GET", "/v1/tafs", { token: "ana" });
     expect(r.body.tafs).toEqual([{ id: RAE, name: "Rae", job: "refunds", kiff_agent: "rae", status: "active", next_run: "2026-10-16T12:30:00.000Z", last_run: null, results: ["door_reply"] }]);
     expect(r.body.removing).toEqual([]);
+  });
+
+  it("counts a chat's run as the taf's last run, never a trial's", async () => {
+    const w = world();
+    // The owner wrote to it in its chat: that run is its last, though no schedule ran it.
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund ch_1.");
+    const listed = async () => (await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs[0].last_run;
+    expect(await listed()).toBe(chat.created);
+    // A trial of a version, later, is the version's, not the taf's.
+    w.agents.versions.set(`t_acme|${RAE}`, [{ n: 1, live: true, created: "2026-10-28T09:00:00Z", by: "setup" }, { n: 2, live: false, created: "2026-10-29T09:00:00Z", by: "setup" }] as never);
+    w.now = new Date("2026-10-29T11:00:00Z");
+    await w.agents.api.startTrial("t_acme", RAE, 2, "Refund ch_2.");
+    expect(await listed()).toBe(chat.created);
   });
 
   it("treats another account's taf, or an id that isn't one, as missing", async () => {
@@ -925,6 +938,31 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
       expect(refused.status).toBe(409);
       expect(refused.body.error).toContain("works from its chat");
     }
+  });
+
+  it("keeps what Coach said the taf does, on one line, and shows it as its job line in place of its job's", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const summary = "Offers a customer who cancels\n a discount   to stay, within its Card.";
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, name: "Save Cancels", summary } })).status).toBe(200);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.summary).toBe("Offers a customer who cancels a discount to stay, within its Card.");
+    const listed = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs.find((t: { id: string }) => t.id === NEW);
+    expect(listed.job_summary).toBe("Offers a customer who cancels a discount to stay, within its Card.");
+    // A taf with none (one from before, or not Coach's) keeps its job's line.
+    const rae = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(rae.job_summary).toBe("Answers refund requests and issues refunds and credits within the Card.");
+  });
+
+  it("cuts a long summary at a word, never refusing the taf for it", async () => {
+    expect(oneLine("one two three four five six", 14)).toBe("one two three…");
+    expect(oneLine("  short  ", 160)).toBe("short");
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const long = "word ".repeat(60);
+    expect((await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, summary: long } })).status).toBe(200);
+    const kept = w.tafs.held.get(`t_acme#${NEW}`)!.summary!;
+    expect(kept.length).toBeLessThanOrEqual(160);
+    expect(kept.endsWith("…")).toBe(true);
   });
 
   it("takes a draft_id and nothing that holds a key, and Setup's draft only", async () => {
@@ -2054,6 +2092,14 @@ describe("Coach's result, handed over by tafs cloud", () => {
       expect(answer()).toEqual({ answer: { failed: why }, answered_by: "tafs cloud" });
       expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
     }
+  });
+
+  it("keeps the summary Coach's result gives on the taf it hands over", async () => {
+    const { w, note, answer } = await paused({ ...RESULT, taf: { ...RESULT.taf, summary: "Answers refund requests from the shop, within its Card." } });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.summary).toBe("Answers refund requests from the shop, within its Card.");
   });
 
   it("answers a taf an installed app already made from the same draft as done, never failed", async () => {

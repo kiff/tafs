@@ -242,6 +242,11 @@ export interface Taf {
   /** Its colour in the app (`home.COLORS`), kept so a new taf never takes it. Given at its start. */
   color?: number;
   /**
+   * What it does, in one line in the owner's language, as Coach's result said it: its job line on the taf's page, in place of
+   * its job's fixed line. Absent on a taf from before, or one not made by Coach.
+   */
+  summary?: string;
+  /**
    * The versions made from Setup's results (kiff/tafs#107), by the result
    * they came from: a result makes its version once, however often the app
    * hands it over.
@@ -258,6 +263,21 @@ export interface Taf {
    */
   results?: ResultPlace[];
 }
+
+/** The most a taf's one-line summary keeps, in characters. */
+const MAX_SUMMARY = 160;
+
+/** Text on one line, its spaces collapsed, cut at a word with "…" past [max]. */
+export function oneLine(text: string, max: number): string {
+  const line = text.replace(/\s+/g, " ").trim();
+  if (line.length <= max) return line;
+  const cut = line.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return (space > max / 2 ? cut.slice(0, space) : cut).trimEnd() + "…";
+}
+
+/** How many of a taf's latest runs are read for its last run: enough to see past a trial's. */
+const LAST_RUN_LOOK = 10;
 
 /** A place a taf's results go. */
 export type ResultPlace = "door_reply" | "app" | "owner_email";
@@ -931,6 +951,8 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   if (!calmEnough(cron)) throw new HTTPError(400, "a taf runs at most every 15 minutes");
   const timezone = body.timezone === undefined ? "" : str(body.timezone).trim();
   const notesText = body.notes === undefined ? undefined : str(body.notes).trim();
+  // What it does, from Coach's result: one line, never a reason to refuse the taf.
+  const summary = body.summary === undefined ? undefined : oneLine(str(body.summary), MAX_SUMMARY);
   if (notesText !== undefined && notesText.length > MEMORY.maxNotes) {
     throw new HTTPError(400, `keep the notes to ${MEMORY.maxNotes} characters`);
   }
@@ -1015,7 +1037,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   const taf: Taf = {
     id: tafID, name, job: job.id, kiffAgent: agentID, nameClaim, created: (deps.now?.() ?? new Date()).toISOString(),
     budgetCents: def.max_cost_micro_usd / 10_000, ...(notesText ? { ownerNotes: notesText } : {}), definition: digest(def), color,
-    ...(unscheduled ? { unscheduled: true } : {}),
+    ...(unscheduled ? { unscheduled: true } : {}), ...(summary ? { summary } : {}),
   };
   try {
     await deps.agents.putAgent(me.tenantID, tafID, def);
@@ -3275,11 +3297,14 @@ async function forget(me: KIFFIdentity, taf: Taf, escapedName: string, deps: Dep
   return { forgotten: name };
 }
 
-/** A taf as the app shows it: paused when its schedule is off, with its next and last runs. */
+/**
+ * A taf as the app shows it: paused when its schedule is off, with its next and last runs. Its last run is any of its own,
+ * scheduled or from its chat, never a trial's: a taf that works from its chat has run once it has.
+ */
 async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule) {
   const [s, last] = await Promise.all([
     schedule ? Promise.resolve(schedule) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
-    deps.agents.scheduleRuns(me.tenantID, taf.id, 1).then((r) => r[0], () => undefined),
+    deps.agents.runs(me.tenantID, taf.id, false, LAST_RUN_LOOK).then((r) => r.find((x) => x.trigger !== "trial"), () => undefined),
   ]);
   return {
     id: taf.id,
@@ -3349,8 +3374,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const trial = trials[i];
     const card = summary(cards.get(t.kiffAgent) ?? []);
     const held = waiting.get(t.kiffAgent) ?? 0;
-    // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count.
-    const words = JOBS.find((j) => j.id === v.job)?.summary;
+    // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count: what Coach said this taf does, else its
+    // job's fixed line. A taf Coach made on the nearest job (a cancel saver on refunds) never shows another job's line.
+    const words = t.summary || JOBS.find((j) => j.id === v.job)?.summary;
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now) : undefined;
@@ -3890,7 +3916,7 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
   let took = false;
   let pending = false;
   for (const q of r.requirements ?? []) {
-    const card = q.input as { type?: string; id?: string; taf?: ImprovedTaf & { job?: string; unscheduled?: boolean } } | undefined;
+    const card = q.input as { type?: string; id?: string; taf?: ImprovedTaf & { job?: string; unscheduled?: boolean; summary?: string } } | undefined;
     if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.id || !card.taf) continue;
     const held = `handover#${tenant}#${r.id}#${card.id}`;
     if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
@@ -4008,7 +4034,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
   }
 }
 
-async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean },
+async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean; summary?: string },
   tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
   const made = tafs.find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
@@ -4026,7 +4052,10 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: s
   // The person, as KIFF just answered for them: no session of theirs, and no right beyond that answer.
   const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
   try {
-    const out = await makeTaf({ name: taf.name, job: taf.job, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}) }, me, deps);
+    const out = await makeTaf({
+      name: taf.name, job: taf.job, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}),
+      ...(typeof taf.summary === "string" ? { summary: taf.summary } : {}),
+    }, me, deps);
     return { taf_id: (out.taf as { id: string }).id };
   } catch (err) {
     if (err instanceof HTTPError && err.status >= 400 && err.status < 500) {
