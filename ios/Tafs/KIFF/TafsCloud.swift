@@ -11,9 +11,12 @@ final class TafsCloud {
         let message: String
         /// The runs that keep a switch from beginning, when tafs cloud names them (kiff/tafs#206).
         var blocking: [BlockingRun] = []
-        /// What tafs cloud says is wrong, for the owner, when it says it.
+        /// What tafs cloud says is wrong, written for the owner (a run kiff/agents refused, a
+        /// switch a run blocks), when it says it.
         var words: String? = nil
-        var errorDescription: String? { message }
+        /// tafs cloud's words first, on every path that shows the error (kiff/tafs#397); the
+        /// app's own line for the status only without them.
+        var errorDescription: String? { words ?? message }
     }
 
     /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).

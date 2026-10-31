@@ -2885,7 +2885,7 @@ final class AppModel: ObservableObject {
             clearBusyUnsent(tafID)
             await loadChat(tafID)
             return .sent
-        } catch let e as TafsCloud.CloudError where e.status == 429 {
+        } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
             guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0.id == pending.id }
             chatSent[tafID]?.removeAll { $0.id == pending.id }
@@ -3257,7 +3257,7 @@ final class AppModel: ObservableObject {
                         run: run, status: status, untaken: held + [TafsCloud.Steering.Message(text: text, at: clock())])
                     clearBusyUnsent(tafID)
                     return true
-                } catch let e as TafsCloud.CloudError where e.status == 429 {
+                } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
                     keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
                     return true
                 } catch {
