@@ -174,8 +174,12 @@ a new taf:
 - a tool it lacks, added to the taf's connection to that vendor, or a new connection;
 - a tool that reads the wrong thing, replaced by a fixed one under a new name.
 
-Its result card makes the version (`POST /v1/tafs/{id}/versions`), once per result:
-nothing goes live.
+Its result card is handed over by tafs cloud, as a new taf's is: it makes the version for the
+person whose chat it is, once per result and only while KIFF says they may manage Cards, and
+answers the card with `{version}`. The apps read the answer and make nothing themselves; an app
+from before that still calls `POST /v1/tafs/{id}/versions` gets the same version, made under the
+same key. Nothing goes live: the switch checks the version's draft is this taf's, with the
+owner's session, before anything of it does.
 
 ## Versions
 

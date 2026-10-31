@@ -2061,8 +2061,10 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
     const sw = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).switching;
     const pending = sw && sw.n === n;
     const draft = pending ? sw.draft : version.draft;
-    if (draft && !(await draftConfirmed(bearer(event), draft, deps.fetch, deps.kiffBase))) {
-      throw new HTTPError(409, "confirm this version's Card first");
+    if (draft) {
+      const d = await draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))());
+      if (d?.agent && d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
+      if (!d || !issued(d.status)) throw new HTTPError(409, "confirm this version's Card first");
     }
     // Going back without a switch: a version that ran under other Card revisions
     // goes live only once a switch has restored them, never under the Cards in
@@ -2210,7 +2212,16 @@ const VERSION_NOTES = 4000;
  */
 async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
   if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
-  const body = parseBody(event);
+  return makeVersion(parseBody(event), me, taf, deps, event);
+}
+
+/**
+ * Makes the version a result describes, once per result (`from`). With the owner's session
+ * (`event`), the draft is checked now and the live version's Cards recorded first; from tafs
+ * cloud's hand-over, with no session, both wait for the switch, which checks the draft is this
+ * taf's with the owner's session before anything of it goes live.
+ */
+async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number }> {
   const note = str(body.note).trim();
   if (!note || note.length > VERSION_NOTE) throw new HTTPError(400, `say what changed in 1 to ${VERSION_NOTE} characters`);
   const notes = body.notes === undefined || body.notes === null ? undefined : str(body.notes).trim();
@@ -2228,7 +2239,7 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   if (from && from.length > 128) throw new HTTPError(400, "from is at most 128 characters");
   const made = from ? taf.versionsFrom?.[from] : undefined;
   if (made !== undefined) return { version: made };
-  if (draft) {
+  if (draft && event) {
     const d = await draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase, (deps.now ?? (() => new Date()))());
     if (!d || d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
     if (d.status !== "draft") throw new HTTPError(409, `that draft is ${d.status}: draft it again`);
@@ -2240,7 +2251,7 @@ async function createVersion(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
   // The version live now records its Cards first, so going back to it brings them back.
-  await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
+  if (event) await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
   if (from || tryWith) {
     // Kept so the same result hands over this version again, with what to
@@ -2323,6 +2334,8 @@ async function draftFor(event: HTTPEvent, me: KIFFIdentity, taf: Taf, version: A
   if (version.draft) {
     const d = await draftInfo(token, version.draft, deps.fetch, deps.kiffBase, now);
     if (!d || d.status === "discarded") throw new HTTPError(409, "this version's Card draft is gone: improve the taf again");
+    // A version made with no session wasn't checked when made: its draft must be this taf's.
+    if (d.agent && d.agent !== taf.kiffAgent) throw new HTTPError(409, "that draft isn't this taf's");
     if (!issued(d.status)) {
       if (d.status === "draft" && !again) return version.draft;
       return kiffCall(() => redraft(token, version.draft!, deps.fetch, deps.kiffBase));
@@ -3846,14 +3859,13 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
   let took = false;
   let pending = false;
   for (const q of r.requirements ?? []) {
-    const card = q.input as { type?: string; id?: string; taf?: { agent?: string; name?: string; job?: string; draft?: string; improves?: string; unscheduled?: boolean } } | undefined;
+    const card = q.input as { type?: string; id?: string; taf?: ImprovedTaf & { job?: string; unscheduled?: boolean } } | undefined;
     if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.id || !card.taf) continue;
-    // Improvements wait for their own credentials question; the app still makes those.
-    if (card.taf.improves) continue;
     const held = `handover#${tenant}#${r.id}#${card.id}`;
     if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
     took = true;
-    const outcome = await newTafFor(tenant, coach.id, r, card.taf, tafs, deps).catch(async (err) => {
+    const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, card.taf as ImprovedTaf, tafs, deps) : newTafFor(tenant, coach.id, r, card.taf, tafs, deps);
+    const outcome = await make.catch(async (err) => {
       // Not told: it may still pass. The hold goes, and the sweep tries again.
       console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
       await deps.coach!.remove(held).catch(() => undefined);
@@ -3931,6 +3943,40 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
  * The new taf a result hands over to, made for the run's requester: what to answer
  * the card with. Throws only what may pass on a retry (a server error).
  */
+/** What an improvement result names: the taf it improves, and the version it describes. */
+interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string }
+
+/**
+ * The version an improvement result hands over, made once per result for the person whose run it
+ * is, only while KIFF says they may manage Cards now. It names only the taf it improves, by its id
+ * or its agent, never another's. Nothing goes live: the owner tries it, and the switch checks its
+ * draft with their session.
+ */
+async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID: string, want: ImprovedTaf, tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
+  const taf = tafs.find((t) => !t.removing && t.job !== SETUP_JOB && (t.id === want.improves || (!!want.agent && t.kiffAgent === want.agent)));
+  if (!taf) return { failed: "the taf this improves isn't on this account" };
+  if (want.agent && want.agent !== taf.kiffAgent) return { failed: "that improvement is for another taf" };
+  let access: { requester: Requester; cards_manage?: boolean };
+  try {
+    access = await deps.agents.requesterAccess(tenant, coach, r.id);
+  } catch (err) {
+    if (refused(err, "no_requester")) return { failed: "no person asked for this chat, so no version can be made for them" };
+    throw err;
+  }
+  if (access.cards_manage === undefined) return { failed: "KIFF didn't say whether you may manage Cards now; try again" };
+  if (!access.cards_manage) return { failed: "your role on this KIFF account can't manage Cards now" };
+  const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
+  try {
+    // The key the apps make it under, so a version an app makes for the same result is this one.
+    const what = want.draft || createHash("sha256").update(want.note ?? "").digest("hex").slice(0, 16);
+    const { version } = await makeVersion({ note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}` }, me, taf, deps);
+    return { version };
+  } catch (err) {
+    if (err instanceof HTTPError && err.status >= 400 && err.status < 500) return { failed: err.message };
+    throw err;
+  }
+}
+
 async function newTafFor(tenant: string, coach: string, r: Run, taf: { agent?: string; name?: string; job?: string; draft?: string; unscheduled?: boolean },
   tafs: Taf[], deps: Deps): Promise<ResultOutcome> {
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
