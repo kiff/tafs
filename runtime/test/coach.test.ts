@@ -162,6 +162,17 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     });
     // Coach reads a taf's Cards itself, by its KIFF agent (kiff/tafs#214, item 4).
     expect(r.json.cards).toContain("kiff_card {agent: its kiff_agent}");
+    expect(r.json.tafs[0].runs_on).toBeUndefined();
+  });
+
+  it("tafs_state says a taf with no numbered version live runs the definition it was made with, and how to read a schedule", async () => {
+    const w = world();
+    w.agents.versions.set(`${T}|${RAE}`, []);
+    const r = await w.tool("tafs_state", {});
+    expect(r.json.tafs[0]).toMatchObject({ live_version: null, runs_on: expect.stringContaining("the definition it was made with"), schedule: { on: true } });
+    // Not "no version installed": a schedule that's on is working, though nothing runs this minute.
+    expect(r.json.reading).toContain("schedule.on true is working on its schedule");
+    expect(r.json.reading).toContain("open_runs lists only what runs this minute");
   });
 
   it("taf_task starts a run announced back to tafs cloud, under the taf's own agent", async () => {
