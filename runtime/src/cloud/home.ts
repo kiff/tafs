@@ -92,6 +92,8 @@ export interface Total<T> {
   extra_room?: T;
   base_limit?: T;
   room_window_end?: string;
+  /** What of its use is from calls the tool refused, which count until KIFF can confirm nothing moved, in KIFF's words; absent without any. */
+  pending_text?: string;
 }
 
 /** One KIFF Card, drawn as its own Card. */
@@ -139,6 +141,8 @@ export interface Mandate {
     extra_room?: number | null;
     /** When the window the room counts in ends, and the room with it. */
     room_window_end?: string | null;
+    /** What of its use is from calls the tool refused and still counts, in the owner's words. */
+    pending_text?: string | null;
   }[] | null;
   active: boolean;
   valid_until?: string | null;
@@ -310,6 +314,8 @@ export function cardView(m: Mandate): CardView {
       total.base_limit = money(r.base, unit, scale);
       if (r.ends) total.room_window_end = r.ends;
     }
+    // Passed through as KIFF says it: the apps show it, never their own words.
+    if (ok && line?.pending_text) total.pending_text = line.pending_text;
   }
   let calls: CardView["calls"] = null;
   const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity));
@@ -323,6 +329,7 @@ export function cardView(m: Mandate): CardView {
       calls.base_limit = r.base;
       if (r.ends) calls.room_window_end = r.ends;
     }
+    if (ok && line?.pending_text) calls.pending_text = line.pending_text;
   }
   const environment = (m.environment ?? "").trim();
   return {

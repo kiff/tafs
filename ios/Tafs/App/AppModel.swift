@@ -488,7 +488,7 @@ final class AppModel: ObservableObject {
         kiff.token = token
         cloud.token = token
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
-        holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
@@ -829,7 +829,7 @@ final class AppModel: ObservableObject {
         kiff.token = nil
         cloud.token = nil
         cloudTafs = [:]; halts = [:]
-        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; improvedVersions = [:]; improveErrors = [:]
+        chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         holderIDs = [:]
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
         listLoaded = false; listUnread = false
@@ -1583,8 +1583,10 @@ final class AppModel: ObservableObject {
 
     /// Calls KIFF allowed today that the vendor refused, which still count against the
     /// taf's Card totals (kiff/tafs#211, 6.13), newest first.
-    func refusedToday(_ tafID: UUID) -> [RecordEntry] {
-        entries(for: tafID).filter { $0.refusedByTool == true && AccountTime.calendar.isDateInToday($0.at) }
+    /// What of the taf's live Cards' totals is from calls the tool refused, in KIFF's words:
+    /// they count until KIFF can confirm nothing moved.
+    func pendingLines(_ tafID: UUID) -> [String] {
+        (taf(tafID)?.shownCards ?? []).filter { $0.live && $0.active }.flatMap(\.pending)
     }
 
     /// Whether this person may give a Card extra room (KIFF's cards.manage): Extra room on
@@ -2342,9 +2344,9 @@ final class AppModel: ObservableObject {
             return sw
         } catch let error as TafsCloud.CloudError where error.status == 409 && !error.blocking.isEmpty {
             guard gen == accountGeneration else { return nil }
-            // Named, with the one step that clears it (kiff/tafs#206).
+            // Named, in tafs cloud's words, with the one step that clears it (kiff/tafs#206).
             blockedInstalls[tafID] = version.n
-            versionErrors[tafID] = Self.blockedWords(version.n, error.blocking, stopping: stopBlocking)
+            versionErrors[tafID] = error.words ?? "Version \(version.n) can't go live now: \(error.message)"
             return nil
         } catch {
             guard gen == accountGeneration else { return nil }
@@ -2356,21 +2358,6 @@ final class AppModel: ObservableObject {
     /// The version whose install a run is in the way of, by taf: the panel offers "Stop it
     /// and install" (kiff/tafs#206).
     @Published private(set) var blockedInstalls: [UUID: Int] = [:]
-
-    /// Which run is in the way of installing version n, in the owner's words.
-    static func blockedWords(_ n: Int, _ runs: [TafsCloud.BlockingRun], stopping: Bool) -> String {
-        let waiting = runs.contains { $0.status == "PAUSED" }
-        let what: String
-        switch (runs.count, waiting) {
-        case (1, true): what = "a task waits on your answer"
-        case (1, false): what = runs[0].trigger == "schedule" ? "its scheduled run is at work" : "a task is at work"
-        case (_, true): what = "\(runs.count) tasks are going, one waiting on your answer"
-        default: what = "\(runs.count) tasks are at work"
-        }
-        return stopping
-            ? "Version \(n) isn't installed yet: \(what) and hasn't stopped. Try again in a moment."
-            : "Version \(n) can't go live while \(what). Stop it and install, or wait until it's done."
-    }
 
     /// A version's Card that changed between the screen and the tap (kiff/tafs#115): put
     /// on screen to read again; nothing was signed.
@@ -2900,7 +2887,7 @@ final class AppModel: ObservableObject {
             clearBusyUnsent(tafID)
             await loadChat(tafID)
             return .sent
-        } catch let e as TafsCloud.CloudError where e.status == 429 {
+        } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
             guard current() else { return .notTried }
             chats[tafID]?.removeAll { $0.id == pending.id }
             chatSent[tafID]?.removeAll { $0.id == pending.id }
@@ -3272,7 +3259,7 @@ final class AppModel: ObservableObject {
                         run: run, status: status, untaken: held + [TafsCloud.Steering.Message(text: text, at: clock())])
                     clearBusyUnsent(tafID)
                     return true
-                } catch let e as TafsCloud.CloudError where e.status == 429 {
+                } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
                     keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
                     return true
                 } catch {
@@ -3490,6 +3477,9 @@ final class AppModel: ObservableObject {
             a.element.at != b.element.at ? a.element.at < b.element.at : a.offset < b.offset
         }.map(\.element), anchors: state.anchors)
         if let live { timeline += streamingItems(live, held: held, tafID: tafID) }
+        // Each once, by id: the same message twice in a thread shows once.
+        var seen = Set<String>()
+        timeline = timeline.filter { seen.insert($0.id).inserted }
         return Self.withheldUntilWords(Self.heldAfterItsWords(timeline), now: clock())
     }
 
@@ -4321,15 +4311,33 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupTaf: TafsCloud.CloudTaf?
     /// Setup's thread: messages and components.
     @Published private(set) var setupThread = SetupThread() {
-        didSet { followHandOvers() }
+        didSet {
+            // A card answered here is the thread's once it holds the answer.
+            let held = Set(setupThread.components.filter { $0.answer != nil }.map(\.ref))
+            if !answered.isDisjoint(with: held) { answered.subtract(held) }
+            followHandOvers()
+        }
     }
     @Published private(set) var setupSending = false
     @Published private(set) var startingSetup = false
     @Published var setupError: String?
     /// The drafts Setup's approvals name, read from KIFF so the owner sees the Cards.
     @Published private(set) var setupDrafts: [String: KIFFClient.AgentDraft] = [:]
-    /// Components the owner answered on this phone, so their buttons go quiet.
+    /// Cards the owner answered on this phone, by `ShownComponent.ref`, so their buttons go
+    /// quiet. Never by id alone: Coach can use an id again, and a card answered in one
+    /// conversation is never answered in the next (kiff/tafs#387). A card is the thread's once
+    /// it holds the answer.
     @Published private(set) var answered: Set<String> = []
+
+    /// The card an answer for `id` is for: the one waiting under that id, since Coach can use
+    /// an id again, else the latest.
+    func cardRef(_ id: String) -> String {
+        let shown = setupThread.components.last { $0.component.id == id && $0.answer == nil } ?? setupThread.components.last { $0.component.id == id }
+        return shown?.ref ?? ShownComponent.ref(setupChat ?? "", id)
+    }
+
+    /// Whether the owner answered this card on this phone.
+    func isAnswered(_ c: SetupComponent) -> Bool { answered.contains(cardRef(c.id)) }
 
     /// A message that didn't reach Setup: it stays in the thread, with why, to send
     /// again (kiff/tafs#58). Never lost to a failed send.
@@ -4353,8 +4361,9 @@ final class AppModel: ObservableObject {
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
     @Published private(set) var setupEnded: RunEnd?
 
-    /// The Setup chat shown (kiff/tafs#73): one the owner reopened or started here, or
-    /// nil for the latest ones together, as before.
+    /// The Setup chat shown (kiff/tafs#73): one the owner reopened or started here, the
+    /// newest at launch (kiff/tafs#389), or nil for the latest ones together when there's
+    /// no list to pick from.
     @Published private(set) var setupChat: String?
     /// The owner asked for a new conversation: the next message starts one.
     @Published private(set) var setupFresh = false
@@ -4519,6 +4528,15 @@ final class AppModel: ObservableObject {
         // A new conversation has nothing to read until its first message is sent.
         if setupFresh { return }
         let gen = accountGeneration
+        // No conversation chosen yet (at launch): Coach opens on its newest alone, the earlier
+        // ones under Previous conversations, never several together (kiff/tafs#389). Without
+        // the list, or with none yet, the thread reads as before.
+        if setupChat == nil, let chats = try? await cloud.chats(s.id) {
+            guard gen == accountGeneration else { return }
+            setupChats = chats
+            if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) { setupChat = newest.session }
+            if setupFresh { return }
+        }
         do {
             let thread = try await cloud.setupThread(s.id, session: setupChat)
             guard gen == accountGeneration else { return }
@@ -4669,7 +4687,7 @@ final class AppModel: ObservableObject {
                 setupAwaiting = clock()
                 setupStreamWorks = true
                 setupLiveBefore = Set(setupThread.items.map(\.id))
-                setupAnsweredCard = SetupThread.Answer(text)?.id
+                setupAnsweredCard = SetupThread.Answer(text).map { cardRef($0.id) }
                 setupLive = LiveAnswer(started: clock())
                 let sentID = mine.id
                 setupStream = Task { await self.followSetupStream(events, text: text, gen: gen, sent: sentID) }
@@ -4731,7 +4749,7 @@ final class AppModel: ObservableObject {
             case .sent:
                 if let id { cardNotes[id] = nil }
             case .kept:
-                if let id { answered.remove(id); cardNotes[id] = nil }
+                if let id { answered.remove(cardRef(id)); cardNotes[id] = nil }
             case .notTried:
                 setupAnswersWaiting.insert(line, at: 0)
             }
@@ -4755,21 +4773,21 @@ final class AppModel: ObservableObject {
         }
         setupUnsent.remove(at: at)
         let left = setupUnsent.count
-        if let answer { answered.insert(answer.id) }
+        if let answer { answered.insert(cardRef(answer.id)) }
         if !(await submitSetup(message.text)) {
             // Not taken at all (too long to join the queue, or no Setup): back in its place.
-            if let answer { answered.remove(answer.id) }
+            if let answer { answered.remove(cardRef(answer.id)) }
             setupUnsent.insert(message, at: min(at, setupUnsent.count))
         } else if setupUnsent.count > left, let answer {
             // Tried and kept again as not sent: its card can be answered again.
-            answered.remove(answer.id)
+            answered.remove(cardRef(answer.id))
         }
     }
 
     /// Drops a message that didn't go through; an answer's card can be answered again.
     func discardUnsent(_ message: UnsentMessage) {
         setupUnsent.removeAll { $0.id == message.id }
-        if let answer = SetupThread.Answer(message.text) { answered.remove(answer.id) }
+        if let answer = SetupThread.Answer(message.text) { answered.remove(cardRef(answer.id)) }
     }
 
     /// Retry on a run that failed part-way: its message is sent again.
@@ -5067,7 +5085,7 @@ final class AppModel: ObservableObject {
     var setupWaiting: ShownComponent? {
         setupThread.asks.last { shown in
             let c = shown.component
-            guard !answered.contains(c.id) else { return false }
+            guard !answered.contains(shown.ref) else { return false }
             switch c.type {
             case .approval:
                 return setupCardState(c) == .needsYou
@@ -5114,9 +5132,10 @@ final class AppModel: ObservableObject {
     func answer(_ component: SetupComponent, _ text: String) async {
         setupUnsent.removeAll { SetupThread.Answer($0.text)?.id == component.id }
         guard let s = setupTaf, let value = Self.answerValue(component.type, text) else { return }
-        answered.insert(component.id)
+        let ref = cardRef(component.id)
+        answered.insert(ref)
         cardNotes[component.id] = nil
-        let session = setupThread.components.last { $0.component.id == component.id }?.session
+        let session = setupThread.components.last { $0.ref == ref }?.session
         let gen = accountGeneration
         do {
             let r = try await cloud.answerCard(s.id, component: component.id, answer: value, session: session)
@@ -5125,11 +5144,11 @@ final class AppModel: ObservableObject {
             await followAnswered(s.id, run: r.run, gen: gen)
         } catch let e as TafsCloud.CloudError where e.status == 409 {
             guard gen == accountGeneration else { return }
-            answered.remove(component.id)
+            answered.remove(ref)
             await loadSetupThread()
         } catch {
             guard gen == accountGeneration else { return }
-            answered.remove(component.id)
+            answered.remove(ref)
             cardNotes[component.id] = "Your answer didn't reach Setup. Tap it again."
         }
     }
@@ -5281,18 +5300,21 @@ final class AppModel: ObservableObject {
     /// is read for once.
     private var setUpTafs: Set<String> = []
 
-    /// Coach's results. A new taf is tafs cloud's to set up: it answers the card itself, and the
-    /// phone only shows the answer, reading the list again once for a taf it set up. An
-    /// improvement makes the taf's next version here, once (kiff/tafs#107).
+    /// The versions tafs cloud said it made from an improvement, by taf and number, that the
+    /// taf's Versions were read again for.
+    private var versionsRead: Set<String> = []
+
+    /// Coach's results, each tafs cloud's to hand over: it sets up a new taf, or makes an
+    /// improved taf's next version, and answers the card itself; the phone only shows the
+    /// answer. It reads the list again once for a taf it set up, and a taf's Versions once for
+    /// a version it made, so it's there to try.
     private func followHandOvers() {
         var readList = false
         for shown in setupThread.components where shown.component.type == .result {
             let c = shown.component
             if c.taf?.improves != nil {
-                let key = improvementKey(c)
-                if improvedVersions[key] == nil, !makingVersions.contains(key), improveErrors[key] == nil {
-                    Task { await makeImprovedVersion(c) }
-                }
+                guard let n = shown.answer?.outcome?.version, let tafID = improvedTaf(c) else { continue }
+                if versionsRead.insert("\(tafID)#\(n)").inserted { Task { await loadVersions(tafID) } }
                 continue
             }
             guard let id = shown.answer?.outcome?.tafID, let agent = c.taf?.agent else { continue }
@@ -5302,45 +5324,13 @@ final class AppModel: ObservableObject {
         if readList { Task { await refresh() } }
     }
 
-    /// The version each improvement result made, by `improvementKey`, and those being made
-    /// or that failed (with why).
-    @Published private(set) var improvedVersions: [String: Int] = [:]
-    @Published private(set) var makingVersions: Set<String> = []
-    @Published private(set) var improveErrors: [String: String] = [:]
-
-    /// An improvement result, by its card and what it carries (its draft, else its note). The
-    /// card's id is Setup's to pick and comes back in another conversation ("result"): keyed by
-    /// the id alone, a new conversation's card showed the version an earlier one made, and
-    /// its own was never made (the 755 retest: "See version 2" when 2 was already live).
-    func improvementKey(_ component: SetupComponent) -> String {
-        let taf = component.taf
-        let what = taf?.draft ?? SHA256.hash(data: Data((taf?.note ?? "").utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
-        return "\(component.id)|\(what)"
-    }
-
-    /// Makes the version an improvement result hands over, once: tafs cloud builds it from
-    /// Setup's words and keeps one per result, so a repeat gives the same version. Nothing
-    /// goes live: the owner tries it and switches from the taf's Versions.
-    func makeImprovedVersion(_ component: SetupComponent) async {
-        guard mode == .kiff, let taf = component.taf, let named = taf.improves else { return }
-        let key = improvementKey(component)
-        // The taf it improves, by its tafs id, or by its agent's when Coach changed a taf it
-        // set up or found in this conversation (kiff/tafs#247).
-        let improves = cloudTafs.values.contains(where: { $0.id == named }) ? named : (cloudTafs[named]?.id ?? cloudTafs[taf.agent]?.id ?? named)
-        guard !makingVersions.contains(key) else { return }
-        makingVersions.insert(key)
-        defer { makingVersions.remove(key) }
-        improveErrors[key] = nil
-        let gen = accountGeneration
-        do {
-            let n = try await cloud.createVersion(improves, note: taf.note ?? "", notes: taf.notes, draft: taf.draft, from: key, agent: taf.agent, tryWith: taf.`try`)
-            guard gen == accountGeneration else { return }
-            improvedVersions[key] = n
-            if let tafID = self.taf(forAgent: taf.agent) { await loadVersions(tafID) }
-        } catch {
-            guard gen == accountGeneration else { return }
-            improveErrors[key] = "\(taf.name)'s new version isn't ready: \(error.localizedDescription)"
-        }
+    /// The taf an improvement result improves, as this phone lists it: by its tafs id, else
+    /// by its agent's, when Coach changed a taf it set up or found in this conversation
+    /// (kiff/tafs#247).
+    func improvedTaf(_ component: SetupComponent) -> UUID? {
+        guard let taf = component.taf else { return nil }
+        if let agent = cloudTafs.first(where: { $0.value.id == taf.improves })?.key, let id = self.taf(forAgent: agent) { return id }
+        return taf.improves.flatMap { self.taf(forAgent: $0) } ?? self.taf(forAgent: taf.agent)
     }
 }
 

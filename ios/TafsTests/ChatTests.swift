@@ -158,6 +158,22 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(count("POST", "/v1/tafs/depl_1/messages"), 1)
     }
 
+    /// A run kiff/agents refused says why in tafs cloud's words, on every path (kiff/tafs#396,
+    /// #397): never the app's own line for the status, which shows only without words.
+    func testARefusalSaysWhyInTafsCloudsWords() async throws {
+        let (model, id) = await kiffModel()
+        let words = "Your tafs have used this period's AI. It starts again on 1 Nov."
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (409, #"{"error":"ai_fair_use","words":"\#(words)"}"#)
+        await model.sendChat("hello", to: id)
+        XCTAssertEqual(model.chatState(id).unsent.first?.why, words)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (429, #"{"error":"too many","words":"\#(words)"}"#)
+        await model.sendChat("again", to: id)
+        XCTAssertEqual(model.chatState(id).unsent.last?.why, words, "a 429 with words says them")
+        XCTAssertEqual(model.chatState(id).unsent.last?.busy, false)
+        let bare = TafsCloud.refusal(409, Data(#"{"error":"conflict"}"#.utf8))
+        XCTAssertEqual(bare.localizedDescription, "conflict", "without words, as before")
+    }
+
     /// The 755 retest: after Not sent for writing too fast, the warning stayed under every
     /// message that went through after it. A message that goes through takes it away.
     func testAWarningForWritingTooFastGoesOnceAMessageGoesThrough() async throws {

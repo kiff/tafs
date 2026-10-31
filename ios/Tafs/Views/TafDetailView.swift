@@ -268,9 +268,10 @@ struct TafDetailView: View {
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
-        // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13).
-        if let refused = HeldCallCard.refusedLine(model.refusedToday(taf.id)) {
-            Text(refused)
+        // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13), in
+        // KIFF's words for what's pending.
+        ForEach(shown?.pending ?? [], id: \.self) { line in
+            Text(line)
                 .scaledFont(13).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -629,16 +630,10 @@ struct VersionsPanel: View {
         .padding(.vertical, 4)
     }
 
-    /// Who made it, when, and whether it brings a new Card. A version kiff/agents wrote
-    /// itself (the first, or an Upgrade's) names no one.
+    /// Who made it, in tafs cloud's words, when, and whether it brings a new Card. A version
+    /// kiff/agents wrote itself (the first, or an Upgrade's) names no one.
     static func byline(_ v: TafsCloud.Version) -> String {
-        var by: String?
-        switch v.by {
-        case nil, "": by = nil
-        case "setup": by = "By Coach mode"
-        default: by = "By you"
-        }
-        return [by, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
+        return [v.byWords, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
             .compactMap { $0 }.joined(separator: " · ")
     }
 }

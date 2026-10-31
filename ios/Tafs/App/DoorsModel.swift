@@ -118,7 +118,7 @@ final class DoorsModel: ObservableObject {
             // Pairing keeps the message waiting, with Do it and Ignore (kiff/tafs#236, item 18).
             if action == "pair" { await load() } else { knocks.removeAll { $0.id == knock.id } }
             error = nil
-        } catch let e as TafsCloud.CloudError where e.status == 429 {
+        } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
             // In the app's words, as the chat says it, not tafs cloud's (the 755 retest).
             self.error = "That's a lot of messages in a few minutes. Wait a little, then send it again: nothing was sent."
         } catch {

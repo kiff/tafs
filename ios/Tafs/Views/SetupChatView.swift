@@ -210,8 +210,8 @@ struct SetupChatView: View {
                                 }
                             case .component(let c):
                                 SetupComponentView(shown: c)
-                                    .onAppear { cardsInView.insert(c.id) }
-                                    .onDisappear { cardsInView.remove(c.id) }
+                                    .onAppear { cardsInView.insert(c.ref) }
+                                    .onDisappear { cardsInView.remove(c.ref) }
                             }
                         }
                         .id(item.id)
@@ -282,10 +282,10 @@ struct SetupChatView: View {
             .overlay(alignment: .bottom) {
                 VStack(spacing: 8) {
                     // The card that needs the owner, when it's out of view (#58).
-                    if let waiting, !cardsInView.contains(waiting.id) {
+                    if let waiting, !cardsInView.contains(waiting.ref) {
                         NeedsYouBar(shown: waiting) {
                             following = false
-                            withMotion(.easeOut(duration: 0.25)) { proxy.scrollTo("c|" + waiting.id, anchor: .center) }
+                            withMotion(.easeOut(duration: 0.25)) { proxy.scrollTo("c|" + waiting.ref, anchor: .center) }
                         }
                     }
                     if !atBottom && !following {
@@ -405,7 +405,7 @@ struct SetupChatView: View {
         guard !landed, !model.setupThread.items.isEmpty else { return }
         landed = true
         if waiting != nil { following = false }
-        let (target, anchor): (String, UnitPoint) = waiting.map { ("c|" + $0.id, .center) } ?? (Self.bottom, .bottom)
+        let (target, anchor): (String, UnitPoint) = waiting.map { ("c|" + $0.ref, .center) } ?? (Self.bottom, .bottom)
         // Lazy rows aren't laid out on the first pass after the app comes back, so one
         // scroll lands nowhere (kiff/tafs#138): it lands again once they are, unless the
         // owner has scrolled meanwhile.
@@ -1081,8 +1081,8 @@ struct SetupComponentView: View {
                         .overlay(Capsule().stroke(Theme.ink.opacity(0.18)))
                         .clipShape(Capsule())
                         // Setup at work doesn't stop a tap: the answer waits for it (kiff/tafs#236, item 2).
-                        .disabled(model.answered.contains(c.id))
-                        .opacity(model.answered.contains(c.id) ? 0.45 : 1)
+                        .disabled(model.isAnswered(c))
+                        .opacity(model.isAnswered(c) ? 0.45 : 1)
                     }
                 }
                 CardNote(id: c.id)
@@ -1100,7 +1100,7 @@ struct SetupComponentView: View {
             OutcomeLine(text: "Not now: no sign-in at \(vendor)", tone: Theme.dim, mark: "minus.circle.fill")
         default:
             let busy = model.connecting != nil
-            let answered = model.answered.contains(c.id)
+            let answered = model.isAnswered(c)
             let signedOut = model.grants.first { $0.id == c.grant && $0.needsReconnect }
             Panel(stroke: state == .needsYou ? Theme.amber : Theme.ink) {
                 Eyebrow(text: state.isFailure ? "Didn't go through · sign in" : "Needs you · sign in",
@@ -1138,29 +1138,37 @@ struct SetupComponentView: View {
         if c.taf?.improves != nil { improvement(c) } else { handOver(c) }
     }
 
-    /// An improvement's result (kiff/tafs#107): the taf's next version, made once, to try
-    /// and switch to from its Versions. The card is whole from the start: its button is there
-    /// while the version is made, and says what it opens, the version, never the taf
-    /// (kiff/tafs#138, item 46).
+    /// An improvement's result (kiff/tafs#107): the taf's next version, which tafs cloud makes
+    /// and answers the card with, to try and switch to from its Versions. Nothing goes live.
+    /// The card is whole from the start: its button is there while the version is made, and
+    /// says what it opens, the version, never the taf (kiff/tafs#138, item 46).
     private func improvement(_ c: SetupComponent) -> some View {
-        Panel(stroke: Theme.ok) {
+        let tafID = model.improvedTaf(c)
+        let name = tafID.flatMap { model.cloudTaf(for: $0) }?.name ?? c.taf?.name ?? ""
+        return Panel(stroke: Theme.ok) {
             Eyebrow(text: "New version · \(c.taf?.name ?? "")", color: Theme.ok)
             Text(c.text ?? "").scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             if let note = c.taf?.note, !note.isEmpty {
                 Text(note).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
-            if let n = model.improvedVersions[model.improvementKey(c)], let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent) {
-                NavigationLink {
-                    VersionsScreen(tafID: tafID)
-                } label: {
-                    Text("See version \(n)").frame(maxWidth: .infinity)
+            switch model.setupThread.improvement(shown.ref) {
+            case .made(let n):
+                if let tafID {
+                    NavigationLink {
+                        VersionsScreen(tafID: tafID)
+                    } label: {
+                        Text("See version \(n)").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    Text("Version \(n) is made.").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-            } else if let error = model.improveErrors[model.improvementKey(c)] {
-                Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
-                Button("Try again") { Task { await model.makeImprovedVersion(c) } }
-                    .buttonStyle(OutlineButtonStyle())
-            } else {
+            case .failed(let why):
+                // tafs cloud told Coach, which hands it over again: no Try again here.
+                Text(SetupThread.notImproved(name, why)).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                Text("Coach knows, and hands it over again.")
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            case .preparing:
                 Button {} label: {
                     HStack(spacing: 8) {
                         ProgressView().tint(.white)
@@ -1189,7 +1197,7 @@ struct SetupComponentView: View {
                 Text(tools.map { model.toolTitle($0) ?? KIFFMapping.toolWords($0) }.joined(separator: " · "))
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
-            switch model.setupThread.handOver(c.id, listed: started != nil) {
+            switch model.setupThread.handOver(shown.ref, listed: started != nil) {
             case .setUp:
                 if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                     if sizeClass == .regular {
@@ -1283,7 +1291,12 @@ struct SetupApproval: View {
         }
     }
 
+    /// An answered approval, in one line: the answer, then what it was. Coach's title for the
+    /// card comes first, so several in a row each say what was approved.
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
+        if let title = component.title?.trimmingCharacters(in: .whitespaces), !title.isEmpty {
+            return state == .declined ? "Declined · \(title)" : "Approved · \(title)"
+        }
         let vendor = (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? "the vendor"
         // An approval with the taf's Card is the Card's (kiff/tafs#94), not the tool's again.
         if let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true {
@@ -1300,7 +1313,7 @@ struct SetupApproval: View {
         // Connected first (contract 5): signed in, and Setup reads what the vendor offers.
         let listed = grant?.listed ?? false
         let busy = model.connecting != nil
-        let answered = model.answered.contains(component.id)
+        let answered = model.isAnswered(component)
         let (eyebrow, color): (String, Color) = {
             if replaced { return ("Earlier request", Theme.dim) }
             switch state {
