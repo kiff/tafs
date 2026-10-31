@@ -313,9 +313,13 @@ final class KIFFClient {
             let scale: Int?
             let unitUnavailable: Bool?
             let unitAmbiguous: Bool?
+            /// For a total: what it had used, what this call carries, and its window.
+            var used: Int64? = nil
+            var draw: Int64? = nil
+            var window: String? = nil
 
             enum CodingKeys: String, CodingKey {
-                case outcome, reason, limit, quantity, unit, scale
+                case outcome, reason, limit, quantity, unit, scale, used, draw, window
                 case unitUnavailable = "unit_unavailable", unitAmbiguous = "unit_ambiguous"
             }
         }
@@ -378,12 +382,15 @@ final class KIFFClient {
         /// The proposal KIFF held: what its activity files the call under, so the owner's
         /// answer and KIFF's outcome are one line (kiff/tafs#138, item 51).
         var proposalID: String? = nil
+        /// Why it's held, in KIFF's own words for people: shown as it comes, so the apps never
+        /// word a hold apart. Absent from an older KIFF.
+        var reasonText: String? = nil
         /// KIFF's answer to whether approving once can pass this call (kiff/tafs#138, item 49).
         /// Absent from an older response: then the app offers it, as before.
         var canApproveOnce: Bool? = nil
 
         enum CodingKeys: String, CodingKey {
-            case proposalID = "proposal_id", canApproveOnce = "can_approve_once"
+            case proposalID = "proposal_id", canApproveOnce = "can_approve_once", reasonText = "reason_text"
             case id, subject, action, title, arguments, status, breaches, parameters, reason
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"

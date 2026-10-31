@@ -7,6 +7,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, held calls:** a call Coach's own agent holds is titled **Coach**, with
+  Coach's mark, on its card, its alert and the lock screen, never "A taf". Why a call is held
+  reads KIFF's own words when sent; a count of calls without them reads "Each call asks you
+  first" for a limit of 0, otherwise "20 calls a day: this would be the 21st", never the
+  machine's reason.
 - **iPhone and iPad, approve again without signing out:** after a face or fingerprint is added,
   **Approve again in your browser** lets the phone approve with its new key once the person
   approves it in KIFF, showing the same code on the phone and the page. The session, alerts and

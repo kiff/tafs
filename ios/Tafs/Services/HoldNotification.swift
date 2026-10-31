@@ -45,7 +45,8 @@ enum HoldNotification {
         async let tafs = try? cloud.tafs()
         async let account = try? kiff.me()
         guard let hold = await held?.first(where: { $0.id == id }) else { return }
-        let taf = await tafs?.first { $0.kiffAgent == hold.subject }?.name
+        // Coach's own agent is "setup" (AppModel.setupAgent): its holds are named Coach.
+        let taf = await tafs?.first { $0.kiffAgent == hold.subject }?.name ?? (hold.subject == "setup" ? "Coach" : nil)
         let zone = await account?.timeZone.flatMap(TimeZone.init(identifier:)) ?? TimeZone(identifier: "UTC")!
         let words = words(hold, taf: taf, zone: zone)
         content.title = words.title

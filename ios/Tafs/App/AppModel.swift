@@ -136,7 +136,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var listUnread = false
 
     /// Called whenever the held calls change, so the lock screen can follow.
-    var onHeldChanged: (@MainActor ([HeldCall], [Taf]) -> Void)?
+    var onHeldChanged: (@MainActor ([HeldCall], [Taf], [UUID: String]) -> Void)?
 
     /// This phone's push token (hex), once iOS gives it (`pushTokenArrived`).
     @Published private(set) var pushToken: String?
@@ -1325,6 +1325,16 @@ final class AppModel: ObservableObject {
     }
 
     /// The app's id for a KIFF agent's taf, the same for the whole session.
+    /// Who holds a call, as the owner reads it: its taf's name, or **Coach** for a call from
+    /// Coach's own agent, which no taf in the list is; nil when neither.
+    func holderName(_ tafID: UUID) -> String? {
+        if let name = taf(tafID)?.name { return name }
+        return holderIDs[Self.setupAgent] == tafID ? "Coach" : nil
+    }
+
+    /// Whether `tafID` is Coach's own agent.
+    func isCoach(_ tafID: UUID) -> Bool { holderIDs[Self.setupAgent] == tafID }
+
     private func holderID(_ agent: String) -> UUID {
         if let id = holderIDs[agent] { return id }
         let id = UUID()
@@ -3803,7 +3813,11 @@ final class AppModel: ObservableObject {
         return a.id == b.id
     }
 
-    private func notifyHeld() { onHeldChanged?(held, tafs + otherAgents) }
+    private func notifyHeld() {
+        // Coach's own holds are named Coach where no taf names them.
+        let coach = holderIDs[Self.setupAgent].map { [$0: "Coach"] } ?? [:]
+        onHeldChanged?(held, tafs + otherAgents, coach)
+    }
 
     private func amountLine(_ p: ProposedAction, _ tail: String) -> String {
         if let amount = p.amount { return "\(amount.formatted), \(tail)" }

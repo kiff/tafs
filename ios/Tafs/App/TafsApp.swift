@@ -23,8 +23,8 @@ struct TafsApp: App {
                         return
                     }
                     // Once tafs cloud pushes held calls, the app doesn't post its own alert as well.
-                    model.onHeldChanged = { [lockScreen, weak model] held, tafs in
-                        lockScreen.update(held: held, tafs: tafs, notify: model?.alertsReady != true)
+                    model.onHeldChanged = { [lockScreen, weak model] held, tafs, names in
+                        lockScreen.update(held: held, tafs: tafs, names: names, notify: model?.alertsReady != true)
                     }
                     model.requestPushToken = { PushDelegate.register() }
                     model.askNotificationPermission = { await PushDelegate.askPermission() }

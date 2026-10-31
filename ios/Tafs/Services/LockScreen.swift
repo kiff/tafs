@@ -13,10 +13,13 @@ final class LockScreen {
     private var notified: Set<UUID> = []
     private var askedPermission = false
 
-    func update(held: [HeldCall], tafs: [Taf], notify: Bool = true) {
+    /// `names` names holders no taf is, such as Coach.
+    func update(held: [HeldCall], tafs: [Taf], names: [UUID: String] = [:], notify: Bool = true) {
+        self.names = names
         if notify { notifyNew(held, tafs) } else { notified = Set(held.map(\.id)) }
         if #available(iOS 16.1, *) { updateActivity(held, tafs) }
     }
+    private var names: [UUID: String] = [:]
 
     // MARK: Notifications
 
@@ -32,7 +35,7 @@ final class LockScreen {
             }
             for call in fresh {
                 let content = UNMutableNotificationContent()
-                let name = tafs.first { $0.id == call.tafID }?.name ?? "A taf"
+                let name = tafs.first { $0.id == call.tafID }?.name ?? names[call.tafID] ?? "A taf"
                 content.title = "\(name) needs you"
                 content.body = [call.proposed.amount?.formatted, call.proposed.summary, "·", call.reason]
                     .compactMap { $0 }.joined(separator: " ")
@@ -67,7 +70,7 @@ final class LockScreen {
         }
         let taf = tafs.first { $0.id == first.tafID }
         let state = HeldActivityAttributes.ContentState(
-            tafName: taf?.name ?? "A taf",
+            tafName: taf?.name ?? names[first.tafID] ?? "A taf",
             tafInitial: taf?.initial ?? "t",
             summary: first.proposed.summary,
             amount: first.proposed.amount?.formatted,

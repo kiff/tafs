@@ -423,6 +423,22 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertEqual(signed, "stub-signature")
     }
 
+    /// A call Coach's own agent holds is titled Coach: no taf in the list is Coach (phone check 4
+    /// read "A taf").
+    func testACoachHoldIsTitledCoach() async throws {
+        let signer = TwoKeySigner()
+        let coachHeld = Self.heldJSON.replacingOccurrences(of: #""subject":"rae-k3f9""#, with: #""subject":"setup""#)
+        let model = await signedIn(signer, held: coachHeld)
+        let call = try XCTUnwrap(model.held.first)
+        XCTAssertNil(model.taf(call.tafID))
+        XCTAssertTrue(model.isCoach(call.tafID))
+        XCTAssertEqual(model.holderName(call.tafID), "Coach")
+        let rae = await signedIn(signer, held: Self.heldJSON)
+        let raeCall = try XCTUnwrap(rae.held.first)
+        XCTAssertFalse(rae.isCoach(raeCall.tafID))
+        XCTAssertEqual(rae.holderName(raeCall.tafID), "Rae")
+    }
+
     /// A start of a re-link as KIFF answers it, polled at once.
     private static let relinkStart = #"{"device_code":"rl","user_code":"WXYZ-BCDF","verification_uri":"https://app.test/auth/device","verification_uri_complete":"https://app.test/auth/device?code=WXYZ-BCDF","expires_in":600,"interval":0}"#
 
