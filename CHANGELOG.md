@@ -139,6 +139,15 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, every refusal says why:** Run now, Send again and every other refusal tafs cloud
+  explains show its words, not "It changed in the meantime".
+- **Android, refused calls in a total:** how much of a Card's total is from calls the tool
+  refused, in KIFF's words ("It counts until KIFF can confirm nothing moved"), on a held call
+  and under the Card's limits, from live, active Cards only. The app's own line is gone.
+- **A taf's job line and last run:** a taf Coach sets up shows what Coach said it does, not
+  the nearest fixed job's line, and a run from its chat counts as its last run.
+- **Android, Play's crash view:** the release bundle carries its native libraries' symbol
+  tables, so a native crash reads by function name.
 - **Android, Coach at launch:** Coach opens on its newest conversation alone, with the earlier
   ones under Previous conversations, never several conversations together in one thread.
 - **Android, a refused message:** a message kiff/agents refused (the period's AI use spent, a
