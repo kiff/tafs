@@ -1659,7 +1659,10 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (card) card.answer = cardAnswer(b, iso(e.time));
         // Words the owner wrote while the card waited answered it: they show as their message, as sent.
         if (typeof b.wrote === "string" && b.wrote.trim()) {
-          messages.push({ id: `${e.run}.${e.seq}`, at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
+          // Recorded also as the run's message, at the same time: one message, marked as the answer.
+          const same = sameOwnerMessage(messages, r.session.id, iso(e.time), b.wrote.trim());
+          if (same) same.answers = str(b.id);
+          else messages.push({ id: `${e.run}.${e.seq}`, at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
         }
         continue;
       }
@@ -1677,6 +1680,13 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         // A message that came through a door is shown as written, marked with its door and sender.
         const door = parseDoorMessage(text);
         if (door) doorRuns.set(e.run, door.app);
+        // Words written while a card waited are already the card's answer, at the same time: one message.
+        // It keeps the run's id, the one its send answered, so the app matches its send to it.
+        const same = !door && !attached.length ? sameOwnerMessage(messages, r.session.id, iso(e.time), ownerWords(text)) : undefined;
+        if (same) {
+          if (first) same.id = inputID(e.run);
+          continue;
+        }
         messages.push({
           id: first ? inputID(e.run) : `${e.run}.${e.seq}`,
           at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : ownerWords(text), session: r.session.id,
@@ -1708,6 +1718,11 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
   held.sort((a, b) => a.at.localeCompare(b.at));
   return { messages: messages.slice(-CHAT.maxThread), components: components.slice(-CHAT.maxThread), held: held.slice(-CHAT.maxThread), sessions: picked };
+}
+
+/** The owner's message already in the thread with these words, in this chat, at this time: one send, recorded twice. */
+function sameOwnerMessage(messages: ThreadMessage[], session: string, at: string, text: string): ThreadMessage | undefined {
+  return messages.find((m) => m.from === "owner" && m.session === session && m.at === at && m.text === text);
 }
 
 /** One entry of the thread in order: a message, or a card at its place. */

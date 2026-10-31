@@ -737,6 +737,25 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(r.body.messages).toContainEqual(expect.objectContaining({ from: "owner", text: "Use live", answers: "limits" }));
     expect(byID.late.answer).toEqual({ state: "no_answer", words: "", at: NOW.toISOString() });
   });
+
+  it("shows words written while a card waited once, though they're recorded as the answer and as the run's message", async () => {
+    const w = world();
+    await waiting(w);
+    const other = await w.agents.api.startRun("t_acme", RAE, "And the limits?", ANA);
+    w.agents.show(other, { type: "questions", id: "limits" });
+    const list = w.agents.events.get(other.session)!;
+    const at = "2026-10-31T02:31:04.045Z";
+    list.push({ session: other.session, run: other.id, seq: list.length + 1, time: at, kind: "answered", body: { id: "limits", type: "questions", wrote: "Set up a Refunds taf" } });
+    list.push({ session: other.session, run: other.id, seq: list.length + 1, time: at, kind: "owner_message", body: { text: "Set up a Refunds taf" } });
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    const mine = r.body.messages.filter((m: { from: string; text: string }) => m.from === "owner" && m.text === "Set up a Refunds taf");
+    expect(mine).toHaveLength(1);
+    expect(mine[0]).toMatchObject({ answers: "limits", at });
+    // Sent twice at different times, they stay two.
+    list.push({ session: other.session, run: other.id, seq: list.length + 1, time: "2026-10-31T02:32:00.000Z", kind: "owner_message", body: { text: "Set up a Refunds taf" } });
+    const again = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(again.body.messages.filter((m: { from: string; text: string }) => m.from === "owner" && m.text === "Set up a Refunds taf")).toHaveLength(2);
+  });
 });
 
 describe("chats (kiff/tafs#73)", () => {

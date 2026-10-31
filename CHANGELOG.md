@@ -116,6 +116,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Chats, words written while a card waited:** they showed twice in the thread, once as the
+  card's answer and once as the run's message, at the same time. A phone's list could not hold
+  both (Android closed on opening Coach). tafs cloud now gives one message, marked as the answer,
+  with the id its send answered.
 - **Android, held calls:** a call Coach's own agent holds is titled **Coach**, with Coach's mark,
   never "A taf". Why a call is held reads KIFF's own words when sent. A count of calls without
   them reads "Each call asks you first" for a limit of 0, otherwise "20 calls a day: this would
