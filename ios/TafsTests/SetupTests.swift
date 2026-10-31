@@ -653,7 +653,7 @@ final class SetupTests: XCTestCase {
 
         StubProtocol.responses["POST /v1/tafs/taf-setup/components/which/answer"] = (503, #"{"error":"agents is down"}"#)
         await model.answer(which, "live")
-        XCTAssertFalse(model.answered.contains("which"), "the card can be answered again")
+        XCTAssertFalse(model.isAnswered(which), "the card can be answered again")
         XCTAssertEqual(model.cardNotes["which"], "Your answer didn't reach Setup. Tap it again.")
         XCTAssertTrue(model.setupUnsent.isEmpty, "never a message")
         XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty)
@@ -669,7 +669,7 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/taf-setup/components/in/answer"] = (409, #"{"error":"the card doesn't wait for an answer any more: read the conversation"}"#)
         StubProtocol.sent = []
         await model.answer(signIn, "not now")
-        XCTAssertFalse(model.answered.contains("in"))
+        XCTAssertFalse(model.isAnswered(signIn))
         XCTAssertFalse(sent("GET", "cloud.test", "/v1/tafs/taf-setup/conversation").isEmpty, "the thread read again")
         Keychain.delete(AppModel.planqueAccount)
     }
