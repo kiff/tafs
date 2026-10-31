@@ -215,7 +215,7 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[{"at":"2026-10-31T10:00:00.000Z","session":"s1","run":"r1","seq":1,"key":"k1","component":\#(card)}]}"#)
         await model.loadSetup()
         let first = try XCTUnwrap(model.setupThread.components.first?.component)
-        StubProtocol.responses["POST /v1/tafs/taf-setup/components/which/answer"] = (200, #"{"session":"s1","run":"r1"}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/which/answer"] = (200, #"{"session":"s1","run":"r1","status":"RUNNING"}"#)
         await model.answer(first, "live")
         XCTAssertTrue(model.isAnswered(first))
         // The next conversation's card has the same id and its own key.
@@ -469,7 +469,7 @@ final class SetupTests: XCTestCase {
         let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
         await model.answer(which, "test")
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/which/answer").last)["answer"] as? String, "test")
-        XCTAssertTrue(model.answered.contains("which"))
+        XCTAssertTrue(model.isAnswered(which))
         Keychain.delete(AppModel.planqueAccount)
     }
 
@@ -1046,7 +1046,7 @@ final class SetupTests: XCTestCase {
         let which = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which?","options":[{"value":"test","label":"Test"},{"value":"live","label":"Live"}]}"#)
         StubProtocol.sent = []
         await model.answer(which, "live")
-        XCTAssertTrue(model.answered.contains("which"), "the card goes quiet at once")
+        XCTAssertTrue(model.isAnswered(which), "the card goes quiet at once")
         XCTAssertFalse(model.setupThread.messages.contains { $0.from == .owner }, "no message in the old form")
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/which/answer").last)["answer"] as? String, "live")
 
