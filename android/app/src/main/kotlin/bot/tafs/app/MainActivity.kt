@@ -355,7 +355,6 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         start = { model.startCoach() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
-        makeVersion = model::makeImprovedVersion,
         openTaf = { coachOpen = false; openTaf = it },
         openVersions = { coachOpen = false; openTaf = it; versionsTaf = it },
       ),

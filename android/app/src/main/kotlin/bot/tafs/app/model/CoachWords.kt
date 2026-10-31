@@ -191,14 +191,26 @@ object CoachWords {
   fun settingUp(name: String) = "Setting up $name…"
   fun notSetUp(name: String, why: String) = "$name wasn't set up: ${why.trimEnd('.')}."
 
-  /**
-   * An improvement result, by its card and what it carries (its draft, else its note). The card's id is Coach's to pick and comes
-   * back in another conversation: keyed by the id alone, a new conversation's card showed the version an earlier one made.
-   */
-  fun improvementKey(c: SetupComponent): String {
-    val what = c.taf?.draft ?: java.security.MessageDigest.getInstance("SHA-256").digest((c.taf?.note ?: "").toByteArray()).take(8).joinToString("") { "%02x".format(it) }
-    return "${c.id}|$what"
+  /** What became of an improvement result, as tafs cloud answered it: the version it made, why it made none, or not yet. */
+  sealed interface Improvement {
+    data class Made(val version: Int) : Improvement
+    data class Failed(val why: String) : Improvement
+    data object Preparing : Improvement
   }
+
+  fun improvement(answer: bot.tafs.app.kiff.CardAnswer?): Improvement {
+    val outcome = answer?.outcome
+    return when {
+      outcome?.failed != null -> Improvement.Failed(outcome.failed)
+      outcome?.version != null -> Improvement.Made(outcome.version)
+      else -> Improvement.Preparing
+    }
+  }
+
+  fun notImproved(name: String, why: String) = "${possessive(name)} new version wasn't made: ${why.trimEnd('.')}."
+
+  /** "Coach's", "Refunds'": a name ending in s takes the apostrophe alone. */
+  fun possessive(name: String) = if (name.endsWith("s")) "$name'" else "$name's"
 
   /** An owner's message in their own words: an answer to a card reads as what they chose, never as the contract's form. */
   fun ownerWords(text: String, components: List<ShownComponent>): String {
@@ -236,7 +248,7 @@ object CoachWords {
   fun answeredApproval(answer: String, c: SetupComponent, grantText: String?, draftLabel: String?): String {
     val what = c.title?.takeIf { it.isNotBlank() }
       ?: grantText?.takeIf { it.isNotBlank() }
-      ?: draftLabel?.takeIf { it.isNotBlank() }?.let { (if (it.endsWith("s")) "$it'" else "$it's") + " Card" }
+      ?: draftLabel?.takeIf { it.isNotBlank() }?.let { possessive(it) + " Card" }
       ?: c.service?.let { "Connect $it" }
     return if (what == null) answer else "$answer · $what"
   }
