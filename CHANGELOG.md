@@ -116,6 +116,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Versions, in tafs cloud's words:** each version says who made it (`by_words`), and a switch a
+  run blocks says what's in the way (`words`), so the apps show tafs cloud's words, not their own.
 - **Android, connecting a tool:** a sign-in that came back with its tools listed for Coach to choose
   from showed a red "didn't connect … planque has it as listed", though it was connected. Listed
   now counts as signed in, as on iOS.

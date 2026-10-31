@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions } from "../src/cloud/handler.js";
+import { calmEnough, type Deps, handle, type HTTPEvent, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -1220,6 +1220,17 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const r = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
     expect(r.status).toBe(200);
     expect((r.body.versions as Array<{ n: number; live: boolean }>).map((v) => [v.n, v.live])).toEqual([[1, true], [2, false]]);
+    // Who made each, in words: the apps keep no copy.
+    expect((r.body.versions as Array<{ by_words?: string }>).map((v) => v.by_words)).toEqual(["By Coach mode", "By Coach mode"]);
+  });
+
+  it("says who made a version in words: Coach, you, someone else, or no one", () => {
+    expect(versionBy({ by: "setup" }, { subject: "u_ana" })).toBe("By Coach mode");
+    expect(versionBy({ by: "agent_x", by_kind: "agent" }, { subject: "u_ana" })).toBe("By Coach mode");
+    expect(versionBy({ by: "u_ana", by_kind: "person" }, { subject: "u_ana" })).toBe("By you");
+    expect(versionBy({ by: "u_bo", by_kind: "person" }, { subject: "u_ana" })).toBe("By someone on your account");
+    // The first version, or an Upgrade's: kiff/agents wrote it, and it names no one.
+    expect(versionBy({ by: "" }, { subject: "u_ana" })).toBeUndefined();
   });
 
   it("tries a version on the job's own work, and reads back what KIFF decided", async () => {
@@ -1290,6 +1301,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const named = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
     expect(named.status).toBe(409);
     expect(named.body.blocking).toEqual([{ run: "run_p", session: "sess_p", status: "PAUSED", trigger: "owner" }]);
+    expect(named.body.words).toBe("Version 2 can't go live while a task waits on your answer. Stop it and install, or wait until it's done.");
     expect(w.agents.calls).not.toContain(`cancelRun ${RAE} run_p`);
 
     const stopped = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true } });
@@ -1312,6 +1324,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const r = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana", body: { stop_blocking: true } });
     expect(r.status).toBe(409);
     expect(r.body.blocking).toEqual([{ run: "run_r", session: "sess_r", status: "RUNNING", trigger: "schedule" }]);
+    expect(r.body.words).toBe("Version 2 isn't installed yet: its scheduled run is at work and hasn't stopped. Try again in a moment.");
     expect(w.agents.calls.filter((c) => c === `cancelRun ${RAE} run_r`)).toHaveLength(1);
     expect(w.agents.switching.size).toBe(0);
   });
