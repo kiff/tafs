@@ -532,7 +532,7 @@ final class SetupTests: XCTestCase {
         for _ in 0..<10 { await Task.yield(); try await Task.sleep(nanoseconds: 20_000_000) }
         XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs").isEmpty, "the phone starts no taf")
         XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "nor tells Coach anything")
-        XCTAssertEqual(model.setupThread.handOver("done", listed: false), .settingUp)
+        XCTAssertEqual(model.setupThread.handOver("s1#done", listed: false), .settingUp)
         Keychain.delete(AppModel.planqueAccount)
     }
 
@@ -554,8 +554,8 @@ final class SetupTests: XCTestCase {
         let shown = try XCTUnwrap(model.setupThread.components.first { $0.id == "done" })
         XCTAssertEqual(shown.answer?.by, "tafs cloud")
         XCTAssertEqual(shown.answer?.outcome?.tafID, "taf-new")
-        XCTAssertEqual(model.setupThread.handOver("done", listed: false), .setUp)
-        XCTAssertEqual(model.setupThread.handOver("again", listed: false), .failed("the account already has a taf named Orders."))
+        XCTAssertEqual(model.setupThread.handOver("s1#done", listed: false), .setUp)
+        XCTAssertEqual(model.setupThread.handOver("s1#again", listed: false), .failed("the account already has a taf named Orders."))
         for _ in 0..<50 where sent("GET", "cloud.test", "/v1/home").isEmpty { await Task.yield(); try await Task.sleep(nanoseconds: 20_000_000) }
         XCTAssertFalse(sent("GET", "cloud.test", "/v1/home").isEmpty, "the list is read again for the taf tafs cloud set up")
         XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs").isEmpty)

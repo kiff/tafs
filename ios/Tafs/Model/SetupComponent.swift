@@ -282,30 +282,32 @@ struct SetupThread: Equatable {
 
     /// Where a new taf's hand-over stands, from tafs cloud's answer to its result: set up, why
     /// it wasn't (Coach hands it over again), or not answered yet. `listed`: the taf is
-    /// already on the account's list.
+    /// already on the account's list. By the card's `ref`: Coach can use an id again, and each
+    /// card shows its own answer.
     enum HandOver: Equatable {
         case setUp
         case failed(String)
         case settingUp
     }
 
-    func handOver(_ id: String, listed: Bool) -> HandOver {
-        let outcome = components.first { $0.component.id == id }?.answer?.outcome
+    func handOver(_ ref: String, listed: Bool) -> HandOver {
+        let outcome = components.first { $0.ref == ref }?.answer?.outcome
         if let why = outcome?.failed { return .failed(why) }
         if outcome?.tafID != nil || listed { return .setUp }
         return .settingUp
     }
 
     /// What became of an improvement's result, from tafs cloud's answer: the version it made,
-    /// why it made none (Coach hears it from tafs cloud), or not answered yet.
+    /// why it made none (Coach hears it from tafs cloud), or not answered yet. By the card's
+    /// `ref`: two results under one id each show their own version (the 755 retest).
     enum Improvement: Equatable {
         case made(Int)
         case failed(String)
         case preparing
     }
 
-    func improvement(_ id: String) -> Improvement {
-        let outcome = components.first { $0.component.id == id }?.answer?.outcome
+    func improvement(_ ref: String) -> Improvement {
+        let outcome = components.first { $0.ref == ref }?.answer?.outcome
         if let why = outcome?.failed { return .failed(why) }
         if let n = outcome?.version { return .made(n) }
         return .preparing

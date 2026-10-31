@@ -249,7 +249,7 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
         StubProtocol.sent = []
         await coachThread(model, answer: #"{"state":"answered","by":"tafs cloud","outcome":{"version":2}}"#)
-        XCTAssertEqual(model.setupThread.improvement("v2"), .made(2))
+        XCTAssertEqual(model.setupThread.improvement("s1#v2"), .made(2))
         XCTAssertEqual(model.improvedTaf(model.setupThread.components[0].component), id)
         for _ in 0..<50 where model.versions[id] == nil { await Task.yield(); try await Task.sleep(nanoseconds: 20_000_000) }
         XCTAssertNotNil(model.versions[id], "the taf's Versions read again")
@@ -265,12 +265,29 @@ final class VersionsTests: XCTestCase {
     func testAnImprovementTafsCloudCouldntMakeSaysWhyAndOneNotYetAnsweredIsPreparing() async throws {
         let (model, _) = await kiffModel(signer: StubSigner())
         await coachThread(model, answer: nil)
-        XCTAssertEqual(model.setupThread.improvement("v2"), .preparing)
+        XCTAssertEqual(model.setupThread.improvement("s1#v2"), .preparing)
         await coachThread(model, answer: #"{"state":"answered","by":"tafs cloud","outcome":{"failed":"You can't manage this taf's Cards."}}"#)
-        XCTAssertEqual(model.setupThread.improvement("v2"), .failed("You can't manage this taf's Cards."))
+        XCTAssertEqual(model.setupThread.improvement("s1#v2"), .failed("You can't manage this taf's Cards."))
         XCTAssertEqual(SetupThread.notImproved("Refunds", "You can't manage this taf's Cards."), "Refunds' new version wasn't made: You can't manage this taf's Cards.")
         XCTAssertEqual(SetupThread.notImproved("Rae", "no draft"), "Rae's new version wasn't made: no draft.")
         XCTAssertTrue(sent("POST", "/v1/tafs/depl_1/versions").isEmpty)
+    }
+
+    /// The 755 retest: Coach's card in a new conversation had the id an earlier one had, and
+    /// showed the earlier version. Two results under "result" each show their own.
+    func testACardWithAnEarlierCardsIDShowsItsOwnVersion() async throws {
+        let (model, _) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":{"id":"taf-setup","name":"Coach","job":"setup","kiff_agent":"setup","status":"active","next_run":null,"last_run":null}}"#)
+        func result(_ at: String, _ session: String, _ draft: String, _ n: Int) -> String {
+            #"{"at":"\#(at)","session":"\#(session)","run":"r","seq":1,"component":{"type":"result","id":"result","text":"x","taf":{"agent":"rae-k3f9","name":"Rae","job":"refunds","improves":"depl_1","note":"x","draft":"\#(draft)"}},"answer":{"state":"answered","by":"tafs cloud","outcome":{"version":\#(n)}}}"#
+        }
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":["# + result("2026-10-31T10:00:00.000Z", "s1", "d_02", 2) + "," + result("2026-10-31T11:00:00.000Z", "s2", "d_03", 3) + "]}")
+        await model.loadSetup()
+        let refs = model.setupThread.components.map(\.ref)
+        XCTAssertEqual(refs, ["s1#result", "s2#result"])
+        XCTAssertEqual(model.setupThread.improvement(refs[0]), .made(2))
+        XCTAssertEqual(model.setupThread.improvement(refs[1]), .made(3), "not the earlier card's version")
     }
 
     /// A Card reads as unchanged only when KIFF says its full terms are kept (kiff/tafs#138):

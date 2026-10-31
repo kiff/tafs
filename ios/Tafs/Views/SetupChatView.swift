@@ -1151,7 +1151,7 @@ struct SetupComponentView: View {
             if let note = c.taf?.note, !note.isEmpty {
                 Text(note).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
-            switch model.setupThread.improvement(c.id) {
+            switch model.setupThread.improvement(shown.ref) {
             case .made(let n):
                 if let tafID {
                     NavigationLink {
@@ -1197,7 +1197,7 @@ struct SetupComponentView: View {
                 Text(tools.map { model.toolTitle($0) ?? KIFFMapping.toolWords($0) }.joined(separator: " · "))
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
-            switch model.setupThread.handOver(c.id, listed: started != nil) {
+            switch model.setupThread.handOver(shown.ref, listed: started != nil) {
             case .setUp:
                 if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                     if sizeClass == .regular {
