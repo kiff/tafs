@@ -106,8 +106,8 @@ export function refusedForAI(err: unknown): boolean {
 }
 
 /**
- * A chat refused for AI fair use, in words that say what to do: who can let the tafs go on, where,
- * and when the AI use starts again by itself, on the period's end in the account's zone.
+ * A chat refused for AI fair use, in words: when the AI use starts again by itself, on the period's
+ * end in the account's zone.
  */
 export function refusedWords(p: Plan | undefined, zone = "UTC"): string {
   const end = p?.end ? new Date(p.end) : undefined;
@@ -119,6 +119,6 @@ export function refusedWords(p: Plan | undefined, zone = "UTC"): string {
       day = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }).format(end);
     }
   }
-  const again = day ? `, or wait until ${day}, when it starts again` : ", or wait for the next period";
-  return `Your tafs have used this period's AI and are waiting for you. An owner or admin can let them go on now in Settings, AI use${again}.`;
+  // No app offers a go on yet, so the words say only when the AI use starts again by itself.
+  return day ? `Your tafs have used this period's AI. It starts again on ${day}.` : "Your tafs have used this period's AI. It starts again with the next period.";
 }

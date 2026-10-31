@@ -105,7 +105,7 @@ describe("chats under AI fair use", () => {
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "And now?" });
     expect(r.status).toBe(409);
     expect(r.body.error).toMatch(/^ai_fair_use/);
-    expect(r.body).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("can let them go on now in Settings, AI use") });
+    expect(r.body).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("It starts again") });
     // The live chat was refused; no new chat was tried for it.
     expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([`startRun ${RAE} live`]);
   });
@@ -121,7 +121,7 @@ describe("chats under AI fair use", () => {
     for await (const s of r.body) body += s;
     expect(JSON.parse(body).error).toMatch(/^ai_fair_use/);
     // Said by its code and in tafs cloud's words, so no app shows a bare 409.
-    expect(JSON.parse(body)).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("can let them go on now in Settings, AI use") });
+    expect(JSON.parse(body)).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("It starts again") });
     expect(w.agents.calls.filter((c) => c.startsWith("streamRun"))).toEqual([`streamRun ${RAE} live`]);
   });
 
@@ -162,11 +162,11 @@ describe("GET /v1/usage/ai", () => {
 });
 
 describe("a chat refused for AI fair use, in words", () => {
-  it("says who can let the tafs go on, where, and the day the AI use starts again, in the account's zone", () => {
+  it("says the day the AI use starts again, in the account's zone", () => {
     const p = { plan: "solo", seats: 1, start: "2026-10-01T00:00:00Z", end: "2026-10-31T23:30:00Z", goOns: 0 };
-    expect(refusedWords(p, "Europe/Madrid")).toBe("Your tafs have used this period's AI and are waiting for you. An owner or admin can let them go on now in Settings, AI use, or wait until 1 Nov, when it starts again.");
-    expect(refusedWords(p, "UTC")).toContain("wait until 31 Oct");
-    expect(refusedWords(undefined)).toContain("or wait for the next period.");
+    expect(refusedWords(p, "Europe/Madrid")).toBe("Your tafs have used this period's AI. It starts again on 1 Nov.");
+    expect(refusedWords(p, "UTC")).toBe("Your tafs have used this period's AI. It starts again on 31 Oct.");
+    expect(refusedWords(undefined)).toBe("Your tafs have used this period's AI. It starts again with the next period.");
   });
 });
 
