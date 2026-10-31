@@ -426,6 +426,21 @@ class CoachStartTest {
     assertNull(m.state.value.connectStep)
   }
 
+  @Test fun aSignInThatCameBackListedIsSignedInNeverTheRedError() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    // Signed in, and planque listed the vendor's tools for Setup to choose from: that's connected, with nothing in KIFF yet.
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("listed"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.signInAgain(KiffClient.json.decodeFromString(signInCard))
+    assertEquals("signed in", answered("s1"))
+    assertNull(m.state.value.coachNotes["s1"])
+  }
+
   @Test fun aSignInClosedAtTheVendorIsToldToCoachAsFailed() = runTest {
     reads()
     coachThread(signInCard)

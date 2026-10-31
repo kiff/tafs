@@ -2216,7 +2216,7 @@ class AppModel(
         val url = approved.signInUrl
         if (url == null) {
           // planque already holds the sign-in: approving the tools Setup chose from the vendor's list connected them, with no second sign-in.
-          if (approved.status != "connected") {
+          if (approved.status != "connected" && approved.status != "listed") {
             refreshConnections()
             return Connected.Failed("The connection came back ${approved.status} with no sign-in link. Nothing was connected.")
           }
@@ -2233,7 +2233,8 @@ class AppModel(
         _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
         val connected = planque.confirm(grant.id, signedIn.code)
         refreshConnections()
-        if (!connected.connected) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}")
+        // Listed is signed in too: planque holds the sign-in and listed the vendor's tools for Setup to choose from.
+        if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}")
         return Connected.Done(connected)
       } catch (e: VendorSignInCancelled) {
         refreshConnections()
