@@ -24,6 +24,8 @@ export interface Plan {
   seats: number;
   /** The period's start, as KIFF names it (RFC 3339). */
   start: string;
+  /** The period's end, when the AI use starts again (RFC 3339), when KIFF gives it. */
+  end?: string;
   /** How many times the owner said go on this period. */
   goOns: number;
 }
@@ -42,10 +44,11 @@ export async function planOf(token: string, doFetch: Fetch = fetch, base = KIFF_
   }
   if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
   if (!res.ok) return undefined;
-  const u = (await res.json().catch(() => ({}))) as { plan?: unknown; seats?: unknown; period?: { start?: unknown }; ai?: { go_ons?: unknown } };
+  const u = (await res.json().catch(() => ({}))) as { plan?: unknown; seats?: unknown; period?: { start?: unknown; end?: unknown }; ai?: { go_ons?: unknown } };
   if (typeof u.plan !== "string" || typeof u.period?.start !== "string" || !u.period.start) return undefined;
   const count = (n: unknown) => (typeof n === "number" && Number.isInteger(n) && n > 0 ? n : 0);
-  return { plan: u.plan, seats: count(u.seats), start: u.period.start, goOns: count(u.ai?.go_ons) };
+  const end = typeof u.period.end === "string" && u.period.end ? { end: u.period.end } : {};
+  return { plan: u.plan, seats: count(u.seats), start: u.period.start, goOns: count(u.ai?.go_ons), ...end };
 }
 
 /** The period's name for kiff/agents, which takes a-z, 0-9, '.', '_' and '-': "2026-10-20t09.12.00z". */
@@ -100,4 +103,22 @@ export function refusedForAI(err: unknown): boolean {
   if (!(err instanceof Error) || (err as { status?: number }).status !== 409) return false;
   const code = (err as { code?: string }).code;
   return code !== undefined ? code === "ai_fair_use" : err.message.startsWith("ai_fair_use");
+}
+
+/**
+ * A chat refused for AI fair use, in words that say what to do: who can let the tafs go on, where,
+ * and when the AI use starts again by itself, on the period's end in the account's zone.
+ */
+export function refusedWords(p: Plan | undefined, zone = "UTC"): string {
+  const end = p?.end ? new Date(p.end) : undefined;
+  let day = "";
+  if (end && !Number.isNaN(end.getTime())) {
+    try {
+      day = new Intl.DateTimeFormat("en-GB", { timeZone: zone, day: "numeric", month: "short" }).format(end);
+    } catch {
+      day = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }).format(end);
+    }
+  }
+  const again = day ? `, or wait until ${day}, when it starts again` : ", or wait for the next period";
+  return `Your tafs have used this period's AI and are waiting for you. An owner or admin can let them go on now in Settings, AI use${again}.`;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiFor, base, bound, periodName, planOf, type Plan, view } from "../src/cloud/aiuse.js";
+import { aiFor, base, bound, periodName, planOf, type Plan, refusedWords, view } from "../src/cloud/aiuse.js";
 import { handle, handleStream, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -105,6 +105,7 @@ describe("chats under AI fair use", () => {
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "And now?" });
     expect(r.status).toBe(409);
     expect(r.body.error).toMatch(/^ai_fair_use/);
+    expect(r.body).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("can let them go on now in Settings, AI use") });
     // The live chat was refused; no new chat was tried for it.
     expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([`startRun ${RAE} live`]);
   });
@@ -119,6 +120,8 @@ describe("chats under AI fair use", () => {
     let body = "";
     for await (const s of r.body) body += s;
     expect(JSON.parse(body).error).toMatch(/^ai_fair_use/);
+    // Said by its code and in tafs cloud's words, so no app shows a bare 409.
+    expect(JSON.parse(body)).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("can let them go on now in Settings, AI use") });
     expect(w.agents.calls.filter((c) => c.startsWith("streamRun"))).toEqual([`streamRun ${RAE} live`]);
   });
 
@@ -158,10 +161,19 @@ describe("GET /v1/usage/ai", () => {
   });
 });
 
+describe("a chat refused for AI fair use, in words", () => {
+  it("says who can let the tafs go on, where, and the day the AI use starts again, in the account's zone", () => {
+    const p = { plan: "solo", seats: 1, start: "2026-10-01T00:00:00Z", end: "2026-10-31T23:30:00Z", goOns: 0 };
+    expect(refusedWords(p, "Europe/Madrid")).toBe("Your tafs have used this period's AI and are waiting for you. An owner or admin can let them go on now in Settings, AI use, or wait until 1 Nov, when it starts again.");
+    expect(refusedWords(p, "UTC")).toContain("wait until 31 Oct");
+    expect(refusedWords(undefined)).toContain("or wait for the next period.");
+  });
+});
+
 describe("KIFF's usage read", () => {
   it("is undefined when KIFF has no billing yet, and refuses a sign-in KIFF refuses", async () => {
     expect(await planOf("ana", kiff(undefined), "https://kiff.test")).toBeUndefined();
-    expect(await planOf("ana", kiff(usage("team", 3, 2)), "https://kiff.test")).toEqual({ plan: "team", seats: 3, start: START, goOns: 2 });
+    expect(await planOf("ana", kiff(usage("team", 3, 2)), "https://kiff.test")).toEqual({ plan: "team", seats: 3, start: START, end: "2026-11-20T09:12:00Z", goOns: 2 });
     await expect(planOf("eve", kiff(undefined), "https://kiff.test")).rejects.toThrow(/did not accept/);
   });
 });

@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { JOBS, jobById } from "../jobs.js";
-import { aiFor, type AIView, base, periodName, planOf, view as aiView } from "./aiuse.js";
+import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWords, view as aiView } from "./aiuse.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
@@ -389,7 +389,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
     if (isDoorPath(event.rawPath)) return await doorWebhook(event, deps);
     return json(200, await route(event, deps));
   } catch (err) {
-    if (err instanceof HTTPError) return json(err.status, { error: err.message, ...err.extra });
+    if (err instanceof HTTPError) return json(err.status, { error: err.message, ...(await withRefusalWords(event, err, deps)) });
     if (err instanceof DoorError) return json(err.status, { error: err.message });
     if (err instanceof KIFFError || err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
@@ -2819,7 +2819,10 @@ export async function handleStream(event: HTTPEvent, deps: Deps): Promise<Stream
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
     if (status === 500) console.error(err);
     const message = status === 500 ? "something went wrong on tafs cloud" : (err as Error).message;
-    return { statusCode: status, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: once(JSON.stringify({ error: message })) };
+    const extra = err instanceof HTTPError ? await withRefusalWords(event, err, deps) : undefined;
+    // A refusal is said in the log too, by its code: never a body, a token or an id.
+    if (status !== 500) console.warn(JSON.stringify({ msg: "stream refused", status, ...(typeof extra?.code === "string" ? { code: extra.code } : {}) }));
+    return { statusCode: status, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: once(JSON.stringify({ error: message, ...extra })) };
   }
 }
 
@@ -2844,8 +2847,36 @@ async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: D
 }
 
 function agentsFailure(err: unknown): unknown {
-  return err instanceof AgentsError ? new HTTPError(err.status >= 500 ? 502 : err.status, err.message) : err;
+  // kiff/agents' typed code goes on, so an app says why (`ai_fair_use`, `halted`, `switching`), never a bare 409.
+  if (!(err instanceof AgentsError)) return err;
+  const code = err.status < 500 ? err.code ?? (refusedForAI(err) ? "ai_fair_use" : undefined) : undefined;
+  const words = code ? REFUSAL_WORDS[code] : undefined;
+  return new HTTPError(err.status >= 500 ? 502 : err.status, err.message, code ? { code, ...(words ? { words } : {}) } : undefined);
 }
+
+/**
+ * A refusal's extra fields, with an AI fair use refusal's words saying when the AI use starts again:
+ * read from KIFF's plan with the person's session. A read that fails keeps the words without the day.
+ */
+async function withRefusalWords(event: HTTPEvent, err: HTTPError, deps: Deps): Promise<Record<string, unknown> | undefined> {
+  if (err.extra?.code !== "ai_fair_use") return err.extra;
+  let zone = "UTC";
+  let plan;
+  try {
+    const me = await person(event, deps);
+    zone = me.timeZone ?? "UTC";
+    plan = await planOf(bearer(event), deps.fetch, deps.kiffBase);
+  } catch { /* the words without the day */ }
+  return { ...err.extra, words: refusedWords(plan, zone) };
+}
+
+/** What a refusal means, in the words the apps show as they are: tafs cloud's, never an app's own. */
+const REFUSAL_WORDS: Record<string, string> = {
+  ai_fair_use: refusedWords(undefined),
+  halted: "This taf is halted: nothing of it runs until you resume it from Halt.",
+  switching: "This taf is switching versions: it runs again once the switch is done or cancelled.",
+  run_changed: "This chat changed meanwhile. Read it again and send your message once more.",
+};
 
 async function* once(s: string): AsyncGenerator<string> {
   yield s;
@@ -3366,7 +3397,7 @@ async function aiUsage(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
 async function agentsCall<T>(work: () => Promise<T>): Promise<T> {
   try { return await work(); } catch (err) {
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "not found");
-    if (err instanceof AgentsError && err.status < 500) throw new HTTPError(err.status, err.message);
+    if (err instanceof AgentsError && err.status < 500) throw agentsFailure(err);
     throw new HTTPError(502, "the tafs' runtime didn't answer; try again");
   }
 }
