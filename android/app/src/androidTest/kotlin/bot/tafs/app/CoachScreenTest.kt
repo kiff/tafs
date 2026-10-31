@@ -93,7 +93,7 @@ class CoachScreenTest {
     rule.onNodeWithText("Coach").assertIsDisplayed()
     rule.onNodeWithText("Step 3 of 6 · Your rules").assertIsDisplayed()
     // Answered: kiff/agents' word, and no buttons left on it.
-    rule.onNodeWithText("Approved").assertIsDisplayed()
+    rule.onNodeWithText("Approved · Connect Stripe (test mode)").assertIsDisplayed()
     hold()
   }
 

@@ -215,6 +215,11 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   stopped waiting with no answer. Each card draws its answered state from this alone, in
   kiff/agents' words (Android: `CoachWords.answered`); the app keeps no answer of its own. Words written instead also show as the owner's message,
   with `answers` naming the card, so they never vanish from the thread.
+- On Android, an answered approval keeps one line saying what it was, "Approved · Connect
+  Stripe" (`CoachWords.answeredApproval`): Coach's title for the card, else planque's words for
+  the connection, else the draft's Card, else its service. A card waiting for the owner sits
+  after what Coach wrote with it, so the open question is at the end; once answered, it goes
+  back to its own time in the thread (`CoachWords.items`).
 - The app's earlier form, a message `[<type> <id>] <answer>` from the person's own app, is
   still taken as the card's answer when that card waits. Any other text, a door's message, or
   a card that doesn't wait goes as a message. This form goes one release after the app build
