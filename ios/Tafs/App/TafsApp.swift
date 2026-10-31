@@ -42,6 +42,8 @@ struct TafsApp: App {
         }
         .onChange(of: scenePhase) { phase in
             if phase == .background { wasAway = true }
+            // Back from the browser: a re-link waiting there asks KIFF again at once.
+            if phase == .active, model.relink != nil { model.nudgeSignIn() }
             if phase == .active, model.mode == .kiff { Task { await model.refresh(); model.settleListOrder() } }
             if phase == .active, wasAway { wasAway = false; model.settleSampleOnReturn() }
         }
