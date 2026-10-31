@@ -214,7 +214,7 @@ under Coach's Cards first.
 
 | Tool | What it does |
 |---|---|
-| `tafs_state` (read) | Every taf: its live version and versions, a switch under way, its schedule, its open runs and what each waits on |
+| `tafs_state` (read) | Every taf: its live version and versions (with none live, `runs_on` says it runs the definition it was made with), a switch under way, its schedule, its open runs and what each waits on. `reading` says a schedule that's on is working, with its next run, and that open runs are only what runs this minute |
 | `taf_run` (read) | One run of a taf so far |
 | `taf_task` | Hands a taf a task or a message: a new run, or to a run at work |
 | `run_stop` | Stops a run; its held calls are withdrawn |

@@ -116,6 +116,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Coach, a scheduled taf with no numbered version:** Coach said it had "no version installed
+  yet" and that nothing was working, while the home said "Working · Next run 04:00". Its
+  `tafs_state` now says such a taf runs the definition it was made with, and that a schedule
+  that's on is working, with its next run, though nothing runs this minute.
 - A taf's work steps say what it did, in words, both while it works and after: KIFF's title for
   a tool through KIFF ("List your charges"), and what Coach's and the agents' own tools do
   ("Showing you a card"). A step showed the tool's name before ("show", "list_charges_ijkp").
