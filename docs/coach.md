@@ -125,7 +125,9 @@ then shows its plan. Then, each step behind the owner's yes:
    planque keeps the vendor's credentials; KIFF lists the connection's tools.
 2. **Choose the tools and draft the Card.** Coach picks the tools the job needs and
    submits a KIFF draft of the taf's Cards: what each tool may do, how much each time,
-   how much a day. KIFF takes a Card only for a tool that is connected.
+   how much a day. The limits are the owner's: Coach proposes them, and its rules say
+   for each action exactly what asks the owner first and what is refused. Each card
+   Coach shows has an id no earlier card in the conversation had. KIFF takes a Card only for a tool that is connected.
 3. **Approve the Card.** The owner reads the Card on its approval card and confirms it
    with one Face ID, which signs exactly the draft version shown. Each draft Card's lines
    are KIFF's `lines` for it, as they come. For a KIFF that doesn't send them, the app words

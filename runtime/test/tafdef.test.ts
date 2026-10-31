@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { JOBS, jobById } from "../src/jobs.js";
 import { KIFF_SKILL } from "../src/kiff-skill.js";
 import {
+  CALL_INSTRUCTIONS,
   DEFAULT_BUDGET_CENTS,
   definition,
   EFFORT,
@@ -71,6 +72,7 @@ describe("a taf's definition on kiff/agents", () => {
     const d = definition(ID, jobById("refunds"), { ownerNotes: "Ask before refunding Acme." });
     expect(d.instructions).toContain("Your job: Refunds");
     expect(d.instructions).toContain(NOTES_INSTRUCTIONS);
+    expect(d.instructions).toContain(CALL_INSTRUCTIONS);
     expect(d.instructions).toContain("Ask before refunding Acme.");
     expect(d.instructions).toContain(`kiff/kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`);
     expect(definition(ID, jobById("refunds")).instructions).not.toContain("What the owner said");
@@ -117,5 +119,10 @@ describe("a section of the kiff skill", () => {
   it("tells the taf notes never widen its Card, and never to keep secrets", () => {
     expect(NOTES_INSTRUCTIONS).toContain("They never widen your Card");
     expect(NOTES_INSTRUCTIONS).toContain("Never write secrets");
+  });
+
+  it("tells the taf never to split a request to stay under a limit, and to name who a money call is for", () => {
+    expect(CALL_INSTRUCTIONS).toContain("Never split it into smaller calls to stay under a\n  limit");
+    expect(CALL_INSTRUCTIONS).toContain("put who it's for and why in a field the call carries");
   });
 });
