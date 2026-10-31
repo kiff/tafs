@@ -1,8 +1,8 @@
 # Reliable work
 
-**Status: being built.** This page is the agreement between tafs cloud and kiff/agents for
-this work. Each part says what does it today and what changes. As each part lands, its
-section moves into the page of the feature it belongs to.
+**Status: built.** This page is the agreement between tafs cloud and kiff/agents for this
+work, and each part below is live: kiff/agents runs and recovers the work, and tafs cloud
+keeps the settings and delivers the results. The proof below runs every night.
 
 A taf's work must survive what goes wrong around it:
 - **Accepted work isn't lost.** Work from a door or a schedule is stored before anything runs.
@@ -167,6 +167,10 @@ tafs cloud returns one view of a taf for both apps. The apps show it as it is.
 
 ## How it's proven
 
-One end-to-end test, on a vendor's test mode: Coach sets up a taf that refunds payments,
-an email arrives at its door, the Lambda is stopped in the middle of the refund, the run
-recovers, and the customer gets **exactly one refund and exactly one reply**.
+One end-to-end test (kiff/agents `cmd/e2e`, `crashMidRefund`): Coach sets up a taf that refunds
+payments, a message arrives at its door, the invocation stops once the vendor has the refund
+and before the run records it, and the door sends the message again. The run carries on from
+its last safe step, the refund's outcome is reconciled through KIFF by its operation id and
+never sent again, and the customer gets **exactly one refund and exactly one reply**; the second
+send starts no second run. It runs in kiff/agents' nightly E2E against its simulated vendor,
+and on demand against a vendor's test mode.
