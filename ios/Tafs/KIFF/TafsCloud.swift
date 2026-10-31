@@ -148,11 +148,15 @@ final class TafsCloud {
             var extraRoom: Value?
             var baseLimit: Value?
             var roomWindowEnd: Date?
+            /// What of its use is from calls the tool refused, which count until KIFF can
+            /// confirm nothing moved, in KIFF's words; none without any.
+            var pendingText: String?
 
             enum CodingKeys: String, CodingKey {
                 case limit, used, window
                 case windowWords = "window_words"
                 case extraRoom = "extra_room", baseLimit = "base_limit", roomWindowEnd = "room_window_end"
+                case pendingText = "pending_text"
             }
         }
 

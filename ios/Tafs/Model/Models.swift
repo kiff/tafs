@@ -200,6 +200,8 @@ struct CardTotal<Value: Hashable & Codable & Sendable>: Hashable, Codable, Senda
     var extra: Value? = nil
     var base: Value? = nil
     var roomEnds: Date? = nil
+    /// What of its use is from calls the tool refused and still counts, in KIFF's words.
+    var pending: String? = nil
 }
 
 /// One KIFF Card, drawn on its own (kiff/tafs#211): a taf can hold several, each with its
@@ -219,6 +221,10 @@ struct TafCard: Identifiable, Hashable, Codable {
     var total: CardTotal<Money>?
     /// Its count of calls.
     var calls: CardTotal<Int>?
+
+    /// What of its totals' use is from calls the tool refused, in KIFF's words: they count
+    /// until KIFF can confirm nothing moved (kiff-cloud's limit lines).
+    var pending: [String] { [total?.pending, calls?.pending].compactMap { $0 } }
 
     /// The pill on the face: LIVE, or the environment it's scoped to ("TEST").
     /// The environment a Card is scoped to, when it isn't every one or production: nothing for

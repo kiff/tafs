@@ -694,6 +694,22 @@ describe("the home list", () => {
     expect(card.usage_unknown).toEqual(["pay_invoice"]);
   });
 
+  it("passes KIFF's words for a total's pending use through, never its own", async () => {
+    const w = world();
+    const pending = "€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved.";
+    w.account.mandates = [{
+      ...raeCard,
+      aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "calendar_day", unit: "EUR", scale: 2 }, { quantity: "count", limit: 5, window: "calendar_day" }],
+      limits: [
+        { quantity: "sum(amount)", window: "calendar_day", limit: 50000, used: 9800, status: "ok", unit: "EUR", scale: 2, pending_text: pending },
+        { quantity: "count", window: "calendar_day", limit: 5, used: 2, status: "ok" },
+      ],
+    }];
+    const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
+    expect(card.cards[0].total.pending_text).toBe(pending);
+    expect(card.cards[0].calls.pending_text).toBeUndefined();
+  });
+
   it("never works out extra room: a ceiling over the Card's limit with no extra_room from KIFF is none", async () => {
     const w = world();
     w.account.mandates = [{

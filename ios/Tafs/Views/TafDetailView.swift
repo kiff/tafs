@@ -268,9 +268,10 @@ struct TafDetailView: View {
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
-        // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13).
-        if let refused = HeldCallCard.refusedLine(model.refusedToday(taf.id)) {
-            Text(refused)
+        // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13), in
+        // KIFF's words for what's pending.
+        ForEach(shown?.pending ?? [], id: \.self) { line in
+            Text(line)
                 .scaledFont(13).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
         }
