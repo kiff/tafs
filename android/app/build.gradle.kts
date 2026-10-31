@@ -40,6 +40,9 @@ android {
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      // The libraries' native code goes to Play with its symbol tables, so a native crash's stack trace reads by function
+      // name in Play's crash view. The bundle carries them for Play; the app on the phone doesn't.
+      ndk { debugSymbolLevel = "SYMBOL_TABLE" }
     }
   }
   compileOptions {
