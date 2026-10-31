@@ -311,6 +311,30 @@ class ChatKiffTest {
     assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
   }
 
+  private val spent = "Your tafs have used this period's AI and are waiting for you. It starts again on 1 Nov."
+
+  @Test fun aRunKiffAgentsRefusedSaysWhyInTafsCloudsWordsOnTheStream() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread())
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 409, """{"error":"refused","code":"ai_fair_use","words":"$spent"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("hello", "refunds-1"))
+    // Never "It changed in the meantime": tafs cloud's words for why.
+    assertEquals("The message wasn't sent. $spent", m.state.value.chatErrors["refunds-1"])
+  }
+
+  @Test fun aRunKiffAgentsRefusedSaysWhyInTafsCloudsWordsOnThePlainRoute() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread())
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 404, """{"error":"not_found"}""")
+    transport.answer("POST /v1/tafs/taf_1/messages", 409, """{"error":"refused","code":"halted","words":"Refunds is halted. Resume it from Halt to go on."}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("hello", "refunds-1"))
+    assertEquals("The message wasn't sent. Refunds is halted. Resume it from Halt to go on.", m.state.value.chatErrors["refunds-1"])
+  }
+
   @Test fun aMessageThatDoesNotGoIsTakenOffTheScreenAndSaysWhy() = runTest {
     readsOf()
     transport.answer(conversation, 200, thread())
