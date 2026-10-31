@@ -1294,6 +1294,14 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.switching.size).toBe(0);
   });
 
+  it("refuses a switch to a version whose draft is another taf's: it may have been made with no session", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: { status: "draft", agent_id: "someone-else" } };
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/switch`, { token: "ana" });
+    expect(r.status).toBe(409);
+    expect(w.agents.calls.some((c) => c.startsWith("beginSwitch"))).toBe(false);
+  });
+
   it("names the run in the way, and with stop_blocking stops it and begins the switch (kiff/tafs#206)", async () => {
     const w = twoVersions();
     w.account.drafts = { drf_v2: "draft" };
@@ -1999,6 +2007,34 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.agents.calls.length = 0;
     await note();
     expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft") || c.startsWith("answerResult"))).toEqual([]);
+  });
+
+  it("makes an improvement's version for the taf it improves, once, and answers with it; nothing goes live", async () => {
+    const better = { type: "result", id: "better", text: "Rae checks first.", taf: { agent: "rae", name: "Rae", improves: RAE, draft: "drf_v9", note: "Reads a charge before refunding it" } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    const made = (w.agents.versions.get(`t_acme|${RAE}`) ?? []).filter((v) => v.note === "Reads a charge before refunding it");
+    expect(made).toHaveLength(1);
+    expect(made[0]).toMatchObject({ by: "setup", draft: "drf_v9", live: false });
+    expect(answer()).toEqual({ answer: { version: made[0]!.n }, answered_by: "tafs cloud" });
+    // Under the key the apps use, so an app making it too gets this version back.
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.versionsFrom?.["better|drf_v9"]).toBe(made[0]!.n);
+    await note();
+    expect((w.agents.versions.get(`t_acme|${RAE}`) ?? []).filter((v) => v.note === "Reads a charge before refunding it")).toHaveLength(1);
+  });
+
+  it("makes no version for someone KIFF says can't manage Cards, nor for another taf's agent", async () => {
+    const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Checks first" } };
+    const one = await paused(better);
+    one.w.agents.access.set("u_ana", { cards_manage: false });
+    await one.note();
+    expect(one.answer()).toEqual({ answer: { failed: "your role on this KIFF account can't manage Cards now" }, answered_by: "tafs cloud" });
+    const other = await paused({ ...better, taf: { ...better.taf, agent: "someone-else" } });
+    other.w.agents.access.set("u_ana", { cards_manage: true });
+    await other.note();
+    expect(other.answer()).toEqual({ answer: { failed: "that improvement is for another taf" }, answered_by: "tafs cloud" });
+    expect((other.w.agents.versions.get(`t_acme|${RAE}`) ?? []).some((v) => v.note === "Checks first")).toBe(false);
   });
 
   it("claims only a draft KIFF says is confirmed: one waiting is answered so, and nothing is made", async () => {
