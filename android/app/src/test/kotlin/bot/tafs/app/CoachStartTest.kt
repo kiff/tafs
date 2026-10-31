@@ -224,6 +224,17 @@ class CoachStartTest {
     assertEquals("Another device connects this account's tools for now. Connect them from that one.", m.state.value.coachStartError)
   }
 
+  @Test fun planqueNotRecognizingThePhoneAtEnrolmentIsntASignOut() = runTest {
+    reads()
+    startAnswers(enrol = 401 to """{"error":"device not recognized"}""")
+    val m = model()
+    assertFalse(m.startCoach())
+    // KIFF's session works: the app stays signed in and says connecting the tools failed, with Start to try again.
+    assertEquals(CoachWords.CONNECTING_FAILED, m.state.value.coachStartError)
+    assertEquals(bot.tafs.app.app.Mode.kiff, m.state.value.mode)
+    assertEquals("at_1", secrets.load(AppModel.TOKEN))
+  }
+
   // MARK: Hand-overs
 
   private fun coachThread(component: String, messages: String = "[]", answer: String? = null) {

@@ -107,6 +107,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, starting Coach:** when the tools can't be connected because planque couldn't check
+  the phone, Coach says "Connecting your tools didn't work. Tap Start to try again", not that
+  you're signed out, since the session still works.
+
 - A taf's work steps say what it did, in words, both while it works and after: KIFF's title for
   a tool through KIFF ("List your charges"), and what Coach's and the agents' own tools do
   ("Showing you a card"). A step showed the tool's name before ("show", "list_charges_ijkp").

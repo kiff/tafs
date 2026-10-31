@@ -1925,7 +1925,14 @@ class AppModel(
             startFailed(if (e.status == 403) "Only an admin of this KIFF account can connect tools." else "Connecting tools isn't set up. ${ErrorWords.of(e)}")
             return false
           } catch (e: PlanqueError.Server) {
-            startFailed(if (e.status == 409) "Another device connects this account's tools for now. Connect them from that one." else "Connecting tools isn't set up. ${ErrorWords.of(e)}")
+            startFailed(
+              when (e.status) {
+                409 -> "Another device connects this account's tools for now. Connect them from that one."
+                // planque couldn't check this phone with KIFF. KIFF's session works, so it isn't a sign-out.
+                401 -> CoachWords.CONNECTING_FAILED
+                else -> "Connecting tools isn't set up. ${ErrorWords.of(e)}"
+              },
+            )
             return false
           }
           if (generation != accountGeneration) return false

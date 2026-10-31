@@ -154,6 +154,9 @@ object CoachWords {
 
   fun improveLine(name: String) = "Say what should change, or ask how it's going. Coach mode starts from what $name did and what its Card allows."
   const val NOT_CONNECTABLE = "Connecting tools isn't set up for this account from this phone. Open Coach to start it."
+
+  /** Starting Coach, planque couldn't check this phone with KIFF: the session still works, so it's never "signed out". */
+  const val CONNECTING_FAILED = "Connecting your tools didn't work. Tap Start to try again."
   const val DIGEST_MISMATCH = "This request doesn't match what it asks for, so it can't be approved. Ask Coach to propose it again."
   const val WAITING_FOR_VENDOR = "If the vendor's sign-in page opened, finish it there and come back."
 
