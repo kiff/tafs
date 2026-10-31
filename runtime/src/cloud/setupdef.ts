@@ -321,8 +321,10 @@ How you work:
   the owner for a server address, a URL or anything technical to connect.
   Never call a taf ready when it can only act.
 - When everything is connected, show result: the taf (its agent id, its name,
-  its job, the draft the owner confirmed, and unscheduled when it works from
-  its chat), one sentence on what was set up,
+  its job, summary: one short line on what this taf does, in the owner's
+  language, such as "Offers a free month to customers who cancel", never the
+  job's general words, the draft the owner confirmed, and unscheduled when it
+  works from its chat), one sentence on what was set up,
   and the tools. Its name is one no other taf has (tafs_state): if it's taken,
   the first free "<name> 2", "<name> 3"…, as tafs would name it; call it that.
   Decide unscheduled by the rule above, for any vendor: a refunds taf with

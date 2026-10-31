@@ -134,7 +134,8 @@ then shows its plan. Then, each step behind the owner's yes:
    them from the Card's terms and its `on_exceed`, with the same words as a taf's Card tab
    ([tafs.md](tafs.md)): an `owner` Card says what asks the owner past each limit. An editor's draft
    waits for an admin to confirm it in KIFF.
-4. **Start the taf.** The result card hands over the taf. tafs cloud starts it as the
+4. **Start the taf.** The result card hands over the taf, with `summary`: one line on
+   what this taf does, in the owner's words. tafs cloud starts it as the
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
    claims the key from Coach's draft, and the taf joins the account's list
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer

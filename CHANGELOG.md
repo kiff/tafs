@@ -11,7 +11,8 @@ version headings refer to releases, not merely to merged pull requests.
   ones to stay under a limit, and asks the owner when it's refused. A money call that doesn't
   name its customer, such as a coupon, carries who it's for in its name, so the held call says
   it. Coach says the limits are the owner's, says for each action what asks first and what is
-  refused, and gives each card an id no earlier card in the conversation had.
+  refused, gives each card an id no earlier card in the conversation had, and hands over
+  each taf with a one-line `summary` of what it does.
 - **Android, dictation's language:** where the phone dictates in more than one of the owner's
   languages, a switch before the mic shows the one in use ("FR"), and each tap goes to the
   next, as on iOS. The choice is kept.
