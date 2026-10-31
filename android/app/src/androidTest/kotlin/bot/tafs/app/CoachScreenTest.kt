@@ -77,7 +77,7 @@ class CoachScreenTest {
     connections = ConnectionActions({}, { false }),
   )
 
-  private fun show(live: LiveAnswer?) = rule.setContent {
+  private fun show(live: LiveAnswer?) = rule.setShown {
     TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(state(live), actions, loadCoach = {}, onBack = {}) } }
   }
 

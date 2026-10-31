@@ -147,4 +147,6 @@ each route in turn with what the test queued and keeps every request, and
 `FakeAuthenticator`, the person at the prompt. `app/src/androidTest` holds the UI tests.
 Each one orders `AwakeDevice` before its compose rule: it wakes the device and dismisses the
 keyguard, then waits until it is awake and unlocked, since a just-booted emulator may not be,
-and an activity launched then never gets a window ("No compose hierarchies found").
+and an activity launched then never gets a window ("No compose hierarchies found"). It
+also closes a system dialog left over from boot, and each test sets its screen with `setShown`,
+which waits until there's a Compose hierarchy to read before reading it.

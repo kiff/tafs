@@ -34,7 +34,7 @@ class ApprovalKeyLineTest {
 
   private val taps = mutableListOf<String>()
 
-  private fun show(again: ApproveAgain?) = rule.setContent {
+  private fun show(again: ApproveAgain?) = rule.setShown {
     TafsTheme {
       CompositionLocalProvider(LocalApproveAgain provides again, LocalSignInAgain provides { taps += "sign in again" }) {
         ApprovalKeyLine(Modifier.padding(16.dp))

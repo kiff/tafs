@@ -67,7 +67,7 @@ class HeldCallCardTest {
   )
 
   private fun show(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, Answer) -> Unit = { _, _ -> }) {
-    rule.setContent {
+    rule.setShown {
       TafsTheme {
         CompositionLocalProvider(
           LocalBiometry provides "your fingerprint",
