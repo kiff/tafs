@@ -18,6 +18,9 @@ import bot.tafs.app.model.ProposedAction
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.Money
+import bot.tafs.app.model.Window
+import bot.tafs.app.model.TafCard
+import bot.tafs.app.model.CardTotal
 import bot.tafs.app.views.HeldCallCard
 import bot.tafs.app.views.LocalAnswerPage
 import java.time.Instant
@@ -57,8 +60,9 @@ class HeldCallCardTest {
     capabilities: List<String>? = null,
     unanswerable: Map<String, String> = emptyMap(),
     entries: List<RecordEntry> = emptyList(),
+    tafs: List<Taf> = listOf(taf),
   ) = AppState(
-    mode = if (kiff) Mode.kiff else Mode.sample, ready = true, tafs = listOf(taf), sessionHasKey = sessionHasKey,
+    mode = if (kiff) Mode.kiff else Mode.sample, ready = true, tafs = tafs, sessionHasKey = sessionHasKey,
     kiffAccount = Account("t", "acme", capabilities = capabilities), unanswerable = unanswerable, record = entries,
   )
 
@@ -183,10 +187,15 @@ class HeldCallCardTest {
     check(answers == listOf<Answer>(Answer.ExtraRoom)) { answers.toString() }
   }
 
-  @Test fun callsTheVendorRefusedTodayAreSaidWhereExtraRoomIsOffered() {
+  @Test fun whatATotalHoldsFromRefusedCallsIsSaidInKiffsWordsWhereExtraRoomIsOffered() {
+    val words = "€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved."
+    val total = CardTotal(Money.of(50000, "EUR", 2), Money.of(9800, "EUR", 2), Window.day, pending = words)
+    val withCard = taf.copy(kiffCards = listOf(TafCard(id = "c1", title = "Refunds", rules = emptyList(), total = total)))
+    // The day's Record has a refused call, as before: the app writes no line of its own from it.
     val refused = RecordEntry(tafId = "a-1", kind = RecordEntry.Kind.notDone, title = "x", detail = "", at = Instant.now(), refusedByTool = true, refusedBy = "Stripe")
-    show(call(approvableOnce = false), state(entries = listOf(refused)))
-    text("1 call Stripe refused today still counted toward it").assertExists()
+    show(call(approvableOnce = false), state(entries = listOf(refused), tafs = listOf(withCard)))
+    text(words).assertExists()
+    gone("1 call Stripe refused today still counted toward it")
   }
 
   @Test fun anExpiredCallSaysSoAndOffersNothing() {

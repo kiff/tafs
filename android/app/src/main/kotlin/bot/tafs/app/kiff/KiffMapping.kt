@@ -170,10 +170,10 @@ object KiffMapping {
           rules = c.rules.map(::rule),
           total = c.total?.let { t ->
             amount(t.limit)?.let { limit ->
-              CardTotal(limit, amount(t.used), window(t.window), amount(t.extraRoom), amount(t.baseLimit), t.roomWindowEnd)
+              CardTotal(limit, amount(t.used), window(t.window), amount(t.extraRoom), amount(t.baseLimit), t.roomWindowEnd, t.pendingText)
             }
           },
-          calls = c.calls?.let { CardTotal(it.limit, it.used, window(it.window), it.extraRoom, it.baseLimit, it.roomWindowEnd) },
+          calls = c.calls?.let { CardTotal(it.limit, it.used, window(it.window), it.extraRoom, it.baseLimit, it.roomWindowEnd, it.pendingText) },
         )
       },
       used = h.card.used.mapNotNull { (action, a) -> amount(a)?.let { action to it } }.toMap(),

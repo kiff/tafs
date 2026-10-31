@@ -305,6 +305,8 @@ private fun CardTab(taf: Taf, actions: TafActions, front: String?, onFront: (Str
   }
   // All of the front Card's limits: the face shows the main one.
   CardLines(shown?.rules ?: emptyList())
+  // How much of its totals is from calls the tool refused, in KIFF's words: for a live, active Card only.
+  shown?.takeIf(::countsForReal)?.let(::pendingOf)?.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
   // In the sample, Pause and Revoke are its own; signed in, Revoke is KIFF's, for whoever manages it, and pausing is under
   // Runs, on the Activity tab.
   if (taf.state != TafState.revoked && (controls || manages)) {

@@ -427,10 +427,6 @@ data class AppState(
    */
   fun canAnswer(call: HeldCall): Boolean = call.kiffId == null || (sessionHasKey && call.accountingVersion != null)
 
-  /** Calls KIFF allowed today that the vendor refused, which still count against the taf's Card totals, newest first. */
-  fun refusedToday(tafId: String): List<RecordEntry> =
-    entries(tafId).filter { it.refusedByTool == true && localDate(it.at) == java.time.LocalDate.now(zone) }
-
   /** The account this person is in, by its name, where they can always see it. Null outside KIFF. */
   val accountLabel: String? get() = if (mode == Mode.kiff) kiffAccount?.name else null
 
