@@ -46,7 +46,11 @@ id: after extra room it's `changed`, and when the taf tries the call again it's 
 went through and why one more is needed, in KIFF's own words (`reason_text`): "Extra room
 went through. This call is held again for a limit of its own: $60 is over the $50 limit
 for one call. Approve it once to let it go, or refuse it." (Android: `SecondStep`,
-`roomGiven`). A held call's reason is KIFF's `reason_text` wherever KIFF sends it.
+`roomGiven`). A held call's reason is KIFF's `reason_text` wherever KIFF sends it. Where KIFF
+sends none, the app writes it, never the machine's reason: money in the app's money words, and
+a count of calls as "Each call asks you first" for a limit of 0, otherwise "20 calls a day:
+this would be the 21st", in each window's words (`KiffMapping.countReason`). A call Coach's
+own agent holds is titled **Coach**, with Coach's mark, never "A taf" (`AppState.holder`).
 
 Over a total, approving once can't pass it, and the card says so. Someone who may use
 Coach also gets "Change the limit in Coach mode", which opens Coach on that taf

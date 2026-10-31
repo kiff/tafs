@@ -196,7 +196,7 @@ fun NeedsYouView(state: AppState, onAnswer: suspend (HeldCall, Answer) -> Unit, 
 
 @Composable
 fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, Answer) -> Unit) {
-  val taf = state.taf(call.tafId)
+  val taf = state.holder(call.tafId)
   // Set on the tap itself, until the owner has confirmed or declined: a second tap sends nothing.
   val scope = rememberCoroutineScope()
   var sending by remember { mutableStateOf(false) }
