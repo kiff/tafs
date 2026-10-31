@@ -282,7 +282,10 @@ line becomes the message's "Worked … · N steps".
 
 The thread also comes as one ordered list, `items` (`threadItems` in `handler.ts`). Each entry
 is `{type: "message", message}` or `{type: "card", card}`, by time. A card shown again (the same id
-in the same chat, in any run of it) replaces its earlier version where it first appeared. A call KIFF held is
+in the same chat, in any run of it) replaces its earlier version where it first appeared, while it waits. Coach's
+model names its cards, and may name a new one as it named one already answered: that is a new card, waiting, with
+no answer of the old one's. Each card carries `key`, unique in the thread, and an app keys a card, and what it
+took or is answering, by `key`, never by the model's `id` (which it still sends to answer). A call KIFF held is
 `{type: "held", held: {exception, invocation?, run, session, at}}`, at the point it was held: only
 KIFF's keys, and the app reads the call itself from KIFF. An app draws `items` as
 they come, and places or folds nothing itself. `messages` and `components` stay, for apps from

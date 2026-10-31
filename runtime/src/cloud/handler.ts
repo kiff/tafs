@@ -1490,6 +1490,11 @@ export interface ThreadComponent {
    * they wrote a message instead (`wrote`), or that it stopped waiting (`no_answer`).
    */
   answer?: CardAnswer;
+  /**
+   * The card's own key in the thread, unique in it: what an app keys a card by, never the model's id.
+   * The same card shown again in its run keeps it; one that reuses an answered card's id is a new card.
+   */
+  key?: string;
 }
 
 export interface CardAnswer {
@@ -1747,10 +1752,18 @@ export interface ThreadHeld {
  */
 export function threadItems(messages: ThreadMessage[], components: ThreadComponent[], held: ThreadHeld[] = []): ThreadItem[] {
   const cards = new Map<string, ThreadComponent & { first: string }>();
+  // How many cards each id has named in a chat: Coach's model names its cards, and may name two the same.
+  const named = new Map<string, number>();
   for (const c of components) {
     const id = String((c.component as { id?: unknown })?.id ?? "");
-    // The same card shown again in the chat replaces it, in a later run of the chat too.
-    const key = `${c.session}#${id}`;
+    const base = `${c.session}#${id}`;
+    let n = named.get(base) ?? 0;
+    const last = cards.get(n ? `${base}#${n}` : base);
+    // The same card shown again in the chat replaces it, in a later run of the chat too, while it waits.
+    // Once answered, a card with its id is a new card, with no answer of the old one's.
+    if (last?.answer && !c.answer) named.set(base, ++n);
+    const key = n ? `${base}#${n}` : base;
+    c.key = key;
     const seen = cards.get(key);
     cards.set(key, { ...c, first: seen?.first ?? c.at });
   }
