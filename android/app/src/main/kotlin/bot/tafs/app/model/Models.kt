@@ -189,6 +189,8 @@ data class CardTotal<V>(
   val extra: V? = null,
   val base: V? = null,
   @Serializable(with = InstantAsString::class) val roomEnds: Instant? = null,
+  /** KIFF's words for how much of it is from calls the tool refused, which count until KIFF confirms nothing moved; null for none. */
+  val pending: String? = null,
 )
 
 /**

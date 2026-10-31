@@ -338,7 +338,8 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
           },
           style = scaled(13, color = Theme.soft),
         )
-        refusedLine(state.refusedToday(call.tafId))?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+        // How much of its totals is from calls the tool refused, in KIFF's words: they count until KIFF confirms nothing moved.
+        state.taf(call.tafId)?.let(::pendingLines)?.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
         if (state.canManageCards) PrimaryButton("Extra room with $biometry", { send(Answer.ExtraRoom) }, enabled = !sending)
         // A lasting change is Coach's: a new conversation about this taf (kiff/tafs#107).
         improveInCoach?.let { improve ->
@@ -382,17 +383,9 @@ private fun Details(lines: List<String>) {
   }
 }
 
-/**
- * How many calls the vendor refused today that still count toward the Card's totals, in a line, naming the vendor
- * when every one is the same; null for none.
- */
-fun refusedLine(refused: List<bot.tafs.app.model.RecordEntry>): String? {
-  if (refused.isEmpty()) return null
-  val vendors = refused.mapNotNull { it.refusedBy }.toSet()
-  val who = if (vendors.size == 1 && refused.all { it.refusedBy != null }) vendors.first() else "the vendor"
-  val calls = if (refused.size == 1) "1 call" else "${refused.size} calls"
-  return "$calls $who refused today still counted toward it: nothing moved, but they used room."
-}
+/** KIFF's words for how much of a taf's totals is from calls the tool refused, each once, from its Cards; none for none. */
+fun pendingLines(taf: bot.tafs.app.model.Taf): List<String> =
+  taf.shownCards.flatMap { listOfNotNull(it.total?.pending, it.calls?.pending) }.distinct()
 
 private fun remaining(call: HeldCall, now: Instant): String {
   val seconds = Duration.between(now, call.expiresAt).seconds

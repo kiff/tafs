@@ -41,6 +41,8 @@ data class HomeTotal<V>(
   @SerialName("extra_room") val extraRoom: V? = null,
   @SerialName("base_limit") val baseLimit: V? = null,
   @SerialName("room_window_end") @Serializable(with = InstantAsString::class) val roomWindowEnd: Instant? = null,
+  /** KIFF's words for how much of it is from calls the tool refused, which count until KIFF confirms nothing moved; null for none. */
+  @SerialName("pending_text") val pendingText: String? = null,
 )
 
 /** One KIFF Card on its own (kiff/tafs#211). */

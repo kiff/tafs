@@ -146,7 +146,9 @@ It has up to four tabs:
   currency for says so ("30 000 left today of 30 000 · no currency"), never reading
   like money. A Card scoped to an environment other than production says which; one
   that acts for real carries no label. Connections show only when there are some.
-  Calls the vendor refused today still count against the Card's totals, and are listed.
+  A call the tool refused still counts toward the Card's totals until KIFF can confirm nothing
+  moved: KIFF's `pending_text` on the total says how much, under the Card's limits and on a
+  held call over that total (Android: `pendingLines`). The app writes no line of its own.
   A limit says what happens past it, from each rule's `outside` in tafs cloud's list (the
   Card's `on_exceed` in KIFF). On a `hold` rule: "up to $40 each; more asks you first",
   "$300 in total a day, then it asks you", "20 calls a day, then it asks you", and a count
