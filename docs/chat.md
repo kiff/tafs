@@ -53,7 +53,12 @@ recognizer (`createOnDeviceSpeechRecognizer`, Android 12 and later), in the phon
 language. The microphone is asked for at the first tap. A phone without an on-device
 recognizer doesn't dictate and says so, rather than use one that sends the voice away.
 Words go into the box as they're heard; listening goes on after a pause and stops after
-two quiet ones, a tap on the mic, or Send. iOS's language switch isn't on Android yet.
+two quiet ones, a tap on the mic, or Send. As on iOS, where the phone dictates in more than
+one of the owner's languages, a switch before the mic shows the one in use ("FR"); each tap
+goes to the next, and while dictating, listening starts again in it after what was heard.
+The owner's languages are their keyboards', then the phone's, among those its recognizer has
+on the phone (`SpeechLanguage.owners`, Android 13 and later), and the one chosen is kept for
+next time.
 
 The recognizer's models are per variant, so a phone set to English in France (`en-FR`)
 dictates in a variant of its language (`SpeechLanguage.choose`, from Android 13
@@ -220,6 +225,11 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   the connection, else the draft's Card, else its service. A card waiting for the owner sits
   after what Coach wrote with it, so the open question is at the end; once answered, it goes
   back to its own time in the thread (`CoachWords.items`).
+- A card's answer belongs to that card in that conversation. On Android, a card on its way or
+  taken, and its place in the thread, is known by tafs cloud's `key` for it, else its
+  conversation and id (`ShownComponent.ref`), never the bare id; it is the thread's again
+  once the thread holds its answer; a new card Coach sends under an id it used before waits
+  for its own answer (`CoachWords.fold`), never shows the earlier one's.
 - The app's earlier form, a message `[<type> <id>] <answer>` from the person's own app, is
   still taken as the card's answer when that card waits. Any other text, a door's message, or
   a card that doesn't wait goes as a message. This form goes one release after the app build
@@ -282,7 +292,10 @@ line becomes the message's "Worked … · N steps".
 
 The thread also comes as one ordered list, `items` (`threadItems` in `handler.ts`). Each entry
 is `{type: "message", message}` or `{type: "card", card}`, by time. A card shown again (the same id
-in the same chat, in any run of it) replaces its earlier version where it first appeared. A call KIFF held is
+in the same chat, in any run of it) replaces its earlier version where it first appeared, while it waits. Coach's
+model names its cards, and may name a new one as it named one already answered: that is a new card, waiting, with
+no answer of the old one's. Each card carries `key`, unique in the thread, and an app keys a card, and what it
+took or is answering, by `key`, never by the model's `id` (which it still sends to answer). A call KIFF held is
 `{type: "held", held: {exception, invocation?, run, session, at}}`, at the point it was held: only
 KIFF's keys, and the app reads the call itself from KIFF. An app draws `items` as
 they come, and places or folds nothing itself. `messages` and `components` stay, for apps from

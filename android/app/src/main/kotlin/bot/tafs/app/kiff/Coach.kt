@@ -100,6 +100,8 @@ data class WireShown(
   val run: String = "",
   val component: JsonElement,
   val answer: JsonElement? = null,
+  /** The card's own key in the thread, unique in it, from tafs cloud. */
+  val key: String? = null,
 )
 
 /**
@@ -117,8 +119,20 @@ data class CardAnswered(val session: String? = null, val run: String? = null, va
 data class ResultOutcome(@SerialName("taf_id") val tafId: String? = null, val version: Int? = null, val failed: String? = null)
 
 /** A component as the thread holds it: where it first appeared, its latest version (showing an id again replaces it in place), and its answer. */
-data class ShownComponent(val firstAt: Instant, val session: String, val run: String, val component: SetupComponent, val answer: CardAnswer? = null) {
+data class ShownComponent(
+  val firstAt: Instant,
+  val session: String,
+  val run: String,
+  val component: SetupComponent,
+  val answer: CardAnswer? = null,
+  /** tafs cloud's key for the card, unique in the thread; null from a tafs cloud that doesn't send one. */
+  val key: String? = null,
+) {
+  /** The model's name for the card: what an answer is sent for. Coach can use one again, so it never tells cards apart. */
   val id: String get() = component.id
+
+  /** Which card it is: tafs cloud's key, else its conversation and id. What the phone keys a card by, never [id] alone. */
+  val ref: String get() = key ?: bot.tafs.app.model.CoachWords.cardKey(session, component.id)
 }
 
 /** The account's Setup, as tafs cloud runs it: its id there. */

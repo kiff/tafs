@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
  * into the message box as they're spoken, and the owner sends them as if typed: dictation never sends anything. Recognition
  * runs on the phone only ([SpeechEngine]), so no audio leaves it; only the text the owner sends reaches tafs cloud.
  */
-class Dictation(private val engine: SpeechEngine) {
+class Dictation(private val engine: SpeechEngine, private val memory: LanguageMemory = LanguageMemory.None) {
   sealed interface State {
     data object Idle : State
     data object Listening : State
@@ -25,6 +25,34 @@ class Dictation(private val engine: SpeechEngine) {
   /** The phone can recognise speech on itself, and the microphone may be used. */
   val available: Boolean get() = engine.available
   val mayListen: Boolean get() = engine.mayListen
+
+  /** The phone's own languages to dictate in, the owner's first (their keyboards', then the phone's): the switch goes through them. */
+  val languages: StateFlow<List<String>> get() = engine.languages
+
+  /** The language chosen last, kept for next time; [current] is the one dictated in. */
+  private val chosen = MutableStateFlow(memory.load())
+  val language: StateFlow<String?> = chosen
+
+  /** The language it dictates in: the one chosen while the phone still has it, else the owner's first; null before it's known. */
+  fun current(): String? {
+    val have = engine.languages.value
+    return chosen.value?.takeIf { it in have } ?: have.firstOrNull()
+  }
+
+  /**
+   * The next of the owner's languages, as iOS's switch: kept for next time, and while dictating, listening starts again in it,
+   * after what was already heard.
+   */
+  fun switchLanguage(text: String, write: (String) -> Unit) {
+    val have = engine.languages.value
+    if (have.size < 2) return
+    val next = have[(have.indexOf(current()) + 1) % have.size]
+    val was = listening
+    if (was) stop()
+    chosen.value = next
+    memory.save(next)
+    if (was) start(text, write)
+  }
 
   /** The box when dictation started, and each finished stretch of speech since: what's heard now goes after it. */
   private var before = ""
@@ -49,7 +77,7 @@ class Dictation(private val engine: SpeechEngine) {
     this.write = write
     quietEnds = 0
     _state.value = State.Listening
-    engine.listen(listener)
+    engine.listen(listener, current())
   }
 
   /** Stops listening: what was heard stays in the box, unsent. */
@@ -80,7 +108,7 @@ class Dictation(private val engine: SpeechEngine) {
         quietEnds++
       }
       // The recognizer stops after a pause; listening goes on until the owner stops it, or it stays quiet.
-      if (quietEnds >= QUIET_ENDS) stop() else engine.listen(this)
+      if (quietEnds >= QUIET_ENDS) stop() else engine.listen(this, current())
     }
 
     override fun failed(why: String) {
@@ -123,6 +151,49 @@ object SpeechLanguage {
     data object None : Choice
   }
 
+  /**
+   * The owner's own languages among those the phone dictates in, one form each, theirs first: their keyboards' (where
+   * dictation's languages are), then the phone's; every one it has when none of theirs is there. As iOS's `owners`.
+   */
+  fun owners(installed: List<String>, keyboards: List<String>, preferred: List<String>): List<String> {
+    val theirs = keyboards + preferred
+    val codes = theirs.map(::code).toSet()
+    val all = ordered(installed, theirs)
+    return all.filter { code(it) in codes }.ifEmpty { all }
+  }
+
+  /** The phone's languages, one form each, the owner's first: for each, the form they use when the phone has it, else another. */
+  fun ordered(installed: List<String>, preferred: List<String>): List<String> {
+    val have = installed.map { it.replace('_', '-') }
+    val out = mutableListOf<String>()
+    fun add(tag: String) {
+      if (out.none { code(it) == code(tag) }) out += tag
+    }
+    for (p in preferred.map { it.replace('_', '-') }) {
+      (have.firstOrNull { it.equals(p, ignoreCase = true) } ?: bestForm(code(p), have))?.let(::add)
+    }
+    have.sorted().forEach(::add)
+    return out
+  }
+
+  /** The form of a language to dictate in when the owner's own isn't on the phone: English, British then American; another, its own country's. */
+  fun bestForm(code: String, have: List<String>): String? {
+    val forms = have.filter { code(it) == code }.sorted()
+    val want = if (code == "en") listOf("en-GB", "en-US") else listOf("$code-${code.uppercase()}")
+    return want.firstNotNullOfOrNull { w -> forms.firstOrNull { it.equals(w, ignoreCase = true) } } ?: forms.firstOrNull()
+  }
+
+  private fun code(tag: String) = tag.takeWhile { it != '-' && it != '_' }.lowercase()
+
+  /** The switch's label: "FR". */
+  fun label(tag: String) = code(tag).uppercase()
+
+  /** A language's own name, as its speakers write it: "Français", "Español", "English". */
+  fun name(tag: String): String {
+    val locale = java.util.Locale.forLanguageTag(tag.replace('_', '-'))
+    return locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }
+  }
+
   fun choose(locale: java.util.Locale, installed: List<String>, supported: List<String>): Choice {
     best(locale, installed)?.let { return Choice.Use(it) }
     best(locale, supported)?.let { return Choice.Download(it) }
@@ -153,8 +224,11 @@ interface SpeechEngine {
   /** The microphone may be used. */
   val mayListen: Boolean
 
-  /** Listens until a pause: what it hears so far, then its final words, or why it failed. */
-  fun listen(listener: Listener)
+  /** The languages it dictates in on the phone, the owner's first; none until it knows, and none where it can't say. */
+  val languages: StateFlow<List<String>> get() = NO_LANGUAGES
+
+  /** Listens until a pause, in [language] when one is chosen: what it hears so far, then its final words, or why it failed. */
+  fun listen(listener: Listener, language: String?)
 
   fun stop()
 
@@ -162,5 +236,20 @@ interface SpeechEngine {
     fun heard(words: String)
     fun finished(words: String)
     fun failed(why: String)
+  }
+
+  companion object {
+    val NO_LANGUAGES: StateFlow<List<String>> = MutableStateFlow(emptyList())
+  }
+}
+
+/** Where the dictation language chosen last is kept, for next time. */
+interface LanguageMemory {
+  fun load(): String?
+  fun save(tag: String)
+
+  object None : LanguageMemory {
+    override fun load(): String? = null
+    override fun save(tag: String) {}
   }
 }

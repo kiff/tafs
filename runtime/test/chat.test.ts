@@ -719,6 +719,26 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(w.agents.calls.filter((c) => c.startsWith("answerCard"))).toEqual([]);
   });
 
+  it("keys each card uniquely: a card reusing an answered card's id is a new card, waiting, with no answer of the old one's", async () => {
+    const w = world();
+    const first = await w.agents.api.startRun("t_acme", RAE, "Connect Stripe", ANA);
+    w.agents.show(first, { type: "approval", id: "connect" });
+    const list = w.agents.events.get(first.session)!;
+    list.push({ session: first.session, run: first.id, seq: list.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: "connect", type: "approval", answer: "approve" } });
+    // The same chat's next run: the model names its new card as it named the last.
+    const next = await w.agents.api.startRun("t_acme", RAE, "Now the reads", ANA);
+    w.agents.show(next, { type: "approval", id: "connect" });
+    // Shown again while it waits: still one card.
+    w.agents.show(next, { type: "approval", id: "connect" });
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    const cards = (r.body.items as Array<{ type: string; card?: { key: string; answer?: unknown; run: string } }>).filter((i) => i.type === "card").map((i) => i.card!);
+    const connects = cards.filter((c) => c.key.includes("#connect"));
+    expect(connects).toHaveLength(2);
+    expect(new Set(connects.map((c) => c.key)).size).toBe(2);
+    expect(connects.find((c) => c.run === first.id)?.answer).toMatchObject({ state: "answered" });
+    expect(connects.find((c) => c.run === next.id)?.answer).toBeUndefined();
+  });
+
   it("shows each card's answer in the conversation: chosen, written instead, or none", async () => {
     const w = world();
     const run = await waiting(w);

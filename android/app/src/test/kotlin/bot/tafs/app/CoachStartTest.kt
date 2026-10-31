@@ -320,6 +320,33 @@ class CoachStartTest {
     nothingStartedHere()
   }
 
+  @Test fun aNewCardUnderAnIdUsedBeforeWaitsForItsOwnAnswer() {
+    val connect = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"connect","grant":"g1","title":"Connect Stripe"}""")
+    val reads = connect.copy(grant = "g2", title = "Refunds' setup reads")
+    val first = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", connect, bot.tafs.app.kiff.CardAnswer(words = "Approved"))
+    val second = bot.tafs.app.kiff.ShownComponent(t0.plusSeconds(60), "s1", "r2", reads)
+    val folded = CoachWords.fold(listOf(first, second)).single()
+    assertEquals("Refunds' setup reads", folded.component.title)
+    assertNull("a different card under the same id isn't answered by the first", folded.answer)
+  }
+
+  @Test fun twoConversationsReusingACardIdKeepTheirOwnCards() {
+    val rules = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"confirm","id":"rules","title":"Use these rules?","options":[{"value":"agree","label":"Agree"}]}""")
+    // Refunds' conversation answered its rules card; Chargebacks', later, sent its own under the same id.
+    val refunds = bot.tafs.app.kiff.ShownComponent(t0, "s_refunds", "r1", rules, bot.tafs.app.kiff.CardAnswer(words = "Agree"))
+    val chargebacks = bot.tafs.app.kiff.ShownComponent(t0.plusSeconds(600), "s_chargebacks", "r9", rules.copy(title = "Use these rules for disputes?"))
+    val folded = CoachWords.fold(listOf(refunds, chargebacks))
+    assertEquals(2, folded.size)
+    assertEquals("Agree", folded[0].answer?.words)
+    assertNull("Chargebacks' card waits for its own answer", folded[1].answer)
+    assertEquals(t0.plusSeconds(600), folded[1].firstAt)
+    // tafs cloud's key, where it sends one, tells cards apart; else the conversation and id. The list's rows never share a key.
+    assertEquals("s_refunds#rules", refunds.ref)
+    assertEquals("k-2", chargebacks.copy(key = "k-2").ref)
+    val items = CoachWords.items(emptyList(), folded)
+    assertEquals(items.size, items.map { it.id }.toSet().size)
+  }
+
   @Test fun aCardsAnswerOutlivesTheCardShownAgainWithoutIt() {
     val card = KiffClient.json.decodeFromString<SetupComponent>(handOver)
     val first = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", card, bot.tafs.app.kiff.CardAnswer(outcome = bot.tafs.app.kiff.ResultOutcome(tafId = "c_9")))
@@ -388,7 +415,7 @@ class CoachStartTest {
     // The flow went on: planque confirmed, Coach got its answer, and the card isn't left sending.
     assertEquals(1, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/confirm").size)
     assertEquals("signed in", answered("s1"))
-    assertTrue(m.state.value.cardsTaken.contains("s1"))
+    assertTrue(m.state.value.cardsTaken.any { it.endsWith("#s1") })
     assertTrue(m.state.value.cardsAnswering.isEmpty())
     assertTrue(transport.requestsTo("GET /v1/tafs/setup_1/conversation").size >= 2)
   }

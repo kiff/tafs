@@ -112,7 +112,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   val setDraft = { text: String -> actions.setDraft(tafId, text) }
   // Dictation into the box, recognised on the phone; it stops when the chat closes.
   val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
-  val dictation = remember(tafId) { bot.tafs.app.voice.Dictation(bot.tafs.app.voice.DeviceSpeech(appContext)) }
+  val dictation = remember(tafId) { bot.tafs.app.voice.Dictation(bot.tafs.app.voice.DeviceSpeech(appContext), bot.tafs.app.voice.SavedLanguage(appContext)) }
   androidx.compose.runtime.DisposableEffect(dictation) { onDispose { dictation.stop() } }
   // Whether the thread follows what arrives: it stops when the owner reads back, and starts again
   // at the bottom.
