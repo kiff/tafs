@@ -178,7 +178,7 @@ sealed interface ChatItem {
 
   /** One of Coach's cards, where it sits in the thread. */
   data class Card(val shown: bot.tafs.app.kiff.ShownComponent, override val at: Instant) : ChatItem {
-    override val id get() = "c|" + shown.id
+    override val id get() = "c|" + shown.ref
   }
 }
 

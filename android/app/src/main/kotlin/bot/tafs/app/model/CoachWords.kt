@@ -233,14 +233,14 @@ object CoachWords {
   const val TAKEN = "Answered."
 
   /**
-   * Folds components as the conversation lists them, oldest first: the latest version of each id, at the time it first appeared.
-   * An earlier answer carries over only to the same card: Coach can send a new card under an id it used before, and that one
-   * waits for its own answer.
+   * Folds components as the conversation lists them, oldest first: the latest version of each card ([ShownComponent.ref], never
+   * the bare id: Coach can use one again in another conversation), at the time it first appeared. An earlier answer carries over
+   * only to the same card: a new card under an id used before waits for its own answer.
    */
   fun fold(shown: List<ShownComponent>): List<ShownComponent> {
     val out = mutableListOf<ShownComponent>()
     for (s in shown) {
-      val i = out.indexOfFirst { it.id == s.id }
+      val i = out.indexOfFirst { it.ref == s.ref }
       if (i >= 0) out[i] = out[i].copy(component = s.component, answer = s.answer ?: out[i].answer?.takeIf { out[i].component == s.component }) else out += s
     }
     return out
@@ -250,7 +250,7 @@ object CoachWords {
    * A card of Coach's on the phone, by its conversation and its id: Coach can use an id again in another conversation, and a
    * card answered in one is never answered in the other.
    */
-  fun cardKey(session: String?, id: String): String = "${session.orEmpty()}|$id"
+  fun cardKey(session: String?, id: String): String = "${session.orEmpty()}#$id"
 
   private val ASKING = setOf("confirm", "questions", "approval", "sign_in", "result")
 

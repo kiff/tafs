@@ -1689,7 +1689,7 @@ class AppModel(
         chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
         // A taken card is the thread's once it holds its answer.
-        cardsTaken = if (tafId == COACH_CHAT) s.cardsTaken - thread.components.filter { it.answer != null }.map { CoachWords.cardKey(it.session.ifEmpty { null } ?: s.coachChat, it.id) }.toSet() else s.cardsTaken,
+        cardsTaken = if (tafId == COACH_CHAT) s.cardsTaken - thread.components.filter { it.answer != null }.map { it.ref }.toSet() else s.cardsTaken,
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
       )
     }
@@ -2417,8 +2417,10 @@ class AppModel(
   suspend fun answerCard(type: String, id: String, answer: String): Boolean {
     if (_state.value.mode != Mode.kiff) return false
     val cloudId = _state.value.coachCloudId ?: return false
-    val session = _state.value.coachComponents.firstOrNull { it.id == id }?.session?.ifEmpty { null } ?: _state.value.coachChat
-    val key = CoachWords.cardKey(session, id)
+    // The card answered: the one waiting under that id, since Coach can use an id again.
+    val shown = _state.value.coachComponents.lastOrNull { it.id == id && it.answer == null } ?: _state.value.coachComponents.lastOrNull { it.id == id }
+    val session = shown?.session?.ifEmpty { null } ?: _state.value.coachChat
+    val key = shown?.ref ?: CoachWords.cardKey(session, id)
     if (key in _state.value.cardsAnswering) return false
     val value: kotlinx.serialization.json.JsonElement =
       if (type == "questions") runCatching { KiffClient.json.parseToJsonElement(answer) }.getOrElse { kotlinx.serialization.json.JsonPrimitive(answer) }

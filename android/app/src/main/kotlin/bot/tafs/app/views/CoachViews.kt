@@ -218,7 +218,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
   val c = shown.component
   // Answered once the thread says so, in kiff/agents' words; on its way while tafs cloud takes it. By this conversation's card,
   // never another's that had the same id.
-  val key = CoachWords.cardKey(shown.session.ifEmpty { null } ?: state.coachChat, c.id)
+  val key = shown.ref
   val answered = shown.answer?.let(CoachWords::answered)
     ?: if (key in state.cardsAnswering) CoachWords.ANSWERING else if (key in state.cardsTaken) CoachWords.TAKEN else null
   val error = state.cardErrors[key]
