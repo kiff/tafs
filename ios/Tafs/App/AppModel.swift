@@ -4306,15 +4306,33 @@ final class AppModel: ObservableObject {
     @Published private(set) var setupTaf: TafsCloud.CloudTaf?
     /// Setup's thread: messages and components.
     @Published private(set) var setupThread = SetupThread() {
-        didSet { followHandOvers() }
+        didSet {
+            // A card answered here is the thread's once it holds the answer.
+            let held = Set(setupThread.components.filter { $0.answer != nil }.map(\.ref))
+            if !answered.isDisjoint(with: held) { answered.subtract(held) }
+            followHandOvers()
+        }
     }
     @Published private(set) var setupSending = false
     @Published private(set) var startingSetup = false
     @Published var setupError: String?
     /// The drafts Setup's approvals name, read from KIFF so the owner sees the Cards.
     @Published private(set) var setupDrafts: [String: KIFFClient.AgentDraft] = [:]
-    /// Components the owner answered on this phone, so their buttons go quiet.
+    /// Cards the owner answered on this phone, by `ShownComponent.ref`, so their buttons go
+    /// quiet. Never by id alone: Coach can use an id again, and a card answered in one
+    /// conversation is never answered in the next (kiff/tafs#387). A card is the thread's once
+    /// it holds the answer.
     @Published private(set) var answered: Set<String> = []
+
+    /// The card an answer for `id` is for: the one waiting under that id, since Coach can use
+    /// an id again, else the latest.
+    func cardRef(_ id: String) -> String {
+        let shown = setupThread.components.last { $0.component.id == id && $0.answer == nil } ?? setupThread.components.last { $0.component.id == id }
+        return shown?.ref ?? ShownComponent.ref(setupChat ?? "", id)
+    }
+
+    /// Whether the owner answered this card on this phone.
+    func isAnswered(_ c: SetupComponent) -> Bool { answered.contains(cardRef(c.id)) }
 
     /// A message that didn't reach Setup: it stays in the thread, with why, to send
     /// again (kiff/tafs#58). Never lost to a failed send.
@@ -4654,7 +4672,7 @@ final class AppModel: ObservableObject {
                 setupAwaiting = clock()
                 setupStreamWorks = true
                 setupLiveBefore = Set(setupThread.items.map(\.id))
-                setupAnsweredCard = SetupThread.Answer(text)?.id
+                setupAnsweredCard = SetupThread.Answer(text).map { cardRef($0.id) }
                 setupLive = LiveAnswer(started: clock())
                 let sentID = mine.id
                 setupStream = Task { await self.followSetupStream(events, text: text, gen: gen, sent: sentID) }
@@ -4716,7 +4734,7 @@ final class AppModel: ObservableObject {
             case .sent:
                 if let id { cardNotes[id] = nil }
             case .kept:
-                if let id { answered.remove(id); cardNotes[id] = nil }
+                if let id { answered.remove(cardRef(id)); cardNotes[id] = nil }
             case .notTried:
                 setupAnswersWaiting.insert(line, at: 0)
             }
@@ -4740,21 +4758,21 @@ final class AppModel: ObservableObject {
         }
         setupUnsent.remove(at: at)
         let left = setupUnsent.count
-        if let answer { answered.insert(answer.id) }
+        if let answer { answered.insert(cardRef(answer.id)) }
         if !(await submitSetup(message.text)) {
             // Not taken at all (too long to join the queue, or no Setup): back in its place.
-            if let answer { answered.remove(answer.id) }
+            if let answer { answered.remove(cardRef(answer.id)) }
             setupUnsent.insert(message, at: min(at, setupUnsent.count))
         } else if setupUnsent.count > left, let answer {
             // Tried and kept again as not sent: its card can be answered again.
-            answered.remove(answer.id)
+            answered.remove(cardRef(answer.id))
         }
     }
 
     /// Drops a message that didn't go through; an answer's card can be answered again.
     func discardUnsent(_ message: UnsentMessage) {
         setupUnsent.removeAll { $0.id == message.id }
-        if let answer = SetupThread.Answer(message.text) { answered.remove(answer.id) }
+        if let answer = SetupThread.Answer(message.text) { answered.remove(cardRef(answer.id)) }
     }
 
     /// Retry on a run that failed part-way: its message is sent again.
@@ -5052,7 +5070,7 @@ final class AppModel: ObservableObject {
     var setupWaiting: ShownComponent? {
         setupThread.asks.last { shown in
             let c = shown.component
-            guard !answered.contains(c.id) else { return false }
+            guard !answered.contains(shown.ref) else { return false }
             switch c.type {
             case .approval:
                 return setupCardState(c) == .needsYou
@@ -5099,9 +5117,10 @@ final class AppModel: ObservableObject {
     func answer(_ component: SetupComponent, _ text: String) async {
         setupUnsent.removeAll { SetupThread.Answer($0.text)?.id == component.id }
         guard let s = setupTaf, let value = Self.answerValue(component.type, text) else { return }
-        answered.insert(component.id)
+        let ref = cardRef(component.id)
+        answered.insert(ref)
         cardNotes[component.id] = nil
-        let session = setupThread.components.last { $0.component.id == component.id }?.session
+        let session = setupThread.components.last { $0.ref == ref }?.session
         let gen = accountGeneration
         do {
             let r = try await cloud.answerCard(s.id, component: component.id, answer: value, session: session)
@@ -5110,11 +5129,11 @@ final class AppModel: ObservableObject {
             await followAnswered(s.id, run: r.run, gen: gen)
         } catch let e as TafsCloud.CloudError where e.status == 409 {
             guard gen == accountGeneration else { return }
-            answered.remove(component.id)
+            answered.remove(ref)
             await loadSetupThread()
         } catch {
             guard gen == accountGeneration else { return }
-            answered.remove(component.id)
+            answered.remove(ref)
             cardNotes[component.id] = "Your answer didn't reach Setup. Tap it again."
         }
     }

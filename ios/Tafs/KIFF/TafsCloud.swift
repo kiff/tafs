@@ -890,15 +890,19 @@ final class TafsCloud {
         let run: String
         let component: SetupComponent
         var answer: CardAnswer?
+        /// tafs cloud's key for the card, unique in the thread (kiff/tafs#386); none from a
+        /// tafs cloud that doesn't send one.
+        var key: String? = nil
 
-        enum CodingKeys: String, CodingKey { case at, session, run, component, answer }
+        enum CodingKeys: String, CodingKey { case at, session, run, component, answer, key }
 
-        init(at: Date, session: String, run: String, component: SetupComponent, answer: CardAnswer? = nil) {
+        init(at: Date, session: String, run: String, component: SetupComponent, answer: CardAnswer? = nil, key: String? = nil) {
             self.at = at
             self.session = session
             self.run = run
             self.component = component
             self.answer = answer
+            self.key = key
         }
 
         init(from decoder: Decoder) throws {
@@ -909,6 +913,7 @@ final class TafsCloud {
             component = try c.decode(SetupComponent.self, forKey: .component)
             // An answer the app can't read leaves the card unanswered, never the card out.
             answer = try? c.decodeIfPresent(CardAnswer.self, forKey: .answer)
+            key = try? c.decodeIfPresent(String.self, forKey: .key)
         }
     }
 

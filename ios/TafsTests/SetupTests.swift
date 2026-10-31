@@ -127,7 +127,7 @@ final class SetupTests: XCTestCase {
         await model.loadSetup()
         XCTAssertEqual(model.setupThread.plan?.component.steps?.first?.status, "done", "the latest version")
         XCTAssertEqual(model.setupThread.items.map(\.id), [
-            "m|" + model.setupThread.messages[0].id, "m|" + model.setupThread.messages[1].id, "c|which",
+            "m|" + model.setupThread.messages[0].id, "m|" + model.setupThread.messages[1].id, "c|s1#which",
         ])
         XCTAssertEqual(model.setupThread.session, "s1")
         Keychain.delete(AppModel.planqueAccount)
@@ -150,12 +150,12 @@ final class SetupTests: XCTestCase {
         thread.components = [try shown(#"{"type":"approval","id":"connect","grant":"g_01"}"#, 2),
                              try shown(#"{"type":"notice","id":"note","tone":"info","text":"Reading Stripe's tools"}"#, 11)]
         let order = thread.items.map(\.id)
-        let connect = try XCTUnwrap(order.firstIndex(of: "c|connect"))
+        let connect = try XCTUnwrap(order.firstIndex(of: "c|s1#connect"))
         let words = try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[1].id))
         let answer = try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[2].id))
         XCTAssertEqual(connect, words + 1, "the card right after Setup's words")
         XCTAssertLessThan(connect, answer, "and before the owner's answer")
-        XCTAssertLessThan(try XCTUnwrap(order.firstIndex(of: "c|note")), try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[3].id)),
+        XCTAssertLessThan(try XCTUnwrap(order.firstIndex(of: "c|s1#note")), try XCTUnwrap(order.firstIndex(of: "m|" + thread.messages[3].id)),
                           "a notice stays where it happened")
     }
 
@@ -170,10 +170,64 @@ final class SetupTests: XCTestCase {
         ]
         var card = ShownComponent(firstAt: at(2), session: "s1", run: "r1", component: try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01"}"#))
         thread.components = [card]
-        XCTAssertEqual(thread.items.last?.id, "c|connect", "waiting, after Coach's words")
+        XCTAssertEqual(thread.items.last?.id, "c|s1#connect", "waiting, after Coach's words")
         card.answer = TafsCloud.CardAnswer(words: "Approved")
         thread.components = [card]
-        XCTAssertEqual(thread.items.map(\.id), ["m|" + thread.messages[0].id, "c|connect", "m|" + thread.messages[1].id], "answered, at its own time")
+        XCTAssertEqual(thread.items.map(\.id), ["m|" + thread.messages[0].id, "c|s1#connect", "m|" + thread.messages[1].id], "answered, at its own time")
+    }
+
+    /// Coach can use a card's id again (kiff/tafs#387): a new card under an id used before
+    /// waits for its own answer, by tafs cloud's key, else its conversation and id. An answer
+    /// written before it appeared was to the earlier card.
+    func testANewCardUnderAnIdUsedBeforeWaitsForItsOwnAnswer() throws {
+        func at(_ s: Int) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + Double(s)) }
+        let confirm = try SetupTests.component(#"{"type":"confirm","id":"which","text":"Which account?","options":[{"value":"live","label":"Live"}]}"#)
+        let answered = TafsCloud.CardAnswer(words: "Live")
+        // Two conversations, no keys: two cards.
+        let folded = SetupThread.fold([
+            TafsCloud.Shown(at: at(1), session: "s1", run: "r1", component: confirm, answer: answered),
+            TafsCloud.Shown(at: at(9), session: "s2", run: "r2", component: confirm),
+        ])
+        XCTAssertEqual(folded.map(\.ref), ["s1#which", "s2#which"])
+        XCTAssertNotNil(folded[0].answer)
+        XCTAssertNil(folded[1].answer, "the new card waits")
+        // One conversation, tafs cloud's keys: two cards; the same key again is the same card.
+        let keyed = SetupThread.fold([
+            TafsCloud.Shown(at: at(1), session: "s1", run: "r1", component: confirm, answer: answered, key: "k1"),
+            TafsCloud.Shown(at: at(9), session: "s1", run: "r2", component: confirm, key: "k2"),
+            TafsCloud.Shown(at: at(10), session: "s1", run: "r2", component: confirm, key: "k2"),
+        ])
+        XCTAssertEqual(keyed.map(\.ref), ["k1", "k2"])
+        var thread = SetupThread()
+        thread.components = [keyed[1]]
+        thread.messages = [TafsCloud.ChatMessage(at: at(2), from: .owner, text: "[confirm which] live", session: "s1")]
+        XCTAssertNil(thread.answer(to: "which"), "an answer from before it appeared was the earlier card's")
+        thread.messages.append(TafsCloud.ChatMessage(at: at(11), from: .owner, text: "[confirm which] live", session: "s1"))
+        XCTAssertEqual(thread.answer(to: "which")?.text, "live")
+    }
+
+    /// A card answered in one conversation isn't answered in the next with the same id; a
+    /// card answered here is the thread's once it holds the answer (kiff/tafs#387).
+    func testACardTakenInOneConversationIsntAnsweredInTheNext() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        let card = #"{"type":"confirm","id":"which","text":"Which account?","options":[{"value":"live","label":"Live"}]}"#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[{"at":"2026-10-31T10:00:00.000Z","session":"s1","run":"r1","seq":1,"key":"k1","component":\#(card)}]}"#)
+        await model.loadSetup()
+        let first = try XCTUnwrap(model.setupThread.components.first?.component)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/which/answer"] = (200, #"{"session":"s1","run":"r1"}"#)
+        await model.answer(first, "live")
+        XCTAssertTrue(model.isAnswered(first))
+        // The next conversation's card has the same id and its own key.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[{"at":"2026-10-31T11:00:00.000Z","session":"s2","run":"r9","seq":1,"key":"k2","component":\#(card)}]}"#)
+        await model.loadSetupThread()
+        XCTAssertFalse(model.isAnswered(first), "a new card under the id waits for its own answer")
+        XCTAssertTrue(model.answered.contains("k1"))
+        // Once the thread holds k1's answer, it's the thread's.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[{"at":"2026-10-31T10:00:00.000Z","session":"s1","run":"r1","seq":1,"key":"k1","component":\#(card),"answer":{"state":"answered","words":"Live"}}]}"#)
+        await model.loadSetupThread()
+        XCTAssertTrue(model.answered.isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
     }
 
     /// While Setup works, the chat shows it thinking and Send is Stop (#58 B1): from the
