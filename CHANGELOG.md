@@ -116,6 +116,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, held calls:** a call Coach's own agent holds is titled **Coach**, with Coach's mark,
+  never "A taf". Why a call is held reads KIFF's own words when sent. A count of calls without
+  them reads "Each call asks you first" for a limit of 0, otherwise "20 calls a day: this would
+  be the 21st", never the machine's reason.
 - A taf's work steps say what it did, in words, both while it works and after: KIFF's title for
   a tool through KIFF ("List your charges"), and what Coach's and the agents' own tools do
   ("Showing you a card"). A step showed the tool's name before ("show", "list_charges_ijkp").

@@ -286,7 +286,7 @@ object KiffMapping {
   fun held(e: CardException, coach: String? = null): HeldCall {
     val breach = reasonBreach(e)
     // KIFF's own words first; the app's only where KIFF sends none.
-    val reason = e.reasonText?.takeIf { it.isNotBlank() } ?: moneyReason(e) ?: breach?.reason ?: e.reason ?: outcomeText(breach?.outcome)
+    val reason = e.reasonText?.takeIf { it.isNotBlank() } ?: moneyReason(e) ?: countReason(e) ?: breach?.reason ?: e.reason ?: outcomeText(breach?.outcome)
     // A gateway call is filed under its tool call's id, which says nothing to the owner: what it's on is in
     // its arguments, as KIFF keeps them (kiff/tafs#102).
     val name = says(e.action, e.title)
@@ -335,6 +335,41 @@ object KiffMapping {
       "per_action_exceeded" -> "${amount.formatted} is over the $cap limit for one call"
       "limit_reached" -> "${amount.formatted} would go over the $cap total"
       else -> null
+    }
+  }
+
+  /**
+   * A hold over a count of calls, in the Card's words, for a KIFF that doesn't send its own: a limit of 0 means each call asks
+   * first; otherwise which call this would be ("20 calls a day: this would be the 21st"). Never the machine's "count limit 0
+   * per calendar_day reached".
+   */
+  fun countReason(e: CardException): String? {
+    val b = reasonBreach(e) ?: return null
+    if (b.outcome != "limit_reached" || b.quantity != "count") return null
+    val limit = b.limit ?: return null
+    if (limit == 0L) return "Each call asks you first"
+    val nth = ordinal((b.used ?: limit) + (b.draw ?: 1))
+    val window = b.window ?: return "Over its limit of $limit calls: this would be the $nth"
+    return "$limit ${if (limit == 1L) "call" else "calls"} ${windowWords(window)}: this would be the $nth"
+  }
+
+  /** A KIFF window in the words a Card's totals use (docs/tafs.md); one KIFF adds later shows as it is sent, never as a day. */
+  fun windowWords(window: String): String = when (window) {
+    "calendar_day" -> "a day"
+    "rolling_24h" -> "in any 24 hours"
+    "rolling_1h" -> "in any hour"
+    "lifetime" -> "in total"
+    else -> window
+  }
+
+  /** 1st, 2nd, 3rd, 11th, 21st. */
+  fun ordinal(n: Long): String {
+    if (n % 100 in 11..13) return "${n}th"
+    return when (n % 10) {
+      1L -> "${n}st"
+      2L -> "${n}nd"
+      3L -> "${n}rd"
+      else -> "${n}th"
     }
   }
 

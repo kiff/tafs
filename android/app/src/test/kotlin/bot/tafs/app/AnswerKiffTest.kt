@@ -401,6 +401,19 @@ class AnswerKiffTest {
     assertEquals("role_forbidden", AnswerRefusals.lastingRefusal(error))
   }
 
+  @Test fun aCallCoachsOwnAgentHoldsIsTitledCoachNeverATaf() = runTest {
+    // Coach's agent is no taf in the list: tafs cloud names which agent is Coach's.
+    reads(held = held(id = "ce_9").replace(""""subject":"a-1"""", """"subject":"setup-acme""""))
+    transport.answer("GET /v1/setup", 200, """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}}""")
+    val m = model()
+    val call = m.state.value.held.single()
+    assertNull(m.state.value.taf(call.tafId))
+    assertEquals("Coach", m.state.value.holder(call.tafId)?.name)
+    // A taf's own call keeps its taf's name.
+    assertEquals(m.state.value.taf("a-1")?.name, m.state.value.holder("a-1")?.name)
+    assertNull(m.state.value.holder("someone-else"))
+  }
+
   @Test fun aRefusalIsForgottenOnceItsCallIsNoLongerHeld() = runTest {
     reads(); refusal("role_forbidden")
     val m = model()
