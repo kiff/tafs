@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, dictation's language:** where the phone dictates in more than one of the owner's
+  languages, a switch before the mic shows the one in use ("FR"), and each tap goes to the
+  next, as on iOS. The choice is kept.
 - **Android, versions:** who made a version, and what keeps a switch from going live, read in
   tafs cloud's words ("By Coach mode", "By you", "By someone on your account"), as on iOS.
   The app's own copies of both are gone.
@@ -119,6 +122,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, Coach's answered cards:** an answered approval says in one line what it was
+  ("Approved · Connect Stripe"), and an answered card goes back to its own time in the thread,
+  while one waiting for the owner stays at the end.
+- **Android, Coach's cards under a reused id:** a card in a new conversation, or a new card in
+  the same one, under an id Coach used before, no longer shows "Answered." with no button, nor
+  sits in another conversation's part of the thread.
 - **Android, a chat while its taf or Coach works:** the thread no longer jumps about. The dots and
   the answer replacing them are one row that never shortens the thread's end, and an answer
   growing word by word is followed without restarting an animation on every word.
