@@ -1688,6 +1688,8 @@ class AppModel(
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
         chatAwaiting = if (settled) s.chatAwaiting - tafId else s.chatAwaiting,
         coachComponents = if (tafId == COACH_CHAT) thread.components else s.coachComponents,
+        // A taken card is the thread's once it holds its answer.
+        cardsTaken = if (tafId == COACH_CHAT) s.cardsTaken - thread.components.filter { it.answer != null }.map { CoachWords.cardKey(it.session.ifEmpty { null } ?: s.coachChat, it.id) }.toSet() else s.cardsTaken,
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
       )
     }
@@ -2415,31 +2417,33 @@ class AppModel(
   suspend fun answerCard(type: String, id: String, answer: String): Boolean {
     if (_state.value.mode != Mode.kiff) return false
     val cloudId = _state.value.coachCloudId ?: return false
-    if (id in _state.value.cardsAnswering) return false
+    val session = _state.value.coachComponents.firstOrNull { it.id == id }?.session?.ifEmpty { null } ?: _state.value.coachChat
+    val key = CoachWords.cardKey(session, id)
+    if (key in _state.value.cardsAnswering) return false
     val value: kotlinx.serialization.json.JsonElement =
       if (type == "questions") runCatching { KiffClient.json.parseToJsonElement(answer) }.getOrElse { kotlinx.serialization.json.JsonPrimitive(answer) }
       else kotlinx.serialization.json.JsonPrimitive(answer)
-    _state.update { it.copy(cardsAnswering = it.cardsAnswering + id, cardErrors = it.cardErrors - id) }
+    _state.update { it.copy(cardsAnswering = it.cardsAnswering + key, cardErrors = it.cardErrors - key) }
     val generation = accountGeneration
     val answered = try {
-      cloud.answerCard(cloudId, id, value, _state.value.coachComponents.firstOrNull { it.id == id }?.session?.ifEmpty { null } ?: _state.value.coachChat)
+      cloud.answerCard(cloudId, id, value, session)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return false
       val gone = e is CloudError && e.status == 409
-      if (!gone) _state.update { it.copy(cardErrors = it.cardErrors + (id to "Your answer wasn't sent. ${ErrorWords.of(e)}")) }
-      _state.update { it.copy(cardsAnswering = it.cardsAnswering - id) }
+      if (!gone) _state.update { it.copy(cardErrors = it.cardErrors + (key to "Your answer wasn't sent. ${ErrorWords.of(e)}")) }
+      _state.update { it.copy(cardsAnswering = it.cardsAnswering - key) }
       readThread(COACH_CHAT)
       return false
     } finally {
       // Whatever comes after (the thread read, following the run), the answer is no longer on its way once tafs cloud has
       // answered: a screen torn down meanwhile (the vendor's page opening) never leaves the card on "Sending your answer…".
-      _state.update { it.copy(cardsAnswering = it.cardsAnswering - id) }
+      _state.update { it.copy(cardsAnswering = it.cardsAnswering - key) }
     }
     if (generation != accountGeneration) return false
     // Taken: the card shows it's answered at once, until the thread's words for it come.
-    _state.update { it.copy(cardsTaken = it.cardsTaken + id) }
+    _state.update { it.copy(cardsTaken = it.cardsTaken + key) }
     answered.session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
     // Coach is at work again: it reads as thinking until its run is followed, and the run's end reads the thread again.
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (COACH_CHAT to clock()), chatEnded = it.chatEnded - COACH_CHAT) }

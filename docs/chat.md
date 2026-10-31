@@ -220,6 +220,10 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   stopped waiting with no answer. Each card draws its answered state from this alone, in
   kiff/agents' words (Android: `CoachWords.answered`); the app keeps no answer of its own. Words written instead also show as the owner's message,
   with `answers` naming the card, so they never vanish from the thread.
+- A card's answer belongs to that card in that conversation. On Android, a card on its way or
+  taken is known by its conversation and id (`CoachWords.cardKey`), and is the thread's again
+  once the thread holds its answer; a new card Coach sends under an id it used before waits
+  for its own answer (`CoachWords.fold`), never shows the earlier one's.
 - The app's earlier form, a message `[<type> <id>] <answer>` from the person's own app, is
   still taken as the card's answer when that card waits. Any other text, a door's message, or
   a card that doesn't wait goes as a message. This form goes one release after the app build
