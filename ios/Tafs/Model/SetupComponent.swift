@@ -139,7 +139,8 @@ struct SetupThread: Equatable {
     /// In order, as it happened, with one exception (kiff/tafs#58): a component that asks
     /// the owner to act comes after what Setup wrote with it, so its words lead to the
     /// card. That is Setup's messages in the same session after the component, up to the
-    /// owner's next message.
+    /// owner's next message. Once answered, it goes back to its own time, in line with what
+    /// Coach said around it.
     var items: [Item] {
         let placed: [(Item, Date)] = messages.map { (Item.message($0), $0.at) } +
             components.filter { $0.component.type != .steps }.map { c in (Item.component(c), placedAt(c)) }
@@ -153,7 +154,7 @@ struct SetupThread: Equatable {
     private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn]
 
     private func placedAt(_ c: ShownComponent) -> Date {
-        guard Self.asking.contains(c.component.type) else { return c.firstAt }
+        guard Self.asking.contains(c.component.type), c.answer == nil else { return c.firstAt }
         let nextOwner = messages.first { $0.from == .owner && $0.at > c.firstAt }?.at ?? .distantFuture
         let after = messages.filter { $0.from == .taf && $0.session == c.session && $0.at >= c.firstAt && $0.at < nextOwner }
         return after.last?.at ?? c.firstAt

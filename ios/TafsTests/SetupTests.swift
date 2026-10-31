@@ -159,6 +159,23 @@ final class SetupTests: XCTestCase {
                           "a notice stays where it happened")
     }
 
+    /// Once the thread holds its answer, a card goes back to its own time, in line with what
+    /// Coach said around it: the owner doesn't scroll up past answered cards (kiff/tafs#385).
+    func testAnAnsweredCardGoesBackToItsOwnTime() throws {
+        func at(_ s: Int) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + Double(s)) }
+        var thread = SetupThread()
+        thread.messages = [
+            TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Refunds, please", session: "s1"),
+            TafsCloud.ChatMessage(at: at(3), from: .taf, text: "I'll connect Stripe. Approve below.", session: "s1"),
+        ]
+        var card = ShownComponent(firstAt: at(2), session: "s1", run: "r1", component: try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01"}"#))
+        thread.components = [card]
+        XCTAssertEqual(thread.items.last?.id, "c|connect", "waiting, after Coach's words")
+        card.answer = TafsCloud.CardAnswer(words: "Approved")
+        thread.components = [card]
+        XCTAssertEqual(thread.items.map(\.id), ["m|" + thread.messages[0].id, "c|connect", "m|" + thread.messages[1].id], "answered, at its own time")
+    }
+
     /// While Setup works, the chat shows it thinking and Send is Stop (#58 B1): from the
     /// owner's message until tafs cloud says the run ended; Stop cancels that run.
     func testThinkingUntilSetupAnswersAndStopCancels() async throws {

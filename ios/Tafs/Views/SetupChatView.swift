@@ -1291,7 +1291,12 @@ struct SetupApproval: View {
         }
     }
 
+    /// An answered approval, in one line: the answer, then what it was. Coach's title for the
+    /// card comes first, so several in a row each say what was approved.
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
+        if let title = component.title?.trimmingCharacters(in: .whitespaces), !title.isEmpty {
+            return state == .declined ? "Declined · \(title)" : "Approved · \(title)"
+        }
         let vendor = (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? "the vendor"
         // An approval with the taf's Card is the Card's (kiff/tafs#94), not the tool's again.
         if let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true {
