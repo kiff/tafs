@@ -68,7 +68,7 @@ class ChatFollowTest {
 
   @Test fun aReplyStreamingInKeepsTheThreadAtItsEndNeverAtItsTop() {
     var current by mutableStateOf(state(null))
-    rule.setContent {
+    rule.setShown {
       TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { TafChatView("refunds-1", current, actions) } }
     }
     rule.onNodeWithText("Message 30 of the thread").assertIsDisplayed()
@@ -116,7 +116,7 @@ class ChatFollowTest {
 
   @Test fun coachWorkingKeepsItsThreadAtItsEndNeverAtItsTop() {
     var current by mutableStateOf(coach(false, null))
-    rule.setContent {
+    rule.setShown {
       TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(current, actions, loadCoach = {}, onBack = {}) } }
     }
     rule.onNodeWithText("Coach message 30").assertIsDisplayed()
