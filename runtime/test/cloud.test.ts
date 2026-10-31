@@ -1220,7 +1220,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const r = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
     expect(r.status).toBe(200);
     expect((r.body.versions as Array<{ n: number; live: boolean }>).map((v) => [v.n, v.live])).toEqual([[1, true], [2, false]]);
-    // Who made each, in words: the apps keep no copy (kiff/kiff-cloud#1425 item 8).
+    // Who made each, in words: the apps keep no copy.
     expect((r.body.versions as Array<{ by_words?: string }>).map((v) => v.by_words)).toEqual(["By Coach mode", "By Coach mode"]);
   });
 

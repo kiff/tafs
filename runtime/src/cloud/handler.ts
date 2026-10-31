@@ -1995,7 +1995,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   const [, , , action, rawN, sub] = parts;
   if (action === "versions" && parts.length === 4 && method === "GET") {
     const state = await settleSwitch(event, me, taf, deps);
-    // Who made each, in words (kiff/tafs#1425 item 8): the apps show them, never their own copy.
+    // Who made each, in words: the apps show them, never their own copy.
     const versions = state.versions.map((v) => { const by = versionBy(v, me); return by ? { ...v, by_words: by } : v; });
     return { versions, ...(state.switching ? { switching: state.switching } : {}) };
   }
