@@ -177,15 +177,16 @@ nothing goes live.
 ## Versions
 
 A taf's versions are on their own screen (`VersionsPanel`), like app builds: newest
-first, the live one marked (`GET /v1/tafs/{id}/versions`).
+first, the live one marked (`GET /v1/tafs/{id}/versions`). Each says who made it in tafs
+cloud's words (`by_words`: "By Coach mode", "By you"), shown as they come.
 
 **Install this version** makes one live, forward or back, with one Face ID
 (`AppModel.versionCard`). When the version brings a Card revision, it's three steps, so
 nothing ever runs with one version's definition under another's Cards:
 
 1. tafs cloud begins the switch (`POST /v1/tafs/{id}/versions/{n}/switch`): from here
-   nothing of the taf runs. A run in the way answers 409 naming it; the app can stop it
-   first (`stop_blocking`).
+   nothing of the taf runs. A run in the way answers 409 naming it, with `words` saying
+   what's in the way, which the app shows as they come; it can stop it first (`stop_blocking`).
 2. The owner reads the Card the version brings (`VersionCardSheet`: each Card as it is
    now and as it will be), and the Face ID signs its confirmation in KIFF.
 3. The version goes live (`POST /v1/tafs/{id}/versions/{n}/live`).

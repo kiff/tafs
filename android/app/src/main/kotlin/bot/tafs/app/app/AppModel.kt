@@ -3203,7 +3203,7 @@ class AppModel(
       if (generation != accountGeneration) return null
       if (e.status == 409 && e.blocking.isNotEmpty()) {
         _state.update { it.copy(blockedInstalls = it.blockedInstalls + (tafId to version.n)) }
-        versionError(tafId, VersionWords.blockedWords(version.n, e.blocking, stopBlocking))
+        versionError(tafId, e.words ?: "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
       } else {
         versionError(tafId, "Version ${version.n} can't go live now. ${ErrorWords.of(e)}")
       }
