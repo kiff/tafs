@@ -42,7 +42,10 @@ card above" under it. An older Coach thread still holds answers in the form the 
 (`CoachWords.ownerWords`), and sends nothing in that form. A message that didn't go
 stays where it was written, with why and Retry (`UnsentBubble`). kiff/agents allows each
 person 10 messages in 10 minutes. Past that, the message is kept with "That's a lot of
-messages in a few minutes. Give {taf} a moment, then try again."
+messages in a few minutes. Give {taf} a moment, then try again." A run kiff/agents refused
+(the period's AI use spent, the taf halted, a version switching) says why in tafs cloud's
+`words`, on the plain route and the streamed one alike (Android: `sendFailure`); the app's
+own line for the status is only for a refusal that comes without them.
 
 A sent message's menu offers **Send again**, **Edit and send** and **Copy**. The mic in
 the message bar dictates into the box, recognised on the device: no audio leaves the
