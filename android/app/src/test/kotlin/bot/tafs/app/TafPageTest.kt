@@ -132,6 +132,14 @@ class TafPageTest {
     assertTrue(m.state.value.runsInFlight.isEmpty())
   }
 
+  @Test fun aRunNowKiffAgentsRefusedSaysWhyInTafsCloudsWords() = runTest {
+    reads()
+    transport.answer("POST /v1/tafs/taf_1/run", 409, """{"error":"refused","code":"ai_fair_use","words":"Your tafs have used this period's AI. It starts again on 1 Nov."}""")
+    val m = model()
+    assertNull(m.runNow("refunds-1"))
+    assertEquals("The run didn't start. Your tafs have used this period's AI. It starts again on 1 Nov.", m.state.value.lastError)
+  }
+
   @Test fun aSecondRunNowWhileTheFirstIsOnItsWayStartsNothing() = runTest {
     reads()
     transport.answer("POST /v1/tafs/taf_1/run", 200, """{"session":"s9"}""")

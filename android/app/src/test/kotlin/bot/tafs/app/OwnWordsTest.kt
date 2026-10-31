@@ -103,6 +103,9 @@ class OwnWordsTest {
   @Test fun aServersRefusalIsSaidInTheAppsWordsWithWhatTheOwnerCanDo() {
     assertEquals(ErrorWords.OURS, ErrorWords.of(CloudError(400, "send the phone's push token, in hex")))
     assertEquals(ErrorWords.DOWN, ErrorWords.of(CloudError(503, "alerts aren't set up")))
+    // tafs cloud's own words for the owner show as they come, on every path (Run now, Send again, a message): never "It changed".
+    assertEquals("Your tafs have used this period's AI. It starts again on 1 Nov.", ErrorWords.of(CloudError(409, "refused", words = "Your tafs have used this period's AI. It starts again on 1 Nov.")))
+    assertEquals(ErrorWords.CHANGED, ErrorWords.of(CloudError(409, "refused")))
     assertEquals(ErrorWords.NOT_ALLOWED, ErrorWords.of(KiffError.Server(403, "forbidden")))
     assertEquals(ErrorWords.CHANGED, ErrorWords.of(CloudError(409, "card_not_waiting")))
     assertEquals(ErrorWords.BUSY, ErrorWords.of(CloudError(429, "slow down")))
