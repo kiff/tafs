@@ -216,15 +216,18 @@ class CoachActions(
 @Composable
 fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
   val c = shown.component
-  // Answered once the thread says so, in kiff/agents' words; on its way while tafs cloud takes it.
+  // Answered once the thread says so, in kiff/agents' words; on its way while tafs cloud takes it. By this conversation's card,
+  // never another's that had the same id.
+  val key = shown.ref
   val answered = shown.answer?.let(CoachWords::answered)
-    ?: if (c.id in state.cardsAnswering) CoachWords.ANSWERING else if (c.id in state.cardsTaken) CoachWords.TAKEN else null
+    ?: if (key in state.cardsAnswering) CoachWords.ANSWERING else if (key in state.cardsTaken) CoachWords.TAKEN else null
+  val error = state.cardErrors[key]
   when (c.type) {
     "notice" -> NoticeCard(c)
-    "confirm" -> ConfirmCard(c, answered, state.cardErrors[c.id], actions.answer)
-    "questions" -> QuestionsCard(c, answered, state.cardErrors[c.id], actions.answer)
-    "approval" -> ApprovalCard(c, state, answered, actions)
-    "sign_in" -> SignInCard(c, state, answered, actions)
+    "confirm" -> ConfirmCard(c, answered, error, actions.answer)
+    "questions" -> QuestionsCard(c, answered, error, actions.answer)
+    "approval" -> ApprovalCard(c, state, answered, error, actions)
+    "sign_in" -> SignInCard(c, state, answered, error, actions)
     "result" -> if (c.taf?.improves != null) ImprovementCard(c, state, actions) else HandOverCard(shown, state, actions)
   }
 }
@@ -234,7 +237,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
  * reads it, and the one confirmation signs exactly what is shown. Coach's own description of it is never what is approved.
  */
 @Composable
-private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, actions: CoachActions) {
+private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val draft = c.draft?.let { state.setupDrafts[it] }
   val busy = state.connecting != null
@@ -281,7 +284,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
       }
     }
     state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
-    state.cardErrors[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+    error?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
 
@@ -401,7 +404,7 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
  * page. Where it goes is always the app's own words (the card's service), whatever Coach's button says.
  */
 @Composable
-private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, actions: CoachActions) {
+private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
   val vendor = c.service ?: "the vendor"
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val again = grant?.needsReconnect == true
@@ -440,7 +443,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, ac
           )
         }
         state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
-        state.cardErrors[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+        error?.let { Text(it, style = scaled(13, color = Theme.no)) }
       }
     }
   }

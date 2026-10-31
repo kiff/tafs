@@ -128,7 +128,7 @@ class TafsCloud(
     val wire = KiffClient.json.decodeFromJsonElement(WireShown.serializer(), element)
     val component = KiffClient.json.decodeFromJsonElement(SetupComponent.serializer(), wire.component)
     val answer = wire.answer?.let { runCatching { KiffClient.json.decodeFromJsonElement(CardAnswer.serializer(), it) }.getOrNull() }
-    if (component.type !in SetupComponent.KINDS) null else ShownComponent(wire.at, wire.session, wire.run, component, answer)
+    if (component.type !in SetupComponent.KINDS) null else ShownComponent(wire.at, wire.session, wire.run, component, answer, wire.key)
   }.getOrNull()
 
   /**

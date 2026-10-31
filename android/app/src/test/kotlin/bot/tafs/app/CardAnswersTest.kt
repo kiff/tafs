@@ -89,7 +89,7 @@ class CardAnswersTest {
     assertEquals("""{"answer":"agree","session":"s1"}""", String(transport.requestsTo("POST /v1/tafs/setup_1/components/c1/answer").single().body!!))
     assertTrue("never the chat's text form", transport.requestsTo("POST /v1/tafs/setup_1/messages").isEmpty())
     assertEquals("Agree", m.state.value.coachComponents.single().answer?.let(CoachWords::answered))
-    assertFalse(m.state.value.cardsAnswering.contains("c1"))
+    assertFalse(m.state.value.cardsAnswering.contains(CoachWords.cardKey("s1", "c1")))
   }
 
   @Test fun anAnswerTafsCloudTookNeverLeavesTheCardSendingEvenIfTheThreadCantBeRead() = runTest {
@@ -103,9 +103,40 @@ class CardAnswersTest {
     m.loadChat(COACH_CHAT)
     assertTrue(m.answerCard("sign_in", "s1", "signed in"))
     // Taken: not "Sending your answer…", and not open again, though the thread hasn't the answer yet.
-    assertFalse(m.state.value.cardsAnswering.contains("s1"))
-    assertTrue(m.state.value.cardsTaken.contains("s1"))
+    assertFalse(m.state.value.cardsAnswering.contains(CoachWords.cardKey("s1", "s1")))
+    assertTrue(m.state.value.cardsTaken.contains(CoachWords.cardKey("s1", "s1")))
     assertNull(m.state.value.coachComponents.single().answer)
+  }
+
+  @Test fun aCardTakenInOneConversationIsntAnsweredInTheNextWithTheSameId() = runTest {
+    reads()
+    val signIn = cards[3].second
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("s1", signIn)}]}""")
+    transport.answer(conversation, 503, """{"error":"later"}""")
+    transport.answer("POST /v1/tafs/setup_1/components/s1/answer", 200, """{"session":"s1","run":"r1","status":"running"}""")
+    val m = model()
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertTrue(m.answerCard("sign_in", "s1", "signed in"))
+    assertTrue(m.state.value.cardsTaken.contains(CoachWords.cardKey("s1", "s1")))
+    // Coach uses the same card id in a new conversation: that card waits for its own answer.
+    assertFalse(m.state.value.cardsTaken.contains(CoachWords.cardKey("s2", "s1")))
+  }
+
+  @Test fun aTakenCardIsTheThreadsOnceItHoldsTheAnswer() = runTest {
+    reads()
+    val confirm = cards.first().second
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("c1", confirm)}]}""")
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("c1", confirm, """{"state":"answered","words":"Agree"}""")}]}""")
+    transport.answer("POST /v1/tafs/setup_1/components/c1/answer", 200, """{"session":"s1","run":"r1","status":"running"}""")
+    transport.answer("GET /v1/tafs/setup_1/runs/r1/stream", 200, sse("end" to """{"status":"COMPLETED","stop":"end_turn"}"""))
+    val m = model()
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertTrue(m.answerCard("confirm", "c1", "agree"))
+    settle()
+    assertEquals("Agree", m.state.value.coachComponents.single().answer?.let(CoachWords::answered))
+    assertTrue(m.state.value.cardsTaken.isEmpty())
   }
 
   @Test fun aQuestionsCardsAnswerGoesAsItsJson() = runTest {
@@ -131,9 +162,9 @@ class CardAnswersTest {
     val reads = transport.requestsTo(conversation).size
     assertFalse(m.answerCard("confirm", "c1", "agree"))
     assertTrue(transport.requestsTo(conversation).size > reads)
-    assertNull(m.state.value.cardErrors["c1"])
+    assertNull(m.state.value.cardErrors[CoachWords.cardKey("s1", "c1")])
     assertFalse(m.answerCard("confirm", "c1", "agree"))
-    assertEquals("Your answer wasn't sent. " + bot.tafs.app.model.ErrorWords.DOWN, m.state.value.cardErrors["c1"])
+    assertEquals("Your answer wasn't sent. " + bot.tafs.app.model.ErrorWords.DOWN, m.state.value.cardErrors[CoachWords.cardKey("s1", "c1")])
   }
 
   @Test fun afterTheCardsApprovalCoachsRunIsFollowedToItsEndAndItsNextWordsShow() = runTest {
