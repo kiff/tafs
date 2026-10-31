@@ -273,10 +273,6 @@ data class AppState(
   /** Cards whose answer tafs cloud took, before the thread has it: shown answered, never as open again. */
   val cardsTaken: Set<String> = emptySet(),
   val cardErrors: Map<String, String> = emptyMap(),
-  /** The version each improvement result made, by its key; those being made, and those that failed (with why). */
-  val improvedVersions: Map<String, Int> = emptyMap(),
-  val makingVersions: Set<String> = emptySet(),
-  val improveErrors: Map<String, String> = emptyMap(),
   /** Coach's cards in its thread, folded. */
   val coachComponents: List<ShownComponent> = emptyList(),
   /** The Coach conversation shown (kiff/tafs#73): one the owner reopened or started here, or null for the latest ones together. */
@@ -2324,9 +2320,13 @@ class AppModel(
   /** The tafs tafs cloud said it set up that the list was read again for, so a taf not listed yet is read for once. */
   private val setUpTafs = mutableSetOf<String>()
 
+  /** The versions tafs cloud said it made from an improvement, by taf and number, that the taf's Versions were read again for. */
+  private val versionsRead = mutableSetOf<String>()
+
   /**
-   * Coach's results. A new taf is tafs cloud's to set up: it answers the card itself, and the phone only shows the answer,
-   * reading the list again once for a taf it set up. An improvement makes the taf's next version here, once.
+   * Coach's results, each tafs cloud's to hand over: it sets up a new taf, or makes an improved taf's next version, and answers
+   * the card itself; the phone only shows the answer. It reads the list again once for a taf it set up, and a taf's Versions
+   * once for a version it made, so it's there to try.
    */
   private suspend fun followHandOvers() {
     if (_state.value.mode != Mode.kiff) return
@@ -2335,9 +2335,9 @@ class AppModel(
       val c = shown.component
       val taf = c.taf ?: continue
       if (taf.improves != null) {
-        val key = improvementKey(c)
-        val s = _state.value
-        if (key !in s.improvedVersions && key !in s.makingVersions && key !in s.improveErrors) makeImprovedVersion(c)
+        val n = shown.answer?.outcome?.version ?: continue
+        val improved = improvedTaf(c) ?: continue
+        if (versionsRead.add("${improved.id}#$n")) loadVersions(improved.id)
         continue
       }
       val id = shown.answer?.outcome?.tafId ?: continue
@@ -2346,40 +2346,8 @@ class AppModel(
     if (readList) refresh()
   }
 
-  /**
-   * An improvement result, by its card and what it carries (its draft, else its note). The card's id is Coach's to pick and comes back
-   * in another conversation: keyed by the id alone, a new conversation's card showed the version an earlier one made.
-   */
-  fun improvementKey(c: SetupComponent): String = CoachWords.improvementKey(c)
-
-  /**
-   * Makes the version an improvement result hands over, once: tafs cloud builds it from Coach's words and keeps one per result, so a
-   * repeat gives the same version. Nothing goes live: the owner tries it and switches from the taf's Versions.
-   */
-  suspend fun makeImprovedVersion(c: SetupComponent) {
-    val taf = c.taf ?: return
-    val named = taf.improves ?: return
-    if (_state.value.mode != Mode.kiff) return
-    val key = improvementKey(c)
-    if (key in _state.value.makingVersions) return
-    // The taf it improves, by its tafs id, or by its agent's when Coach changed a taf it set up or found in this conversation.
-    val tafs = _state.value.tafs
-    val improves = tafs.firstOrNull { it.cloudId == named }?.cloudId ?: tafs.firstOrNull { it.id == named }?.cloudId ?: tafs.firstOrNull { it.id == taf.agent }?.cloudId ?: named
-    _state.update { it.copy(makingVersions = it.makingVersions + key, improveErrors = it.improveErrors - key) }
-    val generation = accountGeneration
-    try {
-      val n = cloud.createVersion(improves, taf.note.orEmpty(), taf.notes, taf.draft, key, taf.agent.takeIf { it.isNotEmpty() }, taf.tryWith)
-      if (generation != accountGeneration) return
-      _state.update { it.copy(improvedVersions = it.improvedVersions + (key to n)) }
-      tafs.firstOrNull { it.cloudId == improves }?.let { loadVersions(it.id) }
-    } catch (e: CancellationException) {
-      throw e
-    } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(improveErrors = it.improveErrors + (key to "${taf.name}'s new version isn't ready. ${ErrorWords.of(e)}")) }
-    } finally {
-      if (generation == accountGeneration) _state.update { it.copy(makingVersions = it.makingVersions - key) }
-    }
-  }
+  /** The taf an improvement result improves, as this phone lists it: by its tafs id, else by its agent's. */
+  private fun improvedTaf(c: SetupComponent): Taf? = c.taf?.let { t -> _state.value.tafs.firstOrNull { it.cloudId == t.improves || it.id == t.improves || it.id == t.agent } }
 
   /** Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at the vendor. Asks for the owner's confirmation. */
   suspend fun disconnect(grantId: String): Boolean {

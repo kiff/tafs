@@ -63,22 +63,6 @@ class TafsCloud(
     KiffClient.json.decodeFromString<SetupResponse>(String(send("POST", "/v1/setup", jsonBody("draft_id" to draft, "claim_secret" to claimSecret)))).setup
       ?: throw CloudError(502, "tafs cloud didn't answer with Coach.")
 
-  /**
-   * Stores a taf's next version as Coach drafted it, once per result ([from]): nothing goes live. Returns its number. [agent] is
-   * the result's: tafs cloud refuses an improvement of another taf's agent.
-   */
-  suspend fun createVersion(id: String, note: String, notes: String?, draft: String?, from: String, agent: String? = null, tryWith: String? = null): Int {
-    val body = kotlinx.serialization.json.buildJsonObject {
-      put("note", note)
-      notes?.let { put("notes", it) }
-      draft?.let { put("draft", it) }
-      put("from", from)
-      agent?.let { put("agent", it) }
-      tryWith?.let { put("try", it) }
-    }
-    return KiffClient.json.decodeFromString<CreatedVersion>(String(sendJson("POST", "/v1/tafs/${escaped(id)}/versions", body))).version
-  }
-
   private fun jsonBody(vararg fields: Pair<String, String>): ByteArray =
     KiffClient.json.encodeToString(
       kotlinx.serialization.json.JsonObject.serializer(),

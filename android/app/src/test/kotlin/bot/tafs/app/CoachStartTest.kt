@@ -356,33 +356,31 @@ class CoachStartTest {
 
   private val improvement = """{"type":"result","id":"r2","taf":{"agent":"refunds-2","name":"Refunds","improves":"c_9","note":"Asks before refunds over 50","draft":"dr_v","try":"Refund order 1001"}}"""
 
-  @Test fun anImprovementMakesTheTafsNextVersionOnceAndNothingGoesLive() = runTest {
+  @Test fun anImprovementsVersionIsTafsCloudsAndThePhoneOnlyShowsIt() = runTest {
     reads(home = refunds)
-    coachThread(improvement)
-    transport.answer("POST /v1/tafs/c_9/versions", 200, """{"version":3}""")
+    // tafs cloud made version 3 in the hand-over and answered the card with it.
+    coachThread(improvement, answer = """{"state":"answered","by":"tafs cloud","outcome":{"version":3}}""")
     transport.answer("GET /v1/tafs/c_9/versions", 200, """{"versions":[]}""")
     val m = model()
     m.refresh()
     m.loadCoach()
     m.loadChat(COACH_CHAT)
-    val made = body("POST /v1/tafs/c_9/versions")
-    assertEquals("dr_v", made.getValue("draft").jsonPrimitive.content)
-    assertEquals("r2|dr_v", made.getValue("from").jsonPrimitive.content)
-    assertEquals("refunds-2", made.getValue("agent").jsonPrimitive.content)
-    assertEquals("Refund order 1001", made.getValue("try").jsonPrimitive.content)
-    assertEquals(3, m.state.value.improvedVersions["r2|dr_v"])
+    val shown = m.state.value.coachComponents.single()
+    assertEquals(CoachWords.Improvement.Made(3), CoachWords.improvement(shown.answer))
+    // The phone makes no version and nothing goes live; it reads the taf's Versions once, so version 3 is there to try.
     m.loadChat(COACH_CHAT)
-    assertEquals(1, transport.requestsTo("POST /v1/tafs/c_9/versions").size)
+    assertTrue(transport.requestsTo("POST /v1/tafs/c_9/versions").isEmpty())
+    assertEquals(1, transport.requestsTo("GET /v1/tafs/c_9/versions").size)
     assertTrue(transport.requests.none { it.url.contains("/live") || it.url.contains("/switch") })
     assertTrue(transport.requestsTo("POST /v1/tafs").isEmpty())
   }
 
-  @Test fun anImprovementWithNoDraftIsKeyedByItsNote() {
-    val a = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"result","id":"r","taf":{"agent":"a","improves":"c","note":"one"}}""")
-    val b = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"result","id":"r","taf":{"agent":"a","improves":"c","note":"two"}}""")
-    assertTrue(CoachWords.improvementKey(a).startsWith("r|"))
-    assertEquals(2 + 16, CoachWords.improvementKey(a).length)
-    assertFalse(CoachWords.improvementKey(a) == CoachWords.improvementKey(b))
+  @Test fun anImprovementTafsCloudCouldntMakeSaysWhyAndOneNotYetAnsweredIsPreparing() {
+    assertEquals(CoachWords.Improvement.Preparing, CoachWords.improvement(null))
+    val failed = bot.tafs.app.kiff.CardAnswer(by = "tafs cloud", outcome = bot.tafs.app.kiff.ResultOutcome(failed = "You can't manage this taf's Cards."))
+    assertEquals(CoachWords.Improvement.Failed("You can't manage this taf's Cards."), CoachWords.improvement(failed))
+    assertEquals("Refunds' new version wasn't made: You can't manage this taf's Cards.", CoachWords.notImproved("Refunds", "You can't manage this taf's Cards."))
+    assertEquals("Coach's new version wasn't made: no draft.", CoachWords.notImproved("Coach", "no draft"))
   }
 
   // MARK: Signing in again

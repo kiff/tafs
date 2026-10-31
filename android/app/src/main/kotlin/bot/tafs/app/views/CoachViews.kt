@@ -206,7 +206,6 @@ class CoachActions(
   /** A new conversation about improving one taf, by its id: Coach starts from what it did and what its Card allows. */
   val improve: (String) -> Unit = {},
   /** Tries again to make the version an improvement names. */
-  val makeVersion: suspend (SetupComponent) -> Unit = {},
   /** Opens a taf, by its KIFF agent; and a taf's versions. */
   val openTaf: (String) -> Unit = {},
   val openVersions: (String) -> Unit = {},
@@ -228,7 +227,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
     "questions" -> QuestionsCard(c, answered, error, actions.answer)
     "approval" -> ApprovalCard(c, state, answered, error, actions)
     "sign_in" -> SignInCard(c, state, answered, error, actions)
-    "result" -> if (c.taf?.improves != null) ImprovementCard(c, state, actions) else HandOverCard(shown, state, actions)
+    "result" -> if (c.taf?.improves != null) ImprovementCard(shown, state, actions) else HandOverCard(shown, state, actions)
   }
 }
 
@@ -483,28 +482,27 @@ private fun HandOverCard(shown: ShownComponent, state: AppState, actions: CoachA
 }
 
 /**
- * An improvement's result: the taf's next version, made once, to try and switch to from its Versions. Nothing goes live. Its button
- * says what it opens: the version, never the taf.
+ * An improvement's result: the taf's next version, which tafs cloud makes and answers the card with, to try and switch to from
+ * its Versions. Nothing goes live. Its button says what it opens: the version, never the taf.
  */
 @Composable
-private fun ImprovementCard(c: SetupComponent, state: AppState, actions: CoachActions) {
-  val scope = rememberCoroutineScope()
-  val key = CoachWords.improvementKey(c)
+private fun ImprovementCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
+  val c = shown.component
   val taf = c.taf ?: return
   val improved = state.tafs.firstOrNull { it.cloudId == taf.improves || it.id == taf.improves || it.id == taf.agent }
   Panel(stroke = Theme.ok.copy(alpha = 0.45f)) {
     Eyebrow("New version · ${improved?.name ?: taf.name}", Theme.ok)
     c.text?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     taf.note?.takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
-    val n = state.improvedVersions[key]
-    val error = state.improveErrors[key]
-    when {
-      n != null && improved != null -> PrimaryButton("See version $n", { actions.openVersions(improved.id) })
-      error != null -> {
-        Text(error, style = scaled(13, color = Theme.no))
-        OutlineButton("Try again", { scope.launch { actions.makeVersion(c) } }, Modifier.fillMaxWidth(), enabled = key !in state.makingVersions)
+    when (val made = CoachWords.improvement(shown.answer)) {
+      is CoachWords.Improvement.Made ->
+        if (improved != null) PrimaryButton("See version ${made.version}", { actions.openVersions(improved.id) })
+        else Text("Version ${made.version} is made.", style = scaled(13, color = Theme.dim))
+      is CoachWords.Improvement.Failed -> {
+        Text(CoachWords.notImproved(improved?.name ?: taf.name, made.why), style = scaled(13, color = Theme.no))
+        Text(CoachWords.COACH_KNOWS, style = scaled(13, color = Theme.dim))
       }
-      else -> PrimaryButton("Preparing the new version…", {}, enabled = false)
+      CoachWords.Improvement.Preparing -> PrimaryButton("Preparing the new version…", {}, enabled = false)
     }
   }
 }
