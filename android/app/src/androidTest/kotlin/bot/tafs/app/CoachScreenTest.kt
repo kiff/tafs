@@ -33,7 +33,10 @@ import org.junit.Test
  * words, and the live line. Run with `-e hold 8` to keep each state on screen for a screenshot.
  */
 class CoachScreenTest {
-  @get:Rule val rule = createComposeRule()
+  // Awake and unlocked before the activity launches: a just-booted emulator may not be yet.
+  @get:Rule(order = 0) val awake = AwakeDevice()
+
+  @get:Rule(order = 1) val rule = createComposeRule()
 
   private val t0 = Instant.parse("2026-10-30T05:00:00Z")
   private fun component(json: String) = KiffClient.json.decodeFromString<SetupComponent>(json)

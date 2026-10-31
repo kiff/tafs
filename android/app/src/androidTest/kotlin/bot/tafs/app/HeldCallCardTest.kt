@@ -31,7 +31,10 @@ import org.junit.Test
  * real: the card only reports what the owner tapped.
  */
 class HeldCallCardTest {
-  @get:Rule val rule = createComposeRule()
+  // Awake and unlocked before the activity launches: a just-booted emulator may not be yet.
+  @get:Rule(order = 0) val awake = AwakeDevice()
+
+  @get:Rule(order = 1) val rule = createComposeRule()
 
   private val taf = Taf(id = "a-1", name = "Refunds", job = "", tools = emptyList(), colorIndex = 1, card = Card(emptyList(), "You"))
 
