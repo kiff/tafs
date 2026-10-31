@@ -38,7 +38,9 @@ tafs cloud stores one agent definition per taf in kiff/agents
 - **Model:** `claude-opus-5-5`, at medium effort, at most 16,000 tokens a turn. The
   model's thinking streams to the owner as a summary while it works.
 - **Instructions:** the shared tafs instructions, the job's, the owner's notes, how its
-  notes work, and two sections of KIFF's `kiff` skill ("Rules that always apply" and
+  notes work, how it makes a call under its Card (one request is one call, never split
+  to stay under a limit; a money call that doesn't name its customer carries who it's
+  for in a field the customer doesn't see, such as metadata, so the hold says it), and two sections of KIFF's `kiff` skill ("Rules that always apply" and
   "Handle a KIFF result"). The skill is vendored at one commit; moving it is in the
   [README](../README.md#the-runtime).
 - **Tools:** only the company's tools, through KIFF's gateway (`mcp.kiff.dev`), and its
