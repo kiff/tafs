@@ -212,19 +212,15 @@ final class KIFFAnswerTests: XCTestCase {
 
     /// The hold card's line on the vendor's refusals counts today's only, and names the
     /// vendor when all are the same.
-    func testTheRefusedLineCountsTodaysRefusals() {
-        let taf = UUID()
-        func refused(_ who: String, at: Date) -> RecordEntry {
-            var e = RecordEntry(tafID: taf, kind: .notDone, title: "Refund", detail: "\(who) refused it. No money moved, but it still counts against today's total.", at: at)
-            e.refusedByTool = true
-            e.refusedBy = who
-            return e
-        }
-        XCTAssertNil(HeldCallCard.refusedLine([]))
-        XCTAssertEqual(HeldCallCard.refusedLine([refused("Stripe", at: Date())]),
-                       "1 call Stripe refused today still counted toward it: nothing moved, but they used room.")
-        XCTAssertEqual(HeldCallCard.refusedLine([refused("Stripe", at: Date()), refused("Shopify", at: Date())]),
-                       "2 calls the vendor refused today still counted toward it: nothing moved, but they used room.")
+    /// What of a total is from calls the tool refused is KIFF's to say (kiff-cloud's
+    /// `pending_text`, passed on by tafs cloud): the app keeps no line of its own.
+    func testThePendingLineIsKIFFs() throws {
+        let json = #"{"limit":{"minor":50000,"unit":"EUR","scale":2},"used":{"minor":9800,"unit":"EUR","scale":2},"window":"calendar_day","pending_text":"€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved."}"#
+        let total = try KIFFClient.decoder.decode(TafsCloud.HomeTaf.Total<TafsCloud.HomeTaf.Amount>.self, from: Data(json.utf8))
+        XCTAssertEqual(total.pendingText, "€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved.")
+        let card = TafCard(id: "m1", title: "Refunds", rules: [], total: CardTotal(limit: Money(minor: 50000, currency: "EUR", scale: 2), used: Money(minor: 9800, currency: "EUR", scale: 2), window: .day, pending: total.pendingText))
+        XCTAssertEqual(card.pending, [total.pendingText!])
+        XCTAssertTrue(TafCard(id: "m2", title: "x", rules: []).pending.isEmpty)
     }
 
     func testASessionWithoutThePhonesKeyCannotAnswer() async throws {

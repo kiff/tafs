@@ -113,8 +113,9 @@ struct HeldCallCard: View {
                      : "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it.")
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
-                if let refused = HeldCallCard.refusedLine(model.refusedToday(call.tafID)) {
-                    Text(refused)
+                // What of the total is from calls the tool refused, in KIFF's words.
+                ForEach(model.pendingLines(call.tafID), id: \.self) { line in
+                    Text(line)
                         .scaledFont(13).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -283,16 +284,6 @@ struct HeldCallCard: View {
             }
             sending = false
         }
-    }
-
-    /// How many calls the vendor refused today that still count toward the Card's totals,
-    /// in a line, naming the vendor when every one is the same; nil for none.
-    static func refusedLine(_ refused: [RecordEntry]) -> String? {
-        guard !refused.isEmpty else { return nil }
-        let vendors = Set(refused.compactMap(\.refusedBy))
-        let who = vendors.count == 1 && refused.allSatisfy({ $0.refusedBy != nil }) ? vendors.first! : "the vendor"
-        let calls = refused.count == 1 ? "1 call" : "\(refused.count) calls"
-        return "\(calls) \(who) refused today still counted toward it: nothing moved, but they used room."
     }
 
     private func send(_ answer: Answer, fromNotification: Bool = false) {

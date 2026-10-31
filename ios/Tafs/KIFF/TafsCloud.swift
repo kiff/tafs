@@ -11,14 +11,19 @@ final class TafsCloud {
         let message: String
         /// The runs that keep a switch from beginning, when tafs cloud names them (kiff/tafs#206).
         var blocking: [BlockingRun] = []
-        var errorDescription: String? { message }
+        /// What tafs cloud says is wrong, written for the owner (a run kiff/agents refused, a
+        /// switch a run blocks), when it says it.
+        var words: String? = nil
+        /// tafs cloud's words first, on every path that shows the error (kiff/tafs#397); the
+        /// app's own line for the status only without them.
+        var errorDescription: String? { words ?? message }
     }
 
     /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
-        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]? }
+        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
-        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [])
+        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [], words: body?.words)
     }
 
     /// A run in the way of an install (kiff/tafs#206): one at work, or one waiting on the owner.
@@ -143,11 +148,15 @@ final class TafsCloud {
             var extraRoom: Value?
             var baseLimit: Value?
             var roomWindowEnd: Date?
+            /// What of its use is from calls the tool refused, which count until KIFF can
+            /// confirm nothing moved, in KIFF's words; none without any.
+            var pendingText: String?
 
             enum CodingKeys: String, CodingKey {
                 case limit, used, window
                 case windowWords = "window_words"
                 case extraRoom = "extra_room", baseLimit = "base_limit", roomWindowEnd = "room_window_end"
+                case pendingText = "pending_text"
             }
         }
 
@@ -386,11 +395,13 @@ final class TafsCloud {
         /// A taf's (or Setup's) message is the same message while its text grows: tafs cloud
         /// writes a turn's words as one message, so a reload can bring more of it. Keyed by its
         /// words, it would show as a new message and be revealed again from nothing, its cards
-        /// held back meanwhile (kiff/tafs#138, item 48). An owner's message keeps its words in
-        /// its id: two sent at once stay two.
+        /// held back meanwhile (kiff/tafs#138, item 48). An owner's message is tafs cloud's id
+        /// for it where there is one, so two with the same words at the same moment stay two;
+        /// else (a steer, an older tafs cloud) its words are in its id.
         var id: String {
-            from == .taf ? "\(session)|\(at.timeIntervalSince1970)|taf|\(kind.rawValue)"
-                : "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)|\(attachments.map(\.id).joined(separator: ","))"
+            if from == .taf { return "\(session)|\(at.timeIntervalSince1970)|taf|\(kind.rawValue)" }
+            if let serverID { return "\(session)|owner|\(serverID)" }
+            return "\(session)|\(at.timeIntervalSince1970)|\(from.rawValue)|\(text.hashValue)|\(attachments.map(\.id).joined(separator: ","))"
         }
         let at: Date
         let from: From
@@ -888,15 +899,19 @@ final class TafsCloud {
         let run: String
         let component: SetupComponent
         var answer: CardAnswer?
+        /// tafs cloud's key for the card, unique in the thread (kiff/tafs#386); none from a
+        /// tafs cloud that doesn't send one.
+        var key: String? = nil
 
-        enum CodingKeys: String, CodingKey { case at, session, run, component, answer }
+        enum CodingKeys: String, CodingKey { case at, session, run, component, answer, key }
 
-        init(at: Date, session: String, run: String, component: SetupComponent, answer: CardAnswer? = nil) {
+        init(at: Date, session: String, run: String, component: SetupComponent, answer: CardAnswer? = nil, key: String? = nil) {
             self.at = at
             self.session = session
             self.run = run
             self.component = component
             self.answer = answer
+            self.key = key
         }
 
         init(from decoder: Decoder) throws {
@@ -907,6 +922,7 @@ final class TafsCloud {
             component = try c.decode(SetupComponent.self, forKey: .component)
             // An answer the app can't read leaves the card unanswered, never the card out.
             answer = try? c.decodeIfPresent(CardAnswer.self, forKey: .answer)
+            key = try? c.decodeIfPresent(String.self, forKey: .key)
         }
     }
 
@@ -1058,6 +1074,9 @@ final class TafsCloud {
         let note: String?
         /// Who made it: the owner's subject, or "setup".
         let by: String?
+        /// Who made it, in tafs cloud's words ("By Coach mode", "By you"); none for one
+        /// kiff/agents wrote itself (the first, or an Upgrade's).
+        var byWords: String? = nil
         let created: Date
         let live: Bool
         /// The KIFF draft whose confirmation brings this version's Card revision, while it
@@ -1066,6 +1085,7 @@ final class TafsCloud {
         /// Its trials that ended, oldest first (kiff/tafs#173).
         var trials: [TrialSummary]? = nil
         var id: Int { n }
+        enum CodingKeys: String, CodingKey { case n, note, by, created, live, draft, trials, byWords = "by_words" }
     }
 
     /// A switch to version n under way (kiff/tafs#107): nothing of the taf runs until it
@@ -1092,16 +1112,6 @@ final class TafsCloud {
     /// The taf's versions, oldest first, the live one marked.
     func versions(_ id: String) async throws -> [Version] {
         try await versionState(id).versions
-    }
-
-    /// Stores the taf's next version as Setup drafted it (kiff/tafs#107), once per result
-    /// (`from`): nothing goes live. Returns its number. `agent` is the result's: tafs cloud
-    /// refuses an improvement of another taf's agent.
-    func createVersion(_ id: String, note: String, notes: String?, draft: String?, from: String, agent: String? = nil, tryWith: String? = nil) async throws -> Int {
-        struct Body: Encodable { let note: String; let notes: String?; let draft: String?; let from: String; let agent: String?; let `try`: String? }
-        struct Response: Decodable { let version: Int }
-        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/versions", body: Body(note: note, notes: notes, draft: draft, from: from, agent: agent, try: tryWith))
-        return r.version
     }
 
     /// Begins the switch to version n: from then on nothing of the taf runs until it ends.

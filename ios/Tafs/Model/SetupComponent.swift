@@ -96,6 +96,15 @@ struct ShownComponent: Identifiable, Equatable {
     let run: String
     var component: SetupComponent
     var answer: TafsCloud.CardAnswer? = nil
+    /// tafs cloud's key for the card, unique in the thread (kiff/tafs#386).
+    var key: String? = nil
+
+    /// Which card it is: tafs cloud's key, else its conversation and id. Coach can use an id
+    /// again, within a conversation and across them, so the phone never keys a card by its id
+    /// alone; the id is what an answer is sent for.
+    var ref: String { key ?? Self.ref(session, component.id) }
+
+    static func ref(_ session: String, _ id: String) -> String { "\(session)#\(id)" }
 }
 
 /// Setup's thread: the messages, and the components where they first appeared.
@@ -125,7 +134,7 @@ struct SetupThread: Equatable {
         var id: String {
             switch self {
             case .message(let m): return "m|" + m.id
-            case .component(let c): return "c|" + c.id
+            case .component(let c): return "c|" + c.ref
             }
         }
         var at: Date {
@@ -139,21 +148,25 @@ struct SetupThread: Equatable {
     /// In order, as it happened, with one exception (kiff/tafs#58): a component that asks
     /// the owner to act comes after what Setup wrote with it, so its words lead to the
     /// card. That is Setup's messages in the same session after the component, up to the
-    /// owner's next message.
+    /// owner's next message. Once answered, it goes back to its own time, in line with what
+    /// Coach said around it.
     var items: [Item] {
         let placed: [(Item, Date)] = messages.map { (Item.message($0), $0.at) } +
             components.filter { $0.component.type != .steps }.map { c in (Item.component(c), placedAt(c)) }
-        return placed.enumerated().sorted { a, b in
+        let sorted = placed.enumerated().sorted { a, b in
             if a.element.1 != b.element.1 { return a.element.1 < b.element.1 }
             return a.offset < b.offset // a message before a component placed at its time
         }.map(\.element.0)
+        // Each once, by id: the same message twice in a thread shows once.
+        var seen = Set<String>()
+        return sorted.filter { seen.insert($0.id).inserted }
     }
 
     private static let asking: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn, .result]
     private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn]
 
     private func placedAt(_ c: ShownComponent) -> Date {
-        guard Self.asking.contains(c.component.type) else { return c.firstAt }
+        guard Self.asking.contains(c.component.type), c.answer == nil else { return c.firstAt }
         let nextOwner = messages.first { $0.from == .owner && $0.at > c.firstAt }?.at ?? .distantFuture
         let after = messages.filter { $0.from == .taf && $0.session == c.session && $0.at >= c.firstAt && $0.at < nextOwner }
         return after.last?.at ?? c.firstAt
@@ -197,11 +210,14 @@ struct SetupThread: Equatable {
     /// The owner's latest answer to a component, as the thread has it: the answer kiff/agents
     /// recorded on the card, else an answer sent the old way, as a message.
     func answer(to id: String) -> Answer? {
-        if let shown = components.last(where: { $0.component.id == id }), let recorded = shown.answer,
-           let a = Self.answer(recorded, to: shown.component) {
+        let shown = components.last { $0.component.id == id }
+        if let shown, let recorded = shown.answer, let a = Self.answer(recorded, to: shown.component) {
             return a
         }
-        return messages.lazy.reversed().filter { $0.from == .owner }.compactMap { Answer($0.text) }.first { $0.id == id }
+        // An answer written before the card appeared was to an earlier card under its id
+        // (kiff/tafs#387).
+        let since = shown?.firstAt ?? .distantPast
+        return messages.lazy.reversed().filter { $0.from == .owner && $0.at >= since }.compactMap { Answer($0.text) }.first { $0.id == id }
     }
 
     /// A card's recorded answer in the form the cards read (`text` as the old message carried
@@ -266,18 +282,41 @@ struct SetupThread: Equatable {
 
     /// Where a new taf's hand-over stands, from tafs cloud's answer to its result: set up, why
     /// it wasn't (Coach hands it over again), or not answered yet. `listed`: the taf is
-    /// already on the account's list.
+    /// already on the account's list. By the card's `ref`: Coach can use an id again, and each
+    /// card shows its own answer.
     enum HandOver: Equatable {
         case setUp
         case failed(String)
         case settingUp
     }
 
-    func handOver(_ id: String, listed: Bool) -> HandOver {
-        let outcome = components.first { $0.component.id == id }?.answer?.outcome
+    func handOver(_ ref: String, listed: Bool) -> HandOver {
+        let outcome = components.first { $0.ref == ref }?.answer?.outcome
         if let why = outcome?.failed { return .failed(why) }
         if outcome?.tafID != nil || listed { return .setUp }
         return .settingUp
+    }
+
+    /// What became of an improvement's result, from tafs cloud's answer: the version it made,
+    /// why it made none (Coach hears it from tafs cloud), or not answered yet. By the card's
+    /// `ref`: two results under one id each show their own version (the 755 retest).
+    enum Improvement: Equatable {
+        case made(Int)
+        case failed(String)
+        case preparing
+    }
+
+    func improvement(_ ref: String) -> Improvement {
+        let outcome = components.first { $0.ref == ref }?.answer?.outcome
+        if let why = outcome?.failed { return .failed(why) }
+        if let n = outcome?.version { return .made(n) }
+        return .preparing
+    }
+
+    /// "Refunds' new version wasn't made: why."
+    static func notImproved(_ name: String, _ why: String) -> String {
+        let whose = name.hasSuffix("s") ? "\(name)'" : "\(name)'s"
+        return "\(whose) new version wasn't made: \(why.trimmingCharacters(in: CharacterSet(charactersIn: ". ")))."
     }
 
     /// The components that ask the owner to act, in the thread's order: an approval, a
@@ -289,17 +328,19 @@ struct SetupThread: Equatable {
         }
     }
 
-    /// Folds components as the conversation lists them, oldest first: the latest
-    /// version of each id, at the time it first appeared.
+    /// Folds components as the conversation lists them, oldest first: the latest version of
+    /// each card (`ref`, never the bare id: Coach can use one again), at the time it first
+    /// appeared.
     static func fold(_ shown: [TafsCloud.Shown]) -> [ShownComponent] {
         var out: [ShownComponent] = []
         for s in shown {
-            if let i = out.firstIndex(where: { $0.component.id == s.component.id }) {
+            let ref = s.key ?? ShownComponent.ref(s.session, s.component.id)
+            if let i = out.firstIndex(where: { $0.ref == ref }) {
                 out[i].component = s.component
                 // tafs cloud puts an answer on the latest card with its id: a card shown again waits anew.
                 out[i].answer = s.answer
             } else {
-                out.append(ShownComponent(firstAt: s.at, session: s.session, run: s.run, component: s.component, answer: s.answer))
+                out.append(ShownComponent(firstAt: s.at, session: s.session, run: s.run, component: s.component, answer: s.answer, key: s.key))
             }
         }
         return out

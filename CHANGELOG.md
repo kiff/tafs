@@ -7,6 +7,17 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **A total's pending use, in KIFF's words:** tafs cloud's list passes on KIFF's
+  `pending_text` for each Card total, how much of it is from calls the tool refused, which
+  count until KIFF can confirm nothing moved. iOS shows it on a taf's Card and on a hold,
+  in place of its own "nothing moved, but they used room".
+- **iOS, as on Android:** an improvement's version is tafs cloud's, and the card only shows
+  it; versions and a blocked switch read tafs cloud's words; an answered approval says what
+  it was, and an answered card goes back to its own time; a card Coach shows again under an
+  earlier id waits for its own answer; at launch Coach opens on its newest conversation
+  alone; tafs cloud's words for a refusal show on every path; and an owner's message is
+  keyed by tafs cloud's id, so each chat item shows once.
+
 - **Tafs and Coach, calls under a Card:** a taf makes one call for one request, never smaller
   ones to stay under a limit, and asks the owner when it's refused. A money call that doesn't
   name its customer, such as a coupon, carries who it's for in a field the customer doesn't
