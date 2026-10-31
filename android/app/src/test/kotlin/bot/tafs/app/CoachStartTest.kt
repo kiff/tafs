@@ -79,6 +79,22 @@ class CoachStartTest {
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
   }
 
+  /** The device id planque was sent with the latest signed read of [account]'s grants. */
+  private fun planqueDevice(account: String): String =
+    transport.requestsTo("GET /v1/accounts/$account/grants").last().headers.getValue("Planque-Device-Signature").split(",")[2].removePrefix("d=")
+
+  @Test fun afterSigningInToAnotherAccountPlanqueGetsThisDevicesIdThere() = runTest {
+    reads()
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer("GET /v1/accounts/t_02/grants", 200, """{"grants":[]}""")
+    val m = model()
+    assertEquals("dev_1", planqueDevice("t_01"))
+    // Signed in to another account, with no relaunch: KIFF lists this phone there under another id.
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_2","name":"tafs on Android phone","this_device":true}]}""")
+    m.useSession("at_2", "t_02")
+    assertEquals("dev_2", planqueDevice("t_02"))
+  }
+
   @Test fun startingCoachAsksOnceEnrolsWithPlanqueAndStartsCoachFromADraftWithNoTools() = runTest {
     reads()
     startAnswers()
@@ -222,6 +238,17 @@ class CoachStartTest {
     val m = model()
     assertFalse(m.startCoach())
     assertEquals("Another device connects this account's tools for now. Connect them from that one.", m.state.value.coachStartError)
+  }
+
+  @Test fun planqueNotRecognizingThePhoneAtEnrolmentIsntASignOut() = runTest {
+    reads()
+    startAnswers(enrol = 401 to """{"error":"device not recognized"}""")
+    val m = model()
+    assertFalse(m.startCoach())
+    // KIFF's session works: the app stays signed in and says connecting the tools failed, with Start to try again.
+    assertEquals(CoachWords.CONNECTING_FAILED, m.state.value.coachStartError)
+    assertEquals(bot.tafs.app.app.Mode.kiff, m.state.value.mode)
+    assertEquals("at_1", secrets.load(AppModel.TOKEN))
   }
 
   // MARK: Hand-overs

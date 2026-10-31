@@ -65,7 +65,9 @@ Before the first message, one Face ID (`AppModel.startSetup`):
 
 1. The phone enrolls with planque: planque gets the phone's key, and a KIFF key that
    connects tools and does nothing else, minted with a signed setup call and never kept
-   on the phone.
+   on the phone. If planque can't check the phone with KIFF (401), the app says "Connecting
+   your tools didn't work. Tap Start to try again." It never says signed out, since KIFF's
+   session still works (Android).
 2. The phone submits a KIFF agent draft with no tools for Coach. tafs cloud claims its
    key, so the key never reaches the phone (`POST /v1/setup`).
 3. The phone gives Coach its tools, as tafs cloud says them (`GET /v1/setup`'s `tools`).
@@ -150,7 +152,9 @@ version's Card is shown as left over: the taf doesn't use it now, but an older v
 may.
 
 Reading connections asks for no Face ID; it is signed so planque shows them only to the
-enrolled phone.
+enrolled phone. Each signature names this device's id in KIFF (`d=`), which planque checks
+with KIFF. The id is the signed-in account's: Android reads it again after any sign-in or
+sign-out, so after switching accounts planque never gets the last account's device.
 
 ## Improving a taf
 
@@ -214,7 +218,7 @@ under Coach's Cards first.
 
 | Tool | What it does |
 |---|---|
-| `tafs_state` (read) | Every taf: its live version and versions, a switch under way, its schedule, its open runs and what each waits on |
+| `tafs_state` (read) | Every taf: its live version and versions (with none live, `runs_on` says it runs the definition it was made with), a switch under way, its schedule, its open runs and what each waits on. `reading` says a schedule that's on is working, with its next run, and that open runs are only what runs this minute |
 | `taf_run` (read) | One run of a taf so far |
 | `taf_task` | Hands a taf a task or a message: a new run, or to a run at work |
 | `run_stop` | Stops a run; its held calls are withdrawn |

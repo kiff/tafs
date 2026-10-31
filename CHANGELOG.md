@@ -120,6 +120,19 @@ version headings refer to releases, not merely to merged pull requests.
   never "A taf". Why a call is held reads KIFF's own words when sent. A count of calls without
   them reads "Each call asks you first" for a limit of 0, otherwise "20 calls a day: this would
   be the 21st", never the machine's reason.
+- **Android, Coach crash:** opening Coach no longer crashes when a chat holds the same message
+  twice. An owner's message is told apart by tafs cloud's id for it, and a chat shows each item
+  once.
+- **Coach, a scheduled taf with no numbered version:** Coach said it had "no version installed
+  yet" and that nothing was working, while the home said "Working · Next run 04:00". Its
+  `tafs_state` now says such a taf runs the definition it was made with, and that a schedule
+  that's on is working, with its next run, though nothing runs this minute.
+- **Android, switching accounts:** after signing in to another account without closing the app,
+  connecting tools and starting Coach work there. The phone used to sign planque's requests with
+  the last account's device id, which planque refused, and the app said it was signed out.
+- **Android, starting Coach:** when the tools can't be connected because planque couldn't check
+  the phone, Coach says "Connecting your tools didn't work. Tap Start to try again", not that
+  you're signed out, since the session still works.
 - A taf's work steps say what it did, in words, both while it works and after: KIFF's title for
   a tool through KIFF ("List your charges"), and what Coach's and the agents' own tools do
   ("Showing you a card"). A step showed the tool's name before ("show", "list_charges_ijkp").

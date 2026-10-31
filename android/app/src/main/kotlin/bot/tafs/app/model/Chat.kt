@@ -115,11 +115,15 @@ data class ChatMessage(
   enum class Kind { kickoff, message }
 
   /**
-   * A taf's message is the same message while its text grows, so its id leaves its words out;
-   * an owner's keeps them, so two sent at once stay two.
+   * A taf's message is the same message while its text grows, so its id leaves its words out. An owner's is tafs cloud's id
+   * for it where there is one, so two with the same words at the same moment stay two; else it keeps its words.
    */
   val id: String
-    get() = if (from == From.taf) "$session|${at.toEpochMilli()}|taf|${kind.name}" else "$session|${at.toEpochMilli()}|owner|${text.hashCode()}"
+    get() = when {
+      from == From.taf -> "$session|${at.toEpochMilli()}|taf|${kind.name}"
+      serverId != null -> "$session|owner|$serverId"
+      else -> "$session|${at.toEpochMilli()}|owner|${text.hashCode()}"
+    }
 }
 
 /**

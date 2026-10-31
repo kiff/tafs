@@ -3529,6 +3529,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
             ? { schedule: { cron: schedule.cron, time_zone: schedule.time_zone || "UTC", on: schedule.enabled, ...(schedule.next ? { next: iso(schedule.next) } : {}) } }
             : {}),
           live_version: live?.n ?? null,
+          // No numbered version live isn't "not installed": the taf runs the definition it was made with.
+          ...(live ? {} : { runs_on: "the definition it was made with: no numbered version is live yet" }),
           versions: state.versions.map((v) => ({ n: v.n, note: v.note, live: v.live, created: iso(v.created) })),
           ...(state.switching ? { switching: { to: state.switching.n, waiting_for: state.switching.draft ? "the owner to confirm its Card in tafs" : "its runs to stop" } } : {}),
           // Another person's runs show only how they stand, never what they said or used.
@@ -3536,6 +3538,9 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         };
       })),
       cards: "Each taf's Cards aren't here: read them with kiff_card {agent: its kiff_agent}.",
+      // As the home says it: a taf whose schedule is on is working, with its next run, though
+      // nothing runs this minute; open_runs is only what runs now.
+      reading: "A taf with schedule.on true is working on its schedule: say its next run. open_runs lists only what runs this minute.",
     };
   }
   const taf = await coachTaf(call.tenant, args.taf, deps);
