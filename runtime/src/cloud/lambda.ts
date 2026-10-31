@@ -187,7 +187,7 @@ const push: PushStore = {
       const m = v.M ?? {};
       const env = m.environment?.S;
       return env === "sandbox" || env === "production"
-        ? [{ token, platform: m.platform?.S === "android" ? "android" as const : "ios" as const, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, manages: m.manages?.BOOL === true, silent: m.silent?.BOOL === true, at: m.at?.S ?? "" }]
+        ? [{ token, platform: m.platform?.S === "android" ? "android" as const : "ios" as const, environment: env, subject: m.subject?.S ?? "", answers: m.answers?.BOOL === true, addsTasks: m.adds_tasks?.BOOL === true, ...(m.manages ? { manages: m.manages.BOOL === true } : {}), silent: m.silent?.BOOL === true, at: m.at?.S ?? "" }]
         : [];
     });
     const secrets = Object.values(out.Item?.secrets?.M ?? {})
