@@ -2,7 +2,6 @@ package bot.tafs.app
 
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.kiff.AgentDraft
-import bot.tafs.app.kiff.BlockingRun
 import bot.tafs.app.kiff.DraftCard
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
@@ -348,13 +347,23 @@ class VersionsTest {
 
   // MARK: A run in the way, and cancelling
 
-  @Test fun aRunInTheWayIsNamedWithTheOneStepThatClearsIt() = runTest {
+  @Test fun aRunInTheWayIsSaidInTafsCloudsWordsWithTheOneStepThatClearsIt() = runTest {
     reads()
-    transport.answer(switch2, 409, """{"error":"a run is going","blocking":[{"run":"r1","session":"s1","status":"PAUSED","trigger":"chat"}]}""")
+    val words = "Version 2 can't go live while a task waits on your answer. Stop it and install, or wait until it's done."
+    transport.answer(switch2, 409, """{"error":"a run is going","words":"$words","blocking":[{"run":"r1","session":"s1","status":"PAUSED","trigger":"chat"}]}""")
     val m = model()
     assertNull(m.prepareSwitch(Version(2, "n", null, t0, false), "refunds-1"))
     assertEquals(2, m.state.value.blockedInstalls["refunds-1"])
-    assertEquals("Version 2 can't go live while a task waits on your answer. Stop it and install, or wait until it's done.", m.state.value.versionErrors["refunds-1"])
+    assertEquals(words, m.state.value.versionErrors["refunds-1"])
+  }
+
+  @Test fun aRunInTheWayWithoutWordsSaysTheVersionCantGoLiveNow() = runTest {
+    reads()
+    transport.answer(switch2, 409, """{"error":"a run is going","blocking":[{"run":"r1","session":"s1","status":"RUNNING","trigger":"chat"}]}""")
+    val m = model()
+    assertNull(m.prepareSwitch(Version(2, "n", null, t0, false), "refunds-1"))
+    assertEquals(2, m.state.value.blockedInstalls["refunds-1"])
+    assertTrue(m.state.value.versionErrors["refunds-1"]!!.startsWith("Version 2 can't go live now. "))
   }
 
   @Test fun stoppingWhatIsInTheWayAsksTafsCloudToStopIt() = runTest {
@@ -467,14 +476,15 @@ class VersionsTest {
     assertEquals("create refund", d.retires!!.single().current!!.lines.single())
   }
 
-  @Test fun theBylineSaysWhoMadeItAndWhetherItBringsACard() {
+  @Test fun theBylineSaysWhoMadeItInTafsCloudsWordsAndWhetherItBringsACard() {
     val made = Instant.parse("2026-10-27T09:00:00Z")
-    fun line(by: String?, draft: String?) = VersionWords.byline(Version(2, null, by, made, false, draft))
-    assertFalse(line(null, null).contains("By"))
-    assertTrue(line("setup", null).startsWith("By Coach mode · "))
-    assertTrue(line("someone", null).startsWith("By you · "))
-    assertTrue(line("setup", "dr_1").endsWith(" · brings a new Card"))
-    assertFalse(line("setup", null).contains("brings a new Card"))
+    fun line(json: String) = VersionWords.byline(KiffClient.json.decodeFromString<Version>(json))
+    // One kiff/agents wrote itself has no by_words, and names no one.
+    assertFalse(line("""{"n":1,"created":"$made"}""").contains("By"))
+    assertTrue(line("""{"n":2,"by":"setup","by_words":"By Coach mode","created":"$made"}""").startsWith("By Coach mode · "))
+    assertTrue(line("""{"n":2,"by":"u_2","by_words":"By someone on your account","created":"$made"}""").startsWith("By someone on your account · "))
+    assertTrue(line("""{"n":2,"by_words":"By you","created":"$made","draft":"dr_1"}""").endsWith(" · brings a new Card"))
+    assertFalse(line("""{"n":2,"by_words":"By you","created":"$made"}""").contains("brings a new Card"))
   }
 
   @Test fun anEndedTrialIsOneLine() {
@@ -484,16 +494,6 @@ class VersionsTest {
     assertTrue(tried("idle", 0, 0, 0).endsWith(" · 0 calls · ended unused"))
     assertTrue(tried("replaced", 2, 0, 0).endsWith(" · ended"))
     assertTrue(tried("back", 3, 1, 0).startsWith("Tried "))
-  }
-
-  @Test fun aRunInTheWayIsSaidAsItIs() {
-    fun run(status: String, trigger: String? = null) = BlockingRun("r", "s", status, trigger)
-    assertEquals("Version 3 can't go live while a task waits on your answer. Stop it and install, or wait until it's done.", VersionWords.blockedWords(3, listOf(run("PAUSED")), false))
-    assertEquals("Version 3 can't go live while its scheduled run is at work. Stop it and install, or wait until it's done.", VersionWords.blockedWords(3, listOf(run("RUNNING", "schedule")), false))
-    assertEquals("Version 3 can't go live while a task is at work. Stop it and install, or wait until it's done.", VersionWords.blockedWords(3, listOf(run("RUNNING", "chat")), false))
-    assertEquals("Version 3 can't go live while 2 tasks are going, one waiting on your answer. Stop it and install, or wait until it's done.", VersionWords.blockedWords(3, listOf(run("PAUSED"), run("RUNNING")), false))
-    assertEquals("Version 3 can't go live while 2 tasks are at work. Stop it and install, or wait until it's done.", VersionWords.blockedWords(3, listOf(run("RUNNING"), run("RUNNING")), false))
-    assertEquals("Version 3 isn't installed yet: a task is at work and hasn't stopped. Try again in a moment.", VersionWords.blockedWords(3, listOf(run("RUNNING")), true))
   }
 
   @Test fun theCardNoteSaysWhetherCardsAreRemoved() {

@@ -34,6 +34,8 @@ data class Version(
   val draft: String? = null,
   /** Its trials that ended, oldest first. */
   val trials: List<TrialSummary>? = null,
+  /** Who made it, in tafs cloud's words ("By Coach mode", "By you"); none for one kiff/agents wrote itself. */
+  @SerialName("by_words") val byWords: String? = null,
 )
 
 /** A switch to version n under way: nothing of the taf runs until it ends, with that version live, or is dropped. */
