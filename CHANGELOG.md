@@ -118,6 +118,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 - **Versions, in tafs cloud's words:** each version says who made it (`by_words`), and a switch a
   run blocks says what's in the way (`words`), so the apps show tafs cloud's words, not their own.
+- **Android, connecting a tool:** a sign-in that came back with its tools listed for Coach to choose
+  from showed a red "didn't connect … planque has it as listed", though it was connected. Listed
+  now counts as signed in, as on iOS.
 - **Chats, words written while a card waited:** they showed twice in the thread, once as the
   card's answer and once as the run's message, at the same time. A phone's list could not hold
   both (Android closed on opening Coach). tafs cloud now gives one message, marked as the answer,
