@@ -105,9 +105,9 @@ See [coach.md](coach.md#versions). Not for Coach itself (404).
 
 | Route | Who | What |
 |---|---|---|
-| `GET /v1/tafs/{id}/versions` | a person | Its versions, oldest first, the live one marked, and a switch under way |
+| `GET /v1/tafs/{id}/versions` | a person | Its versions, oldest first, the live one marked, and a switch under way. Each says who made it in `by_words` ("By Coach mode", "By you", "By someone on your account"); one kiff/agents wrote itself has none |
 | `POST /v1/tafs/{id}/versions` | manages | `{note, notes?, draft?, from?, agent?}`: its next version, as Coach's result made it, once per result. Nothing goes live |
-| `POST /v1/tafs/{id}/versions/{n}/switch` | manages | `{redraft?, stop_blocking?}`: begin the switch to version n, with the Card draft it waits for. Nothing of the taf runs until it ends. A run in the way is 409, naming it (`blocking`) |
+| `POST /v1/tafs/{id}/versions/{n}/switch` | manages | `{redraft?, stop_blocking?}`: begin the switch to version n, with the Card draft it waits for. Nothing of the taf runs until it ends. A run in the way is 409, naming it (`blocking`), with `words` saying what's in the way for the app to show |
 | `DELETE /v1/tafs/{id}/switching` | manages | Drop a switch whose Card isn't confirmed yet |
 | `POST /v1/tafs/{id}/versions/{n}/live` | manages | Make version n live, once its Card revision is confirmed in KIFF (409 before) |
 | `POST /v1/tafs/{id}/versions/{n}/try` | manages | The KIFF draft to confirm as version n's trial Card |

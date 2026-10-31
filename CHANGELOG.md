@@ -119,6 +119,8 @@ version headings refer to releases, not merely to merged pull requests.
 - **Android, a chat while its taf or Coach works:** the thread no longer jumps about. The dots and
   the answer replacing them are one row that never shortens the thread's end, and an answer
   growing word by word is followed without restarting an animation on every word.
+- **Versions, in tafs cloud's words:** each version says who made it (`by_words`), and a switch a
+  run blocks says what's in the way (`words`), so the apps show tafs cloud's words, not their own.
 - **Android, connecting a tool:** a sign-in that came back with its tools listed for Coach to choose
   from showed a red "didn't connect … planque has it as listed", though it was connected. Listed
   now counts as signed in, as on iOS.
