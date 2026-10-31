@@ -383,9 +383,18 @@ private fun Details(lines: List<String>) {
   }
 }
 
-/** KIFF's words for how much of a taf's totals is from calls the tool refused, each once, from its Cards; none for none. */
+/**
+ * KIFF's words for how much of a taf's totals is from calls the tool refused, each once, from its live and active Cards only: a
+ * test Card's totals aren't what the taf may do for real. None for none.
+ */
 fun pendingLines(taf: bot.tafs.app.model.Taf): List<String> =
-  taf.shownCards.flatMap { listOfNotNull(it.total?.pending, it.calls?.pending) }.distinct()
+  taf.shownCards.filter(::countsForReal).flatMap(::pendingOf).distinct()
+
+/** A Card whose totals are what the taf may do for real: live, and active. */
+fun countsForReal(card: bot.tafs.app.model.TafCard): Boolean = card.live && card.active
+
+/** A Card's own pending lines, its money total's and its count's. */
+fun pendingOf(card: bot.tafs.app.model.TafCard): List<String> = listOfNotNull(card.total?.pending, card.calls?.pending)
 
 private fun remaining(call: HeldCall, now: Instant): String {
   val seconds = Duration.between(now, call.expiresAt).seconds

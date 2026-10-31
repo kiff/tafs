@@ -204,7 +204,7 @@ class MappingTest {
            "total":{"limit":{"minor":100000,"unit":"EUR","scale":2},"used":{"minor":20000,"unit":"EUR","scale":2},"window":"day",
              "pending_text":"€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved."}},
           {"id":"card_t","title":"Refunds (test)","environment":"test","live":false,"active":true,"rules":[],
-           "calls":{"limit":50,"used":3,"window":"week"}}]}},
+           "calls":{"limit":50,"used":3,"window":"week","pending_text":"2 of them are from calls the tool refused, in test."}}]}},
       {"id":"taf_2","name":"Access","kiff_agent":"access-1","status":"paused","color":3,"state":"paused","waiting":0,"card":{"ids":["c2","c3"],"active":true,"tools":[],"rules":[],"used":{},"usage_unknown":[]}},
       {"id":"taf_3","name":"Deploys","kiff_agent":"deploys-1","color":4,"state":"waiting","waiting":2,"card":{"ids":["c4"],"active":true,"tools":[],"rules":[]}},
       {"id":"taf_4","name":"Billing","kiff_agent":"billing-1","color":5,"state":"halted","card":{"ids":["c5"],"active":true}},
@@ -235,7 +235,8 @@ class MappingTest {
     val refunds = named("Refunds")
     val words = "€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved."
     assertEquals(words, refunds.shownCards.first { it.id == "card_1" }.total?.pending)
-    // Each once, from its Cards; a Card with none adds nothing, and the app writes no line of its own.
+    // Each once, from its live and active Cards: the test Card's own line isn't what the taf may do for real.
+    assertEquals("2 of them are from calls the tool refused, in test.", refunds.shownCards.first { it.id == "card_t" }.calls?.pending)
     assertEquals(listOf(words), pendingLines(refunds))
     assertEquals(emptyList<String>(), pendingLines(named("Access")))
   }
