@@ -414,6 +414,16 @@ class AnswerKiffTest {
     assertNull(m.state.value.holder("someone-else"))
   }
 
+  @Test fun anAccountWithNoCoachIsAskedForItOnceASessionNotEachRefresh() = runTest {
+    // A hold from an agent no taf is, on an account with no Coach.
+    reads(held = held(id = "ce_9").replace(""""subject":"a-1"""", """"subject":"made-elsewhere""""))
+    transport.answer("GET /v1/setup", 200, """{"setup":null}""")
+    val m = model()
+    m.refresh()
+    m.refresh()
+    assertEquals(1, transport.requestsTo("GET /v1/setup").size)
+  }
+
   @Test fun aRefusalIsForgottenOnceItsCallIsNoLongerHeld() = runTest {
     reads(); refusal("role_forbidden")
     val m = model()

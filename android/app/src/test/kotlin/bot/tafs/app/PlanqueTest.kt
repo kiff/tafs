@@ -144,6 +144,19 @@ class PlanqueTest {
     assertEquals("dev_9", transport.requests.single().headers.getValue("Planque-Device-Signature").split(",")[2].removePrefix("d="))
   }
 
+  @Test fun aDeviceIdReadWhileTheAccountChangedIsNotKeptForTheNext() = runTest {
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer("GET /v1/accounts/t_02/grants", 200, """{"grants":[]}""")
+    val client = planque(device = null)
+    // The first account's device is read while the phone signs in to another.
+    client.deviceLoader = { client.tenant = "t_02"; "dev_1" }
+    client.grants()
+    // The next account's read asks KIFF again: never the last account's device.
+    client.deviceLoader = { "dev_2" }
+    client.grants()
+    assertEquals(listOf("dev_1", "dev_2"), transport.requests.map { it.headers.getValue("Planque-Device-Signature").split(",")[2].removePrefix("d=") })
+  }
+
   @Test fun aGrantsDigestIsCheckedAgainstItsRequestAsPlanqueSentIt() = runTest {
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("g1")},${grant("g2", digest = "0".repeat(64))}]}""")
     val (ok, bad) = planque().grants()
