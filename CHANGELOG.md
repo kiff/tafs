@@ -116,6 +116,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, Coach crash:** opening Coach no longer crashes when a chat holds the same message
+  twice. An owner's message is told apart by tafs cloud's id for it, and a chat shows each item
+  once.
 - **Android, switching accounts:** after signing in to another account without closing the app,
   connecting tools and starting Coach work there. The phone used to sign planque's requests with
   the last account's device id, which planque refused, and the app said it was signed out.

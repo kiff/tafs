@@ -33,7 +33,10 @@ The sent message shows at once, faded until the thread has it. The thread's copy
 tafs cloud's id for it: `POST …/messages` answers `message: {id}`, and so does the stream's first
 event, and each thread message carries its `id` (Android: `SentMessages.merge`). Only a message
 that steers a run at work, which has no id, or one from an older tafs cloud, is matched by its
-words. An owner's message written while a card waited carries `answers`, and shows "Answered the
+words. On Android, an owner's message is told apart by that id too (`ChatMessage.id`), so two
+with the same words at the same moment stay two. A chat shows each item once
+(`AppState.chatItems`): the same message twice in a thread shows once and never crashes the list.
+An owner's message written while a card waited carries `answers`, and shows "Answered the
 card above" under it. An older Coach thread still holds answers in the form the apps once sent,
 "[<type> <id>] <answer>"; Android reads them only to show them in the owner's words
 (`CoachWords.ownerWords`), and sends nothing in that form. A message that didn't go

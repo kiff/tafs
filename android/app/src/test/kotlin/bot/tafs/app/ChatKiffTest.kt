@@ -365,6 +365,37 @@ class ChatKiffTest {
 
   private fun msg(text: String, from: ChatMessage.From, at: String) = ChatMessage(Instant.parse(at), from, text, "s")
 
+  // MARK: The same message twice (phone check: opening Coach crashed on a repeated key)
+
+  @Test fun twoOwnerMessagesWithTheSameWordsAndTimeButTheirOwnIdsAreTwoItems() {
+    val a = msg("Set up a Refunds taf on Stripe", ChatMessage.From.owner, "2026-10-31T02:31:04Z").copy(serverId = "run_1.in")
+    val b = a.copy(serverId = "run_2.in")
+    assertFalse(a.id == b.id)
+    val s = AppState(mode = Mode.kiff, chats = mapOf("refunds-1" to listOf(a, b)))
+    assertEquals(2, s.chatItems("refunds-1").map { it.id }.toSet().size)
+  }
+
+  @Test fun theSameMessageTwiceInAThreadShowsOnceAndNeverRepeatsAKey() {
+    val m = msg("Set up a Refunds taf on Stripe", ChatMessage.From.owner, "2026-10-31T02:31:04Z")
+    for (chat in listOf("refunds-1", bot.tafs.app.app.COACH_CHAT)) {
+      // From the thread twice, with and without tafs cloud's id: each is one item, and every key is used once.
+      for (twice in listOf(listOf(m, m), listOf(m.copy(serverId = "run_1.in"), m.copy(serverId = "run_1.in")))) {
+        val items = AppState(mode = Mode.kiff, chats = mapOf(chat to twice)).chatItems(chat)
+        assertEquals(chat, 1, items.size)
+        assertEquals(items.size, items.map { it.id }.toSet().size)
+      }
+    }
+  }
+
+  @Test fun aPendingCopyTheThreadHasByItsIdIsDroppedNotKeptBeside() {
+    // The send answered its id; the thread has the message under it, at the server's time.
+    val sent = msg("Set up a Refunds taf on Stripe", ChatMessage.From.owner, "2026-10-31T02:31:03Z").copy(serverId = "run_1.in")
+    val thread = listOf(sent.copy(at = Instant.parse("2026-10-31T02:31:04Z")))
+    val (all, waiting) = SentMessages.merge(thread, listOf(sent), Instant.parse("2026-10-31T02:31:10Z"))
+    assertEquals(1, all.size)
+    assertTrue(waiting.isEmpty())
+  }
+
   @Test fun aSentMessageGoesOnceTheThreadHasIt() {
     val sent = msg("Sí", ChatMessage.From.owner, "2026-10-28T09:00:00Z")
     val (all, waiting) = SentMessages.merge(listOf(msg("Sí", ChatMessage.From.owner, "2026-10-28T09:00:01Z")), listOf(sent), t0.plusSeconds(5))

@@ -538,7 +538,13 @@ data class AppState(
    * held, and what became of earlier held calls (approved, refused) since the thread's first
    * message, each as one line.
    */
-  fun chatItems(tafId: String): List<ChatItem> {
+  /**
+   * A chat's items, each once: the list keys its rows by id, and a repeated key crashes it, so an exact repeat (the same
+   * message twice in a thread) shows once.
+   */
+  fun chatItems(tafId: String): List<ChatItem> = chatItemsAsRead(tafId).distinctBy { it.id }
+
+  private fun chatItemsAsRead(tafId: String): List<ChatItem> {
     val messages = chats[tafId] ?: emptyList()
     // Coach's thread has its cards in it, and the owner's answers to them read as what they chose.
     if (tafId == COACH_CHAT) {
