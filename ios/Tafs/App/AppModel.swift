@@ -4356,8 +4356,9 @@ final class AppModel: ObservableObject {
     enum RunEnd: Equatable { case stopped, failed(retry: String) }
     @Published private(set) var setupEnded: RunEnd?
 
-    /// The Setup chat shown (kiff/tafs#73): one the owner reopened or started here, or
-    /// nil for the latest ones together, as before.
+    /// The Setup chat shown (kiff/tafs#73): one the owner reopened or started here, the
+    /// newest at launch (kiff/tafs#389), or nil for the latest ones together when there's
+    /// no list to pick from.
     @Published private(set) var setupChat: String?
     /// The owner asked for a new conversation: the next message starts one.
     @Published private(set) var setupFresh = false
@@ -4522,6 +4523,15 @@ final class AppModel: ObservableObject {
         // A new conversation has nothing to read until its first message is sent.
         if setupFresh { return }
         let gen = accountGeneration
+        // No conversation chosen yet (at launch): Coach opens on its newest alone, the earlier
+        // ones under Previous conversations, never several together (kiff/tafs#389). Without
+        // the list, or with none yet, the thread reads as before.
+        if setupChat == nil, let chats = try? await cloud.chats(s.id) {
+            guard gen == accountGeneration else { return }
+            setupChats = chats
+            if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) { setupChat = newest.session }
+            if setupFresh { return }
+        }
         do {
             let thread = try await cloud.setupThread(s.id, session: setupChat)
             guard gen == accountGeneration else { return }

@@ -958,6 +958,40 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// At launch, Coach opens on its newest conversation alone, the earlier ones under
+    /// Previous conversations, never several together (kiff/tafs#389). With none yet, the
+    /// thread reads as before.
+    func testAtLaunchCoachOpensOnItsNewestConversationAlone() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, """
+        {"chats":[{"session":"s_3","started":"2026-10-18T10:00:00.000Z","updated":"2026-10-18T10:05:00.000Z","title":"Refunds"},
+                  {"session":"s_4","started":"2026-10-19T09:00:00.000Z","updated":"2026-10-19T09:30:00.000Z","title":"Chargebacks"}]}
+        """)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s_4"] = (200, """
+        {"messages":[{"at":"2026-10-19T09:00:00.000Z","from":"owner","kind":"message","text":"Chargebacks, please","session":"s_4"}],"components":[]}
+        """)
+        StubProtocol.sent = []
+        await model.loadSetup()
+        XCTAssertEqual(model.setupChat, "s_4", "the one updated last")
+        XCTAssertEqual(model.setupThread.messages.map(\.text), ["Chargebacks, please"])
+        XCTAssertEqual(model.setupChats.count, 2, "the list read fills Previous conversations")
+        XCTAssertTrue(sent("GET", "cloud.test", "/v1/tafs/taf-setup/conversation").isEmpty, "never the conversations together")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    func testWithNoConversationYetCoachsThreadReadsAsBefore() async throws {
+        let model = await model(signer: FaceIDSigner())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, #"{"chats":[]}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[]}"#)
+        StubProtocol.sent = []
+        await model.loadSetup()
+        XCTAssertNil(model.setupChat)
+        XCTAssertEqual(sent("GET", "cloud.test", "/v1/tafs/taf-setup/conversation").count, 1)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A past conversation, reopened (#73): it's read alone, and messages go on in it.
     func testAPastConversationReopens() async throws {
         let model = await model(signer: FaceIDSigner())
