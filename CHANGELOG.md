@@ -122,6 +122,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, Coach at launch:** Coach opens on its newest conversation alone, with the earlier
+  ones under Previous conversations, never several conversations together in one thread.
+- **Android, an improvement's new version:** tafs cloud makes it in the hand-over, and the
+  phone shows it ("See version n"), or why it wasn't made. The phone no longer makes it.
 - **Android, Coach's answered cards:** an answered approval says in one line what it was
   ("Approved · Connect Stripe"), and an answered card goes back to its own time in the thread,
   while one waiting for the owner stays at the end.
