@@ -1,6 +1,5 @@
 package bot.tafs.app.model
 
-import bot.tafs.app.kiff.BlockingRun
 import bot.tafs.app.kiff.TrialSummary
 import bot.tafs.app.kiff.Version
 import java.time.Instant
@@ -13,15 +12,9 @@ object VersionWords {
 
   const val FIRST_ONLY = "One version so far. When you improve it, each change is kept here."
 
-  /** Who made it, when, and whether it brings a new Card. A version kiff/agents wrote itself (the first, or an Upgrade's) names no one. */
-  fun byline(v: Version): String {
-    val by = when (v.by) {
-      null, "" -> null
-      "setup" -> "By Coach mode"
-      else -> "By you"
-    }
-    return listOfNotNull(by, shownDate(v.created) + ", " + shortTime(v.created), if (v.draft == null) null else "brings a new Card").joinToString(" · ")
-  }
+  /** Who made it, in tafs cloud's words, when, and whether it brings a new Card. A version kiff/agents wrote itself names no one. */
+  fun byline(v: Version): String =
+    listOfNotNull(v.byWords, shownDate(v.created) + ", " + shortTime(v.created), if (v.draft == null) null else "brings a new Card").joinToString(" · ")
 
   /** One ended trial, in a line: "Tried 21 Oct 2026 · 3 calls, 1 held · went back". */
   fun tried(t: TrialSummary): String {
@@ -35,19 +28,6 @@ object VersionWords {
       else -> "ended"
     }
     return listOf("Tried ${shownDate(t.started)}", counts, how).joinToString(" · ")
-  }
-
-  /** Which run is in the way of installing version n, in the owner's words. */
-  fun blockedWords(n: Int, runs: List<BlockingRun>, stopping: Boolean): String {
-    val waiting = runs.any { it.status == "PAUSED" }
-    val what = when {
-      runs.size == 1 && waiting -> "a task waits on your answer"
-      runs.size == 1 -> if (runs[0].trigger == "schedule") "its scheduled run is at work" else "a task is at work"
-      waiting -> "${runs.size} tasks are going, one waiting on your answer"
-      else -> "${runs.size} tasks are at work"
-    }
-    return if (stopping) "Version $n isn't installed yet: $what and hasn't stopped. Try again in a moment."
-    else "Version $n can't go live while $what. Stop it and install, or wait until it's done."
   }
 
   /** What the Card sheet says under the Cards, before the one confirmation. */

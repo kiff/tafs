@@ -15,7 +15,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 
 /** tafs cloud's refusal: its words. */
-class CloudError(val status: Int, message: String, val blocking: List<BlockingRun> = emptyList()) : Exception(message)
+/** [words]: tafs cloud's own words for what's in the way, where it sends them (a switch a run blocks). */
+class CloudError(val status: Int, message: String, val blocking: List<BlockingRun> = emptyList(), val words: String? = null) : Exception(message)
 
 /**
  * tafs cloud: the calls that start, follow, chat with and remove tafs, which run on kiff/agents; the
@@ -538,7 +539,7 @@ class TafsCloud(
     if (body != null) headers["Content-Type"] = "application/json"
     val response = transport.send(HttpRequest(method, baseUrl + path, headers, body))
     if (response.status !in 200..299) {
-      throw CloudError(response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}", blockingRuns(response.body))
+      throw CloudError(response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}", blockingRuns(response.body), field(response.body, "words"))
     }
     return response.body
   }
@@ -550,8 +551,10 @@ class TafsCloud(
   }.getOrDefault(emptyList())
 
   /** tafs cloud's own words for a refusal: its `error`. */
-  private fun refusal(body: ByteArray): String? = runCatching {
-    (KiffClient.json.parseToJsonElement(String(body)).jsonObject["error"] as? JsonPrimitive)?.contentOrNull
+  private fun refusal(body: ByteArray): String? = field(body, "error")
+
+  private fun field(body: ByteArray, name: String): String? = runCatching {
+    (KiffClient.json.parseToJsonElement(String(body)).jsonObject[name] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
   }.getOrNull()
 
   // MARK: A chat, live (docs/chat.md)
