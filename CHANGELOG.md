@@ -119,6 +119,10 @@ version headings refer to releases, not merely to merged pull requests.
 - **Android, Coach crash:** opening Coach no longer crashes when a chat holds the same message
   twice. An owner's message is told apart by tafs cloud's id for it, and a chat shows each item
   once.
+- **Coach, a scheduled taf with no numbered version:** Coach said it had "no version installed
+  yet" and that nothing was working, while the home said "Working · Next run 04:00". Its
+  `tafs_state` now says such a taf runs the definition it was made with, and that a schedule
+  that's on is working, with its next run, though nothing runs this minute.
 - **Android, switching accounts:** after signing in to another account without closing the app,
   connecting tools and starting Coach work there. The phone used to sign planque's requests with
   the last account's device id, which planque refused, and the app said it was signed out.
