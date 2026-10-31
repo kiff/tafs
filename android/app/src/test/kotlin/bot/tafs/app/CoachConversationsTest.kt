@@ -98,6 +98,39 @@ class CoachConversationsTest {
     assertFalse(m.state.value.coachRequested)
   }
 
+  @Test fun atLaunchCoachOpensOnItsNewestConversationAlone() = runTest {
+    reads()
+    // Two conversations, listed in any order: the one updated last is opened, alone.
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[{"session":"s3","started":"2026-10-26T09:00:00Z","updated":"2026-10-26T10:00:00Z","title":"Refunds"},{"session":"s4","started":"2026-10-27T09:00:00Z","updated":"2026-10-27T10:00:00Z","title":"Chargebacks"}]}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200, """{"messages":[{"at":"2026-10-27T09:00:00Z","from":"owner","text":"Set up Chargebacks","session":"s4"}]}""")
+    val m = model()
+    m.loadChat(COACH_CHAT)
+    assertEquals("s4", m.state.value.coachChat)
+    assertEquals(listOf("Set up Chargebacks"), m.state.value.chats[COACH_CHAT]!!.map { it.text })
+    // Never the latest conversations together; the earlier one is under Previous conversations.
+    assertTrue(transport.requestsTo("GET /v1/tafs/setup_1/conversation").isEmpty())
+    assertEquals(listOf("s3", "s4"), m.state.value.coachChats.map { it.session })
+  }
+
+  @Test fun withNoConversationYetCoachsThreadReadsAsBefore() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[]}""")
+    val m = model()
+    m.loadChat(COACH_CHAT)
+    assertEquals(null, m.state.value.coachChat)
+    assertEquals(1, transport.requestsTo("GET /v1/tafs/setup_1/conversation").size)
+  }
+
+  @Test fun aNewConversationIsntReplacedByTheNewestAtItsFirstRead() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[{"session":"s4","started":"2026-10-27T09:00:00Z","updated":"2026-10-27T10:00:00Z","title":"Chargebacks"}]}""")
+    val m = model()
+    m.newCoachChat()
+    m.loadChat(COACH_CHAT)
+    assertEquals(null, m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
+  }
+
   @Test fun earlierConversationsAreListedAndOneArchivedLeavesTheListAndTheScreen() = runTest {
     reads()
     transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[{"session":"s4","started":"2026-10-27T09:00:00Z","updated":"2026-10-27T10:00:00Z","title":"Refunds for Acme"},{"session":"s3","started":"2026-10-26T09:00:00Z","updated":"2026-10-26T10:00:00Z","title":"Connect Stripe"}]}""")
