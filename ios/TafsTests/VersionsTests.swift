@@ -99,12 +99,20 @@ final class VersionsTests: XCTestCase {
         XCTAssertEqual(model.switches[id]?.n, 2)
     }
 
+    /// Who made a version is tafs cloud's to say (kiff/tafs#380): the app keeps no copy.
+    func testWhoMadeAVersionIsReadFromTafsCloud() throws {
+        let json = #"{"versions":[{"n":1,"by":"","created":"2026-10-19T09:00:00Z","live":true},{"n":2,"by":"u_bo","by_words":"By someone on your account","created":"2026-10-20T07:00:00Z","live":false}]}"#
+        let state = try KIFFClient.decoder.decode(TafsCloud.VersionState.self, from: Data(json.utf8))
+        XCTAssertNil(state.versions[0].byWords)
+        XCTAssertTrue(VersionsPanel.byline(state.versions[1]).hasPrefix("By someone on your account · "))
+    }
+
     func testAVersionKiffAgentsWroteNamesNoOne() {
         let at = Date(timeIntervalSince1970: 0)
         let upgrade = TafsCloud.Version(n: 3, note: "Its rules were updated", by: nil, created: at, live: true, draft: nil)
         XCTAssertFalse(VersionsPanel.byline(upgrade).contains("By"))
-        let setup = TafsCloud.Version(n: 2, note: nil, by: "setup", created: at, live: false, draft: "d_02")
-        XCTAssertTrue(VersionsPanel.byline(setup).hasPrefix("By Coach mode · "))
+        let setup = TafsCloud.Version(n: 2, note: nil, by: "setup", byWords: "By Coach mode", created: at, live: false, draft: "d_02")
+        XCTAssertTrue(VersionsPanel.byline(setup).hasPrefix("By Coach mode · "), "tafs cloud's words")
         XCTAssertTrue(VersionsPanel.byline(setup).hasSuffix(" · brings a new Card"))
     }
 
@@ -333,7 +341,7 @@ final class VersionsTests: XCTestCase {
     /// (kiff/tafs#206).
     func testARunInTheWayIsNamedAndStoppedInOneStep() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
-        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (409, #"{"error":"a run of this agent is going or waiting on its owner","blocking":[{"run":"r1","session":"s1","status":"PAUSED","trigger":"owner"}]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/versions/2/switch"] = (409, #"{"error":"a run of this agent is going or waiting on its owner","blocking":[{"run":"r1","session":"s1","status":"PAUSED","trigger":"owner"}],"words":"Version 2 can't go live while a task waits on your answer. Stop it and install, or wait until it's done."}"#)
         let v2 = TafsCloud.Version(n: 2, note: nil, by: "setup", created: Date(), live: false, draft: "d_02")
         let blocked = await model.prepareSwitch(v2, of: id)
         XCTAssertNil(blocked)

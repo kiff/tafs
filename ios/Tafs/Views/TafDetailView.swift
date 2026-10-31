@@ -629,16 +629,10 @@ struct VersionsPanel: View {
         .padding(.vertical, 4)
     }
 
-    /// Who made it, when, and whether it brings a new Card. A version kiff/agents wrote
-    /// itself (the first, or an Upgrade's) names no one.
+    /// Who made it, in tafs cloud's words, when, and whether it brings a new Card. A version
+    /// kiff/agents wrote itself (the first, or an Upgrade's) names no one.
     static func byline(_ v: TafsCloud.Version) -> String {
-        var by: String?
-        switch v.by {
-        case nil, "": by = nil
-        case "setup": by = "By Coach mode"
-        default: by = "By you"
-        }
-        return [by, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
+        return [v.byWords, v.created.shown(date: .abbreviated, time: .shortened), v.draft == nil ? nil : "brings a new Card"]
             .compactMap { $0 }.joined(separator: " · ")
     }
 }

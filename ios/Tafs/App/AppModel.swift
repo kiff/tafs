@@ -2342,9 +2342,9 @@ final class AppModel: ObservableObject {
             return sw
         } catch let error as TafsCloud.CloudError where error.status == 409 && !error.blocking.isEmpty {
             guard gen == accountGeneration else { return nil }
-            // Named, with the one step that clears it (kiff/tafs#206).
+            // Named, in tafs cloud's words, with the one step that clears it (kiff/tafs#206).
             blockedInstalls[tafID] = version.n
-            versionErrors[tafID] = Self.blockedWords(version.n, error.blocking, stopping: stopBlocking)
+            versionErrors[tafID] = error.words ?? "Version \(version.n) can't go live now: \(error.message)"
             return nil
         } catch {
             guard gen == accountGeneration else { return nil }
@@ -2356,21 +2356,6 @@ final class AppModel: ObservableObject {
     /// The version whose install a run is in the way of, by taf: the panel offers "Stop it
     /// and install" (kiff/tafs#206).
     @Published private(set) var blockedInstalls: [UUID: Int] = [:]
-
-    /// Which run is in the way of installing version n, in the owner's words.
-    static func blockedWords(_ n: Int, _ runs: [TafsCloud.BlockingRun], stopping: Bool) -> String {
-        let waiting = runs.contains { $0.status == "PAUSED" }
-        let what: String
-        switch (runs.count, waiting) {
-        case (1, true): what = "a task waits on your answer"
-        case (1, false): what = runs[0].trigger == "schedule" ? "its scheduled run is at work" : "a task is at work"
-        case (_, true): what = "\(runs.count) tasks are going, one waiting on your answer"
-        default: what = "\(runs.count) tasks are at work"
-        }
-        return stopping
-            ? "Version \(n) isn't installed yet: \(what) and hasn't stopped. Try again in a moment."
-            : "Version \(n) can't go live while \(what). Stop it and install, or wait until it's done."
-    }
 
     /// A version's Card that changed between the screen and the tap (kiff/tafs#115): put
     /// on screen to read again; nothing was signed.

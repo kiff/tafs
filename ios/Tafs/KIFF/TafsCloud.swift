@@ -11,14 +11,16 @@ final class TafsCloud {
         let message: String
         /// The runs that keep a switch from beginning, when tafs cloud names them (kiff/tafs#206).
         var blocking: [BlockingRun] = []
+        /// What tafs cloud says is wrong, for the owner, when it says it.
+        var words: String? = nil
         var errorDescription: String? { message }
     }
 
     /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
-        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]? }
+        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
-        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [])
+        return CloudError(status: status, message: body?.error ?? "tafs cloud answered \(status)", blocking: body?.blocking ?? [], words: body?.words)
     }
 
     /// A run in the way of an install (kiff/tafs#206): one at work, or one waiting on the owner.
@@ -1058,6 +1060,9 @@ final class TafsCloud {
         let note: String?
         /// Who made it: the owner's subject, or "setup".
         let by: String?
+        /// Who made it, in tafs cloud's words ("By Coach mode", "By you"); none for one
+        /// kiff/agents wrote itself (the first, or an Upgrade's).
+        var byWords: String? = nil
         let created: Date
         let live: Bool
         /// The KIFF draft whose confirmation brings this version's Card revision, while it
@@ -1066,6 +1071,7 @@ final class TafsCloud {
         /// Its trials that ended, oldest first (kiff/tafs#173).
         var trials: [TrialSummary]? = nil
         var id: Int { n }
+        enum CodingKeys: String, CodingKey { case n, note, by, created, live, draft, trials, byWords = "by_words" }
     }
 
     /// A switch to version n under way (kiff/tafs#107): nothing of the taf runs until it
