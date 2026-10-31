@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, versions:** who made a version, and what keeps a switch from going live, read in
+  tafs cloud's words ("By Coach mode", "By you", "By someone on your account"), as on iOS.
+  The app's own copies of both are gone.
 - **iPhone and iPad, held calls:** a call Coach's own agent holds is titled **Coach**, with
   Coach's mark, on its card, its alert and the lock screen, never "A taf". Why a call is held
   reads KIFF's own words when sent; a count of calls without them reads "Each call asks you
