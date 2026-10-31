@@ -621,6 +621,9 @@ class AppModel(
   /** Bumped when an account is left, so an answer for the account that was is dropped. */
   private var accountGeneration = 0
 
+  /** The session ([accountGeneration]) Coach's setup was last read in for a hold no taf is. */
+  private var setupReadIn = -1
+
   /**
    * The owner's answers to KIFF's held calls, by their record id, until KIFF records the outcome
    * (kiff/tafs#138): a refresh just after an answer still reads the call as held.
@@ -831,9 +834,10 @@ class AppModel(
       // on, and the old account's data is dropped here.
       if (generation != accountGeneration) return
       // A held install is Coach's only from Coach's own agent, and a hold from an agent no taf is may be Coach's: read which
-      // agent is Coach's, once, when either is held.
-      val unnamed = read.exceptions.any { _state.value.holder(it.subject) == null }
+      // agent is Coach's when either is held. For a hold no taf is, once a session: an account with no Coach has none to find.
+      val unnamed = setupReadIn != accountGeneration && read.exceptions.any { _state.value.holder(it.subject) == null }
       if (_state.value.coachAgent == null && (unnamed || read.exceptions.any { it.action == "version_install" })) {
+        setupReadIn = accountGeneration
         attempt { cloud.setup() }?.let { setup ->
           if (generation == accountGeneration) _state.update { it.copy(coachAgent = setup.kiffAgent, coachCloudId = it.coachCloudId ?: setup.id) }
         }

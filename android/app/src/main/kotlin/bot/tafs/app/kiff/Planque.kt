@@ -201,9 +201,9 @@ class PlanqueClient(
     val uri = "/v1/accounts/${escaped(account)}" + if (path.isEmpty()) "" else "/$path"
     val signedAt = signingTime.next()
     val message = message(baseUrl, account, method, uri, body ?: ByteArray(0), signedAt)
-    // planque asks KIFF whether this device signed: never a key alone.
-    if (deviceId == null) deviceId = deviceLoader?.invoke()
-    val device = deviceId ?: throw PlanqueError.NoDevice
+    // planque asks KIFF whether this device signed: never a key alone. One read while the account changed is kept only if the
+    // account is still this request's: kept otherwise, it would name the last account's device to the next.
+    val device = deviceId ?: deviceLoader?.invoke()?.also { if (tenant == account) deviceId = it } ?: throw PlanqueError.NoDevice
     val headers = linkedMapOf(
       "Accept" to "application/json",
       "User-Agent" to "tafs-android",
