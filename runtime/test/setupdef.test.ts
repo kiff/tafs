@@ -233,7 +233,9 @@ describe("Setup's definition on kiff/agents", () => {
     // After the version is made, Coach closes, never "waiting" for it; each approval has a title.
     expect(flat).toContain("Never write that you're waiting for it to be made: the result card says so until the answer comes.");
     expect(flat).toContain("When it answers with the version, always write one closing sentence: version N of the taf is ready to try, then to install from its Versions.");
-    expect(flat).toContain("Each has a short title saying what it approves");
+    // An approval carries no words of Coach's: what the owner reads as they grant is planque's and KIFF's.
+    expect(flat).toContain("An approval carries only its grant and draft, never a title or words of yours");
+    expect(flat).not.toContain("Each has a short title saying what it approves");
     // The owner installed a version Coach made: the plan ends, never "install it" again.
     expect(flat).toContain(`A line "[taf <name> version N live]" says the owner installed a version you made.`);
     expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
