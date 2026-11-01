@@ -21,6 +21,9 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -63,6 +66,8 @@ fun SettingsSheet(
 ) {
   val scope = rememberCoroutineScope()
   val uri = LocalUriHandler.current
+  // Each way out of KIFF asks first: one stray tap never ends the session.
+  var confirming by remember { mutableStateOf<SignOut?>(null) }
   val context = LocalContext.current
   val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "–" }
 
@@ -99,9 +104,7 @@ fun SettingsSheet(
               style = scaled(13, color = Theme.amberText),
               modifier = Modifier.padding(12.dp),
             )
-            Action("Sign in again", Theme.amberText) {
-              scope.launch { if (onSignInAgain()) onClose() }
-            }
+            Action("Sign in again", Theme.amberText) { confirming = SignOut.SignInAgain }
           }
           // The account's groups and who is in each.
           if (state.mode == Mode.kiff) Action("People & groups", Theme.ink, onPeople)
@@ -110,11 +113,10 @@ fun SettingsSheet(
           if (state.mode == Mode.kiff) ExportChatsRow(onExport)
           // Another account this person is on: KIFF's sign-in page lists each one. This session ends at KIFF first, as Sign out's
           // does, so it never stays live behind the new one.
-          if (state.mode == Mode.kiff) Action("Switch account…", Theme.ink) { scope.launch { if (onSignOut()) onSignIn() } }
+          if (state.mode == Mode.kiff) Action("Switch account…", Theme.ink) { confirming = SignOut.SwitchAccount }
           Action(if (state.mode == Mode.kiff) "Sign out of KIFF" else "Clear the sample", Theme.no) {
-            scope.launch {
-              if (onSignOut()) onClose()
-            }
+            // The sample has nothing at KIFF to end: it clears at once.
+            if (state.mode == Mode.kiff) confirming = SignOut.SignOut else scope.launch { if (onSignOut()) onClose() }
           }
           // KIFF didn't end the session, so nothing changed here: said under it, to try again.
           state.signOutError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
@@ -172,6 +174,39 @@ fun SettingsSheet(
       }
     }
   }
+
+  confirming?.let { way ->
+    ConfirmSignOut(way, onDismiss = { confirming = null }) {
+      confirming = null
+      scope.launch {
+        when (way) {
+          SignOut.SignOut -> if (onSignOut()) onClose()
+          SignOut.SignInAgain -> if (onSignInAgain()) onClose()
+          SignOut.SwitchAccount -> if (onSignOut()) onSignIn()
+        }
+      }
+    }
+  }
+}
+
+/** The ways out of KIFF this phone offers, each confirmed first. */
+enum class SignOut(val title: String, val text: String, val confirm: String) {
+  SignOut("Sign out of KIFF?", "This phone stops working for your account until you sign in again. Your tafs keep working.", "Sign out"),
+  SignInAgain("Sign in again?", "This phone signs out of KIFF first, then you sign in again in your browser.", "Sign out and sign in"),
+  SwitchAccount("Switch account?", "This phone signs out of KIFF first, then you pick the account to sign in to.", "Sign out and switch"),
+}
+
+/** Asks before this phone signs out of KIFF, so a stray tap never ends the session. Cancel leaves everything as it is. */
+@Composable
+fun ConfirmSignOut(way: SignOut, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+  androidx.compose.material3.AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(way.title) },
+    text = { Text(way.text) },
+    confirmButton = { androidx.compose.material3.TextButton(onConfirm) { Text(way.confirm, color = Theme.no) } },
+    dismissButton = { androidx.compose.material3.TextButton(onDismiss) { Text("Cancel", color = Theme.soft) } },
+    containerColor = Theme.panel,
+  )
 }
 
 @Composable

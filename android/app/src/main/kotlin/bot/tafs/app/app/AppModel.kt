@@ -149,6 +149,16 @@ data class TafDoors(
 /** The run at work in a taf's chat: its session, and the run itself when tafs cloud names it. */
 data class ChatRun(val session: String, val run: String? = null)
 
+/**
+ * How a purchase or a restore went, said under what was tapped: [at] is the Play product, or [RESTORE]. [offersRestore]: KIFF
+ * hasn't recorded it yet, so Restore purchases is offered right there.
+ */
+data class PurchaseNote(val at: String, val words: String, val offersRestore: Boolean = false) {
+  companion object {
+    const val RESTORE = "restore"
+  }
+}
+
 /** What a person may do, as KIFF says it: a KIFF that doesn't say leaves it to KIFF to decide. */
 internal fun allows(capabilities: List<String>?, capability: String): Boolean = capabilities?.contains(capability) ?: true
 
@@ -321,6 +331,8 @@ data class AppState(
   val storeProducts: Map<String, StoreProduct> = emptyMap(),
   val buying: String? = null,
   val tasksMessage: String? = null,
+  /** How the latest purchase or restore went, said under what was tapped (Start Solo, a pack, Restore purchases). */
+  val purchaseNote: PurchaseNote? = null,
   /**
    * What a refresh the app made by itself couldn't do, said quietly under the account's name ("Can't reach KIFF"), never as
    * "Not done"; null once one goes through. And whether the app is still trying again by itself.
@@ -4149,7 +4161,7 @@ class AppModel(
   private suspend fun startPurchases() {
     if (!playBilling || _state.value.mode != Mode.kiff) return
     _state.update { it.copy(playBilling = true) }
-    purchases.record ={ product, token, request -> kiff.recordGooglePurchase(product, token, request) }
+    purchases.record = { product, token, request -> kiff.recordGooglePurchase(product, token, request) }
     purchases.recorded = { refreshUsage(); refresh() }
     if (purchasesListening?.isActive != true) {
       purchasesListening = scope.launch { purchases.updates.collect { purchases.deliver(it, null) } }
@@ -4232,9 +4244,12 @@ class AppModel(
     return true
   }
 
-  /** Buys Solo or a pack for the account, answering a member's request when there is one. */
+  /**
+   * Buys Solo or a pack for the account, answering a member's request when there is one. How it went is said under what was
+   * tapped; a request's, on the request. Play's offers are read again after, whatever the outcome.
+   */
   suspend fun buy(product: String, requestId: String? = null) {
-    _state.update { it.copy(tasksMessage = null) }
+    _state.update { it.copy(tasksMessage = null, purchaseNote = null) }
     val token = _state.value.usage?.store?.appAccountToken
     if (!_state.value.offersPurchases || token == null) {
       _state.update { it.copy(tasksMessage = "Only the account's admin adds tasks.") }
@@ -4242,14 +4257,21 @@ class AppModel(
     }
     _state.update { it.copy(buying = product) }
     val outcome = purchases.buy(product, token, requestId)
-    _state.update { it.copy(buying = null, tasksMessage = buyWords(outcome) ?: it.tasksMessage) }
+    val words = buyWords(outcome)
+    _state.update {
+      if (requestId != null) it.copy(buying = null, tasksMessage = words ?: it.tasksMessage)
+      else it.copy(buying = null, purchaseNote = words?.let { w -> PurchaseNote(product, w, offersRestore = outcome is PurchaseOutcome.NotRecorded) })
+    }
+    loadStore()
   }
 
   /** Brings back this Google account's purchases not finished yet, and sends each to KIFF. */
   suspend fun restorePurchases() {
-    _state.update { it.copy(tasksMessage = null) }
+    _state.update { it.copy(tasksMessage = null, purchaseNote = null) }
     if (!_state.value.offersPurchases) return
-    val words = when (val o = purchases.restore()) {
+    _state.update { it.copy(buying = PurchaseNote.RESTORE) }
+    val outcome = purchases.restore()
+    val words = when (val o = outcome) {
       PurchaseOutcome.Done -> "Purchases restored."
       is PurchaseOutcome.NotRecorded -> "Restored. KIFF hasn't added everything yet: tafs tries again when it opens."
       is PurchaseOutcome.NotAdded -> o.why
@@ -4257,7 +4279,8 @@ class AppModel(
       is PurchaseOutcome.Failed -> "Purchases couldn't be restored: ${o.why}"
       else -> null
     }
-    _state.update { it.copy(tasksMessage = words) }
+    _state.update { it.copy(buying = null, purchaseNote = words?.let { PurchaseNote(PurchaseNote.RESTORE, it, offersRestore = outcome is PurchaseOutcome.NotRecorded) }) }
+    loadStore()
   }
 
   private fun buyWords(o: PurchaseOutcome): String? = when (o) {

@@ -178,6 +178,20 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, Solo's free trial only while Play offers it:** Play's offers are read again each
+  time Usage shows and after every purchase, never kept from an earlier read, so a trial already
+  used reads "€10.99 a month", not "Free for 1 week".
+- **Android, a purchase's outcome where you tapped:** under Start Solo, the pack or Restore
+  purchases, read out by TalkBack, with Restore purchases right there when KIFF hasn't recorded
+  it yet.
+- **Android, packs need Solo:** before a trial starts or after it ends, Usage offers Solo alone;
+  packs already held stay listed and say "Counts once Solo starts." (KIFF's `can_add_packs`).
+- **Android, "1 task":** Usage says "1 task", "0 of 1 task" and "Tasks last 1 month", not "1 tasks".
+- **Android, signing out asks first:** Sign out of KIFF, Sign in again and Switch account each
+  confirm before the phone signs out, so a stray tap doesn't end the session.
+- **Android, an answered card in Coach's chat:** it stays after the words that asked for it,
+  and Coach's words after the answer come below it.
+
 - **Android, Coach's last words on the open screen:** with Coach open, a run that paused on a
   result goes on once tafs cloud answers it, and its closing message shows without leaving
   Coach. The dots and Stop no longer stay after it's done.

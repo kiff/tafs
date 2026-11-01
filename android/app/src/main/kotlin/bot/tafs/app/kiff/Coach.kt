@@ -109,7 +109,16 @@ data class WireShown(
  * the taf it set up, the version it made, or why it didn't.
  */
 @Serializable
-data class CardAnswer(val state: String = "answered", val words: String = "", val by: String? = null, val outcome: ResultOutcome? = null)
+data class CardAnswer(
+  val state: String = "answered",
+  val words: String = "",
+  val by: String? = null,
+  val outcome: ResultOutcome? = null,
+  /** When it was answered, as tafs cloud writes it; null from a tafs cloud that doesn't say. */
+  @SerialName("at") val atText: String? = null,
+) {
+  val at: java.time.Instant? get() = atText?.let { runCatching { java.time.Instant.parse(it) }.getOrNull() }
+}
 
 /** A report of an answer, as tafs cloud kept it: `new` is false when this person had reported that answer already. */
 @Serializable

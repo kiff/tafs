@@ -49,8 +49,20 @@ object UsageWords {
   /** A taf's counted tasks this period, for its page's Usage row. */
   fun tafCount(n: Int): String = "${tasks(n)} this period"
 
-  /** "14 of 25 tasks", or "472 tasks" where there is no limit (KIFF's `included: 0`). */
-  fun count(counted: Int, of: Int, unit: String): String = if (of > 0) "$counted of $of $unit" else "$counted $unit"
+  /**
+   * "14 of 25 tasks", or "472 tasks" where there is no limit (KIFF's `included: 0`), in the singular where the number it follows
+   * is 1: "1 task", "0 of 1 task". [unit] is the plural; its singular drops the final "s".
+   */
+  fun count(counted: Int, of: Int, unit: String): String {
+    val one = unit.removeSuffix("s")
+    return if (of > 0) "$counted of $of ${if (of == 1) one else unit}" else "$counted ${if (counted == 1) one else unit}"
+  }
+
+  /** Under held packs while no plan runs (KIFF's `can_add_packs` false). */
+  const val PACKS_WAIT_FOR_SOLO = "Counts once Solo starts."
+
+  /** "Tasks last 12 months", "Tasks last 1 month": how long a pack's tasks last. */
+  fun packLasts(months: Int): String = "Tasks last $months ${if (months == 1) "month" else "months"}"
 
   /** "65 tasks left", with what the period has beside it; null where tasks have no limit. */
   fun leftLine(u: Usage): String? {

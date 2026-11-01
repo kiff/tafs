@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.kiff.packsOffered
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.Mode
 import bot.tafs.app.kiff.CountedTask
@@ -184,9 +185,24 @@ class UsageTest {
   private fun usageOf(json: String): Usage = KiffClient.json.decodeFromString(json)
   private val period = """"period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"}"""
 
+  @Test fun packsAreOfferedOnlyWhileAPlanRunsAsKiffSays() {
+    fun u(extra: String) = usageOf("""{"plan":"trial",$period,"tasks":{"counted":0},$extra}""")
+    assertFalse(u(""""can_add_tasks":true,"can_add_packs":false""").packsOffered)
+    assertTrue(u(""""can_add_tasks":true,"can_add_packs":true""").packsOffered)
+    // An older KIFF that doesn't say: as before, with can_add_tasks.
+    assertTrue(u(""""can_add_tasks":true""").packsOffered)
+    assertFalse(u(""""can_add_tasks":false""").packsOffered)
+  }
+
   @Test fun countsReadAsAnOfOrAsAPlainTotalWhereThereIsNoLimit() {
     assertEquals("14 of 25 tasks", UsageWords.count(14, 25, "tasks"))
     assertEquals("472 tasks", UsageWords.count(472, 0, "tasks"))
+    assertEquals("1 task", UsageWords.count(1, 0, "tasks"))
+    assertEquals("0 tasks", UsageWords.count(0, 0, "tasks"))
+    assertEquals("1 of 25 tasks", UsageWords.count(1, 25, "tasks"))
+    assertEquals("0 of 1 task", UsageWords.count(0, 1, "tasks"))
+    assertEquals("Tasks last 1 month", UsageWords.packLasts(1))
+    assertEquals("Tasks last 12 months", UsageWords.packLasts(12))
     assertEquals("1 task", UsageWords.tasks(1))
     assertEquals("8 tasks", UsageWords.tasks(8))
     assertEquals("0 tasks this period", UsageWords.tafCount(0))
