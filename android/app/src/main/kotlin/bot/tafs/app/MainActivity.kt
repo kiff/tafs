@@ -506,6 +506,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onPeople = { showingSettings = false; showingPeople = true },
         onUseDeviceZone = { scope.launch { model.useThisDevicesTimeZone() } },
         onDeleteAccount = { showingSettings = false; deletingAccount = true },
+        onExport = model::exportChats,
         onClose = { showingSettings = false },
       )
     }

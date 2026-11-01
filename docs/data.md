@@ -95,6 +95,12 @@ KIFF ──(signed alert)───────────────▶ tafs c
 - **What the company's tools return** reaches the taf's run in kiff/agents, kept only until that run ends. What a chat only read is kept for that chat's next messages, sealed, while the owner keeps writing: up to an hour idle, and never more than 4 hours after it was read. Nothing shows it: not the app, a report or an export. It reaches tafs cloud only when the phone reads a report or a chat, and tafs cloud keeps none of it.
 - **The agent's key** goes from KIFF to tafs cloud to Secrets Manager in one request. The phone never holds it, and tafs cloud can't read it back.
 
+## Your own copy
+
+Settings → *Export my chats* (`GET /v1/me/chats/export`) gives a person their own data in tafs: their chats and trials with every taf, Coach's too, as kiff/agents still keeps them (30 days), the files they attached (by name, type and size; each file opens as in the chat), and their own notes. It comes as JSON, and as text to read. It's only theirs: an admin or the account's owner can't export another person's chats, and KIFF's account export (`GET /v1/me/export`, which an admin downloads) doesn't include them. Door chats stay with the people who manage the taf.
+
+On Android, the row (`ExportChatsRow`, `AppModel.exportChats`) says "Preparing your chats…" while it waits, then offers two files through the system's share sheet, where the person saves or sends them: `tafs-chats.json` (the answer without `readable`) and `tafs-chats.txt` (`readable`). They're written to the app's own cache (`exports/`, shared only through its FileProvider), replaced at each export, and deleted when the person signs out. If it fails, whether reading the export or writing and sharing the files (a full disk, no app to share to), the row says why and offers Try again.
+
 ## Deleting the account (#185)
 
 Settings → *Delete account*, behind Face ID, deletes everything above that is the account's. A step that fails stops the rest, and asking again goes on from there:

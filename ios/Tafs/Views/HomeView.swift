@@ -7,6 +7,7 @@ struct HomeView: View {
     @State private var showingSettings = false
     @State private var showingAddTasks = false
     @State private var showingSolo = false
+    @State private var showingExport = false
     @State private var openingFirst = false
 
     var body: some View {
@@ -142,6 +143,10 @@ struct HomeView: View {
         // The purchase screens, for their screenshots (Screenshots.screen).
         .sheet(isPresented: $showingAddTasks) { AddTasksView().environmentObject(model) }
         .sheet(isPresented: $showingSolo) { NavStack { SoloView() }.environmentObject(model) }
+        // Export my chats, for its UI test: the sample has no KIFF account to open.
+        .sheet(isPresented: $showingExport) {
+            NavStack { List { ExportChatsSection() }.navigationTitle("Account") }.environmentObject(model)
+        }
         .navigationDestination(isPresented: $openingFirst) {
             if let id = model.tafs.first(where: { $0.name == "Refunds" })?.id ?? model.tafs.first?.id {
                 TafDetailView(tafID: id)
@@ -155,6 +160,7 @@ struct HomeView: View {
             case "new": showingNew = true
             case "add-tasks": showingAddTasks = true
             case "solo": showingSolo = true
+            case "export": showingExport = true
             default: break
             }
         }

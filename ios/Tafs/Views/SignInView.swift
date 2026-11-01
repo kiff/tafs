@@ -213,6 +213,8 @@ struct AccountView: View {
             } footer: {
                 Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.")
             }
+            // Their own copy, for their rights of access and portability (kiff/tafs#424).
+            ExportChatsSection()
             if model.mayDeleteAccount { Section {
                 Button("Delete account…", role: .destructive) { deletingAccount = true }
             } footer: {

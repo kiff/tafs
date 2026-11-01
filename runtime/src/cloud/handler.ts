@@ -474,6 +474,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return body.intent === undefined ? deleteAccount(me, deps) : deleteByIntent(me, body, bearer(event), deps);
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
+  if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
+    return exportChats(await person(event, deps), deps);
+  }
   if (parts[1] !== "tafs" && parts[1] !== "setup") throw new HTTPError(404, "not found");
 
   const me = await person(event, deps);
@@ -1951,6 +1954,79 @@ async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, message
     session: found.session, message: found.id, ...input, text: found.text,
   }, now);
   return { report: { id: report.id, at: report.at, new: fresh } };
+}
+
+/** What a person's export holds: as many of their chats per taf as kiff/agents lists at once. */
+export const EXPORT = { sessionsPerTaf: 1000 } as const;
+
+interface ExportedChat {
+  session: string;
+  kind: "chat" | "trial";
+  started: string;
+  updated: string;
+  archived: boolean;
+  messages: Array<{ id: string; at: string; from: "owner" | "taf"; text: string; attachments?: Array<{ name: string; type: string; size: number }> }>;
+}
+
+/**
+ * GET /v1/me/chats/export: a person's own data in tafs, for their rights of access and
+ * portability (GDPR Articles 15 and 20, kiff-cloud#1409). Their own chats and trials with
+ * every taf of the account, Coach's included, archived ones too, with what kiff/agents
+ * still keeps of them (30 days), the names of the files they attached, and their own
+ * notes. Never another person's chats, a door's, or a taf's job runs: only the person
+ * reads their own, and an admin can't export it for them. Answers the data as JSON, and
+ * `readable`, the same as text.
+ */
+async function exportChats(me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  const mine = ownerKey(me);
+  const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing);
+  const out = await Promise.all(tafs.map(async (taf) => {
+    // The person's own sessions alone, so a taf's job runs never crowd their chats out of the list.
+    const listed = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, EXPORT.sessionsPerTaf, mine, true));
+    // An export is complete or it isn't given: a list at the cap may have left chats out.
+    if (listed.length >= EXPORT.sessionsPerTaf) throw new HTTPError(503, `more than ${EXPORT.sessionsPerTaf} chats with one taf to export at once; ask KIFF's support`);
+    const sessions = listed.filter((s): s is Session & { kind: "chat" | "trial" } => (s.kind === "chat" || s.kind === "trial") && s.owner === mine);
+    const chats: ExportedChat[] = [];
+    for (const s of sessions) {
+      // Read it first, failing the export: the thread's own read skips a session it can't read.
+      await agentsCall(() => deps.agents.session(me.tenantID, s.id, mine));
+      const { messages } = await conversation(me, taf, deps, s);
+      chats.push({
+        session: s.id, kind: s.kind, started: iso(s.started), updated: iso(s.updated), archived: s.archived === true,
+        messages: messages.map((m) => ({
+          id: m.id, at: m.at, from: m.from, text: m.text,
+          ...(m.attachments?.length ? { attachments: m.attachments.map((a) => ({ name: a.name, type: a.media_type, size: a.size })) } : {}),
+        })),
+      });
+    }
+    const notes = (await agentsCall(() => deps.agents.memories(me.tenantID, taf.id, mine)))
+      .filter((n) => n.scope).map((n) => ({ name: n.name, text: n.text, updated: iso(n.updated) }));
+    return { id: taf.id, name: taf.job === SETUP_JOB ? "Coach" : taf.name, chats: chats.sort((a, b) => a.started.localeCompare(b.started)), notes };
+  }));
+  const data = { exported_at: (deps.now?.() ?? new Date()).toISOString(), account: me.tenantID, person: me.subject, tafs: out.filter((t) => t.chats.length || t.notes.length) };
+  return { ...data, readable: readableExport(data) };
+}
+
+/** The export as text a person reads: each taf, its chats in order, then their notes. */
+export function readableExport(data: { exported_at: string; tafs: Array<{ name: string; chats: ExportedChat[]; notes: Array<{ name: string; text: string; updated: string }> }> }): string {
+  const lines = [`Your tafs chats, exported ${data.exported_at}`, ""];
+  if (!data.tafs.length) lines.push("You have no chats or notes in tafs.");
+  for (const taf of data.tafs) {
+    lines.push(`# ${taf.name}`, "");
+    for (const c of taf.chats) {
+      lines.push(`## ${c.kind === "trial" ? "Trial" : "Chat"} started ${c.started}${c.archived ? " (archived)" : ""}`, "");
+      for (const m of c.messages) {
+        lines.push(`${m.at} ${m.from === "owner" ? "You" : taf.name}:`, m.text);
+        for (const a of m.attachments ?? []) lines.push(`[attached: ${a.name}, ${a.type}, ${a.size} bytes]`);
+        lines.push("");
+      }
+    }
+    if (taf.notes.length) {
+      lines.push(`## Your notes with ${taf.name}`, "");
+      for (const n of taf.notes) lines.push(`${n.name} (updated ${n.updated}):`, n.text, "");
+    }
+  }
+  return lines.join("\n");
 }
 
 /** The card types the person answers, as kiff/agents takes them. */

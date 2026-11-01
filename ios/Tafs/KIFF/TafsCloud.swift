@@ -748,6 +748,24 @@ final class TafsCloud {
         return r.report
     }
 
+    /// The person's own chats, trials and notes in tafs, for their rights of access and
+    /// portability (kiff/tafs#424): `json`, the answer without `readable`, and `text`, the same
+    /// as text. Kept as tafs cloud wrote them; never another person's.
+    func exportChats() async throws -> (json: Data, text: String) {
+        let data = try await sendData("GET", "/v1/me/chats/export", body: Optional<[String: String]>.none)
+        return try Self.splitExport(data)
+    }
+
+    /// Splits tafs cloud's export into its two files.
+    static func splitExport(_ data: Data) throws -> (json: Data, text: String) {
+        guard var body = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw CloudError(status: 0, message: "The export isn't what tafs cloud sends.")
+        }
+        let text = body.removeValue(forKey: "readable") as? String ?? ""
+        let json = try JSONSerialization.data(withJSONObject: body, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+        return (json, text)
+    }
+
     /// One of a taf's chats, to reopen (kiff/tafs#73): named by its first words.
     struct Chat: Decodable, Equatable, Identifiable {
         let session: String
@@ -1335,6 +1353,11 @@ final class TafsCloud {
     }
 
     func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, headers: [String: String] = [:]) async throws -> T {
+        try KIFFClient.decoder.decode(T.self, from: await sendData(method, path, body: body, headers: headers))
+    }
+
+    /// The answer's body as tafs cloud sent it, for one kept as it is (the person's export).
+    func sendData<B: Encodable>(_ method: String, _ path: String, body: B?, headers: [String: String] = [:]) async throws -> Data {
         guard let url = URL(string: path, relativeTo: baseURL) else { throw CloudError(status: 0, message: "Bad path") }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -1353,6 +1376,6 @@ final class TafsCloud {
         guard (200..<300).contains(status) else {
             throw Self.refusal(status, data)
         }
-        return try KIFFClient.decoder.decode(T.self, from: data)
+        return data
     }
 }
