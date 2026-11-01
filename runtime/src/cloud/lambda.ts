@@ -17,6 +17,7 @@ import { emailProvider } from "./doors/email.js";
 import type { DoorSecrets, DoorStore } from "./doors/model.js";
 import { whatsappClient } from "./doors/whatsapp.js";
 import { eventLog } from "./events.js";
+import type { ReportsDeps } from "./reports.js";
 
 /**
  * kiff/agents, where every taf runs: its API (AWS_IAM function URL, signed
@@ -608,6 +609,15 @@ function readDoorsConfig(): Promise<DoorsConfig> {
 /** Halts, resumes and door events, in the same table as the doors (kiff/tafs#236). */
 const events = eventLog(doorStore);
 
+/** Reports of answers (reports.ts), in the same table, emailed from the doors' email domain when it's set up. */
+const reports: ReportsDeps = {
+  store: doorStore,
+  email: async () => {
+    const cfg = await readDoorsConfig();
+    return { send: cfg.email ? (e) => cfg.email!.send(e) : undefined, domain: cfg.emailDomain };
+  },
+};
+
 /** Doors run only where the deployment says where it is: its runs must be able to announce they ended. */
 const doors: DoorsDeps | undefined = process.env.DOORS_PUBLIC_URL ? { store: doorStore, secrets: doorSecrets, config: readDoorsConfig } : undefined;
 
@@ -658,7 +668,7 @@ const deletionPeers = {
 };
 
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
 }
 
 /**
