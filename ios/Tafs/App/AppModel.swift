@@ -3758,6 +3758,47 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // MARK: Exporting one's own chats
+
+    /// The person's own chats, trials and notes, as two files to save or share
+    /// (kiff/tafs#424): `tafs-chats.json` and `tafs-chats.txt`. Nil, with why, when it
+    /// wasn't exported. The sample's UI test exports the sample's own words.
+    func exportChats() async -> (files: [URL]?, why: String?) {
+        let export: (json: Data, text: String)
+        do {
+            if mode == .sample, Screenshots.enabled {
+                export = try TafsCloud.splitExport(Self.sampleExport(tafs, at: clock()))
+            } else {
+                guard mode == .kiff else { return (nil, "Sign in with KIFF to export your chats.") }
+                export = try await cloud.exportChats()
+            }
+        } catch {
+            return (nil, "Your chats weren't exported. Check your connection and try again.")
+        }
+        do {
+            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("export", isDirectory: true)
+            try? FileManager.default.removeItem(at: dir)
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let json = dir.appendingPathComponent("tafs-chats.json"), text = dir.appendingPathComponent("tafs-chats.txt")
+            try export.json.write(to: json, options: .completeFileProtection)
+            try Data(export.text.utf8).write(to: text, options: .completeFileProtection)
+            return ([json, text], nil)
+        } catch {
+            return (nil, "Your chats weren't exported: this \(ThisDevice.kind) couldn't save the files.")
+        }
+    }
+
+    /// The sample's export, shaped as tafs cloud's, for the UI test.
+    private static func sampleExport(_ tafs: [Taf], at now: Date) -> Data {
+        let at = ISO8601DateFormatter().string(from: now)
+        let body: [String: Any] = [
+            "exported_at": at, "account": "sample", "person": "sample",
+            "tafs": tafs.map { ["id": $0.id.uuidString, "name": $0.name, "chats": [], "notes": []] },
+            "readable": "Your chats in tafs, exported \(at).\n\n" + tafs.map { "\($0.name): no chats yet." }.joined(separator: "\n"),
+        ]
+        return (try? JSONSerialization.data(withJSONObject: body)) ?? Data("{}".utf8)
+    }
+
     private func sampleMessage(_ from: TafsCloud.ChatMessage.From, _ text: String, session: String = "sample") -> TafsCloud.ChatMessage {
         TafsCloud.ChatMessage(at: clock(), from: from, text: text, session: session)
     }
