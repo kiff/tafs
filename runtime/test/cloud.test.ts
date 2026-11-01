@@ -2153,6 +2153,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBe("Answers refund requests within its Card.");
   });
 
+  it("brings back a taf's job's line when going back to a version from before it had a summary", async () => {
+    const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Offers a free month first", summary: "Offers a free month to customers who cancel." } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBeUndefined();
+    await note();
+    const n = (answer() as { answer: { version: number } }).answer.version;
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.summaries).toEqual({ "1": "", [String(n)]: "Offers a free month to customers who cancel." });
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBe("Offers a free month to customers who cancel.");
+    // Back to version 1, which had none: the job's own line again.
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBeUndefined();
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect((home.body.tafs as Array<{ id: string; job_summary?: string }>).find((t) => t.id === RAE)?.job_summary).not.toBe("Offers a free month to customers who cancel.");
+  });
+
   it("leaves a taf's job line as it is for an improvement without a summary", async () => {
     const { w, note, answer } = await paused({ type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Checks first" } });
     w.agents.access.set("u_ana", { cards_manage: true });

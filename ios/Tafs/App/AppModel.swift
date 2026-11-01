@@ -498,7 +498,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -841,7 +841,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; setupQueued = nil; setupAnswersWaiting = []; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
+        setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
@@ -4741,20 +4741,7 @@ final class AppModel: ObservableObject {
 
     private func sendQueuedIfIdle() async {
         guard !setupSending else { return }
-        // A card's answer first: it's what Setup asked for (kiff/tafs#236, item 2).
-        if let line = setupAnswersWaiting.first {
-            setupAnswersWaiting.removeFirst()
-            let id = SetupThread.Answer(line)?.id
-            switch await deliverSetup(line) {
-            case .sent:
-                if let id { cardNotes[id] = nil }
-            case .kept:
-                if let id { answered.remove(cardRef(id)); cardNotes[id] = nil }
-            case .notTried:
-                setupAnswersWaiting.insert(line, at: 0)
-            }
-            return
-        }
+        // A card's answer never waits here: it goes as data on the card's own route (#330).
         guard !setupThinking, let queued = setupQueued else { return }
         setupQueued = nil
         await sendSetup(queued)
@@ -5190,9 +5177,6 @@ final class AppModel: ObservableObject {
         setupLive = LiveAnswer(started: clock())
         setupStream = Task { await self.followSetupStream(events, text: "", gen: gen) }
     }
-
-    /// Answers to cards given while Setup was at work, sent in order once it's done.
-    @Published private(set) var setupAnswersWaiting: [String] = []
 
     /// Approve on an approval (contract 4, one Face ID): the vendor's connection, then the
     /// taf's Cards when it names a draft. The answer says what happened, never more.
