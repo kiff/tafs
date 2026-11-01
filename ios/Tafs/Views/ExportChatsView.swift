@@ -11,6 +11,8 @@ struct ExportChatsSection: View {
     @State private var preparing = false
     @State private var why: String?
     @State private var files: SharedFiles?
+    /// The files the last export made, to name them and share them again.
+    @State private var made: SharedFiles?
 
     var body: some View {
         Section {
@@ -30,6 +32,14 @@ struct ExportChatsSection: View {
             .accessibilityIdentifier("export-chats")
             if let why {
                 Text(why).scaledFont(13).foregroundColor(Theme.no).accessibilityIdentifier("export-failed")
+            } else if let made, !preparing {
+                Button {
+                    files = made
+                } label: {
+                    Text("Ready: \(made.urls.map(\.lastPathComponent).joined(separator: ", ")). Share again")
+                        .scaledFont(13).foregroundColor(Theme.dim)
+                }
+                .accessibilityIdentifier("export-files")
             }
         } footer: {
             Text("Your own chats with each taf, Coach's included, the names of the files you attached, and your notes, as a readable file and as JSON. Only you can export them.")
@@ -44,7 +54,12 @@ struct ExportChatsSection: View {
         Task {
             let result = await model.exportChats()
             preparing = false
-            if let urls = result.files { files = SharedFiles(urls: urls) } else { why = result.why }
+            if let urls = result.files {
+                made = SharedFiles(urls: urls)
+                files = made
+            } else {
+                why = result.why
+            }
         }
     }
 }

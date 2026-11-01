@@ -17,12 +17,12 @@ final class ExportChatsUITests: XCTestCase {
         let row = app.buttons["export-chats"]
         XCTAssertTrue(row.waitForExistence(timeout: 30), "Export my chats")
         row.tap()
-        // The system's share sheet, with the two files.
+        // The system's share sheet opens with the files, and the row names both.
         let sheet = app.otherElements["ActivityListView"]
         XCTAssertTrue(sheet.waitForExistence(timeout: 15), "the share sheet")
-        let named = NSPredicate(format: "label CONTAINS[c] '2 documents' OR label CONTAINS[c] 'tafs-chats' OR label CONTAINS[c] '2 files'")
-        XCTAssertTrue(app.descendants(matching: .any).matching(named).firstMatch.waitForExistence(timeout: 10),
-                      "the sheet offers the two files")
+        let made = app.buttons["export-files"]
+        XCTAssertTrue(made.waitForExistence(timeout: 10), "the files the export made")
+        XCTAssertTrue(made.label.contains("tafs-chats.json") && made.label.contains("tafs-chats.txt"), "both files: \(made.label)")
         XCTAssertFalse(app.staticTexts["export-failed"].exists, "nothing failed")
     }
 }
