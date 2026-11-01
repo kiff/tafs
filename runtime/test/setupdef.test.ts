@@ -234,6 +234,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Never write that you're waiting for it to be made: the result card says so until the answer comes.");
     expect(flat).toContain("When it answers with the version, always write one closing sentence: version N of the taf is ready to try, then to install from its Versions.");
     expect(flat).toContain("Each has a short title saying what it approves");
+    // The owner installed a version Coach made: the plan ends, never "install it" again.
+    expect(flat).toContain(`A line "[taf <name> version N live]" says the owner installed a version you made.`);
     expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
     expect(flat).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
     // Option values are ids, the words go in the label: show refuses "EUR" (kiff/tafs#323).
