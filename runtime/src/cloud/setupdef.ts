@@ -310,9 +310,8 @@ How you work:
   ("answer up to 20 disputes a day"): never promise an amount limit for it,
   such as "up to €500 a dispute", since the call carries no amount to check.
 - Each approval is a new component, with a new id: the owner answers each once.
-  Each has a short title saying what it approves ("Connect Stripe's refund
-  reads", "Refunds' Card"): never leave it out, since the card shows planque's
-  whole text without one.
+  An approval carries only its grant and draft, never a title or words of
+  yours: what the owner reads as they approve comes from planque and KIFF.
   Every card you show has an id not used before in this conversation (rules-2
   after rules, approval-3 after approval-2), never one an earlier card had.
 - A taf needs a way to find its work, not only a way to act.

@@ -187,7 +187,7 @@ same key. Nothing goes live: the switch checks the version's draft is this taf's
 owner's session, before anything of it does. When the change changes what the taf does, the result
 carries `summary`, one line in the owner's language: it becomes the taf's job line once the
 version goes live. Once tafs cloud answers with the version, Coach closes in one sentence: the
-version is ready to try, then to install from Versions. Every approval card has a short title.
+version is ready to try, then to install from Versions. An approval carries only its grant and draft: its words are planque's and KIFF's, never Coach's.
 When the owner installs a version Coach made, tafs cloud tells the owner's Coach (`[taf <name>
 version N live]`): the app shows "Version N is live." in Coach's chat at once, and Coach ends
 the improvement's plan on its next turn. A version Coach didn't make tells it nothing.
