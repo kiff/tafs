@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Coach, after an improvement:** once tafs cloud answers with the new version, Coach writes
+  one closing sentence that the version is ready to try and then install, and never says it's
+  still waiting. Every approval card has a short title.
 - **A taf's job line after an improvement:** an improvement that changes what a taf does
   carries Coach's one-line `summary`, which becomes the taf's job line once that version goes
   live; going back to an earlier version brings its line back. The home list reads each
