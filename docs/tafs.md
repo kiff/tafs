@@ -86,7 +86,11 @@ only what KIFF says the person may use or oversee.
 
 Each taf's `job_summary` is what Coach said it does, one line in the owner's language, kept
 from Coach's result (`summary`); a taf from before, or one Coach didn't make, shows its job's
-fixed line. Its `last_run` is its own latest run, scheduled or from its chat, never a trial's.
+fixed line. An improvement that changes what the taf does carries its own `summary`: tafs
+cloud keeps it with that version and makes it the job line when the version goes live, and
+going back to an earlier version brings that version's line back. Its `last_run` is its own
+latest run, scheduled or from its chat, never a trial's. The list reads each taf's recent
+runs once, for its last run and its work line.
 
 A Card's totals carry KIFF's own `window` and its words, `window_words: {each, now}`, which
 the app shows as they are:

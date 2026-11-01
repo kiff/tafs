@@ -7,6 +7,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **A taf's job line after an improvement:** an improvement that changes what a taf does
+  carries Coach's one-line `summary`, which becomes the taf's job line once that version goes
+  live; going back to an earlier version brings its line back. The home list reads each
+  taf's runs once.
+
 - **A total's pending use, in KIFF's words:** tafs cloud's list passes on KIFF's
   `pending_text` for each Card total, how much of it is from calls the tool refused, which
   count until KIFF can confirm nothing moved. iOS shows it on a taf's Card and on a hold,

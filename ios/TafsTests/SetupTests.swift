@@ -614,6 +614,47 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// An answer written as a message that wasn't sent quiets its card by the card's `ref` while
+    /// it's retried, never by its bare id: a later card under the same id in the next
+    /// conversation isn't quieted by it. Discarding it lets the card be answered again
+    /// (kiff/tafs#387).
+    func testAnUnsentAnswerIsTheCardsByItsRef() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        let card = #"{"type":"confirm","id":"which","text":"Which account?","options":[{"value":"live","label":"Live"}]}"#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[{"at":"2026-10-31T10:00:00.000Z","session":"s1","run":"r1","seq":1,"key":"k1","component":\#(card)}]}"#)
+        await model.loadSetup()
+        let which = try XCTUnwrap(model.setupThread.components.first?.component)
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (429, #"{"error":"that's 10 messages in 10 minutes"}"#)
+        await model.sendSetup("[confirm which] live")
+        let unsent = try XCTUnwrap(model.setupUnsent.first)
+        XCTAssertFalse(model.isAnswered(which), "not sent: the card can be answered")
+
+        // Retried and not taken again: the card can still be answered.
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = nil
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (503, #"{"error":"down"}"#)
+        await model.retrySetup(unsent)
+        XCTAssertFalse(model.isAnswered(which))
+        XCTAssertFalse(model.answered.contains("which"), "never keyed by the bare id")
+
+        // Discarded: the card is answerable, and nothing is left keyed by it.
+        model.discardUnsent(try XCTUnwrap(model.setupUnsent.first))
+        XCTAssertFalse(model.isAnswered(which))
+        XCTAssertTrue(model.answered.isEmpty)
+
+        // Sent on a retry: the card goes quiet by its key alone.
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = (429, #"{"error":"that's 10 messages in 10 minutes"}"#)
+        await model.sendSetup("[confirm which] live")
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages/stream"] = nil
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        await model.retrySetup(try XCTUnwrap(model.setupUnsent.first))
+        XCTAssertTrue(model.isAnswered(which))
+        XCTAssertEqual(model.answered, ["k1"])
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Retry never loses the message: one that can't join the queue (too long with it)
     /// stays where it was. An answer sent from its card drops the earlier one that
     /// wasn't sent, and a Retry of an answer the card has since had sends nothing.

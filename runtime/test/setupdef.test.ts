@@ -228,6 +228,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("so does a change the owner asks for to a taf you set up in this conversation, or one they name: change it here, never send them elsewhere");
     expect(flat).toContain("improves: the taf's id from the first line, else its agent id");
     expect(flat).toContain("try: one task to try it with that uses the change, in the owner's words");
+    // What the taf does now, when the change changes it: its job line once the version is live.
+    expect(flat).toContain("summary: one short line on what the taf does now, in the owner's language, only if this change changes what it does, never the job's general words");
     expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
     expect(flat).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
     // Option values are ids, the words go in the label: show refuses "EUR" (kiff/tafs#323).
