@@ -62,7 +62,8 @@ fun ReportableAnswer(onReport: (suspend (String, String?) -> ReportResult)?, con
   }
   var menu by remember { mutableStateOf(false) }
   var reporting by remember { mutableStateOf(false) }
-  Box(Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClick = { menu = true })) {
+  // TalkBack names the long press, so the report is found without seeing the menu.
+  Box(Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClickLabel = ReportWords.MENU, onLongClick = { menu = true })) {
     content()
     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
       DropdownMenuItem(text = { Text(ReportWords.MENU) }, onClick = { menu = false; reporting = true })
