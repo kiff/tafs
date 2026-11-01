@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { calmEnough, type Deps, handle, type HTTPEvent, oneLine, SETUP_JOB, sweepDeletions, sweepHandOvers, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
@@ -297,6 +297,20 @@ describe("tafs cloud", () => {
     w.now = new Date("2026-10-29T11:00:00Z");
     await w.agents.api.startTrial("t_acme", RAE, 2, "Refund ch_2.");
     expect(await listed()).toBe(chat.created);
+  });
+
+  it("reads each taf's runs once on the home list, for its last run and its work line", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Refund ch_1.");
+    const runs = vi.spyOn(w.agents.api, "runs");
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    const tafs = home.body.tafs as Array<{ id: string | null; last_run: string | null }>;
+    expect(tafs.find((t) => t.id === RAE)?.last_run).toBe(chat.created);
+    const perTaf = new Map<string, number>();
+    for (const [, agent] of runs.mock.calls) perTaf.set(agent, (perTaf.get(agent) ?? 0) + 1);
+    expect(perTaf.size).toBe(tafs.filter((t) => t.id).length);
+    expect([...perTaf.values()].every((n) => n === 1)).toBe(true);
+    runs.mockRestore();
   });
 
   it("treats another account's taf, or an id that isn't one, as missing", async () => {
@@ -2116,6 +2130,39 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
     expect(w.tafs.held.get(`t_acme#${NEW}`)?.summary).toBe("Answers refund requests from the shop, within its Card.");
+  });
+
+  it("changes a taf's job line to Coach's summary for an improvement only once that version goes live, and back with it", async () => {
+    const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Offers a free month first", summary: "Offers a free month to customers who cancel." } };
+    const { w, note, answer } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, summary: "Answers refund requests within its Card." });
+    await note();
+    const n = (answer() as { answer: { version: number } }).answer.version;
+    const kept = w.tafs.held.get(`t_acme#${RAE}`)!;
+    // Made, not live: the line stays the live version's.
+    expect(kept.summary).toBe("Answers refund requests within its Card.");
+    expect(kept.summaries).toEqual({ "1": "Answers refund requests within its Card.", [String(n)]: "Offers a free month to customers who cancel." });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBe("Offers a free month to customers who cancel.");
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect((home.body.tafs as Array<{ id: string; job_summary?: string }>).find((t) => t.id === RAE)?.job_summary).toBe("Offers a free month to customers who cancel.");
+    // Back to version 1: its line comes back.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" })).body).toEqual({ live: 1 });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBe("Answers refund requests within its Card.");
+  });
+
+  it("leaves a taf's job line as it is for an improvement without a summary", async () => {
+    const { w, note, answer } = await paused({ type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Checks first" } });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, summary: "Answers refund requests within its Card." });
+    await note();
+    const n = (answer() as { answer: { version: number } }).answer.version;
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.summaries).toBeUndefined();
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBe("Answers refund requests within its Card.");
   });
 
   it("answers a taf an installed app already made from the same draft as done, never failed", async () => {

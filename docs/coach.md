@@ -182,7 +182,9 @@ person whose chat it is, once per result and only while KIFF says they may manag
 answers the card with `{version}`. The apps read the answer and make nothing themselves; an app
 from before that still calls `POST /v1/tafs/{id}/versions` gets the same version, made under the
 same key. Nothing goes live: the switch checks the version's draft is this taf's, with the
-owner's session, before anything of it does.
+owner's session, before anything of it does. When the change changes what the taf does, the result
+carries `summary`, one line in the owner's language: it becomes the taf's job line once the
+version goes live.
 
 ## Versions
 

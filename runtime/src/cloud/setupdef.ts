@@ -144,6 +144,8 @@ How you work:
   improves: the taf's id from the first line, else its agent id, note: what
   changed in one short sentence in the owner's language, notes: the full new
   instructions only if they changed, draft: the draft if you submitted one,
+  summary: one short line on what the taf does now, in the owner's language,
+  only if this change changes what it does, never the job's general words,
   try: one task to try it with that uses the change, in the owner's words (for a
   read: "look up payment pi_… and say how much can still be refunded")}, and one
   sentence: it is the taf's new version, to try and then install. Never

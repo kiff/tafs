@@ -258,6 +258,11 @@ export interface Taf {
    */
   tries?: Record<string, string>;
   /**
+   * What each version does, in one line, as Coach's result said it, by version: the live
+   * one's becomes `summary` when it goes live. A version with none keeps the line it had.
+   */
+  summaries?: Record<string, string>;
+  /**
    * Where its results go (docs/reliability.md): through the door the work came in on, a line
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
@@ -2252,6 +2257,8 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   // What to try it with (kiff/tafs#247): kept for its trial.
   const tryWith = body.try === undefined || body.try === null ? undefined : str(body.try).trim() || undefined;
   if (tryWith !== undefined && tryWith.length > VERSION_TRY) throw new HTTPError(400, `what to try is at most ${VERSION_TRY} characters`);
+  // What the taf does under it, from Coach's result: one line, never a reason to refuse it.
+  const summary = body.summary === undefined ? undefined : oneLine(str(body.summary), MAX_SUMMARY) || undefined;
   // The result's agent, when the app sends it: an improvement of another taf
   // never becomes this one's version, with a draft or without.
   const agent = str(body.agent).trim();
@@ -2274,14 +2281,19 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   }
   // The version live now records its Cards first, so going back to it brings them back.
   if (event) await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
+  // The version live now keeps the line it has, so going back to it brings the line back too.
+  // A taf stored before versions has none listed: what's live then is version 1.
+  const listed = summary && taf.summary ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
+  const live = listed ? listed.find((v) => v.live)?.n ?? (listed.length === 0 ? 1 : undefined) : undefined;
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
-  if (from || tryWith) {
+  if (from || tryWith || summary) {
     // Kept so the same result hands over this version again, with what to
-    // try it with. A record that changed meanwhile is read again once.
+    // try it with and what it does. A record that changed meanwhile is read again once.
     for (let attempt = 0; attempt < 2; attempt++) {
       const cur = attempt === 0 ? taf : await deps.tafs.get(me.tenantID, taf.id);
       if (!cur) break;
-      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}) };
+      const summaries = summary ? { ...(live !== undefined && cur.summary && !cur.summaries?.[String(live)] ? { [String(live)]: cur.summary } : {}), ...cur.summaries, [String(n)]: summary } : undefined;
+      const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}) };
       if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
     }
   }
@@ -2384,7 +2396,10 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const notes = typeof live.instructions === "string" ? ownerNotesIn(live.instructions) : undefined;
     const next: Taf = { ...taf, definition: digest(definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
-    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition) await deps.tafs.putIf(me.tenantID, next, taf);
+    // What it does now is what the live version does, when Coach said so for it.
+    const summary = taf.summaries?.[String(n)];
+    if (summary) next.summary = summary;
+    if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary) await deps.tafs.putIf(me.tenantID, next, taf);
   } catch (err) {
     // The switch stands; the next switch, or the upgrade's read-back, catches the record up.
     console.error(`keep notes: ${taf.id} v${n}:`, err);
@@ -3301,10 +3316,12 @@ async function forget(me: KIFFIdentity, taf: Taf, escapedName: string, deps: Dep
  * A taf as the app shows it: paused when its schedule is off, with its next and last runs. Its last run is any of its own,
  * scheduled or from its chat, never a trial's: a taf that works from its chat has run once it has.
  */
-async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule) {
+async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule, read?: { runs: Run[] | undefined }) {
+  // The taf's recent runs when the caller read them already (the home list): never read twice.
+  const runs = read ? Promise.resolve(read.runs) : deps.agents.runs(me.tenantID, taf.id, false, LAST_RUN_LOOK).catch(() => undefined);
   const [s, last] = await Promise.all([
     schedule ? Promise.resolve(schedule) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
-    deps.agents.runs(me.tenantID, taf.id, false, LAST_RUN_LOOK).then((r) => r.find((x) => x.trigger !== "trial"), () => undefined),
+    runs.then((r) => r?.find((x) => x.trigger !== "trial")),
   ]);
   return {
     id: taf.id,
@@ -3357,7 +3374,11 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
   const tafs = all.filter((t) => listable(access, t.kiffAgent));
-  const views = await Promise.all(tafs.map((t) => view(t, me, deps)));
+  // Where each taf's work stands (docs/reliability.md): one read of its recent runs, for its
+  // last run and its work line. A read that fails leaves both out.
+  const now = deps.now?.() ?? new Date();
+  const recent = await Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => undefined)));
+  const views = await Promise.all(tafs.map((t, i) => view(t, me, deps, undefined, { runs: recent[i] })));
   // Each taf's open trial, its own entry in the app's menu (kiff/tafs#173). One that can't
   // be read leaves that entry out, never the list.
   const trials = await Promise.all(tafs.map((t) => deps.agents.openedTrial(me.tenantID, t.id).then((tr) => trialFor(me, t, tr, deps)).catch(() => null)));
@@ -3366,9 +3387,6 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
-  // Where each taf's work stands (docs/reliability.md): one read of its recent runs. A read that fails leaves it out.
-  const now = deps.now?.() ?? new Date();
-  const recent = await Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => undefined)));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
@@ -4001,7 +4019,7 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
  * the card with. Throws only what may pass on a retry (a server error).
  */
 /** What an improvement result names: the taf it improves, and the version it describes. */
-interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string }
+interface ImprovedTaf { agent?: string; name?: string; draft?: string; improves?: string; note?: string; notes?: string; try?: string; summary?: string }
 
 /**
  * The version an improvement result hands over, made once per result for the person whose run it
@@ -4026,7 +4044,10 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
   try {
     // The key the apps make it under, so a version an app makes for the same result is this one.
     const what = want.draft || createHash("sha256").update(want.note ?? "").digest("hex").slice(0, 16);
-    const { version } = await makeVersion({ note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}` }, me, taf, deps);
+    const { version } = await makeVersion({
+      note: want.note, notes: want.notes, draft: want.draft, try: want.try, agent: want.agent, from: `${cardID}|${what}`,
+      ...(typeof want.summary === "string" ? { summary: want.summary } : {}),
+    }, me, taf, deps);
     return { version };
   } catch (err) {
     if (err instanceof HTTPError && err.status >= 400 && err.status < 500) return { failed: err.message };
