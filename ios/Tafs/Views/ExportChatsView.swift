@@ -30,6 +30,9 @@ struct ExportChatsSection: View {
             }
             .disabled(preparing)
             .accessibilityIdentifier("export-chats")
+            // On the button, which stays put: on the Section, the row naming the files
+            // appearing with it took the sheet away before it showed.
+            .sheet(item: $files) { ShareSheet(items: $0.urls).ignoresSafeArea() }
             if let why {
                 Text(why).scaledFont(13).foregroundColor(Theme.no).accessibilityIdentifier("export-failed")
             } else if let made, !preparing {
@@ -44,7 +47,6 @@ struct ExportChatsSection: View {
         } footer: {
             Text("Your own chats with each taf, Coach's included, the names of the files you attached, and your notes, as a readable file and as JSON. Only you can export them.")
         }
-        .sheet(item: $files) { ShareSheet(items: $0.urls).ignoresSafeArea() }
     }
 
     private func export() {
