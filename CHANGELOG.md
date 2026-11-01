@@ -7,6 +7,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Reporting an answer:** `POST /v1/tafs/{id}/messages/{message}/report` takes a person's report of
+  an answer Coach or a taf wrote (offensive, harmful, wrong or other, with a note). tafs cloud keeps it
+  with the answer as kiff/agents holds it and emails KIFF, so a person reads it.
+- **Report this answer, on iPhone and iPad:** an answer from Coach or a taf (a chat or a trial) has
+  **Report this answer** in its menu. A sheet takes one of four reasons and an optional note, and
+  thanks the person once it's sent, or says they reported it already.
 - **Coach, the hand-over:** a result's tools are their names in KIFF, never their titles, and
   Coach ends the hand-over with its closing message as text, after the plan update and with no
   tool call after it, also when its first result was refused.

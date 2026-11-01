@@ -18,6 +18,7 @@ import { stepWords, Steps, type ToolTitles } from "./steps.js";
 import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
+import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -175,6 +176,8 @@ export interface Deps {
   doors?: DoorsDeps;
   /** What happens in tafs itself, for the app's Activity (kiff/tafs#236). Missing: not kept. */
   events?: EventLog;
+  /** Where a person's report of an answer is kept and sent (reports.ts). Missing: reports aren't taken here. */
+  reports?: ReportsDeps;
   fetch?: Fetch;
   kiffBase?: string;
   /** KIFF's gateway, where the account's tool connections are (default mcp.kiff.dev). */
@@ -629,6 +632,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && action === "messages") {
     return message(event, me, taf, deps);
+  }
+  if (parts.length === 6 && method === "POST" && action === "messages" && parts[5] === "report") {
+    return reportRoute(event, me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 4 && method === "POST" && action === "attachments") {
     return attachFile(event, me, taf, deps);
@@ -1906,6 +1912,45 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
     await lines.putBack();
     throw err;
   }
+}
+
+/**
+ * POST /v1/tafs/{id}/messages/{message}/report {reason, note?, session?}: the person reports
+ * an answer Coach or the taf wrote, from inside the app (reports.ts). tafs cloud finds the
+ * answer in what the person may read, the taf's thread or the chat `session` names (a
+ * trial's too), and keeps and sends it as kiff/agents holds it. 404 when no answer of the
+ * taf's by that id is theirs to read; reporting one again answers the first report.
+ */
+async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, messageID: string, deps: Deps): Promise<unknown> {
+  if (!deps.reports) throw new HTTPError(503, "reports aren't taken here");
+  const body = parseBody(event);
+  let input: ReturnType<typeof reportInput>;
+  try {
+    input = reportInput(body);
+  } catch (err) {
+    throw new HTTPError(400, (err as Error).message);
+  }
+  const session = str(body.session).trim();
+  const answer = (messages: ThreadMessage[]) => messages.find((m) => m.id === messageID && m.from === "taf");
+  let found: ThreadMessage | undefined;
+  // The chat the app names first, when it's the person's; else the whole thread (a run's, a door's).
+  if (messageID && session) {
+    for (const kind of ["chat", "trial"] as const) {
+      const only = await ownChat(me, taf, session, deps, kind).catch((err) => {
+        if (err instanceof HTTPError && err.status === 404) return undefined;
+        throw err;
+      });
+      if (only) { found = answer((await conversation(me, taf, deps, only)).messages); break; }
+    }
+  }
+  if (!found && messageID) found = answer((await conversation(me, taf, deps, undefined, await managesTaf(event, me, taf, deps))).messages);
+  if (!found) throw new HTTPError(404, "no answer of the taf's by that id");
+  const now = deps.now?.() ?? new Date();
+  const { report, new: fresh } = await fileReport(deps.reports, {
+    at: now.toISOString(), tenant: me.tenantID, by: me.subject, taf: taf.id, tafName: taf.name, coach: taf.job === SETUP_JOB,
+    session: found.session, message: found.id, ...input, text: found.text,
+  }, now);
+  return { report: { id: report.id, at: report.at, new: fresh } };
 }
 
 /** The card types the person answers, as kiff/agents takes them. */

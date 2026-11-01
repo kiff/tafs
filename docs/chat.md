@@ -280,6 +280,25 @@ The sample taf answers as a real one does, streamed into the live answer: it thi
 takes a step, then writes. Nothing reaches a model. `-sampleReplySeconds` slows it for
 UI tests ([ios-app.md](ios-app.md#launch-arguments)).
 
+## Reporting an answer
+
+Any answer Coach or a taf wrote can be reported from inside the app, as Google Play asks of
+apps that generate content with AI (`POST /v1/tafs/{id}/messages/{message}/report`,
+[api.md](api.md)). It's for answers only, never the person's own messages, and only once tafs
+cloud has an id for the answer (not in the sample).
+- On Android, a long press on the answer shows **Report this answer** (`ReportableAnswer`, in a
+  taf's chat, Coach's and a trial's). It opens a sheet with four reasons (Offensive, Harmful,
+  Wrong, Other), an optional note of at most 1,000 characters, and **Send** (`ReportSheet`,
+  `AppModel.reportAnswer`). The message's chat goes as `session`.
+- On iPhone and iPad, the answer's context menu (a long press) shows **Report this answer**, in
+  a taf's chat, a trial's and Coach's (`reportable`, `ReportAnswerSheet`, `AppModel.reportAnswer`).
+  The same reasons, note and **Send**, with the message's chat as `session`.
+- Sent, the sheet says "Thanks. Someone at KIFF will read your report.", or "You've already
+  reported this answer." when tafs cloud answers `new: false`. A report that didn't go says why
+  in the app's words and keeps the sheet open to send again.
+- tafs cloud keeps the answer as kiff/agents holds it, never the app's copy. A run's report
+  (`GET /v1/tafs/{id}/runs/{session}`) carries no message id, so it isn't reported from there.
+
 ## Message ids
 
 Every message in the thread has a stable `id` (`conversation` in `handler.ts`). A run's first

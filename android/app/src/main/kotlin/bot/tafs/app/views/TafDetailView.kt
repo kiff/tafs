@@ -53,6 +53,8 @@ import bot.tafs.app.model.Answer
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.MemoryNote
 import bot.tafs.app.model.RunReport
+import bot.tafs.app.model.ChatMessage
+import bot.tafs.app.model.ReportResult
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.TafState
 import bot.tafs.app.model.shortTime
@@ -94,6 +96,8 @@ class TafActions(
   val setPaused: suspend (String, Boolean) -> Unit = { _, _ -> },
   /** Removes it for good, after one confirmation: what to tell the owner, null when nothing was done. */
   val remove: suspend (String) -> String? = { null },
+  /** Reports an answer Coach or the taf wrote: the chat, the answer, a reason and an optional note. */
+  val report: suspend (String, ChatMessage, String, String?) -> ReportResult = { _, _, _, _ -> ReportResult.NotSent("") },
 )
 
 @Composable
