@@ -1957,7 +1957,7 @@ async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, message
 }
 
 /** What a person's export holds: as many of their chats per taf as kiff/agents lists at once. */
-export const EXPORT = { sessionsPerTaf: 100 } as const;
+export const EXPORT = { sessionsPerTaf: 1000 } as const;
 
 interface ExportedChat {
   session: string;
@@ -1981,10 +1981,15 @@ async function exportChats(me: KIFFIdentity, deps: Deps): Promise<unknown> {
   const mine = ownerKey(me);
   const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing);
   const out = await Promise.all(tafs.map(async (taf) => {
-    const sessions = (await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, EXPORT.sessionsPerTaf, mine)))
-      .filter((s): s is Session & { kind: "chat" | "trial" } => (s.kind === "chat" || s.kind === "trial") && s.owner === mine);
+    // The person's own sessions alone, so a taf's job runs never crowd their chats out of the list.
+    const listed = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, EXPORT.sessionsPerTaf, mine, true));
+    // An export is complete or it isn't given: a list at the cap may have left chats out.
+    if (listed.length >= EXPORT.sessionsPerTaf) throw new HTTPError(503, `more than ${EXPORT.sessionsPerTaf} chats with one taf to export at once; ask KIFF's support`);
+    const sessions = listed.filter((s): s is Session & { kind: "chat" | "trial" } => (s.kind === "chat" || s.kind === "trial") && s.owner === mine);
     const chats: ExportedChat[] = [];
     for (const s of sessions) {
+      // Read it first, failing the export: the thread's own read skips a session it can't read.
+      await agentsCall(() => deps.agents.session(me.tenantID, s.id, mine));
       const { messages } = await conversation(me, taf, deps, s);
       chats.push({
         session: s.id, kind: s.kind, started: iso(s.started), updated: iso(s.updated), archived: s.archived === true,

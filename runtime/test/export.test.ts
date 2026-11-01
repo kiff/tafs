@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AgentsError } from "../src/cloud/agents.js";
 import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -88,6 +89,29 @@ describe("a person exports their own chats (kiff-cloud#1409)", () => {
     expect(r.status).toBe(200);
     expect(r.body.tafs).toEqual([]);
     expect(r.body.readable).toContain("You have no chats or notes in tafs.");
+  });
+
+  it("has every chat, past 100, and newer job runs never hide an older chat", async () => {
+    const w = world();
+    const at = (m: number) => new Date(NOW.getTime() - m * 60_000).toISOString();
+    for (let i = 0; i < 101; i++) {
+      w.agents.sessions.push({ id: `chat-${i}`, tenant: "t_acme", agent: RAE, kind: "chat", owner: "member:u_ana", started: at(10_000 + i), updated: at(10_000 + i) });
+    }
+    for (let i = 0; i < 150; i++) {
+      w.agents.sessions.push({ id: `run-${i}`, tenant: "t_acme", agent: RAE, kind: "run", started: at(i), updated: at(i) });
+    }
+    const r = await exportAs(w, "ana");
+    expect(r.status).toBe(200);
+    expect(r.body.tafs.find((t: { name: string }) => t.name === "Rae").chats).toHaveLength(101);
+  });
+
+  it("fails instead of leaving a chat out when one can't be read", async () => {
+    const w = world();
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Why was order 7 held?", ANA);
+    w.agents.say(chat, "It was over the Card's $50.");
+    w.agents.api.session = async () => { throw new AgentsError(500, "busy"); };
+    const r = await exportAs(w, "ana");
+    expect(r.status).toBeGreaterThanOrEqual(500);
   });
 
   it("needs a signed-in person", async () => {
