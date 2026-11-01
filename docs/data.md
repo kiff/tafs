@@ -99,7 +99,7 @@ KIFF ──(signed alert)───────────────▶ tafs c
 
 Settings → *Export my chats* (`GET /v1/me/chats/export`) gives a person their own data in tafs: their chats and trials with every taf, Coach's too, as kiff/agents still keeps them (30 days), the files they attached (by name, type and size; each file opens as in the chat), and their own notes. It comes as JSON, and as text to read. It's only theirs: an admin or the account's owner can't export another person's chats, and KIFF's account export (`GET /v1/me/export`, which an admin downloads) doesn't include them. Door chats stay with the people who manage the taf.
 
-On Android, the row (`ExportChatsRow`, `AppModel.exportChats`) says "Preparing your chats…" while it waits, then offers two files through the system's share sheet, where the person saves or sends them: `tafs-chats.json` (the answer without `readable`) and `tafs-chats.txt` (`readable`). They're written to the app's own cache (`exports/`, shared only through its FileProvider), replaced at each export, and deleted when the person signs out. If it fails, the row says why and offers Try again.
+On Android, the row (`ExportChatsRow`, `AppModel.exportChats`) says "Preparing your chats…" while it waits, then offers two files through the system's share sheet, where the person saves or sends them: `tafs-chats.json` (the answer without `readable`) and `tafs-chats.txt` (`readable`). They're written to the app's own cache (`exports/`, shared only through its FileProvider), replaced at each export, and deleted when the person signs out. If it fails, whether reading the export or writing and sharing the files (a full disk, no app to share to), the row says why and offers Try again.
 
 ## Deleting the account (#185)
 

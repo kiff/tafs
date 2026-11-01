@@ -34,6 +34,22 @@ class ExportChatsTest {
     rule.onNodeWithText(ExportWords.ROW).assertIsDisplayed()
   }
 
+  @Test fun filesThatCantBeWrittenOrSharedSayWhyAndTryAgainWorks() {
+    var shares = 0
+    rule.setShown {
+      TafsTheme {
+        ExportChatsRow({ ExportResult.Ready(export) }, share = { if (shares++ == 0) throw java.io.IOException("No space left on device") else offered += it })
+      }
+    }
+    rule.onNodeWithText(ExportWords.ROW).performClick()
+    rule.onNodeWithText(ExportWords.notExported(ExportWords.NOT_OFFERED)).assertIsDisplayed()
+    // Not stuck on Preparing: the row is back, and Try again offers the files.
+    rule.onNodeWithText(ExportWords.ROW).assertIsDisplayed()
+    rule.onNodeWithText(ExportWords.TRY_AGAIN).performClick()
+    rule.waitUntil(5_000) { offered.isNotEmpty() }
+    assertEquals(listOf(export), offered)
+  }
+
   @Test fun theTwoFilesAreWrittenAndHandedToTheShareSheet() {
     val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
     // Throws if the FileProvider doesn't share the exports folder.

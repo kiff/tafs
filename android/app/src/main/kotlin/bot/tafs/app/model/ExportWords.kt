@@ -10,6 +10,9 @@ object ExportWords {
   const val JSON_FILE = "tafs-chats.json"
   const val TEXT_FILE = "tafs-chats.txt"
 
+  /** The files couldn't be written on the phone or handed to another app. */
+  const val NOT_OFFERED = "The files couldn't be saved on this phone. Free up some space, then try again."
+
   fun notExported(why: String) = "Your chats weren't exported. $why"
 }
 

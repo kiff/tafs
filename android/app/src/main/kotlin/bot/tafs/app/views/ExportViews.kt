@@ -47,11 +47,21 @@ fun ExportChatsRow(onExport: suspend () -> ExportResult, share: ((ChatExport) ->
     preparing = true
     error = null
     scope.launch {
-      when (val r = onExport()) {
-        is ExportResult.Ready -> offer(r.export)
-        is ExportResult.NotExported -> error = ExportWords.notExported(r.why)
+      try {
+        when (val r = onExport()) {
+          // Writing the files or opening the sheet can fail too (a full disk, no app to share to): said the same way, to try again.
+          is ExportResult.Ready -> try {
+            offer(r.export)
+          } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+          } catch (_: Exception) {
+            error = ExportWords.notExported(ExportWords.NOT_OFFERED)
+          }
+          is ExportResult.NotExported -> error = ExportWords.notExported(r.why)
+        }
+      } finally {
+        preparing = false
       }
-      preparing = false
     }
   }
 
