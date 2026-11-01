@@ -2341,6 +2341,21 @@ async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, d
   await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
   await keepNotes(me, taf, n, deps);
   await tellChange(me.tenantID, "taf", taf.id, deps);
+  await tellCoachLive(me, taf, n, deps);
+}
+
+/**
+ * A version Coach made is live: the owner's Coach hears it on its next turn, and the
+ * app shows it in Coach's chat at once, so the improvement's plan can end. Best
+ * effort: the switch stands either way.
+ */
+async function tellCoachLive(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
+  if (!deps.coach || !Object.values(taf.versionsFrom ?? {}).includes(n)) return;
+  const at = deps.now?.() ?? new Date();
+  const does = taf.summaries?.[String(n)];
+  const line = `[taf ${taf.name} version ${n} live] The owner installed version ${n}, the one you made; it runs now.${does ? ` It does: ${JSON.stringify(does)}` : ""}`;
+  await deps.coach.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: line, taf: taf.name, said: `Version ${n} is live.` },
+    new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${taf.id} v${n}:`, err));
 }
 
 function sameCards(a: CardRevision[], b: CardRevision[]): boolean {
