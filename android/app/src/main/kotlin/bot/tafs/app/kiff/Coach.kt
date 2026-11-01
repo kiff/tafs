@@ -111,6 +111,13 @@ data class WireShown(
 @Serializable
 data class CardAnswer(val state: String = "answered", val words: String = "", val by: String? = null, val outcome: ResultOutcome? = null)
 
+/** A report of an answer, as tafs cloud kept it: `new` is false when this person had reported that answer already. */
+@Serializable
+data class AnswerReport(val id: String, val at: String? = null, val new: Boolean = true)
+
+@Serializable
+data class Reported(val report: AnswerReport)
+
 /** What answering a card gives back: the run that goes on with it. */
 @Serializable
 data class CardAnswered(val session: String? = null, val run: String? = null, val status: String? = null)

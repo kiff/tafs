@@ -10,6 +10,7 @@ import bot.tafs.app.model.FilePrep
 import bot.tafs.app.model.PendingFile
 import bot.tafs.app.model.PreparedFile
 import bot.tafs.app.model.RunReport
+import bot.tafs.app.model.ReportResult
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.ChatMessage
@@ -2390,6 +2391,26 @@ class AppModel(
     }
     refreshConnections()
     return true
+  }
+
+  /**
+   * Reports an answer Coach or a taf wrote (docs/chat.md): by tafs cloud's id for it, in the chat it's in. tafs cloud keeps the
+   * answer as kiff/agents holds it and a person at KIFF reads the report. Nothing on the phone changes.
+   */
+  suspend fun reportAnswer(tafId: String, message: ChatMessage, reason: String, note: String?): ReportResult {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    val id = message.serverId
+    if (_state.value.mode != Mode.kiff || cloudId == null || id == null || message.from != ChatMessage.From.taf) {
+      return ReportResult.NotSent(ErrorWords.CHANGED)
+    }
+    val session = message.session.takeIf { it.isNotEmpty() && it != "pending" && it != "sample" }
+    return try {
+      ReportResult.Sent(first = cloud.report(cloudId, id, reason, note?.trim()?.takeIf { it.isNotEmpty() }, session).new)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      ReportResult.NotSent(ErrorWords.of(e))
+    }
   }
 
   /** The owner's answer to one of Coach's cards. */

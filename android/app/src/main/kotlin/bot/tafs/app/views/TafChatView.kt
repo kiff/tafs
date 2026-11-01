@@ -77,6 +77,7 @@ import bot.tafs.app.design.scaled
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatEnd
+import bot.tafs.app.model.ReportResult
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.LiveAnswer
 import bot.tafs.app.model.ChatMessage
@@ -207,6 +208,8 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                   files = actions.files,
                   onEdit = { text -> setDraft(text) },
                   onResend = { text -> following = true; actions.sendChat(text, tafId, false) { } },
+                  // An answer of Coach's or the taf's, reported by tafs cloud's id for it; none in the sample.
+                  onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
                 )
                 is ChatItem.Held -> HeldCallCard(item.call, state, actions.answer)
                 is ChatItem.Outcome -> OutcomeLine(Chat.outcomeText(item.entry), outcomeTone(item.entry.kind), outcomeMark(item.entry.kind))
@@ -380,23 +383,37 @@ private fun Composer(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MessageRow(message: ChatMessage, tafId: String, files: FileActions, onEdit: (String) -> Unit, onResend: (String) -> Unit) {
+private fun MessageRow(
+  message: ChatMessage,
+  tafId: String,
+  files: FileActions,
+  onEdit: (String) -> Unit,
+  onResend: (String) -> Unit,
+  onReport: (suspend (String, String?) -> ReportResult)? = null,
+) {
   val door = message.door
   if (door != null && message.kind != ChatMessage.Kind.kickoff) {
     // A door's message, or its answer: marked with where it came from and how it went back.
     Column(Modifier.fillMaxWidth(), horizontalAlignment = if (message.from == ChatMessage.From.owner) Alignment.End else Alignment.Start, verticalArrangement = Arrangement.spacedBy(4.dp)) {
       if (message.from == ChatMessage.From.owner) DoorStamp(door, fromOwner = true)
-      MessageBody(message, tafId, files, onEdit, onResend)
+      MessageBody(message, tafId, files, onEdit, onResend, onReport)
       if (message.from == ChatMessage.From.taf) DoorStamp(door, fromOwner = false)
     }
   } else {
-    MessageBody(message, tafId, files, onEdit, onResend)
+    MessageBody(message, tafId, files, onEdit, onResend, onReport)
   }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MessageBody(message: ChatMessage, tafId: String, files: FileActions, onEdit: (String) -> Unit, onResend: (String) -> Unit) {
+private fun MessageBody(
+  message: ChatMessage,
+  tafId: String,
+  files: FileActions,
+  onEdit: (String) -> Unit,
+  onResend: (String) -> Unit,
+  onReport: (suspend (String, String?) -> ReportResult)?,
+) {
   if (message.from == ChatMessage.From.owner) {
     var menu by remember { mutableStateOf(false) }
     val clipboard = LocalClipboard.current
@@ -443,8 +460,10 @@ private fun MessageBody(message: ChatMessage, tafId: String, files: FileActions,
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
       // What it did before writing it, folded (kiff/tafs#285).
       message.work?.let { WorkSummary(it) }
-      // Full width, with no bubble, as the taf writes (#58).
-      MarkdownText(message.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
+      // Full width, with no bubble, as the taf writes (#58). A long press reports it, once tafs cloud has an id for it.
+      ReportableAnswer(onReport?.takeIf { message.serverId != null }) {
+        MarkdownText(message.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
+      }
     }
   }
 }

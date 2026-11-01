@@ -348,6 +348,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       sendAgain = model::sendAgain,
       setPaused = model::setPaused,
       remove = model::removeTaf,
+      report = model::reportAnswer,
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::startApproval,

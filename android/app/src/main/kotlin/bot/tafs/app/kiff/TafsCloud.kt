@@ -229,6 +229,19 @@ class TafsCloud(
     return KiffClient.json.decodeFromString(String(sendJson("POST", "/v1/tafs/${escaped(id)}/components/${escaped(component)}/answer", body)))
   }
 
+  /**
+   * Reports an answer Coach or the taf wrote (docs/api.md): by tafs cloud's id for the message, with the chat it's in. tafs cloud
+   * finds and keeps the answer itself, never the app's copy. Reporting one again answers the first report, with `new` false.
+   */
+  suspend fun report(id: String, message: String, reason: String, note: String?, session: String?): AnswerReport {
+    val body = kotlinx.serialization.json.buildJsonObject {
+      put("reason", reason)
+      note?.let { put("note", it) }
+      session?.let { put("session", it) }
+    }
+    return KiffClient.json.decodeFromString<Reported>(String(sendJson("POST", "/v1/tafs/${escaped(id)}/messages/${escaped(message)}/report", body))).report
+  }
+
   suspend fun steer(id: String, run: String, text: String): String =
     post<Steered>("/v1/tafs/${escaped(id)}/steer", mapOf("run" to run, "text" to text)).status
 
