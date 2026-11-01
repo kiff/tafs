@@ -1292,6 +1292,18 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect((r.body.versions as Array<{ by_words?: string }>).map((v) => v.by_words)).toEqual(["By Coach mode", "By Coach mode"]);
   });
 
+  it("dates version 1 when the taf was set up, not when kiff/agents first wrote it down", async () => {
+    const w = world();
+    // kiff/agents records version 1 only when a second is made, at the same moment.
+    w.agents.versions.set(`t_acme|${RAE}`, [
+      { n: 1, note: "", by: "", created: "2026-11-01T09:49:00Z", digest: "d1", live: true },
+      { n: 2, note: "Looks up a refund", by: "setup", created: "2026-11-01T09:49:00Z", digest: "d2", live: false },
+    ]);
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/versions`, { token: "ana" });
+    const created = (r.body.versions as Array<{ n: number; created: string }>).map((v) => [v.n, v.created]);
+    expect(created).toEqual([[1, "2026-10-15T09:00:00Z"], [2, "2026-11-01T09:49:00Z"]]);
+  });
+
   it("says who made a version in words: Coach, you, someone else, or no one", () => {
     expect(versionBy({ by: "setup" }, { subject: "u_ana" })).toBe("By Coach mode");
     expect(versionBy({ by: "agent_x", by_kind: "agent" }, { subject: "u_ana" })).toBe("By Coach mode");

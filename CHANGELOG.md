@@ -168,6 +168,8 @@ version headings refer to releases, not merely to merged pull requests.
 - **Android, Coach's last words on the open screen:** with Coach open, a run that paused on a
   result goes on once tafs cloud answers it, and its closing message shows without leaving
   Coach. The dots and Stop no longer stay after it's done.
+- **Versions:** version 1 ("As it was set up") shows when the taf was set up, not the moment its
+  second version was made.
 - **Android, an approval is "approved" only once signed:** Approve on a connection already
   connected that brings no Card no longer tells Coach "approved" with nothing signed. Coach
   hears it's already connected and there's nothing new to approve. A Card KIFF already
