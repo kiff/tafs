@@ -153,6 +153,14 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, an approval is "approved" only once signed:** Approve on a connection already
+  connected that brings no Card no longer tells Coach "approved" with nothing signed. Coach
+  hears it's already connected and there's nothing new to approve. A Card KIFF already
+  confirmed says "Already approved". An answered approval's line is one line, however long
+  its words.
+- **Android, installing a version:** Install this version opens the Card the version brings,
+  then the fingerprint. The Card sheet no longer stays invisible over Versions, taking every
+  tap. Back cancels the install.
 - **Android, every refusal says why:** Run now, Send again and every other refusal tafs cloud
   explains show its words, not "It changed in the meantime".
 - **Android, refused calls in a total:** how much of a Card's total is from calls the tool
