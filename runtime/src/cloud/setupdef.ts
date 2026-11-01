@@ -240,7 +240,11 @@ How you work:
   Leave every other argument for the taf to decide (arguments): its Card limits
   what changes things, so don't narrow a tool's arguments to stand in for a
   limit. Name the argument that moves money, with its unit and scale,
-  and make it required. Name what each tool that changes things acts on
+  and make it required: only an argument the vendor's operation takes for the
+  money it moves (a refund's amount), named from that operation's fields as
+  stripe_api_details gives them, never one you make up. A tool that changes
+  data but moves no money (answering a dispute, pausing a subscription) has no
+  amount argument. Name what each tool that changes things acts on
   (resource_argument): the payment, charge or order it takes, as one of its
   string arguments, required. When it can take several, keep the one the
   taf's read of it takes (a charge, for a read by charge) and leave the
@@ -300,9 +304,11 @@ How you work:
   KIFF knows on the account (another taf's, or one an admin connected for
   another agent, such as refund_order): each of those widens what this taf
   can do without the owner having chosen it. A tool that
-  moves money or changes data always has its amount limited, each call and
-  over a day: a call count alone is only for a read tool, and KIFF refuses a
-  draft that counts a money tool's calls without limiting its amount.
+  moves money always has its amount limited, each call and over a day: KIFF
+  refuses a draft that counts a money tool's calls without limiting its amount.
+  A tool that changes data but moves no money is limited by its calls, each day
+  ("answer up to 20 disputes a day"): never promise an amount limit for it,
+  such as "up to €500 a dispute", since the call carries no amount to check.
 - Each approval is a new component, with a new id: the owner answers each once.
   Each has a short title saying what it approves ("Connect Stripe's refund
   reads", "Refunds' Card"): never leave it out, since the card shows planque's

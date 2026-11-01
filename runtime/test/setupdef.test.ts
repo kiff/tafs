@@ -256,7 +256,11 @@ describe("Setup's definition on kiff/agents", () => {
     // Only the taf's own tools, and a money tool's amount limited (kiff/tafs#138, item 41).
     expect(flat).toContain("The draft names only the tools planque lists for this taf's own grant, and of those never one you asked for with setup_reads");
     expect(flat).toContain("Never another tool KIFF knows on the account");
-    expect(flat).toContain("A tool that moves money or changes data always has its amount limited, each call and over a day: a call count alone is only for a read tool");
+    expect(flat).toContain("A tool that moves money always has its amount limited, each call and over a day");
+    // A write that moves no money is limited by its calls, and never gets a made-up amount.
+    expect(flat).toContain("A tool that changes data but moves no money is limited by its calls, each day");
+    expect(flat).toContain("A tool that changes data but moves no money (answering a dispute, pausing a subscription) has no amount argument.");
+    expect(flat).toContain("named from that operation's fields as stripe_api_details gives them, never one you make up");
     // The owner's own limit is the limit (item 44).
     expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
     // The schedule is decided before the result, with the owner's case as the example (item 43).
