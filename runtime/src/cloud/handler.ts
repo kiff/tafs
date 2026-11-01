@@ -2081,8 +2081,14 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   const [, , , action, rawN, sub] = parts;
   if (action === "versions" && parts.length === 4 && method === "GET") {
     const state = await settleSwitch(event, me, taf, deps);
-    // Who made each, in words: the apps show them, never their own copy.
-    const versions = state.versions.map((v) => { const by = versionBy(v, me); return by ? { ...v, by_words: by } : v; });
+    // Who made each, in words: the apps show them, never their own copy. Version 1 is the
+    // taf as it was set up: kiff/agents records it only when a second is made, so it says
+    // when the taf was set up, not when that record was written.
+    const versions = state.versions.map((v) => {
+      const by = versionBy(v, me);
+      const created = v.n === 1 && taf.created && Date.parse(taf.created) < Date.parse(v.created) ? taf.created : v.created;
+      return { ...v, created, ...(by ? { by_words: by } : {}) };
+    });
     return { versions, ...(state.switching ? { switching: state.switching } : {}) };
   }
   if (action === "versions" && parts.length === 4 && method === "POST") {

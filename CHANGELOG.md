@@ -162,6 +162,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Versions:** version 1 ("As it was set up") shows when the taf was set up, not the moment its
+  second version was made.
+
 - **Android, an approval is "approved" only once signed:** Approve on a connection already
   connected that brings no Card no longer tells Coach "approved" with nothing signed. Coach
   hears it's already connected and there's nothing new to approve. A Card KIFF already
