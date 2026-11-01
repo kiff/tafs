@@ -82,7 +82,7 @@ describe("Setup's definition on kiff/agents", () => {
   });
 
   it("writes its closing message as text, never as a component", () => {
-    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A component (steps, plan, a notice) never stands in for it: after any component, write the closing message as text in the same turn.");
+    expect(SETUP_INSTRUCTIONS.replace(/\s+/g, " ")).toContain("A component (steps, plan, a notice) never stands in for it.");
   });
 
   it("calls taf_results and lets it be held, never reading its 0 a day as forbidden", () => {
@@ -235,6 +235,11 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("When it answers with the version, always write one closing sentence: version N of the taf is ready to try, then to install from its Versions.");
     // An approval carries no words of Coach's: what the owner reads as they grant is planque's and KIFF's.
     expect(flat).toContain("An approval carries only its grant and draft, never a title or words of yours");
+    // A result's tools are KIFF's names, never titles: show refuses titles, and the hand-over then lost its closing message.
+    expect(flat).toContain("and tools: the tools' names in KIFF as planque's status lists them (create_refund_k3f9), never their titles or the owner's words for them.");
+    expect(flat).toContain("also when that result was refused once and shown again");
+    // The closing text comes before the plan update, so a plan update is never the turn's end.
+    expect(flat).toContain("In that turn, write the closing message first, then show the plan with its last steps done: a turn that only updates the plan is never the end.");
     expect(flat).not.toContain("Each has a short title saying what it approves");
     // The owner installed a version Coach made: the plan ends, never "install it" again.
     expect(flat).toContain(`A line "[taf <name> version N live]" says the owner installed a version you made.`);
