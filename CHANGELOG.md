@@ -8,8 +8,8 @@ version headings refer to releases, not merely to merged pull requests.
 ### Added
 
 - **Coach, the hand-over:** a result's tools are their names in KIFF, never their titles, and
-  Coach writes its closing message after tafs cloud sets the taf up, also when its first result
-  was refused.
+  Coach ends the hand-over with its closing message as text, after the plan update and with no
+  tool call after it, also when its first result was refused.
 - **Coach, writes that move no money:** answering a dispute or pausing a subscription is limited
   by its calls a day, never by an amount, and Coach never gives a tool an amount argument the
   vendor's operation doesn't take.

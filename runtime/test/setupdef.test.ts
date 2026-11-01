@@ -238,8 +238,10 @@ describe("Setup's definition on kiff/agents", () => {
     // A result's tools are KIFF's names, never titles: show refuses titles, and the hand-over then lost its closing message.
     expect(flat).toContain("and tools: the tools' names in KIFF as planque's status lists them (create_refund_k3f9), never their titles or the owner's words for them.");
     expect(flat).toContain("also when that result was refused once and shown again");
-    // The closing text comes before the plan update, so a plan update is never the turn's end.
-    expect(flat).toContain("In that turn, write the closing message first, then show the plan with its last steps done: a turn that only updates the plan is never the end.");
+    // Text before a tool call comes back as an empty progress note on Opus 5.5: the plan first, the closing text last.
+    expect(flat).toContain("In that turn, show the plan with its last steps done first, then end the turn with the closing message as text, with no tool call after it: a sentence written before a tool call isn't shown to the owner, and a turn that only updates the plan is never the end.");
+    expect(flat).toContain(`a "[taf … version N live]" line: the plan first, the sentence last.`);
+    expect(flat).not.toContain("write the closing message first");
     expect(flat).not.toContain("Each has a short title saying what it approves");
     // The owner installed a version Coach made: the plan ends, never "install it" again.
     expect(flat).toContain(`A line "[taf <name> version N live]" says the owner installed a version you made.`);
