@@ -1932,8 +1932,9 @@ async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, message
   }
   const session = str(body.session).trim();
   const answer = (messages: ThreadMessage[]) => messages.find((m) => m.id === messageID && m.from === "taf");
-  let found = messageID ? answer((await conversation(me, taf, deps, undefined, await managesTaf(event, me, taf, deps))).messages) : undefined;
-  if (!found && messageID && session) {
+  let found: ThreadMessage | undefined;
+  // The chat the app names first, when it's the person's; else the whole thread (a run's, a door's).
+  if (messageID && session) {
     for (const kind of ["chat", "trial"] as const) {
       const only = await ownChat(me, taf, session, deps, kind).catch((err) => {
         if (err instanceof HTTPError && err.status === 404) return undefined;
@@ -1942,6 +1943,7 @@ async function reportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, message
       if (only) { found = answer((await conversation(me, taf, deps, only)).messages); break; }
     }
   }
+  if (!found && messageID) found = answer((await conversation(me, taf, deps, undefined, await managesTaf(event, me, taf, deps))).messages);
   if (!found) throw new HTTPError(404, "no answer of the taf's by that id");
   const now = deps.now?.() ?? new Date();
   const { report, new: fresh } = await fileReport(deps.reports, {
