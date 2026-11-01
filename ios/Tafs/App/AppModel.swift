@@ -4155,6 +4155,7 @@ final class AppModel: ObservableObject {
         }
         connecting = grantID
         vendorSignedIn = false
+        nothingSigned = nil
         defer { connecting = nil }
         let gen = accountGeneration
         let signer = self.signer
@@ -4180,7 +4181,12 @@ final class AppModel: ObservableObject {
         if grant.connected {
             // The second approval (kiff/agents#91): the vendor is connected, and the
             // taf's Cards over its tools wait as a draft. One Face ID confirms them.
-            guard let draft, !draft.confirmed else { return grant }
+            // Nothing left to sign: the grant is returned as it is, and noted, so an
+            // approval card is never told "approved" without a signature made here.
+            guard let draft, !draft.confirmed else {
+                nothingSigned = (vendor: grant.vendor, cardsConfirmed: draft != nil)
+                return grant
+            }
             guard draft.version == shownDraft else {
                 setupDrafts[draft.id] = draft
                 termsChanged()
@@ -5189,6 +5195,14 @@ final class AppModel: ObservableObject {
         cardNotes[component.id] = nil
         // Connected, or connected first and listed (contract 5): Setup reads what's next.
         let done = await connect(grantID: grant, shown: shown, draftID: component.draft, shownDraft: shownDraft)
+        // Already connected with nothing to confirm: nothing was signed, so it isn't approved.
+        // Coach hears it, in the same words as Android, and asks for a new grant.
+        if done != nil, let none = nothingSigned {
+            cardNotes[component.id] = Self.nothingToApprove(none.vendor, cardsConfirmed: none.cardsConfirmed)
+            await answer(component, "failed: \(none.vendor) is already connected; nothing new to approve")
+            await loadSetupThread()
+            return
+        }
         // Changed terms aren't a failure to tell Setup: the owner reads them and approves again.
         if shownTermsChanged {
             cardNotes[component.id] = lastError
@@ -5215,6 +5229,15 @@ final class AppModel: ObservableObject {
             cardNotes[component.id] = quietStop ?? "Nothing was approved. Approve again."
         }
         await loadSetupThread()
+    }
+
+    /// Set by `connect` when the grant was already connected and nothing was left to
+    /// sign: the vendor, and whether its Cards were already confirmed.
+    private var nothingSigned: (vendor: String, cardsConfirmed: Bool)?
+
+    /// An approval with nothing left to sign, in the owner's words: nothing was approved.
+    static func nothingToApprove(_ vendor: String, cardsConfirmed: Bool) -> String {
+        "\(vendor) is already connected\(cardsConfirmed ? " and its Cards are confirmed" : ""). There's nothing new to approve, so nothing was approved."
     }
 
     /// Whether this approval, as it reads now, was refused for the request itself: sent

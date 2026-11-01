@@ -563,6 +563,32 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// An approval whose grant is already connected, with no Cards left to confirm, signs
+    /// nothing, so it's never answered "approved": Coach hears it's already connected, in
+    /// the same words as Android, and the card says nothing was approved.
+    func testAnAlreadyConnectedGrantIsNeverApprovedWithoutASignature() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/refund-reads/answer"] = (200, #"{"session":"s1","run":"r1","status":"RUNNING"}"#)
+        await model.loadSetup()
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected", signedIn: true))]}"#)
+        await model.refreshConnections()
+        StubProtocol.sent = []
+        let card = try SetupTests.component(#"{"type":"approval","id":"refund-reads","grant":"g_01"}"#)
+        await model.approve(card, shown: model.grants.first?.digest, shownDraft: nil)
+        let answer = body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/refund-reads/answer").last)["answer"] as? String
+        XCTAssertNotEqual(answer, "approved", "nothing was signed")
+        XCTAssertTrue(answer?.hasPrefix("failed: ") ?? false, answer ?? "no answer")
+        XCTAssertTrue(answer?.hasSuffix(" is already connected; nothing new to approve") ?? false, answer ?? "")
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID: there was nothing to sign")
+        XCTAssertTrue(model.cardNotes["refund-reads"]?.contains("There's nothing new to approve, so nothing was approved.") ?? false)
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// An answer the app can't read leaves its card unanswered, never the card out.
     func testAnUnreadableAnswerKeepsTheCard() throws {
         let json = #"{"at":"2026-10-17T10:00:06.000Z","session":"s1","run":"r1","component":{"type":"result","id":"done","text":"Done."},"answer":{"outcome":"set up"}}"#
