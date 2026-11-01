@@ -563,6 +563,59 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// An approval whose grant is already connected, with no Cards left to confirm, signs
+    /// nothing, so it's never answered "approved": Coach hears it's already connected, in
+    /// the same words as Android, and the card says nothing was approved.
+    func testAnAlreadyConnectedGrantIsNeverApprovedWithoutASignature() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/refund-reads/answer"] = (200, #"{"session":"s1","run":"r1","status":"RUNNING"}"#)
+        await model.loadSetup()
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected", signedIn: true))]}"#)
+        await model.refreshConnections()
+        StubProtocol.sent = []
+        let card = try SetupTests.component(#"{"type":"approval","id":"refund-reads","grant":"g_01"}"#)
+        await model.approve(card, shown: model.grants.first?.digest, shownDraft: nil)
+        let answer = body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/refund-reads/answer").last)["answer"] as? String
+        XCTAssertNotEqual(answer, "approved", "nothing was signed")
+        XCTAssertTrue(answer?.hasPrefix("failed: ") ?? false, answer ?? "no answer")
+        XCTAssertTrue(answer?.hasSuffix(" is already connected; nothing new to approve") ?? false, answer ?? "")
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID: there was nothing to sign")
+        XCTAssertTrue(model.cardNotes["refund-reads"]?.contains("There's nothing new to approve, so nothing was approved.") ?? false)
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// An approval whose Card KIFF already confirmed was signed earlier (another device, or
+    /// a tap before this one): it signs nothing here, so it's never "approved", and never
+    /// "failed" either, or Coach asks again. The card says "Already approved".
+    func testAConfirmedCardIsAlreadyApprovedNeverFailed() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/refund-reads/answer"] = (200, #"{"session":"s1","run":"r1","status":"RUNNING"}"#)
+        await model.loadSetup()
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected", signedIn: true))]}"#)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"confirmed","version":"v3"}"#)
+        await model.refreshConnections()
+        StubProtocol.sent = []
+        let card = try SetupTests.component(#"{"type":"approval","id":"refund-reads","grant":"g_01","draft":"d_01"}"#)
+        await model.approve(card, shown: model.grants.first?.digest, shownDraft: "v3")
+        let answer = body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/refund-reads/answer").last)["answer"] as? String
+        XCTAssertTrue(answer?.hasPrefix("already approved: ") ?? false, answer ?? "no answer")
+        XCTAssertTrue(answer?.hasSuffix(" is connected and its Card is confirmed") ?? false, answer ?? "")
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID: there was nothing to sign")
+        XCTAssertEqual(model.cardNotes["refund-reads"], "Already approved")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts/d_01/confirm").isEmpty)
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// An answer the app can't read leaves its card unanswered, never the card out.
     func testAnUnreadableAnswerKeepsTheCard() throws {
         let json = #"{"at":"2026-10-17T10:00:06.000Z","session":"s1","run":"r1","component":{"type":"result","id":"done","text":"Done."},"answer":{"outcome":"set up"}}"#
@@ -835,6 +888,27 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// An approval is finished only by its answer, never by planque's state alone: a grant
+    /// connected after the card appeared, with no draft and no answer, still shows Approve.
+    func testAConnectedGrantNeverShowsApprovedByItself() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        // Connected at 10:00:00, after the card (09:59:58), and nothing answered.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected", signedIn: true))]}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, """
+            {"messages":[{"at":"2026-10-17T09:59:50.000Z","from":"owner","kind":"message","text":"Add a discount tool","session":"s1"}],
+             "components":[{"at":"2026-10-17T09:59:58.000Z","session":"s1","run":"r1","seq":1,"component":{"type":"approval","id":"discount","grant":"g_01"}}]}
+            """)
+        await model.loadSetup()
+        await model.refreshConnections()
+        let card = try SetupTests.component(#"{"type":"approval","id":"discount","grant":"g_01"}"#)
+        XCTAssertEqual(model.grants.first?.status, "connected")
+        XCTAssertEqual(model.setupCardState(card), .needsYou, "nothing was signed or answered")
+        XCTAssertEqual(model.setupWaiting?.id, "discount", "its Approve button shows")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// The owner's answers read as what they chose, and each card knows where it stands:
     /// the one waiting for the owner, then declined, failed with why, or done (#58 B4, B7).
     func testCardsKnowWhereTheyStand() async throws {
@@ -883,7 +957,7 @@ final class SetupTests: XCTestCase {
 
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected"))]}"#)
         await model.refreshConnections()
-        XCTAssertEqual(model.setupCardState(connect), .done, "connected is done, whatever was answered")
+        XCTAssertEqual(model.setupCardState(connect), .failed("planque is down"), "planque's state alone doesn't finish it; the answer does")
         Keychain.delete(AppModel.planqueAccount)
     }
 

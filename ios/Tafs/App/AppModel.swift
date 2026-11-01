@@ -4155,6 +4155,7 @@ final class AppModel: ObservableObject {
         }
         connecting = grantID
         vendorSignedIn = false
+        nothingSigned = nil
         defer { connecting = nil }
         let gen = accountGeneration
         let signer = self.signer
@@ -4180,7 +4181,12 @@ final class AppModel: ObservableObject {
         if grant.connected {
             // The second approval (kiff/agents#91): the vendor is connected, and the
             // taf's Cards over its tools wait as a draft. One Face ID confirms them.
-            guard let draft, !draft.confirmed else { return grant }
+            // Nothing left to sign: the grant is returned as it is, and noted, so an
+            // approval card is never told "approved" without a signature made here.
+            guard let draft, !draft.confirmed else {
+                nothingSigned = (vendor: grant.vendor, cardsConfirmed: draft != nil)
+                return grant
+            }
             guard draft.version == shownDraft else {
                 setupDrafts[draft.id] = draft
                 termsChanged()
@@ -5048,23 +5054,16 @@ final class AppModel: ObservableObject {
         return .needsYou
     }
 
-    /// Connected with its Cards confirmed, or connected first and listed (contract 5), as
-    /// planque says after this approval appeared; or the owner's answer to it says so.
+    /// Finished only by its answer in the thread: approved after a signature made on a
+    /// phone, or already approved, signed earlier. planque's state alone never finishes it:
+    /// a grant connected before this card says nothing of what the owner approved here.
     func approvalFinished(_ c: SetupComponent) -> Bool {
         let grant = grants.first { $0.id == c.grant }
-        let readSince = grantsReadFor.contains(c.id)
         // planque failed the grant after the owner approved (at connect, or later): the
         // card says so with planque's reason, whatever the answer said.
-        if readSince, let grant, grant.status == "failed" || grant.status == "disconnected" { return false }
-        if let a = setupThread.answer(to: c.id), !a.failed, a.text.hasPrefix("approved") { return true }
-        guard readSince else { return false }
-        // Read after the card appeared, but changed before it: Setup can show an approval in
-        // the same turn it changes the grant, and a read between the two still finds the
-        // grant as it was (kiff/tafs#236, item 3). Its state then says nothing of this card.
-        guard changedSince(c) else { return false }
-        let draft = c.draft.flatMap { setupDrafts[$0] }
-        let cardsWaiting = draft.map { !$0.confirmed } ?? (c.draft != nil)
-        return (grant?.connected == true && !cardsWaiting) || (grant?.listed == true && c.draft == nil)
+        if grantsReadFor.contains(c.id), let grant, grant.status == "failed" || grant.status == "disconnected" { return false }
+        guard let a = setupThread.answer(to: c.id), !a.failed else { return false }
+        return a.text.hasPrefix("approved") || a.text.hasPrefix("already approved")
     }
 
     /// The card waiting for the owner, if any (kiff/tafs#58): the latest approval they
@@ -5155,6 +5154,8 @@ final class AppModel: ObservableObject {
         case .approval:
             if text == "approved" || text.hasPrefix("approved,") { return .text("approved") }
             if text == "declined" { return .text("declined") }
+            // Signed earlier, not by this tap (kiff/agents takes it as Already approved).
+            if text.hasPrefix("already approved:") { return .text(text) }
             return failed.map { .text($0) }
         case .signIn:
             if text == "signed in" || text == "not now" { return .text(text) }
@@ -5189,6 +5190,21 @@ final class AppModel: ObservableObject {
         cardNotes[component.id] = nil
         // Connected, or connected first and listed (contract 5): Setup reads what's next.
         let done = await connect(grantID: grant, shown: shown, draftID: component.draft, shownDraft: shownDraft)
+        // Nothing was signed here, so it isn't "approved". Its Card confirmed already is a
+        // real approval signed earlier (another device, or a tap before this one): said as
+        // that, never as failed, or Coach asks again. With no Card at all, Coach hears it's
+        // already connected and asks for a new grant. Both in the same words as Android.
+        if done != nil, let none = nothingSigned {
+            if none.cardsConfirmed {
+                await answer(component, "already approved: \(none.vendor) is connected and its Card is confirmed")
+            } else {
+                await answer(component, "failed: \(none.vendor) is already connected; nothing new to approve")
+            }
+            // After the answer, which clears the card's note when it goes.
+            cardNotes[component.id] = none.cardsConfirmed ? Self.alreadyApproved : Self.nothingToApprove(none.vendor)
+            await loadSetupThread()
+            return
+        }
         // Changed terms aren't a failure to tell Setup: the owner reads them and approves again.
         if shownTermsChanged {
             cardNotes[component.id] = lastError
@@ -5216,6 +5232,18 @@ final class AppModel: ObservableObject {
         }
         await loadSetupThread()
     }
+
+    /// Set by `connect` when the grant was already connected and nothing was left to
+    /// sign: the vendor, and whether its Cards were already confirmed.
+    private var nothingSigned: (vendor: String, cardsConfirmed: Bool)?
+
+    /// An approval with nothing to sign and no Card, in the owner's words: nothing was approved.
+    static func nothingToApprove(_ vendor: String) -> String {
+        "\(vendor) is already connected. There's nothing new to approve, so nothing was approved."
+    }
+
+    /// An approval signed earlier: connected, its Card confirmed in KIFF.
+    static let alreadyApproved = "Already approved"
 
     /// Whether this approval, as it reads now, was refused for the request itself: sent
     /// again unchanged it fails the same way (kiff/tafs#138). A grant planque failed can't

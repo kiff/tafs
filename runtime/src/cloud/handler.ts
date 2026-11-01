@@ -1961,7 +1961,7 @@ async function shownCard(me: KIFFIdentity, taf: Taf, id: string, type: string | 
  * The app's answer to a card in the form it has sent until now, "[<type> <id>] <answer>"
  * (only the person's own message, never a door's), as the answer kiff/agents takes:
  * confirm → its option's value, questions → the answers' JSON, approval → approved,
- * declined or failed: <why>, sign_in → signed in, not now or failed: <why>. Undefined
+ * declined, already approved: <why> or failed: <why>, sign_in → signed in, not now or failed: <why>. Undefined
  * for any other text.
  */
 export function oldFormCard(text: string): { type: string; id: string; answer: unknown } | undefined {
@@ -1980,7 +1980,7 @@ export function oldFormCard(text: string): { type: string; id: string; answer: u
         return undefined;
       }
     case "approval": {
-      const answer = rest === "approved" || rest.startsWith("approved,") ? "approved" : rest === "declined" ? "declined" : failed;
+      const answer = rest === "approved" || rest.startsWith("approved,") ? "approved" : rest === "declined" ? "declined" : rest.startsWith("already approved:") ? rest : failed;
       return answer ? { type, id, answer } : undefined;
     }
     default: {
