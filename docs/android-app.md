@@ -104,7 +104,8 @@ connection says the same, with **Sign in again**: one approval, then the vendor'
 A change of a kind the app doesn't know is ignored; coming back to the app reads everything
 again. Opening a chat no longer reads it on a timer: a run at work is followed on its stream, and
 the timer is left only where nothing else tells the phone (a trial's chat, a run whose stream
-can't open).
+can't open or dropped, and a run that goes on after its stream ended at a pause: Coach's, once
+tafs cloud answers its result, which the timer follows until Coach's closing words show).
 
 A door shows tafs cloud's words for itself (`words`: `state`, `tap`, `settings`) as they come; the
 app's own lines stand in only where tafs cloud sends none.

@@ -186,6 +186,25 @@ class ChatStreamTest {
     assertEquals(ChatEnd.Stopped, m.state.value.chatEnded["refunds-1"])
   }
 
+  @Test fun aRunThatGoesOnAfterItsStreamPausedIsFollowedToItsEnd() = runTest {
+    // Paused on a card tafs cloud answers itself (Coach's result): the stream ends, then the run goes on with no stream open.
+    reads()
+    transport.answer(stream, 200, sse(
+      "session" to """{"session":"s1","run":"run_1"}""",
+      "end" to """{"status":"PAUSED","stop":"waiting"}""",
+    ))
+    val m = model()
+    transport.answer(conversation, 200, """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
+    transport.answer(conversation, 200, """{"messages":[{"at":"2026-10-28T09:00:05Z","from":"taf","text":"Version 2 is ready to try.","session":"s1"}]}""")
+    m.deliverChat("Improve Refunds", "refunds-1")
+    settle()
+    testScheduler.advanceTimeBy(AppModel.CHAT_POLL_MS * 3)
+    testScheduler.runCurrent()
+    // Its end shows in the open chat, and nothing says it's still at work.
+    assertNull(m.state.value.chatWorking["refunds-1"])
+    assertTrue(m.state.value.chats["refunds-1"].orEmpty().any { it.text == "Version 2 is ready to try." })
+  }
+
   @Test fun aRunAtWorkIsPickedBackUpOnceWhenTheChatIsRead() = runTest {
     reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
     transport.answer("GET /v1/tafs/taf_1/runs/run_1/stream", 200, sse(

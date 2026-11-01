@@ -192,4 +192,34 @@ class CardAnswersTest {
     assertNull(m.state.value.chatAwaiting[COACH_CHAT])
     assertTrue(m.state.value.chats[COACH_CHAT].orEmpty().any { it.text == "Refunds 5 is set up." })
   }
+
+  @Test fun aRunPausedOnAResultIsFollowedUntilTafsCloudAnswersItAndCoachsLastWordsShow() = runTest {
+    reads()
+    val approval = cards[2].second
+    val result = """{"type":"result","id":"r1","taf":{"improves":"taf_9","agent":"refunds-1","name":"Refunds"}}"""
+    val approved = shown("a1", approval, """{"state":"answered","words":"Approved"}""")
+    transport.answer(conversation, 200, """{"messages":[],"components":[${shown("a1", approval)}]}""")
+    transport.answer("POST /v1/tafs/setup_1/components/a1/answer", 200, """{"session":"s1","run":"r1","status":"running"}""")
+    transport.answer("GET /v1/tafs/setup_1/runs/r1/stream", 200, sse(
+      "component" to "{}",
+      "end" to """{"status":"PAUSED","stop":"waiting"}""",
+    ))
+    val m = model()
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    // The stream ends on the result, paused: tafs cloud hasn't made the version yet, and nothing is at work.
+    transport.answer(conversation, 200, """{"messages":[],"components":[$approved,${shown("r1", result)}]}""")
+    m.answerCard("approval", "a1", "approved")
+    settle()
+    // Then it answers the result, the run goes on, and Coach closes, with no stream open.
+    transport.answer(
+      conversation, 200,
+      """{"messages":[{"at":"2026-10-30T05:02:00Z","from":"taf","kind":"message","text":"Version 2 is ready to try.","session":"s1"}],"components":[$approved,${shown("r1", result, """{"state":"answered","words":"Version 2","outcome":{"version":2}}""")}]}""",
+    )
+    testScheduler.advanceTimeBy(AppModel.CHAT_POLL_MS * 3)
+    testScheduler.runCurrent()
+    // The open screen shows Coach's last words without being left, and nothing is at work.
+    assertTrue(m.state.value.chats[COACH_CHAT].orEmpty().any { it.text == "Version 2 is ready to try." })
+    assertNull(m.state.value.chatWorking[COACH_CHAT])
+  }
 }
