@@ -217,8 +217,10 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   Each type takes its own answer: confirm, one of its options' values; questions,
   `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `approved`, `declined` or
   `failed: <why>`, and `approved` only after the phone signed what the card asks: a connection
-  already connected with no Cards left to confirm signs nothing, so its answer is `failed: <vendor>
-  is already connected; nothing new to approve` (Android: `AppModel.connect`); sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
+  already connected that brings no Card signs nothing, so its answer is `failed: <vendor> is
+  already connected; nothing new to approve`, and one whose Card KIFF already confirmed (approved
+  before, with its own signature) says "Already approved" and answers `already approved: <vendor>
+  is connected and its Card is confirmed` (`AppModel.connect`, and iOS's); sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
 - Writing a message instead while a card waits answers it with those words: the run that
   waits goes on, and no second run starts beside it.
 - In the thread, each answered card carries `answer` `{state: answered|wrote|no_answer,

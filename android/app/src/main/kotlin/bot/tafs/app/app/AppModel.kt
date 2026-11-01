@@ -2089,6 +2089,9 @@ class AppModel(
     /** Nothing was done and nothing is to be told: the owner didn't confirm, the terms changed on the screen, or another approval is going through. */
     data object Stopped : Connected
 
+    /** Approved before, with its own signature: connected, and its Card confirmed in KIFF. Nothing was signed this time. */
+    data class AlreadyApproved(val grant: Grant) : Connected
+
     /**
      * It didn't go through: [why] for the owner, in the app's words; [told] for Coach, the card's answer, which keeps the server's own
      * reason so Coach can say what went wrong and ask again.
@@ -2181,9 +2184,9 @@ class AppModel(
         // Done only after a signature made here: a connection already connected with no Cards left to confirm signs nothing, so it
         // isn't approved. Coach hears that, and asks for what it needs as a new grant.
         val d = draft
-        if (d == null || d.confirmed) {
-          return Connected.Failed(CoachWords.nothingToApprove(grant.vendor, cardsConfirmed = d != null), "${grant.vendor} is already connected; nothing new to approve")
-        }
+        if (d == null) return Connected.Failed(CoachWords.nothingToApprove(grant.vendor), "${grant.vendor} is already connected; nothing new to approve")
+        // Its Card confirmed already: a real approval, signed earlier. Said as that, never as done here, nor as failed.
+        if (d.confirmed) return Connected.AlreadyApproved(grant)
         if (d.version != shownDraft) {
           _state.update { it.copy(setupDrafts = it.setupDrafts + (d.id to d)) }
           note(cardId, VersionWords.OUT_OF_DATE_CARD)
@@ -2289,6 +2292,10 @@ class AppModel(
     val grantId = c.grant ?: return
     when (val result = connect(c.id, grantId, shownDigest, c.draft, shownDraft)) {
       is Connected.Done -> answerCard("approval", c.id, "approved")
+      is Connected.AlreadyApproved -> {
+        note(c.id, CoachWords.ALREADY_APPROVED)
+        answerCard("approval", c.id, "already approved: ${result.grant.vendor} is connected and its Card is confirmed")
+      }
       is Connected.Failed -> {
         note(c.id, result.why)
         answerCard("approval", c.id, "failed: " + result.told)
@@ -2307,6 +2314,8 @@ class AppModel(
     note(c.id, null)
     when (val result = connect(c.id, grantId, _state.value.grants.firstOrNull { it.id == grantId }?.digest)) {
       is Connected.Done -> answerCard("sign_in", c.id, "signed in")
+      // Only an approval with a Card to confirm comes back already approved; a sign-in has none.
+      is Connected.AlreadyApproved -> Unit
       is Connected.Failed -> {
         note(c.id, result.why)
         answerCard("sign_in", c.id, "failed: " + result.told)

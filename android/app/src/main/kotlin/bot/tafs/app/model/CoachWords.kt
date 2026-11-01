@@ -167,11 +167,13 @@ object CoachWords {
   fun notConnected(vendor: String, status: String) =
     "The sign-in at $vendor didn't connect: planque has it as ${status.replace('_', ' ')}. Nothing was connected. Try signing in again."
 
-  /** An approval with nothing left to sign: the connection is connected and no Cards wait to be confirmed. Nothing is approved. */
-  fun nothingToApprove(vendor: String, cardsConfirmed: Boolean) =
-    "$vendor is already connected${if (cardsConfirmed) " and its Cards are confirmed" else ""}. There's nothing new to approve, so nothing was approved."
+  /** An approval with nothing to sign: the connection is connected and it brings no Card. Nothing is approved. */
+  fun nothingToApprove(vendor: String) = "$vendor is already connected. There's nothing new to approve, so nothing was approved."
 
-  const val INTRO ="Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it."
+  /** An approval signed earlier (on another phone, or a tap before this one): connected, its Card confirmed in KIFF. */
+  const val ALREADY_APPROVED = "Already approved"
+
+  const val INTRO = "Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it."
   const val SIGN_IN_NOTE = "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed."
   const val COACH_KNOWS = "Coach knows, and hands it over again."
 
