@@ -259,7 +259,8 @@ export interface Taf {
   tries?: Record<string, string>;
   /**
    * What each version does, in one line, as Coach's result said it, by version: the live
-   * one's becomes `summary` when it goes live. A version with none keeps the line it had.
+   * one's becomes `summary` when it goes live. "" is a version that had none, whose job's
+   * line comes back with it. A version not listed keeps the line it had.
    */
   summaries?: Record<string, string>;
   /**
@@ -2283,7 +2284,7 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   if (event) await recordLiveCards(event, me, taf, await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)), deps);
   // The version live now keeps the line it has, so going back to it brings the line back too.
   // A taf stored before versions has none listed: what's live then is version 1.
-  const listed = summary && taf.summary ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
+  const listed = summary && !taf.summaries ? (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions : undefined;
   const live = listed ? listed.find((v) => v.live)?.n ?? (listed.length === 0 ? 1 : undefined) : undefined;
   const n = await agentsCall(() => deps.agents.createVersion(me.tenantID, taf.id, { definition: def, note, by: "setup", by_kind: "agent", ...(draft ? { draft } : {}) }));
   if (from || tryWith || summary) {
@@ -2292,7 +2293,8 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     for (let attempt = 0; attempt < 2; attempt++) {
       const cur = attempt === 0 ? taf : await deps.tafs.get(me.tenantID, taf.id);
       if (!cur) break;
-      const summaries = summary ? { ...(live !== undefined && cur.summary && !cur.summaries?.[String(live)] ? { [String(live)]: cur.summary } : {}), ...cur.summaries, [String(n)]: summary } : undefined;
+      // The live version keeps its line, or "" for none, so going back to it brings that back.
+      const summaries = summary ? { ...(live !== undefined && cur.summaries?.[String(live)] === undefined ? { [String(live)]: cur.summary ?? "" } : {}), ...cur.summaries, [String(n)]: summary } : undefined;
       const next = { ...cur, ...(from ? { versionsFrom: { ...cur.versionsFrom, [from]: n } } : {}), ...(tryWith ? { tries: { ...cur.tries, [String(n)]: tryWith } } : {}), ...(summaries ? { summaries } : {}) };
       if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
     }
@@ -2398,7 +2400,7 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
-    if (summary) next.summary = summary;
+    if (summary) next.summary = summary; else if (summary === "") delete next.summary;
     if (next.ownerNotes !== taf.ownerNotes || next.definition !== taf.definition || next.summary !== taf.summary) await deps.tafs.putIf(me.tenantID, next, taf);
   } catch (err) {
     // The switch stands; the next switch, or the upgrade's read-back, catches the record up.
