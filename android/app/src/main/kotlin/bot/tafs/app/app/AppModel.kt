@@ -1631,11 +1631,11 @@ class AppModel(
    * Reads the thread again every few seconds while a run is at work in it, or the taf has been written to and
    * hasn't answered: its words and steps arrive as it works. It stops once the taf is idle.
    */
-  fun followChat(tafId: String) {
+  fun followChat(tafId: String, handOver: String? = null) {
     if (followers[tafId]?.isActive == true) return
     followers[tafId] = scope.launch {
       var polls = 0
-      while (polls < CHAT_POLL_BUDGET && busy(tafId)) {
+      while (polls < CHAT_POLL_BUDGET && (busy(tafId) || (handOver != null && handingOver(handOver)))) {
         delay(CHAT_POLL_MS)
         polls += 1
         readThread(tafId)
@@ -1647,6 +1647,10 @@ class AppModel(
   }
 
   private fun busy(tafId: String): Boolean = _state.value.let { tafId in it.chatWorking || tafId in it.chatAwaiting }
+
+  /** Coach's run paused on a result tafs cloud hasn't answered yet: it goes on once tafs cloud has made the taf or version. */
+  private fun handingOver(run: String): Boolean =
+    _state.value.coachComponents.any { it.run == run && it.component.type == "result" && it.answer == null }
 
   /** Reads a taf's thread from tafs cloud and shows it; what the owner sent that it doesn't have yet stays, dimmed. */
   private suspend fun readThread(tafId: String) {
@@ -2752,6 +2756,7 @@ class AppModel(
       }
       if (generation != accountGeneration) return@launch
       val end = ended
+      val run = _state.value.chatLive[tafId]?.run
       _state.update { s ->
         val how = when {
           end == null -> null
@@ -2766,11 +2771,11 @@ class AppModel(
       if (end != null) refresh()
       readThread(tafId)
       _state.update { it.copy(chatLive = it.chatLive - tafId, chatAwaiting = if (end != null) it.chatAwaiting - tafId else it.chatAwaiting) }
-      // No end came: the thread is read as the run goes on, as before the stream.
-      if (end == null && busy(tafId)) {
-        followers.remove(tafId)
-        followChat(tafId)
-      }
+      // This stream no longer holds the chat. What goes on after it is read on a timer: a stream that dropped with no end, or a
+      // run that paused and went on with no stream open, as Coach's does once tafs cloud answers its result. Its end must show.
+      if (followers[tafId] === coroutineContext[kotlinx.coroutines.Job]) followers.remove(tafId)
+      val handOver = if (end != null && tafId == COACH_CHAT) run else null
+      if (busy(tafId) || (handOver != null && handingOver(handOver))) followChat(tafId, handOver)
     }
   }
 
