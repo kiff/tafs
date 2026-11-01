@@ -64,8 +64,10 @@ it once into the secrets store, and `android/release.sh` builds with it. A relea
 carries the symbol tables of its libraries' native code (`ndk.debugSymbolLevel`), so a native
 crash reads by function name in Play's crash view; the app on the phone carries none.
 
-**Buying through Google Play** is built but off: `res/values/flags.xml`'s `play_billing`,
-until KIFF names Google Play products for the account.
+**Buying through Google Play** is on (`res/values/flags.xml`'s `play_billing`). Usage offers Solo
+and the task packs, at Play's prices, only once KIFF's usage names their Play products and the
+account's token, and only to someone who may add tasks. KIFF records each purchase before Play
+is told it's done, and Restore purchases sends again what wasn't.
 
 ## The packages of `bot.tafs.app`
 

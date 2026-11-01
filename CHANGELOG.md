@@ -7,6 +7,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, buying through Google Play:** Usage offers Solo (with its free trial) and the task
+  packs at Play's prices, once KIFF names their Play products, to someone who may add tasks. KIFF
+  records each purchase before Play is told it's done, and Restore purchases sends again what
+  wasn't.
 - **Reporting an answer:** `POST /v1/tafs/{id}/messages/{message}/report` takes a person's report of
   an answer Coach or a taf wrote (offensive, harmful, wrong or other, with a note). tafs cloud keeps it
   with the answer as kiff/agents holds it and emails KIFF, so a person reads it.

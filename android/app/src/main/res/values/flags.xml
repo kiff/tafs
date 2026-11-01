@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-      Buying Solo and task packs through Google Play. Off until KIFF records Play purchases
-      (POST /v1/me/billing/google/purchases): even on, nothing is offered until KIFF's usage
-      names the Play products.
+      Buying Solo and task packs through Google Play: on, now that KIFF records Play purchases
+      (POST /v1/me/billing/google/purchases). Even on, nothing is offered until KIFF's usage names
+      the Play products and the account's token, to someone who may add tasks.
     -->
-    <bool name="play_billing">false</bool>
+    <bool name="play_billing">true</bool>
 </resources>
