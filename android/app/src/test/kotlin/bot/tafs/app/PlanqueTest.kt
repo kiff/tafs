@@ -443,13 +443,16 @@ class PlanqueTest {
     assertTrue(transport.requestsTo("POST /v1/me/agent-drafts/dr_1/confirm").isEmpty())
   }
 
-  @Test fun aDraftKiffAlreadyConfirmedNeedsNothingMore() = runTest {
+  @Test fun aDraftKiffAlreadyConfirmedSignsNothingSoIsNotApproved() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
     transport.answer("GET /v1/me/agent-drafts/dr_1", 200, draft.replace("\"draft\"", "\"confirmed\""))
     val m = model()
     m.refreshConnections()
-    assertTrue(m.connect("a1", "g1", digest, "dr_1", "v3") is AppModel.Connected.Done)
+    assertEquals(
+      AppModel.Connected.Failed(bot.tafs.app.model.CoachWords.nothingToApprove("mcp.stripe.com", cardsConfirmed = true), "mcp.stripe.com is already connected; nothing new to approve"),
+      m.connect("a1", "g1", digest, "dr_1", "v3"),
+    )
     assertTrue(auth.asked.isEmpty())
   }
 
@@ -536,7 +539,21 @@ class PlanqueTest {
     assertEquals("nothing told: the owner didn't confirm", before, transport.requestsTo(answerRoute).size)
   }
 
-  private fun approvalComponent() = KiffClient.json.decodeFromString<SetupComponent>(approvalCard)
+  @Test fun anApprovalOfAConnectionAlreadyConnectedSignsNothingAndIsNeverToldApproved() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
+    val m = model()
+    coachWithCard(m)
+    transport.answer(answerRoute, 200, """{"session":"s1","run":"r1","status":"running"}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    // Nothing was signed, so nothing was approved: Coach hears why, never "approved", and planque is asked nothing.
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertEquals("failed: mcp.stripe.com is already connected; nothing new to approve", told())
+    assertEquals(bot.tafs.app.model.CoachWords.nothingToApprove("mcp.stripe.com", cardsConfirmed = false), m.state.value.coachNotes["a1"])
+  }
+
+  private fun approvalComponent() =KiffClient.json.decodeFromString<SetupComponent>(approvalCard)
 
   @Test fun disconnectingConfirmsThenDeletesThenReadsAgain() = runTest {
     reads()

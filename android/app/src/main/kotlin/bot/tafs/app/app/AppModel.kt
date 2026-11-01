@@ -2178,8 +2178,12 @@ class AppModel(
       }
       if (grant.connected) {
         // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a draft. One confirmation confirms them.
+        // Done only after a signature made here: a connection already connected with no Cards left to confirm signs nothing, so it
+        // isn't approved. Coach hears that, and asks for what it needs as a new grant.
         val d = draft
-        if (d == null || d.confirmed) return Connected.Done(grant)
+        if (d == null || d.confirmed) {
+          return Connected.Failed(CoachWords.nothingToApprove(grant.vendor, cardsConfirmed = d != null), "${grant.vendor} is already connected; nothing new to approve")
+        }
         if (d.version != shownDraft) {
           _state.update { it.copy(setupDrafts = it.setupDrafts + (d.id to d)) }
           note(cardId, VersionWords.OUT_OF_DATE_CARD)

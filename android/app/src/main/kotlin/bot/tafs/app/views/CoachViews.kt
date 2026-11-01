@@ -241,9 +241,10 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   val draft = c.draft?.let { state.setupDrafts[it] }
   val busy = state.connecting != null
   var details by remember { mutableStateOf(false) }
-  // Answered, it keeps one line saying what it was: several in a row each say what was approved.
+  // Answered, it keeps one line saying what it was: several in a row each say what was approved. One line, whatever the words'
+  // length: with no title, planque's text can run to paragraphs.
   if (answered != null) {
-    Text(CoachWords.answeredApproval(answered, c, grant?.text, draft?.label), style = scaled(14, FontWeight.Medium, Theme.dim))
+    Text(CoachWords.answeredApproval(answered, c, grant?.text, draft?.label), style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
     return
   }
   Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
