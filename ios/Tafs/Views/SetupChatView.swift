@@ -1294,6 +1294,11 @@ struct SetupApproval: View {
     /// An answered approval, in one line: the answer, then what it was. Coach's title for the
     /// card comes first, so several in a row each say what was approved.
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
+        // Signed earlier, not by this tap: said as that.
+        if state == .done, model.setupThread.answer(to: component.id)?.text.hasPrefix("already approved") == true {
+            let title = component.title?.trimmingCharacters(in: .whitespaces)
+            return "\(AppModel.alreadyApproved) · \(title.flatMap { $0.isEmpty ? nil : $0 } ?? (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? "the vendor")"
+        }
         if let title = component.title?.trimmingCharacters(in: .whitespaces), !title.isEmpty {
             return state == .declined ? "Declined · \(title)" : "Approved · \(title)"
         }
