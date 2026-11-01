@@ -18,9 +18,11 @@ For AI assistants working on tafs. Read this first.
 - What "only the screen" means, checked on every PR that touches `ios/` or `android/`:
   the apps draw, collect the person's input and sign with the device's key. They don't
   decide outcomes (whether an approval counted, what a version is, what counts against a
-  limit), don't infer state from another service's status, and don't write words for a
-  server's decision: tafs cloud sends them. A rule written twice, once per app, belongs
-  in tafs cloud. A PR that adds logic to an app says why it can't live there.
+  limit). They show a service's state in its own words (planque's signed-out line,
+  "Connected" once planque says so), but derive nothing else from it, such as whether a
+  card is finished. An app's own words only stand in where the server sends none yet,
+  and that gap is a tafs cloud issue. A rule written twice, once per app, belongs in
+  tafs cloud. A PR that adds logic to an app says why it can't live there.
 - Jobs are few and consequential. Add a job only with evidence it is painful and
   high-stakes; tafs is not a catalogue of integrations.
 
@@ -63,7 +65,8 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) for scope and checks,
   contain no live credentials, customer data, private infrastructure details,
   or private assistant-session links. That includes private issue numbers and links,
   the names of test or demo accounts and their data, and internal roles or coordination
-  ("as agreed on …"): say the requirement, not where it was decided. Use synthetic evidence. Report new
+  ("as agreed on <private issue>"): say the requirement, not where it was decided. Use
+  synthetic evidence. Report new
   vulnerabilities through the private channel, not a public exploit report.
 - State what checks actually ran, their results, and any limitations. Do not
   substitute prompt wording tests for measured agent behavior or a happy-path
