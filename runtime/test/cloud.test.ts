@@ -2153,6 +2153,24 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.tafs.held.get(`t_acme#${RAE}`)?.summary).toBe("Answers refund requests within its Card.");
   });
 
+  it("tells the owner's Coach when a version it made goes live, and not for one it didn't make", async () => {
+    const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Offers a free month first", summary: "Offers a free month to customers who cancel." } };
+    const { w, note, answer, deps } = await paused(better);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    const n = (answer() as { answer: { version: number } }).answer.version;
+    const send = async (path: string) => JSON.parse((await handle({ rawPath: path, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" } }, deps)).body);
+    const lines = async () => (await deps.coach.get(`t_acme#coach-notes#u_ana`) as Array<{ text: string; said: string; taf: string }> | undefined) ?? [];
+    expect(await send(`/v1/tafs/${RAE}/versions/${n}/live`)).toEqual({ live: n });
+    const said = await lines();
+    expect(said).toHaveLength(1);
+    expect(said[0]).toMatchObject({ taf: "Rae", said: `Version ${n} is live.` });
+    expect(said[0]!.text).toBe(`[taf Rae version ${n} live] The owner installed version ${n}, the one you made; it runs now. It does: "Offers a free month to customers who cancel."`);
+    // Version 1 wasn't Coach's: going back tells it nothing.
+    expect(await send(`/v1/tafs/${RAE}/versions/1/live`)).toEqual({ live: 1 });
+    expect(await lines()).toHaveLength(1);
+  });
+
   it("brings back a taf's job's line when going back to a version from before it had a summary", async () => {
     const better = { type: "result", id: "better", taf: { agent: "rae", improves: RAE, note: "Offers a free month first", summary: "Offers a free month to customers who cancel." } };
     const { w, note, answer } = await paused(better);
