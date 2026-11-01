@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- What the FileProvider shares (docs/attachments.md): the camera's photo before it's redrawn, and files opened full size. -->
+<!-- What the FileProvider shares (docs/attachments.md): the camera's photo before it's redrawn, files opened full size,
+     and the person's own export of their chats (docs/data.md). -->
 <paths>
     <cache-path name="camera" path="camera/" />
     <cache-path name="attachments" path="attachments/" />
+    <cache-path name="exports" path="exports/" />
 </paths>

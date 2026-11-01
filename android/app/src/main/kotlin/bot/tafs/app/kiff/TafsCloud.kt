@@ -2,6 +2,7 @@ package bot.tafs.app.kiff
 
 import bot.tafs.app.model.AttachmentRef
 import bot.tafs.app.model.ChatMessage
+import bot.tafs.app.model.ChatExport
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.model.DoorMark
 import bot.tafs.app.model.InstantAsString
@@ -511,6 +512,12 @@ class TafsCloud(
   /** Go back: KIFF ends the trial Cards, the trial's chat is deleted, and the live version stays as it was. */
   suspend fun endTrial(id: String): TrialSummary =
     KiffClient.json.decodeFromString<TrialInstalled>(String(send("DELETE", "/v1/tafs/${escaped(id)}/trial"))).ended
+
+  /**
+   * The person's own chats, trials and notes, for their own copy (docs/data.md): the data as JSON, and `readable`, the same as
+   * text. Kept as tafs cloud wrote it: [ChatExport.of] splits it into the two files, and nothing in it is read on the phone.
+   */
+  suspend fun exportChats(): ChatExport = ChatExport.of(send("GET", "/v1/me/chats/export"))
 
   private suspend fun sendJson(method: String, path: String, body: kotlinx.serialization.json.JsonObject): ByteArray =
     send(method, path, KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), body).toByteArray())
