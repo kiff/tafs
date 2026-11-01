@@ -33,6 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
+import bot.tafs.app.app.PurchaseNote
+import bot.tafs.app.kiff.packsOffered
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import bot.tafs.app.app.Mode
 import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.Meter
@@ -80,6 +85,8 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
         Panel {
           Eyebrow("Packs")
           packs.forEach { p -> CountRow(p.name, UsageWords.packLeft(p)) }
+          // Held while no plan runs: they count again once Solo starts.
+          if (usage.canAddPacks == false) Text(UsageWords.PACKS_WAIT_FOR_SOLO, style = scaled(13, color = Theme.soft))
         }
       }
       state.aiUse?.takeIf { it.usedPct != null }?.let { ai ->
@@ -131,16 +138,18 @@ private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions
             Text("Privacy policy", style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri("https://kiff.dev/privacy#tafs") }.padding(vertical = 6.dp))
           }
           PrimaryButton(if (state.buying == id) "Buying…" else "Start Solo", { scope.launch { actions.buy(id) } }, enabled = state.buying == null)
+          PurchaseNoteLine(state, id, actions)
         }
       }
     }
-    store.packs.forEach { pack ->
+    // Packs only while a plan runs (KIFF's can_add_packs); before a trial or after it, Solo alone.
+    if (usage.packsOffered) store.packs.forEach { pack ->
       val id = pack.googleProduct ?: return@forEach
       val product = state.storeProducts[id] ?: return@forEach
       Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
           Text(pack.line.ifEmpty { pack.name }, style = scaled(15, FontWeight.SemiBold, Theme.ink))
-          Text("Tasks last ${pack.months} months", style = scaled(12, color = Theme.dim))
+          Text(UsageWords.packLasts(pack.months), style = scaled(12, color = Theme.dim))
         }
         Text(
           if (state.buying == id) "Buying…" else product.price,
@@ -148,9 +157,33 @@ private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions
           modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
         )
       }
+      PurchaseNoteLine(state, id, actions)
     }
-    Text("Restore purchases", style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 6.dp))
+    Text(
+      if (state.buying == PurchaseNote.RESTORE) "Restoring…" else "Restore purchases",
+      style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+      modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 6.dp),
+    )
+    PurchaseNoteLine(state, PurchaseNote.RESTORE, actions)
     state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.ink)) }
+  }
+}
+
+/**
+ * How a purchase or restore went, under what was tapped, read out by TalkBack as it appears. Bought but not recorded by KIFF
+ * yet: Restore purchases, right there.
+ */
+@Composable
+private fun PurchaseNoteLine(state: AppState, at: String, actions: AccountActions) {
+  val note = state.purchaseNote?.takeIf { it.at == at } ?: return
+  val scope = rememberCoroutineScope()
+  Text(note.words, style = scaled(14, color = Theme.ink), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+  if (note.offersRestore && at != PurchaseNote.RESTORE) {
+    Text(
+      "Restore purchases",
+      style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 10.dp),
+    )
   }
 }
 

@@ -129,6 +129,8 @@ data class Usage(
   @SerialName("pack_list") val packList: List<UsagePack>? = null,
   /** Whether this person may add tasks (an admin), and what can be bought. */
   @SerialName("can_add_tasks") val canAddTasks: Boolean? = null,
+  /** Whether packs can be bought now: only while a plan runs (Solo, or a trial still going). Absent from an older KIFF: [canAddTasks]. */
+  @SerialName("can_add_packs") val canAddPacks: Boolean? = null,
   val store: UsageStore? = null,
   /** Requests for tasks: a member's own, newest first; for someone who may add tasks, the members' too. */
   val requests: List<PackRequest>? = null,
@@ -204,3 +206,6 @@ data class PackRequest(
   @SerialName("expires_at") @Serializable(with = InstantAsString::class) val expiresAt: Instant,
   val note: String? = null,
 )
+
+/** Packs are offered only while a plan runs: KIFF's `can_add_packs`, else, from an older KIFF, `can_add_tasks`. */
+val Usage.packsOffered: Boolean get() = canAddPacks ?: (canAddTasks == true)

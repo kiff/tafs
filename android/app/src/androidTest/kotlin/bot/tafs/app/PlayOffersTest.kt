@@ -61,6 +61,51 @@ class PlayOffersTest {
     assertEquals(listOf("pack_rayo"), bought)
   }
 
+  @Test fun aPurchasesOutcomeShowsUnderWhatWasTappedWithRestoreThere() {
+    val note = bot.tafs.app.app.PurchaseNote("pack_rayo", "Bought. KIFF hasn't added it yet: tafs tries again when it opens.", offersRestore = true)
+    rule.setShown {
+      TafsTheme {
+        UsageSheet(
+          AppState(mode = Mode.kiff, ready = true, playBilling = true, usage = usage(true), storeProducts = products, purchaseNote = note),
+          AccountActions(halt = {}, refreshHalt = {}, resumeHalt = { false }, refreshUsage = {}, refreshTafUsage = {}, restorePurchases = { bought += "restore" }),
+          onClose = {},
+        )
+      }
+    }
+    // Right under the pack's row, above the panel's own Restore purchases.
+    val line = rule.onNodeWithText(note.words).performScrollTo().assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+    val pack = rule.onNodeWithText("Rayo · 70 tasks").fetchSemanticsNode().boundsInRoot
+    val restores = rule.onAllNodes(androidx.compose.ui.test.hasText("Restore purchases")).fetchSemanticsNodes().map { it.boundsInRoot }.sortedBy { it.top }
+    assertEquals(2, restores.size)
+    assertEquals(true, line.top > pack.top && line.top < restores.last().top)
+    // The Restore offered with it is the one just under it.
+    rule.onAllNodes(androidx.compose.ui.test.hasText("Restore purchases"))[0].performClick()
+    rule.waitUntil(5_000) { bought.isNotEmpty() }
+    assertEquals(listOf("restore"), bought)
+  }
+
+  @Test fun beforeOrAfterATrialOnlySoloIsOfferedAndHeldPacksWaitForIt() {
+    val ended = KiffClient.json.decodeFromString<Usage>(
+      """{"plan":"trial","period":{"start":"2026-11-01T00:00:00Z","end":"2026-12-01T00:00:00Z"},"can_add_tasks":true,"can_add_packs":false,"billing":{"source":""},
+      "tasks":{"counted":0,"included":0,"left":0,"packs":0},
+      "pack_list":[{"id":"pk_1","name":"Pico","tasks":12,"tasks_left":12,"expires_at":"2027-11-01T00:00:00Z"}],
+      "store":{"app_account_token":"acct_1","google_solo_product":"solo_monthly",
+        "packs":[{"id":"rayo","name":"Rayo","line":"Rayo · 70 tasks","tasks":70,"months":12,"google_product":"pack_rayo"}]}}""",
+    )
+    rule.setShown {
+      TafsTheme {
+        UsageSheet(
+          AppState(mode = Mode.kiff, ready = true, playBilling = true, usage = ended, storeProducts = products),
+          AccountActions(halt = {}, refreshHalt = {}, resumeHalt = { false }, refreshUsage = {}, refreshTafUsage = {}),
+          onClose = {},
+        )
+      }
+    }
+    rule.onNodeWithText("Start Solo").performScrollTo().assertIsDisplayed()
+    assertEquals("no pack offered", 0, rule.onAllNodesWithTextCount("Rayo · 70 tasks"))
+    rule.onNodeWithText(bot.tafs.app.model.UsageWords.PACKS_WAIT_FOR_SOLO).performScrollTo().assertIsDisplayed()
+  }
+
   @Test fun nothingIsOfferedUntilKiffNamesPlaysProducts() {
     show(google = false)
     rule.waitForIdle()

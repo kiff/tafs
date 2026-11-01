@@ -27,7 +27,8 @@ Sign in with KIFF's device flow (`AppModel.startSignIn`, `finishSignIn`):
    so KIFF accepts the phone's answers only with that key's signature. The approval key
    is registered next ([approvals.md](approvals.md#how-an-answer-is-signed)).
 
-Signing out (`POST /v1/auth/device/logout`) or switching account clears everything of the
+Each way out asks first: Sign out, Sign in again and Switch account open a confirmation on
+Android, so a stray tap never ends the session (iOS follows). Signing out (`POST /v1/auth/device/logout`) or switching account clears everything of the
 earlier session on the phone, including files opened from a chat. The session ends at KIFF
 first: when KIFF doesn't confirm, the phone stays signed in and says so ("Not signed out at
 KIFF yet…"), so a device shown as signed out never holds a session KIFF still accepts.

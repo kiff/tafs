@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.kiff.packsOffered
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -56,9 +57,10 @@ fun TaskRequests(usage: Usage, state: AppState, actions: AccountActions) {
           Text("A member asks for ${UsageWords.packLine(r.pack, usage)}.", style = scaled(15, color = Theme.ink))
           if (r.reason.isNotEmpty()) Text(r.reason, style = scaled(14, color = Theme.soft))
           Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Approving is buying the pack, through Google Play: only where this phone offers buying.
+            // Approving is buying the pack, through Google Play: only where this phone offers buying, and while a plan runs
+            // (a pack bought before Solo would add nothing).
             val product = usage.store?.packs?.firstOrNull { it.id == r.pack }?.googleProduct
-            if (state.offersPurchases && product != null) {
+            if (state.offersPurchases && usage.packsOffered && product != null) {
               PrimaryButton("Approve", { scope.launch { actions.approveRequest(product, r.id) } }, Modifier.weight(1f), enabled = state.buying == null)
             }
             OutlineButton("Decline", { declining = r }, Modifier.weight(1f))

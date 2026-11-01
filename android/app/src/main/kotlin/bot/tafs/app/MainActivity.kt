@@ -182,6 +182,8 @@ fun RootView(model: AppModel) {
   LaunchedEffect(model) { model.restore() }
   var signingIn by rememberSaveable { mutableStateOf(false) }
   val rootScope = rememberCoroutineScope()
+  // The approval-key line's Sign in again asks first, as Settings' ways out of KIFF do.
+  var confirmingSignInAgain by rememberSaveable { mutableStateOf(false) }
 
   Box(Modifier.fillMaxSize().background(Theme.background)) {
     when {
@@ -191,7 +193,7 @@ fun RootView(model: AppModel) {
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
         LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
-        LocalSignInAgain provides { rootScope.launch { model.signOutAtKiff() } },
+        LocalSignInAgain provides { confirmingSignInAgain = true },
         // Approve again in the browser, signed in to a KIFF that can re-link the phone; else the line offers Sign in again.
         LocalApproveAgain provides (
           if (state.mode == Mode.kiff && !state.relinkUnavailable) {
@@ -216,6 +218,12 @@ fun RootView(model: AppModel) {
     }
   }
   if (signingIn) SignInSheet(model, onClose = { signingIn = false })
+  if (confirmingSignInAgain) {
+    bot.tafs.app.views.ConfirmSignOut(bot.tafs.app.views.SignOut.SignInAgain, onDismiss = { confirmingSignInAgain = false }) {
+      confirmingSignInAgain = false
+      rootScope.launch { model.signOutAtKiff() }
+    }
+  }
 
   // Why something wasn't done, in words, until it is read.
   state.lastError?.let { error ->

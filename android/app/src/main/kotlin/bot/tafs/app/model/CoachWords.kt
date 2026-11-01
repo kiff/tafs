@@ -293,13 +293,18 @@ object CoachWords {
   /**
    * The thread in order, the plan left out. As it happened, with one exception: a card that waits for the owner to act comes
    * after what Coach wrote with it, so its words lead to the card: Coach's messages in the same session after the card, up to
-   * the owner's next message. Once answered, it goes back to its own time, in line with what Coach said around it.
+   * the owner's next message. Once answered, it stays after the words that asked for it, and Coach's words after its answer come below it.
    */
   fun items(messages: List<ChatMessage>, components: List<ShownComponent>): List<ChatItem> {
     fun placedAt(c: ShownComponent): java.time.Instant {
-      if (c.component.type !in ASKING || c.answer != null) return c.firstAt
+      if (c.component.type !in ASKING) return c.firstAt
+      // An answer with no time (from a tafs cloud before it said): at its own time, as before.
+      if (c.answer != null && c.answer.at == null) return c.firstAt
+      // After what Coach wrote with it, up to the owner's next message; once answered, up to its answer, so the words Coach
+      // wrote after the answer stay below it. Coach's message is dated when it was written, after the card appeared.
       val nextOwner = messages.firstOrNull { it.from == ChatMessage.From.owner && it.at > c.firstAt }?.at
-      val after = messages.filter { it.from == ChatMessage.From.taf && it.session == c.session && it.at >= c.firstAt && (nextOwner == null || it.at < nextOwner) }
+      val end = listOfNotNull(nextOwner, c.answer?.at).minOrNull()
+      val after = messages.filter { it.from == ChatMessage.From.taf && it.session == c.session && it.at >= c.firstAt && (end == null || it.at < end) }
       return after.lastOrNull()?.at ?: c.firstAt
     }
     val placed = messages.map { ChatItem.Message(it) as ChatItem to it.at } +

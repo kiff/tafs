@@ -78,16 +78,20 @@ class PlayBillingStore(context: Context) : PlayStore {
         .build()
       client.queryProductDetails(params).productDetailsList.orEmpty()
     }
+    // What Play lists now, for this Google account: a product it no longer lists is forgotten, never sold from an older read.
+    ids.forEach { details.remove(it) }
     found.forEach { details[it.productId] = it }
     return found.map { it.asStoreProduct() }
   }
 
   override suspend fun purchase(id: String, accountToken: String): PlayStore.Bought {
     connected()
-    val product = details[id] ?: run { products(listOf(id)); details[id] } ?: throw IllegalStateException("Google Play doesn't sell this here.")
+    // Read again just before: the offer sent is one Play gives this Google account now (its trial only while it can have it).
+    products(listOf(id))
+    val product = details[id] ?: throw IllegalStateException("Google Play doesn't sell this here.")
     val on = activity.get() ?: throw IllegalStateException("Open tafs to buy.")
     val each = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product)
-    product.subscriptionOfferDetails?.firstOrNull()?.let { each.setOfferToken(it.offerToken) }
+    product.offer()?.let { each.setOfferToken(it.offerToken) }
     val params = BillingFlowParams.newBuilder()
       .setProductDetailsParamsList(listOf(each.build()))
       .setObfuscatedAccountId(accountToken)
@@ -140,10 +144,20 @@ class PlayBillingStore(context: Context) : PlayStore {
 
   private fun ProductDetails.asStoreProduct(): StoreProduct {
     oneTimePurchaseOfferDetails?.let { return StoreProduct(productId, name, it.formattedPrice) }
-    val phases = subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList.orEmpty()
+    val phases = offer()?.pricingPhases?.pricingPhaseList.orEmpty()
     val paid = phases.lastOrNull()
     val trial = phases.firstOrNull { it.priceAmountMicros == 0L }
     return StoreProduct(productId, name, paid?.formattedPrice ?: "", period = paid?.billingPeriod?.let(::periodWords), freeTrial = trial?.billingPeriod?.let(::lengthWords))
+  }
+
+  /**
+   * The subscription offer shown and bought: the free trial when Play lists one for this account (it lists it only while the
+   * account can have it), else the base plan. The same one for the words and the purchase, never just the first listed.
+   */
+  private fun ProductDetails.offer(): ProductDetails.SubscriptionOfferDetails? = subscriptionOfferDetails?.let { offers ->
+    offers.firstOrNull { o -> o.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L } }
+      ?: offers.firstOrNull { it.offerId == null }
+      ?: offers.firstOrNull()
   }
 
   companion object {

@@ -347,6 +347,20 @@ class CoachStartTest {
     assertEquals(items.size, items.map { it.id }.toSet().size)
   }
 
+  @Test fun anAnsweredCardStaysAfterTheWordsThatAskedForItAndCoachsLaterWordsComeBelow() {
+    val connect = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"connect","grant":"g1"}""")
+    fun said(at: Long, text: String) = bot.tafs.app.model.ChatMessage(t0.plusSeconds(at), bot.tafs.app.model.ChatMessage.From.taf, text, session = "s1")
+    // Shown at 0 s; Coach's words with it are dated when written (2 s); answered at 10 s; Coach's next words at 12 s.
+    val asked = said(2, "Approve the connection to Stripe.")
+    val next = said(12, "Connected. Next, the Card.")
+    val answered = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", connect, bot.tafs.app.kiff.CardAnswer(words = "Approved", atText = t0.plusSeconds(10).toString()))
+    val order = CoachWords.items(listOf(asked, next), listOf(answered)).map { (it as? bot.tafs.app.model.ChatItem.Message)?.message?.text ?: "card" }
+    assertEquals(listOf("Approve the connection to Stripe.", "card", "Connected. Next, the Card."), order)
+    // One that waits sits after the words too.
+    val waiting = CoachWords.items(listOf(asked), listOf(answered.copy(answer = null))).map { (it as? bot.tafs.app.model.ChatItem.Message)?.message?.text ?: "card" }
+    assertEquals(listOf("Approve the connection to Stripe.", "card"), waiting)
+  }
+
   @Test fun aCardsAnswerOutlivesTheCardShownAgainWithoutIt() {
     val card = KiffClient.json.decodeFromString<SetupComponent>(handOver)
     val first = bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", card, bot.tafs.app.kiff.CardAnswer(outcome = bot.tafs.app.kiff.ResultOutcome(tafId = "c_9")))

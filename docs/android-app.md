@@ -60,14 +60,33 @@ it has alerts off and says so in Settings.
 **Releases** are signed bundles for Google Play, built by `android.yml`'s release job on a
 manual dispatch, in the `android-release` environment, which the owner approves each time.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
-it once into the secrets store, and `android/release.sh` builds with it. A release bundle
-carries the symbol tables of its libraries' native code (`ndk.debugSymbolLevel`), so a native
-crash reads by function name in Play's crash view; the app on the phone carries none.
+it once into the secrets store, and `android/release.sh` builds with it. The app has no native
+code of its own. Its only native libraries are two small ones that AndroidX ships already
+stripped (`libandroidx.graphics.path.so` for Compose, `libdatastore_shared_counter.so` for
+DataStore), with no symbol table or debug sections, so there are no native symbols to put in the
+bundle. `ndk.debugSymbolLevel` stays set, so any native code added later sends its symbols. Play's
+"no debug symbols" notice is about those two libraries, and it can't be cleared from this build.
 
 **Buying through Google Play** is on (`res/values/flags.xml`'s `play_billing`). Usage offers Solo
 and the task packs, at Play's prices, only once KIFF's usage names their Play products and the
 account's token, and only to someone who may add tasks. KIFF records each purchase before Play
 is told it's done, and Restore purchases sends again what wasn't.
+- **Play's offers are read again** each time Usage shows, after every purchase and restore, and
+  just before Play's sheet opens (`Purchases.load`, `PlayBillingStore.purchase`), never kept
+  from an earlier read. Solo's free trial is offered only while Play lists it for the Google
+  account in the Play Store, and the words follow it: "Free for 1 week, then €10.99 a month", or
+  "€10.99 a month".
+- **Packs need a running plan:** the packs, and approving a member's request for one, are offered
+  only while KIFF's usage says `can_add_packs` (from an older KIFF, `can_add_tasks`). Before a trial
+  starts or after it ends, Solo alone is offered, and packs already held say "Counts once Solo
+  starts." (`Usage.packsOffered`).
+- **How a purchase or restore went** shows under what was tapped (Start Solo, the pack, Restore
+  purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
+  Restore purchases right there.
+
+**Signing out asks first.** Sign out of KIFF, Sign in again and Switch account in Settings, and
+Sign in again on the line shown when the phone can't approve, each open a confirmation
+(`ConfirmSignOut`), so one stray tap never ends the session.
 
 ## The packages of `bot.tafs.app`
 

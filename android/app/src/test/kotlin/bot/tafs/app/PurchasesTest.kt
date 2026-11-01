@@ -30,7 +30,14 @@ class FakePlayStore : PlayStore {
 
   fun made(id: String, token: String = "tok_$id") = StorePurchase(id, token) { finished += token }
 
-  override suspend fun products(ids: List<String>) = ids.map { StoreProduct(it, it, "€4.99", period = if (it.startsWith("solo")) "month" else null) }
+  /** What Play lists, read by read: each read counts in [reads]. */
+  var listed: (List<String>) -> List<StoreProduct> = { ids -> ids.map { StoreProduct(it, it, "€4.99", period = if (it.startsWith("solo")) "month" else null) } }
+  var reads = 0
+
+  override suspend fun products(ids: List<String>): List<StoreProduct> {
+    reads += 1
+    return listed(ids)
+  }
   override suspend fun purchase(id: String, accountToken: String): PlayStore.Bought {
     asked += id to accountToken
     return bought(id)
@@ -51,6 +58,28 @@ class PurchasesTest {
   }
 
   // MARK: Purchases
+
+  @Test fun playsOffersAreReadAgainEachTimeSoAUsedTrialIsntOffered() = runTest {
+    play.listed = { ids -> ids.map { StoreProduct(it, "Solo", "€10.99", period = "month", freeTrial = "1 week") } }
+    purchases.load(listOf("solo_monthly"))
+    assertEquals("1 week", purchases.products.value["solo_monthly"]?.freeTrial)
+    // The trial used, or the Play Store switched to an account that had it: Play no longer lists it.
+    play.listed = { ids -> ids.map { StoreProduct(it, "Solo", "€10.99", period = "month") } }
+    purchases.load(listOf("solo_monthly"))
+    assertEquals(2, play.reads)
+    assertNull(purchases.products.value["solo_monthly"]?.freeTrial)
+    assertTrue(UsageWords.soloTerms("€10.99", "month", purchases.products.value["solo_monthly"]?.freeTrial).startsWith("€10.99 a month. "))
+  }
+
+  @Test fun aProductPlayNoLongerListsIsntOfferedAndAFailedReadKeepsTheLast() = runTest {
+    purchases.load(listOf("pack_rayo", "pack_pico"))
+    play.listed = { ids -> ids.filter { it != "pack_pico" }.map { StoreProduct(it, it, "€9.99") } }
+    purchases.load(listOf("pack_rayo", "pack_pico"))
+    assertEquals(setOf("pack_rayo"), purchases.products.value.keys)
+    play.listed = { throw IllegalStateException("Play is unreachable") }
+    purchases.load(listOf("pack_rayo"))
+    assertEquals(setOf("pack_rayo"), purchases.products.value.keys)
+  }
 
   @Test fun aPurchaseIsFinishedOnlyOnceKiffRecordedIt() = runTest {
     recording()
@@ -133,7 +162,7 @@ class PurchasesTest {
     "store":{"app_account_token":"acct_1","solo_product":"bot.tafs.solo"${if (google) ""","google_solo_product":"solo_monthly"""" else ""},
       "packs":[{"id":"rayo","name":"Rayo","line":"Rayo · 70 tasks","tasks":70,"months":12,"apple_product":"bot.tafs.rayo"${if (google) ""","google_product":"pack_rayo"""" else ""}}]}}"""
 
-  private suspend fun model(playBilling: Boolean, google: Boolean = true, canAdd: Boolean = true): AppModel {
+  private suspend fun model(playBilling: Boolean, google: Boolean = true, canAdd: Boolean = true, records: Int = 200): AppModel {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme"}""")
     transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
@@ -141,7 +170,7 @@ class PurchasesTest {
     transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
     transport.answer("GET /v1/me/usage", 200, usage(google, canAdd))
     transport.answer("GET /v1/me/usage/tasks", 200, """{"items":[]}""")
-    transport.answer("POST /v1/me/billing/google/purchases", 200)
+    transport.answer("POST /v1/me/billing/google/purchases", records, if (records == 200) "{}" else """{"error":"could not record the purchase"}""")
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
@@ -180,6 +209,27 @@ class PurchasesTest {
     assertEquals("""{"product":"pack_rayo","purchase_token":"tok_pack_rayo"}""", body)
     assertEquals(listOf("tok_pack_rayo"), play.finished)
     assertNull(m.state.value.tasksMessage)
+  }
+
+  @Test fun aPurchaseKiffHasntRecordedSaysSoUnderWhatWasTappedWithRestoreRightThere() = runTest {
+    val m = model(playBilling = true, records = 500)
+    val before = play.reads
+    m.buy("pack_rayo")
+    val note = m.state.value.purchaseNote!!
+    assertEquals("pack_rayo", note.at)
+    assertEquals("Bought. KIFF hasn't added it yet: tafs tries again when it opens.", note.words)
+    assertTrue(note.offersRestore)
+    // Not at the panel's end, and not finished with Play.
+    assertNull(m.state.value.tasksMessage)
+    assertTrue(play.finished.isEmpty())
+    assertTrue("Play's offers are read again after a purchase", play.reads > before)
+  }
+
+  @Test fun aRestoreSaysHowItWentUnderRestore() = runTest {
+    val m = model(playBilling = true)
+    m.restorePurchases()
+    assertEquals(bot.tafs.app.app.PurchaseNote(bot.tafs.app.app.PurchaseNote.RESTORE, "Purchases restored."), m.state.value.purchaseNote)
+    assertNull(m.state.value.buying)
   }
 
   @Test fun whatWasntFinishedIsSentAtSignIn() = runTest {

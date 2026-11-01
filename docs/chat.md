@@ -231,8 +231,9 @@ run pauses on it, and the answer comes back to the run as data, never as text in
 - On Android, an answered approval keeps one line saying what it was, "Approved · Connect
   Stripe" (`CoachWords.answeredApproval`): Coach's title for the card, else planque's words for
   the connection, else the draft's Card, else its service, cut to one line however long those are. A card waiting for the owner sits
-  after what Coach wrote with it, so the open question is at the end; once answered, it goes
-  back to its own time in the thread (`CoachWords.items`).
+  after what Coach wrote with it, so the open question is at the end. Once answered, it stays
+  after the words that asked for it, and what Coach wrote after the answer (`answer.at`) comes
+  below it (`CoachWords.items`).
 - A card's answer belongs to that card in that conversation. On Android, a card on its way or
   taken, and its place in the thread, is known by tafs cloud's `key` for it, else its
   conversation and id (`ShownComponent.ref`), never the bare id; it is the thread's again

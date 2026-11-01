@@ -78,16 +78,18 @@ class Purchases(private val store: PlayStore) {
 
   /** Reads the products' names and prices from Play. */
   suspend fun load(ids: List<String>) {
-    val missing = ids.filter { it !in _products.value }
-    if (missing.isEmpty()) return
+    if (ids.isEmpty()) return
+    // Read again each time, never kept from an earlier read: what Play offers changes with the Google account and its history
+    // (a trial used, the Play Store switched to another account). Unreadable: what was read before stays.
     val read = try {
-      store.products(missing)
+      store.products(ids)
     } catch (e: CancellationException) {
       throw e
     } catch (_: Exception) {
       return
     }
-    _products.update { it + read.associateBy { p -> p.id } }
+    // A product Play doesn't list now isn't offered.
+    _products.update { it - ids.toSet() + read.associateBy { p -> p.id } }
   }
 
   /** Buys a product for the account, answering a member's request when there is one. */
