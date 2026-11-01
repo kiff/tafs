@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -353,9 +354,11 @@ fun VersionCardSheet(
     loaded = true
   }
 
+  // It opens, and only Cancel, Install or back close it: a sheet state that refused every change refused opening too, and lay
+  // invisible over Versions, taking every tap. Back is Cancel, so the switch is never left with nothing on screen to end it.
   ModalBottomSheet(
-    onDismissRequest = {},
-    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { false }),
+    onDismissRequest = onCancel,
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { it != SheetValue.Hidden }),
     containerColor = Theme.background,
     sheetGesturesEnabled = false,
   ) {
