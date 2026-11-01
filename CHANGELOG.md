@@ -7,6 +7,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Coach, writes that move no money:** answering a dispute or pausing a subscription is limited
+  by its calls a day, never by an amount, and Coach never gives a tool an amount argument the
+  vendor's operation doesn't take.
 - **Coach, after an improvement:** once tafs cloud answers with the new version, Coach writes
   one closing sentence that the version is ready to try and then install, and never says it's
   still waiting. Every approval card has a short title.
