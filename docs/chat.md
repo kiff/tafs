@@ -290,6 +290,9 @@ cloud has an id for the answer (not in the sample).
   taf's chat, Coach's and a trial's). It opens a sheet with four reasons (Offensive, Harmful,
   Wrong, Other), an optional note of at most 1,000 characters, and **Send** (`ReportSheet`,
   `AppModel.reportAnswer`). The message's chat goes as `session`.
+- On iPhone and iPad, the answer's context menu (a long press) shows **Report this answer**, in
+  a taf's chat, a trial's and Coach's (`reportable`, `ReportAnswerSheet`, `AppModel.reportAnswer`).
+  The same reasons, note and **Send**, with the message's chat as `session`.
 - Sent, the sheet says "Thanks. Someone at KIFF will read your report.", or "You've already
   reported this answer." when tafs cloud answers `new: false`. A report that didn't go says why
   in the app's words and keeps the sheet open to send again.

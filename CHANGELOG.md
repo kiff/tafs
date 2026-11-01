@@ -10,6 +10,9 @@ version headings refer to releases, not merely to merged pull requests.
 - **Reporting an answer:** `POST /v1/tafs/{id}/messages/{message}/report` takes a person's report of
   an answer Coach or a taf wrote (offensive, harmful, wrong or other, with a note). tafs cloud keeps it
   with the answer as kiff/agents holds it and emails KIFF, so a person reads it.
+- **Report this answer, on iPhone and iPad:** an answer from Coach or a taf (a chat or a trial) has
+  **Report this answer** in its menu. A sheet takes one of four reasons and an optional note, and
+  thanks the person once it's sent, or says they reported it already.
 - **Coach, writes that move no money:** answering a dispute or pausing a subscription is limited
   by its calls a day, never by an amount, and Coach never gives a tool an amount argument the
   vendor's operation doesn't take.

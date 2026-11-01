@@ -49,6 +49,8 @@ struct SetupChatView: View {
     @State private var turn = PinnedTurn()
     /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
+    /// The answer of Coach's being reported, from its menu (kiff/tafs#421).
+    @State private var reporting: ReportedAnswer?
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     #else
@@ -96,6 +98,7 @@ struct SetupChatView: View {
         .navigationTitle("Coach mode")
         .inlineTitle()
         .setupChrome(wide: sizeClass == .regular)
+        .sheet(item: $reporting) { ReportAnswerSheet(answer: $0).environmentObject(model) }
         .sheet(isPresented: $showingChats) {
             SetupChatsList { session in
                 showingChats = false
@@ -207,6 +210,7 @@ struct SetupChatView: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     if let work = m.work { WorkSummary(work: work, coach: true) }
                                     RevealingBubble(message: m, reveal: revealing(m), revealed: $revealed, grown: $grown)
+                                        .reportable(m, in: nil, model: model, reporting: $reporting)
                                 }
                             case .component(let c):
                                 SetupComponentView(shown: c)

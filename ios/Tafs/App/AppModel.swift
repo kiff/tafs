@@ -3717,6 +3717,47 @@ final class AppModel: ObservableObject {
         chats[tafID]?.last?.from == .owner
     }
 
+    // MARK: Reporting an answer
+
+    /// How a report went: kept, kept before, or not sent with why.
+    enum ReportOutcome: Equatable { case sent, already, failed(String) }
+
+    /// The answers reported in the UI test's sample, by id: a second report says it was reported already.
+    private var sampleReports: Set<String> = []
+
+    /// Whether `message` is an answer the person can report (kiff/tafs#421): Coach's or a
+    /// taf's, never their own, and one tafs cloud has an id for (not one still streaming).
+    /// The sample's canned answers aren't reported, except in the UI test's run.
+    func canReport(_ message: TafsCloud.ChatMessage) -> Bool {
+        guard message.from == .taf, message.kind == .message, !message.text.isEmpty else { return false }
+        if mode == .sample { return Screenshots.enabled }
+        return mode == .kiff && message.serverID != nil
+    }
+
+    /// Reports an answer from the chat `chatID` shows (a taf's, or a trial's), or Coach's
+    /// when it's nil, to tafs cloud with its chat's session, so a person at KIFF reads it.
+    func reportAnswer(_ message: TafsCloud.ChatMessage, in chatID: UUID?, reason: TafsCloud.ReportReason, note: String) async -> ReportOutcome {
+        let note = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        if mode == .sample {
+            return sampleReports.insert(message.id).inserted ? .sent : .already
+        }
+        let taf = chatID == nil ? setupTaf : cloudTaf(for: chatID!)
+        guard mode == .kiff, let taf, let id = message.serverID else { return .failed("This answer can't be reported from here.") }
+        let gen = accountGeneration
+        do {
+            let report = try await cloud.reportAnswer(taf.id, message: id, reason: reason, note: note.isEmpty ? nil : note, session: message.session)
+            guard gen == accountGeneration else { return .failed("You signed out.") }
+            return report.new ? .sent : .already
+        } catch let e as TafsCloud.CloudError where e.words != nil {
+            return .failed(e.words!)
+        } catch let e as TafsCloud.CloudError where e.status == 404 {
+            return .failed("This answer isn't on tafs cloud any more.")
+        } catch {
+            // tafs cloud's own wording is for developers: the app says it in its words.
+            return .failed("It didn't reach KIFF. Try again.")
+        }
+    }
+
     private func sampleMessage(_ from: TafsCloud.ChatMessage.From, _ text: String, session: String = "sample") -> TafsCloud.ChatMessage {
         TafsCloud.ChatMessage(at: clock(), from: from, text: text, session: session)
     }

@@ -24,6 +24,8 @@ struct TafChatView: View {
     /// the answer grows below it.
     @State private var pinNext = false
     @State private var pinned: String?
+    /// The answer being reported, from its menu (kiff/tafs#421).
+    @State private var reporting: ReportedAnswer?
     /// The words of the pinned message: when tafs cloud's copy takes the place of the one
     /// shown on sending, the pin moves to it, and the view doesn't move (kiff/tafs#206).
     @State private var pinnedWords: String?
@@ -65,6 +67,7 @@ struct TafChatView: View {
         .task(id: tafID) {
             await model.followChat(tafID)
         }
+        .sheet(item: $reporting) { ReportAnswerSheet(answer: $0).environmentObject(model) }
     }
 
     /// Room at the thread's foot for ✦ Coach mode, which floats over the screen's lower right
@@ -132,6 +135,7 @@ struct TafChatView: View {
                                         // same bubble draws under its own id (ChatPinUITests).
                                         if m.from == .taf {
                                             ChatBubble(message: m, taf: taf, fullWidth: true).accessibilityIdentifier("taf-message")
+                                                .reportable(m, in: tafID, model: model, reporting: $reporting)
                                         } else {
                                             ChatBubble(message: m, taf: taf, fullWidth: false)
                                         }
