@@ -47,9 +47,15 @@ final class ReportAnswerUITests: XCTestCase {
 
     @MainActor
     private func report(_ app: XCUIApplication, _ answer: XCUIElement, reason: String, note: String?) {
-        answer.press(forDuration: 1.2)
+        // A slow simulator can take the press before the menu is ready: press again, up to
+        // three times, until the menu shows.
         let item = app.buttons["Report this answer"]
-        XCTAssertTrue(item.waitForExistence(timeout: 5), "Report this answer in the answer's menu")
+        var shown = false
+        for _ in 0..<3 where !shown {
+            answer.press(forDuration: 1.2)
+            shown = item.waitForExistence(timeout: 5)
+        }
+        XCTAssertTrue(shown, "Report this answer in the answer's menu")
         item.tap()
         let send = app.buttons["report-send"]
         XCTAssertTrue(send.waitForExistence(timeout: 5), "the sheet")
