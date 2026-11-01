@@ -11,6 +11,7 @@ import bot.tafs.app.model.PendingFile
 import bot.tafs.app.model.PreparedFile
 import bot.tafs.app.model.RunReport
 import bot.tafs.app.model.ReportResult
+import bot.tafs.app.model.ExportResult
 import bot.tafs.app.model.Chat
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.ChatMessage
@@ -1186,8 +1187,9 @@ class AppModel(
     store?.clear()
     AccountTime.use(null)
     _state.value = AppState(mode = Mode.signedOut, ready = true)
-    // Nothing the person attached and opened stays on the phone after them.
+    // Nothing the person attached and opened stays on the phone after them, nor their export of their chats (beside it).
     openedFiles.deleteRecursively()
+    openedFiles.parentFile?.let { java.io.File(it, "exports").deleteRecursively() }
   }
 
   // MARK: Sample mode
@@ -2410,6 +2412,18 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       ReportResult.NotSent(ErrorWords.of(e))
+    }
+  }
+
+  /** The person's own chats, for their own copy (docs/data.md): tafs cloud's export, as the two files Settings saves. */
+  suspend fun exportChats(): ExportResult {
+    if (_state.value.mode != Mode.kiff) return ExportResult.NotExported(ErrorWords.CHANGED)
+    return try {
+      ExportResult.Ready(cloud.exportChats())
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      ExportResult.NotExported(ErrorWords.of(e))
     }
   }
 

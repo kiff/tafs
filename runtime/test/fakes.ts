@@ -371,9 +371,9 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       for (const e of resumed) yield e;
       yield { event: "end", data: { ...r } };
     },
-    async sessions(tenant, agent, limit = 20, owner) {
+    async sessions(tenant, agent, limit = 20, owner, ownOnly = false) {
       failing("sessions");
-      return sessions.filter((s) => s.tenant === tenant && s.agent === agent && (!owner || ownedBy(s, owner)))
+      return sessions.filter((s) => s.tenant === tenant && s.agent === agent && (!owner || ownedBy(s, owner)) && (!ownOnly || s.owner === owner))
         .sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, limit);
     },
     async session(tenant, id, owner) {

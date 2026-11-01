@@ -712,8 +712,10 @@ export class Agents {
   // Sessions and memory.
 
   /** The agent's sessions, newest first: with `owner`, theirs and the taf's jobs'; without, as the service. */
-  async sessions(tenant: string, agent: string, limit = 20, owner?: string): Promise<Session[]> {
-    const out = await this.call<{ sessions: Session[] }>("GET", tenant, ["sessions"], undefined, { agent_id: agent, limit: String(limit), ...as(owner) });
+  /** With `ownOnly`, the owner's sessions alone, not the taf's jobs' too: what a person's export reads. */
+  async sessions(tenant: string, agent: string, limit = 20, owner?: string, ownOnly = false): Promise<Session[]> {
+    const out = await this.call<{ sessions: Session[] }>("GET", tenant, ["sessions"], undefined,
+      { agent_id: agent, limit: String(limit), ...as(owner), ...(ownOnly ? { own_only: "true" } : {}) });
     return out.sessions;
   }
 

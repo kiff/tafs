@@ -57,6 +57,8 @@ fun SettingsSheet(
   onPeople: () -> Unit,
   onUseDeviceZone: () -> Unit,
   onDeleteAccount: () -> Unit,
+  /** The person's own chats, for their own copy: offered as two files through the share sheet. */
+  onExport: suspend () -> bot.tafs.app.model.ExportResult = { bot.tafs.app.model.ExportResult.NotExported("") },
   onClose: () -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -104,6 +106,8 @@ fun SettingsSheet(
           // The account's groups and who is in each.
           if (state.mode == Mode.kiff) Action("People & groups", Theme.ink, onPeople)
           if (state.mode == Mode.kiff) Action("Devices", Theme.ink, onDevices)
+          // Their own chats and notes, for their rights of access and portability (docs/data.md).
+          if (state.mode == Mode.kiff) ExportChatsRow(onExport)
           // Another account this person is on: KIFF's sign-in page lists each one. This session ends at KIFF first, as Sign out's
           // does, so it never stays live behind the new one.
           if (state.mode == Mode.kiff) Action("Switch account…", Theme.ink) { scope.launch { if (onSignOut()) onSignIn() } }

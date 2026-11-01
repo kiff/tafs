@@ -7,6 +7,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Export my chats, on iPhone and iPad:** Settings → Account → **Export my chats** prepares the
+  person's own chats, trials and notes and offers `tafs-chats.json` and `tafs-chats.txt` in the
+  system's share and save sheet. If it fails, it says so and offers Try again.
+- **Exporting your own chats:** `GET /v1/me/chats/export` gives a person their own chats and trials with
+  every taf, Coach's included, their attached files' names and their own notes, as JSON and as text.
+  It's never another person's, and no one exports it for someone else.
 - **Reporting an answer:** `POST /v1/tafs/{id}/messages/{message}/report` takes a person's report of
   an answer Coach or a taf wrote (offensive, harmful, wrong or other, with a note). tafs cloud keeps it
   with the answer as kiff/agents holds it and emails KIFF, so a person reads it.
