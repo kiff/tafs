@@ -731,7 +731,7 @@ final class TafsCloud {
     }
 
     /// A report tafs cloud keeps; `new` is false when the person had reported this answer already.
-    struct Report: Decodable, Equatable {
+    struct AnswerReport: Decodable, Equatable {
         let id: String
         let at: String
         let new: Bool
@@ -740,9 +740,9 @@ final class TafsCloud {
     /// Reports one of the taf's answers (or Coach's, by Coach's taf id) by its id, with the
     /// chat or trial it's in. tafs cloud keeps the answer as kiff/agents holds it and a person
     /// at KIFF reads it (kiff/tafs#421, Google Play's rule for content an AI generates).
-    func reportAnswer(_ id: String, message: String, reason: ReportReason, note: String?, session: String?) async throws -> Report {
+    func reportAnswer(_ id: String, message: String, reason: ReportReason, note: String?, session: String?) async throws -> AnswerReport {
         struct Body: Encodable { let reason: ReportReason; let note: String?; let session: String? }
-        struct Response: Decodable { let report: Report }
+        struct Response: Decodable { let report: AnswerReport }
         let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/messages/\(escaped(message))/report",
                                          body: Body(reason: reason, note: note, session: session))
         return r.report
