@@ -15,6 +15,12 @@ For AI assistants working on tafs. Read this first.
 - iPhone and iPad (SwiftUI, iOS 16+, `ios/`) and Android (Kotlin and Compose, Android 11+,
   `android/`). Both apps are only the screen: what they show comes from KIFF, tafs cloud and
   planque. A change of behaviour lands for both, or says which app follows. No React Native.
+- What "only the screen" means, checked on every PR that touches `ios/` or `android/`:
+  the apps draw, collect the person's input and sign with the device's key. They don't
+  decide outcomes (whether an approval counted, what a version is, what counts against a
+  limit), don't infer state from another service's status, and don't write words for a
+  server's decision: tafs cloud sends them. A rule written twice, once per app, belongs
+  in tafs cloud. A PR that adds logic to an app says why it can't live there.
 - Jobs are few and consequential. Add a job only with evidence it is painful and
   high-stakes; tafs is not a catalogue of integrations.
 
@@ -55,7 +61,9 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) for scope and checks,
   an isolated branch or worktree and preserve other contributors' edits.
 - Public commits, PRs, issues, fixtures, screenshots, and Actions logs must
   contain no live credentials, customer data, private infrastructure details,
-  or private assistant-session links. Use synthetic evidence. Report new
+  or private assistant-session links. That includes private issue numbers and links,
+  the names of test or demo accounts and their data, and internal roles or coordination
+  ("as agreed on …"): say the requirement, not where it was decided. Use synthetic evidence. Report new
   vulnerabilities through the private channel, not a public exploit report.
 - State what checks actually ran, their results, and any limitations. Do not
   substitute prompt wording tests for measured agent behavior or a happy-path
