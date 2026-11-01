@@ -13,6 +13,9 @@ version headings refer to releases, not merely to merged pull requests.
 - **Report this answer, on iPhone and iPad:** an answer from Coach or a taf (a chat or a trial) has
   **Report this answer** in its menu. A sheet takes one of four reasons and an optional note, and
   thanks the person once it's sent, or says they reported it already.
+- **Report this answer, on Android:** a long press on an answer from Coach or a taf (a chat, Coach's
+  or a trial) shows **Report this answer**, with the same sheet, reasons and words as on iOS.
+  TalkBack names the long press "Report this answer".
 - **Coach, the hand-over:** a result's tools are their names in KIFF, never their titles, and
   Coach ends the hand-over with its closing message as text, after the plan update and with no
   tool call after it, also when its first result was refused.
@@ -162,6 +165,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, Coach's last words on the open screen:** with Coach open, a run that paused on a
+  result goes on once tafs cloud answers it, and its closing message shows without leaving
+  Coach. The dots and Stop no longer stay after it's done.
 - **Android, an approval is "approved" only once signed:** Approve on a connection already
   connected that brings no Card no longer tells Coach "approved" with nothing signed. Coach
   hears it's already connected and there's nothing new to approve. A Card KIFF already
