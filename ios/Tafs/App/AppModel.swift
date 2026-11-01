@@ -5198,8 +5198,9 @@ final class AppModel: ObservableObject {
         // Already connected with nothing to confirm: nothing was signed, so it isn't approved.
         // Coach hears it, in the same words as Android, and asks for a new grant.
         if done != nil, let none = nothingSigned {
-            cardNotes[component.id] = Self.nothingToApprove(none.vendor, cardsConfirmed: none.cardsConfirmed)
             await answer(component, "failed: \(none.vendor) is already connected; nothing new to approve")
+            // After the answer, which clears the card's note when it goes.
+            cardNotes[component.id] = Self.nothingToApprove(none.vendor, cardsConfirmed: none.cardsConfirmed)
             await loadSetupThread()
             return
         }
