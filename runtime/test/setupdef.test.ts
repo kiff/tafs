@@ -230,6 +230,10 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("try: one task to try it with that uses the change, in the owner's words");
     // What the taf does now, when the change changes it: its job line once the version is live.
     expect(flat).toContain("summary: one short line on what the taf does now, in the owner's language, only if this change changes what it does, never the job's general words");
+    // After the version is made, Coach closes, never "waiting" for it; each approval has a title.
+    expect(flat).toContain("Never write that you're waiting for it to be made: the result card says so until the answer comes.");
+    expect(flat).toContain("When it answers with the version, always write one closing sentence: version N of the taf is ready to try, then to install from its Versions.");
+    expect(flat).toContain("Each has a short title saying what it approves");
     expect(flat).toContain("Then make it as the taf's next version, never as a new taf");
     expect(flat).toContain("with each Card it changes written again under the same id, as KIFF holds it, with only the agreed change");
     // Option values are ids, the words go in the label: show refuses "EUR" (kiff/tafs#323).

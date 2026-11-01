@@ -184,7 +184,8 @@ from before that still calls `POST /v1/tafs/{id}/versions` gets the same version
 same key. Nothing goes live: the switch checks the version's draft is this taf's, with the
 owner's session, before anything of it does. When the change changes what the taf does, the result
 carries `summary`, one line in the owner's language: it becomes the taf's job line once the
-version goes live.
+version goes live. Once tafs cloud answers with the version, Coach closes in one sentence: the
+version is ready to try, then to install from Versions. Every approval card has a short title.
 
 ## Versions
 
