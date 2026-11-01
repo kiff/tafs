@@ -5154,6 +5154,8 @@ final class AppModel: ObservableObject {
         case .approval:
             if text == "approved" || text.hasPrefix("approved,") { return .text("approved") }
             if text == "declined" { return .text("declined") }
+            // Signed earlier, not by this tap (kiff/agents takes it as Already approved).
+            if text.hasPrefix("already approved:") { return .text(text) }
             return failed.map { .text($0) }
         case .signIn:
             if text == "signed in" || text == "not now" { return .text(text) }

@@ -668,6 +668,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
       ["[approval connect] approved, signed in", { type: "approval", id: "connect", answer: "approved" }],
       ["[approval connect] declined", { type: "approval", id: "connect", answer: "declined" }],
       ["[approval connect] failed: Face ID was cancelled", { type: "approval", id: "connect", answer: "failed: Face ID was cancelled" }],
+      ["[approval connect] already approved: Stripe is connected and its Card is confirmed", { type: "approval", id: "connect", answer: "already approved: Stripe is connected and its Card is confirmed" }],
       ["[sign_in stripe] signed in", { type: "sign_in", id: "stripe", answer: "signed in" }],
       ["[sign_in stripe] not now", { type: "sign_in", id: "stripe", answer: "not now" }],
       ["[questions limits] not json", undefined],
