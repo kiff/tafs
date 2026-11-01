@@ -204,7 +204,9 @@ nothing ever runs with one version's definition under another's Cards:
    nothing of the taf runs. A run in the way answers 409 naming it, with `words` saying
    what's in the way, which the app shows as they come; it can stop it first (`stop_blocking`).
 2. The owner reads the Card the version brings (`VersionCardSheet`: each Card as it is
-   now and as it will be), and the Face ID signs its confirmation in KIFF.
+   now and as it will be), and the Face ID signs its confirmation in KIFF. On Android the sheet
+   closes only by Cancel, Install or back (back is Cancel, which drops the switch), never a
+   swipe, so a switch is never left begun with nothing on screen to end it.
 3. The version goes live (`POST /v1/tafs/{id}/versions/{n}/live`).
 
 A switch that stopped half way stays begun, and the next read of the versions ends it

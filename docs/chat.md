@@ -216,7 +216,11 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   view. A card that doesn't wait any more (409) is read again as it is.
   Each type takes its own answer: confirm, one of its options' values; questions,
   `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `approved`, `declined` or
-  `failed: <why>`; sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
+  `failed: <why>`, and `approved` only after the phone signed what the card asks: a connection
+  already connected that brings no Card signs nothing, so its answer is `failed: <vendor> is
+  already connected; nothing new to approve`, and one whose Card KIFF already confirmed (approved
+  before, with its own signature) says "Already approved" and answers `already approved: <vendor>
+  is connected and its Card is confirmed` (`AppModel.connect`, and iOS's); sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
 - Writing a message instead while a card waits answers it with those words: the run that
   waits goes on, and no second run starts beside it.
 - In the thread, each answered card carries `answer` `{state: answered|wrote|no_answer,
@@ -226,7 +230,7 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   with `answers` naming the card, so they never vanish from the thread.
 - On Android, an answered approval keeps one line saying what it was, "Approved · Connect
   Stripe" (`CoachWords.answeredApproval`): Coach's title for the card, else planque's words for
-  the connection, else the draft's Card, else its service. A card waiting for the owner sits
+  the connection, else the draft's Card, else its service, cut to one line however long those are. A card waiting for the owner sits
   after what Coach wrote with it, so the open question is at the end; once answered, it goes
   back to its own time in the thread (`CoachWords.items`).
 - A card's answer belongs to that card in that conversation. On Android, a card on its way or
