@@ -137,6 +137,23 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(model.awaitingReply(id), "the taf hasn't answered yet")
     }
 
+    /// A door's run shows in an open chat without reopening it (kiff/tafs#423, item 3): tafs
+    /// cloud's `taf` push re-reads the chat that's been read. One never opened isn't read.
+    func testATafPushReadsTheOpenChatAgain() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        await model.liveChange("taf", cloudTafID: "depl_1")
+        XCTAssertEqual(count("GET", "/v1/tafs/depl_1/conversation"), 0, "a chat never opened isn't read")
+
+        await model.loadChat(id)
+        XCTAssertEqual(model.chats[id]?.count, 0)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[{"at":"2026-11-02T16:00:00Z","from":"owner","kind":"message","text":"By email: refund order 4410","session":"sesn_9"}]}
+        """)
+        await model.liveChange("taf", cloudTafID: "depl_1")
+        XCTAssertEqual(model.chats[id]?.map(\.text), ["By email: refund order 4410"])
+    }
+
     /// A message that isn't sent stays in the thread, marked not sent with why, and
     /// Retry sends it (#64).
     func testAFloodedTafKeepsTheMessageWithRetry() async throws {
