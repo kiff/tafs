@@ -35,6 +35,10 @@ version headings refer to releases, not merely to merged pull requests.
 - **tafs cloud, a taf shared with you shows none of its doors:** someone who only uses a taf reads
   no doors, paired senders or knocks from `GET /v1/tafs/{id}/doors`, so other people's addresses
   stay with the people who manage the taf.
+- **tafs cloud, the owner's own email is theirs:** a message from the owner's own sign-in email
+  that passes the sender check runs as the owner, in their own live chat, so it shows there as
+  their message (marked as by email) and an open chat reads it at the next change. Other paired
+  senders are unchanged.
 
 - **Android, Copy under an answer:** every finished answer from Coach or a taf has Copy under it,
   which copies the whole answer, and its text can be selected. Report this answer moves under

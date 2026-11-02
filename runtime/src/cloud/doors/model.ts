@@ -22,6 +22,12 @@ export interface Key {
   name?: string;
   /** Paired by tafs, not by the owner: the owner's own sign-in email. */
   auto?: boolean;
+  /**
+   * The owner's KIFF subject, on their own sign-in email's key: a proven message from it is
+   * theirs, in their own chat (kiff/tafs#423, item 3). Kept when the door is made, or the
+   * first time the owner reads the doors of a door made before.
+   */
+  subject?: string;
   added: string;
 }
 

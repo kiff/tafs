@@ -18,6 +18,12 @@ deployment offers a door; WhatsApp is offered only once it's set up.
     the From domain, with DMARC not failing), and From names one mailbox. A spoofed
     From is treated as anyone else;
   - **WhatsApp**: WhatsApp gives the sender's number.
+- **The owner's own sign-in email, proven, is the owner writing** (kiff/tafs#423). It's taken
+  as their message, in their own live chat, as if they'd typed it in the app: it shows there as
+  theirs, marked as by email, and an open chat reads it at the next change. The answer also goes
+  back to them by email. Their chat busy, a new chat of theirs takes it. The key keeps the owner's
+  KIFF subject, set when the door is made, or the first time the owner reads the doors of an
+  older door. A spoofed From is never the owner's: it's a knock.
 - A key's message becomes a chat message for the taf, through the same path as the
   app's chat. The taf works under its Cards, with holds and Face ID unchanged, and
   everything is in the Record as usual.

@@ -4363,7 +4363,7 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   const ctx = doorContext(deps);
   const owner: Owner = {
     tenant: me.tenantID,
-    ...(me.email ? { email: me.email } : {}),
+    ...(me.email ? { email: me.email, subject: me.subject } : {}),
     say: (text) => startMessage(event, me, taf, text, deps),
   };
   const [, , , , a, b, c] = parts;
