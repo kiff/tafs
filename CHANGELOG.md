@@ -27,6 +27,12 @@ version headings refer to releases, not merely to merged pull requests.
   device can approve; Check again updates both at once. A cancelled or unrecognised approval says
   so, and that the request is kept. It says up front that adding a face or fingerprint later
   means approving this device again.
+- **tafs cloud, going on past the AI use bound:** `GET /v1/usage/ai` says whether this person may
+  go on (`can_go_on`, the billing admin) and when the AI use starts again by itself
+  (`starts_again`). While the tafs wait, its words tell the billing admin to go on and anyone else
+  that an admin of the account can, with the day it starts again. A chat refused for AI use says
+  the same, pointing to Settings › AI use.
+
 - **Android, Copy under an answer:** every finished answer from Coach or a taf has Copy under it,
   which copies the whole answer, and its text can be selected. Report this answer moves under
   More actions (⋯), so it's never the only thing a long press finds.

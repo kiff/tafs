@@ -167,6 +167,14 @@ many times the owner said **go on**, which raises the bound (signed on the phone
 is never billed: the bound only asks first. `GET /v1/usage/ai` gives the share used and
 where the tafs ask next.
 
+**Going on** (kiff/tafs#185). While the tafs wait (`paused`), the person who may go on
+(`can_go_on`: the account's billing admin, `billing.manage`) sees **Go on** in Settings › AI use.
+It's KIFF's signed route, `PUT /v1/me/usage/ai` with `{"go_on": true}` (one Face ID or
+fingerprint), and each tap raises the bound by one more base. Anyone else is told that an admin
+of the account can let the tafs go on, and the day the AI use starts again by itself
+(`starts_again`, the period's end), named by role, never by email. A chat refused for AI use
+says the same in its `words`, so its words point to Go on or to whoever can.
+
 ## The account's time zone
 
 Every time the app shows is in the account's time zone (`AccountTime`), and a Card's day
