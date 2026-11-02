@@ -478,6 +478,15 @@ class KiffClient(
   /** KIFF's receipt for a call, as KIFF wrote it: its bytes are what [ReceiptCheck] checks, never decoded and written again. */
   suspend fun receipt(traceId: String): ByteArray = send("GET", "/v1/receipts/${escaped(traceId)}")
 
+  /**
+   * KIFF's words for a connection's [profile] (KIFF's profile contract, `kiff.words.v1`), with this person's session: the words the owner reads before
+   * approving, checked against their digests here ([ProfileWords.checked]).
+   */
+  suspend fun profileWords(profile: JsonObject): ProfileWords {
+    val answer = json.parseToJsonElement(String(sendJson("POST", "/v1/profiles/words", profile))).jsonObject
+    return ProfileWords.checked(profile, answer)
+  }
+
   /** Lets the tafs go on past the AI use bound, signed: KIFF raises it by one more base, and refuses (403) without `billing.manage`. */
   suspend fun goOnAI() {
     sendJson("PUT", AI_USE, JsonObject(mapOf("go_on" to JsonPrimitive(true))))

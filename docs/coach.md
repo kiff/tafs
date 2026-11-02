@@ -166,6 +166,25 @@ enrolled phone. Each signature names this device's id in KIFF (`d=`), which plan
 with KIFF. The id is the signed-in account's: Android reads it again after any sign-in or
 sign-out, so after switching accounts planque never gets the last account's device.
 
+### KIFF's words for a connection (KIFF's profile contract)
+
+A connection can carry a **profile**: KIFF's facts about how each of its tools is counted and
+what its outcomes mean. planque puts it in the grant's `request.profile`, so the grant's digest
+the phone already checks covers it. Before the owner approves:
+- the phone asks KIFF for its words with its own session (`POST /v1/profiles/words`, never
+  through tafs cloud or planque);
+- it checks that the profile's SHA-256 (JCS) is KIFF's `profile_sha256` and the words' is
+  `words_sha256`;
+- the approval card shows each line verbatim, in KIFF's order. What KIFF can't check,
+  probation and a vendor that isn't pinned are in amber.
+
+**Approve** waits until the words are on screen, and approving signs `kiff_profile`
+(`profile_sha256`, `words_sha256`) into planque's approve body, so one signature covers the
+connection, the profile and the words. Words that don't check out are said ("KIFF's words for
+this connection don't check out…"), and nothing can be approved. On Android: `ProfileWords`,
+`AppModel.loadProfileWords`, `ProfileWordsLines`; KIFF's golden vectors are in
+`app/src/test/resources/profile`.
+
 ## Improving a taf
 
 **Improve** on a taf (`POST /v1/tafs/{id}/improve`) starts a Coach conversation on that

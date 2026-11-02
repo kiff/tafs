@@ -387,6 +387,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
         openVersions = { coachOpen = false; openTaf = it; versionsTaf = it },
+        loadProfileWords = model::loadProfileWords,
       ),
     )
   }

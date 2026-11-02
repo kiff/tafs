@@ -329,4 +329,7 @@ object CoachWords {
     "skipped" -> "–"
     else -> "○"
   }
+
+  /** While KIFF's words for a connection's profile are read: Approve waits for them. */
+  const val READING_KIFF_WORDS = "Reading KIFF's words for this connection…"
 }

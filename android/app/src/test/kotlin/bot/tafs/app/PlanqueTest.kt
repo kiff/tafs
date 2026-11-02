@@ -185,6 +185,22 @@ class PlanqueTest {
     assertEquals(digest, KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").single().body!!)).jsonObject.getValue("digest").jsonPrimitive.content)
   }
 
+  @Test fun approvingWithKiffsWordsSignsBothDigestsInTheSameBody() = runTest {
+    // KIFF's profile contract: the profile and the words the owner read ride in planque's approve body, under the same signature.
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("g1")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1","expires_at":"2026-10-28T09:15:00Z"}""")
+    val client = planque()
+    val words = bot.tafs.app.kiff.ProfileWords("ca81de5f".repeat(8), "50723c8a".repeat(8), emptyList())
+    client.approve(client.grants().single(), words)
+    val sent = transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").single()
+    val body = KiffClient.json.parseToJsonElement(String(sent.body!!)).jsonObject
+    assertEquals(digest, body.getValue("digest").jsonPrimitive.content)
+    val profile = body.getValue("kiff_profile").jsonObject
+    assertEquals("ca81de5f".repeat(8), profile.getValue("profile_sha256").jsonPrimitive.content)
+    assertEquals("50723c8a".repeat(8), profile.getValue("words_sha256").jsonPrimitive.content)
+    assertTrue("signed like any approval", sent.headers.keys.any { it.contains("Signature", ignoreCase = true) })
+  }
+
   @Test fun confirmingSendsTheCodeAndDisconnectingDeletes() = runTest {
     transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("g1", "connected"))
     transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, grant("g1", "disconnected"))
@@ -268,6 +284,65 @@ class PlanqueTest {
     val order = transport.requests.map { it.method + " " + java.net.URI(it.url).path }
     assertTrue(order.indexOf("POST /v1/accounts/t_01/grants/g1/approve") < order.indexOf("POST /v1/accounts/t_01/grants/g1/confirm"))
     assertNull("the signer a confirmed step set is gone", m.state.value.connecting)
+  }
+
+  // MARK: A connection with a profile (KIFF's profile contract): KIFF's words, read by the phone and signed with the approval
+
+  private fun resource(name: String) = javaClass.classLoader!!.getResource("profile/$name.json")!!.readText()
+  private val stripeProfile = resource("stripe-refunds")
+  private val profiledRequest = request.dropLast(1) + ""","profile":""" + stripeProfile + "}"
+  private fun profiledGrant() =
+    """{"id":"g1","status":"pending","text":"Connect Stripe: refund a payment.","digest":"${digestOf(profiledRequest)}","request":$profiledRequest}"""
+  private val words = "POST /v1/profiles/words"
+
+  @Test fun aProfilesWordsAreReadFromKiffCheckedShownAndSignedIntoTheApproval() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    transport.answer(words, 200, resource("stripe-refunds.expected"))
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.refreshConnections()
+    assertTrue("the grant's digest covers its profile", m.state.value.grants.single().digestMatches)
+    m.loadProfileWords("g1")
+    // Asked of KIFF with the person's own session, the profile as the body: tafs cloud and planque never hand the phone words.
+    val asked = transport.requestsTo(words).single()
+    assertEquals("https://api.kiff.dev/v1/profiles/words", asked.url)
+    assertEquals("Bearer at_1", asked.headers["Authorization"])
+    assertEquals(Jcs.canonical(stripeProfile), Jcs.canonical(String(asked.body!!)))
+    val shown = m.state.value.profileWords.getValue("g1")
+    assertEquals("Refund a payment: moves money through Stripe. It pays out or charges.", shown.lines[2].text)
+    val result = m.connect("a1", "g1", digestOf(profiledRequest))
+    assertTrue(result.toString(), result is AppModel.Connected.Done)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject
+    val signed = body.getValue("kiff_profile").jsonObject
+    val expected = KiffClient.json.parseToJsonElement(resource("stripe-refunds.expected")).jsonObject
+    assertEquals(expected["profile_sha256"], signed["profile_sha256"])
+    assertEquals(expected["words_sha256"], signed["words_sha256"])
+  }
+
+  @Test fun aConnectionWithAProfileIsNeverApprovedBeforeItsWordsAreRead() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    val m = model()
+    m.refreshConnections()
+    val result = m.connect("a1", "g1", digestOf(profiledRequest))
+    assertTrue(result.toString(), result is AppModel.Connected.Failed)
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+  }
+
+  @Test fun wordsForAnotherProfileAreShownAsWrongAndNothingCanBeApproved() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    transport.answer(words, 200, resource("slack-messages.expected"))
+    val m = model()
+    m.refreshConnections()
+    m.loadProfileWords("g1")
+    assertTrue(m.state.value.profileWords.isEmpty())
+    assertTrue(m.state.value.profileWordsErrors.getValue("g1").contains("Nothing was approved"))
+    assertTrue(m.connect("a1", "g1", digestOf(profiledRequest)) is AppModel.Connected.Failed)
+    assertTrue(transport.requestsTo(approve).isEmpty())
   }
 
   @Test fun aSignInPlanqueAlreadyHoldsConnectsOnApprovalWithNoVendorPage() = runTest {

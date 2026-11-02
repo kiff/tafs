@@ -316,6 +316,10 @@ data class AppState(
   val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
+  /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
+  val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
+  /** Why a grant's words couldn't be read or didn't check out, by grant id. */
+  val profileWordsErrors: Map<String, String> = emptyMap(),
   val planqueReady: Boolean = false,
   /** The grant being connected now, so a second tap starts nothing. */
   val connecting: String? = null,
@@ -2187,6 +2191,29 @@ class AppModel(
    * grant. [shownDigest] is the grant's digest as the owner's screen showed it, and [shownDraft] the draft's version: the
    * confirmation signs exactly that. Terms that changed since are put on screen and not signed; nothing shown, nothing signed.
    */
+  /**
+   * KIFF's words for [grantId]'s profile (KIFF's profile contract, `kiff.words.v1`), read with this person's session and checked against their digests, so
+   * the card shows them before any approval. Nothing is read for a grant with no profile.
+   */
+  suspend fun loadProfileWords(grantId: String) {
+    if (_state.value.mode != Mode.kiff || grantId in _state.value.profileWords) return
+    val profile = _state.value.grants.firstOrNull { it.id == grantId }?.request?.profile ?: return
+    val generation = accountGeneration
+    val result = try {
+      Result.success(kiff.profileWords(profile))
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+    if (generation != accountGeneration) return
+    result.onSuccess { w -> _state.update { it.copy(profileWords = it.profileWords + (grantId to w), profileWordsErrors = it.profileWordsErrors - grantId) } }
+      .onFailure { e ->
+        val words = if (e is bot.tafs.app.kiff.ProfileWords.Mismatch) e.message!! else "KIFF's words for this connection couldn't be read. ${ErrorWords.of(e)}"
+        _state.update { it.copy(profileWordsErrors = it.profileWordsErrors + (grantId to words)) }
+      }
+  }
+
   suspend fun connect(cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null): Connected {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
@@ -2255,6 +2282,11 @@ class AppModel(
         note(cardId, VersionWords.OUT_OF_DATE_CARD)
         return Connected.Stopped
       }
+      // A connection with a profile is approved only with KIFF's words for exactly that profile, as the owner read them.
+      val words = grant.request.profile?.let { profile ->
+        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
+          ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
+      }
       try {
         signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Connect ${grant.vendor} to ${grant.request.agent}")
       } catch (_: SignerException) {
@@ -2263,7 +2295,7 @@ class AppModel(
       }
       if (generation != accountGeneration) return Connected.Stopped
       try {
-        val approved = planque.approve(grant)
+        val approved = planque.approve(grant, words)
         val url = approved.signInUrl
         if (url == null) {
           // planque already holds the sign-in: approving the tools Setup chose from the vendor's list connected them, with no second sign-in.

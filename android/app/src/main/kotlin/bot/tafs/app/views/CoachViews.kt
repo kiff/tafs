@@ -218,6 +218,8 @@ class CoachActions(
   /** Opens a taf, by its KIFF agent; and a taf's versions. */
   val openTaf: (String) -> Unit = {},
   val openVersions: (String) -> Unit = {},
+  /** Reads KIFF's words for a grant's profile, by grant id. */
+  val loadProfileWords: suspend (String) -> Unit = {},
 )
 
 /** One of Coach's cards in its thread. What grants authority is read from planque and KIFF, and signed there. */
@@ -268,6 +270,17 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
         // planque's own words for what it will do, never Coach's.
         Text(grant.text, style = scaled(14, color = Theme.ink))
         Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
+        // KIFF's words for the connection's profile, verbatim and in order (KIFF's profile contract, `kiff.words.v1`): what the owner's approval signs.
+        val profiled = grant.request.profile != null
+        val words = state.profileWords[grant.id]
+        if (profiled) {
+          LaunchedEffect(grant.id) { actions.loadProfileWords(grant.id) }
+          when {
+            words != null -> ProfileWordsLines(words)
+            state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))
+            else -> Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+          }
+        }
         grant.terms?.takeIf { it.isNotEmpty() }?.let { terms ->
           Text(if (details) "▾ Details" else "▸ Details", style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
           if (details) terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) }
@@ -288,7 +301,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
               if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else "Approve with $biometry",
               { actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f),
-              enabled = !busy,
+              // With a profile, nothing is approved before KIFF's words for it are read and shown.
+              enabled = !busy && (!profiled || words != null),
             )
             OutlineButton("Decline", { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }
@@ -516,6 +530,19 @@ private fun ImprovementCard(shown: ShownComponent, state: AppState, actions: Coa
         Text(CoachWords.COACH_KNOWS, style = scaled(13, color = Theme.dim))
       }
       CoachWords.Improvement.Preparing -> PrimaryButton("Preparing the new version…", {}, enabled = false)
+    }
+  }
+}
+
+/**
+ * KIFF's words for a connection's profile (KIFF's profile contract, `kiff.words.v1`), each line verbatim and in KIFF's order. Its kind only styles it: what
+ * KIFF can't check, probation and an unpinned vendor are in amber, so they're seen before approving.
+ */
+@Composable
+fun ProfileWordsLines(words: bot.tafs.app.kiff.ProfileWords) {
+  Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    words.lines.forEach { line ->
+      Text(line.text, style = scaled(13, color = if (line.caution) Theme.amberText else Theme.ink))
     }
   }
 }

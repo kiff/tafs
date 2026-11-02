@@ -45,7 +45,16 @@ data class GrantTool(
 }
 
 @Serializable
-data class GrantRequest(val server: String = "", val agent: String = "", val tools: List<GrantTool> = emptyList())
+data class GrantRequest(
+  val server: String = "",
+  val agent: String = "",
+  val tools: List<GrantTool> = emptyList(),
+  /**
+   * The connection's `kiff.profile.v1` (KIFF's profile contract), when planque sends one: inside the request, so the grant's digest the phone
+   * checks covers it. The phone asks KIFF for its words and signs both digests on approval.
+   */
+  val profile: kotlinx.serialization.json.JsonObject? = null,
+)
 
 @Serializable
 data class GrantEvent(
@@ -168,10 +177,19 @@ class PlanqueClient(
     }
   }
 
-  /** Approves [grant] as shown: its digest is signed. Refused here when the digest isn't the hash of the request the owner was shown. */
-  suspend fun approve(grant: Grant): Approved {
+  /**
+   * Approves [grant] as shown: its digest is signed. Refused here when the digest isn't the hash of the request the owner was
+   * shown. With [words], KIFF's words for its profile that the owner read, the body carries `kiff_profile` (KIFF's profile contract), so the
+   * same signature covers the profile and the words.
+   */
+  suspend fun approve(grant: Grant, words: ProfileWords? = null): Approved {
     if (!grant.digestMatches) throw PlanqueError.DigestMismatch
-    return decode(raw("POST", "grants/${escaped(grant.id)}/approve", body("digest" to grant.digest)))
+    val fields = buildMap {
+      put("digest", kotlinx.serialization.json.JsonPrimitive(grant.digest))
+      words?.let { put("kiff_profile", it.approval()) }
+    }
+    val body = KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(fields)).toByteArray()
+    return decode(raw("POST", "grants/${escaped(grant.id)}/approve", body))
   }
 
   /** Confirms the vendor sign-in with the code it handed back to the app. Only the phone that approved can, within 15 minutes; then planque registers the tools in KIFF. */
