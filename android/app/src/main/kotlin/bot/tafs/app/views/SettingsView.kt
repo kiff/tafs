@@ -98,7 +98,8 @@ fun SettingsSheet(
           if (state.mode == Mode.kiff) state.kiffAccount?.let { account ->
             Value("KIFF account", account.name)
             if (account.name != account.slug) Value("Account id", account.slug)
-            account.email?.takeIf { it.isNotEmpty() }?.let { Value("Email", it) }
+            // The person's own address, from KIFF's /v1/me: never the account owner's.
+            account.email?.takeIf { it.isNotEmpty() }?.let { Value("Signed in as", it) }
           }
           if (state.mode == Mode.sample) Action("Sign in with KIFF", Theme.ink, onSignIn)
           // This phone can't approve until a new sign-in, which KIFF approves in the browser and which registers its new key.

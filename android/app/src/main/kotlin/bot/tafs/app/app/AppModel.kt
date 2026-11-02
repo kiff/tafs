@@ -368,6 +368,12 @@ data class AppState(
   fun manages(tafId: String): Boolean = access[tafId]?.manage ?: false
 
   /**
+   * Who a taf's Card reads as issued by: "You" on a taf this person manages, else the account, by its name, never a person
+   * (a taf shared with them was issued by whoever manages it), as iOS's `issuer(of:)`.
+   */
+  fun issuer(taf: Taf): String = if (mode != Mode.kiff || manages(taf.id)) taf.card.issuedBy else accountLabel ?: "The account"
+
+  /**
    * Doors are tafs cloud's, and only where it offers one: a taf it runs, that this person manages: who may give it work
    * and from where is the manager's to say.
    */
