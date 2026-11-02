@@ -535,5 +535,8 @@ export function setupDefinition(id: string): AgentDefinition {
     // The vendor's read tools KIFF adds once the owner approves a connection load only when Setup
     // searches for them, so the conversation's cache doesn't start over (kiff/agents#197).
     defer_vendor_tools: true,
+    // A run that would end on its tool results with nothing said gets one more turn for its
+    // closing message, so Setup always says what came of it.
+    close_in_text: true,
   };
 }

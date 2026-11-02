@@ -129,6 +129,8 @@ export interface AgentDefinition {
    * for it, so a Card that adds a vendor's tools mid-conversation keeps the cache (kiff/agents#197).
    */
   defer_vendor_tools?: boolean;
+  /** A run that would end on its tool results with no text gets one more turn, once, for its closing message. */
+  close_in_text?: boolean;
 }
 
 /** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */
