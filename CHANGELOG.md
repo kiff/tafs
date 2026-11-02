@@ -16,6 +16,11 @@ version headings refer to releases, not merely to merged pull requests.
   and the approval signs both. Approve waits until they're shown.
 - **Android, the taf's dial:** Wakes it, When and Results go around the job, with a rim that
   counts today's work; choosing a stop says what it is in the face (not yet on a screen).
+- **iPhone and iPad, KIFF's words for a connection:** the same as Android: a connection that
+  carries its profile shows KIFF's words on the approval card, read with the person's session
+  and checked against both digests; the approval signs both, and waits until they're shown.
+- **iPhone and iPad, the taf's dial:** the same dial, drawn from the approved design and laid
+  out from the knob API (not yet on a screen).
 - **Setup, for any vendor:** its rules name roles, not one payments vendor's tools: the
   argument a call acts on, the read that says its unit, money in its own units, test or live when
   the vendor has both. A vendor with a REST API and no MCP server is connected by its key, which

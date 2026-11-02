@@ -105,6 +105,21 @@ the app in sample mode.
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
 | `-listSettlesOnReturn YES` | The list opens on its first taf, and its last taf moves to the top each time the app comes back (`ListTapUITests`) |
 
+## The dial and KIFF's words
+
+- **The dial** (`TafKnobView`, from the approved "The knob, end to end"): the job in the face,
+  and **Wakes it**, **When** and **Results go** around it, inside to out, each stop's word along
+  its ring, on the design's 360-point grid. The rim counts today's work: done, working,
+  retrying, needs you. Tapping a word turns its ring to bring it to the top; the other rings
+  dim, and the face shows tafs cloud's `state` and `tap` for it. It lays out what
+  `GET /v1/tafs/{id}/knob` sends (`TafsCloud.Knob`), every label and line as tafs cloud wrote
+  it; the app's own words are only "DOES", "Tap a ring" and the ring titles.
+- **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
+  `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
+  (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
+  they're shown, verbatim and in order. Approving signs both digests into planque's approve
+  body (`kiff_profile`). The tests use KIFF's vectors in `TafsTests/ProfileVectors/`.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,
