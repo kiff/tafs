@@ -72,7 +72,8 @@ final class ProfileWordsTests: XCTestCase {
         StubProtocol.responses["POST /v1/profiles/words"] = (200, String(decoding: expected, as: UTF8.self))
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_09/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/a"}"#)
 
-        let grant = try XCTUnwrap(try await planque.grants().first)
+        let grants = try await planque.grants()
+        let grant = try XCTUnwrap(grants.first)
         XCTAssertTrue(grant.digestMatches)
         XCTAssertEqual(grant.profile, profile)
 
