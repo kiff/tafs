@@ -130,6 +130,10 @@ the app in sample mode.
   with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
   API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
   the device signs only its SHA-256 with the grant's digest.
+- **Did this happen?** (`DidThisHappenCard`, in Needs you): KIFF's money calls whose outcome
+  it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind
+  Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the
+  Card its room back; the first answer stands.
 
 ## Tests and CI
 

@@ -1481,6 +1481,50 @@ final class AppModel: ObservableObject {
 
     /// Runs a taf now, outside its schedule. Returns the run's session; nil when it didn't
     /// start, or when a run request for it is already on its way.
+    /// "Did this happen?": the money calls whose outcome KIFF can't prove, newest first.
+    @Published private(set) var unproven: [KIFFClient.Unproven] = []
+
+    /// Reads "Did this happen?" from KIFF, for someone who answers held calls.
+    func loadUnproven() async {
+        guard mode == .kiff, mayAnswerHolds else { return }
+        let gen = accountGeneration
+        do {
+            let calls = try await kiff.didThisHappen()
+            guard gen == accountGeneration else { return }
+            unproven = calls
+        } catch {
+            // Read again on the next refresh; nothing is answered from a stale list.
+        }
+    }
+
+    /// The owner's answer behind Face ID, signed like an approval: "No" gives the Card its
+    /// room back, "Yes" keeps it counted. The first answer stands.
+    func answerHappened(_ call: KIFFClient.Unproven, happened: Bool) async -> Bool {
+        guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
+            lastError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            return false
+        }
+        let gen = accountGeneration
+        do {
+            _ = try await signer.sign(Data("tafs.happened.v1|\(tenant)|\(call.proposal)|\(happened ? "yes" : "no")".utf8),
+                                      reason: happened ? "Say it happened: \(call.title)" : "Say it didn't happen: \(call.title)", grants: true)
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            try await kiff.answerHappened(call.proposal, happened: happened)
+        } catch {
+            lastError = "KIFF didn't take the answer: \(error.localizedDescription)"
+            return false
+        }
+        unproven.removeAll { $0.proposal == call.proposal }
+        await loadUnproven()
+        return true
+    }
+
     /// Connect apps as tafs cloud last listed them.
     @Published private(set) var connectApps: TafsCloud.ConnectApps?
     /// The connection started from the list, waiting for its approval sheet.

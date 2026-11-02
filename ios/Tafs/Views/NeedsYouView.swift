@@ -13,7 +13,9 @@ struct NeedsYouView: View {
                 }
                 // A knock at a taf's door waits for the owner too (kiff/tafs#236, item 17).
                 let knocked = model.tafs.filter { knocks($0) > 0 }
-                if model.held.isEmpty && knocked.isEmpty {
+                // A money call whose outcome KIFF can't prove: the owner says whether it happened.
+                ForEach(model.unproven) { call in DidThisHappenCard(call: call) }
+                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty {
                     Panel {
                         Text("Nothing is waiting.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text("When a taf asks for something outside its Card, it shows up here and on your lock screen.")
@@ -52,7 +54,11 @@ struct NeedsYouView: View {
         .onAppear { scroll(to: model.requestedHold, reader) }
         }
         .coachClearance()
-        .refreshable { await model.refresh() }
+        .refreshable {
+            await model.refresh()
+            await model.loadUnproven()
+        }
+        .task { await model.loadUnproven() }
         .screenBackground()
     }
 
@@ -61,6 +67,51 @@ struct NeedsYouView: View {
     private func scroll(to request: AppModel.HoldRequest?, _ reader: ScrollViewProxy) {
         guard let request, let call = model.held.first(where: { $0.kiffID == request.kiffID }) else { return }
         withMotion { reader.scrollTo(call.id, anchor: .top) }
+    }
+}
+
+/// "Did this happen?" (A5): a money call whose outcome KIFF can't prove, its answer lost or
+/// refused with nothing proving no effect. The owner says: No gives the Card its room back,
+/// Yes keeps it counted. Signed like an approval; the first answer stands.
+struct DidThisHappenCard: View {
+    @EnvironmentObject private var model: AppModel
+    let call: KIFFClient.Unproven
+    @State private var sending = false
+
+    var body: some View {
+        Panel(stroke: Theme.amber.opacity(0.4)) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Did this happen?").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.amberText)
+                Text(call.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                if let money = call.money {
+                    Text(money.formatted).scaledFont(15).foregroundColor(Theme.ink)
+                }
+                Text(call.status == "refused_by_tool" ? "The app refused it, but nothing proves it had no effect." : "Its answer was lost, so KIFF can't tell.")
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                if model.mayAnswerHolds {
+                    HStack(spacing: 10) {
+                        ApprovalGate {
+                            Button("No") { answer(false) }.buttonStyle(OutlineButtonStyle())
+                        }
+                        ApprovalGate {
+                            Button("Yes, it did") { answer(true) }.buttonStyle(PrimaryButtonStyle())
+                        }
+                    }
+                    .disabled(sending)
+                    Text("No gives its Card the room back. Answering asks for \(Biometry.name).")
+                        .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                }
+            }
+        }
+        .accessibilityIdentifier("happened.\(call.proposal)")
+    }
+
+    private func answer(_ happened: Bool) {
+        sending = true
+        Task {
+            _ = await model.answerHappened(call, happened: happened)
+            sending = false
+        }
     }
 }
 

@@ -24,6 +24,8 @@ version headings refer to releases, not merely to merged pull requests.
 - **iPhone and iPad, Connect apps:** from Settings, the apps tafs cloud offers, searched as you
   type. Connecting shows its approval over the list, with KIFF's words, then the vendor's
   sign-in; a vendor reached by an API key takes its key there, with Face ID.
+- **iPhone and iPad, Did this happen?:** in Needs you, a money call whose outcome KIFF can't
+  prove asks you whether it happened. No gives its Card the room back.
 - **iPhone and iPad, the taf's dial:** the same dial, drawn from the approved design and laid
   out from the knob API (not yet on a screen).
 - **Setup, for any vendor:** its rules name roles, not one payments vendor's tools: the
