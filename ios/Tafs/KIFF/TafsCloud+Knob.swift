@@ -171,6 +171,25 @@ extension TafsCloud {
         }
     }
 
+    /// What starting a connection answers: the grant to approve, and whether it's approved
+    /// with an API key the owner gives on the phone. The approval comes first, then the sign-in.
+    struct ConnectStart: Decodable, Equatable {
+        let grant: String
+        var needsKey = false
+        enum CodingKeys: String, CodingKey { case grant, needsKey = "needs_key" }
+        init(grant: String, needsKey: Bool = false) { self.grant = grant; self.needsKey = needsKey }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            grant = try c.decode(String.self, forKey: .grant)
+            needsKey = try c.decodeIfPresent(Bool.self, forKey: .needsKey) ?? false
+        }
+    }
+
+    /// Starts connecting `entry` from the list: planque makes its grant, with its profile.
+    func startConnect(_ entry: String) async throws -> ConnectStart {
+        try await send("POST", "/v1/connect/apps/\(escaped(entry))", body: Optional<[String: String]>.none)
+    }
+
     /// Connect apps, filtered by `q` when given.
     func connectApps(_ q: String? = nil) async throws -> ConnectApps {
         let query = q.map { $0.trimmingCharacters(in: .whitespaces) }.flatMap { $0.isEmpty ? nil : "?q=\(escaped($0))" } ?? ""

@@ -21,6 +21,9 @@ version headings refer to releases, not merely to merged pull requests.
 - **iPhone and iPad, KIFF's words for a connection:** the same as Android: a connection that
   carries its profile shows KIFF's words on the approval card, read with the person's session
   and checked against both digests; the approval signs both, and waits until they're shown.
+- **iPhone and iPad, Connect apps:** from Settings, the apps tafs cloud offers, searched as you
+  type. Connecting shows its approval over the list, with KIFF's words, then the vendor's
+  sign-in; a vendor reached by an API key takes its key there, with Face ID.
 - **iPhone and iPad, the taf's dial:** the same dial, drawn from the approved design and laid
   out from the knob API (not yet on a screen).
 - **Setup, for any vendor:** its rules name roles, not one payments vendor's tools: the

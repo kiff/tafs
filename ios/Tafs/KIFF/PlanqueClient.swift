@@ -231,6 +231,29 @@ final class PlanqueClient {
         return ApproveBody(digest: grant.digest, kiffProfile: .init(profileSHA256: words.profileSHA256, wordsSHA256: words.wordsSHA256))
     }
 
+    /// The body that gives an API-key grant its key: the grant's digest, the key's SHA-256 and,
+    /// with a profile, both its digests. The device signs it, so the signature covers which key;
+    /// the key itself goes in a header, never in what's signed or logged.
+    struct KeyBody: Encodable, Equatable {
+        let digest: String
+        let keySHA256: String
+        let kiffProfile: ApproveBody.KIFFProfile?
+        enum CodingKeys: String, CodingKey { case digest, keySHA256 = "key_sha256", kiffProfile = "kiff_profile" }
+    }
+
+    /// The header planque reads a grant's key from.
+    static let keyHeader = "Planque-Vendor-Key"
+
+    /// Gives an API-key grant its key, as shown, with the same checks as approving.
+    func giveKey(_ grant: Grant, key: String, words: ProfileWords? = nil) async throws -> Grant {
+        let approved = try Self.approveBody(grant, words: words)
+        let key = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sum = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
+        let body = try JSONEncoder().encode(KeyBody(digest: approved.digest, keySHA256: sum, kiffProfile: approved.kiffProfile))
+        let data = try await raw("POST", "grants/\(escaped(grant.id))/key", body: body, headers: [Self.keyHeader: key])
+        return try KIFFClient.decoder.decode(Grant.self, from: data)
+    }
+
     /// Approves `grant` as shown, with KIFF's words for its profile when it has one.
     func approve(_ grant: Grant, words: ProfileWords? = nil) async throws -> Approved {
         try await send("POST", "grants/\(escaped(grant.id))/approve", body: try Self.approveBody(grant, words: words))
@@ -281,7 +304,7 @@ final class PlanqueClient {
     }
 
     private func raw(_ method: String, _ path: String, body: Data?,
-                     signer override: (@MainActor (Data) throws -> String)? = nil) async throws -> Data {
+                     signer override: (@MainActor (Data) throws -> String)? = nil, headers: [String: String] = [:]) async throws -> Data {
         guard let tenant, let signer = override ?? signer else { throw PlanqueError.notSigning }
         // The account itself when path is empty (erasing it), else one of its routes.
         let account = "v1/accounts/\(escaped(tenant))"
@@ -296,6 +319,7 @@ final class PlanqueClient {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = body
         }
+        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         let signedAt = SigningTime.next()
         // Signed as planque reads it: the path and query as sent, percent-encoded.
         let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")

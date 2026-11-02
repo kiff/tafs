@@ -124,6 +124,12 @@ the app in sample mode.
   (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
   they're shown, verbatim and in order. Approving signs both digests into planque's approve
   body (`kiff_profile`). The tests use KIFF's vectors in `TafsTests/ProfileVectors/`.
+- **Connect apps** (`ConnectAppsView`, from Settings): `GET /v1/connect/apps`, searched as the
+  owner types, in tafs cloud's order and words; "Not listed? Ask Coach" when `by_key`.
+  Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,
+  with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
+  API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
+  the device signs only its SHA-256 with the grant's digest.
 
 ## Tests and CI
 

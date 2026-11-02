@@ -1481,6 +1481,68 @@ final class AppModel: ObservableObject {
 
     /// Runs a taf now, outside its schedule. Returns the run's session; nil when it didn't
     /// start, or when a run request for it is already on its way.
+    /// Connect apps as tafs cloud last listed them.
+    @Published private(set) var connectApps: TafsCloud.ConnectApps?
+    /// The connection started from the list, waiting for its approval sheet.
+    @Published var connectStart: TafsCloud.ConnectStart?
+
+    /// Reads Connect apps, filtered by what the owner typed.
+    func loadConnectApps(_ q: String = "") async {
+        guard mode == .kiff else { return }
+        do { connectApps = try await cloud.connectApps(q) } catch {
+            lastError = "The apps couldn't be listed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Starts connecting an app from the list; its approval opens as a sheet over the list.
+    func startConnect(_ app: TafsCloud.ConnectApps.App) async {
+        do {
+            let start = try await cloud.startConnect(app.entry)
+            await refreshConnections()
+            connectStart = start
+        } catch {
+            lastError = "\(app.vendor.isEmpty ? app.title : app.vendor) couldn't be connected: \(error.localizedDescription)"
+        }
+    }
+
+    /// Gives an API-key grant its key, as shown, behind Face ID. A grant with a profile needs
+    /// KIFF's words for it shown, as approving does.
+    func giveKey(grantID: String, shown: String?, key: String) async -> Bool {
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
+            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
+            return false
+        }
+        guard let grant = grants.first(where: { $0.id == grantID }), grant.digestMatches, grant.digest == shown else {
+            lastError = PlanqueClient.PlanqueError.digestMismatch.errorDescription
+            return false
+        }
+        let words = shownWords(for: grant)
+        if grant.profile != nil, words == nil {
+            lastError = PlanqueClient.PlanqueError.wordsUnread.errorDescription
+            return false
+        }
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        do {
+            _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
+                                      reason: "Give \(grant.vendor) its key for \(grant.request.agent)", grants: true)
+        } catch {
+            quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+            return false
+        }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        do {
+            _ = try await planque.giveKey(grant, key: key, words: words)
+        } catch {
+            lastError = "The key wasn't given: \(error.localizedDescription)"
+            return false
+        }
+        await refreshConnections()
+        return true
+    }
+
     /// Each taf's dial as tafs cloud last sent it (`GET /v1/tafs/{id}/knob`), by its id here.
     @Published private(set) var knobs: [UUID: TafsCloud.Knob] = [:]
 
