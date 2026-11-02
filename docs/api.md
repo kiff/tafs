@@ -127,7 +127,7 @@ See [coach.md](coach.md#versions). Not for Coach itself (404).
 
 ### Doors
 
-See [doors.md](doors.md). Reading needs a session; changing, managing the taf.
+See [doors.md](doors.md). Reading and changing both need managing the taf: someone it's only shared with reads no doors, paired senders or knocks (`{doors: [], apps: [], knocks: []}`).
 
 | Route | What |
 |---|---|

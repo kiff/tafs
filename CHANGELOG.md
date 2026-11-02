@@ -32,6 +32,9 @@ version headings refer to releases, not merely to merged pull requests.
   (`starts_again`). While the tafs wait, its words tell the billing admin to go on and anyone else
   that an admin of the account can, with the day it starts again. A chat refused for AI use says
   the same, pointing to Settings › AI use.
+- **tafs cloud, a taf shared with you shows none of its doors:** someone who only uses a taf reads
+  no doors, paired senders or knocks from `GET /v1/tafs/{id}/doors`, so other people's addresses
+  stay with the people who manage the taf.
 
 - **Android, Copy under an answer:** every finished answer from Coach or a taf has Copy under it,
   which copies the whole answer, and its text can be selected. Report this answer moves under

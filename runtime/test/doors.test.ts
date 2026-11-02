@@ -326,6 +326,18 @@ describe("the email door", () => {
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "viewer" })).body.knocks).toEqual([]);
   });
 
+  // kiff/tafs#185: a taf shared to use isn't the account's to oversee. Its doors, their paired
+  // senders (other people's addresses) and who wrote are only for the people who manage it.
+  it("someone a taf is only shared with sees none of its doors or paired senders", async () => {
+    const w = world();
+    await emailDoor(w);
+    const owner = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    expect(owner.body.doors.length).toBeGreaterThan(0);
+    const viewer = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "viewer" });
+    expect(viewer.status).toBe(200);
+    expect(viewer.body).toEqual({ doors: [], apps: [], knocks: [] });
+  });
+
   it("tells a phone registered before tafs cloud kept who manages, by whether its person answers held calls", async () => {
     // Only the alerts are read here: the silent change push is told once every few seconds per taf.
     const w = world();

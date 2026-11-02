@@ -4370,9 +4370,10 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   if (parts.length === 4 && method === "GET") {
     // The bound the owner's session can read now, kept for the door's runs.
     await keepBound(ctx.doors, me.tenantID, await aiBound(event, deps).catch(() => undefined), ctx.now);
-    const list = await listDoors(ctx, owner, taf);
-    // Who wrote and what: only for the people who manage the taf.
-    return await managesTaf(event, me, taf, deps) ? list : { ...list, knocks: [] };
+    // A taf's doors, their paired senders and who wrote are for the people who manage it.
+    // Someone it's only shared with sees none (kiff/tafs#185): it's used, not overseen.
+    if (!await managesTaf(event, me, taf, deps)) return { doors: [], apps: [], knocks: [] };
+    return await listDoors(ctx, owner, taf);
   }
   await needTaf(event, me, taf, deps);
   const body = parseBody(event);
