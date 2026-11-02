@@ -590,6 +590,7 @@ private struct CountRow: View {
 struct AIUseView: View {
     @EnvironmentObject private var model: AppModel
     @State private var goingOn = false
+    @State private var reading = false
     @State private var why: String?
 
     var body: some View {
@@ -609,7 +610,19 @@ struct AIUseView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    if ai.paused && ai.canGoOn {
+                    if model.aiUseStale {
+                        Panel {
+                            Text("Your tafs went on. This month's AI use couldn't be read since.").scaledFont(15).foregroundColor(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button(reading ? "Reading…" : "Read it again") {
+                                reading = true
+                                Task { await model.readAIUse(); reading = false }
+                            }
+                            .buttonStyle(OutlineButtonStyle())
+                            .disabled(reading)
+                            .accessibilityIdentifier("ai-read-again")
+                        }
+                    } else if ai.paused && ai.canGoOn {
                         ApprovalGate {
                             Button {
                                 goingOn = true

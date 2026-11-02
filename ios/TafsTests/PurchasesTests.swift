@@ -346,6 +346,37 @@ final class PurchasesTests: XCTestCase {
         XCTAssertEqual(refused, "Your tafs couldn't go on: this signature was used")
     }
 
+    /// A go-on that went through, whose AI use then couldn't be read, isn't offered again
+    /// (kiff/tafs#433): another tap sends no PUT until the use is read, and reading it again
+    /// signs nothing.
+    func testAfterAGoOnWhoseReadFailedNoSecondGoOnIsSentUntilItsRead() async throws {
+        let log = StoreLog()
+        let (model, _, signer) = await signedIn(log)
+        StubProtocol.responses["GET /v1/usage/ai"] = (200, #"{"used_pct":100,"asks_at_pct":100,"paused":true,"can_go_on":true,"words":"Waiting for you."}"#)
+        await model.refreshUsage()
+        StubProtocol.responses["PUT /v1/me/usage/ai"] = (200, #"{"go_ons":1}"#)
+        StubProtocol.responses["GET /v1/usage/ai"] = (503, #"{"error":"down"}"#)
+        let went = await model.goOnAI()
+        XCTAssertNil(went, "it went through")
+        XCTAssertTrue(model.aiUseStale)
+        XCTAssertTrue(model.aiUse?.paused ?? false, "what was read before, marked stale")
+
+        let puts = { StubProtocol.sent.filter { $0.httpMethod == "PUT" && $0.url?.path == "/v1/me/usage/ai" }.count }
+        let signed = signer.signed.count
+        let again = await model.goOnAI()
+        XCTAssertEqual(again, AppModel.readAIUseFirst)
+        XCTAssertEqual(puts(), 1, "no second PUT")
+        XCTAssertEqual(signer.signed.count, signed, "no Face ID for a refused tap")
+
+        await model.refreshUsage()
+        XCTAssertTrue(model.aiUseStale, "a refresh that can't read it keeps it stale")
+        StubProtocol.responses["GET /v1/usage/ai"] = (200, #"{"used_pct":100,"asks_at_pct":200,"paused":false,"can_go_on":true,"words":"They ask again at 200%."}"#)
+        await model.readAIUse()
+        XCTAssertFalse(model.aiUseStale)
+        XCTAssertEqual(model.aiUse?.asksAtPct, 200)
+        XCTAssertEqual(signer.signed.count, signed, "reading signs nothing")
+    }
+
     /// Someone who may not go on gets no answer of their own: tafs cloud's words say who can.
     func testAPersonWhoMayNotGoOnReadsWhoCan() throws {
         let ai = try JSONDecoder().decode(TafsCloud.AIUse.self, from: Data(#"{"used_pct":101,"asks_at_pct":100,"paused":true,"can_go_on":false,"starts_again":null,"words":"An admin of this account can let them go on from Settings › AI use."}"#.utf8))

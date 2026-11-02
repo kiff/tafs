@@ -19,7 +19,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 - **iPhone and iPad, Go on past the AI use bound:** Settings › AI use shows tafs cloud's words as
   they are. While the tafs wait, the billing admin gets **Go on** (one Face ID), and AI use is read
-  again after it; anyone else reads who can let them go on, and when it starts again by itself.
+  again after it; anyone else reads who can let them go on, and when it starts again by itself. If
+  that read fails, it says the tafs went on and offers Read it again, never a second Go on.
 
 - **Android, Go on:** while the tafs wait past this period's AI use, the billing admin sees **Go
   on** in Plan & usage's AI use. It asks once, then the phone's device key signs it for KIFF.

@@ -186,7 +186,9 @@ On iPhone and iPad, AI use is its own screen from Plan & usage (`AIUseView`), wi
 `words` as they are; the app's own lines stay only for a tafs cloud that sends none. Go on
 (`AppModel.goOnAI`) is signed through the session's signed route, behind Face ID, inside an
 `ApprovalGate`, so while the device can't approve its state stands in the button's place. After
-it, AI use is read again.
+it, AI use is read again, with the button busy until then. If that read fails, the screen says the
+tafs went on and offers **Read it again**, which signs nothing; Go on isn't offered, and
+`goOnAI` sends nothing, until the use has been read.
 
 ## The account's time zone
 
