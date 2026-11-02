@@ -47,7 +47,8 @@ final class UsageTests: XCTestCase {
 
     func testItSaysWhereThingsStand() throws {
         var u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
-        XCTAssertEqual(UsageView.notice(u), "Your trial: 5 days and 11 tasks left.")
+        // Read on 22 Oct, while the trial runs: the real clock is past its end (27 Oct).
+        XCTAssertEqual(UsageView.notice(u, now: Self.now), "Your trial: 5 days and 11 tasks left.")
         XCTAssertEqual(UsageView.leftLine(u), "11 tasks left")
         u.trial = .init(endsAt: Date(), daysLeft: 0, tasksLeft: 11, actionsLeft: 460)
         XCTAssertEqual(UsageView.notice(u), "Your trial has ended.")
@@ -259,14 +260,15 @@ final class UsageTests: XCTestCase {
 
     // MARK: The ended trial, and the plan in sight
 
-    /// 28 Oct 2026, 12:00 UTC: the tests read the trial against a fixed now, never the clock.
-    static let now = Date(timeIntervalSince1970: 1_793_188_800)
+    /// 22 Oct 2026, 12:00 UTC, while `read`'s trial runs (it ends 27 Oct): the tests read the
+    /// trial against a fixed now, never the clock.
+    static let now = Date(timeIntervalSince1970: 1_792_670_400)
 
     /// What KIFF sends an ended trial today: no tasks on purpose, packs held, none on sale.
     static let ended = #"""
-    {"plan":"trial","period":{"start":"2026-10-20T00:00:00Z","end":"2026-10-27T00:00:00Z"},
+    {"plan":"trial","period":{"start":"2026-10-13T00:00:00Z","end":"2026-10-20T00:00:00Z"},
      "tasks":{"counted":0,"included":0,"packs":0,"left":0},"actions":{"counted":0,"included":500},
-     "trial":{"ends_at":"2026-10-27T00:00:00Z","days_left":0,"tasks_left":0,"actions_left":0},
+     "trial":{"ends_at":"2026-10-20T00:00:00Z","days_left":0,"tasks_left":0,"actions_left":0},
      "pack_list":[{"id":"pico","name":"Pico","tasks":12,"tasks_left":12,"expires_at":"2027-11-01T00:00:00Z"}],
      "can_add_tasks":true,"can_add_packs":false,
      "store":{"solo_product":"bot.tafs.solo","packs":[{"id":"pico","name":"Pico","line":"Pico · 12 tasks","tasks":12,"months":12,"apple_product":"bot.tafs.pack.pico"}]}}
