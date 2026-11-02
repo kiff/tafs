@@ -287,8 +287,10 @@ Any answer Coach or a taf wrote can be reported from inside the app, as Google P
 apps that generate content with AI (`POST /v1/tafs/{id}/messages/{message}/report`,
 [api.md](api.md)). It's for answers only, never the person's own messages, and only once tafs
 cloud has an id for the answer (not in the sample).
-- On Android, a long press on the answer shows **Report this answer** (`ReportableAnswer`, in a
-  taf's chat, Coach's and a trial's). It opens a sheet with four reasons (Offensive, Harmful,
+- On Android, every finished answer from Coach or a taf (a taf's chat, Coach's and a trial's) has
+  its text selectable, and under it **Copy**, which copies the whole answer and says "Copied", in
+  the sample too. **More actions** (⋯) holds **Report this answer**, only where the answer can be
+  reported. Opening the menu sends nothing (`AnswerWithActions`). Report opens a sheet with four reasons (Offensive, Harmful,
   Wrong, Other), an optional note of at most 1,000 characters, and **Send** (`ReportSheet`,
   `AppModel.reportAnswer`). The message's chat goes as `session`.
 - On iPhone and iPad, the answer's context menu (a long press) shows **Report this answer**, in

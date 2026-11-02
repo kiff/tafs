@@ -4291,7 +4291,8 @@ class AppModel(
     is PurchaseOutcome.NotRecorded -> "Bought. KIFF hasn't added it yet: tafs tries again when it opens."
     is PurchaseOutcome.NotAdded -> o.why
     is PurchaseOutcome.NeedsSupport -> o.why
-    is PurchaseOutcome.Failed -> "The purchase didn't go through: ${o.why}"
+    // Play unreachable is said on its own, with what to do: nothing was bought.
+    is PurchaseOutcome.Failed -> if (o.why == bot.tafs.app.billing.Purchases.PLAY_UNREACHABLE) o.why else "The purchase didn't go through: ${o.why}"
   }
 
   suspend fun refreshUsage() {

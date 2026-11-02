@@ -225,6 +225,18 @@ class PurchasesTest {
     assertTrue("Play's offers are read again after a purchase", play.reads > before)
   }
 
+  @Test fun playUnreachableBeforeBuyingSaysToTryAgainNotThatItIsntSold() = runTest {
+    val m = model(playBilling = true)
+    play.bought = { throw IllegalStateException(Purchases.PLAY_UNREACHABLE) }
+    m.buy("pack_rayo")
+    assertEquals("Couldn't reach Google Play. Try again.", m.state.value.purchaseNote?.words)
+    assertEquals("pack_rayo", m.state.value.purchaseNote?.at)
+    // Play's codes for not being reached, and not one for not selling.
+    assertTrue(PlayBillingStore.unreachable(com.android.billingclient.api.BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE))
+    assertTrue(PlayBillingStore.unreachable(com.android.billingclient.api.BillingClient.BillingResponseCode.NETWORK_ERROR))
+    assertFalse(PlayBillingStore.unreachable(com.android.billingclient.api.BillingClient.BillingResponseCode.ITEM_UNAVAILABLE))
+  }
+
   @Test fun aRestoreSaysHowItWentUnderRestore() = runTest {
     val m = model(playBilling = true)
     m.restorePurchases()

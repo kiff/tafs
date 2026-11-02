@@ -7,6 +7,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, Copy under an answer:** every finished answer from Coach or a taf has Copy under it,
+  which copies the whole answer, and its text can be selected. Report this answer moves under
+  More actions (⋯), so it's never the only thing a long press finds.
+
 - **iPhone and iPad, as Android's v19:** Settings opens with a Plan card that opens **Plan &
   usage** (was Account usage), and Home shows one line about the plan only when it needs you,
   with Android's words and thresholds. An ended trial says "Your trial has ended." (with "Start
@@ -189,6 +193,9 @@ version headings refer to releases, not merely to merged pull requests.
   phone's registration is refused (503) until then.
 
 ### Fixed
+
+- **Android, Google Play unreachable:** when Play can't be read just before a purchase, it says
+  "Couldn't reach Google Play. Try again.", not that Play doesn't sell it.
 
 - **Android, an ended trial:** Usage says "Your trial has ended." (with "Start Solo to keep your
   tafs running." where Solo is offered), not that its tasks are used, and shows no past period

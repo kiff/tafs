@@ -163,6 +163,8 @@ class Purchases(private val store: PlayStore) {
 
   companion object {
     const val TEST_PURCHASE = "Test purchases don't add tasks to this account."
+    /** Play couldn't be read just now: no network, or its service down. Not "doesn't sell this". */
+    const val PLAY_UNREACHABLE = "Couldn't reach Google Play. Try again."
     const val ANOTHER_ACCOUNT = "This purchase belongs to another tafs account on this Google account, so nothing was added here."
     const val CONTACT_SUPPORT = "KIFF can't add this purchase to this account. You paid for it, so contact support at support@kiff.dev and we'll sort it out."
     /** Play's own page for this Google account's subscriptions. */

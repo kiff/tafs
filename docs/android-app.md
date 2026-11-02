@@ -75,7 +75,9 @@ is told it's done, and Restore purchases sends again what wasn't.
   just before Play's sheet opens (`Purchases.load`, `PlayBillingStore.purchase`), never kept
   from an earlier read. Solo's free trial is offered only while Play lists it for the Google
   account in the Play Store, and the words follow it: "Free for 1 week, then €10.99 a month", or
-  "€10.99 a month".
+  "€10.99 a month". When Play can't be reached for that read (no network, its service down), the
+  purchase says "Couldn't reach Google Play. Try again.", never that Play doesn't sell it
+  (`PlayBillingStore.unreachable`).
 - **Packs need a running plan:** the packs, and approving a member's request for one, are offered
   only while KIFF's usage says `can_add_packs` (from an older KIFF, `can_add_tasks`). Before a trial
   starts or after it ends, Solo alone is offered, and packs already held say "Counts once Solo

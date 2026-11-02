@@ -460,8 +460,8 @@ private fun MessageBody(
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
       // What it did before writing it, folded (kiff/tafs#285).
       message.work?.let { WorkSummary(it) }
-      // Full width, with no bubble, as the taf writes (#58). A long press reports it, once tafs cloud has an id for it.
-      ReportableAnswer(onReport?.takeIf { message.serverId != null }) {
+      // Full width, with no bubble, as the taf writes (#58). Copy under it; Report under More actions, once tafs cloud has an id for it.
+      AnswerWithActions(message.text, onReport?.takeIf { message.serverId != null }) {
         MarkdownText(message.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
       }
     }
