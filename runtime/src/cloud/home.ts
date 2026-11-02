@@ -94,6 +94,10 @@ export interface Total<T> {
   room_window_end?: string;
   /** What of its use is from calls the tool refused, which count until KIFF can confirm nothing moved, in KIFF's words; absent without any. */
   pending_text?: string;
+  /** Why the amount has no currency, in KIFF's words: a tool the Card grants isn't connected. Absent otherwise. */
+  unit_words?: string;
+  /** Which tools that is, and whether they're connected, as KIFF says; absent with unit_words. */
+  unit_missing?: { tools: string[]; connected: boolean };
 }
 
 /** One KIFF Card, drawn as its own Card. */
@@ -143,6 +147,9 @@ export interface Mandate {
     room_window_end?: string | null;
     /** What of its use is from calls the tool refused and still counts, in the owner's words. */
     pending_text?: string | null;
+    /** On a summed line with no unit: why, in the owner's words, and the tools it waits on (a tool the Card grants isn't connected). */
+    unit_words?: string | null;
+    unit_missing?: { tools?: string[] | null; connected?: boolean | null } | null;
   }[] | null;
   active: boolean;
   valid_until?: string | null;
@@ -316,6 +323,11 @@ export function cardView(m: Mandate): CardView {
     }
     // Passed through as KIFF says it: the apps show it, never their own words.
     if (ok && line?.pending_text) total.pending_text = line.pending_text;
+    // Why its amount has no currency: about the Card, not its use, so whatever the read's status.
+    if (line?.unit_words) {
+      total.unit_words = line.unit_words;
+      if (line.unit_missing) total.unit_missing = { tools: line.unit_missing.tools ?? [], connected: line.unit_missing.connected ?? false };
+    }
   }
   let calls: CardView["calls"] = null;
   const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity));
