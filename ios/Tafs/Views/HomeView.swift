@@ -86,7 +86,8 @@ struct HomeView: View {
                 if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
                     Panel {
                         Text("No tafs yet.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                        Text("Connect a tool to set up your first taf. Pull down to refresh.")
+                        // Setting one up is Coach's: someone who may not use it reads where shared tafs show.
+                        Text(model.mayUseCoach ? "Connect a tool to set up your first taf. Pull down to refresh." : "Tafs shared with you show here. Pull down to refresh.")
                             .scaledFont(14).foregroundColor(Theme.soft)
                     }
                 }

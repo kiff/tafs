@@ -27,6 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalUriHandler
 import bot.tafs.app.billing.Purchases
 import bot.tafs.app.design.PrimaryButton
+import bot.tafs.app.design.OutlineButton
+import bot.tafs.app.design.LocalBiometry
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,15 +99,7 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
           if (usage.canAddPacks == false) Text(UsageWords.PACKS_WAIT_FOR_SOLO, style = scaled(13, color = Theme.soft))
         }
       }
-      state.aiUse?.takeIf { it.usedPct != null }?.let { ai ->
-        Panel {
-          Eyebrow("AI use this month")
-          Text("${ai.usedPct}%", style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
-          Meter((ai.usedPct ?: 0).toDouble() / (ai.asksAtPct ?: 100).coerceAtLeast(1), if (ai.paused) Theme.amber else Theme.ok)
-          Text(UsageWords.aiExplain(ai.asksAtPct), style = scaled(13, color = Theme.soft))
-          if (ai.paused) Text(UsageWords.AI_ASKING, style = scaled(15, color = Theme.ink))
-        }
-      }
+      state.aiUse?.takeIf { it.usedPct != null || it.words != null }?.let { ai -> AIUsePanel(ai, state, actions) }
       // Every taf is listed by KIFF, most at 0 on a busy account: only those that counted.
       usage.tasks.byAgent?.filter { it.counted > 0 }?.takeIf { it.isNotEmpty() }?.let { by ->
         Panel {
@@ -129,6 +123,46 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
  * Adding tasks through Google Play, for someone who may: Solo on an account with no plan billed, with every term, and the packs,
  * each at Play's price. Each purchase goes to KIFF before Play is told it's done; Restore sends what wasn't.
  */
+/**
+ * AI use this period (docs/accounts.md#ai-use): the share, tafs cloud's words for it as they are, and, while the tafs wait,
+ * Go on for the person who may (`can_go_on`). Anyone else reads in the words who can, and when it starts again.
+ */
+@Composable
+fun AIUsePanel(ai: bot.tafs.app.kiff.AIUse, state: AppState, actions: AccountActions) {
+  val scope = rememberCoroutineScope()
+  Panel {
+    Eyebrow("AI use this month")
+    ai.usedPct?.let { used ->
+      Text("$used%", style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
+      Meter(used.toDouble() / (ai.asksAtPct ?: 100).coerceAtLeast(1), if (ai.paused) Theme.amber else Theme.ok)
+    }
+    // tafs cloud's words where it sends them; the app's own only from one that doesn't yet.
+    if (ai.words != null) {
+      Text(ai.words, style = scaled(15, color = if (ai.paused) Theme.ink else Theme.soft))
+    } else {
+      Text(UsageWords.aiExplain(ai.asksAtPct), style = scaled(13, color = Theme.soft))
+      if (ai.paused) Text(UsageWords.AI_ASKING, style = scaled(15, color = Theme.ink))
+    }
+    if (state.aiUseStale) {
+      // It went through; what's above is from before. Reading signs nothing, and no Go on until it's read.
+      Text(UsageWords.WENT_ON_UNREAD, style = scaled(15, color = Theme.ink))
+      OutlineButton(if (state.readingAIUse) "Reading…" else "Read it again", { scope.launch { actions.readAIUse() } }, Modifier.fillMaxWidth(), enabled = !state.readingAIUse)
+    } else if (ai.offersGoOn) {
+      // Going on lets the tafs spend more, so it waits on the phone being able to approve, as on iOS. KIFF takes it signed by the
+      // device key, once the person confirms.
+      val biometry = LocalBiometry.current
+      ApprovalGate {
+        PrimaryButton(
+          if (state.goingOn) "Going on…" else "Go on with $biometry",
+          { scope.launch { actions.goOnAI() } },
+          enabled = !state.goingOn,
+        )
+      }
+      state.goOnError?.let { Text(it, style = scaled(13, color = Theme.no)) }
+    }
+  }
+}
+
 @Composable
 private fun AddTasksPanel(usage: Usage, state: AppState, actions: AccountActions) {
   val scope = rememberCoroutineScope()

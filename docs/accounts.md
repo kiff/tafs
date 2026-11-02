@@ -167,6 +167,33 @@ many times the owner said **go on**, which raises the bound (signed on the phone
 is never billed: the bound only asks first. `GET /v1/usage/ai` gives the share used and
 where the tafs ask next.
 
+**Going on** (kiff/tafs#185). While the tafs wait (`paused`), the person who may go on
+(`can_go_on`: the account's billing admin, `billing.manage`) sees **Go on** in Settings › AI use.
+It's KIFF's signed route, `PUT /v1/me/usage/ai` with `{"go_on": true}` (one Face ID or
+fingerprint), and each tap raises the bound by one more base. Anyone else is told that an admin
+of the account can let the tafs go on, and the day the AI use starts again by itself
+(`starts_again`, the period's end), named by role, never by email. A chat refused for AI use
+says the same in its `words`, so its words point to Go on or to whoever can.
+
+On Android, AI use is in Plan & usage (`AIUsePanel`), with tafs cloud's `words` as they are.
+Go on (`AppModel.goOnAI`) asks the person once, then the device key signs KIFF's request:
+KIFF takes this route phone-signed, not from the approval key. Like an approval, it waits on
+the phone being able to approve: while it can't, its state stands in the button's place
+([approvals.md](approvals.md#set-up-approvals-on-this-device)).
+After it, AI use is read again, with the button busy until then. If that read fails
+(`aiUseStale`), the panel says "Your tafs went on. This month's AI use couldn't be read since."
+and offers **Read it again** (`AppModel.readAIUse`), which signs nothing; Go on isn't offered, and
+`goOnAI` sends nothing, until the use has been read. A chat refused for AI use shows its `words`
+and has no button.
+
+On iPhone and iPad, AI use is its own screen from Plan & usage (`AIUseView`), with tafs cloud's
+`words` as they are; the app's own lines stay only for a tafs cloud that sends none. Go on
+(`AppModel.goOnAI`) is signed through the session's signed route, behind Face ID, inside an
+`ApprovalGate`, so while the device can't approve its state stands in the button's place. After
+it, AI use is read again, with the button busy until then. If that read fails, the screen says the
+tafs went on and offers **Read it again**, which signs nothing; Go on isn't offered, and
+`goOnAI` sends nothing, until the use has been read.
+
 ## The account's time zone
 
 Every time the app shows is in the account's time zone (`AccountTime`), and a Card's day

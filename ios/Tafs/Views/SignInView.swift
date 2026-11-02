@@ -244,7 +244,7 @@ struct AccountView: View {
                     LabeledContent("Account id", value: account.slug)
                 }
                 if let email = account.email, !email.isEmpty {
-                    LabeledContent("Email", value: email)
+                    LabeledContent("Signed in as", value: email)
                 }
             }
             Section {

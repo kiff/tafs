@@ -276,12 +276,38 @@ final class TafsCloud {
 
     /// The period's AI use, from chats and Setup (kiff/tafs#193): a share of the plan's fair
     /// use, where the tafs ask next (100%, then 200% after a go on…), and whether they're
-    /// asking now. Nil shares: no bound on this account.
+    /// asking now. Nil shares: no bound on this account. Whether this person may go on
+    /// (`can_go_on`, the billing admin), when it starts again by itself, and `words` saying
+    /// all that, shown as they are (kiff/tafs#185).
     struct AIUse: Decodable, Equatable {
         let usedPct: Int?
         let asksAtPct: Int?
         let paused: Bool
-        enum CodingKeys: String, CodingKey { case usedPct = "used_pct", asksAtPct = "asks_at_pct", paused }
+        var canGoOn = false
+        var startsAgain: String?
+        var words = ""
+        enum CodingKeys: String, CodingKey {
+            case usedPct = "used_pct", asksAtPct = "asks_at_pct", paused, canGoOn = "can_go_on", startsAgain = "starts_again", words
+        }
+
+        init(usedPct: Int?, asksAtPct: Int?, paused: Bool, canGoOn: Bool = false, startsAgain: String? = nil, words: String = "") {
+            self.usedPct = usedPct
+            self.asksAtPct = asksAtPct
+            self.paused = paused
+            self.canGoOn = canGoOn
+            self.startsAgain = startsAgain
+            self.words = words
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            usedPct = try c.decodeIfPresent(Int.self, forKey: .usedPct)
+            asksAtPct = try c.decodeIfPresent(Int.self, forKey: .asksAtPct)
+            paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? false
+            canGoOn = (try? c.decodeIfPresent(Bool.self, forKey: .canGoOn)) ?? false
+            startsAgain = try? c.decodeIfPresent(String.self, forKey: .startsAgain)
+            words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? ""
+        }
     }
 
     func aiUse() async throws -> AIUse {
@@ -994,6 +1020,8 @@ final class TafsCloud {
         var words = ""
         var by: String?
         var outcome: Outcome?
+        /// When it was answered, as tafs cloud writes it; nil from a tafs cloud that doesn't say.
+        var at: Date?
 
         struct Outcome: Decodable, Equatable {
             var tafID: String?
@@ -1002,13 +1030,14 @@ final class TafsCloud {
             enum CodingKeys: String, CodingKey { case version, failed, tafID = "taf_id" }
         }
 
-        enum CodingKeys: String, CodingKey { case state, words, by, outcome }
+        enum CodingKeys: String, CodingKey { case state, words, by, outcome, at }
 
-        init(state: String = "answered", words: String = "", by: String? = nil, outcome: Outcome? = nil) {
+        init(state: String = "answered", words: String = "", by: String? = nil, outcome: Outcome? = nil, at: Date? = nil) {
             self.state = state
             self.words = words
             self.by = by
             self.outcome = outcome
+            self.at = at
         }
 
         init(from decoder: Decoder) throws {
@@ -1017,6 +1046,13 @@ final class TafsCloud {
             words = try c.decodeIfPresent(String.self, forKey: .words) ?? ""
             by = try c.decodeIfPresent(String.self, forKey: .by)
             outcome = try? c.decodeIfPresent(Outcome.self, forKey: .outcome)
+            at = (try? c.decodeIfPresent(String.self, forKey: .at)).flatMap { $0 }.flatMap(Self.date)
+        }
+
+        private static func date(_ raw: String) -> Date? {
+            let precise = ISO8601DateFormatter()
+            precise.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return precise.date(from: raw) ?? ISO8601DateFormatter().date(from: raw)
         }
     }
 

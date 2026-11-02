@@ -38,20 +38,32 @@ describe("the bound", () => {
   });
 
   it("shows the use as a share of the base, where the tafs ask, and when they're asking", () => {
-    expect(view(SOLO, HALF / 2)).toEqual({ used_pct: 50, asks_at_pct: 100, paused: false, words: "Your tafs used 50% of this period's AI. They ask you before going past 100%." });
-    expect(view(SOLO, HALF)).toEqual({ used_pct: 100, asks_at_pct: 100, paused: true, words: "Your tafs used 100% of this period's AI and are waiting for you: go on, and they ask again at 200%." });
+    expect(view(SOLO, HALF / 2)).toEqual({ used_pct: 50, asks_at_pct: 100, paused: false, can_go_on: false, starts_again: null,
+      words: "Your tafs used 50% of this period's AI. They ask you before going past 100%." });
     expect(view({ ...SOLO, goOns: 1 }, HALF + 1)).toMatchObject({ used_pct: 100, asks_at_pct: 200, paused: false });
-    expect(view({ ...SOLO, plan: "internal" }, 10 * HALF)).toEqual({ used_pct: null, asks_at_pct: null, paused: false, words: "Your plan sets no AI limit for your tafs." });
-    expect(view(undefined, 0)).toEqual({ used_pct: null, asks_at_pct: null, paused: false, words: "Your plan sets no AI limit for your tafs." });
+    expect(view({ ...SOLO, plan: "internal" }, 10 * HALF)).toEqual({ used_pct: null, asks_at_pct: null, paused: false, can_go_on: false, starts_again: null, words: "Your plan sets no AI limit for your tafs." });
+    expect(view(undefined, 0)).toEqual({ used_pct: null, asks_at_pct: null, paused: false, can_go_on: false, starts_again: null, words: "Your plan sets no AI limit for your tafs." });
+  });
+
+  // kiff/tafs#185: while the tafs wait, the billing admin is told to go on; anyone else, that an
+  // admin can, and when the AI use starts again by itself. An admin is named by role, never email.
+  it("tells the billing admin to go on, and anyone else who can and when it starts again", () => {
+    const ending = { ...SOLO, end: "2026-10-31T23:30:00Z" };
+    expect(view(ending, HALF, true, "Europe/Madrid")).toEqual({ used_pct: 100, asks_at_pct: 100, paused: true, can_go_on: true, starts_again: "2026-10-31T23:30:00Z",
+      words: "Your tafs used 100% of this period's AI and are waiting for you. Go on, and they ask again at 200%. Otherwise it starts again on 1 Nov." });
+    expect(view(ending, HALF, false, "UTC")).toMatchObject({ paused: true, can_go_on: false,
+      words: "Your tafs used 100% of this period's AI and are waiting. An admin of this account can let them go on from Settings › AI use. Otherwise it starts again on 31 Oct." });
+    expect(view(SOLO, HALF, false).words).toContain("Otherwise it starts again with the next period.");
+    expect(view(SOLO, HALF, false).words).not.toMatch(/@/);
   });
 });
 
 /** KIFF: who the token is, and the account's usage read (404 until billing gives one). */
-function kiff(usage: object | undefined) {
+function kiff(usage: object | undefined, capabilities = ME.capabilities) {
   return (async (url: string, init?: RequestInit) => {
     const token = String((init?.headers as Record<string, string>).authorization).replace("Bearer ", "");
     if (token !== "ana") return new Response("{}", { status: 401 });
-    if (url.endsWith("/v1/me")) return new Response(JSON.stringify(ME), { status: 200 });
+    if (url.endsWith("/v1/me")) return new Response(JSON.stringify({ ...ME, capabilities }), { status: 200 });
     if (url.endsWith("/v1/me/usage")) return usage ? new Response(JSON.stringify(usage), { status: 200 }) : new Response("{}", { status: 404 });
     return new Response("{}", { status: 404 });
   }) as typeof fetch;
@@ -59,7 +71,7 @@ function kiff(usage: object | undefined) {
 
 const usage = (plan: string, seats: number, goOns = 0) => ({ plan, seats, period: { start: START, end: "2026-11-20T09:12:00Z" }, ai: { go_ons: goOns } });
 
-function world(kiffUsage: object | undefined) {
+function world(kiffUsage: object | undefined, capabilities = ME.capabilities) {
   const agents = fakeAgents(() => NOW);
   const tafs = memoryTafs();
   const taf: Taf = { id: RAE, name: "Rae", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
@@ -72,7 +84,7 @@ function world(kiffUsage: object | undefined) {
     push: { get: async () => ({ devices: [], secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
     apns: { send: async () => "sent" as const },
     forward: async () => undefined,
-    fetch: kiff(kiffUsage),
+    fetch: kiff(kiffUsage, capabilities),
     now: () => NOW,
   };
   return { agents, deps };
@@ -105,7 +117,9 @@ describe("chats under AI fair use", () => {
     const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { text: "And now?" });
     expect(r.status).toBe(409);
     expect(r.body.error).toMatch(/^ai_fair_use/);
-    expect(r.body).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("It starts again") });
+    expect(r.body).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("it starts again on 20 Nov") });
+    // Ana may not go on (no billing.manage): the words say an admin can.
+    expect(r.body.words).toContain("An admin of this account can let them go on from Settings › AI use");
     // The live chat was refused; no new chat was tried for it.
     expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([`startRun ${RAE} live`]);
   });
@@ -121,7 +135,7 @@ describe("chats under AI fair use", () => {
     for await (const s of r.body) body += s;
     expect(JSON.parse(body).error).toMatch(/^ai_fair_use/);
     // Said by its code and in tafs cloud's words, so no app shows a bare 409.
-    expect(JSON.parse(body)).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("It starts again") });
+    expect(JSON.parse(body)).toMatchObject({ code: "ai_fair_use", words: expect.stringContaining("it starts again on 20 Nov") });
     expect(w.agents.calls.filter((c) => c.startsWith("streamRun"))).toEqual([`streamRun ${RAE} live`]);
   });
 
@@ -146,6 +160,15 @@ describe("chats under AI fair use", () => {
 });
 
 describe("GET /v1/usage/ai", () => {
+  it("says the billing admin may go on, and no one else", async () => {
+    const w = world(usage("solo", 1));
+    w.agents.spent.set(`t_acme ${PERIOD}`, HALF);
+    expect((await call(w, "GET", "/v1/usage/ai")).body).toMatchObject({ paused: true, can_go_on: false, starts_again: "2026-11-20T09:12:00Z" });
+    const admin = world(usage("solo", 1), [...ME.capabilities, "billing.manage"]);
+    admin.agents.spent.set(`t_acme ${PERIOD}`, HALF);
+    expect((await call(admin, "GET", "/v1/usage/ai")).body).toMatchObject({ paused: true, can_go_on: true, words: expect.stringContaining("Go on, and they ask again at 200%") });
+  });
+
   it("answers the share used, where the tafs ask, and whether they're asking", async () => {
     const w = world(usage("solo", 1));
     w.agents.spent.set(`t_acme ${PERIOD}`, Math.round(HALF * 0.42));
@@ -156,7 +179,8 @@ describe("GET /v1/usage/ai", () => {
 
   it("answers nulls with no bound, without asking kiff/agents", async () => {
     const w = world(usage("internal", 0));
-    expect((await call(w, "GET", "/v1/usage/ai")).body).toEqual({ used_pct: null, asks_at_pct: null, paused: false, words: "Your plan sets no AI limit for your tafs." });
+    expect((await call(w, "GET", "/v1/usage/ai")).body).toEqual({ used_pct: null, asks_at_pct: null, paused: false, can_go_on: false,
+      starts_again: "2026-11-20T09:12:00Z", words: "Your plan sets no AI limit for your tafs." });
     expect(w.agents.calls).toEqual([]);
   });
 });
@@ -164,9 +188,9 @@ describe("GET /v1/usage/ai", () => {
 describe("a chat refused for AI fair use, in words", () => {
   it("says the day the AI use starts again, in the account's zone", () => {
     const p = { plan: "solo", seats: 1, start: "2026-10-01T00:00:00Z", end: "2026-10-31T23:30:00Z", goOns: 0 };
-    expect(refusedWords(p, "Europe/Madrid")).toBe("Your tafs have used this period's AI. It starts again on 1 Nov.");
-    expect(refusedWords(p, "UTC")).toBe("Your tafs have used this period's AI. It starts again on 31 Oct.");
-    expect(refusedWords(undefined)).toBe("Your tafs have used this period's AI. It starts again with the next period.");
+    expect(refusedWords(p, "Europe/Madrid")).toBe("Your tafs have used this period's AI. An admin of this account can let them go on from Settings › AI use, or it starts again on 1 Nov.");
+    expect(refusedWords(p, "UTC", true)).toBe("Your tafs have used this period's AI. Go on from Settings › AI use, or it starts again on 31 Oct.");
+    expect(refusedWords(undefined)).toBe("Your tafs have used this period's AI. An admin of this account can let them go on from Settings › AI use, or it starts again with the next period.");
   });
 });
 

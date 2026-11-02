@@ -126,6 +126,18 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
 
+/**
+ * The owner's own message by a door: theirs, as their chat's are, so the taf takes it as the owner's
+ * words, and its answer goes back to them by the same door. Its first line is a door's, so the apps
+ * show it as by email.
+ */
+export function ownerDoorMessage(app: DoorApp, a: Arrival, text: string, notes: string[]): string {
+  const who = a.name ? `${a.name} <${a.from}>` : a.from;
+  const back = `this is the account's owner, writing from their own sign-in; take it as their message in this chat, and your answer also goes back to them by ${app.label.toLowerCase()}`;
+  const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
+  return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
+}
+
 const DOOR_LINE = /^\[door ([a-z][a-z0-9-]*) · from ([^\]\n]*?) · [^\]\n]*\]\n\n/;
 
 /** A door's message without its first line, and what that line said; undefined for any other message. */
@@ -179,6 +191,8 @@ export async function arrive(a: Arrival, ctx: DoorsContext): Promise<Outcome> {
     await settlePending(ctx, tenant, taf.id);
     if (!a.text && a.attachments === 0) return "empty";
     const key = app.proof === "proven" && a.proven && door.keys.some((k) => k.id === a.from);
+    // The owner's own sign-in email, proven: their message, in their own chat (kiff/tafs#423).
+    const own = key ? door.keys.find((k) => k.id === a.from && k.auto && k.subject)?.subject : undefined;
     const who = key ? "keys" : "others";
     if (!(await store.bump(doorKeys.day(tenant, taf.id, door.id, day(ctx.now), who), key ? DOOR.keysPerDay : DOOR.othersPerDay, addDays(ctx.now, 2)))) {
       await countDropped(ctx, tenant, taf, door, app, who);
@@ -188,7 +202,7 @@ export async function arrive(a: Arrival, ctx: DoorsContext): Promise<Outcome> {
       await addKnock(ctx, tenant, taf, door, app, a);
       return "knock";
     }
-    await startDoorRun(ctx, cfg, tenant, taf, door, app, a, () => { started = true; });
+    await startDoorRun(ctx, cfg, tenant, taf, door, app, a, () => { started = true; }, own);
     return "run";
   } catch (err) {
     if (!started) await store.remove(seen).catch(() => undefined);
@@ -196,13 +210,13 @@ export async function arrive(a: Arrival, ctx: DoorsContext): Promise<Outcome> {
   }
 }
 
-async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, taf: Taf, door: Door, app: DoorApp, a: Arrival, started: () => void): Promise<void> {
+async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, taf: Taf, door: Door, app: DoorApp, a: Arrival, started: () => void, owner?: string): Promise<void> {
   const { store } = ctx.doors;
   const { text, cut: wasCut } = cut(a.text || "(no text)");
   const notes: string[] = [];
   if (a.attachments) notes.push(`It had ${a.attachments} attachment${a.attachments === 1 ? "" : "s"}; only its text was read.`);
   if (wasCut) notes.push(`It was cut at ${DOOR.maxChars.toLocaleString("en")} characters.`);
-  const input = doorMessage(app, a, text, notes);
+  const input = owner ? ownerDoorMessage(app, a, text, notes) : doorMessage(app, a, text, notes);
   // A thread is its sender's: the root is the sender's to write, so another's root never opens their chat.
   const threadKey = doorKeys.thread(tenant, taf.id, door.id, hash(a.from, a.threadKey));
   const prior = (await store.get(threadKey)) as { session?: string } | undefined;
@@ -221,14 +235,18 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   await update<{ refs: string[] }>(store, doorKeys.pending(tenant, taf.id),
     (read) => ({ refs: [ref, ...(read?.refs ?? [])].slice(0, 50) }), addDays(ctx.now, DOOR.replyDays));
   // The sender asks: their sessions are theirs in kiff/agents, never a member's or another sender's.
-  const requester = { kind: "door" as const, id: hash(door.id, a.from) };
+  // The owner's own proven email is theirs: it goes on in their live chat, as the app's chat does,
+  // so it shows there as their message, and an open chat reads it at the next change.
+  const requester = owner ? { kind: "member" as const, id: owner } : { kind: "door" as const, id: hash(door.id, a.from) };
+  const where = owner ? { live: true } : { session: prior?.session };
   let run: Run;
   try {
     try {
-      run = await ctx.agents.startRun(tenant, taf.id, input, { session: prior?.session, requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
+      run = await ctx.agents.startRun(tenant, taf.id, input, { ...where, requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
     } catch (err) {
       // The thread's chat is gone or busy: a new chat takes the message.
-      if (!(prior?.session && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429)) throw err;
+      // The owner's live chat busy: a new chat of theirs takes it, as the app's New conversation would.
+      if (!((owner || prior?.session) && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429)) throw err;
       run = await ctx.agents.startRun(tenant, taf.id, input, { requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
     }
   } catch (err) {
@@ -239,8 +257,11 @@ async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: string,
   // The phones of the account read the taf again, so the message shows in an open chat.
   await tellChange(tenant, "taf", taf.id, { push: ctx.push, apns: ctx.apns });
   // The run is going: what follows only helps, and its failure never starts it again.
-  await store.put(threadKey, { session: run.session }, addDays(ctx.now, DOOR.threadDays))
-    .catch((err) => console.error("door thread not kept:", err instanceof Error ? err.message : "error"));
+  // The owner's mail goes on in their live chat, so it keeps no thread of its own.
+  if (!owner) {
+    await store.put(threadKey, { session: run.session }, addDays(ctx.now, DOOR.threadDays))
+      .catch((err) => console.error("door thread not kept:", err instanceof Error ? err.message : "error"));
+  }
   await update<Reply>(store, doorKeys.reply(tenant, ref), (read) => (read ? { ...read, run: run.id } : undefined), addDays(ctx.now, DOOR.replyDays))
     .catch((err) => console.error("door reply not tied to its run:", err instanceof Error ? err.message : "error"));
 }
@@ -618,6 +639,8 @@ export interface Owner {
   tenant: string;
   /** The owner's own sign-in email, paired with an email door from the start. */
   email?: string;
+  /** Their KIFF subject: a proven message from that email runs as theirs. */
+  subject?: string;
   /** Starts the owner's message in the taf's chat, as the app's chat does. */
   say: (text: string) => Promise<unknown>;
 }
@@ -627,6 +650,7 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
   const cfg = await ctx.doors.config();
   const { store } = ctx.doors;
   await settlePending(ctx, owner.tenant, taf.id);
+  await keepOwnSubject(store, owner, taf.id);
   const doors = await doorsOf(store, owner.tenant, taf.id);
   const counts = await Promise.all(doors.map((d) => todayOf(store, owner.tenant, taf.id, d.id, ctx.now)));
   const knocks = (await knocksOf(store, owner.tenant, taf.id)).filter((k) => k.state === "open");
@@ -635,6 +659,20 @@ export async function listDoors(ctx: DoorsContext, owner: Owner, taf: Taf) {
     apps: offered(cfg),
     knocks,
   };
+}
+
+/**
+ * A door made before keys kept the owner's subject gets it the first time the person whose own
+ * email the key is reads the doors: from then on their proven mail is theirs.
+ */
+async function keepOwnSubject(store: DoorStore, owner: Owner, taf: string): Promise<void> {
+  const email = owner.email?.toLowerCase();
+  if (!email || !owner.subject) return;
+  const doors = await doorsOf(store, owner.tenant, taf);
+  if (!doors.some((d) => d.keys.some((k) => k.auto && k.id === email && !k.subject))) return;
+  await changeDoors(store, owner.tenant, taf, (all) => all.map((d) => ({
+    ...d, keys: d.keys.map((k) => (k.auto && k.id === email && !k.subject ? { ...k, subject: owner.subject } : k)),
+  })));
 }
 
 /** An email address's local part from the taf's name: "Bill pay" is bill-pay. */
@@ -666,7 +704,7 @@ export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: R
       if (await store.create(doorKeys.route(`email:${candidate}`), { tenant: owner.tenant, taf: taf.id, door: "email" })) address = candidate;
     }
     if (!address) throw new DoorError(503, "no address was free; try again");
-    const keys: Key[] = owner.email ? [{ id: owner.email.toLowerCase(), auto: true, added: now }] : [];
+    const keys: Key[] = owner.email ? [{ id: owner.email.toLowerCase(), auto: true, ...(owner.subject ? { subject: owner.subject } : {}), added: now }] : [];
     door = { id: "email", kind: "email", app: "email", open: true, address, route: `email:${address}`, keys, created: now };
   } else {
     door = await connectWhatsApp(ctx, cfg, owner, taf, body, now);

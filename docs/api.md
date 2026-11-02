@@ -43,7 +43,7 @@ details go only to tafs cloud's own log.
 | `GET /v1/setup` | a person | `{setup, tools}`: the account's Coach (Setup), or `null`; and Coach's tools as KIFF has them. `tools.state` is `given` (every tool connected here and each of Coach's Cards in force; a revoked Card doesn't count), `to_give`, `taken` (`taken`: the name a vendor's tool holds; one of Coach's tools at tafs cloud's earlier address is connected again instead, its entry marked `replace: true` and its line saying it replaces the earlier connection) or `unknown`. With `to_give`: `connect {body, lines[]}`, the batch for KIFF's `POST /v1/connections/batch`, or, once every tool is connected (KIFF refuses a Card naming an action no tool declares yet), `card {body, card_title, cards[]}`, Coach's Cards' draft for `POST /v1/me/agent-drafts` with KIFF's own words for it from its preview, unchanged. The phone signs and sends each body as it is; the signed submit is the owner's one confirmation |
 | `POST /v1/setup` | `cards.manage` | Start Coach once: `{draft_id, claim_secret}` from a draft with no tools ([coach.md](coach.md#starting-coach-once-per-account)) |
 | `GET /v1/events` | a person | Halts, resumes and door events, newest first, for Activity. Who wrote to a door shows only for the tafs the person manages |
-| `GET /v1/usage/ai` | a person | The period's AI use as a share of the bound, where the tafs ask next, whether they're asking now, and `words` saying all that for the apps to show ([accounts.md](accounts.md#ai-use)) |
+| `GET /v1/usage/ai` | a person | The period's AI use as a share of the bound, where the tafs ask next, whether they're asking now, whether this person may go on (`can_go_on`), when it starts again (`starts_again`), and `words` saying all that for the apps to show ([accounts.md](accounts.md#ai-use)) |
 | `GET /v1/me/chats/export` | a person | Their own data in tafs, for their rights of access and portability (GDPR Articles 15 and 20). It covers their own chats and trials with every taf, Coach's included and archived ones too, with what kiff/agents still keeps (30 days), the names, types and sizes of the files they attached, and their own notes. Never another person's chats, a door's chats or a taf's job runs, and no one exports it for someone else. Answers `{exported_at, account, person, tafs: [{id, name, chats: [{session, kind, started, updated, archived, messages}], notes}], readable}`, where `readable` is the same as text. Each file is downloaded through the attachments route, as in the chat ([data.md](data.md#your-own-copy)) |
 | `POST /v1/account/delete` | `account.delete` | `{intent, signature}`: delete the account from the phone's one signed intent. KIFF accepts it first, within its 10 minutes, or nothing is deleted; planque accepts on KIFF's word. tafs cloud then erases its own, planque's, then KIFF's, and what doesn't finish now its sweep finishes. Answers `{done, failed, pending}`. Without an intent, it erases only tafs cloud's and kiff/agents' (the app's earlier way) ([accounts.md](accounts.md#deleting-the-account)) |
 | `GET /v1/halt` | a person | The whole account's halt, as KIFF and kiff/agents hold it |
@@ -127,7 +127,7 @@ See [coach.md](coach.md#versions). Not for Coach itself (404).
 
 ### Doors
 
-See [doors.md](doors.md). Reading needs a session; changing, managing the taf.
+See [doors.md](doors.md). Reading and changing both need managing the taf: someone it's only shared with reads no doors, paired senders or knocks (`{doors: [], apps: [], knocks: []}`).
 
 | Route | What |
 |---|---|

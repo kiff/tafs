@@ -69,6 +69,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var tafTasks: [UUID: [KIFFClient.CountedTask]] = [:]
     /// The period's AI use from chats and Setup (kiff/tafs#193), from tafs cloud; nil until read.
     @Published private(set) var aiUse: TafsCloud.AIUse?
+    /// A go-on went through but the AI use couldn't be read after it: what `aiUse` says is
+    /// from before, so Go on isn't offered again until it's read (kiff/tafs#433).
+    @Published private(set) var aiUseStale = false
 
     /// Sets the account's time zone to this device's, so a Card's day ends at the owner's
     /// midnight (kiff/tafs#96): a signed setup call, which KIFF takes from
@@ -506,7 +509,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
         accountGeneration += 1
@@ -849,7 +852,7 @@ final class AppModel: ObservableObject {
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; setupQueued = nil; cardNotes = [:]; setupEnded = nil; setupChat = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
-        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; tafTasks = [:]; tasksMessage = nil
+        usage = nil; countedTasks = []; usageError = nil; aiUse = nil; aiUseStale = false; tafTasks = [:]; tasksMessage = nil
         groups = []; people = []; access = [:]; peopleError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
@@ -1926,7 +1929,7 @@ final class AppModel: ObservableObject {
     func refreshUsage() async {
         switch mode {
         case .signedOut:
-            usage = nil; countedTasks = []; aiUse = nil
+            usage = nil; countedTasks = []; aiUse = nil; aiUseStale = false
         case .sample:
             usage = Self.sampleUsage(now: clock()); countedTasks = []; usageError = nil
             aiUse = .init(usedPct: 30, asksAtPct: 100, paused: false)
@@ -1938,7 +1941,9 @@ final class AppModel: ObservableObject {
                 // AI use is tafs cloud's; the rest of the screen doesn't wait on it.
                 let ai = try? await cloud.aiUse()
                 guard gen == accountGeneration else { return }
-                usage = read; countedTasks = page?.tasks ?? []; usageError = nil; aiUse = ai
+                usage = read; countedTasks = page?.tasks ?? []; usageError = nil
+                // A read that failed keeps what was known, and says it's stale after a go-on.
+                if let ai { aiUse = ai; aiUseStale = false } else if !aiUseStale { aiUse = nil }
                 if let store = read.store { await purchases.load([store.soloProduct] + store.packs.map(\.appleProduct)) }
             } catch {
                 guard gen == accountGeneration else { return }
@@ -2021,6 +2026,50 @@ final class AppModel: ObservableObject {
             tasksMessage = "The request wasn't withdrawn: \(error.localizedDescription)"
         }
         await refreshUsage()
+    }
+
+    /// Lets the tafs go on past this period's AI fair use (kiff/tafs#185), behind Face ID:
+    /// the billing admin's act, which KIFF takes only signed by this phone. Then reads the AI
+    /// use again, so the screen says where they ask next. Nil once it went on; else why not,
+    /// empty when the prompt was closed.
+    func goOnAI() async -> String? {
+        guard mode == .kiff, let tenant = kiffTenant else { return "Sign in with KIFF to let your tafs go on." }
+        guard sessionHasKey else { return "Sign in with KIFF again: this sign-in can't sign for the \(ThisDevice.kind)." }
+        // The last go-on went through, and the use it changed hasn't been read since: another
+        // tap would raise the bound again for a use the screen no longer shows.
+        guard !aiUseStale else { return Self.readAIUseFirst }
+        let gen = accountGeneration
+        let at = aiUse?.asksAtPct ?? 100
+        do { _ = try await signer.sign(Data("tafs.ai-go-on.v1|\(tenant)|\(at)".utf8), reason: "Let your tafs go on") } catch { return "" }
+        guard gen == accountGeneration else { return "" }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            try await kiff.goOnAI()
+        } catch {
+            guard gen == accountGeneration else { return "" }
+            return "Your tafs couldn't go on: \(error.localizedDescription)"
+        }
+        // A switch while the PUT was out: its answer is the old account's, and changes nothing here.
+        guard gen == accountGeneration else { return "" }
+        // It went through. Until the use is read again, the screen says so and offers only a read.
+        aiUseStale = true
+        await readAIUse()
+        return nil
+    }
+
+    static let readAIUseFirst = "Your tafs went on. Read this month's AI use again before going on once more."
+
+    /// Reads the AI use again, without signing anything: after a go-on whose read failed.
+    func readAIUse() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        let ai = try? await cloud.aiUse()
+        guard gen == accountGeneration, let ai else { return }
+        aiUse = ai
+        aiUseStale = false
     }
 
     /// Declines a member's request, with a note: the admin's answer, behind Face ID.

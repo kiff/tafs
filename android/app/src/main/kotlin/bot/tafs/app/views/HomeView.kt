@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.HomeWords
 import bot.tafs.app.model.ListOrder
 import androidx.compose.runtime.SideEffect
 import bot.tafs.app.model.shortTime
@@ -168,7 +169,8 @@ fun HomeView(
           item {
             Panel {
               Text("No tafs yet.", style = scaled(15, FontWeight.SemiBold, Theme.ink))
-              Text("Connect a tool to set up your first taf. Pull down to refresh.", style = scaled(14, color = Theme.soft))
+              // Setting one up is Coach's: someone a taf is shared with who can't use Coach waits for one instead.
+              Text(HomeWords.empty(state.mayUseCoach), style = scaled(14, color = Theme.soft))
             }
           }
         }

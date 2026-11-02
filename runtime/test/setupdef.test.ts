@@ -204,7 +204,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(SETUP_INSTRUCTIONS.match(/Face ID/g)?.length).toBe(1);
     expect(flat).not.toContain("approves with Face ID");
     expect(flat).toContain("Don't name how the owner approves (Face ID, Touch ID or a passcode), where a card, the plan or anything else is on the screen (above, below, beside, in the panel) or a button's words");
-    expect(flat).toContain("where the work comes from (for refunds: where customers ask for them)");
+    expect(flat).toContain("where the work comes from (where customers ask, where meetings get booked)");
     expect(flat).toContain("A taf needs a way to find its work, not only a way to act");
     // The batch measurement: asked for Gmail's MCP server address and looped.
     expect(flat).toContain("Never ask the owner for a server address, a URL or anything technical to connect");
@@ -236,7 +236,7 @@ describe("Setup's definition on kiff/agents", () => {
     // An approval carries no words of Coach's: what the owner reads as they grant is planque's and KIFF's.
     expect(flat).toContain("An approval carries only its grant and draft, never a title or words of yours");
     // A result's tools are KIFF's names, never titles: show refuses titles, and the hand-over then lost its closing message.
-    expect(flat).toContain("and tools: the tools' names in KIFF as planque's status lists them (create_refund_k3f9), never their titles or the owner's words for them.");
+    expect(flat).toContain("and tools: the tools' names in KIFF as planque's status lists them (post_reply_k3f9), never their titles or the owner's words for them.");
     expect(flat).toContain("also when that result was refused once and shown again");
     // Text before a tool call comes back as an empty progress note on Opus 5.5: the plan first, the closing text last.
     expect(flat).toContain("In that turn, show the plan with its last steps done first, then end the turn with the closing message as text, with no tool call after it: a sentence written before a tool call isn't shown to the owner, and a turn that only updates the plan is never the end.");
@@ -268,14 +268,14 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("A tool that moves money always has its amount limited, each call and over a day");
     // A write that moves no money is limited by its calls, and never gets a made-up amount.
     expect(flat).toContain("A tool that changes data but moves no money is limited by its calls, each day");
-    expect(flat).toContain("A tool that changes data but moves no money (answering a dispute, pausing a subscription) has no amount argument.");
-    expect(flat).toContain("named from that operation's fields as stripe_api_details gives them, never one you make up");
+    expect(flat).toContain("A tool that changes data but moves no money (posting a reply, moving a meeting, sharing a file) has no amount argument.");
+    expect(flat).toContain("named from that operation's fields as the vendor's own docs give them, never one you make up");
     // The owner's own limit is the limit (item 44).
     expect(flat).toContain("A limit the owner already gave, in their first message or later, is that limit");
     // The schedule is decided before the result, with the owner's case as the example (item 43).
-    expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
-    // The result applies that rule for any vendor; Stripe is its example (review on kiff/tafs#238).
-    expect(flat).toContain("Decide unscheduled by the rule above, for any vendor: a refunds taf with Stripe's tools alone is one, as Stripe lists payments, not requests to refund them");
+    expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about), set unscheduled on the result's taf");
+    // The result applies that rule for any vendor (review on kiff/tafs#238), in roles (kiff/agents#293).
+    expect(flat).toContain("Decide unscheduled by the rule above, for any vendor: a taf whose tools list payments but not the requests to refund them is one");
     // The result's name is the one tafs will give it, not another taf's (kiff/tafs#236, item 5).
     expect(flat).toContain("Its name is one no other taf has (tafs_state): if it's taken, the first free \"<name> 2\", \"<name> 3\"…, as tafs would name it; call it that.");
     // A new taf asked for in an improve conversation is a new taf (kiff/tafs#138, item 36).
@@ -286,7 +286,7 @@ describe("Setup's definition on kiff/agents", () => {
     // Trying and installing is the owner's step, open in the plan (item 40).
     expect(flat).toContain("The plan for an improvement ends with trying it and installing it, the owner's step: it stays to do in the plan you show with the result, never done");
     // A taf whose tools can't list its work has no schedule (kiff/tafs#138, item 26).
-    expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about, such as payments), set unscheduled on the result's taf");
+    expect(flat).toContain("When none of its tools lists the work itself (the requests to act on, not only the things they're about), set unscheduled on the result's taf");
     // A second choice beside a confirm went into prose (measure of #138): it goes in the card.
     expect(flat).toContain("While a card asks something, the message asks nothing else, and a choice among a few options (by email, a form or support) goes in the card, never written out beside it");
     // Several questions at once (kiff/tafs#138, item 57): independent ones in one questions
@@ -299,8 +299,14 @@ describe("Setup's definition on kiff/agents", () => {
     // An operation's fields come from the vendor, never Setup's guess (kiff/tafs#138, item 1).
     // On the owner's iPad a read took the charge as `charge` and the vendor wants `id`, so
     // the taf couldn't read it and KIFF couldn't check its currency (kiff/tafs#174).
-    expect(flat).toContain("their names aren't the thing's (a read of one charge can take it as id): never guess or rename them");
-    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields (for Stripe, stripe_api_details), ask for it first, as the first tools of the taf's one connection to that vendor");
+    expect(flat).toContain("names aren't the thing's (a read of one item can take it as id): never guess or rename them");
+    // In roles, not one vendor's nouns (kiff/agents#293); a REST vendor is connected by its key,
+    // which the owner gives on the phone, never in the chat.
+    expect(flat).not.toMatch(/stripe|\bcharges?\b|\bdisputes?\b/i); // the job ids (chargebacks) are tafs' own
+    expect(flat).toContain("A vendor with a REST API and no MCP server is connected by its key instead: planque request with api {url: its published OpenAPI description");
+    expect(flat).toContain("The owner gives the key on their phone as they approve, straight to planque: never ask for it in the chat");
+    expect(flat).toContain("A step that waits on one call names it (call: the tool's name): it can't be shown done until that call went through");
+    expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields, given its id, ask for it first, as the first tools of the taf's one connection to that vendor");
     // The account list, when it must pin the account, joins that grant: one approval, not two (kiff/tafs#138).
     expect(flat).toContain("put that tool in the same first tools, with setup_reads: true");
     // One connection per vendor per taf (kiff/tafs#138, the owner's retest: five Face IDs and Stripe sign-ins).

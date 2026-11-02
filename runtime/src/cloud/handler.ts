@@ -3043,12 +3043,14 @@ async function withRefusalWords(event: HTTPEvent, err: HTTPError, deps: Deps): P
   if (err.extra?.code !== "ai_fair_use") return err.extra;
   let zone = "UTC";
   let plan;
+  let canGoOn = false;
   try {
     const me = await person(event, deps);
     zone = me.timeZone ?? "UTC";
+    canGoOn = me.capabilities.includes("billing.manage");
     plan = await planOf(bearer(event), deps.fetch, deps.kiffBase);
   } catch { /* the words without the day */ }
-  return { ...err.extra, words: refusedWords(plan, zone) };
+  return { ...err.extra, words: refusedWords(plan, zone, canGoOn) };
 }
 
 /** What a refusal means, in the words the apps show as they are: tafs cloud's, never an app's own. */
@@ -3577,8 +3579,10 @@ async function aiBound(event: HTTPEvent, deps: Deps): Promise<AIBound | undefine
  */
 async function aiUsage(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<AIView> {
   const plan = await planOf(bearer(event), deps.fetch, deps.kiffBase);
-  if (!plan || base(plan) <= 0) return aiView(plan, 0);
-  return aiView(plan, await agentsCall(() => deps.agents.aiSpent(me.tenantID, periodName(plan.start))));
+  // Going on is the billing admin's (KIFF's PUT /v1/me/usage/ai checks it again).
+  const canGoOn = me.capabilities.includes("billing.manage"), zone = me.timeZone ?? "UTC";
+  if (!plan || base(plan) <= 0) return aiView(plan, 0, canGoOn, zone);
+  return aiView(plan, await agentsCall(() => deps.agents.aiSpent(me.tenantID, periodName(plan.start))), canGoOn, zone);
 }
 
 /** A kiff/agents call a route depends on: its 404 is the taf's, anything else says the runtime didn't answer. */
@@ -4359,16 +4363,17 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   const ctx = doorContext(deps);
   const owner: Owner = {
     tenant: me.tenantID,
-    ...(me.email ? { email: me.email } : {}),
+    ...(me.email ? { email: me.email, subject: me.subject } : {}),
     say: (text) => startMessage(event, me, taf, text, deps),
   };
   const [, , , , a, b, c] = parts;
   if (parts.length === 4 && method === "GET") {
     // The bound the owner's session can read now, kept for the door's runs.
     await keepBound(ctx.doors, me.tenantID, await aiBound(event, deps).catch(() => undefined), ctx.now);
-    const list = await listDoors(ctx, owner, taf);
-    // Who wrote and what: only for the people who manage the taf.
-    return await managesTaf(event, me, taf, deps) ? list : { ...list, knocks: [] };
+    // A taf's doors, their paired senders and who wrote are for the people who manage it.
+    // Someone it's only shared with sees none (kiff/tafs#185): it's used, not overseen.
+    if (!await managesTaf(event, me, taf, deps)) return { doors: [], apps: [], knocks: [] };
+    return await listDoors(ctx, owner, taf);
   }
   await needTaf(event, me, taf, deps);
   const body = parseBody(event);

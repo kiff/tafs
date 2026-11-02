@@ -148,8 +148,9 @@ struct SetupThread: Equatable {
     /// In order, as it happened, with one exception (kiff/tafs#58): a component that asks
     /// the owner to act comes after what Setup wrote with it, so its words lead to the
     /// card. That is Setup's messages in the same session after the component, up to the
-    /// owner's next message. Once answered, it goes back to its own time, in line with what
-    /// Coach said around it.
+    /// owner's next message. Once answered, it stays after the words that asked for it, and
+    /// Coach's words after its answer come below it (kiff/tafs#423); an answer with no time,
+    /// from a tafs cloud that doesn't say, puts it back at its own time.
     var items: [Item] {
         let placed: [(Item, Date)] = messages.map { (Item.message($0), $0.at) } +
             components.filter { $0.component.type != .steps }.map { c in (Item.component(c), placedAt(c)) }
@@ -166,9 +167,13 @@ struct SetupThread: Equatable {
     private static let needsOwner: Set<SetupComponent.Kind> = [.confirm, .questions, .approval, .signIn]
 
     private func placedAt(_ c: ShownComponent) -> Date {
-        guard Self.asking.contains(c.component.type), c.answer == nil else { return c.firstAt }
+        guard Self.asking.contains(c.component.type) else { return c.firstAt }
+        if let answer = c.answer, answer.at == nil { return c.firstAt }
+        // After what Coach wrote with it, up to the owner's next message; once answered, up to
+        // its answer, so the words Coach wrote after the answer stay below it.
         let nextOwner = messages.first { $0.from == .owner && $0.at > c.firstAt }?.at ?? .distantFuture
-        let after = messages.filter { $0.from == .taf && $0.session == c.session && $0.at >= c.firstAt && $0.at < nextOwner }
+        let end = min(nextOwner, c.answer?.at ?? .distantFuture)
+        let after = messages.filter { $0.from == .taf && $0.session == c.session && $0.at >= c.firstAt && $0.at < end }
         return after.last?.at ?? c.firstAt
     }
 

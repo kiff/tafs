@@ -180,7 +180,7 @@ fun TafDetailView(
           Section.Activity -> Activity(taf, state, actions)
           Section.Card -> {
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            CardTab(taf, actions, frontCard, { frontCard = it }, controls = state.mode == Mode.sample, manages = managesHere, onRevoke = { confirmRevoke = true })
+            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, controls = state.mode == Mode.sample, manages = managesHere, onRevoke = { confirmRevoke = true })
             // Which tools it is connected to, and whose sign-ins: read from planque, for the people who manage it.
             if (state.canHalt(taf.id) && state.manages(taf.id)) ConnectionsPanel(taf, state, actions.connections)
             // Halting is a job of its own: its row opens its screen. Its usage is the account's Usage, with this taf's count.
@@ -301,11 +301,11 @@ private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
 }
 
 @Composable
-private fun CardTab(taf: Taf, actions: TafActions, front: String?, onFront: (String) -> Unit, controls: Boolean, manages: Boolean, onRevoke: () -> Unit) {
+private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, controls: Boolean, manages: Boolean, onRevoke: () -> Unit) {
   val cards = taf.shownCards
   val shown = cards.firstOrNull { it.id == front } ?: cards.firstOrNull()
   Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-    CardStack(cards, actions.issuer, Theme.tafColor(taf.colorIndex), front, onFront, revoked = taf.card.revoked)
+    CardStack(cards, issuer, Theme.tafColor(taf.colorIndex), front, onFront, revoked = taf.card.revoked)
   }
   // All of the front Card's limits: the face shows the main one.
   CardLines(shown?.rules ?: emptyList())
@@ -501,7 +501,7 @@ private fun SideColumn(taf: Taf, state: AppState, actions: TafActions, front: St
     }
     val cards = taf.shownCards
     Eyebrow(if (cards.size == 1) "Card" else "Cards")
-    CardStack(cards, actions.issuer, Theme.tafColor(taf.colorIndex), front, onFront, revoked = taf.card.revoked)
+    CardStack(cards, state.issuer(taf), Theme.tafColor(taf.colorIndex), front, onFront, revoked = taf.card.revoked)
     OutlineButton(if (cards.size == 1) "All of the Card" else "All of the Cards", onAll, Modifier.fillMaxWidth())
   }
 }

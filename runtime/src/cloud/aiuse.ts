@@ -83,19 +83,51 @@ export interface AIView {
   used_pct: number | null;
   asks_at_pct: number | null;
   paused: boolean;
+  /**
+   * Whether this person may go on (billing.manage): the apps show **Go on** only then, signed
+   * through KIFF's `PUT /v1/me/usage/ai` (kiff/tafs#185).
+   */
+  can_go_on: boolean;
+  /** When the AI use starts again by itself: the period's end (RFC 3339), null when KIFF gives none. */
+  starts_again: string | null;
   /** The same, in words the apps show as they are. */
   words: string;
 }
 
-/** The period's use as a share of the base, where the tafs ask next, and whether they're asking now. */
-export function view(p: Plan | undefined, spent: number): AIView {
+/** The day the period ends, in the account's zone ("1 Nov"), or "" when KIFF gives no end. */
+export function startsAgainDay(p: Plan | undefined, zone = "UTC"): string {
+  const end = p?.end ? new Date(p.end) : undefined;
+  if (!end || Number.isNaN(end.getTime())) return "";
+  try {
+    return new Intl.DateTimeFormat("en-GB", { timeZone: zone, day: "numeric", month: "short" }).format(end);
+  } catch {
+    return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }).format(end);
+  }
+}
+
+/** When the AI use starts again, as a clause: "on 1 Nov", or "with the next period". */
+function again(p: Plan | undefined, zone: string): string {
+  const day = startsAgainDay(p, zone);
+  return day ? `on ${day}` : "with the next period";
+}
+
+/**
+ * The period's use as a share of the base, where the tafs ask next, and whether they're asking now.
+ * While they wait, someone who may go on is told to; anyone else is told who can, and when it starts
+ * again by itself. An account's admin is named by role, never by email.
+ */
+export function view(p: Plan | undefined, spent: number, canGoOn = false, zone = "UTC"): AIView {
   const b = p ? base(p) : 0;
-  if (!p || b <= 0) return { used_pct: null, asks_at_pct: null, paused: false, words: "Your plan sets no AI limit for your tafs." };
+  const starts = p?.end ?? null;
+  if (!p || b <= 0) return { used_pct: null, asks_at_pct: null, paused: false, can_go_on: canGoOn, starts_again: starts, words: "Your plan sets no AI limit for your tafs." };
   const used = Math.floor((spent * 100) / b), at = 100 * (p.goOns + 1), paused = spent >= bound(p);
-  const words = paused
-    ? `Your tafs used ${used}% of this period's AI and are waiting for you: go on, and they ask again at ${at + 100}%.`
-    : `Your tafs used ${used}% of this period's AI. They ask you before going past ${at}%.`;
-  return { used_pct: used, asks_at_pct: at, paused, words };
+  let words = `Your tafs used ${used}% of this period's AI. They ask you before going past ${at}%.`;
+  if (paused) {
+    words = canGoOn
+      ? `Your tafs used ${used}% of this period's AI and are waiting for you. Go on, and they ask again at ${at + 100}%. Otherwise it starts again ${again(p, zone)}.`
+      : `Your tafs used ${used}% of this period's AI and are waiting. An admin of this account can let them go on from Settings › AI use. Otherwise it starts again ${again(p, zone)}.`;
+  }
+  return { used_pct: used, asks_at_pct: at, paused, can_go_on: canGoOn, starts_again: starts, words };
 }
 
 /** Whether kiff/agents refused a chat for AI fair use. */
@@ -106,19 +138,12 @@ export function refusedForAI(err: unknown): boolean {
 }
 
 /**
- * A chat refused for AI fair use, in words: when the AI use starts again by itself, on the period's
- * end in the account's zone.
+ * A chat refused for AI fair use, in words: Go on in Settings › AI use for someone who may, who can
+ * otherwise, and when the AI use starts again by itself, on the period's end in the account's zone.
  */
-export function refusedWords(p: Plan | undefined, zone = "UTC"): string {
-  const end = p?.end ? new Date(p.end) : undefined;
-  let day = "";
-  if (end && !Number.isNaN(end.getTime())) {
-    try {
-      day = new Intl.DateTimeFormat("en-GB", { timeZone: zone, day: "numeric", month: "short" }).format(end);
-    } catch {
-      day = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }).format(end);
-    }
-  }
-  // No app offers a go on yet, so the words say only when the AI use starts again by itself.
-  return day ? `Your tafs have used this period's AI. It starts again on ${day}.` : "Your tafs have used this period's AI. It starts again with the next period.";
+export function refusedWords(p: Plan | undefined, zone = "UTC", canGoOn = false): string {
+  const how = canGoOn
+    ? "Go on from Settings › AI use"
+    : "An admin of this account can let them go on from Settings › AI use";
+  return `Your tafs have used this period's AI. ${how}, or it starts again ${again(p, zone)}.`;
 }

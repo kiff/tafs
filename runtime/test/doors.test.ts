@@ -6,7 +6,7 @@ import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
 import { localPart, parseDoorMessage } from "../src/cloud/doors/doors.js";
 import { type EmailProvider, emailArrival, type OutgoingEmail, parseReceived, type ReceivedEmail } from "../src/cloud/doors/email.js";
-import type { DoorSecrets, DoorStore } from "../src/cloud/doors/model.js";
+import { doorKeys, type DoorSecrets, type DoorStore } from "../src/cloud/doors/model.js";
 import { signedWebhook, whatsappSigned } from "../src/cloud/doors/sign.js";
 import { cut, htmlText, ownText } from "../src/cloud/doors/text.js";
 import type { WhatsAppClient } from "../src/cloud/doors/whatsapp.js";
@@ -186,6 +186,13 @@ function mail(w: World, opts: { from?: string; to?: string; text?: string | null
 }
 
 /** The owner turns on Refunds' email door. */
+/** A paired sender who isn't the owner: a partner the owner lets give the taf work. */
+const BEN = "Ben <ben@partner.example>";
+async function pairBen(w: World) {
+  const r = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/email/keys`, { token: "ana", body: { id: "ben@partner.example", name: "Ben" } });
+  expect(r.status).toBe(200);
+}
+
 async function emailDoor(w: World) {
   const r = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "email" } });
   expect(r.status).toBe(200);
@@ -217,12 +224,13 @@ describe("the email door", () => {
   it("a paired sender's email starts a run in the taf's chat, and the answer goes back in the same thread", async () => {
     const w = world();
     await emailDoor(w);
-    const id = mail(w, { attachments: 2, messageID: "<m1@mail.acme.example>", references: "<m0@mail.acme.example>" });
+    await pairBen(w);
+    const id = mail(w, { from: BEN, attachments: 2, messageID: "<m1@mail.acme.example>", references: "<m0@mail.acme.example>" });
     const r = await emailHook(w, id);
     expect(r.body).toEqual({ outcome: "run" });
     const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
     const input = w.agents.events.get(run.session)![0]!.body as { text: string };
-    expect(input.text).toContain("[door email · from Ana <ana@acme.example> · your answer goes back by email to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for");
+    expect(input.text).toContain("[door email · from Ben <ben@partner.example> · your answer goes back by email to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for");
     // The sender is outside: no error, code, tool or id goes back to them.
     expect(input.text).toContain("never an error, a code, a tool, an id or how things are connected]");
     expect(input.text).toContain("Please refund order 4471");
@@ -232,7 +240,7 @@ describe("the email door", () => {
     expect(ended.body).toEqual({ taken: true });
     expect(w.outbox).toHaveLength(1);
     expect(w.outbox[0]).toMatchObject({
-      from: "Refunds <refunds@tafs.example>", to: "ana@acme.example", subject: "Re: Order 4471",
+      from: "Refunds <refunds@tafs.example>", to: "ben@partner.example", subject: "Re: Order 4471",
       inReplyTo: "<m1@mail.acme.example>", references: "<m0@mail.acme.example> <m1@mail.acme.example>",
     });
     expect(w.outbox[0]!.text).toContain("Refunded the duplicate $180");
@@ -242,7 +250,7 @@ describe("the email door", () => {
     // The chat shows the email marked as by email, and its answer as sent back.
     const chat = await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "ana" });
     const [asked, answered] = chat.body.messages;
-    expect(asked).toMatchObject({ from: "owner", door: { app: "email", from: "Ana <ana@acme.example>", subject: "Order 4471" } });
+    expect(asked).toMatchObject({ from: "owner", door: { app: "email", from: "Ben <ben@partner.example>", subject: "Order 4471" } });
     expect(asked.text.startsWith("Please refund order 4471")).toBe(true);
     expect(answered).toMatchObject({ from: "taf", door: { app: "email", reply: "sent" } });
 
@@ -279,12 +287,48 @@ describe("the email door", () => {
     expect(w.agents.runs.find((x) => x.id === chat.id)!.status).toBe("PAUSED");
   });
 
+  // kiff/tafs#423, item 3: the owner's own sign-in email, proven, is the owner writing. It's taken
+  // as their message, in their own live chat, so it shows there as theirs and an open chat reads it.
+  it("the owner's own proven email is theirs, in their own live chat, with the answer back by email", async () => {
+    const w = world();
+    const door = await emailDoor(w);
+    expect(door.keys[0]).toEqual({ id: "ana@acme.example", auto: true });
+    expect(JSON.stringify(door)).not.toContain("u_ana");
+    const r = await emailHook(w, mail(w, { messageID: "<own@mail.acme.example>" }));
+    expect(r.body).toEqual({ outcome: "run" });
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    expect(run.requester).toEqual({ kind: "member", id: "u_ana" });
+    const input = w.agents.events.get(run.session)![0]!.body as { text: string };
+    expect(input.text).toContain("this is the account's owner, writing from their own sign-in; take it as their message in this chat");
+    expect(input.text).not.toContain("someone outside the company");
+    await finish(w, run, "Refunded the duplicate $180 on order 4471.");
+    expect(w.outbox).toHaveLength(1);
+    expect(w.outbox[0]).toMatchObject({ to: "ana@acme.example", subject: "Re: Order 4471" });
+    // A spoofed From is a knock, never the owner's: "a spoofed From counts as unpaired" below.
+  });
+
+  it("a door made before keys kept the owner gets them the first time the owner reads its doors", async () => {
+    const w = world();
+    await emailDoor(w);
+    // As a door made before: its owner's key without the subject.
+    const kept = (await w.store.get(doorKeys.doors("t_acme", REFUNDS))) as { doors: Array<{ keys: Array<Record<string, unknown>> }> };
+    delete kept.doors[0]!.keys[0]!.subject;
+    await w.store.put(doorKeys.doors("t_acme", REFUNDS), kept);
+    expect((await emailHook(w, mail(w, { messageID: "<before@mail.acme.example>" }))).body.outcome).toBe("run");
+    // The fake lists runs newest first.
+    expect(w.agents.runs[0]!.requester?.kind).toBe("door");
+    await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    expect((await emailHook(w, mail(w, { messageID: "<after@mail.acme.example>" }))).body.outcome).toBe("run");
+    expect(w.agents.runs[0]!.requester).toEqual({ kind: "member", id: "u_ana" });
+  });
+
   it("never sends what the taf thought: a door's run isn't streamed, and its reply is its answer only (kiff/tafs#285)", async () => {
     const w = world();
     await emailDoor(w);
     // What a streamed run would show while it thinks: a door's run never reads it.
     w.agents.streamed.push({ event: "delta", data: { kind: "thinking", text: "The sender seems upset; check the order first." } });
-    const r = await emailHook(w, mail(w, { messageID: "<m9@mail.acme.example>" }));
+    await pairBen(w);
+    const r = await emailHook(w, mail(w, { from: BEN, messageID: "<m9@mail.acme.example>" }));
     expect(r.body).toEqual({ outcome: "run" });
     const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
     expect(run.requester?.kind).toBe("door");
@@ -324,6 +368,18 @@ describe("the email door", () => {
     // Someone who only uses the taf isn't shown who wrote or what.
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/conversation`, { token: "viewer" })).body.knocks).toBeUndefined();
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "viewer" })).body.knocks).toEqual([]);
+  });
+
+  // kiff/tafs#185: a taf shared to use isn't the account's to oversee. Its doors, their paired
+  // senders (other people's addresses) and who wrote are only for the people who manage it.
+  it("someone a taf is only shared with sees none of its doors or paired senders", async () => {
+    const w = world();
+    await emailDoor(w);
+    const owner = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
+    expect(owner.body.doors.length).toBeGreaterThan(0);
+    const viewer = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "viewer" });
+    expect(viewer.status).toBe(200);
+    expect(viewer.body).toEqual({ doors: [], apps: [], knocks: [] });
   });
 
   it("tells a phone registered before tafs cloud kept who manages, by whether its person answers held calls", async () => {
@@ -657,9 +713,10 @@ describe("the email door", () => {
   it("the daily limit holds: 20 a day from paired senders, then one line counts what was dropped", async () => {
     const w = world();
     await emailDoor(w);
-    for (let i = 0; i < 20; i++) expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("run");
-    expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("resting");
-    expect((await emailHook(w, mail(w, {}))).body.outcome).toBe("resting");
+    await pairBen(w);
+    for (let i = 0; i < 20; i++) expect((await emailHook(w, mail(w, { from: BEN }))).body.outcome).toBe("run");
+    expect((await emailHook(w, mail(w, { from: BEN }))).body.outcome).toBe("resting");
+    expect((await emailHook(w, mail(w, { from: BEN }))).body.outcome).toBe("resting");
     expect(w.agents.runs).toHaveLength(20);
     const doors = await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" });
     expect(doors.body.doors[0]).toMatchObject({ today: 20, limit: 20, resting: true, others_today: 0, others_limit: 10 });

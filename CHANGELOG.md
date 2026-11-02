@@ -11,6 +11,35 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Setup, for any vendor:** its rules name roles, not one payments vendor's tools: the
+  argument a call acts on, the read that says its unit, money in its own units, test or live when
+  the vendor has both. A vendor with a REST API and no MCP server is connected by its key, which
+  the owner gives on the phone, never in the chat. A plan step can name the call it waits on, and
+  is done only once that call went through.
+
+- **iPhone and iPad, an empty home for someone a taf is shared with:** "Tafs shared with you show
+  here." Only someone who may use Coach reads "Connect a tool to set up your first taf".
+
+- **iPhone and iPad, Signed in as:** Settings › Account › KIFF account labels the person's own
+  address "Signed in as", so it never reads as the account's, as on Android.
+
+- **iPhone and iPad, Go on past the AI use bound:** Settings › AI use shows tafs cloud's words as
+  they are. While the tafs wait, the billing admin gets **Go on** (one Face ID), and AI use is read
+  again after it; anyone else reads who can let them go on, and when it starts again by itself. If
+  that read fails, it says the tafs went on and offers Read it again, never a second Go on.
+
+- **Android, Go on:** while the tafs wait past this period's AI use, the billing admin sees **Go
+  on** in Plan & usage's AI use. It asks once, then the phone's device key signs it for KIFF. If
+  AI use can't be read after it, it says the tafs went on and offers Read it again, never a second
+  Go on.
+  Anyone else reads tafs cloud's words on who can, and when AI use starts again.
+- **Android, a taf shared with you:** its Card reads as issued by the account, by name, never
+  "You"; that stays only for a taf you manage. Settings labels your own address "Signed in as".
+  An empty home list tells someone who can't use Coach "Tafs shared with you show here."
+- **iPhone and iPad, an answered card stays under its turn:** once answered, a card stays after
+  Coach's words that asked for it, and Coach's words after the answer come below it, as on Android.
+  A "Try again" card no longer shows above the turn that offered it.
+
 - **Android, Set up approvals on this device:** before sign-in, only when the phone can't approve
   yet, a screen says why approvals need a fingerprint and where this phone stands: none set up
   (Open settings goes straight to adding one), the sensor busy just now (Check again), or no
@@ -27,6 +56,19 @@ version headings refer to releases, not merely to merged pull requests.
   device can approve; Check again updates both at once. A cancelled or unrecognised approval says
   so, and that the request is kept. It says up front that adding a face or fingerprint later
   means approving this device again.
+- **tafs cloud, going on past the AI use bound:** `GET /v1/usage/ai` says whether this person may
+  go on (`can_go_on`, the billing admin) and when the AI use starts again by itself
+  (`starts_again`). While the tafs wait, its words tell the billing admin to go on and anyone else
+  that an admin of the account can, with the day it starts again. A chat refused for AI use says
+  the same, pointing to Settings › AI use.
+- **tafs cloud, a taf shared with you shows none of its doors:** someone who only uses a taf reads
+  no doors, paired senders or knocks from `GET /v1/tafs/{id}/doors`, so other people's addresses
+  stay with the people who manage the taf.
+- **tafs cloud, the owner's own email is theirs:** a message from the owner's own sign-in email
+  that passes the sender check runs as the owner, in their own live chat, so it shows there as
+  their message (marked as by email) and an open chat reads it at the next change. Other paired
+  senders are unchanged.
+
 - **Android, Copy under an answer:** every finished answer from Coach or a taf has Copy under it,
   which copies the whole answer, and its text can be selected. Report this answer moves under
   More actions (⋯), so it's never the only thing a long press finds.

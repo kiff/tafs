@@ -172,7 +172,7 @@ struct HomeSplitView: View {
                 Section {
                     ForEach(sections.own) { taf in tafLinks(taf) }
                     if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
-                        Text("Connect a tool to set up your first taf.")
+                        Text(model.mayUseCoach ? "Connect a tool to set up your first taf." : "Tafs shared with you show here.")
                             .scaledFont(13).foregroundColor(Theme.dim)
                             .listRowBackground(Color.clear)
                     }
