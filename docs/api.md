@@ -50,6 +50,15 @@ details go only to tafs cloud's own log.
 | `POST /v1/halt` | `cards.manage` | Halt every taf, in KIFF and kiff/agents at once ([approvals.md](approvals.md#halting)) |
 | `DELETE /v1/halt` | `cards.manage` | Resume kiff/agents, once KIFF says it runs again (409 until the phone resumed it in KIFF) |
 
+### Connect apps
+
+The catalog of apps a taf can use, and a connection started for one taf. tafs cloud asks planque with the person's own session and keeps nothing. The approval, with KIFF's words for the connection signed on the phone, and the vendor's sign-in after it, are the phone's and planque's, as for a connection Coach starts.
+
+| Route | Who | What |
+|---|---|---|
+| `GET /v1/connect/apps?q=` | a person | `{apps: [{entry, vendor, title, icon?, how: oauth \| key, state: available \| connected \| needs_reconnect, grant?}], by_key}`: the catalog first, searched by `q`. `by_key` says Coach can connect a vendor that isn't listed |
+| `POST /v1/connect/apps/{entry}` | `cards.manage`, managing the taf | `{taf}`: starts a connection for that taf's KIFF agent. Answers `{grant, needs_key?}`, the grant to approve. Nothing is signed here, and there's no sign-in URL until the phone approves |
+
 ### Alerts
 
 | Route | Who | What |

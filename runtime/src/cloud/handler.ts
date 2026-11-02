@@ -13,6 +13,7 @@ import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary }
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf } from "./knob.js";
+import { ConnectError, listApps, startApp } from "./connect.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { stepWords, Steps, type ToolTitles } from "./steps.js";
@@ -55,6 +56,8 @@ import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
+ *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
+ *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   GET  /v1/tafs/{id}/knob             its dial: what wakes it, when, where results go, and today's work, in tafs cloud's words
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
@@ -182,6 +185,8 @@ export interface Deps {
   reports?: ReportsDeps;
   fetch?: Fetch;
   kiffBase?: string;
+  /** planque, where Connect apps' catalog is (docs/api.md). Missing: Connect apps answers 503. */
+  planqueBase?: string;
   /** KIFF's gateway, where the account's tool connections are (default mcp.kiff.dev). */
   kiffGateway?: string;
   /**
@@ -431,7 +436,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 }
 
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
-const ROUTE_WORDS = new Set(("v1 account ai alerts answer archive archived attachments calls chats components continue conversation " +
+const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats components connect continue conversation " +
   "delete deletions deliveries doors door email whatsapp ended events halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "memory messages pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks").split(" "));
@@ -478,6 +483,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return body.intent === undefined ? deleteAccount(me, deps) : deleteByIntent(me, body, bearer(event), deps);
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
+  if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
   }
@@ -4411,6 +4417,33 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   if (parts.length === 5 && method === "DELETE" && a) return removeDoor(ctx, owner, taf, a);
   if (parts.length === 6 && method === "POST" && a && b === "keys") return pair(ctx, owner, taf, a, body);
   if (parts.length === 7 && method === "DELETE" && a && b === "keys" && c) return unpair(ctx, owner, taf, a, decodeURIComponent(c));
+  throw new HTTPError(404, "not found");
+}
+
+/**
+ * Connect apps (docs/api.md): planque's catalog, and a connection started for one taf, asked with
+ * the person's own session. The approval and the sign-in after it are the phone's and planque's.
+ */
+async function connectApps(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  if (!deps.planqueBase) throw new HTTPError(503, "Connect apps isn't set up here");
+  const fetchFn = deps.fetch ?? fetch;
+  try {
+    if (parts.length === 3 && method === "GET") {
+      return await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), new URLSearchParams(event.rawQueryString ?? "").get("q") ?? "");
+    }
+    if (parts.length === 4 && method === "POST") {
+      need(me, "cards.manage");
+      const body = parseBody(event);
+      if (typeof body.taf !== "string") throw new HTTPError(400, "taf is the taf this connection is for");
+      const taf = await owned(me, body.taf, deps);
+      await needTaf(event, me, taf, deps);
+      if (!taf.kiffAgent) throw new HTTPError(409, `${taf.name} has no KIFF agent to connect apps for yet`);
+      return await startApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), decodeURIComponent(parts[3] ?? ""), taf.kiffAgent);
+    }
+  } catch (err) {
+    if (err instanceof ConnectError) throw new HTTPError(err.status, err.message);
+    throw err;
+  }
   throw new HTTPError(404, "not found");
 }
 

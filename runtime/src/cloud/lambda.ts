@@ -668,7 +668,7 @@ const deletionPeers = {
 };
 
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, planqueBase: process.env.PLANQUE_URL ?? PLANQUE, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
 }
 
 /**
