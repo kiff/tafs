@@ -29,12 +29,14 @@ extension TafsCloud {
             var tap: String?
             /// A follow-up's end.
             var expires: String?
+            /// A door's own id: the face opens or closes it through the doors API.
+            var door: String?
 
-            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires }
+            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door }
             init(id: String, kind: String? = nil, place: String? = nil, label: String, words: String, on: Bool = true,
-                 state: String? = nil, tap: String? = nil, expires: String? = nil) {
+                 state: String? = nil, tap: String? = nil, expires: String? = nil, door: String? = nil) {
                 self.id = id; self.kind = kind; self.place = place; self.label = label; self.words = words
-                self.on = on; self.state = state; self.tap = tap; self.expires = expires
+                self.on = on; self.state = state; self.tap = tap; self.expires = expires; self.door = door
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -47,6 +49,7 @@ extension TafsCloud {
                 state = try c.decodeIfPresent(String.self, forKey: .state)
                 tap = try c.decodeIfPresent(String.self, forKey: .tap)
                 expires = try c.decodeIfPresent(String.self, forKey: .expires)
+                door = try c.decodeIfPresent(String.self, forKey: .door)
             }
         }
 

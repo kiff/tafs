@@ -1497,14 +1497,21 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// The face was tapped on a stop whose `tap` says it does something. Run now starts a run;
-    /// the rest go through the knob's changes once tafs cloud says how.
+    /// The face was tapped on a stop whose `tap` says it does something: a door opens or
+    /// closes through the doors API, and Run now starts a run, each as today, with no new
+    /// version. Every other change goes through the knob's own route.
     func pressKnob(_ tafID: UUID, _ item: TafsCloud.Knob.Item) async {
         guard let c = cloudTaf(for: tafID) else { return }
-        if item.kind == "run_now" {
+        if let door = item.door {
+            do { _ = try await cloud.setDoorOpen(c.id, door: door, open: !item.on) } catch {
+                lastError = "The door didn't \(item.on ? "close" : "open"): \(error.localizedDescription)"
+            }
+        } else if item.kind == "run_now" {
             _ = await runNow(c)
-            await loadKnob(tafID)
+        } else {
+            return
         }
+        await loadKnob(tafID)
     }
 
     func runNow(_ cloudTaf: TafsCloud.CloudTaf) async -> String? {

@@ -116,8 +116,9 @@ the app in sample mode.
   it; the app's own words are only "DOES", "Tap a ring", "Tap to approve once" and the ring
   titles. `TafDialScreen` puts it on a screen (K1 to K3): the taf's name and "Needs you · N",
   which puts its oldest held call in the face, where a tap approves it once; then Overview,
-  Ask Coach and Pause. The face's tap starts a run for Run now; the other stops wait for
-  their route in the knob API. It isn't reachable from the app's navigation yet.
+  Ask Coach and Pause. The face's tap opens or closes a door through the doors API (its
+  `door`) and starts a run for Run now, as today, with no new version; every other change goes
+  through the knob's own route. It isn't reachable from the app's navigation yet.
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
   `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
   (`POST /v1/profiles/words`) and checked against the profile's digest and their own before

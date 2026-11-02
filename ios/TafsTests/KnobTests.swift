@@ -7,7 +7,7 @@ final class KnobTests: XCTestCase {
     func testTheKnobAPIsExampleDecodes() throws {
         let json = #"""
         {"version":7,"does":{"label":"Refund","line":"Refunds a payment in Stripe, within its Card."},
-         "wakes":[{"id":"trg_1","kind":"door","label":"Email","words":"Wakes on email to refunds@shop.example","on":true,"state":"Open","tap":"Tap to close"},
+         "wakes":[{"id":"trg_1","kind":"door","door":"door_1","label":"Email","words":"Wakes on email to refunds@shop.example","on":true,"state":"Open","tap":"Tap to close"},
                   {"id":"trg_2","kind":"follow_up","label":"Follow-up","words":"Checks refund re_1 again","expires":"2026-11-09T09:00:00Z"}],
          "when":[{"id":"when_arrivals","kind":"arrivals","label":"Arrivals","words":"Works each one as it arrives"}],
          "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote","on":false}],
@@ -20,6 +20,8 @@ final class KnobTests: XCTestCase {
         XCTAssertEqual(k.wakes.map(\.label), ["Email", "Follow-up"])
         XCTAssertEqual(k.wakes[0].state, "Open")
         XCTAssertEqual(k.wakes[0].tap, "Tap to close")
+        XCTAssertEqual(k.wakes[0].door, "door_1", "a door's own id, for the doors API")
+        XCTAssertNil(k.wakes[1].door)
         XCTAssertNil(k.wakes[1].tap, "no tap: the face does nothing for it")
         XCTAssertTrue(k.wakes[1].on, "a stop that doesn't say is on")
         XCTAssertEqual(k.wakes[1].expires, "2026-11-09T09:00:00Z")
