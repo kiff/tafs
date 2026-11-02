@@ -137,7 +137,7 @@ struct ApprovalNotReady: View {
                 .scaledFont(14).foregroundColor(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("approvalNotReady")
-            if readiness == .noneEnrolled {
+            if readiness == .noneEnrolled || readiness == .noPasscode {
                 Text(ApprovalReadiness.newBiometricsNote)
                     .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     .fixedSize(horizontal: false, vertical: true)

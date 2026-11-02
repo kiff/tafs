@@ -20,9 +20,9 @@ version headings refer to releases, not merely to merged pull requests.
   stops approvals until they're approved again.
 - **iPhone and iPad, Set up approvals on this device:** before sign-in, only when the device
   can't approve yet, a screen says where it stands: no Face ID or Touch ID set up (the path in
-  Settings, in words), turned off for tafs (Open Settings), locked after too many tries or
-  unavailable just now (Check again), or none on this device (approve on another one), with
-  Continue without approvals. Before the first taf Coach's start says approving is needed, and at
+  Settings, in words, or a passcode first where there is none), turned off for tafs (Open
+  Settings), locked after too many tries or unavailable just now (Check again), or none on this
+  device (approve on another one), with Continue without approvals. Before the first taf Coach's start says approving is needed, and at
   every approval the same words stand in the button's place, or beside a disabled one, until the
   device can approve; Check again updates both at once. A cancelled or unrecognised approval says
   so, and that the request is kept. It says up front that adding a face or fingerprint later

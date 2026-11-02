@@ -8,7 +8,7 @@ final class ApprovalReadinessTests: XCTestCase {
     func testEachLAErrorMapsToItsState() {
         XCTAssertEqual(ApprovalReadiness.from(nil, biometry: .faceID), .ready)
         XCTAssertEqual(ApprovalReadiness.from(.biometryNotEnrolled, biometry: .faceID), .noneEnrolled)
-        XCTAssertEqual(ApprovalReadiness.from(.passcodeNotSet, biometry: .touchID), .noneEnrolled)
+        XCTAssertEqual(ApprovalReadiness.from(.passcodeNotSet, biometry: .touchID), .noPasscode)
         // The same code for no Face ID at all and for Face ID turned off for tafs.
         XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .none), .unsupported)
         XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .faceID), .offForTafs)
@@ -17,7 +17,7 @@ final class ApprovalReadinessTests: XCTestCase {
     }
 
     func testEachStateHasItsOwnWords() {
-        let states: [ApprovalReadiness] = [.ready, .noneEnrolled, .offForTafs, .unavailable(lockedOut: true), .unavailable(lockedOut: false), .unsupported]
+        let states: [ApprovalReadiness] = [.ready, .noneEnrolled, .noPasscode, .offForTafs, .unavailable(lockedOut: true), .unavailable(lockedOut: false), .unsupported]
         let words = states.map { $0.words(device: "iPhone", kind: "Face ID") }
         XCTAssertEqual(Set(words).count, states.count, words.joined(separator: "\n"))
         let short = states.dropFirst().map { $0.short(kind: "Face ID") }
@@ -32,8 +32,11 @@ final class ApprovalReadinessTests: XCTestCase {
         // Locked out: retry guidance. Unsupported: another device.
         XCTAssertTrue(ApprovalReadiness.unavailable(lockedOut: true).words(device: "iPhone", kind: "Face ID").contains("passcode"))
         XCTAssertTrue(ApprovalReadiness.unsupported.words(device: "iPad", kind: nil).contains("another"))
-        // Open Settings only where tafs' settings help.
-        XCTAssertEqual(states.filter(\.opensSettings), [.noneEnrolled, .offForTafs])
+        // Open Settings only where tafs' own settings help: its Face ID switch.
+        XCTAssertEqual(states.filter(\.opensSettings), [.offForTafs])
+        // No passcode: a passcode first, then Face ID.
+        let noPasscode = ApprovalReadiness.noPasscode.words(device: "iPhone", kind: "Face ID")
+        XCTAssertTrue(noPasscode.contains("Set a passcode") && noPasscode.contains("then add Face ID"), noPasscode)
     }
 
     func testAnApprovalSaysCancelledOrNotRecognizedAndKeepsTheRequest() {

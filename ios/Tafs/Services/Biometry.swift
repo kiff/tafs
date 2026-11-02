@@ -29,8 +29,10 @@ enum Biometry {
 /// up" for all of them (kiff/tafs#423, "Set up approvals on this device").
 enum ApprovalReadiness: Equatable {
     case ready
-    /// No face or fingerprint enrolled, or no passcode: the person sets one up.
+    /// No face or fingerprint enrolled: the person adds one.
     case noneEnrolled
+    /// No passcode on the device, which Face ID and Touch ID need first.
+    case noPasscode
     /// Face ID or Touch ID is there but turned off for tafs: its own settings turn it on.
     case offForTafs
     /// Working but not right now: locked out after tries, a Touch ID keyboard not connected.
@@ -44,8 +46,10 @@ enum ApprovalReadiness: Equatable {
     static func from(_ code: LAError.Code?, biometry: LABiometryType) -> ApprovalReadiness {
         guard let code else { return .ready }
         switch code {
-        case .biometryNotEnrolled, .passcodeNotSet:
+        case .biometryNotEnrolled:
             return .noneEnrolled
+        case .passcodeNotSet:
+            return .noPasscode
         case .biometryNotAvailable:
             // The same code for a device without it and for tafs not allowed to use it.
             return biometry == .none ? .unsupported : .offForTafs
@@ -81,6 +85,8 @@ enum ApprovalReadiness: Equatable {
             return "This \(device) is ready to approve with \(either)."
         case .noneEnrolled:
             return "Approving asks for \(either), and none is set up on this \(device) yet. Set it up in \(Self.path(kind)), then come back."
+        case .noPasscode:
+            return "This \(device) has no passcode, and \(either) needs one. Set a passcode in \(Self.path(kind)), then add \(either), then come back."
         case .offForTafs:
             return "\(either) is turned off for tafs. Open Settings and turn on \(either) for tafs."
         case .unavailable(lockedOut: true):
@@ -98,6 +104,7 @@ enum ApprovalReadiness: Equatable {
         switch self {
         case .ready: return ""
         case .noneEnrolled: return "Approving needs \(either), and none is set up. Set it up in \(Self.path(kind))."
+        case .noPasscode: return "Approving needs a passcode and \(either). Set a passcode in \(Self.path(kind)), then add \(either)."
         case .offForTafs: return "\(either) is turned off for tafs. Turn it on in tafs' settings to approve."
         case .unavailable(lockedOut: true): return "\(either) is locked after too many tries. Unlock this device with its passcode, then try again."
         case .unavailable(lockedOut: false): return "\(either) can't be used right now. Try again in a moment."
@@ -115,13 +122,10 @@ enum ApprovalReadiness: Equatable {
         }
     }
 
-    /// Open Settings helps here: tafs' settings hold its Face ID switch, and lead to the rest.
-    var opensSettings: Bool {
-        switch self {
-        case .noneEnrolled, .offForTafs: return true
-        default: return false
-        }
-    }
+    /// Open Settings helps only here: it opens tafs' own settings, which hold its Face ID
+    /// switch. Adding a face, a fingerprint or a passcode isn't there, so those states give
+    /// the path in words and no button that can't help.
+    var opensSettings: Bool { self == .offForTafs }
 
     /// Said on the setup screen: a new face or fingerprint ends the approval key.
     static let newBiometricsNote = "Adding a face or fingerprint later ends this device's approval key, so you approve this device again then."

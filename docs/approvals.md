@@ -189,9 +189,11 @@ The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Tou
 
 - **The states,** each from its `LAError`:
   - set up: approvals work;
-  - none enrolled (`biometryNotEnrolled`, `passcodeNotSet`): the path in words, **Settings →
-    Face ID & Passcode** (Touch ID & Passcode on a device with Touch ID). iOS opens no page of
-    Settings for an app but its own, so **Open Settings** opens tafs' settings;
+  - none enrolled (`biometryNotEnrolled`): the path in words, **Settings → Face ID & Passcode**
+    (Touch ID & Passcode on a device with Touch ID), and no button: iOS opens no page of
+    Settings for an app but its own, which can't add a face or a fingerprint;
+  - no passcode (`passcodeNotSet`): set a passcode first, at the same path, then add Face ID
+    or Touch ID;
   - turned off for tafs (`biometryNotAvailable` on a device that has Face ID or Touch ID):
     **Open Settings** opens tafs' settings, where its Face ID switch is;
   - temporarily unavailable: locked after too many tries (`biometryLockout`), "lock this
@@ -199,8 +201,9 @@ The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Tou
     moment"; both with **Check again**;
   - unsupported (`biometryNotAvailable` with no Face ID or Touch ID): approve on another
     iPhone, iPad or Android phone signed in to the account.
-- **Before sign-in,** only when it isn't set up: the screen, with **Open Settings**, **Check
-  again** and **Continue without approvals**. Once it's set up there, the same screen says so,
+- **Before sign-in,** only when it isn't set up: the screen, with **Check again** and
+  **Continue without approvals**, and **Open Settings** only when Face ID is turned off for
+  tafs. Once it's set up there, the same screen says so,
   with **Continue**.
 - **Before the first taf:** Coach's start says approving is needed to finish it, and Start is
   gated, since it asks for Face ID.
