@@ -2052,6 +2052,8 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return "" }
             return "Your tafs couldn't go on: \(error.localizedDescription)"
         }
+        // A switch while the PUT was out: its answer is the old account's, and changes nothing here.
+        guard gen == accountGeneration else { return "" }
         // It went through. Until the use is read again, the screen says so and offers only a read.
         aiUseStale = true
         await readAIUse()

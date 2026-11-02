@@ -377,6 +377,29 @@ final class PurchasesTests: XCTestCase {
         XCTAssertEqual(signer.signed.count, signed, "reading signs nothing")
     }
 
+    /// A switch while the go-on is out (kiff/tafs#433): its answer is the old account's, so it
+    /// marks nothing stale and reads nothing for the account the app is in now.
+    func testAGoOnAnsweredAfterASwitchChangesNothing() async throws {
+        let log = StoreLog()
+        let (model, _, _) = await signedIn(log)
+        StubProtocol.responses["GET /v1/usage/ai"] = (200, #"{"used_pct":100,"asks_at_pct":100,"paused":true,"can_go_on":true,"words":"Waiting for you."}"#)
+        await model.refreshUsage()
+        StubProtocol.responses["PUT /v1/me/usage/ai"] = (200, #"{"go_ons":1}"#)
+        StubProtocol.holdOnce = "PUT /v1/me/usage/ai"
+        let going = Task { await model.goOnAI() }
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
+        _ = await model.signOut()
+        let readsBefore = StubProtocol.sent.filter { $0.url?.path == "/v1/usage/ai" }.count
+        StubProtocol.release.signal()
+        let answer = await going.value
+        XCTAssertEqual(answer, "", "nothing to say for an account that's gone")
+        XCTAssertFalse(model.aiUseStale)
+        XCTAssertNil(model.aiUse)
+        XCTAssertEqual(StubProtocol.sent.filter { $0.url?.path == "/v1/usage/ai" }.count, readsBefore, "no read after the switch")
+    }
+
     /// Someone who may not go on gets no answer of their own: tafs cloud's words say who can.
     func testAPersonWhoMayNotGoOnReadsWhoCan() throws {
         let ai = try JSONDecoder().decode(TafsCloud.AIUse.self, from: Data(#"{"used_pct":101,"asks_at_pct":100,"paused":true,"can_go_on":false,"starts_again":null,"words":"An admin of this account can let them go on from Settings › AI use."}"#.utf8))
