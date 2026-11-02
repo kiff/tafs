@@ -59,7 +59,8 @@ final class KIFFClient {
     /// starts a taf, the alert target that tells tafs cloud when a call is held, the connector
     /// key planque keeps, the account's time zone, deleting the account (kiff/tafs#185), and
     /// the owner's go on past AI fair use (kiff/tafs#193).
-    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete"]
+    static let signedSetupPaths: Set<String> = ["/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete",
+                                                      "/v1/me/usage/ai"]
 
     /// Whether KIFF takes `path` from a phone only with its signature: the paths above,
     /// confirming a draft someone else submitted (`/v1/me/agent-drafts/{id}/confirm`),
@@ -605,6 +606,14 @@ final class KIFFClient {
     /// Takes back this person's request.
     func withdrawRequest(_ id: String) async throws -> PackRequest {
         try await send("POST", "/v1/me/pack-requests/\(escaped(id))/withdraw", body: [String: String]())
+    }
+
+    /// One more go-on past the AI fair-use bound this period (kiff/tafs#185): the billing
+    /// admin's act, a signed call from a phone. A replayed signature is refused, so one tap is
+    /// one go-on.
+    func goOnAI() async throws {
+        struct GoOn: Encodable { let go_on = true }
+        let _: Empty = try await send("PUT", "/v1/me/usage/ai", body: GoOn())
     }
 
     /// Declines a member's request, with a note: a signed call from a phone.

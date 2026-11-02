@@ -583,10 +583,14 @@ private struct CountRow: View {
     }
 }
 
-/// AI use from chats and Setup this period (kiff/tafs#193): its own screen, read only. It's
-/// included, and never billed: past the plan's fair use the tafs ask before going on.
+/// AI use from chats and Setup this period (kiff/tafs#193): its own screen. It's included,
+/// and never billed: past the plan's fair use the tafs ask before going on. While they wait,
+/// the billing admin can let them go on, behind Face ID (kiff/tafs#185); anyone else reads who
+/// can, in tafs cloud's words.
 struct AIUseView: View {
     @EnvironmentObject private var model: AppModel
+    @State private var goingOn = false
+    @State private var why: String?
 
     var body: some View {
         ScrollView {
@@ -596,14 +600,36 @@ struct AIUseView: View {
                         Eyebrow(text: "AI use this month")
                         Text("\(used)%").scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                         Meter(fraction: Double(used) / Double(max(ai.asksAtPct ?? 100, 1)), color: ai.paused ? Theme.amber : Theme.ok)
-                        Text(Self.explain(ai)).scaledFont(13).foregroundColor(Theme.soft)
+                        Text(ai.words.isEmpty ? Self.explain(ai) : ai.words).scaledFont(13).foregroundColor(Theme.soft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    if ai.paused {
+                    if ai.paused && ai.words.isEmpty {
                         Panel {
                             Text(Self.asking).scaledFont(15).foregroundColor(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
+                    }
+                    if ai.paused && ai.canGoOn {
+                        ApprovalGate {
+                            Button {
+                                goingOn = true
+                                why = nil
+                                Task {
+                                    let answer = await model.goOnAI()
+                                    why = answer?.isEmpty == true ? nil : answer
+                                    goingOn = false
+                                }
+                            } label: {
+                                Label(goingOn ? "Going on…" : "Go on", systemImage: Biometry.symbol)
+                            }
+                            .buttonStyle(PrimaryButtonStyle())
+                            .disabled(goingOn)
+                            .accessibilityIdentifier("ai-go-on")
+                        }
+                    }
+                    if let why {
+                        Text(why).scaledFont(13).foregroundColor(Theme.no)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }

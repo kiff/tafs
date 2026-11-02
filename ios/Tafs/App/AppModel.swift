@@ -2023,6 +2023,33 @@ final class AppModel: ObservableObject {
         await refreshUsage()
     }
 
+    /// Lets the tafs go on past this period's AI fair use (kiff/tafs#185), behind Face ID:
+    /// the billing admin's act, which KIFF takes only signed by this phone. Then reads the AI
+    /// use again, so the screen says where they ask next. Nil once it went on; else why not,
+    /// empty when the prompt was closed.
+    func goOnAI() async -> String? {
+        guard mode == .kiff, let tenant = kiffTenant else { return "Sign in with KIFF to let your tafs go on." }
+        guard sessionHasKey else { return "Sign in with KIFF again: this sign-in can't sign for the \(ThisDevice.kind)." }
+        let gen = accountGeneration
+        let at = aiUse?.asksAtPct ?? 100
+        do { _ = try await signer.sign(Data("tafs.ai-go-on.v1|\(tenant)|\(at)".utf8), reason: "Let your tafs go on") } catch { return "" }
+        guard gen == accountGeneration else { return "" }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            try await kiff.goOnAI()
+        } catch {
+            guard gen == accountGeneration else { return "" }
+            return "Your tafs couldn't go on: \(error.localizedDescription)"
+        }
+        let ai = try? await cloud.aiUse()
+        guard gen == accountGeneration else { return "" }
+        if let ai { aiUse = ai }
+        return nil
+    }
+
     /// Declines a member's request, with a note: the admin's answer, behind Face ID.
     func declineRequest(_ request: KIFFClient.PackRequest, note: String) async -> Bool {
         tasksMessage = nil

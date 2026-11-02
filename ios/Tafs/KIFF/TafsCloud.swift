@@ -276,12 +276,38 @@ final class TafsCloud {
 
     /// The period's AI use, from chats and Setup (kiff/tafs#193): a share of the plan's fair
     /// use, where the tafs ask next (100%, then 200% after a go on…), and whether they're
-    /// asking now. Nil shares: no bound on this account.
+    /// asking now. Nil shares: no bound on this account. Whether this person may go on
+    /// (`can_go_on`, the billing admin), when it starts again by itself, and `words` saying
+    /// all that, shown as they are (kiff/tafs#185).
     struct AIUse: Decodable, Equatable {
         let usedPct: Int?
         let asksAtPct: Int?
         let paused: Bool
-        enum CodingKeys: String, CodingKey { case usedPct = "used_pct", asksAtPct = "asks_at_pct", paused }
+        var canGoOn = false
+        var startsAgain: String?
+        var words = ""
+        enum CodingKeys: String, CodingKey {
+            case usedPct = "used_pct", asksAtPct = "asks_at_pct", paused, canGoOn = "can_go_on", startsAgain = "starts_again", words
+        }
+
+        init(usedPct: Int?, asksAtPct: Int?, paused: Bool, canGoOn: Bool = false, startsAgain: String? = nil, words: String = "") {
+            self.usedPct = usedPct
+            self.asksAtPct = asksAtPct
+            self.paused = paused
+            self.canGoOn = canGoOn
+            self.startsAgain = startsAgain
+            self.words = words
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            usedPct = try c.decodeIfPresent(Int.self, forKey: .usedPct)
+            asksAtPct = try c.decodeIfPresent(Int.self, forKey: .asksAtPct)
+            paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? false
+            canGoOn = (try? c.decodeIfPresent(Bool.self, forKey: .canGoOn)) ?? false
+            startsAgain = try? c.decodeIfPresent(String.self, forKey: .startsAgain)
+            words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? ""
+        }
     }
 
     func aiUse() async throws -> AIUse {

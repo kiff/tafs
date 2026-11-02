@@ -180,6 +180,12 @@ Go on is the approval key's (`AppModel.goOnAI`), so while the phone can't approv
 stands in the button's place ([approvals.md](approvals.md#set-up-approvals-on-this-device)).
 After it, AI use is read again. A chat refused for AI use shows its `words` and has no button.
 
+On iPhone and iPad, AI use is its own screen from Plan & usage (`AIUseView`), with tafs cloud's
+`words` as they are; the app's own lines stay only for a tafs cloud that sends none. Go on
+(`AppModel.goOnAI`) is signed through the session's signed route, behind Face ID, inside an
+`ApprovalGate`, so while the device can't approve its state stands in the button's place. After
+it, AI use is read again.
+
 ## The account's time zone
 
 Every time the app shows is in the account's time zone (`AccountTime`), and a Card's day

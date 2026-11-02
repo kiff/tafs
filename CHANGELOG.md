@@ -11,6 +11,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, Go on past the AI use bound:** Settings › AI use shows tafs cloud's words as
+  they are. While the tafs wait, the billing admin gets **Go on** (one Face ID), and AI use is read
+  again after it; anyone else reads who can let them go on, and when it starts again by itself.
+
 - **Android, Go on:** while the tafs wait past this period's AI use, the billing admin sees **Go
   on** in Plan & usage's AI use. It takes one fingerprint and is signed by the approval key.
   Anyone else reads tafs cloud's words on who can, and when AI use starts again.

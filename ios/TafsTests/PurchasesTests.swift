@@ -317,6 +317,46 @@ final class PurchasesTests: XCTestCase {
         XCTAssertNil(ask.value(forHTTPHeaderField: "KIFF-Device-Signature"))
     }
 
+    /// Going on past the AI fair use is the billing admin's act (kiff/tafs#185): signed behind
+    /// Face ID, then the AI use read again. tafs cloud's words show as they are; a refused
+    /// go-on (a replayed signature) says so.
+    func testGoingOnPastTheAIUseIsSignedAndReadsItAgain() async throws {
+        let log = StoreLog()
+        let (model, _, signer) = await signedIn(log)
+        StubProtocol.responses["GET /v1/usage/ai"] = (200,
+            #"{"used_pct":100,"asks_at_pct":100,"paused":true,"can_go_on":true,"starts_again":"2026-12-01T00:00:00Z","words":"Your tafs used 100% of this period's AI and are waiting for you."}"#)
+        await model.refreshUsage()
+        XCTAssertEqual(model.aiUse, .init(usedPct: 100, asksAtPct: 100, paused: true, canGoOn: true,
+                                          startsAgain: "2026-12-01T00:00:00Z", words: "Your tafs used 100% of this period's AI and are waiting for you."))
+
+        XCTAssertTrue(KIFFClient.signsSetup("/v1/me/usage/ai"), "going on lets the tafs use more")
+        StubProtocol.responses["PUT /v1/me/usage/ai"] = (200, #"{"go_ons":1}"#)
+        StubProtocol.responses["GET /v1/usage/ai"] = (200, #"{"used_pct":100,"asks_at_pct":200,"paused":false,"can_go_on":true,"starts_again":null,"words":"They ask you before going past 200%."}"#)
+        let went = await model.goOnAI()
+        XCTAssertNil(went)
+        let put = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PUT" && $0.url?.path == "/v1/me/usage/ai" })
+        XCTAssertEqual(try JSONDecoder().decode([String: Bool].self, from: try XCTUnwrap(put.httpBody)), ["go_on": true])
+        XCTAssertNotNil(put.value(forHTTPHeaderField: "KIFF-Device-Signature"), "a signed setup call")
+        XCTAssertTrue(signer.signed.contains { $0.hasPrefix("tafs.ai-go-on.v1|t1|100") }, "Face ID first")
+        XCTAssertEqual(model.aiUse?.asksAtPct, 200)
+        XCTAssertFalse(model.aiUse?.paused ?? true)
+
+        StubProtocol.responses["PUT /v1/me/usage/ai"] = (409, #"{"error":"this signature was used"}"#)
+        let refused = await model.goOnAI()
+        XCTAssertEqual(refused, "Your tafs couldn't go on: this signature was used")
+    }
+
+    /// Someone who may not go on gets no answer of their own: tafs cloud's words say who can.
+    func testAPersonWhoMayNotGoOnReadsWhoCan() throws {
+        let ai = try JSONDecoder().decode(TafsCloud.AIUse.self, from: Data(#"{"used_pct":101,"asks_at_pct":100,"paused":true,"can_go_on":false,"starts_again":null,"words":"An admin of this account can let them go on from Settings › AI use."}"#.utf8))
+        XCTAssertFalse(ai.canGoOn)
+        XCTAssertNil(ai.startsAgain)
+        XCTAssertEqual(ai.words, "An admin of this account can let them go on from Settings › AI use.")
+        let older = try JSONDecoder().decode(TafsCloud.AIUse.self, from: Data(#"{"used_pct":40,"asks_at_pct":100,"paused":false}"#.utf8))
+        XCTAssertFalse(older.canGoOn, "a tafs cloud that doesn't say: no Go on")
+        XCTAssertEqual(older.words, "")
+    }
+
     /// A member sees their request waiting, and what an admin answered.
     func testAMemberSeesTheirRequest() throws {
         var u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
