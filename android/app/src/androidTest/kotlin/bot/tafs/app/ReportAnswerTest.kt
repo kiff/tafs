@@ -49,44 +49,24 @@ class ReportAnswerTest {
   }
 
   @Test fun copyCopiesTheWholeAnswerAndSaysSo() {
-
     show(ReportResult.Sent(first = true))
-
     rule.onNodeWithText(bot.tafs.app.model.AnswerWords.COPY).assertIsDisplayed().performClick()
-
     rule.onNodeWithText(bot.tafs.app.model.AnswerWords.COPIED).assertIsDisplayed()
-
     val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
-
     val copied = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().let { i ->
-
       var text: CharSequence? = null
-
       i.runOnMainSync { text = (context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).primaryClip?.getItemAt(0)?.text }
-
       text?.toString()
-
     }
-
     assertEquals("Refunded Ana €40.", copied)
-
     assertEquals("opening nothing reported", emptyList<Pair<String, String?>>(), sent)
-
   }
-
-
 
   @Test fun anAnswerThatCantBeReportedStillCopiesAndHasNoMoreActions() {
-
     rule.setShown { TafsTheme { AnswerWithActions("Lately: refund order #4471.", null) { Text("Lately: refund order #4471.") } } }
-
     rule.onNodeWithText(bot.tafs.app.model.AnswerWords.COPY).assertIsDisplayed()
-
     assertEquals(0, rule.onAllNodes(androidx.compose.ui.test.hasContentDescription(bot.tafs.app.model.AnswerWords.MORE)).fetchSemanticsNodes().size)
-
   }
-
-
 
   @Test fun anAnswerReportedBeforeSaysSo() {
     show(ReportResult.Sent(first = false))
