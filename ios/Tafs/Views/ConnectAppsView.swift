@@ -4,12 +4,17 @@ import SwiftUI
 /// first, searched as the owner types, in tafs cloud's order and words. Each app is connected,
 /// to connect, or to sign in again. Connecting opens its approval as a sheet over the list (A3),
 /// with KIFF's words for it; the vendor's sign-in comes after the approval, as for any
-/// connection. An app nobody listed goes to Coach.
+/// connection. A connection is a taf's: opened from Settings, Connect asks which taf first,
+/// unless only one can have it. An app nobody listed goes to Coach.
 struct ConnectAppsView: View {
     static let title = "Connect apps"
     @EnvironmentObject private var model: AppModel
+    /// The taf the apps connect for, when opened from one.
+    var taf: UUID?
     @State private var query = ""
     @State private var starting: String?
+    /// The app waiting for its taf to be chosen.
+    @State private var choosing: TafsCloud.ConnectApps.App?
 
     var body: some View {
         List {
@@ -22,6 +27,10 @@ struct ConnectAppsView: View {
             } else {
                 ProgressView().frame(maxWidth: .infinity)
             }
+            if model.connectApps != nil, taf == nil, model.connectableTafs.isEmpty {
+                Text("Apps connect for a taf. Make one first, then connect its apps here.")
+                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            }
         }
         .navigationTitle(Self.title)
         .searchable(text: $query)
@@ -30,6 +39,14 @@ struct ConnectAppsView: View {
             if !query.isEmpty { try? await Task.sleep(nanoseconds: 300_000_000) }
             guard !Task.isCancelled else { return }
             await model.loadConnectApps(query)
+        }
+        .confirmationDialog("Which taf is this for?", isPresented: Binding(get: { choosing != nil }, set: { if !$0 { choosing = nil } }),
+                            titleVisibility: .visible, presenting: choosing) { app in
+            ForEach(model.connectableTafs) { t in
+                Button(t.name) { start(app, for: t.id) }
+            }
+        } message: { app in
+            Text("\(app.vendor.isEmpty ? app.title : app.vendor) is connected for one taf, which uses it as its Card allows.")
         }
         .sheet(item: Binding(get: { model.connectStart.map(StartSheet.init) }, set: { if $0 == nil { model.connectStart = nil } })) { sheet in
             ConnectApprovalSheet(start: sheet.start).environmentObject(model)
@@ -54,18 +71,27 @@ struct ConnectAppsView: View {
                 Label("Connected", systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
                     .accessibilityLabel("Connected")
             } else {
-                Button(app.needsReconnect ? "Sign in again" : "Connect") {
-                    starting = app.entry
-                    Task {
-                        await model.startConnect(app)
-                        starting = nil
-                    }
-                }
-                .buttonStyle(OutlineButtonStyle())
-                .disabled(starting != nil)
+                Button(app.needsReconnect ? "Sign in again" : "Connect") { connect(app) }
+                    .buttonStyle(OutlineButtonStyle())
+                    .disabled(starting != nil || (taf == nil && model.connectableTafs.isEmpty))
             }
         }
         .frame(minHeight: 44)
+    }
+
+    /// The taf first: the one this was opened from, the only one there is, or the owner's pick.
+    private func connect(_ app: TafsCloud.ConnectApps.App) {
+        let tafs = model.connectableTafs
+        if let taf { start(app, for: taf) } else if tafs.count == 1, let only = tafs.first { start(app, for: only.id) } else { choosing = app }
+    }
+
+    private func start(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) {
+        choosing = nil
+        starting = app.entry
+        Task {
+            await model.startConnect(app, for: tafID)
+            starting = nil
+        }
     }
 }
 

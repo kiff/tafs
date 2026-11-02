@@ -10,6 +10,25 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertEqual(oauth, TafsCloud.ConnectStart(grant: "g_1", needsKey: false))
         let key = try JSONDecoder().decode(TafsCloud.ConnectStart.self, from: Data(#"{"grant":"g_2","needs_key":true}"#.utf8))
         XCTAssertTrue(key.needsKey)
+        // tafs cloud passes planque's grant on whole: its id is what's approved.
+        let whole = try JSONDecoder().decode(TafsCloud.ConnectStart.self, from: Data(#"{"grant":{"id":"g_3","request":{"profile":{}}},"needs_key":true}"#.utf8))
+        XCTAssertEqual(whole, TafsCloud.ConnectStart(grant: "g_3", needsKey: true))
+    }
+
+    /// A connection starts for one taf: its tafs cloud id goes in the body.
+    func testStartNamesItsTaf() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        StubProtocol.responses["POST /v1/connect/apps/holded@1"] = (200, #"{"grant":{"id":"g_4"}}"#)
+        let start = try await cloud.startConnect("holded@1", taf: "taf_01")
+        XCTAssertEqual(start.grant, "g_4")
+        let sent = try XCTUnwrap(StubProtocol.sent.last)
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: try XCTUnwrap(sent.httpBody)) as? [String: Any])
+        XCTAssertEqual(json["taf"] as? String, "taf_01")
     }
 
     /// The key goes in its header. What the device signs is the grant's digest and the key's

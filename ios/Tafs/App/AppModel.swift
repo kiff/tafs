@@ -1538,10 +1538,20 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Starts connecting an app from the list; its approval opens as a sheet over the list.
-    func startConnect(_ app: TafsCloud.ConnectApps.App) async {
+    /// The tafs an app can be connected for: on tafs cloud, and managed by this person.
+    var connectableTafs: [Taf] {
+        tafs.filter { cloudTaf(for: $0.id) != nil && manages($0.id) }
+    }
+
+    /// Starts connecting an app from the list for one taf; its approval opens as a sheet over
+    /// the list.
+    func startConnect(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) async {
+        guard let c = cloudTaf(for: tafID) else {
+            lastError = "This taf isn't on tafs cloud yet, so apps can't be connected for it."
+            return
+        }
         do {
-            let start = try await cloud.startConnect(app.entry)
+            let start = try await cloud.startConnect(app.entry, taf: c.id)
             await refreshConnections()
             connectStart = start
         } catch {

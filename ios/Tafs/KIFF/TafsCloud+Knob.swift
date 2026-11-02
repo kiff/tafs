@@ -192,16 +192,21 @@ extension TafsCloud {
         var needsKey = false
         enum CodingKeys: String, CodingKey { case grant, needsKey = "needs_key" }
         init(grant: String, needsKey: Bool = false) { self.grant = grant; self.needsKey = needsKey }
+        private struct GrantRef: Decodable { let id: String }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
-            grant = try c.decode(String.self, forKey: .grant)
+            // planque's grant as tafs cloud passes it on, or only its id.
+            if let id = try? c.decode(String.self, forKey: .grant) { grant = id } else {
+                grant = try c.decode(GrantRef.self, forKey: .grant).id
+            }
             needsKey = try c.decodeIfPresent(Bool.self, forKey: .needsKey) ?? false
         }
     }
 
-    /// Starts connecting `entry` from the list: planque makes its grant, with its profile.
-    func startConnect(_ entry: String) async throws -> ConnectStart {
-        try await send("POST", "/v1/connect/apps/\(escaped(entry))", body: Optional<[String: String]>.none)
+    /// Starts connecting `entry` from the list for one taf (its tafs cloud id): planque makes
+    /// the grant for that taf's KIFF agent, with its profile.
+    func startConnect(_ entry: String, taf: String) async throws -> ConnectStart {
+        try await send("POST", "/v1/connect/apps/\(escaped(entry))", body: ["taf": taf])
     }
 
     /// Connect apps, filtered by `q` when given.
