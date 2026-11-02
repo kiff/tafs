@@ -85,8 +85,10 @@ fun SettingsSheet(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
-        // The plan first: what the account is on and what's left, one tap from Plan & usage.
-        if (state.mode != Mode.signedOut) Section("Plan") { PlanRow(state, onUsage) }
+        // The plan first, on a KIFF account: what it's on and what's left, one tap from Plan & usage.
+        if (state.mode == Mode.kiff) Section("Plan") { PlanRow(state, onUsage) }
+        // The sample has no plan of its own: Plan & usage shows its made-up month.
+        if (state.mode == Mode.sample) Section("Usage") { Action(UsageWords.TITLE, Theme.ink, onUsage) }
         Section("Account") {
           Value("Mode", when (state.mode) {
             Mode.kiff -> "Signed in with KIFF"
@@ -148,7 +150,6 @@ fun SettingsSheet(
             AlertWords.foot(state.alertsAvailable, state.canAnswerHolds)?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
           }
         }
-        // This period's tasks, and what the tafs did that counted.
         Section("How it works") {
           Text(
             "Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this phone.",

@@ -152,10 +152,14 @@ object UsageWords {
     else -> null
   }
 
-  /** "12 of 20 tasks left", or "472 tasks this period" where there's no limit. */
+  /**
+   * "12 of 20 tasks left until 1 Dec 2026" on a plan someone bills, or "472 tasks this period" where there's no limit. "Until",
+   * not "renews": the app can't tell a cancelled Solo from one that renews, and the period's end is true of both.
+   */
   private fun tasksLine(u: Usage): String {
     val left = u.tasks.left ?: return "${tasks(u.tasks.counted)} this period"
-    return if (u.tasks.total > 0) "$left of ${tasks(u.tasks.total)} left" else "${tasks(left)} left"
+    val line = if (u.tasks.total > 0) "$left of ${tasks(u.tasks.total)} left" else "${tasks(left)} left"
+    return if (billedBy(u) != null) "$line until ${shownDate(u.period.end)}" else line
   }
 
   /**
@@ -171,7 +175,8 @@ object UsageWords {
       val left = u.tasks.left ?: trial.tasksLeft
       return "Trial · $days and ${tasks(left)} left"
     }
-    val name = planName(u.plan) ?: "Your plan"
+    // Our own accounts' plan isn't sold, so planName has none for it; the card still names it.
+    val name = planName(u.plan) ?: if (u.plan == "internal") "Internal" else "Your plan"
     return listOfNotNull(name, tasksLine(u), billedBy(u)).joinToString(" · ")
   }
 
@@ -182,14 +187,14 @@ object UsageWords {
   }
 
   /**
-   * Home's line about the plan, only when something needs the owner: a trial ended, not started or ending within 2 days,
-   * and tasks used up or down to a tenth of the period's. Null otherwise: Home stays about the tafs.
+   * Home's line about the plan, only when something needs the owner: a trial ended or ending within 2 days, and tasks used up
+   * or down to a tenth of the period's. Null otherwise: Home stays about the tafs. A trial not started says so on the card only.
    */
   fun homeLine(u: Usage, now: Instant = Instant.now()): String? {
     if (u.plan == "trial") {
       if (trialEnded(u, now)) return if (offersSolo(u)) "Your trial has ended. $START_SOLO" else "Your trial has ended."
       val trial = u.trial ?: return null
-      if (trial.endsAt == null) return "Your trial hasn't started."
+      if (trial.endsAt == null) return null
       if (u.tasks.usedUp) return notice(u, now)
       if (trial.daysLeft <= 2) return if (trial.daysLeft <= 1) "Your trial ends within a day." else "Your trial ends in 2 days."
     }
