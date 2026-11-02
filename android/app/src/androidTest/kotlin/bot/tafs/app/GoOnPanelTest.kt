@@ -32,8 +32,8 @@ class GoOnPanelTest {
     TafsTheme {
       ProvideApprovalReadiness(Mode.kiff, readiness, recheck = {}) {
         AIUsePanel(
-          ai, AppState(mode = Mode.kiff, ready = true, aiUse = ai),
-          AccountActions(halt = {}, refreshHalt = {}, resumeHalt = { false }, refreshUsage = {}, refreshTafUsage = {}, goOnAI = { wentOn += 1; true }),
+          ai, AppState(mode = Mode.kiff, ready = true, aiUse = ai, aiUseStale = stale),
+          AccountActions(halt = {}, refreshHalt = {}, resumeHalt = { false }, refreshUsage = {}, refreshTafUsage = {}, goOnAI = { wentOn += 1; true }, readAIUse = { read += 1 }),
         )
       }
     }
