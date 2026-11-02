@@ -175,6 +175,8 @@ needed, never only at a prompt that fails.
   trial's Install): while the phone can't approve, the state and what to do stand in the
   button's place (`ApprovalGate`). Refuse, Decline and Halt stay. When it can, the button
   says what it does, under the card that shows what is being approved, before the prompt.
+- **After the prompt:** an answer that wasn't sent says why ("Not sent: it wasn't confirmed.", or
+  the fingerprint's own words) and that the hold stays: "It's kept in Needs you." (`ApprovalWords.KEPT`).
 - **The sample** signs nothing, so its buttons never wait on the phone (`gateReadiness`).
 - **Read again** each time the app comes back, so returning from the phone's settings shows
   the new state at once.

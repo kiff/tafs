@@ -17,7 +17,7 @@ version headings refer to releases, not merely to merged pull requests.
   sensor tafs can use (approve from another device), with Continue without approvals. Before the
   first taf, and at every approval, the same words stand in the button's place until the phone
   can approve; Refuse, Decline and Halt stay. It says up front that adding a fingerprint later
-  stops approvals until they're approved again.
+  stops approvals until they're approved again. An answer the fingerprint prompt didn't send says why and "It's kept in Needs you."
 - **iPhone and iPad, Set up approvals on this device:** before sign-in, only when the device
   can't approve yet, a screen says where it stands: no Face ID or Touch ID set up (the path in
   Settings, in words, or a passcode first where there is none), turned off for tafs (Open

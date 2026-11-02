@@ -59,6 +59,9 @@ object ApprovalWords {
     ApprovalReadiness.Unsupported -> "This phone can't approve. Approve from another supported device."
   }
 
+  /** After an answer that wasn't sent (the prompt closed, a finger not recognised, the key ended): the hold stays. */
+  const val KEPT = "It's kept in Needs you."
+
   const val OPEN_SETTINGS = "Open settings"
   const val CHECK_AGAIN = "Check again"
   const val CONTINUE_WITHOUT = "Continue without approvals"
