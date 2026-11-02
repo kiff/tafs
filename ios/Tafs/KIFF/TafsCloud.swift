@@ -994,6 +994,8 @@ final class TafsCloud {
         var words = ""
         var by: String?
         var outcome: Outcome?
+        /// When it was answered, as tafs cloud writes it; nil from a tafs cloud that doesn't say.
+        var at: Date?
 
         struct Outcome: Decodable, Equatable {
             var tafID: String?
@@ -1002,13 +1004,14 @@ final class TafsCloud {
             enum CodingKeys: String, CodingKey { case version, failed, tafID = "taf_id" }
         }
 
-        enum CodingKeys: String, CodingKey { case state, words, by, outcome }
+        enum CodingKeys: String, CodingKey { case state, words, by, outcome, at }
 
-        init(state: String = "answered", words: String = "", by: String? = nil, outcome: Outcome? = nil) {
+        init(state: String = "answered", words: String = "", by: String? = nil, outcome: Outcome? = nil, at: Date? = nil) {
             self.state = state
             self.words = words
             self.by = by
             self.outcome = outcome
+            self.at = at
         }
 
         init(from decoder: Decoder) throws {
@@ -1017,6 +1020,13 @@ final class TafsCloud {
             words = try c.decodeIfPresent(String.self, forKey: .words) ?? ""
             by = try c.decodeIfPresent(String.self, forKey: .by)
             outcome = try? c.decodeIfPresent(Outcome.self, forKey: .outcome)
+            at = (try? c.decodeIfPresent(String.self, forKey: .at)).flatMap { $0 }.flatMap(Self.date)
+        }
+
+        private static func date(_ raw: String) -> Date? {
+            let precise = ISO8601DateFormatter()
+            precise.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return precise.date(from: raw) ?? ISO8601DateFormatter().date(from: raw)
         }
     }
 

@@ -11,6 +11,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, an answered card stays under its turn:** once answered, a card stays after
+  Coach's words that asked for it, and Coach's words after the answer come below it, as on Android.
+  A "Try again" card no longer shows above the turn that offered it.
+
 - **Android, Set up approvals on this device:** before sign-in, only when the phone can't approve
   yet, a screen says why approvals need a fingerprint and where this phone stands: none set up
   (Open settings goes straight to adding one), the sensor busy just now (Check again), or no

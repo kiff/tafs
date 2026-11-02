@@ -159,8 +159,8 @@ final class SetupTests: XCTestCase {
                           "a notice stays where it happened")
     }
 
-    /// Once the thread holds its answer, a card goes back to its own time, in line with what
-    /// Coach said around it: the owner doesn't scroll up past answered cards (kiff/tafs#385).
+    /// An answer with no time, from a tafs cloud that doesn't say, puts a card back at its own
+    /// time, in line with what Coach said around it (kiff/tafs#385).
     func testAnAnsweredCardGoesBackToItsOwnTime() throws {
         func at(_ s: Int) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + Double(s)) }
         var thread = SetupThread()
@@ -174,6 +174,31 @@ final class SetupTests: XCTestCase {
         card.answer = TafsCloud.CardAnswer(words: "Approved")
         thread.components = [card]
         XCTAssertEqual(thread.items.map(\.id), ["m|" + thread.messages[0].id, "c|s1#connect", "m|" + thread.messages[1].id], "answered, at its own time")
+    }
+
+    /// An answered card stays after the words that asked for it, and Coach's words after its
+    /// answer come below it (kiff/tafs#423): a "Try again" never shows above the turn that offered it.
+    func testAnAnsweredCardStaysAfterTheWordsThatAskedForItAndCoachsLaterWordsComeBelow() throws {
+        func at(_ s: Int) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + Double(s)) }
+        var thread = SetupThread()
+        thread.messages = [
+            TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Refunds, please", session: "s1"),
+            TafsCloud.ChatMessage(at: at(3), from: .taf, text: "That didn't go through. Try again?", session: "s1"),
+            TafsCloud.ChatMessage(at: at(12), from: .taf, text: "Done: it went through.", session: "s1"),
+        ]
+        var card = ShownComponent(firstAt: at(2), session: "s1", run: "r1", component: try SetupTests.component(#"{"type":"confirm","id":"retry","text":"Try again?","options":[{"value":"yes","label":"Try again"}]}"#))
+        card.answer = TafsCloud.CardAnswer(words: "Try again", at: at(10))
+        thread.components = [card]
+        XCTAssertEqual(thread.items.map(\.id), ["m|" + thread.messages[0].id, "m|" + thread.messages[1].id, "c|s1#retry", "m|" + thread.messages[2].id])
+    }
+
+    /// tafs cloud's answer time is read, with or without its fractional seconds.
+    func testACardsAnswerTimeIsRead() throws {
+        let decode = { (json: String) in try JSONDecoder().decode(TafsCloud.CardAnswer.self, from: Data(json.utf8)) }
+        XCTAssertEqual(try decode(#"{"words":"Live","at":"2026-11-02T16:00:05.250Z"}"#).at, Date(timeIntervalSince1970: 1_793_635_205.25))
+        XCTAssertEqual(try decode(#"{"words":"Live","at":"2026-11-02T16:00:05Z"}"#).at, Date(timeIntervalSince1970: 1_793_635_205))
+        XCTAssertNil(try decode(#"{"words":"Live"}"#).at)
+        XCTAssertNil(try decode(#"{"words":"Live","at":"soon"}"#).at, "a time it can't read is no time")
     }
 
     /// Coach can use a card's id again (kiff/tafs#387): a new card under an id used before
