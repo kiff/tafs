@@ -4129,6 +4129,32 @@ final class AppModel: ObservableObject {
 
     /// The account's planque grants: connections, and connections waiting for the owner.
     @Published private(set) var grants: [PlanqueClient.Grant] = []
+    /// KIFF's words for each grant's profile, by grant id, once read and checked.
+    @Published private(set) var profileWords: [String: ProfileWords] = [:]
+    /// Why a grant's words couldn't be shown, by grant id.
+    @Published private(set) var profileWordsError: [String: String] = [:]
+
+    /// Reads KIFF's words for `grant`'s profile with this person's session, checked against
+    /// the profile shown. A grant with no profile has none to read.
+    func loadProfileWords(for grant: PlanqueClient.Grant) async {
+        guard let profile = grant.profile else { return }
+        if let words = profileWords[grant.id], (try? ProfileWords.digest(profile)) == words.profileSHA256 { return }
+        do {
+            let words = try await kiff.profileWords(for: profile)
+            profileWords[grant.id] = words
+            profileWordsError[grant.id] = nil
+        } catch {
+            profileWords[grant.id] = nil
+            profileWordsError[grant.id] = (error as? LocalizedError)?.errorDescription ?? ProfileWords.Failure.notWords.errorDescription
+        }
+    }
+
+    /// The words to show for `grant`: only KIFF's words for exactly its profile.
+    func shownWords(for grant: PlanqueClient.Grant) -> ProfileWords? {
+        guard let profile = grant.profile, let words = profileWords[grant.id],
+              (try? ProfileWords.digest(profile)) == words.profileSHA256 else { return nil }
+        return words
+    }
 
     /// The vendor of each connected tool, by its name in KIFF: what a refusal names.
     private var toolVendors: [String: String] {
@@ -4382,6 +4408,12 @@ final class AppModel: ObservableObject {
             termsChanged()
             return nil
         }
+        // A connection with a profile is approved only with KIFF's words for it shown.
+        let words = shownWords(for: grant)
+        if grant.profile != nil, words == nil {
+            lastError = PlanqueClient.PlanqueError.wordsUnread.errorDescription
+            return nil
+        }
 
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
@@ -4394,7 +4426,7 @@ final class AppModel: ObservableObject {
 
         let connected: PlanqueClient.Grant
         do {
-            let approved = try await planque.approve(grant)
+            let approved = try await planque.approve(grant, words: words)
             guard let signInURL = approved.signInURL else {
                 // planque already holds the sign-in (contract 5): approving the tools Setup
                 // chose from the vendor's list connected them, with no second sign-in.

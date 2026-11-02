@@ -1368,6 +1368,10 @@ struct SetupApproval: View {
                             Text("Details").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.blue)
                         }
                     }
+                    if grant.profile != nil {
+                        ProfileWordsView(words: model.shownWords(for: grant), error: model.profileWordsError[grant.id])
+                            .task(id: grant.digest) { await model.loadProfileWords(for: grant) }
+                    }
                     if !grant.digestMatches {
                         Text("This request doesn't match what it shows, so it can't be approved.")
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
@@ -1409,7 +1413,8 @@ struct SetupApproval: View {
                             Task { await model.approve(component, shown: grant?.digest, shownDraft: draft?.version) }
                         }
                         .buttonStyle(PrimaryButtonStyle())
-                        .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil))
+                        .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil)
+                                  || (!connected && grant.map { $0.profile != nil && model.shownWords(for: $0) == nil } ?? false))
                     }
                 }
                 .disabled(busy || (answered && !state.isFailure))
@@ -1532,5 +1537,35 @@ struct WhileYouWereAway: View {
         .background(Theme.raised)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// KIFF's words for a connection's profile: each line verbatim, in order. What
+/// KIFF can't check, probation and an unpinned vendor are in amber. Until they're read and
+/// checked, the card says so and Approve stays off.
+struct ProfileWordsView: View {
+    let words: ProfileWords?
+    let error: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Eyebrow(text: "KIFF counts it this way")
+            if let words {
+                ForEach(Array(words.lines.enumerated()), id: \.offset) { _, line in
+                    Text(line.text)
+                        .scaledFont(13, relativeTo: .footnote)
+                        .foregroundColor(line.caution ? Theme.amberText : Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else if let error {
+                Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Reading KIFF's words…").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.raised)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }

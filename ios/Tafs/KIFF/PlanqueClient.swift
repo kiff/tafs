@@ -15,6 +15,8 @@ final class PlanqueClient {
         case noDevice
         /// The grant's digest isn't the hash of the request shown: nothing is approved.
         case digestMismatch
+        /// A connection with a profile is approved only once KIFF's words for it are shown.
+        case wordsUnread
         case server(status: Int, message: String)
 
         var errorDescription: String? {
@@ -22,6 +24,7 @@ final class PlanqueClient {
             case .notSigning: return "This step needs your confirmation first."
             case .noDevice: return "Couldn't reach KIFF to name this device. Check the connection and try again."
             case .digestMismatch: return "This request doesn't match what it asks for. Nothing was approved."
+            case .wordsUnread: return "KIFF's words for this connection aren't shown yet. Nothing was approved."
             case .server(_, let message): return message
             }
         }
@@ -129,6 +132,10 @@ final class PlanqueClient {
         /// Whether `digest` is the hash of the request as received: the app shows Approve
         /// only then. Set by `grants()`, never read from planque.
         var digestMatches = false
+        /// The connection's `kiff.profile.v1` in the request, as planque sent it:
+        /// the grant's digest covers it. The owner reads KIFF's words for it before
+        /// approving. Set by `grants()`, never decoded.
+        var profile: JCS.Value?
 
         enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor" }
 
@@ -185,6 +192,7 @@ final class PlanqueClient {
                   let canonical = try? JCS.canonical(request) else { continue }
             let hash = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
             grants[i].digestMatches = hash == grants[i].digest
+            grants[i].profile = request["profile"]
         }
         return grants
     }
@@ -198,11 +206,34 @@ final class PlanqueClient {
         enum CodingKeys: String, CodingKey { case status, signInURL = "sign_in_url", expiresAt = "expires_at" }
     }
 
-    /// Approves `grant` as shown: its digest is signed. Refused here when the digest isn't
-    /// the hash of the request the owner was shown.
-    func approve(_ grant: Grant) async throws -> Approved {
+    /// The approve body: the grant's digest, and for a grant with a profile, the digests of
+    /// that profile and of KIFF's words for it. The device signs the body, so
+    /// its signature covers both.
+    struct ApproveBody: Encodable, Equatable {
+        struct KIFFProfile: Encodable, Equatable {
+            let profileSHA256: String
+            let wordsSHA256: String
+            enum CodingKeys: String, CodingKey { case profileSHA256 = "profile_sha256", wordsSHA256 = "words_sha256" }
+        }
+        let digest: String
+        let kiffProfile: KIFFProfile?
+        enum CodingKeys: String, CodingKey { case digest, kiffProfile = "kiff_profile" }
+    }
+
+    /// The body that approves `grant` as shown. Refused when the digest isn't the hash of the
+    /// request the owner was shown, and for a grant with a profile, until KIFF's words for
+    /// exactly that profile were read and checked.
+    static func approveBody(_ grant: Grant, words: ProfileWords?) throws -> ApproveBody {
         guard grant.digestMatches else { throw PlanqueError.digestMismatch }
-        return try await send("POST", "grants/\(escaped(grant.id))/approve", body: ["digest": grant.digest])
+        guard let profile = grant.profile else { return ApproveBody(digest: grant.digest, kiffProfile: nil) }
+        guard let words else { throw PlanqueError.wordsUnread }
+        guard try ProfileWords.digest(profile) == words.profileSHA256 else { throw ProfileWords.Failure.otherProfile }
+        return ApproveBody(digest: grant.digest, kiffProfile: .init(profileSHA256: words.profileSHA256, wordsSHA256: words.wordsSHA256))
+    }
+
+    /// Approves `grant` as shown, with KIFF's words for its profile when it has one.
+    func approve(_ grant: Grant, words: ProfileWords? = nil) async throws -> Approved {
+        try await send("POST", "grants/\(escaped(grant.id))/approve", body: try Self.approveBody(grant, words: words))
     }
 
     /// Confirms the vendor sign-in with the code it handed back to the app. Only the phone

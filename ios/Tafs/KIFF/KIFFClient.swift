@@ -1291,7 +1291,7 @@ final class KIFFClient {
         request.setValue(Self.acceptLanguage(Bundle.main.preferredLocalizations), forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(body)
+            request.httpBody = try (body as? RawJSON)?.data ?? JSONEncoder().encode(body)
         }
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
         let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key" || path == "/v1/me/device/relink")
@@ -1330,6 +1330,20 @@ final class KIFFClient {
         if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }
         if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }
         return try Self.decoder.decode(T.self, from: data)
+    }
+
+    /// A request body sent as these bytes, untouched.
+    struct RawJSON: Encodable {
+        let data: Data
+        func encode(to encoder: Encoder) throws {}
+    }
+
+    /// KIFF's words for `profile`, the `kiff.profile.v1` in a grant's request, read with the
+    /// person's own session: it reads nothing of the account and changes
+    /// nothing. Checked against the profile before they're returned (`ProfileWords.checked`).
+    func profileWords(for profile: JCS.Value) async throws -> ProfileWords {
+        let answer: RawBody = try await send("POST", "/v1/profiles/words", body: RawJSON(data: try JCS.canonical(profile)))
+        return try ProfileWords.checked(answer.data, profile: profile)
     }
 
     /// A response's bytes, untouched.
