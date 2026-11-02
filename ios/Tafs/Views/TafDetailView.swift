@@ -292,7 +292,11 @@ struct TafDetailView: View {
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
                 if Self.offersReconnect(manages: model.manages(taf.id), mayUseCoach: model.mayUseCoach, mode: model.mode) {
-                    Button(Self.reconnect) { model.openCoach() }
+                    // A new Coach conversation on this taf, as Android's Improve in Coach.
+                    Button(Self.reconnect) {
+                        model.improveTaf(taf.id)
+                        model.coachOpen = true
+                    }
                         .scaledFont(13, weight: .semibold).foregroundColor(Theme.amberText)
                         .accessibilityIdentifier("card-reconnect")
                 }
