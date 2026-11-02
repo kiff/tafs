@@ -127,3 +127,40 @@ export function schedulesOf(t: Trigger, busy: "skip" | "latest" = "skip"): Plann
   }
   throw new TriggerError("form is daily, weekdays, weekly, monthly, monthly_last_day, times_a_day, every or once");
 }
+
+/** A wall-clock time in zone ("2026-11-05T09:00") as an instant, RFC 3339 in UTC. */
+export function instantIn(local: string, zone: string): string {
+  const [d, t] = local.split("T") as [string, string];
+  const [y, mo, da] = d.split("-").map(Number) as [number, number, number];
+  const [h, mi] = t.split(":").map(Number) as [number, number];
+  const guess = Date.UTC(y, mo - 1, da, h, mi);
+  // The zone's offset at that moment, read from how it writes the guess.
+  const offset = (at: number) => {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+      .formatToParts(new Date(at)).map((x) => [x.type, x.value]));
+    return Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour), Number(p.minute)) - at;
+  };
+  const first = guess - offset(guess);
+  return new Date(guess - offset(first)).toISOString().replace(/\.000Z$/, "Z");
+}
+
+/** The words for what a version's rings change, one line each, for the owner to confirm. */
+export function triggerWords(t: Trigger): string {
+  switch (t.kind) {
+    case "door": return "Wakes on its door";
+    case "vendor_event": return "Wakes on a vendor's event";
+    case "app_check": return `Checks ${t.operation} every ${t.every_minutes} minutes, and works only on what's new`;
+    case "before_event": return "Wakes before a calendar event";
+  }
+  switch (t.form) {
+    case "daily": return `Every day at ${t.at}`;
+    case "weekdays": return `Weekdays at ${t.at}`;
+    case "weekly": return `${(t.days ?? []).join(", ")} at ${t.at}`;
+    case "monthly": return `On day ${t.date} of each month at ${t.at}`;
+    case "monthly_last_day": return `On the last day of each month at ${t.at}`;
+    case "times_a_day": return `Every day at ${(t.times ?? []).join(", ")}`;
+    case "every": return `Every ${t.every_minutes} minutes${t.between ? ` from ${t.between.from} to ${t.between.to}` : ""}${t.days?.length ? ` on ${t.days.join(", ")}` : ""}`;
+    case "once": return `Once, on ${(t.date ?? "").replace("T", " at ")}`;
+  }
+  return "On a schedule";
+}

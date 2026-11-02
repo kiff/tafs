@@ -1528,6 +1528,30 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(upgraded.find((u) => u.taf === RAE)?.outcome).toBe("current");
   });
 
+  it("a dial change is the next version, and only going live writes its triggers and places", async () => {
+    const w = twoVersions();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const refused = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "every", every_minutes: 25 }] } });
+    expect(refused.status).toBe(400);
+    expect(refused.body.error).toBe("every 25 minutes can't be kept exactly: the nearest is every 20 minutes");
+    const before = w.agents.calls.length;
+    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: {
+      wakes: [{ kind: "schedule", form: "times_a_day", times: ["09:00", "15:00", "12:30"] }, { kind: "door" }],
+      when: { busy: "latest" }, results: ["door_reply", "app"],
+    } });
+    expect(put.status).toBe(200);
+    const n = put.body.version as number;
+    expect(put.body.words).toEqual(["Every day at 09:00, 15:00, 12:30", "Wakes on its door", "If busy, runs the latest once it's free", "Results go to door_reply, app"]);
+    // Nothing reached the scheduler yet.
+    expect(w.agents.calls.slice(before).filter((c: string) => /Schedule/.test(c))).toEqual([]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
+    const writes = w.agents.calls.slice(before).filter((c: string) => /(create|update)Schedule/.test(c));
+    expect(writes).toEqual([`updateSchedule ${RAE} cron 0 9,15 * * * latest`, `createSchedule ${RAE}-t2 30 12 * * * UTC`]);
+    const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rec.results).toEqual(["door_reply", "app"]);
+    expect(rec.scheduleIds).toEqual([`${RAE}-t2`]);
+  });
+
   it("records the Cards a version runs under when it goes live", async () => {
     const w = twoVersions();
     w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] } as Mandate];

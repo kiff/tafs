@@ -55,3 +55,13 @@ describe("the dial's triggers, as kiff/agents keeps them", () => {
     expect([1, 15, 17, 18, 24, 26, 45, 50, 60, 100, 150].map(nearestEvery)).toEqual([15, 15, 15, 20, 20, 30, 30, 60, 60, 120, 180]);
   });
 });
+
+describe("a once trigger's time", () => {
+  it("is the wall clock in the account's zone, as an instant", async () => {
+    const { instantIn } = await import("../src/cloud/triggers.js");
+    expect(instantIn("2026-11-05T09:00", "Europe/Paris")).toBe("2026-11-05T08:00:00Z");
+    expect(instantIn("2026-07-05T09:00", "Europe/Paris")).toBe("2026-07-05T07:00:00Z");
+    expect(instantIn("2026-11-05T09:00", "UTC")).toBe("2026-11-05T09:00:00Z");
+    expect(instantIn("2026-11-05T09:00", "America/New_York")).toBe("2026-11-05T14:00:00Z");
+  });
+});

@@ -432,6 +432,16 @@ export interface Schedule {
   enabled: boolean;
   /** The next firing, in UTC; absent when it's off. */
   next?: string;
+  /** How it fires: cron (the default), once (at `at`) or monthly_last_day (at its cron's time). */
+  kind?: "cron" | "once" | "monthly_last_day";
+  /** When a once schedule fires, RFC 3339. */
+  at?: string;
+  /** A firing while the taf works: skipped (the default), or the latest kept waiting. */
+  busy?: "skip" | "latest";
+  /** Coming firings the owner skipped, by their due time. */
+  skip?: string[];
+  /** A check of a connected app before each firing: a run only for what's new. */
+  check?: { tool: string; arguments: Record<string, unknown>; items: string; cursor: string };
 }
 
 /** The ids kiff/agents takes: 1 to 128 letters, digits, '-', '_' or '.', never "." or "..". */
@@ -904,7 +914,11 @@ function parseBlock(block: string): RunStreamEvent | undefined {
  * `next` is only ever its answer; the tenant comes from the caller.
  */
 function writable(s: Schedule): Omit<Schedule, "next" | "tenant"> {
-  return { id: s.id, agent: s.agent, cron: s.cron, ...(s.time_zone ? { time_zone: s.time_zone } : {}), input: s.input, enabled: s.enabled };
+  return {
+    id: s.id, agent: s.agent, cron: s.cron, ...(s.time_zone ? { time_zone: s.time_zone } : {}), input: s.input, enabled: s.enabled,
+    ...(s.kind && s.kind !== "cron" ? { kind: s.kind } : {}), ...(s.at ? { at: s.at } : {}), ...(s.busy ? { busy: s.busy } : {}),
+    ...(s.skip?.length ? { skip: s.skip } : {}), ...(s.check ? { check: s.check } : {}),
+  };
 }
 
 function notFound(err: unknown): undefined {

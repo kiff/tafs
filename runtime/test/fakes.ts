@@ -409,6 +409,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     async getSchedule(tenant, id) {
       return schedules.get(k(tenant, id));
     },
+    async updateSchedule(tenant, sc) {
+      calls.push(`updateSchedule ${sc.id} ${sc.kind ?? "cron"} ${sc.cron} ${sc.busy ?? ""}`);
+      if (!schedules.has(k(tenant, sc.id))) throw gone();
+      const s = { ...sc, tenant, ...(sc.enabled ? { next: "2026-10-16T12:30:00Z" } : {}) };
+      schedules.set(k(tenant, sc.id), s);
+      return s;
+    },
     // Halts, as kiff/agents keeps them: by agent, "" for the account.
     async halt(tenant, agent) {
       calls.push(`halt ${agent ?? "all"}`);

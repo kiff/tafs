@@ -14,6 +14,10 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf } from "./knob.js";
 import { ConnectError, listApps, startApp } from "./connect.js";
+import { instantIn, schedulesOf, TriggerError, triggerWords, type Trigger } from "./triggers.js";
+
+/** A version's dial: its triggers, what a busy taf does, and where results go. */
+export interface KnobSetting { wakes: Trigger[]; busy: "skip" | "latest"; results: ResultPlace[] }
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { stepWords, Steps, type ToolTitles } from "./steps.js";
@@ -58,6 +62,7 @@ import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
+ *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/knob             its dial: what wakes it, when, where results go, and today's work, in tafs cloud's words
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
@@ -120,7 +125,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -258,6 +263,13 @@ export interface Taf {
   summary?: string;
   /** What it does in one word, for its dial's face ("Refund"), as Coach's result said it. */
   does?: string;
+  /**
+   * The dial's rings each version made from a tap or Coach's draft sets, by version: written to
+   * kiff/agents' scheduler, and its results places kept, only when that version goes live.
+   */
+  knobs?: Record<string, KnobSetting>;
+  /** The schedules its live dial keeps in kiff/agents, beyond the first (its own id). */
+  scheduleIds?: string[];
   /**
    * The versions made from Setup's results (kiff/tafs#107), by the result
    * they came from: a result makes its version once, however often the app
@@ -567,6 +579,35 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again), skipped: skippedOf(fired, zone, now) };
+  }
+  if (parts.length === 4 && method === "PUT" && action === "knob") {
+    // The dial changed, from a tap or Coach's draft: the taf's next version, as an improvement
+    // makes one. Nothing runs from it until it goes live (docs/api.md, "The knob").
+    await needTaf(event, me, taf, deps);
+    if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
+    const body = parseBody(event);
+    const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
+    const when = (body.when ?? {}) as { busy?: unknown };
+    const busy = when.busy === "latest" ? "latest" : "skip";
+    if (wakes.length > 10) throw new HTTPError(400, "a taf has at most 10 triggers");
+    for (const t of wakes) {
+      try {
+        schedulesOf(t, busy);
+      } catch (err) {
+        if (err instanceof TriggerError) throw new HTTPError(400, err.nearest ? `${err.message}: the nearest is ${err.nearest}` : err.message);
+        throw err;
+      }
+    }
+    const results = body.results === undefined ? placesOf(taf) : resultPlaces(body.results);
+    const words = [...wakes.map(triggerWords), busy === "latest" ? "If busy, runs the latest once it's free" : "If busy, skips the run",
+      `Results go to ${results.join(", ")}`];
+    const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE) }, me, taf, deps, event);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const cur = await deps.tafs.get(me.tenantID, taf.id);
+      if (!cur) break;
+      if (await deps.tafs.putIf(me.tenantID, { ...cur, knobs: { ...cur.knobs, [String(version)]: { wakes, busy, results } } }, cur)) break;
+    }
+    return { version, words };
   }
   if (parts.length === 4 && method === "GET" && action === "knob") {
     // The taf's dial (docs/api.md, "The knob"): every label and line written here.
@@ -2497,9 +2538,40 @@ async function recordLiveCards(event: HTTPEvent, me: KIFFIdentity, taf: Taf, sta
 async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
   const cards = await liveCards(event, taf, deps);
   await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
+  await applyKnob(me, taf, n, deps);
   await keepNotes(me, taf, n, deps);
   await tellChange(me.tenantID, "taf", taf.id, deps);
   await tellCoachLive(me, taf, n, deps);
+}
+
+/**
+ * The live version's dial, written where it acts: its triggers to kiff/agents' scheduler (the
+ * taf's own schedule first, then one more per firing time the scheduler can say exactly, any left
+ * over switched off), and where its results go. A version with no dial changes none of it.
+ */
+async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
+  const k = taf.knobs?.[String(n)];
+  if (!k) return;
+  const zone = me.timeZone ?? "UTC";
+  const own = await deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined);
+  const input = own?.input ?? jobById(taf.job).kickoff;
+  const planned = k.wakes.flatMap((t) => schedulesOf(t, k.busy));
+  const ids = planned.map((_, i) => (i === 0 ? taf.id : `${taf.id}-t${i + 1}`));
+  for (const [i, p] of planned.entries()) {
+    const s: Schedule = { id: ids[i]!, agent: taf.id, cron: p.cron ?? "", time_zone: zone, input, enabled: true, ...(p.kind !== "cron" ? { kind: p.kind } : {}),
+      ...(p.at ? { at: instantIn(p.at, zone) } : {}), busy: p.busy, ...(p.skip ? { skip: p.skip } : {}), ...(p.check ? { check: p.check } : {}) };
+    const exists = i === 0 ? own : await deps.agents.getSchedule(me.tenantID, s.id).catch(() => undefined);
+    await agentsCall(() => (exists ? deps.agents.updateSchedule(me.tenantID, s) : deps.agents.createSchedule(me.tenantID, s)));
+  }
+  // What the dial no longer has starts nothing: the taf's own schedule off when no trigger is a schedule.
+  for (const id of [taf.id, ...(taf.scheduleIds ?? [])].filter((id) => !ids.includes(id))) {
+    await deps.agents.switchSchedule(me.tenantID, id, false).catch(() => undefined);
+  }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const cur = await deps.tafs.get(me.tenantID, taf.id);
+    if (!cur) break;
+    if (await deps.tafs.putIf(me.tenantID, { ...cur, results: k.results, scheduleIds: ids.slice(1) }, cur)) break;
+  }
 }
 
 /**
