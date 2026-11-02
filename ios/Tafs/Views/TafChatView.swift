@@ -43,9 +43,7 @@ struct TafChatView: View {
     @State private var turn = PinnedTurn()
     /// The height of what's under the thread: an error, the field, the dictation bar.
     @State private var footHeight: CGFloat = 60
-    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
-    #endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,9 +54,7 @@ struct TafChatView: View {
                         .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
                 }
                 composer
-                #if os(iOS)
                 DictationBar(dictation: model.dictation)
-                #endif
             }
             .background(GeometryReader { g in
                 Color.clear.onAppear { footHeight = g.size.height }.onChange(of: g.size.height) { footHeight = $0 }
@@ -74,12 +70,8 @@ struct TafChatView: View {
     /// (kiff/tafs#243): the newest line stops above it. None while the button is hidden: the
     /// keyboard is up, or Coach mode is open.
     private var coachRoom: CGFloat {
-        #if os(iOS)
         guard model.signedIn, model.mode == .kiff, !model.coachOpen, !typing else { return 0 }
         return max(0, CoachButton.clearance(wide: sizeClass == .regular) - footHeight)
-        #else
-        return 0
-        #endif
     }
 
     private var thread: some View {
@@ -457,9 +449,7 @@ struct TafChatView: View {
         return VStack(spacing: 0) {
         FileTray(key: key)
         HStack(alignment: .bottom, spacing: 10) {
-            #if os(iOS)
             if model.filesTarget(key) != nil { AttachButton(key: key) }
-            #endif
             ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft, cursor: { model.dictation.cursor = $0 })
                 .accessibilityIdentifier("chat-field")
                 .focused($typing)
@@ -468,10 +458,8 @@ struct TafChatView: View {
                 .background(Theme.panel)
                 .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            #if os(iOS)
             // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
             MicButton(dictation: model.dictation, text: $draft)
-            #endif
             if thinking && empty {
                 // While the taf works, Send is Stop: its run is cancelled.
                 Button { Task { await model.stopChat(tafID) } } label: {

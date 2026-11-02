@@ -29,6 +29,7 @@ struct TrialStartSheet: View {
                     if let draft, draft.cards != nil {
                         Eyebrow(text: "Its Card")
                         DraftCardsView(draft: draft)
+                        ApprovalNotice()
                     } else if loaded {
                         Text(model.trialErrors[tafID] ?? "This trial's Card couldn't be read.")
                             .scaledFont(13).foregroundColor(Theme.no)
@@ -63,7 +64,7 @@ struct TrialStartSheet: View {
                             }
                         }
                     }
-                    .disabled(draft?.cards == nil || model.trialBusy.contains(tafID))
+                    .disabled(draft?.cards == nil || model.trialBusy.contains(tafID) || model.approvalBlocked)
                 }
             }
         }
@@ -175,13 +176,14 @@ struct TrialScreen: View {
                     }
                 Button(busy ? "Working…" : "Install") { confirmInstall = true }
                     .buttonStyle(OutlineButtonStyle())
-                    .disabled(busy)
+                    .disabled(busy || model.approvalBlocked)
                     .confirmationDialog("Install version \(trial.n)?", isPresented: $confirmInstall, titleVisibility: .visible) {
-                        Button("Install with Face ID") { Task { if await model.installTrial(tafID) { ended() } } }
+                        Button("Install with \(Biometry.name)") { Task { if await model.installTrial(tafID) { ended() } } }
                     } message: {
                         Text("Version \(trial.n) becomes the live version, with its Card. This chat is deleted.")
                     }
             }
+            ApprovalNotice()
             if let error = model.trialErrors[tafID] {
                 Text(error).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }

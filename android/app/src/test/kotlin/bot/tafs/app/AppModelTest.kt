@@ -121,7 +121,7 @@ class AppModelTest {
     assertEquals(before.held, s.held)
     assertEquals(before.record, s.record)
     assertEquals(before.tafs, s.tafs)
-    assertEquals("Not sent: it wasn't confirmed.", s.lastError)
+    assertEquals("Not sent: it wasn't confirmed. It's kept in Needs you.", s.lastError)
   }
 
   @Test fun theCallStillWaitsAndCanBeAnsweredOnceConfirmed() = runTest {

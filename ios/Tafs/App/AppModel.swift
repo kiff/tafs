@@ -13,6 +13,12 @@ final class AppModel: ObservableObject {
     enum Mode: String, Codable { case signedOut, sample, kiff }
 
     @Published private(set) var mode: Mode = .signedOut
+    /// Whether this device can approve (kiff/tafs#423), one value for every approval's button,
+    /// notice and disabled state: Check again anywhere updates them all at once. Read again
+    /// when the app comes back.
+    @Published private(set) var approvalReadiness: ApprovalReadiness = ApprovalReadiness.current()
+    /// How readiness is read: this device's, or a test's.
+    var readApprovalReadiness: () -> ApprovalReadiness = { ApprovalReadiness.current() }
     @Published private(set) var tafs: [Taf] = []
     /// The account's other agents with Cards, the ones tafs doesn't run (made through KIFF's
     /// API): listed apart, never counted as working.
@@ -405,8 +411,8 @@ final class AppModel: ObservableObject {
         var tries = 0
         while true {
             do {
-                // A Mac without a Secure Enclave holds no key (kiff/tafs#85): it signs in
-                // without one, and KIFF takes a platform only with a key.
+                // A device without a Secure Enclave holds no key: it signs in without one,
+                // and KIFF takes a platform only with a key.
                 let key = signer.publicKeyDER
                 let approvalKey = signer.approvalPublicKeyDER
                 return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key,
@@ -1286,7 +1292,7 @@ final class AppModel: ObservableObject {
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
         } catch is CancellationError {
             // A refresh the app itself dropped (a newer one, a view that went away): not an
-            // error to show (the Mac's "Couldn't reach KIFF: cancelled", kiff/tafs#85).
+            // error to show ("Couldn't reach KIFF: cancelled").
             cancelled = true
         } catch let error as URLError where error.code == .cancelled {
             cancelled = true
@@ -1447,7 +1453,7 @@ final class AppModel: ObservableObject {
             do {
                 _ = try await signer.sign(answer: .approveOnce, heldID: "card-\(UUID().uuidString)", reason: "Issue \(draft.name)'s Card")
             } catch {
-                lastError = "The Card was not issued: it wasn't confirmed."
+                lastError = "The Card was not issued. " + ApprovalReadiness.notApproved(error, kind: Biometry.kind)
                 return nil
             }
         }
@@ -1691,6 +1697,11 @@ final class AppModel: ObservableObject {
                 signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)
             }
         } catch {
+            // Closed by the person: cancelled, and the request stays in Needs you.
+            if let words = ApprovalReadiness.cancelled(error) {
+                lastError = words
+                return
+            }
             // A prompt closed without a recognized face or finger, while the key is still good.
             lastError = sessionHasApprovalKey && (answer == .approveOnce || answer == .extraRoom)
                 ? KIFFClient.notRecognized : "Not sent: it wasn't confirmed."
@@ -4292,7 +4303,7 @@ final class AppModel: ObservableObject {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
                                           reason: "Give \(draft.agentID) its Card", grants: true)
             } catch {
-                quietStop = Self.notConfirmed
+                quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
                 return nil
             }
             guard gen == accountGeneration else { return nil }
@@ -4327,7 +4338,7 @@ final class AppModel: ObservableObject {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
                                       reason: "Connect \(grant.vendor) to \(grant.request.agent)", grants: true)
         } catch {
-            quietStop = Self.notConfirmed
+            quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return nil
         }
         guard gen == accountGeneration else { return nil }
@@ -5395,7 +5406,6 @@ final class AppModel: ObservableObject {
     /// Why the last connect stopped before anything happened that Setup should hear of: the
     /// owner reads it on the card, which offers Approve again (kiff/tafs#236, item 1).
     private var quietStop: String?
-    static var notConfirmed: String { "\(Biometry.name) didn't confirm, so nothing was approved. Approve again when you're ready." }
 
     /// A line on a card whose tap ended without reaching Setup: why, in the owner's words
     /// (kiff/tafs#236). A tap always shows something: the vendor's sign-in, Setup's answer, or this.
@@ -5533,4 +5543,16 @@ enum Screenshots {
         default: return .tafs
         }
     }
+}
+
+extension AppModel {
+    /// Reads this device's readiness again: Check again, and the app coming back.
+    func checkApprovalReadiness() {
+        let now = readApprovalReadiness()
+        if now != approvalReadiness { approvalReadiness = now }
+    }
+
+    /// This device can't approve now, so an approval's button is disabled. Sample mode signs
+    /// nothing for real, so nothing is blocked there.
+    var approvalBlocked: Bool { mode == .kiff && !approvalReadiness.isReady }
 }

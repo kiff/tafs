@@ -1,146 +1,93 @@
 import SwiftUI
-#if canImport(UIKit)
 import UIKit
-#else
-import AppKit
-#endif
 
-// The iPhone's screens on the Mac app (kiff/tafs#85), which runs on macOS 12: each helper
-// is the iOS call as it was on iOS, and what macOS 12 has in its place on the Mac.
-
-#if os(macOS)
-/// A Mac window is always wide: the iPhone's screens read it as regular.
-enum UserInterfaceSizeClass { case compact, regular }
-#endif
+// Shared screen helpers: each names what the screens do, so a call reads as its purpose.
 
 extension View {
-    /// iOS's inline navigation title; a Mac window shows its title itself.
+    /// The inline navigation title.
     @ViewBuilder func inlineTitle() -> some View {
-        #if os(iOS)
         navigationBarTitleDisplayMode(.inline)
-        #else
-        self
-        #endif
     }
 
     /// A list or form over the screen's own background.
     @ViewBuilder func hiddenScrollBackground() -> some View {
-        if #available(iOS 16, macOS 13, *) {
-            scrollContentBackground(.hidden)
-        } else {
-            self
-        }
+        scrollContentBackground(.hidden)
     }
 
-    /// A screen that covers the whole screen on iOS, with nothing behind it showing
-    /// (kiff/tafs#206 6.10); a sheet in a Mac window.
+    /// A screen that covers the whole screen, with nothing behind it showing (kiff/tafs#206 6.10).
     @ViewBuilder func fullCover<Content: View>(isPresented: Binding<Bool>, @ViewBuilder content: @escaping () -> Content) -> some View {
-        #if os(iOS)
         fullScreenCover(isPresented: isPresented, content: content)
-        #else
-        sheet(isPresented: isPresented, content: content)
-        #endif
     }
 
-    /// Dragging the chat down puts the keyboard away; a Mac has none to put away.
+    /// Dragging the chat down puts the keyboard away.
     @ViewBuilder func dismissesKeyboardInteractively() -> some View {
-        #if os(iOS)
         scrollDismissesKeyboard(.interactively)
-        #else
-        self
-        #endif
     }
 }
 
 extension View {
     /// The bar under a chat: the screen's colour, with a soft shadow above it.
     @ViewBuilder func barBackground() -> some View {
-        if #available(iOS 16, macOS 13, *) {
-            background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
-        } else {
-            background(Theme.background.shadow(color: Theme.ink.opacity(0.06), radius: 6, y: -2))
-        }
+        background(Theme.background.shadow(.drop(color: Theme.ink.opacity(0.06), radius: 6, y: -2)))
     }
 
-    /// Semibold, keeping the font's size (iOS 16, macOS 13); as it is on macOS 12.
+    /// Semibold, keeping the font's size.
     @ViewBuilder func semibold() -> some View {
-        if #available(iOS 16, macOS 13, *) {
-            fontWeight(.semibold)
-        } else {
-            self
-        }
+        fontWeight(.semibold)
     }
 }
 
 extension View {
     /// Room at the foot of a scrolling screen for ✦ Coach mode, which floats over it
-    /// (kiff/tafs#138): its last line scrolls clear of the button. The Mac has no ✦.
+    /// (kiff/tafs#138): its last line scrolls clear of the button.
     func coachClearance() -> some View { modifier(CoachClearance()) }
 }
 
 private struct CoachClearance: ViewModifier {
-    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
-    #endif
 
     func body(content: Content) -> some View {
-        #if os(iOS)
         content.safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear.frame(height: CoachButton.clearance(wide: sizeClass == .regular))
         }
-        #else
-        content
-        #endif
     }
 }
 
 extension ToolbarItemPlacement {
-    /// The navigation bar's trailing end on iOS; the window toolbar's on the Mac.
+    /// The navigation bar's trailing end.
     static var trailingBar: ToolbarItemPlacement {
-        #if os(iOS)
         .navigationBarTrailing
-        #else
-        .primaryAction
-        #endif
     }
 }
 
-/// A NavigationStack where there is one (iOS 16, macOS 13). On macOS 12 the content stands
-/// alone: a sheet or a window's detail needs no stack of its own there.
+/// A NavigationStack around a sheet's or a screen's content.
 struct NavStack<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        if #available(iOS 16, macOS 13, *) {
-            NavigationStack(root: content)
-        } else {
-            content()
-        }
+        NavigationStack(root: content)
     }
 }
 
-/// The chat's message field: it grows to six lines where it can (iOS 16, macOS 13), one
-/// line on macOS 12.
+/// The chat's message field: it grows to six lines.
 struct ChatField: View {
     let title: String
     @Binding var text: String
     /// Where the insertion point is, in characters, for dictation to put its words there;
-    /// told from iOS 18 and macOS 15, which say where it is.
+    /// told from iOS 18, which says where it is.
     var cursor: ((Int) -> Void)? = nil
 
     var body: some View {
-        if #available(iOS 18, macOS 15, *), let cursor {
+        if #available(iOS 18, *), let cursor {
             SelectingField(title: title, text: $text, cursor: cursor)
-        } else if #available(iOS 16, macOS 13, *) {
-            TextField(title, text: $text, axis: .vertical).lineLimit(1...6)
         } else {
-            TextField(title, text: $text)
+            TextField(title, text: $text, axis: .vertical).lineLimit(1...6)
         }
     }
 }
 
 /// A message box that says where its insertion point is.
-@available(iOS 18, macOS 15, *)
+@available(iOS 18, *)
 private struct SelectingField: View {
     let title: String
     @Binding var text: String
@@ -159,26 +106,16 @@ private struct SelectingField: View {
 
 enum Clipboard {
     static func copy(_ text: String) {
-        #if canImport(UIKit)
         UIPasteboard.general.string = text
-        #else
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
-        #endif
     }
 }
 
-/// Buttons in rows that wrap (FlowRow, a Layout: iOS 16 and macOS 13); one under another
-/// on macOS 12.
+/// Buttons in rows that wrap (FlowRow).
 struct WrapRow<Content: View>: View {
     var spacing: CGFloat = 8
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        if #available(iOS 16, macOS 13, *) {
-            FlowRow(spacing: spacing) { content() }
-        } else {
-            VStack(alignment: .leading, spacing: spacing) { content() }
-        }
+        FlowRow(spacing: spacing) { content() }
     }
 }

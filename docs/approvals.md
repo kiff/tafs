@@ -151,6 +151,75 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
 The simulator has no Secure Enclave; it uses a software key, fine for a demo and never
 for production.
 
+## Set up approvals on this device
+
+Approving needs the approval key, and the approval key needs a fingerprint or face the phone
+counts as strong. The app asks the phone where it stands and says so before an approval is
+needed, never only at a prompt that fails.
+
+- **The states,** each in its own words (`ApprovalReadiness`, `ApprovalWords` on Android):
+  - set up: approvals work;
+  - none enrolled: "No fingerprint is set up on this phone. Add one in its settings, then come
+    back.", with **Open settings**, which on Android opens the phone's own screen to add one
+    (`ACTION_BIOMETRIC_ENROLL`, asking for a strong biometric; its security settings where
+    that screen isn't there);
+  - temporarily unavailable (the sensor locked after tries, busy, an update pending): wait a
+    moment, or unlock the phone once, then **Check again**;
+  - unsupported (no strong biometric at all): approve from another supported device.
+- **Before sign-in,** only when it isn't set up: the screen **Set up approvals on this device**,
+  with **Continue without approvals**. Without them the person can still sign in, review,
+  refuse and halt. Once the phone says it's set up, sign-in goes on by itself.
+- **Before the first taf:** Coach's Start is an approval, so while the phone can't approve it
+  says "Setting up a taf needs approvals" with the state and what to do, in Start's place.
+- **At each approval** (Approve once, Extra room, Install, Issue, Resume, Coach's Approve, a
+  trial's Install): while the phone can't approve, the state and what to do stand in the
+  button's place (`ApprovalGate`). Refuse, Decline and Halt stay. When it can, the button
+  says what it does, under the card that shows what is being approved, before the prompt.
+- **After the prompt:** an answer that wasn't sent says why ("Not sent: it wasn't confirmed.", or
+  the fingerprint's own words) and that the hold stays: "It's kept in Needs you." (`ApprovalWords.KEPT`).
+- **The sample** signs nothing, so its buttons never wait on the phone (`gateReadiness`).
+- **Read again** each time the app comes back, so returning from the phone's settings shows
+  the new state at once.
+- **A new fingerprint** ends the approval key, and the screen says so up front: "If you add
+  another fingerprint later, approving on this phone stops until you approve it again."
+  ([How an answer is signed](#how-an-answer-is-signed)).
+
+### On iPhone and iPad
+
+The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Touch ID
+(`ApprovalReadiness` in `Biometry.swift`, the screens in `ApprovalSetupView.swift`):
+
+- **The states,** each from its `LAError`:
+  - set up: approvals work;
+  - none enrolled (`biometryNotEnrolled`): the path in words, **Settings → Face ID & Passcode**
+    (Touch ID & Passcode on a device with Touch ID), and no button: iOS opens no page of
+    Settings for an app but its own, which can't add a face or a fingerprint;
+  - no passcode (`passcodeNotSet`): set a passcode first, at the same path, then add Face ID
+    or Touch ID;
+  - turned off for tafs (`biometryNotAvailable` on a device that has Face ID or Touch ID):
+    **Open Settings** opens tafs' settings, where its Face ID switch is;
+  - temporarily unavailable: locked after too many tries (`biometryLockout`), "lock this
+    iPhone, unlock it with its passcode, then check again"; anything else, "try again in a
+    moment"; both with **Check again**;
+  - unsupported (`biometryNotAvailable` with no Face ID or Touch ID): approve on another
+    iPhone, iPad or Android phone signed in to the account.
+- **Before sign-in,** only when it isn't set up: the screen, with **Check again** and
+  **Continue without approvals**, and **Open Settings** only when Face ID is turned off for
+  tafs. Once it's set up there, the same screen says so,
+  with **Continue**.
+- **Before the first taf:** Coach's start says approving is needed to finish it, and Start is
+  gated, since it asks for Face ID.
+- **At each approval** (Approve once, Extra room, Install from Needs you, Coach's Approve,
+  Issue): while the device can't approve, the state and what to do stand in the button's place
+  (`ApprovalGate`). A version's or a trial's Install, in a toolbar or a confirmation, stays
+  where it is, disabled, with the words beside it (`ApprovalNotice`).
+- **One readiness for every screen:** the model's `approvalReadiness`, read again when the app
+  comes back and on any **Check again**, so a notice and the button it stands for change
+  together. Sample mode signs nothing for real and is never blocked. The Simulator counts as
+  set up, as its signer lets the demo through.
+- **After an approval:** "Cancelled", "didn't recognise you", or the device's state, each with
+  "The request is kept".
+
 ## After the answer
 
 1. The answer goes to KIFF: `POST /v1/me/card-exceptions/{id}/approve-once`, `reject` or `change-card`, with its signature.

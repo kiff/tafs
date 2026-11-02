@@ -175,8 +175,6 @@ struct MarkdownBlock: Equatable {
 
     /// Bold, italic, links and inline code; the text as written if it isn't Markdown.
     /// The capture groups of `pattern` over the whole line, or nil when it doesn't match.
-    /// NSRegularExpression, not Swift's regexes: those need macOS 13, and the Mac app runs
-    /// on 12 (kiff/tafs#85).
     static func groups(_ line: String, _ pattern: String) -> [String]? {
         guard let re = try? NSRegularExpression(pattern: pattern),
               let m = re.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) else { return nil }
@@ -215,8 +213,7 @@ struct MarkdownBlock: Equatable {
 
 /// A Markdown table, drawn (kiff/tafs#211, 6.5): the header in bold, a line under it and
 /// between rows, a column of numbers aligned on the right. Drawn column by column, each
-/// cell on one line, so the rows line up without Grid (the Mac app runs on macOS 12); a
-/// table wider than the message scrolls sideways.
+/// cell on one line, so the rows line up; a table wider than the message scrolls sideways.
 struct MarkdownTable: View {
     let rows: [[AttributedString]]
     var size: CGFloat = 15

@@ -13,11 +13,7 @@ struct TafDetailView: View {
     @State private var runTapped = false
     /// The Card in front of the stack (kiff/tafs#211); nil for the first, the live one.
     @State private var frontCard: String?
-    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
-    #else
-    private let sizeClass: UserInterfaceSizeClass? = .regular
-    #endif
     @State private var width: CGFloat = 0
     @State private var height: CGFloat = 0
     /// Share, the version and the Card's line folded away while the page scrolls down, so
@@ -39,7 +35,7 @@ struct TafDetailView: View {
 
     /// A wide screen (kiff/tafs#85): beside the chat or the activity, a second column with
     /// the call waiting for the owner and the Cards. Only in landscape and only when the chat
-    /// keeps an iPhone's width beside it (kiff/tafs#211): iPad landscape and the Mac. A
+    /// keeps an iPhone's width beside it (kiff/tafs#211): iPad landscape. A
     /// narrower screen keeps one column, with the Card bar above it.
     private var sideColumn: Bool {
         sizeClass == .regular && section < 2 && width > height
@@ -160,10 +156,8 @@ struct TafDetailView: View {
     private func headerLine(_ taf: Taf) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             versionLine(taf)
-            #if os(iOS)
             // Who it's shared with, and Share: the taf's manager's to see (the 870 test).
             if model.manages(taf.id) { ShareLine(tafID: taf.id) }
-            #endif
         }
         .transition(.opacity)
     }
@@ -693,6 +687,7 @@ struct VersionCardSheet: View {
                              ? "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
                              : "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF, then this version goes live.")
                             .scaledFont(12).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                        ApprovalNotice()
                     } else if loaded {
                         Text(model.versionErrors[tafID] ?? "This version's Card couldn't be read.")
                             .scaledFont(13).foregroundColor(Theme.no)
@@ -719,7 +714,7 @@ struct VersionCardSheet: View {
                         dismiss()
                         Task { await model.useVersion(version, of: tafID, shownDraft: shown, approving: approving) }
                     }
-                    .disabled(draft?.cards == nil)
+                    .disabled(draft?.cards == nil || model.approvalBlocked)
                 }
             }
         }

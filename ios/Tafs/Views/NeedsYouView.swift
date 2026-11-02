@@ -97,13 +97,15 @@ struct HeldCallCard: View {
                 // Approving or extra room would fail: the way out instead. Refuse stays below.
                 ApprovalKeyLostLine()
             } else if call.approvableOnce {
-                Button {
-                    if call.install != nil { install() } else { send(.approveOnce) }
-                } label: {
-                    Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
+                ApprovalGate {
+                    Button {
+                        if call.install != nil { install() } else { send(.approveOnce) }
+                    } label: {
+                        Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(sending)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(sending)
             } else {
                 // Over a total the Card keeps across calls: approving once can't pass it
                 // (kiff/tafs#138, item 49). Extra room can, for this call, until that total
@@ -120,11 +122,13 @@ struct HeldCallCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if model.canManageCards {
-                    Button { send(.extraRoom) } label: {
-                        Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                    ApprovalGate {
+                        Button { send(.extraRoom) } label: {
+                            Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(sending)
                     }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(sending)
                 }
                 if model.mayUseCoach {
                     Button {
@@ -297,7 +301,7 @@ struct HeldCallCard: View {
     private func remaining(at date: Date) -> Text {
         let seconds = Int(call.expiresAt.timeIntervalSince(date))
         guard seconds >= 1 else { return Text("expired") }
-        if #available(iOS 16, macOS 13, *) {
+        if #available(iOS 16, *) {
             return Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(" left")
         }
         return Text(String(format: "%d:%02d left", seconds / 60, seconds % 60))

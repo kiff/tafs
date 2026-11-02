@@ -3087,7 +3087,8 @@ class AppModel(
         signer.sign(Messages.answer(call.id, answer), reason)
       }
     } catch (e: SignerException) {
-      fail(notSigned(e, "Not sent: it wasn't confirmed."))
+      // Nothing was sent, so the hold stays where it was; say so after why (requirement: a clear outcome, the request kept).
+      fail("${notSigned(e, "Not sent: it wasn't confirmed.")} ${bot.tafs.app.model.ApprovalWords.KEPT}")
       return false
     }
     // The session ended, or another began, while the prompt was up: nothing of this answer goes to the new one.

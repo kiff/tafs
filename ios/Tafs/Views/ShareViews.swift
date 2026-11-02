@@ -1,8 +1,5 @@
 import SwiftUI
 
-// The iPhone's and iPad's: the Mac app reads Cards and answers holds, and changes no one's
-// access.
-#if os(iOS)
 
 /// Who a taf is shared with, on its page, and Share for whoever may change it (KIFF's
 /// manage). Nothing for a taf KIFF doesn't run.
@@ -348,4 +345,3 @@ struct OverviewView: View {
     }
 }
 
-#endif

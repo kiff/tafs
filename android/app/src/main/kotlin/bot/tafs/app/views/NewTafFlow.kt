@@ -287,7 +287,7 @@ private fun IssueStep(draft: TafDraft, issuer: String, colorIndex: Int, issuing:
       Rule("Outside it,", "it waits for you, here and on your lock screen.", Theme.amber)
       Rule("Revoked,", "no new action goes through.", Theme.no)
     }
-    PrimaryButton("Issue with ${LocalBiometry.current}", onIssue, enabled = !issuing)
+    ApprovalGate { PrimaryButton("Issue with ${LocalBiometry.current}", onIssue, enabled = !issuing) }
   }
 }
 

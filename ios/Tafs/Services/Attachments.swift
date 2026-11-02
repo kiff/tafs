@@ -1,9 +1,7 @@
 import CryptoKit
 import Foundation
 import UniformTypeIdentifiers
-#if canImport(UIKit)
 import UIKit
-#endif
 
 /// A file the person picked for their next message (kiff/tafs#209), while it goes up. It is
 /// sent with the message once it's `ready`; a file that failed says why.
@@ -121,17 +119,12 @@ enum FilePrep {
     /// A photo, any format the phone reads (HEIC included): as a JPEG, its long edge at most
     /// 2576 px, with a small thumbnail for the tray.
     static func photo(_ data: Data, name: String) throws -> PreparedFile {
-        #if canImport(UIKit)
         guard let image = UIImage(data: data) else {
             throw FileProblem(message: "\(name) couldn't be read as a photo.")
         }
         return try photo(image, name: name)
-        #else
-        throw FileProblem(message: "Photos are attached on iPhone and iPad.")
-        #endif
     }
 
-    #if canImport(UIKit)
     static func photo(_ image: UIImage, name: String) throws -> PreparedFile {
         let jpeg = scaled(image, to: longEdge).jpegData(compressionQuality: 0.85)
         guard let jpeg else { throw FileProblem(message: "\(name) couldn't be read as a photo.") }
@@ -159,5 +152,4 @@ enum FilePrep {
             image.draw(in: CGRect(origin: .zero, size: target))
         }
     }
-    #endif
 }

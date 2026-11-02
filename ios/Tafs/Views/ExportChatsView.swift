@@ -1,5 +1,3 @@
-// The iPhone's and iPad's: the Mac app reads Cards and answers holds.
-#if os(iOS)
 import SwiftUI
 import UIKit
 
@@ -82,4 +80,3 @@ struct ShareSheet: UIViewControllerRepresentable {
 
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }
-#endif

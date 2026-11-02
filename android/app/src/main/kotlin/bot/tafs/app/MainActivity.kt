@@ -184,12 +184,30 @@ fun RootView(model: AppModel) {
   val rootScope = rememberCoroutineScope()
   // The approval-key line's Sign in again asks first, as Settings' ways out of KIFF do.
   var confirmingSignInAgain by rememberSaveable { mutableStateOf(false) }
+  // Whether this phone can approve, read again each time the app comes back (a fingerprint added in settings, say).
+  val context = androidx.compose.ui.platform.LocalContext.current
+  var readiness by remember { mutableStateOf(bot.tafs.app.views.approvalReadiness(context)) }
+  val recheck = { readiness = bot.tafs.app.views.approvalReadiness(context) }
+  androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { recheck() }
+  // Before sign-in, only when this phone can't approve yet: Set up approvals on this device, or sign in without.
+  var settingUpApprovals by rememberSaveable { mutableStateOf(false) }
+  // A fingerprint added meanwhile: on to sign-in at once.
+  LaunchedEffect(readiness, settingUpApprovals) {
+    if (settingUpApprovals && readiness == bot.tafs.app.model.ApprovalReadiness.Ready) { settingUpApprovals = false; signingIn = true }
+  }
 
+  bot.tafs.app.views.ProvideApprovalReadiness(state.mode, readiness, recheck) {
   Box(Modifier.fillMaxSize().background(Theme.background)) {
     when {
       // Nothing draws until it is known, so the first screen never flashes up for someone signed in.
       !state.ready -> Unit
-      !state.signedIn -> OnboardingView(onSignIn = { signingIn = true }, onSample = model::startSample)
+      !state.signedIn && settingUpApprovals -> bot.tafs.app.views.ApprovalsSetupScreen(
+        readiness, onCheckAgain = recheck, onContinue = { settingUpApprovals = false; signingIn = true },
+      )
+      !state.signedIn -> OnboardingView(
+        onSignIn = { if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready) signingIn = true else settingUpApprovals = true },
+        onSample = model::startSample,
+      )
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
         LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
@@ -248,6 +266,7 @@ fun RootView(model: AppModel) {
       containerColor = Theme.panel,
     )
   }
+}
 }
 
 @Composable

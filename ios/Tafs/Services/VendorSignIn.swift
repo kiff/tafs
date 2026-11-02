@@ -1,9 +1,5 @@
 import AuthenticationServices
-#if canImport(UIKit)
 import UIKit
-#else
-import AppKit
-#endif
 
 /// The vendor's own sign-in page, opened for a grant the owner approved. It ends at
 /// planque, which sends the browser back to `tafs://planque/signed-in` with a one-time
@@ -93,7 +89,6 @@ final class VendorSignIn: NSObject, VendorSigningIn {
         }
     }
 
-    #if canImport(UIKit)
     private static func isActive() -> Bool { activeScene() != nil }
 
     private static func activeScene() -> UIWindowScene? {
@@ -131,19 +126,6 @@ final class VendorSignIn: NSObject, VendorSigningIn {
         }
         return "\(type(of: w)), \(w.isKeyWindow ? "key" : "not key"), \(w.isHidden ? "hidden" : "shown"), \(state)"
     }
-    #else
-    // The Mac (kiff/tafs#85): the app's key window, else a visible one.
-    private static func isActive() -> Bool { NSApp.isActive }
-
-    static func window() -> NSWindow? {
-        NSApp.keyWindow ?? NSApp.windows.first { $0.isVisible && $0.canBecomeKey }
-    }
-
-    static func describe(_ w: NSWindow?) -> String {
-        guard let w else { return "no window" }
-        return "\(type(of: w)), \(w.isKeyWindow ? "key" : "not key"), \(w.isVisible ? "shown" : "hidden")"
-    }
-    #endif
 }
 
 // The session asks for its window on the main thread.

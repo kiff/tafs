@@ -281,7 +281,7 @@ class AnswerKiffTest {
     assertTrue(transport.requests.none { it.method == "POST" })
     assertEquals(1, m.state.value.held.size)
     // A fingerprint not given, with the key still good: try again, or sign in again if the fingerprints changed.
-    assertEquals(bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED, m.state.value.lastError)
+    assertEquals("${bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED} ${bot.tafs.app.model.ApprovalWords.KEPT}", m.state.value.lastError)
     assertTrue(m.state.value.record.none { it.signature != null })
   }
 
@@ -534,7 +534,7 @@ class AnswerKiffTest {
     val call = m.state.value.held.single()
     keys.invalidateApproval = true
     assertFalse(m.answer(call, Answer.ApproveOnce))
-    assertEquals(ApprovalKeyRenewed.WORDS, m.state.value.lastError)
+    assertEquals("${ApprovalKeyRenewed.WORDS} ${bot.tafs.app.model.ApprovalWords.KEPT}", m.state.value.lastError)
     assertTrue(m.state.value.approvalKeyLost)
     assertNull(secrets.load(AppModel.APPROVAL_KEYED))
     assertTrue(transport.requests.none { it.url.endsWith("approve-once") })
@@ -561,7 +561,7 @@ class AnswerKiffTest {
     secrets.save("at_1", AppModel.TOKEN); secrets.save("t_01", AppModel.TENANT); secrets.save("1", AppModel.KEYED)
     val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = DeviceSigner(keys, auth), start = false).also { it.restore() }
     assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
-    assertEquals(DeviceSigner.NO_FINGERPRINT, m.state.value.lastError)
+    assertEquals("${DeviceSigner.NO_FINGERPRINT} ${bot.tafs.app.model.ApprovalWords.KEPT}", m.state.value.lastError)
     assertTrue(auth.asked.isEmpty())
     assertTrue(transport.requests.none { it.url.endsWith("approve-once") })
   }

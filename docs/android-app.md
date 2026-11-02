@@ -161,7 +161,9 @@ Two keys in the Android Keystore, in StrongBox where the phone has it
 ([approvals.md](approvals.md#how-an-answer-is-signed)). The **signing key** signs what
 reads or takes authority away. The **approval key** signs what grants it, once per
 fingerprint, through the prompt; a new fingerprint turns it off, and the phone asks for a
-new sign-in. A debug build on a phone with no screen lock signs without asking, as the iOS
+new sign-in. Whether the phone can approve is read each time the app comes back
+(`approvalReadiness`), and while it can't, each approval's button gives way to the state and what
+to do ([approvals.md](approvals.md#set-up-approvals-on-this-device)). A debug build on a phone with no screen lock signs without asking, as the iOS
 Simulator does; a release never does.
 
 ## Tests

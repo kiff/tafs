@@ -1,15 +1,12 @@
 import QuickLook
 import SwiftUI
 import UniformTypeIdentifiers
-#if os(iOS)
 import PhotosUI
 import UIKit
-#endif
 
 // Files a person attaches to a message (kiff/tafs#209): the paperclip in both message bars,
 // the tray above the box, and the files in the thread, opened full size.
 
-#if os(iOS)
 /// The paperclip: take a photo, choose photos, or choose a file. Each file goes up as soon
 /// as it's picked, and waits in the tray for the message.
 struct AttachButton: View {
@@ -120,7 +117,6 @@ struct CameraPicker: UIViewControllerRepresentable {
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { parent.dismiss() }
     }
 }
-#endif
 
 /// The files waiting for the next message, above the box: each with a remove control, going
 /// up, ready, or saying why it can't go.
@@ -204,15 +200,11 @@ struct FileIcon: View {
 
     var body: some View {
         Group {
-            #if os(iOS)
             if let thumbnail, let image = UIImage(data: thumbnail) {
                 Image(uiImage: image).resizable().scaledToFill()
             } else {
                 symbol
             }
-            #else
-            symbol
-            #endif
         }
         .frame(width: 36, height: 36)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))

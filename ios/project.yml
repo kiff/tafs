@@ -3,7 +3,6 @@ options:
   bundleIdPrefix: bot.tafs
   deploymentTarget:
     iOS: "16.0"
-    macOS: "12.0"
   createIntermediateGroups: true
 settings:
   base:
@@ -152,62 +151,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.notify
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_NOTIFY)
         TARGETED_DEVICE_FAMILY: "1,2"
-  # The Mac app (kiff/tafs#85): native SwiftUI on macOS 12, the owner's Mac's last system.
-  # The model, clients and services are the iPhone app's; its window is its own (Mac/).
-  # Never above 12.0, and never a software signing key: a Mac without a Secure Enclave
-  # approves on the iPhone.
-  TafsMac:
-    type: application
-    platform: macOS
-    deploymentTarget: "12.0"
-    # The shared KIFF sources check receipts too.
-    dependencies:
-      - package: swift-secp256k1
-        product: libsecp256k1
-    sources:
-      - path: Mac
-        excludes: [Info.plist, TafsMac.entitlements, make-icon.swift]
-      - path: Tafs
-        excludes:
-          - App/TafsApp.swift
-          # The iPhone's home, sign-in and new-taf flows: the Mac has its own window, and
-          # starting a taf needs a signature, given on the iPhone.
-          - Views/HomeView.swift
-          - Views/HomeSplitView.swift
-          - Views/SignInView.swift
-          - Views/OnboardingView.swift
-          - Views/NewTafFlow.swift
-          # Coach mode's button, panel and sheet: the iPhone's and iPad's (kiff/tafs#138).
-          - Views/CoachMode.swift
-          - Services/LockScreen.swift
-          - Services/PushDelegate.swift
-          - Info.plist
-          # The Mac's own manifest is Mac/PrivacyInfo.xcprivacy.
-          - PrivacyInfo.xcprivacy
-      - path: Shared
-        excludes: [HeldActivity.swift]
-    info:
-      path: Mac/Info.plist
-      properties:
-        CFBundleDisplayName: tafs
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        LSApplicationCategoryType: public.app-category.productivity
-        ITSAppUsesNonExemptEncryption: false
-        CFBundleURLTypes:
-          - CFBundleURLName: bot.tafs.app
-            CFBundleURLSchemes: [tafs]
-    entitlements:
-      path: Mac/TafsMac.entitlements
-      properties:
-        com.apple.security.app-sandbox: true
-        com.apple.security.network.client: true
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
-        # The Mac's own icon sizes, and tafs' amber where macOS draws its accent (kiff/tafs#85).
-        ASSETCATALOG_COMPILER_APPICON_NAME: MacAppIcon
-        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
   TafsTests:
     type: bundle.unit-test
     platform: iOS
@@ -249,7 +192,3 @@ schemes:
       targets: [TafsTests, TafsUITests]
       # StoreKit's local testing (StoreKitLocalTests): the test host's App Store is this file's.
       storeKitConfiguration: Tafs.storekit
-  TafsMac:
-    build:
-      targets:
-        TafsMac: all

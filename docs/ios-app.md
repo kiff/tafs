@@ -12,7 +12,6 @@ page is a map of the code; what each feature does is on its own page
 | `Tafs` | `ios/Tafs`, `ios/Shared` | The app |
 | `TafsWidgets` | `ios/TafsWidgets`, `ios/Shared` | The Live Activity for the first held call, on the lock screen and in the Dynamic Island (iOS 16.1) |
 | `TafsNotify` | `ios/Notify` | The notification service extension: fills in a hold's alert from KIFF ([approvals.md](approvals.md#alerts-while-tafs-is-closed)) |
-| `TafsMac` | `ios/Mac` and most of `ios/Tafs` | A Mac window on the same model and clients, macOS 12. It holds no signing key and approves nothing: what needs a signature is done on the iPhone |
 | `TafsTests` | `ios/TafsTests` | Unit tests |
 | `TafsUITests` | `ios/TafsUITests` | UI tests |
 
