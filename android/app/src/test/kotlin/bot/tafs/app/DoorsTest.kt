@@ -91,6 +91,19 @@ class DoorsTest {
     assertEquals(threadReads + 1, sent("GET /v1/tafs/taf_1/conversation").size)
   }
 
+  @Test fun aTafPushReadsTheOpenChatAgainSoADoorsMessageShowsWithoutReopening() = runTest {
+    // The owner's own email runs in their live chat, and tafs cloud sends a `taf` push as it starts: the open chat reads it.
+    reads()
+    transport.answer("GET /v1/tafs/taf_1/conversation", 200, """{"messages":[]}""")
+    transport.answer("GET /v1/tafs/taf_1/conversation", 200, """{"messages":[{"role":"user","text":"Email from you\nRefund order 1042","at":"2026-10-28T09:05:00Z","session":"s1"}]}""")
+    val m = model()
+    m.refresh()
+    m.loadChat("refunds-1")
+    val threadReads = sent("GET /v1/tafs/taf_1/conversation").size
+    m.readChange("taf", "taf_1")
+    assertEquals(threadReads + 1, sent("GET /v1/tafs/taf_1/conversation").size)
+  }
+
   @Test fun aTafOrHaltPushReadsTheListAgainAndAnUnknownTafReadsNoThread() = runTest {
     reads()
     val m = model()
