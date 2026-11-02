@@ -311,6 +311,17 @@ private fun CardTab(taf: Taf, actions: TafActions, front: String?, onFront: (Str
   CardLines(shown?.rules ?: emptyList())
   // How much of its totals is from calls the tool refused, in KIFF's words: for a live, active Card only.
   shown?.takeIf(::countsForReal)?.let(::pendingOf)?.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
+  // Why its amount has no currency, in KIFF's words, and where to fix it: Coach, for whoever manages the taf.
+  shown?.total?.unitWords?.let { words ->
+    Text(words, style = scaled(13, color = Theme.soft), modifier = Modifier.fillMaxWidth())
+    LocalImproveInCoach.current?.takeIf { manages }?.let { improve ->
+      Text(
+        bot.tafs.app.model.ConnectionWords.RECONNECT_IN_COACH,
+        style = scaled(13, FontWeight.SemiBold, Theme.amberText),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { improve(taf.id) }.padding(vertical = 12.dp),
+      )
+    }
+  }
   // In the sample, Pause and Revoke are its own; signed in, Revoke is KIFF's, for whoever manages it, and pausing is under
   // Runs, on the Activity tab.
   if (taf.state != TafState.revoked && (controls || manages)) {

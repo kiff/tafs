@@ -4,6 +4,9 @@ import bot.tafs.app.kiff.Grant
 
 /** What a taf's connections say. */
 object ConnectionWords {
+  /** Under a Card total whose currency waits on a tool that isn't connected (KIFF's `unit_words`), for whoever manages the taf. */
+  const val RECONNECT_IN_COACH = "Reconnect it in Coach."
+
   /** Where a connection stands. */
   fun status(g: Grant): String = when {
     g.connected -> "Connected"
