@@ -8,6 +8,13 @@ extension TafsCloud {
         struct Does: Decodable, Equatable {
             var label = ""
             var line = ""
+            enum CodingKeys: String, CodingKey { case label, line }
+            init(label: String = "", line: String = "") { self.label = label; self.line = line }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                label = try c.decodeIfPresent(String.self, forKey: .label) ?? ""
+                line = try c.decodeIfPresent(String.self, forKey: .line) ?? ""
+            }
         }
 
         /// One stop: a trigger on Wakes it, a rule on When, a place on Results go.
@@ -79,6 +86,13 @@ extension TafsCloud {
         struct Draft: Decodable, Equatable {
             let version: Int
             var words: [String] = []
+            enum CodingKeys: String, CodingKey { case version, words }
+            init(version: Int, words: [String] = []) { self.version = version; self.words = words }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                version = try c.decode(Int.self, forKey: .version)
+                words = try c.decodeIfPresent([String].self, forKey: .words) ?? []
+            }
         }
 
         var version: Int?

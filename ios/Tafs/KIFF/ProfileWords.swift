@@ -11,7 +11,8 @@ import Foundation
 /// exactly that profile. Approving then signs both digests into planque's approve body.
 struct ProfileWords: Equatable {
     struct Line: Equatable {
-        let op: String
+        /// The operation it's about; none for a line about the whole connection ("unpinned").
+        let op: String?
         let kind: String
         let text: String
         /// What KIFF can't check for this connection, probation and an unpinned vendor:
@@ -57,8 +58,8 @@ struct ProfileWords: Equatable {
         guard try digest(profile) == profileSHA else { throw Failure.otherProfile }
         guard try digest(words) == wordsSHA else { throw Failure.wordsChanged }
         let lines = try raw.map { line -> Line in
-            guard let op = line["op"]?.string, let kind = line["kind"]?.string, let text = line["text"]?.string else { throw Failure.notWords }
-            return Line(op: op, kind: kind, text: text)
+            guard let kind = line["kind"]?.string, let text = line["text"]?.string else { throw Failure.notWords }
+            return Line(op: line["op"]?.string, kind: kind, text: text)
         }
         return ProfileWords(lines: lines, profileSHA256: profileSHA, wordsSHA256: wordsSHA)
     }

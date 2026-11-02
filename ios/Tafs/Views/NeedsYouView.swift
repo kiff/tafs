@@ -71,7 +71,8 @@ struct NeedsYouView: View {
 }
 
 /// "Did this happen?" (A5): a money call whose outcome KIFF can't prove, its answer lost or
-/// refused with nothing proving no effect. The owner says: No gives the Card its room back,
+/// refused with nothing proving no effect, or one of the first outcomes of a money operation
+/// on probation. The owner says: No gives the Card its room back,
 /// Yes keeps it counted. Signed like an approval; the first answer stands.
 struct DidThisHappenCard: View {
     @EnvironmentObject private var model: AppModel
@@ -82,12 +83,15 @@ struct DidThisHappenCard: View {
         Panel(stroke: Theme.amber.opacity(0.4)) {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Did this happen?").scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.amberText)
-                Text(call.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                if let money = call.money {
+                // KIFF's own words for the call and for why it asks, as they are; before KIFF
+                // sent them, its title and amount.
+                Text(call.words ?? call.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                if call.words == nil, let money = call.money {
                     Text(money.formatted).scaledFont(15).foregroundColor(Theme.ink)
                 }
-                Text(call.status == "refused_by_tool" ? "The app refused it, but nothing proves it had no effect." : "Its answer was lost, so KIFF can't tell.")
-                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                if let why = call.statusWords {
+                    Text(why).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                }
                 if model.mayAnswerHolds {
                     HStack(spacing: 10) {
                         ApprovalGate {

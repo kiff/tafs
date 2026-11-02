@@ -734,7 +734,7 @@ final class KIFFClient {
     func activity(limit: Int = 100) async throws -> [ActivityCall] {
         struct Response: Decodable { let calls: [ActivityCall] }
         let r: Response = try await send("GET", "/v1/me/activity?limit=\(limit)")
-        return r.calls
+        return r.calls ?? []
     }
 
     func heldCalls() async throws -> [CardException] {
@@ -1347,20 +1347,24 @@ final class KIFFClient {
         var agent: String?
         var tool: String?
         var title: String
-        /// unknown or refused_by_tool.
+        /// unknown, refused_by_tool, or probation (the first outcomes of an untried money operation).
         var status: String
         /// In minor units of `unit`, at `scale`.
         var amount: Int64?
         var unit: String?
         var scale: Int?
         var at: String?
+        /// KIFF's sentence for the call ("Refund a payment: 40.00 EUR."), shown as it is.
+        var words: String?
+        /// Why KIFF asks, in its words: the answer was lost, the tool refused it, or probation.
+        var statusWords: String?
         var id: String { proposal }
         var money: Money? { amount.map { Money(minor: $0, currency: unit, scale: scale ?? 2) } }
-        enum CodingKeys: String, CodingKey { case proposal, agent, tool, title, status, amount, unit, scale, at }
+        enum CodingKeys: String, CodingKey { case proposal, agent, tool, title, status, amount, unit, scale, at, words, statusWords = "status_words" }
         init(proposal: String, agent: String? = nil, tool: String? = nil, title: String, status: String,
-             amount: Int64? = nil, unit: String? = nil, scale: Int? = nil, at: String? = nil) {
+             amount: Int64? = nil, unit: String? = nil, scale: Int? = nil, at: String? = nil, words: String? = nil, statusWords: String? = nil) {
             self.proposal = proposal; self.agent = agent; self.tool = tool; self.title = title; self.status = status
-            self.amount = amount; self.unit = unit; self.scale = scale; self.at = at
+            self.amount = amount; self.unit = unit; self.scale = scale; self.at = at; self.words = words; self.statusWords = statusWords
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -1373,14 +1377,16 @@ final class KIFFClient {
             unit = try c.decodeIfPresent(String.self, forKey: .unit)
             scale = try c.decodeIfPresent(Int.self, forKey: .scale)
             at = try c.decodeIfPresent(String.self, forKey: .at)
+            words = try c.decodeIfPresent(String.self, forKey: .words)
+            statusWords = try c.decodeIfPresent(String.self, forKey: .statusWords)
         }
     }
 
     /// "Did this happen?": the money calls waiting for the owner to say, newest first.
     func didThisHappen() async throws -> [Unproven] {
-        struct Response: Decodable { var calls: [Unproven] = [] }
+        struct Response: Decodable { var calls: [Unproven]? }
         let r: Response = try await send("GET", "/v1/me/did-this-happen")
-        return r.calls
+        return r.calls ?? []
     }
 
     /// The owner's answer, signed on the phone like an approval: "No" gives the Card its room

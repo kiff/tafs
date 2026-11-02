@@ -27,6 +27,7 @@ final class ProfileWordsTests: XCTestCase {
             XCTAssertEqual(words.wordsSHA256, answer["words_sha256"]?.string, name)
             XCTAssertEqual(words.lines.map(\.text), answer["words"]?["lines"]?.array?.compactMap { $0["text"]?.string }, name)
             XCTAssertFalse(words.lines.isEmpty, name)
+            XCTAssertEqual(words.lines.map(\.op), answer["words"]?["lines"]?.array?.map { $0["op"]?.string }, "\(name): a line about the whole connection has no op")
         }
     }
 
@@ -100,7 +101,7 @@ final class ProfileWordsTests: XCTestCase {
     /// Lines KIFF can't vouch for are the ones shown in amber.
     func testCautionKinds() {
         for kind in ["missing", "probation", "unpinned"] {
-            XCTAssertTrue(ProfileWords.Line(op: "x", kind: kind, text: "t").caution, kind)
+            XCTAssertTrue(ProfileWords.Line(op: nil, kind: kind, text: "t").caution, kind)
         }
         for kind in ["does", "outside", "scope", "counts", "checks", "no_effect"] {
             XCTAssertFalse(ProfileWords.Line(op: "x", kind: kind, text: "t").caution, kind)
