@@ -17,8 +17,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Go on (kiff/tafs#185): past the AI use bound, the billing admin lets the tafs go on from Settings › AI use, signed by the
- * approval key; anyone else reads tafs cloud's words. A fake KIFF and tafs cloud stand in.
+ * Go on (kiff/tafs#185): past the AI use bound, the billing admin lets the tafs go on from Settings › AI use, confirmed then
+ * signed by the device key, as KIFF takes it; anyone else reads tafs cloud's words. A fake KIFF and tafs cloud stand in.
  */
 class GoOnTest {
   private val transport = FakeTransport()
@@ -81,7 +81,7 @@ class GoOnTest {
     assertFalse(KiffClient.json.decodeFromString<AIUse>("""{"used_pct":100,"asks_at_pct":100,"paused":true}""").offersGoOn)
   }
 
-  @Test fun goOnIsOneFingerprintThenKiffsSignedPutThenAiUseReadAgain() = runTest {
+  @Test fun goOnIsConfirmedOnceThenKiffsPutSignedByTheDeviceKeyThenAiUseReadAgain() = runTest {
     val m = model(paused)
     transport.answer("PUT /v1/me/usage/ai", 200, "{}")
     transport.answer("GET /v1/usage/ai", 200, goneOn)
@@ -92,8 +92,8 @@ class GoOnTest {
     assertEquals("""{"go_on":true}""", String(put.body!!))
     val (at, signature) = put.headers.getValue("KIFF-Device-Signature").split(",").let { it[0].removePrefix("t=") to it[1].removePrefix("v1=") }
     val message = KiffClient.requestMessage("t_01", "PUT", "/v1/me/usage/ai", put.body!!, at)
-    assertTrue("it lets the tafs spend more: the approval key signs it", verifies(signer.approvalPublicKeyDER, message, signature))
-    assertFalse("not the signing key", verifies(signer.publicKeyDER, message, signature))
+    assertTrue("KIFF takes it from the device key (a phone-signed route)", verifies(signer.publicKeyDER, message, signature))
+    assertFalse("not the approval key, which KIFF would refuse here", verifies(signer.approvalPublicKeyDER, message, signature))
     assertEquals(200, m.state.value.aiUse!!.asksAtPct)
     assertFalse(m.state.value.aiUse!!.paused)
     assertFalse(m.state.value.goingOn)
@@ -113,7 +113,7 @@ class GoOnTest {
     auth.confirms = false
     assertFalse(m.goOnAI())
     assertTrue(transport.requestsTo("PUT /v1/me/usage/ai").isEmpty())
-    assertEquals(bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED, m.state.value.goOnError)
+    assertEquals("Not done: it wasn't confirmed.", m.state.value.goOnError)
     assertTrue("still waiting", m.state.value.aiUse!!.paused)
   }
 

@@ -176,8 +176,10 @@ of the account can let the tafs go on, and the day the AI use starts again by it
 says the same in its `words`, so its words point to Go on or to whoever can.
 
 On Android, AI use is in Plan & usage (`AIUsePanel`), with tafs cloud's `words` as they are.
-Go on is the approval key's (`AppModel.goOnAI`), so while the phone can't approve, its state
-stands in the button's place ([approvals.md](approvals.md#set-up-approvals-on-this-device)).
+Go on (`AppModel.goOnAI`) asks the person once, then the device key signs KIFF's request:
+KIFF takes this route phone-signed, not from the approval key. Like an approval, it waits on
+the phone being able to approve: while it can't, its state stands in the button's place
+([approvals.md](approvals.md#set-up-approvals-on-this-device)).
 After it, AI use is read again. A chat refused for AI use shows its `words` and has no button.
 
 On iPhone and iPad, AI use is its own screen from Plan & usage (`AIUseView`), with tafs cloud's

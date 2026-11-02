@@ -618,7 +618,7 @@ class KiffClient(
      */
     val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", AI_USE)
 
-    /** KIFF's AI use bound: Go on is a signed PUT here. */
+    /** KIFF's AI use bound: Go on is a PUT here, signed by the device key (KIFF's phone-signed routes, not the approval key's). */
     const val AI_USE = "/v1/me/usage/ai"
 
     /**
@@ -650,8 +650,6 @@ class KiffClient(
      * resuming a halt. Taking authority away (ending a trial, unsharing) is the current key.
      */
     fun grantsAuthority(method: String, path: String): Boolean {
-      // Going on past the AI use bound lets the tafs spend more: the approval key, one fingerprint per tap.
-      if (method == "PUT" && path == AI_USE) return true
       if (method != "POST") return false
       if (path == "/v1/me/agent-drafts") return true
       val parts = path.split("/")

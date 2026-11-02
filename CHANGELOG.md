@@ -22,10 +22,11 @@ version headings refer to releases, not merely to merged pull requests.
   again after it; anyone else reads who can let them go on, and when it starts again by itself.
 
 - **Android, Go on:** while the tafs wait past this period's AI use, the billing admin sees **Go
-  on** in Plan & usage's AI use. It takes one fingerprint and is signed by the approval key.
+  on** in Plan & usage's AI use. It asks once, then the phone's device key signs it for KIFF.
   Anyone else reads tafs cloud's words on who can, and when AI use starts again.
 - **Android, a taf shared with you:** its Card reads as issued by the account, by name, never
   "You"; that stays only for a taf you manage. Settings labels your own address "Signed in as".
+  An empty home list tells someone who can't use Coach "Tafs shared with you show here."
 - **iPhone and iPad, an answered card stays under its turn:** once answered, a card stays after
   Coach's words that asked for it, and Coach's words after the answer come below it, as on Android.
   A "Try again" card no longer shows above the turn that offered it.

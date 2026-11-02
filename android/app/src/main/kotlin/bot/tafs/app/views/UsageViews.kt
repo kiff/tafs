@@ -143,7 +143,8 @@ fun AIUsePanel(ai: bot.tafs.app.kiff.AIUse, state: AppState, actions: AccountAct
       if (ai.paused) Text(UsageWords.AI_ASKING, style = scaled(15, color = Theme.ink))
     }
     if (ai.offersGoOn) {
-      // Going on lets the tafs spend more: an approval, so the phone must be able to approve.
+      // Going on lets the tafs spend more, so it waits on the phone being able to approve, as on iOS. KIFF takes it signed by the
+      // device key, once the person confirms.
       val biometry = LocalBiometry.current
       ApprovalGate {
         PrimaryButton(
