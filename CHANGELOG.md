@@ -11,6 +11,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, Signed in as:** Settings › Account › KIFF account labels the person's own
+  address "Signed in as", so it never reads as the account's, as on Android.
+
 - **iPhone and iPad, Go on past the AI use bound:** Settings › AI use shows tafs cloud's words as
   they are. While the tafs wait, the billing admin gets **Go on** (one Face ID), and AI use is read
   again after it; anyone else reads who can let them go on, and when it starts again by itself.
