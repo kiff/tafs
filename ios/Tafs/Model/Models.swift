@@ -208,6 +208,13 @@ struct CardTotal<Value: Hashable & Codable & Sendable>: Hashable, Codable, Senda
 
 /// One KIFF Card, drawn on its own (kiff/tafs#211): a taf can hold several, each with its
 /// own limits and balance, and a test Card is kept apart from the live one.
+/// One tool of a Card and how KIFF counts it, in KIFF's words.
+struct CardCounted: Hashable, Codable {
+    var tool: String
+    var title: String
+    var lines: [String]
+}
+
 struct TafCard: Identifiable, Hashable, Codable {
     var id: String
     /// Its own title from KIFF, else its main tool's.
@@ -223,6 +230,9 @@ struct TafCard: Identifiable, Hashable, Codable {
     var total: CardTotal<Money>?
     /// Its count of calls.
     var calls: CardTotal<Int>?
+    /// How this is counted (Card › How this is counted): for each tool it covers with a
+    /// profile the owner approved, KIFF's words for it, as approved. Nil or empty: none.
+    var counted: [CardCounted]?
 
     /// What of its totals' use is from calls the tool refused, in KIFF's words: they count
     /// until KIFF can confirm nothing moved (kiff-cloud's limit lines).

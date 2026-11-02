@@ -184,6 +184,16 @@ final class TafsCloud {
             let rules: [Rule]
             let total: Total<Amount>?
             let calls: Total<Int>?
+            /// How this is counted: each tool's lines in KIFF's words, as the owner approved
+            /// them; nil when KIFF has none.
+            var counted: [Counted]? = nil
+        }
+
+        /// One tool of a Card, and how KIFF counts it.
+        struct Counted: Decodable, Equatable {
+            let tool: String
+            let title: String
+            let lines: [String]
         }
 
         struct CardSummary: Decodable, Equatable {

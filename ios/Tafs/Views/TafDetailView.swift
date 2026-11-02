@@ -270,6 +270,14 @@ struct TafDetailView: View {
             .frame(maxWidth: .infinity)
         // All of the front Card's limits: the face shows the main one.
         CardLines(rules: shown?.rules ?? [])
+        // How KIFF counts each of its tools, as the owner approved it: its own screen.
+        if let shown, let counted = shown.counted, !counted.isEmpty {
+            PanelLink { CountedView(card: shown.title, counted: counted) } label: {
+                Label(CountedView.title, systemImage: "list.bullet.rectangle")
+                    .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+            }
+            .accessibilityIdentifier("card-counted")
+        }
         // A vendor's refusal still counts against the Card's totals (kiff/tafs#211, 6.13), in
         // KIFF's words for what's pending: for a live, active Card only, since a test Card's
         // totals aren't what the taf may do for real.
@@ -1095,5 +1103,29 @@ struct CardStack: View {
             }
         }
         .frame(maxWidth: TafCardFace.width)
+    }
+}
+
+/// Card › How this is counted: for each tool the Card covers with a profile the owner
+/// approved, KIFF's words for how it's counted, the same lines approved, under the tool's
+/// title. The app adds no words of its own.
+struct CountedView: View {
+    static let title = "How this is counted"
+    let card: String
+    let counted: [CardCounted]
+
+    var body: some View {
+        List {
+            ForEach(counted, id: \.tool) { tool in
+                Section(tool.title) {
+                    ForEach(Array(tool.lines.enumerated()), id: \.offset) { _, line in
+                        Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+        .navigationTitle(Self.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .accessibilityIdentifier("counted.\(card)")
     }
 }

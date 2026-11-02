@@ -62,6 +62,19 @@ describe("each Card on its own (kiff/tafs#211)", () => {
     expect(cardView(noLine).calls).toEqual({ limit: 200, used: null, window: "calendar_day", window_words: { each: "a day", now: "today" } });
   });
 
+  it("says how each tool is counted, in KIFF's words under its title, and nothing when KIFF has none", () => {
+    const counted: Mandate = { ...reads, counted: [
+      { tool: "get_charge", lines: ["Look up a charge: reads in Stripe.", ""] },
+      { tool: "list_charges", lines: [] },
+      { tool: "unknown_tool", lines: ["Some tool: reads."] },
+    ] };
+    expect(cardView(counted).counted).toEqual([
+      { tool: "get_charge", title: "Look up a charge", lines: ["Look up a charge: reads in Stripe."] },
+      { tool: "unknown_tool", title: "unknown_tool", lines: ["Some tool: reads."] },
+    ]);
+    expect(cardView(reads)).not.toHaveProperty("counted");
+  });
+
   it("puts the live Cards first, then a test Card", () => {
     const s = summary([test, reads, refunds]);
     expect(s.cards.map((c) => [c.id, c.live])).toEqual([["reads", true], ["live", true], ["test", false]]);
