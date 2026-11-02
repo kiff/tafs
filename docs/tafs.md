@@ -153,12 +153,18 @@ It has up to four tabs:
 - **Card:** its Cards as a stack, as KIFF lists them, each with what it allows, what it
   has used and what's left, and every limit of the front one. An amount KIFF gives no
   currency for says so ("30 000 left today of 30 000 · no currency"), never reading
-  like money. A Card scoped to an environment other than production says which; one
+  like money. When KIFF knows why (a tool the Card grants isn't connected), the total carries
+  KIFF's `unit_words` ("Its currency comes from create_refund, which isn't connected.") and
+  `unit_missing` (`{tools, connected}`), passed on as they are. The app shows the words under
+  the total, then "Reconnect it in Coach." to whoever manages the taf. A Card scoped to an environment other than production says which; one
   that acts for real carries no label. Connections show only when there are some.
   A call the tool refused still counts toward the Card's totals until KIFF can confirm nothing
   moved: KIFF's `pending_text` on the total says how much, under the Card's limits and on a
   held call over that total (Android: `pendingLines`), from live, active Cards only: a test
   Card's totals aren't what the taf may do for real. The app writes no line of its own.
+  On iOS, `unit_words` shows under the Card's limits (`TafCard.unitWords`), and Reconnect
+  it in Coach also needs Coach's permission, since it opens Coach on that taf
+  (`TafDetailView.offersReconnect`).
   A limit says what happens past it, from each rule's `outside` in tafs cloud's list (the
   Card's `on_exceed` in KIFF). On a `hold` rule: "up to $40 each; more asks you first",
   "$300 in total a day, then it asks you", "20 calls a day, then it asks you", and a count

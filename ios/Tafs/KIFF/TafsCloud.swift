@@ -151,12 +151,23 @@ final class TafsCloud {
             /// What of its use is from calls the tool refused, which count until KIFF can
             /// confirm nothing moved, in KIFF's words; none without any.
             var pendingText: String?
+            /// Why its amount has no currency, in KIFF's words, when a tool the Card grants
+            /// isn't connected any more ("Its currency comes from …, which isn't connected.");
+            /// and those tools. None otherwise.
+            var unitWords: String?
+            var unitMissing: UnitMissing?
+
+            struct UnitMissing: Decodable, Equatable, Sendable {
+                var tools: [String] = []
+                var connected = false
+            }
 
             enum CodingKeys: String, CodingKey {
                 case limit, used, window
                 case windowWords = "window_words"
                 case extraRoom = "extra_room", baseLimit = "base_limit", roomWindowEnd = "room_window_end"
                 case pendingText = "pending_text"
+                case unitWords = "unit_words", unitMissing = "unit_missing"
             }
         }
 

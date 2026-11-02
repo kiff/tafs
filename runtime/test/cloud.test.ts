@@ -737,6 +737,24 @@ describe("the home list", () => {
     expect(card.cards[0].calls.pending_text).toBeUndefined();
   });
 
+  it("passes KIFF's words for a total with no currency through, with the tools it waits on", async () => {
+    const w = world();
+    const words = "Its currency comes from create_refund, which isn't connected.";
+    w.account.mandates = [{
+      ...raeCard,
+      aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "calendar_day" }],
+      limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 50000, used: null, status: "unknown", unit_words: words, unit_missing: { tools: ["create_refund"], connected: false } }],
+    }];
+    const card = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
+    expect(card.cards[0].total.unit_words).toBe(words);
+    expect(card.cards[0].total.unit_missing).toEqual({ tools: ["create_refund"], connected: false });
+    // A Card whose currency is known has neither.
+    w.account.mandates = [{ ...raeCard, aggregates: [{ quantity: "sum(amount)", limit: 50000, window: "calendar_day", unit: "EUR", scale: 2 }] }];
+    const known = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].card;
+    expect(known.cards[0].total.unit_words).toBeUndefined();
+    expect(known.cards[0].total.unit_missing).toBeUndefined();
+  });
+
   it("never works out extra room: a ceiling over the Card's limit with no extra_room from KIFF is none", async () => {
     const w = world();
     w.account.mandates = [{

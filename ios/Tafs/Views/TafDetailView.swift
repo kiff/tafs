@@ -29,6 +29,14 @@ struct TafDetailView: View {
     static let sideWidth: CGFloat = 360
     static let chatAtLeast: CGFloat = 430
 
+    /// Under a Card total with no currency: Coach connects the tool again.
+    static let reconnect = "Reconnect it in Coach."
+
+    /// Reconnecting is offered to whoever manages the taf and may use Coach, signed in.
+    static func offersReconnect(manages: Bool, mayUseCoach: Bool, mode: AppModel.Mode) -> Bool {
+        mode == .kiff && manages && mayUseCoach
+    }
+
     /// A wide screen (kiff/tafs#85): beside the chat or the activity, a second column with
     /// the call waiting for the owner and the Cards. Only in landscape and only when the chat
     /// keeps an iPhone's width beside it (kiff/tafs#211): iPad landscape and the Mac. A
@@ -275,6 +283,25 @@ struct TafDetailView: View {
             Text(line)
                 .scaledFont(13).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+        // Its total has no currency because a tool it grants isn't connected any more: KIFF's
+        // words as they are, and, for whoever manages the taf, Coach to connect it again.
+        if let words = shown?.unitWords {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(words)
+                    .scaledFont(13).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                if Self.offersReconnect(manages: model.manages(taf.id), mayUseCoach: model.mayUseCoach, mode: model.mode) {
+                    // A new Coach conversation on this taf, as Android's Improve in Coach.
+                    Button(Self.reconnect) {
+                        model.improveTaf(taf.id)
+                        model.coachOpen = true
+                    }
+                        .scaledFont(13, weight: .semibold).foregroundColor(Theme.amberText)
+                        .accessibilityIdentifier("card-reconnect")
+                }
+            }
+            .accessibilityIdentifier("card-unit-words")
         }
         ConnectionsPanel(tafID: taf.id)
         // Halting is a job of its own too: its row opens its screen.

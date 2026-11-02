@@ -204,7 +204,10 @@ class MappingTest {
            "total":{"limit":{"minor":100000,"unit":"EUR","scale":2},"used":{"minor":20000,"unit":"EUR","scale":2},"window":"day",
              "pending_text":"€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved."}},
           {"id":"card_t","title":"Refunds (test)","environment":"test","live":false,"active":true,"rules":[],
-           "calls":{"limit":50,"used":3,"window":"week","pending_text":"2 of them are from calls the tool refused, in test."}}]}},
+           "calls":{"limit":50,"used":3,"window":"week","pending_text":"2 of them are from calls the tool refused, in test."}},
+          {"id":"card_u","title":"Refunds (reads)","environment":"","live":true,"active":true,"rules":[],
+           "total":{"limit":{"minor":30000},"used":null,"window":"day","unit_words":"Its currency comes from create_refund, which isn't connected.",
+             "unit_missing":{"tools":["create_refund"],"connected":false}}}]}},
       {"id":"taf_2","name":"Access","kiff_agent":"access-1","status":"paused","color":3,"state":"paused","waiting":0,"card":{"ids":["c2","c3"],"active":true,"tools":[],"rules":[],"used":{},"usage_unknown":[]}},
       {"id":"taf_3","name":"Deploys","kiff_agent":"deploys-1","color":4,"state":"waiting","waiting":2,"card":{"ids":["c4"],"active":true,"tools":[],"rules":[]}},
       {"id":"taf_4","name":"Billing","kiff_agent":"billing-1","color":5,"state":"halted","card":{"ids":["c5"],"active":true}},
@@ -241,6 +244,12 @@ class MappingTest {
     assertEquals(emptyList<String>(), pendingLines(named("Access")))
   }
 
+  @Test fun aTotalWithNoCurrencyCarriesKiffsWordsForWhy() {
+    val cards = named("Refunds").shownCards
+    assertEquals("Its currency comes from create_refund, which isn't connected.", cards.first { it.id == "card_u" }.total?.unitWords)
+    assertNull("a Card whose currency is known says nothing", cards.first { it.id == "card_1" }.total?.unitWords)
+  }
+
   @Test fun aTafsCardLinesCarryTheirUnitsAndWhatHappensOutsideThem() {
     val rules = named("Refunds").card.rules
     assertEquals(eur(10000), rules[0].perAction)
@@ -260,7 +269,7 @@ class MappingTest {
 
   @Test fun eachKiffCardIsKeptOnItsOwnWithItsTotalOrItsCount() {
     val cards = named("Refunds").kiffCards!!
-    assertEquals(listOf("card_1", "card_t"), cards.map { it.id })
+    assertEquals(listOf("card_1", "card_t", "card_u"), cards.map { it.id })
     assertEquals(eur(100000), cards[0].total!!.limit)
     assertEquals(eur(20000), cards[0].total!!.used)
     assertEquals("${eur(80000).formatted}", cards[0].hero!!.figure)

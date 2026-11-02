@@ -43,7 +43,15 @@ data class HomeTotal<V>(
   @SerialName("room_window_end") @Serializable(with = InstantAsString::class) val roomWindowEnd: Instant? = null,
   /** KIFF's words for how much of it is from calls the tool refused, which count until KIFF confirms nothing moved; null for none. */
   @SerialName("pending_text") val pendingText: String? = null,
+  /** KIFF's words for why its amount has no currency (a tool the Card grants isn't connected); null otherwise. */
+  @SerialName("unit_words") val unitWords: String? = null,
+  /** Which tools that is, and whether they're connected, as KIFF says. */
+  @SerialName("unit_missing") val unitMissing: UnitMissing? = null,
 )
+
+/** The tools a Card's currency waits on, as KIFF says: they aren't connected. */
+@Serializable
+data class UnitMissing(val tools: List<String> = emptyList(), val connected: Boolean = false)
 
 /** One KIFF Card on its own (kiff/tafs#211). */
 @Serializable

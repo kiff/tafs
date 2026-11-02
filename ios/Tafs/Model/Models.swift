@@ -202,6 +202,9 @@ struct CardTotal<Value: Hashable & Codable & Sendable>: Hashable, Codable, Senda
     var roomEnds: Date? = nil
     /// What of its use is from calls the tool refused and still counts, in KIFF's words.
     var pending: String? = nil
+    /// Why its amount has no currency, in KIFF's words: a tool the Card grants isn't
+    /// connected any more.
+    var unitWords: String? = nil
 }
 
 /// One KIFF Card, drawn on its own (kiff/tafs#211): a taf can hold several, each with its
@@ -225,6 +228,10 @@ struct TafCard: Identifiable, Hashable, Codable {
     /// What of its totals' use is from calls the tool refused, in KIFF's words: they count
     /// until KIFF can confirm nothing moved (kiff-cloud's limit lines).
     var pending: [String] { [total?.pending, calls?.pending].compactMap { $0 } }
+
+    /// Why its money total has no currency, in KIFF's words; nil when it has one, or KIFF
+    /// can't tell.
+    var unitWords: String? { total?.unitWords }
 
     /// Whether its totals are what the taf may do for real: live, and active.
     var countsForReal: Bool { live && active }
