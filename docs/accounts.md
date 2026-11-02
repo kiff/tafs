@@ -27,8 +27,8 @@ Sign in with KIFF's device flow (`AppModel.startSignIn`, `finishSignIn`):
    so KIFF accepts the phone's answers only with that key's signature. The approval key
    is registered next ([approvals.md](approvals.md#how-an-answer-is-signed)).
 
-Each way out asks first: Sign out, Sign in again and Switch account open a confirmation on
-Android, so a stray tap never ends the session (iOS follows). Signing out (`POST /v1/auth/device/logout`) or switching account clears everything of the
+Each way out asks first: Sign out, Sign in again and Switch account open a confirmation,
+so a stray tap never ends the session (Android `ConfirmSignOut`, iOS `SignOutWay`). Signing out (`POST /v1/auth/device/logout`) or switching account clears everything of the
 earlier session on the phone, including files opened from a chat. The session ends at KIFF
 first: when KIFF doesn't confirm, the phone stays signed in and says so ("Not signed out at
 KIFF yet…"), so a device shown as signed out never holds a session KIFF still accepts.
@@ -101,7 +101,7 @@ last result. Who uses the taf shows only to whoever manages it.
 
 ## Usage, tasks and plans
 
-**Usage** in Settings (`UsageView`) is the account's period, from KIFF
+**Plan & usage** in Settings (`UsageView`) is the account's period, from KIFF
 (`GET /v1/me/usage`):
 
 - the **tasks** the period has (what the plan includes, and packs) and what's left;
@@ -112,20 +112,23 @@ last result. Who uses the taf shows only to whoever manages it.
 - what wasn't counted, and why: refused by KIFF, held then refused, halted, failed at the
   tool, not valid, retries, reads, trials of a new version, Coach and Setup.
 
-On Android, a trial that has ended (its `trial.ends_at` past, a lapsed Solo included) says
+A trial that has ended (its `trial.ends_at` past, a lapsed Solo included) says
 "Your trial has ended.", never that its tasks are used: KIFF gives it no tasks on purpose. Where
 Solo is offered, "Start Solo to keep your tafs running." follows it. A trial that hasn't started
 or has ended runs no period, so Usage shows no period end and no meter (`UsageWords.notice`,
-`trialEnded`, `noPeriod`). iOS follows.
+`trialEnded`, `noPeriod`; iOS `UsageView`). Packs are on sale only while a plan runs
+(`can_add_packs`, falling back to `can_add_tasks`); packs held meanwhile say "Counts once Solo
+starts."
 
-The plan shows outside it too, on Android. **Settings** opens with a Plan card, one line from
+The plan shows outside it too. **Settings** opens with a Plan card, one line from
 the same read (`UsageWords.planLine`): "Trial · 5 days and 18 tasks left", "Trial · not started",
 "Trial ended · Start Solo" (amber), "Solo · 12 of 20 tasks left · Google Play" (red when none are
 left), "Company · 472 tasks this period". It opens the screen, called **Plan & usage**. **Home**
 shows one line about the plan only when it needs the owner (`UsageWords.homeLine`): a trial ended,
 not started or ending within 2 days, tasks used up, or a tenth or less of the period's left.
 Otherwise Home stays about the tafs. The plan is read with each refresh (`refreshPlan`), so
-both are current. iOS follows.
+both are current. iOS has the same words and thresholds (`UsageView.planLine`, `homeLine`,
+`planTone`, `PlanRow`, `PlanLine`; `refreshPlan`).
 
 Each taf's own part is a row on its Card tab (`TafUsageView`).
 

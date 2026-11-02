@@ -266,6 +266,76 @@ struct UnreachableLine: View {
     }
 }
 
+/// The ways out of KIFF this device offers, each confirmed first, so a stray tap never ends
+/// the session. Cancel leaves everything as it is.
+@MainActor
+enum SignOutWay {
+    case signOut, signInAgain, switchAccount
+
+    var title: String {
+        switch self {
+        case .signOut: return "Sign out of KIFF?"
+        case .signInAgain: return "Sign in again?"
+        case .switchAccount: return "Switch account?"
+        }
+    }
+
+    var message: String {
+        switch self {
+        case .signOut: return "This \(ThisDevice.kind) stops working for your account until you sign in again. Your tafs keep working."
+        case .signInAgain: return "This \(ThisDevice.kind) signs out of KIFF first, then you sign in again in your browser."
+        case .switchAccount: return "KIFF's sign-in page lists your accounts. This \(ThisDevice.kind) then works for the one you pick."
+        }
+    }
+
+    var confirm: String {
+        switch self {
+        case .signOut: return "Sign out"
+        case .signInAgain: return "Sign out and sign in"
+        case .switchAccount: return "Switch"
+        }
+    }
+}
+
+extension View {
+    /// Asks before `way` goes ahead; `go` runs only on its confirm.
+    @MainActor
+    func confirmingSignOut(_ way: Binding<SignOutWay?>, go: @escaping (SignOutWay) -> Void) -> some View {
+        alert(way.wrappedValue?.title ?? "", isPresented: Binding(get: { way.wrappedValue != nil }, set: { if !$0 { way.wrappedValue = nil } }),
+              presenting: way.wrappedValue) { w in
+            Button(w.confirm, role: .destructive) { go(w) }
+            Button("Cancel", role: .cancel) {}
+        } message: { w in
+            Text(w.message)
+        }
+    }
+}
+
+/// Home's line about the plan, only when it needs the owner (`UsageView.homeLine`): a trial
+/// ended or ending, tasks nearly gone. It opens Plan & usage. Home stays about the tafs.
+struct PlanLine: View {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        if model.mode == .kiff, let u = model.usage, let words = UsageView.homeLine(u) {
+            let color = UsageView.planTone(u) == .out ? Theme.no : Theme.amberText
+            Button { model.usageRequested = true } label: {
+                HStack(spacing: 6) {
+                    Circle().fill(color).frame(width: 7, height: 7)
+                    Text(words).scaledFont(13).foregroundColor(color)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 4)
+                    Text(UsageView.title).scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityHint("Opens \(UsageView.title).")
+            .accessibilityIdentifier("plan-line")
+        }
+    }
+}
+
 /// This phone can't approve until its person approves it again in their browser (its
 /// approval key is gone, or KIFF holds another): said with the way out, in place of a button
 /// that would fail. Refuse stays. While the browser hasn't answered, it shows the code to
@@ -275,6 +345,7 @@ struct ApprovalKeyLostLine: View {
     @Environment(\.openURL) private var openURL
     @State private var starting = false
     @State private var signingOut = false
+    @State private var confirming: SignOutWay?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -304,10 +375,7 @@ struct ApprovalKeyLostLine: View {
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(starting)
                 Button {
-                    signingOut = true
-                    // Signing out ends the session at KIFF, the old approval key with it; the
-                    // sign-in screen follows, and the next sign-in registers the new key.
-                    Task { _ = await model.signOut(); signingOut = false }
+                    confirming = .signInAgain
                 } label: {
                     Text("Sign in again instead").scaledFont(13)
                 }
@@ -321,5 +389,11 @@ struct ApprovalKeyLostLine: View {
             }
         }
         .accessibilityIdentifier("approval-key-lost")
+        .confirmingSignOut($confirming) { _ in
+            signingOut = true
+            // Signing out ends the session at KIFF, the old approval key with it; the
+            // sign-in screen follows, and the next sign-in registers the new key.
+            Task { _ = await model.signOut(); signingOut = false }
+        }
     }
 }

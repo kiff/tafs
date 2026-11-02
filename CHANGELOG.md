@@ -7,6 +7,14 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, as Android's v19:** Settings opens with a Plan card that opens **Plan &
+  usage** (was Account usage), and Home shows one line about the plan only when it needs you,
+  with Android's words and thresholds. An ended trial says "Your trial has ended." (with "Start
+  Solo to keep your tafs running." where Solo is offered), with no past period end and no red
+  meter. Packs are on sale only while a plan runs (`can_add_packs`); held ones say "Counts once
+  Solo starts." Coach's New conversation keeps an empty conversation and shows its top. Sign out,
+  Switch account and Sign in again ask first. "1 task", never "1 tasks". Signing out also removes
+  the last export's files.
 - **Android, the plan in sight:** Settings opens with a Plan card ("Trial · 5 days and 18 tasks
   left", "Trial ended · Start Solo", "Solo · 12 of 20 tasks left · Google Play") that opens what
   was Account usage, now **Plan & usage**. Home shows one line about the plan only when it needs

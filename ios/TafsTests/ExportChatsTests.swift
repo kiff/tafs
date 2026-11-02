@@ -47,5 +47,13 @@ final class ExportChatsTests: XCTestCase {
         let failed = await model.exportChats()
         XCTAssertNil(failed.files)
         XCTAssertEqual(failed.why, "Your chats weren't exported. Check your connection and try again.")
+
+        // Signing out takes the last export's files with it: nothing of the chats stays on the phone.
+        StubProtocol.responses["POST /v1/auth/device/logout"] = (200, "{}")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: files[0].path))
+        let signedOut = await model.signOut()
+        XCTAssertTrue(signedOut)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: files[0].path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: AppModel.exportedFiles.path))
     }
 }

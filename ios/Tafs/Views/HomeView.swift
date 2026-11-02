@@ -18,6 +18,8 @@ struct HomeView: View {
                 // KIFF can't be reached just now: said quietly, under the account's name.
                 if let words = model.unreachable { UnreachableLine(words: words, retrying: model.retryingRefresh) }
                 if model.approvalKeyLost { ApprovalKeyLostLine() }
+                // The plan, only when it needs the owner: a trial ended or ending, tasks nearly gone.
+                PlanLine()
 
                 if let first = model.held.first, let taf = model.taf(first.tafID) {
                     Button { tab = .needsYou } label: { needsYouStrip(first, taf) }

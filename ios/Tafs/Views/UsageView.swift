@@ -22,6 +22,11 @@ struct UsageView: View {
                         Panel {
                             Text(notice).scaledFont(15).foregroundColor(Theme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
+                            // An ended trial: Solo keeps the tafs running, said only where Solo is offered.
+                            if Self.trialEnded(u), Self.offersSolo(u) {
+                                Text(Self.startSolo).scaledFont(14).foregroundColor(Theme.soft)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
                     if model.mode == .kiff {
@@ -41,6 +46,10 @@ struct UsageView: View {
                                     Spacer()
                                     Text(Self.packLeft(p)).scaledFont(14).foregroundColor(Theme.soft)
                                 }
+                            }
+                            // Held while no plan runs: they count again once Solo starts.
+                            if u.canAddPacks == false {
+                                Text(Self.packsWaitForSolo).scaledFont(13).foregroundColor(Theme.soft)
                             }
                         }
                     }
@@ -114,23 +123,31 @@ struct UsageView: View {
         Panel {
             Eyebrow(text: Self.whose(u))
             Text(Self.count(u.tasks.counted, of: u.tasks.left == nil ? 0 : u.tasks.total, "tasks")).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-            if u.tasks.left != nil, u.tasks.total > 0 {
+            // A trial that hasn't started or has ended runs no period: no meter, nothing in
+            // red, and no end date (it would be past).
+            let running = !Self.noPeriod(u)
+            if running, u.tasks.left != nil, u.tasks.total > 0 {
                 Meter(fraction: Double(u.tasks.counted) / Double(u.tasks.total),
                       color: u.tasks.usedUp ? Theme.no : Theme.ok)
             }
             if let left = Self.leftLine(u) {
-                Text(left).scaledFont(15, weight: .semibold).foregroundColor(u.tasks.usedUp ? Theme.no : Theme.ink)
+                Text(left).scaledFont(15, weight: .semibold).foregroundColor(running && u.tasks.usedUp ? Theme.no : Theme.ink)
             }
-            Text(Self.periodEnds(u.period.end)).scaledFont(13).foregroundColor(Theme.soft)
+            if running {
+                Text(Self.periodEnds(u.period.end)).scaledFont(13).foregroundColor(Theme.soft)
+            }
         }
     }
 
     /// Adding tasks, for someone who may; asking an admin, or waiting on the answer, for a
-    /// member. Only where tasks have a limit.
+    /// member. Only where tasks have a limit. Packs only while a plan runs (KIFF's
+    /// `can_add_packs`): an ended trial is offered Solo.
     @ViewBuilder private func tasksActions(_ u: KIFFClient.Usage) -> some View {
         if u.tasks.left != nil, u.store != nil {
             if u.canAddTasks == true {
-                if u.tasks.usedUp {
+                if !u.packsOffered {
+                    EmptyView()
+                } else if u.tasks.usedUp {
                     Button("Add tasks") { addingTasks = true }.buttonStyle(PrimaryButtonStyle())
                 } else {
                     Button("Add tasks") { addingTasks = true }.buttonStyle(OutlineButtonStyle())
@@ -185,12 +202,15 @@ struct UsageView: View {
                             Text(r.reason).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         }
                         HStack(spacing: 10) {
-                            Button("Approve") {
-                                guard let pack = u.store?.packs.first(where: { $0.id == r.pack }) else { return }
-                                Task { await model.buyPack(pack, answering: r) }
+                            // Approving buys the pack: only while packs are on sale.
+                            if u.packsOffered {
+                                Button("Approve") {
+                                    guard let pack = u.store?.packs.first(where: { $0.id == r.pack }) else { return }
+                                    Task { await model.buyPack(pack, answering: r) }
+                                }
+                                .buttonStyle(PrimaryButtonStyle())
+                                .disabled(model.purchases.buying != nil)
                             }
-                            .buttonStyle(PrimaryButtonStyle())
-                            .disabled(model.purchases.buying != nil)
                             Button("Decline") { declining = r }.buttonStyle(OutlineButtonStyle())
                         }
                     }
@@ -239,6 +259,7 @@ struct UsageView: View {
     static func billingLine(_ u: KIFFClient.Usage) -> String? {
         switch u.billing?.source {
         case "apple": return "Billed by Apple"
+        case "google": return "Billed by Google Play"
         case "stripe": return "Billed by KIFF"
         case "contract": return "Managed by your company's agreement"
         default: return nil
@@ -308,8 +329,15 @@ struct UsageView: View {
         n == 1 ? "1 task" : "\(n) tasks"
     }
 
-    /// The account's screen is the account's, apart from a taf's own (kiff/tafs#245, item 2).
-    static let title = "Account usage"
+    /// The account's screen: its plan, and what the period used. Apart from a taf's own
+    /// (kiff/tafs#245, item 2).
+    static let title = "Plan & usage"
+
+    /// Under held packs while no plan runs (KIFF's `can_add_packs` false).
+    static let packsWaitForSolo = "Counts once Solo starts."
+
+    /// Under an ended trial's notice, where Solo is offered.
+    static let startSolo = "Start Solo to keep your tafs running."
 
     /// Whose the account's numbers are: every taf's together.
     static let allTafs = "All tafs"
@@ -343,9 +371,13 @@ struct UsageView: View {
     }
 
     /// "14 of 25 tasks", or "472 tasks" where there's no limit (KIFF's `included: 0`, on our
-    /// own accounts and Company).
+    /// own accounts and Company), in the singular where the number it follows is 1: "1 task",
+    /// "0 of 1 task". `unit` is the plural; its singular drops the final "s".
     static func count(_ counted: Int, of included: Int, _ unit: String) -> String {
-        included > 0 ? "\(counted) of \(included) \(unit)" : "\(counted) \(unit)"
+        let one = unit.hasSuffix("s") ? String(unit.dropLast()) : unit
+        return included > 0
+            ? "\(counted) of \(included) \(included == 1 ? one : unit)"
+            : "\(counted) \(counted == 1 ? one : unit)"
     }
 
     /// The plan's name as the owner bought it; nil for one that isn't sold (our own
@@ -360,9 +392,24 @@ struct UsageView: View {
         }
     }
 
-    /// What the account should know now: tasks used up, an ended trial, or what's left of it.
-    /// Nil when there's nothing to say.
-    static func notice(_ u: KIFFClient.Usage) -> String? {
+    /// A trial whose end has passed, Solo lapsed included: KIFF gives it no tasks (`left: 0`),
+    /// and nothing was used up.
+    static func trialEnded(_ u: KIFFClient.Usage, now: Date = Date()) -> Bool {
+        guard u.plan == "trial", let end = u.trial?.endsAt else { return false }
+        return end <= now
+    }
+
+    /// No period runs: a trial that hasn't started or has ended. No period line and no meter then.
+    static func noPeriod(_ u: KIFFClient.Usage, now: Date = Date()) -> Bool {
+        u.plan == "trial" && (u.trial?.endsAt == nil || trialEnded(u, now: now))
+    }
+
+    /// What the account should know now: an ended trial, tasks used up, or what's left of the
+    /// trial. Nil when there's nothing to say.
+    static func notice(_ u: KIFFClient.Usage, now: Date = Date()) -> String? {
+        // Before used-up: an ended trial has left 0 by design, though nothing was used.
+        if trialEnded(u, now: now) { return "Your trial has ended." }
+        if u.plan == "trial", let trial = u.trial, trial.endsAt == nil { return "Your trial hasn't started." }
         if u.tasks.usedUp {
             return u.plan == "trial"
                 ? "Your trial's tasks are used. Your tafs are paused until tasks are added."
@@ -373,8 +420,65 @@ struct UsageView: View {
         if trial.daysLeft <= 0 { return "Your trial has ended." }
         let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
         let left = u.tasks.left ?? trial.tasksLeft
-        let tasks = left == 1 ? "1 task" : "\(left) tasks"
-        return "Your trial: \(days) and \(tasks) left."
+        return "Your trial: \(days) and \(tasks(left)) left."
+    }
+
+    // MARK: The plan, where it shows outside Plan & usage
+
+    /// How the plan line reads: calm, wanting the owner (a trial ended or not started), or out of tasks.
+    enum PlanTone { case calm, attention, out }
+
+    /// Who bills the plan, short, for the plan line; nil when no one does or a contract does.
+    private static func billedBy(_ u: KIFFClient.Usage) -> String? {
+        switch u.billing?.source {
+        case "apple": return "Apple"
+        case "google": return "Google Play"
+        case "stripe": return "KIFF"
+        default: return nil
+        }
+    }
+
+    /// "12 of 20 tasks left until 1 Dec 2026" on a plan someone bills, or "472 tasks this
+    /// period" where there's no limit. "Until", not "renews": the app can't tell a cancelled
+    /// Solo from one that renews, and the period's end is true of both.
+    private static func tasksLine(_ u: KIFFClient.Usage) -> String {
+        guard let left = u.tasks.left else { return "\(tasks(u.tasks.counted)) this period" }
+        let line = u.tasks.total > 0 ? "\(left) of \(tasks(u.tasks.total)) left" : "\(tasks(left)) left"
+        return billedBy(u) == nil ? line : "\(line) until \(u.period.end.shown(date: .abbreviated, time: .omitted))"
+    }
+
+    /// The plan in one line, for Settings' Plan card: "Trial · 5 days and 18 tasks left",
+    /// "Trial ended · Start Solo", "Solo · 12 of 20 tasks left until 1 Dec 2026 · Apple".
+    static func planLine(_ u: KIFFClient.Usage, now: Date = Date()) -> String {
+        if u.plan == "trial" {
+            if trialEnded(u, now: now) { return offersSolo(u) ? "Trial ended · Start Solo" : "Trial ended" }
+            guard let trial = u.trial, trial.endsAt != nil else { return "Trial · not started" }
+            let days = trial.daysLeft == 1 ? "1 day" : "\(trial.daysLeft) days"
+            return "Trial · \(days) and \(tasks(u.tasks.left ?? trial.tasksLeft)) left"
+        }
+        // Our own accounts' plan isn't sold, so planName has none for it; the card still names it.
+        let name = planName(u.plan) ?? (u.plan == "internal" ? "Internal" : "Your plan")
+        return [name, tasksLine(u), billedBy(u)].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    static func planTone(_ u: KIFFClient.Usage, now: Date = Date()) -> PlanTone {
+        if u.plan == "trial", trialEnded(u, now: now) || u.trial?.endsAt == nil { return .attention }
+        return u.tasks.usedUp ? .out : .calm
+    }
+
+    /// Home's line about the plan, only when something needs the owner: a trial ended or
+    /// ending within 2 days, and tasks used up or down to a tenth of the period's. Nil
+    /// otherwise: Home stays about the tafs. A trial not started says so on the card only.
+    static func homeLine(_ u: KIFFClient.Usage, now: Date = Date()) -> String? {
+        if u.plan == "trial" {
+            if trialEnded(u, now: now) { return offersSolo(u) ? "Your trial has ended. \(startSolo)" : "Your trial has ended." }
+            guard let trial = u.trial, trial.endsAt != nil else { return nil }
+            if u.tasks.usedUp { return notice(u, now: now) }
+            if trial.daysLeft <= 2 { return trial.daysLeft <= 1 ? "Your trial ends within a day." : "Your trial ends in 2 days." }
+        }
+        if u.tasks.usedUp { return notice(u, now: now) }
+        guard let left = u.tasks.left, u.tasks.total > 0, left * 10 <= u.tasks.total else { return nil }
+        return "\(tasks(left)) left this period."
     }
 }
 

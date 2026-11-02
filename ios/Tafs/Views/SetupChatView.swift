@@ -49,6 +49,8 @@ struct SetupChatView: View {
     @State private var turn = PinnedTurn()
     /// The list of recent conversations, to reopen or archive one (#73, #82).
     @State private var showingChats = false
+    /// New conversation on a chat that's already empty: the thread shows its top.
+    @State private var toTop = 0
     /// The answer of Coach's being reported, from its menu (kiff/tafs#421).
     @State private var reporting: ReportedAnswer?
     #if os(iOS)
@@ -122,12 +124,18 @@ struct SetupChatView: View {
     /// ones. A new one is on no taf, and offers the taf on screen (item 36).
     private var coachBar: some View {
         HStack(spacing: 10) {
+            // Never a dead tap, as in other chat apps: an empty conversation is kept and shown
+            // from its top; any other gives way to a new one.
             Button {
                 Haptics.tap()
-                landed = true
                 pinned = nil
-                following = true
-                model.newCoachConversation()
+                if model.coachChatIsEmpty {
+                    toTop += 1
+                } else {
+                    landed = true
+                    following = true
+                    model.newCoachConversation()
+                }
                 typing = true
             } label: {
                 Label("New conversation", systemImage: "plus")
@@ -178,6 +186,7 @@ struct SetupChatView: View {
                 // Not lazy (the 845 test): a lazy stack only estimates rows it hasn't drawn, so
                 // a pinned message landed short and a return from another app showed blank rows.
                 VStack(alignment: .leading, spacing: 12) {
+                    Color.clear.frame(height: 0).id(Self.top)
                     if items.isEmpty && !thinking && model.setupUnsent.isEmpty { starts }
                     // The answer streaming now starts at the first item it recorded: its work block
                     // goes just before it, under what started it, so it folds in place to "Worked
@@ -359,6 +368,7 @@ struct SetupChatView: View {
                 follow(proxy)
             }
             .onChange(of: thinking) { _ in follow(proxy) }
+            .onChange(of: toTop) { _ in withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.top, anchor: .top) } }
             .onChange(of: grown) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: model.setupLive) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             // A card's answer starts Coach's next answer: the card goes to the top and stays,
@@ -397,6 +407,7 @@ struct SetupChatView: View {
     }
 
     private static let bottom = "bottom"
+    private static let top = "top"
 
     private func follow(_ proxy: ScrollViewProxy) {
         guard following, pinned == nil else { return }

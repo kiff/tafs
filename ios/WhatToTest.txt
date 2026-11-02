@@ -1,11 +1,11 @@
 What to test in this build:
 
-1. A taf's Cards. Open a taf, then its Card tab. Each Card shows at a set size, with what's left today as the big number. A taf with several Cards shows them as a stack: tap one to bring it forward. A test Card is grey and marked TEST. On the Chat and Activity tabs, a one-line Card bar sits above the chat on the iPhone and on the iPad in portrait; on the iPad in landscape, the Cards sit beside the chat.
+1. The plan in sight. Settings opens with a Plan card: one line with your plan and what's left ("Trial · 5 days and 18 tasks left", "Trial ended · Start Solo" in amber, red when no tasks are left). Tap it: it opens Plan & usage (it was Account usage). Home shows one line about the plan only when it needs you: a trial ended or ending within 2 days, or tasks used up or nearly gone.
 
-2. Coach's steps, live. Start a new taf with Coach. While Coach works, the chat says what it's doing ("Checking your Stripe connection…", "Drafting the Card…"), and Coach's words appear as it writes them.
+2. An ended trial. On an account whose trial has ended, Plan & usage says "Your trial has ended." with "Start Solo to keep your tafs running.", with no past period date and no red meter. Packs aren't on sale then; packs you hold say "Counts once Solo starts."
 
-3. A taf's Card, from any conversation. In Coach, ask what one of your tafs may do. Coach reads that taf's Card itself, says which Card covers live actions and which only test mode, and never sends you elsewhere to look.
+3. New conversation in Coach always works. On a conversation that's already empty it stays there and shows its top; on one with messages it opens a new one.
 
-4. Packs and Solo, with test purchases. In Settings, open Account usage, then Add tasks, and buy a pack; on the trial, subscribe to Solo. Purchases in TestFlight are test purchases: on a test account they add tasks; on any other account the app finishes the purchase, adds nothing, and says "Test purchases don't add tasks to this account."
+4. Signing out asks first. Sign out of KIFF, Switch account, and Sign in again (when this device can't approve) each ask before going ahead. Cancel leaves you signed in.
 
-5. Asking an admin. As a member who can't add tasks, ask for a pack with a reason. As the admin, you're alerted: open Account usage and approve it by buying the pack, or decline it with a note. The member is told the answer.
+5. Your exported chats leave with you. Export my chats in Account, then sign out: the exported files are gone from the device.

@@ -108,10 +108,25 @@ struct SettingsView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var signingIn = false
+    @State private var confirming: SignOutWay?
 
     var body: some View {
         NavigationStack {
             List {
+                // The plan first, on a KIFF account: what it's on and what's left, one tap from
+                // Plan & usage.
+                if model.mode == .kiff {
+                    Section("Plan") {
+                        NavigationLink(destination: UsageView().environmentObject(model)) { PlanRow(usage: model.usage) }
+                            .accessibilityIdentifier("plan-card")
+                    }
+                }
+                // The sample has no plan of its own: Plan & usage shows its made-up month.
+                if model.mode == .sample {
+                    Section("Usage") {
+                        NavigationLink(UsageView.title, destination: UsageView().environmentObject(model))
+                    }
+                }
                 Section("Account") {
                     LabeledContent("Mode", value: modeText)
                     // The account's details, and deleting it at their bottom, on a screen of their
@@ -120,10 +135,6 @@ struct SettingsView: View {
                         NavigationLink(destination: AccountView(account: account, done: { dismiss() }).environmentObject(model)) {
                             LabeledContent("KIFF account", value: account.name)
                         }
-                    }
-                    // What the tafs used this period, the plan's tasks and the trial (kiff/tafs#184).
-                    if model.mode != .signedOut {
-                        NavigationLink(UsageView.title, destination: UsageView().environmentObject(model))
                     }
                     // The account's groups and who is in each.
                     if model.mode == .kiff {
@@ -138,10 +149,15 @@ struct SettingsView: View {
                     }
                     // Another account this person is on: KIFF's sign-in page lists each one (the 870 test).
                     if model.mode == .kiff {
-                        Button("Switch account…") { signingIn = true }
+                        Button("Switch account…") { confirming = .switchAccount }
                     }
                     Button(model.mode == .kiff ? "Sign out of KIFF" : "Clear the sample", role: .destructive) {
-                        Task { if await model.signOut() { dismiss() } }
+                        // The sample has nothing at KIFF to end: it clears at once.
+                        if model.mode == .kiff {
+                            confirming = .signOut
+                        } else {
+                            Task { if await model.signOut() { dismiss() } }
+                        }
                     }
                     if let why = model.signOutError {
                         Text(why).scaledFont(14).foregroundColor(Theme.no)
@@ -165,6 +181,12 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
+            .confirmingSignOut($confirming) { way in
+                switch way {
+                case .switchAccount: signingIn = true
+                case .signOut, .signInAgain: Task { if await model.signOut() { dismiss() } }
+                }
+            }
         }
     }
 
@@ -173,6 +195,33 @@ struct SettingsView: View {
         case .kiff: return "Signed in with KIFF"
         case .sample: return "Sample data"
         case .signedOut: return "Signed out"
+        }
+    }
+}
+
+/// Settings' Plan card: the plan in one line, in its tone, and Plan & usage under it; just the
+/// title until KIFF's usage is read.
+struct PlanRow: View {
+    let usage: KIFFClient.Usage?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let usage {
+                Text(UsageView.planLine(usage)).scaledFont(16, weight: .semibold).foregroundColor(Self.color(UsageView.planTone(usage)))
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(UsageView.title).scaledFont(13).foregroundColor(Theme.amberText)
+            } else {
+                Text(UsageView.title).foregroundColor(Theme.ink)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    static func color(_ tone: UsageView.PlanTone) -> Color {
+        switch tone {
+        case .attention: return Theme.amberText
+        case .out: return Theme.no
+        case .calm: return Theme.ink
         }
     }
 }

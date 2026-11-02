@@ -47,10 +47,13 @@ final class UsageTests: XCTestCase {
 
     func testItSaysWhereThingsStand() throws {
         var u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
-        XCTAssertEqual(UsageView.notice(u), "Your trial: 5 days and 11 tasks left.")
+        // Read on 22 Oct, while the trial runs: the real clock is past its end (27 Oct).
+        XCTAssertEqual(UsageView.notice(u, now: Self.now), "Your trial: 5 days and 11 tasks left.")
         XCTAssertEqual(UsageView.leftLine(u), "11 tasks left")
         u.trial = .init(endsAt: Date(), daysLeft: 0, tasksLeft: 11, actionsLeft: 460)
         XCTAssertEqual(UsageView.notice(u), "Your trial has ended.")
+        // A running trial whose tasks are used: its end is still ahead.
+        u.trial = .init(endsAt: Date().addingTimeInterval(3 * 86_400), daysLeft: 3, tasksLeft: 0, actionsLeft: 460)
         u.tasks.left = 0
         XCTAssertEqual(UsageView.notice(u), "Your trial's tasks are used. Your tafs are paused until tasks are added.")
         let paid = KIFFClient.Usage(plan: "solo", period: u.period,
@@ -104,6 +107,14 @@ final class UsageTests: XCTestCase {
         XCTAssertEqual(model.countedTasks.map(\.record), ["rec_1"])
         XCTAssertNil(model.usageError)
 
+        // Each refresh reads the plan too, for Settings' Plan card and Home's line.
+        StubProtocol.responses["GET /v1/me/usage"] = (200, Self.read.replacingOccurrences(of: #""plan":"trial""#, with: #""plan":"team""#))
+        StubProtocol.sent = []
+        await model.refresh()
+        XCTAssertEqual(model.usage?.plan, "team")
+        XCTAssertTrue(StubProtocol.sent.contains { $0.url?.path == "/v1/me/usage" })
+        XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path == "/v1/me/usage/tasks" }, "counted tasks wait for Plan & usage")
+
         await model.signOut()
         XCTAssertNil(model.usage)
         XCTAssertTrue(model.countedTasks.isEmpty)
@@ -133,7 +144,7 @@ final class UsageTests: XCTestCase {
     /// count says whose it is, and other agents show only once they did something.
     func testEachCountSaysWhoseItIs() throws {
         let u = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(Self.read.utf8))
-        XCTAssertEqual(UsageView.title, "Account usage")
+        XCTAssertEqual(UsageView.title, "Plan & usage")
         XCTAssertEqual(UsageView.whose(u), "All tafs · Trial")
         XCTAssertEqual(UsageView.planName("solo"), "Solo")
         let none = try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(#"""
@@ -246,4 +257,152 @@ final class UsageTests: XCTestCase {
         }
     }
 
+
+    // MARK: The ended trial, and the plan in sight
+
+    /// 22 Oct 2026, 12:00 UTC, while `read`'s trial runs (it ends 27 Oct): the tests read the
+    /// trial against a fixed now, never the clock.
+    static let now = Date(timeIntervalSince1970: 1_792_670_400)
+
+    /// What KIFF sends an ended trial today: no tasks on purpose, packs held, none on sale.
+    static let ended = #"""
+    {"plan":"trial","period":{"start":"2026-10-13T00:00:00Z","end":"2026-10-20T00:00:00Z"},
+     "tasks":{"counted":0,"included":0,"packs":0,"left":0},"actions":{"counted":0,"included":500},
+     "trial":{"ends_at":"2026-10-20T00:00:00Z","days_left":0,"tasks_left":0,"actions_left":0},
+     "pack_list":[{"id":"pico","name":"Pico","tasks":12,"tasks_left":12,"expires_at":"2027-11-01T00:00:00Z"}],
+     "can_add_tasks":true,"can_add_packs":false,
+     "store":{"solo_product":"bot.tafs.solo","packs":[{"id":"pico","name":"Pico","line":"Pico · 12 tasks","tasks":12,"months":12,"apple_product":"bot.tafs.pack.pico"}]}}
+    """#
+
+    func usage(_ json: String) throws -> KIFFClient.Usage {
+        try KIFFClient.decoder.decode(KIFFClient.Usage.self, from: Data(json.utf8))
+    }
+
+    /// An ended trial says so, before used-up (its `left` is 0 by design), with Solo where it's
+    /// offered; it runs no period, so no end date and no red meter.
+    func testAnEndedTrialSaysSoNotUsedUp() throws {
+        let u = try usage(Self.ended)
+        XCTAssertTrue(u.tasks.usedUp, "KIFF gives an ended trial left 0")
+        XCTAssertTrue(UsageView.trialEnded(u, now: Self.now))
+        XCTAssertTrue(UsageView.noPeriod(u, now: Self.now))
+        XCTAssertEqual(UsageView.notice(u, now: Self.now), "Your trial has ended.")
+        XCTAssertTrue(UsageView.offersSolo(u))
+        XCTAssertEqual(UsageView.startSolo, "Start Solo to keep your tafs running.")
+        // Not started: no period either.
+        var fresh = u
+        fresh.trial = .init(endsAt: nil, daysLeft: 7, tasksLeft: 25, actionsLeft: 500)
+        fresh.tasks = .init(counted: 0, included: 25, packs: 0, left: 25)
+        XCTAssertTrue(UsageView.noPeriod(fresh, now: Self.now))
+        XCTAssertEqual(UsageView.notice(fresh, now: Self.now), "Your trial hasn't started.")
+        // A running trial has its period.
+        let running = try usage(Self.read)
+        XCTAssertFalse(UsageView.noPeriod(running, now: Self.now))
+        XCTAssertFalse(UsageView.trialEnded(running, now: Self.now))
+    }
+
+    /// Packs are on sale only while a plan runs (`can_add_packs`), falling back to
+    /// `can_add_tasks` from a KIFF that doesn't say; held ones count once Solo starts.
+    func testPacksOnlyWhileAPlanRuns() throws {
+        var u = try usage(Self.ended)
+        XCTAssertFalse(u.packsOffered)
+        XCTAssertEqual(u.packList?.map(\.name), ["Pico"])
+        XCTAssertEqual(UsageView.packsWaitForSolo, "Counts once Solo starts.")
+        u.canAddPacks = true
+        XCTAssertTrue(u.packsOffered)
+        u.canAddPacks = nil
+        XCTAssertTrue(u.packsOffered, "an older KIFF: whoever may add tasks")
+        u.canAddTasks = false
+        XCTAssertFalse(u.packsOffered)
+    }
+
+    /// "1 task", never "1 tasks", wherever a count is said.
+    func testOneTaskInTheSingular() {
+        XCTAssertEqual(UsageView.count(1, of: 0, "tasks"), "1 task")
+        XCTAssertEqual(UsageView.count(0, of: 1, "tasks"), "0 of 1 task")
+        XCTAssertEqual(UsageView.count(1, of: 20, "tasks"), "1 of 20 tasks")
+        XCTAssertEqual(UsageView.count(1, of: 0, "actions"), "1 action")
+        XCTAssertEqual(UsageView.tasks(1), "1 task")
+        XCTAssertEqual(UsageView.tafCount(1), "1 task this period")
+    }
+
+    /// Settings' Plan card: one line for each plan, in its tone, as Android's.
+    func testThePlanCardSaysThePlan() throws {
+        let ended = try usage(Self.ended)
+        XCTAssertEqual(UsageView.planLine(ended, now: Self.now), "Trial ended · Start Solo")
+        XCTAssertEqual(UsageView.planTone(ended, now: Self.now), .attention)
+        var member = ended
+        member.canAddTasks = false
+        XCTAssertEqual(UsageView.planLine(member, now: Self.now), "Trial ended", "Solo isn't offered to a member")
+
+        var trial = try usage(Self.read)
+        trial.trial = .init(endsAt: Self.now.addingTimeInterval(5 * 86_400), daysLeft: 5, tasksLeft: 18, actionsLeft: 400)
+        trial.tasks.left = 18
+        XCTAssertEqual(UsageView.planLine(trial, now: Self.now), "Trial · 5 days and 18 tasks left")
+        XCTAssertEqual(UsageView.planTone(trial, now: Self.now), .calm)
+        trial.trial = .init(endsAt: Self.now.addingTimeInterval(86_400), daysLeft: 1, tasksLeft: 1, actionsLeft: 400)
+        trial.tasks.left = 1
+        XCTAssertEqual(UsageView.planLine(trial, now: Self.now), "Trial · 1 day and 1 task left")
+        trial.trial = .init(endsAt: nil, daysLeft: 7, tasksLeft: 25, actionsLeft: 500)
+        XCTAssertEqual(UsageView.planLine(trial, now: Self.now), "Trial · not started")
+        XCTAssertEqual(UsageView.planTone(trial, now: Self.now), .attention)
+
+        // A billed plan: "until" its period's end, true whether it renews or not.
+        var solo = try usage(#"""
+        {"plan":"solo","period":{"start":"2026-11-01T00:00:00Z","end":"2026-12-01T12:00:00Z"},
+         "tasks":{"counted":8,"included":20,"packs":0,"left":12},"actions":{"counted":0,"included":500},
+         "trial":null,"billing":{"source":"apple"}}
+        """#)
+        let until = solo.period.end.shown(date: .abbreviated, time: .omitted)
+        XCTAssertEqual(UsageView.planLine(solo, now: Self.now), "Solo · 12 of 20 tasks left until \(until) · Apple")
+        XCTAssertEqual(UsageView.planTone(solo, now: Self.now), .calm)
+        solo.billing = .init(source: "google")
+        XCTAssertEqual(UsageView.planLine(solo, now: Self.now), "Solo · 12 of 20 tasks left until \(until) · Google Play")
+        solo.billing = .init(source: "stripe")
+        XCTAssertEqual(UsageView.planLine(solo, now: Self.now), "Solo · 12 of 20 tasks left until \(until) · KIFF")
+        solo.tasks.left = 0
+        XCTAssertEqual(UsageView.planTone(solo, now: Self.now), .out, "red when used up")
+        solo.billing = .init(source: "contract")
+        solo.tasks.left = 12
+        XCTAssertEqual(UsageView.planLine(solo, now: Self.now), "Solo · 12 of 20 tasks left", "no end date where no one bills it")
+
+        // No limit: the count; our own accounts say Internal.
+        let company = try usage(#"""
+        {"plan":"company","period":{"start":"2026-11-01T00:00:00Z","end":"2026-12-01T00:00:00Z"},
+         "tasks":{"counted":472,"included":0,"packs":0,"left":null},"actions":{"counted":0,"included":0},"trial":null,
+         "billing":{"source":"contract"}}
+        """#)
+        XCTAssertEqual(UsageView.planLine(company, now: Self.now), "Company · 472 tasks this period")
+        let ours = KIFFClient.Usage(plan: "internal", period: company.period, tasks: company.tasks, actions: company.actions, trial: nil)
+        XCTAssertEqual(UsageView.planLine(ours, now: Self.now), "Internal · 472 tasks this period")
+    }
+
+    /// Home's line shows only when the plan needs the owner, at Android's thresholds.
+    func testHomeSaysThePlanOnlyWhenItNeedsYou() throws {
+        let ended = try usage(Self.ended)
+        XCTAssertEqual(UsageView.homeLine(ended, now: Self.now), "Your trial has ended. Start Solo to keep your tafs running.")
+
+        var trial = try usage(Self.read)
+        trial.trial = .init(endsAt: nil, daysLeft: 7, tasksLeft: 25, actionsLeft: 500)
+        XCTAssertNil(UsageView.homeLine(trial, now: Self.now), "not started: the card says so, Home doesn't")
+        trial.trial = .init(endsAt: Self.now.addingTimeInterval(5 * 86_400), daysLeft: 5, tasksLeft: 11, actionsLeft: 400)
+        XCTAssertNil(UsageView.homeLine(trial, now: Self.now))
+        trial.trial = .init(endsAt: Self.now.addingTimeInterval(2 * 86_400), daysLeft: 2, tasksLeft: 11, actionsLeft: 400)
+        XCTAssertEqual(UsageView.homeLine(trial, now: Self.now), "Your trial ends in 2 days.")
+        trial.trial = .init(endsAt: Self.now.addingTimeInterval(3_600), daysLeft: 1, tasksLeft: 11, actionsLeft: 400)
+        XCTAssertEqual(UsageView.homeLine(trial, now: Self.now), "Your trial ends within a day.")
+
+        var solo = KIFFClient.Usage(plan: "solo", period: trial.period, tasks: .init(counted: 17, included: 20, packs: 0, left: 3),
+                                    actions: trial.actions, trial: nil)
+        XCTAssertNil(UsageView.homeLine(solo, now: Self.now), "3 of 20 is more than a tenth")
+        solo.tasks.left = 2
+        XCTAssertEqual(UsageView.homeLine(solo, now: Self.now), "2 tasks left this period.")
+        solo.tasks.left = 1
+        XCTAssertEqual(UsageView.homeLine(solo, now: Self.now), "1 task left this period.")
+        solo.tasks.left = 0
+        XCTAssertEqual(UsageView.homeLine(solo, now: Self.now), UsageView.notice(solo, now: Self.now))
+        XCTAssertEqual(UsageView.planTone(solo, now: Self.now), .out)
+        let unlimited = KIFFClient.Usage(plan: "internal", period: trial.period, tasks: .init(counted: 9, included: 0, left: nil),
+                                         actions: trial.actions, trial: nil)
+        XCTAssertNil(UsageView.homeLine(unlimited, now: Self.now))
+    }
 }
