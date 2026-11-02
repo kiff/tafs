@@ -129,7 +129,8 @@ enum KIFFMapping {
             TafCard(id: c.id, title: c.title, environment: c.environment, live: c.live, active: c.active, expires: c.expires,
                     rules: c.rules.map(rule),
                     total: c.total.flatMap { t in amount(t.limit).map { CardTotal(limit: $0, used: amount(t.used), window: window(t.window, t.windowWords),
-                                                                                          extra: amount(t.extraRoom), base: amount(t.baseLimit), roomEnds: t.roomWindowEnd, pending: t.pendingText) } },
+                                                                                          extra: amount(t.extraRoom), base: amount(t.baseLimit), roomEnds: t.roomWindowEnd, pending: t.pendingText,
+                                                                                          unitWords: t.unitWords) } },
                     calls: c.calls.map { CardTotal(limit: $0.limit, used: $0.used, window: window($0.window, $0.windowWords),
                                                    extra: $0.extraRoom, base: $0.baseLimit, roomEnds: $0.roomWindowEnd, pending: $0.pendingText) })
         }

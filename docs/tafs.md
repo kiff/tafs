@@ -162,6 +162,9 @@ It has up to four tabs:
   moved: KIFF's `pending_text` on the total says how much, under the Card's limits and on a
   held call over that total (Android: `pendingLines`), from live, active Cards only: a test
   Card's totals aren't what the taf may do for real. The app writes no line of its own.
+  On iOS, `unit_words` shows under the Card's limits (`TafCard.unitWords`), and Reconnect
+  it in Coach also needs Coach's permission, since it opens Coach on that taf
+  (`TafDetailView.offersReconnect`).
   A limit says what happens past it, from each rule's `outside` in tafs cloud's list (the
   Card's `on_exceed` in KIFF). On a `hold` rule: "up to $40 each; more asks you first",
   "$300 in total a day, then it asks you", "20 calls a day, then it asks you", and a count

@@ -227,6 +227,31 @@ final class KIFFAnswerTests: XCTestCase {
         XCTAssertFalse(TafCard(id: "m4", title: "Refunds", active: false, rules: []).countsForReal)
     }
 
+    /// Why a total has no currency is KIFF's to say too (`unit_words`, passed on by tafs
+    /// cloud): shown as it is, with Coach to reconnect for whoever manages the taf.
+    func testWhyATotalHasNoCurrencyIsKIFFs() throws {
+        let words = "Its currency comes from create_refund, which isn't connected."
+        let json = #"{"limit":{"minor":50000,"unit":null,"scale":0},"window":"calendar_day","unit_words":"Its currency comes from create_refund, which isn't connected.","unit_missing":{"tools":["create_refund"],"connected":false}}"#
+        let total = try KIFFClient.decoder.decode(TafsCloud.HomeTaf.Total<TafsCloud.HomeTaf.Amount>.self, from: Data(json.utf8))
+        XCTAssertEqual(total.unitWords, words)
+        XCTAssertEqual(total.unitMissing?.tools, ["create_refund"])
+        XCTAssertEqual(total.unitMissing?.connected, false)
+        let card = TafCard(id: "m1", title: "Refunds", rules: [], total: CardTotal(limit: .bare(50000), used: nil, window: .day, unitWords: total.unitWords))
+        XCTAssertEqual(card.unitWords, words)
+        // Absent, nothing changes.
+        let plain = try KIFFClient.decoder.decode(TafsCloud.HomeTaf.Total<TafsCloud.HomeTaf.Amount>.self,
+                                                  from: Data(#"{"limit":{"minor":50000,"unit":"EUR","scale":2},"window":"calendar_day"}"#.utf8))
+        XCTAssertNil(plain.unitWords)
+        XCTAssertNil(plain.unitMissing)
+        XCTAssertNil(TafCard(id: "m2", title: "x", rules: []).unitWords)
+        // Reconnecting is offered to whoever manages the taf and may use Coach, signed in.
+        XCTAssertEqual(TafDetailView.reconnect, "Reconnect it in Coach.")
+        XCTAssertTrue(TafDetailView.offersReconnect(manages: true, mayUseCoach: true, mode: .kiff))
+        XCTAssertFalse(TafDetailView.offersReconnect(manages: false, mayUseCoach: true, mode: .kiff), "someone who only uses it sees the words alone")
+        XCTAssertFalse(TafDetailView.offersReconnect(manages: true, mayUseCoach: false, mode: .kiff))
+        XCTAssertFalse(TafDetailView.offersReconnect(manages: true, mayUseCoach: true, mode: .sample))
+    }
+
     func testASessionWithoutThePhonesKeyCannotAnswer() async throws {
         let signer = RecordingSigner()
         let model = try await makeModel(verifies: true, signer: signer, keyed: false)
