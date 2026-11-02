@@ -7,6 +7,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, the plan in sight:** Settings opens with a Plan card ("Trial · 5 days and 18 tasks
+  left", "Trial ended · Start Solo", "Solo · 12 of 20 tasks left · Google Play") that opens what
+  was Account usage, now **Plan & usage**. Home shows one line about the plan only when it needs
+  you: a trial ended, not started or ending within 2 days, or tasks used up or down to a tenth.
 - **Android, buying through Google Play:** Usage offers Solo (with its free trial) and the task
   packs at Play's prices, once KIFF names their Play products, to someone who may add tasks. KIFF
   records each purchase before Play is told it's done, and Restore purchases sends again what

@@ -118,6 +118,15 @@ Solo is offered, "Start Solo to keep your tafs running." follows it. A trial tha
 or has ended runs no period, so Usage shows no period end and no meter (`UsageWords.notice`,
 `trialEnded`, `noPeriod`). iOS follows.
 
+The plan shows outside it too, on Android. **Settings** opens with a Plan card, one line from
+the same read (`UsageWords.planLine`): "Trial · 5 days and 18 tasks left", "Trial · not started",
+"Trial ended · Start Solo" (amber), "Solo · 12 of 20 tasks left · Google Play" (red when none are
+left), "Company · 472 tasks this period". It opens the screen, called **Plan & usage**. **Home**
+shows one line about the plan only when it needs the owner (`UsageWords.homeLine`): a trial ended,
+not started or ending within 2 days, tasks used up, or a tenth or less of the period's left.
+Otherwise Home stays about the tafs. The plan is read with each refresh (`refreshPlan`), so
+both are current. iOS follows.
+
 Each taf's own part is a row on its Card tab (`TafUsageView`).
 
 **Buying in the app** (`Purchases`), through the App Store only:
