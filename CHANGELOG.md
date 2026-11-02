@@ -11,6 +11,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **iPhone and iPad, an empty home for someone a taf is shared with:** "Tafs shared with you show
+  here." Only someone who may use Coach reads "Connect a tool to set up your first taf".
+
 - **iPhone and iPad, Signed in as:** Settings › Account › KIFF account labels the person's own
   address "Signed in as", so it never reads as the account's, as on Android.
 
