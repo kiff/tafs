@@ -548,12 +548,22 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       DevicesSheet(state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { showingDevices = false })
     }
     if (showingConnectApps) {
-      // Connect waits on how a connection started here is approved; until then the list shows what's connected.
+      // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
       bot.tafs.app.views.ConnectAppsSheet(
-        state, load = model::loadConnectApps, onConnect = null,
+        state, load = model::loadConnectApps,
+        onConnect = if (state.canManageCards) ({ app -> scope.launch { model.startConnectApp(app) } }) else null,
         onAskCoach = { showingConnectApps = false; coachOpen = true },
         onClose = { showingConnectApps = false },
       )
+      // Its approval, over the list: KIFF's words, the signature, then the vendor's page.
+      state.listApproval?.let { grantId ->
+        bot.tafs.app.views.ConnectApprovalSheet(
+          state, state.grants.firstOrNull { it.id == grantId },
+          loadWords = model::loadProfileWords,
+          onApprove = { grant -> model.startListApproval(grant.id, grant.digest) },
+          onClose = model::closeListApproval,
+        )
+      }
     }
     if (deletingAccount) {
       DeleteAccountSheet(state, delete = model::deleteAccount, clearError = model::clearDeleteAccountError, onClose = { deletingAccount = false })

@@ -387,6 +387,9 @@ class TafsCloud(
   /** A taf's dial (the knob API). */
   suspend fun knob(id: String): KnobWire = get("/v1/tafs/${escaped(id)}/knob")
 
+  /** Starts connecting [entry] (`cards.manage`): its grant, waiting for the owner's approval. */
+  suspend fun startConnect(entry: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", emptyMap())
+
   /** Connect apps: the catalog, filtered by [q] when given. */
   suspend fun connectApps(q: String? = null): ConnectApps =
     get("/v1/connect/apps" + (q?.takeIf { it.isNotBlank() }?.let { "?q=" + escaped(it) } ?: ""))

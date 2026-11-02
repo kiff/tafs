@@ -18,7 +18,7 @@ class KnobWireTest {
     "version": 7,
     "does": {"label": "Refund", "line": "Refunds a payment in Stripe, within its Card."},
     "wakes": [
-      {"id": "trg_1", "kind": "door", "label": "Email", "words": "Wakes on email to refunds@yourshop.com", "on": true},
+      {"id": "trg_1", "kind": "door", "door": "door_1", "label": "Email", "words": "Wakes on email to refunds@yourshop.com", "on": true},
       {"id": "trg_2", "kind": "door", "label": "Slack", "words": "Messages in #refunds start a request.", "on": true, "state": "Open", "tap": "Tap to close"},
       {"id": "trg_3", "kind": "follow_up", "label": "Tomorrow 9:00", "words": "Check refund 4402 again", "expires": "2026-11-03T09:00:00Z"}
     ],
@@ -48,6 +48,7 @@ class KnobWireTest {
     assertEquals(15, knob.rim.total)
     assertEquals(1, knob.rim.needsYou)
     assertEquals("12 done today · 1 working · 1 retrying its reply", knob.summary)
+    assertEquals("a door stop names its door, for the face's open and close", "door_1", wire.wakes[0].door)
     assertEquals(8, wire.draft!!.version)
     assertEquals(listOf("Wakes on Slack in #refunds too"), wire.draft!!.words)
   }
@@ -71,8 +72,10 @@ class KnobWireTest {
     assertTrue(apps.apps[1].connected)
     assertTrue(apps.apps[2].needsReconnect)
     assertTrue(apps.byKey)
-    val oauth = KiffClient.json.decodeFromString<ConnectStart>("""{"grant":"g3","sign_in_url":"https://www.notion.so/oauth"}""")
-    assertEquals("https://www.notion.so/oauth", oauth.signInUrl)
+    // The start gives only the grant: the sign-in page comes from planque after the owner approves.
+    val oauth = KiffClient.json.decodeFromString<ConnectStart>("""{"grant":"g3"}""")
+    assertEquals("g3", oauth.grant)
+    assertFalse(oauth.needsKey)
     assertTrue(KiffClient.json.decodeFromString<ConnectStart>("""{"grant":"g4","needs_key":true}""").needsKey)
   }
 }

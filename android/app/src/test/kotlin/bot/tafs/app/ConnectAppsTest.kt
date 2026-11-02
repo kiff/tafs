@@ -40,6 +40,32 @@ class ConnectAppsTest {
     assertNull(m.state.value.connectAppsError)
   }
 
+  @Test fun connectStartsTheGrantAndOpensItsApprovalOverTheList() = runTest {
+    val m = model()
+    transport.answer("POST /v1/connect/apps/notion@1", 200, """{"grant":"g7"}""")
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"))
+    assertEquals("Bearer at_1", transport.requestsTo("POST /v1/connect/apps/notion@1").single().headers["Authorization"])
+    assertEquals("g7", m.state.value.listApproval)
+    assertNull(m.state.value.startingApp)
+    m.closeListApproval()
+    assertNull(m.state.value.listApproval)
+  }
+
+  @Test fun aVendorThatTakesAKeyIsCoachsForNowAndNothingOpens() = runTest {
+    val m = model()
+    transport.answer("POST /v1/connect/apps/holded", 200, """{"grant":"g8","needs_key":true}""")
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("holded", "Holded", "Holded", how = "key"))
+    assertNull(m.state.value.listApproval)
+    assertEquals(bot.tafs.app.model.ConnectWords.needsKey("Holded"), m.state.value.connectAppsError)
+  }
+
+  @Test fun signingInAgainOpensTheGrantItHasWithNoNewOne() = runTest {
+    val m = model()
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("google", "Google", "Google Sheets", state = "needs_reconnect", grant = "g2"))
+    assertTrue(transport.requests.none { it.method == "POST" && it.url.contains("/connect/apps") })
+    assertEquals("g2", m.state.value.listApproval)
+  }
+
   @Test fun aListThatCantBeReadIsSaidInWords() = runTest {
     val m = model()
     transport.answer(apps, 503, """{"error":"down"}""")

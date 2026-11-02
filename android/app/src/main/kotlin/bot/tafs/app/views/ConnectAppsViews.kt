@@ -131,3 +131,62 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
 
 /** A tile's colour, the same for an app every time. */
 private fun tileColor(name: String): Color = Theme.tafColor(Math.floorMod(name.hashCode(), 6))
+
+/**
+ * The approval over Connect apps: the same as Coach's card. planque's words for the connection, KIFF's words for its profile
+ * (Approve waits for them), then the signature, and only then the vendor's sign-in page.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConnectApprovalSheet(
+  state: AppState,
+  grant: bot.tafs.app.kiff.Grant?,
+  loadWords: suspend (String) -> Unit,
+  onApprove: (bot.tafs.app.kiff.Grant) -> Unit,
+  onClose: () -> Unit,
+) {
+  ModalBottomSheet(
+    onDismissRequest = onClose,
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    containerColor = Theme.background,
+  ) {
+    Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Text(bot.tafs.app.model.ConnectWords.APPROVE_TITLE, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
+      if (grant == null) {
+        Text("Reading what it asks for…", style = scaled(14, color = Theme.soft))
+      } else {
+        // planque's own words for what it will do.
+        Text(grant.text, style = scaled(15, color = Theme.ink))
+        Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
+        val profiled = grant.request.profile != null
+        val words = state.profileWords[grant.id]
+        if (profiled) {
+          LaunchedEffect(grant.id) { loadWords(grant.id) }
+          when {
+            words != null -> ProfileWordsLines(words)
+            state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))
+            else -> Text(bot.tafs.app.model.CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+          }
+        }
+        state.coachNotes[bot.tafs.app.model.ConnectWords.cardKey(grant.id)]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+        if (!grant.digestMatches) {
+          Text(bot.tafs.app.model.CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
+        } else {
+          val busy = state.connecting == grant.id
+          ApprovalGate {
+            bot.tafs.app.design.PrimaryButton(
+              if (busy) state.connectStep ?: "Approving…" else "Approve with ${bot.tafs.app.design.LocalBiometry.current}",
+              { onApprove(grant) },
+              enabled = !busy && (!profiled || words != null),
+            )
+          }
+        }
+        Text(
+          bot.tafs.app.model.ConnectWords.CANCEL,
+          style = scaled(15, FontWeight.SemiBold, Theme.dim),
+          modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp),
+        )
+      }
+    }
+  }
+}

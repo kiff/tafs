@@ -43,6 +43,8 @@ data class KnobWire(
     val tap: String? = null,
     /** A follow-up's end. */
     val expires: String? = null,
+    /** A door's id, on a door stop: the face opens or closes it through the doors API. */
+    val door: String? = null,
   )
 
   @Serializable
@@ -97,10 +99,12 @@ data class ConnectApps(
   }
 }
 
-/** What starting a connection answers: a vendor sign-in page, or that a key is needed. Then the approval flow as for any grant. */
+/**
+ * What starting a connection answers: its grant, and whether the vendor takes a key. Then the approval as for any grant: KIFF's
+ * words, the signature, and only then planque's sign-in page.
+ */
 @Serializable
 data class ConnectStart(
   val grant: String,
-  @SerialName("sign_in_url") val signInUrl: String? = null,
   @SerialName("needs_key") val needsKey: Boolean = false,
 )

@@ -4,6 +4,7 @@ import bot.tafs.app.model.ErrorWords
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import bot.tafs.app.model.ConnectWords
 import bot.tafs.app.model.Answer
 import bot.tafs.app.model.AttachmentRef
 import bot.tafs.app.model.FilePrep
@@ -318,8 +319,12 @@ data class AppState(
   val grants: List<Grant> = emptyList(),
   /** Connect apps: the catalog as tafs cloud lists it, for the last search; null before it's read. */
   val connectApps: bot.tafs.app.kiff.ConnectApps? = null,
-  /** Why Connect apps couldn't be read. */
+  /** Why Connect apps couldn't be read, or a connection couldn't start. */
   val connectAppsError: String? = null,
+  /** The app whose connection is starting, by its entry. */
+  val startingApp: String? = null,
+  /** The grant whose approval is open over Connect apps. */
+  val listApproval: String? = null,
   /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
   val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
@@ -2208,6 +2213,54 @@ class AppModel(
       if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "The apps couldn't be read. ${ErrorWords.of(e)}") }
     }
   }
+
+  /**
+   * Connect from Connect apps: starts the app's grant (or, for one to sign in again, takes the grant it has) and opens its
+   * approval over the list. A vendor that takes a key is Coach's to set up for now.
+   */
+  suspend fun startConnectApp(app: bot.tafs.app.kiff.ConnectApps.App) {
+    if (_state.value.mode != Mode.kiff || _state.value.startingApp != null) return
+    if (app.needsReconnect && app.grant != null) {
+      refreshConnections()
+      _state.update { it.copy(listApproval = app.grant) }
+      return
+    }
+    val generation = accountGeneration
+    _state.update { it.copy(startingApp = app.entry, connectAppsError = null) }
+    try {
+      val started = cloud.startConnect(app.entry)
+      if (generation != accountGeneration) return
+      if (started.needsKey) {
+        _state.update { it.copy(connectAppsError = ConnectWords.needsKey(app.title)) }
+        return
+      }
+      refreshConnections()
+      if (generation == accountGeneration) _state.update { it.copy(listApproval = started.grant) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "${app.title} couldn't be started. ${ErrorWords.of(e)}") }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(startingApp = null) }
+    }
+  }
+
+  /** Approve on the sheet over Connect apps: the same as Coach's card (KIFF's words, the signature, the vendor's sign-in), then the list again. */
+  fun startListApproval(grantId: String, shownDigest: String) {
+    scope.launch {
+      when (val result = connect(ConnectWords.cardKey(grantId), grantId, shownDigest)) {
+        is Connected.Done, is Connected.AlreadyApproved -> {
+          note(ConnectWords.cardKey(grantId), null)
+          _state.update { it.copy(listApproval = null) }
+          loadConnectApps()
+        }
+        is Connected.Failed -> note(ConnectWords.cardKey(grantId), result.why)
+        Connected.Stopped -> Unit
+      }
+    }
+  }
+
+  fun closeListApproval() = _state.update { it.copy(listApproval = null) }
 
   /**
    * KIFF's words for [grantId]'s profile (KIFF's profile contract, `kiff.words.v1`), read with this person's session and checked against their digests, so

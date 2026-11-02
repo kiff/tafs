@@ -171,8 +171,16 @@ sign-out, so after switching accounts planque never gets the last account's devi
 Settings › **Connect apps** lists the apps tafs cloud offers (`GET /v1/connect/apps`, with a
 search): the reviewed catalog first, then KIFF's own apps for Google, Microsoft and Slack. Each
 says whether it's connected, or needs signing in again, as tafs cloud sends it. **Not listed?
-Ask Coach** opens Coach, which can connect an app that isn't listed from its own docs. On
-Android, the list reads and searches; starting a connection from it comes next.
+Ask Coach** opens Coach, which can connect an app that isn't listed from its own docs.
+
+**Connect** (for whoever manages the account's Cards) starts the app's grant
+(`POST /v1/connect/apps/{entry}`, which answers only the grant) and opens its approval as a
+sheet over the list. It's the same as Coach's card: planque's words, KIFF's words for the
+profile, then the signature, and only then the vendor's sign-in page from planque's approve
+answer, and the confirm code. The owner sees what they're connecting before they go to the
+vendor. **Sign in again** opens the same sheet on the grant the app already has. A vendor that
+takes a key (`needs_key`) is set up through Coach for now. On Android: `AppModel.startConnectApp`,
+`startListApproval`, `ConnectApprovalSheet`.
 
 ### KIFF's words for a connection (KIFF's profile contract)
 
