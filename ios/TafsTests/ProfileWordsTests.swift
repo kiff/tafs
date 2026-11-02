@@ -3,7 +3,9 @@ import XCTest
 @testable import Tafs
 
 /// KIFF's words for a connection's profile, checked against KIFF's golden vectors byte for
-/// byte, and the approval that signs both digests.
+/// byte, and the approval that signs both digests. The files in `ProfileVectors/` are KIFF's
+/// `kiff.profile.v1` / `kiff.words.v1` vectors, copied as they are: each profile, and KIFF's
+/// answer for it.
 @MainActor
 final class ProfileWordsTests: XCTestCase {
     static let vectors = ["gmail-drafts", "holded-invoices", "notion-pages", "slack-messages", "stripe-refunds"]
