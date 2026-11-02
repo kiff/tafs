@@ -5,6 +5,8 @@ import SwiftUI
 struct TrialStartSheet: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    /// Read so approvalBlocked is asked again when the app comes back from Settings.
+    @Environment(\.scenePhase) private var scenePhase
     let version: TafsCloud.Version
     let tafID: UUID
     /// Started: its chat, which opens next (kiff/tafs#247).
@@ -29,6 +31,7 @@ struct TrialStartSheet: View {
                     if let draft, draft.cards != nil {
                         Eyebrow(text: "Its Card")
                         DraftCardsView(draft: draft)
+                        ApprovalNotice()
                     } else if loaded {
                         Text(model.trialErrors[tafID] ?? "This trial's Card couldn't be read.")
                             .scaledFont(13).foregroundColor(Theme.no)
@@ -63,7 +66,7 @@ struct TrialStartSheet: View {
                             }
                         }
                     }
-                    .disabled(draft?.cards == nil || model.trialBusy.contains(tafID))
+                    .disabled(draft?.cards == nil || model.trialBusy.contains(tafID) || (scenePhase == .active && model.approvalBlocked))
                 }
             }
         }
@@ -103,6 +106,8 @@ struct OpenTrialLink<Label: View>: View {
 struct TrialScreen: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    /// Read so approvalBlocked is asked again when the app comes back from Settings.
+    @Environment(\.scenePhase) private var scenePhase
     let chatID: UUID
     let tafID: UUID
     @State private var confirmBack = false
@@ -175,13 +180,14 @@ struct TrialScreen: View {
                     }
                 Button(busy ? "Working…" : "Install") { confirmInstall = true }
                     .buttonStyle(OutlineButtonStyle())
-                    .disabled(busy)
+                    .disabled(busy || (scenePhase == .active && model.approvalBlocked))
                     .confirmationDialog("Install version \(trial.n)?", isPresented: $confirmInstall, titleVisibility: .visible) {
-                        Button("Install with Face ID") { Task { if await model.installTrial(tafID) { ended() } } }
+                        Button("Install with \(Biometry.name)") { Task { if await model.installTrial(tafID) { ended() } } }
                     } message: {
                         Text("Version \(trial.n) becomes the live version, with its Card. This chat is deleted.")
                     }
             }
+            ApprovalNotice()
             if let error = model.trialErrors[tafID] {
                 Text(error).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }

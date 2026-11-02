@@ -672,6 +672,8 @@ struct VersionsPanel: View {
 struct VersionCardSheet: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    /// Read so approvalBlocked is asked again when the app comes back from Settings.
+    @Environment(\.scenePhase) private var scenePhase
     let version: TafsCloud.Version
     let tafID: UUID
     /// Coach's held install this answers (kiff/tafs#206): approved with the same Face ID,
@@ -693,6 +695,7 @@ struct VersionCardSheet: View {
                              ? "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF and removes the ones this version doesn't have, then this version goes live."
                              : "While it switches, your taf doesn't run. Confirming with \(Biometry.name) once issues these Cards in KIFF, then this version goes live.")
                             .scaledFont(12).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                        ApprovalNotice()
                     } else if loaded {
                         Text(model.versionErrors[tafID] ?? "This version's Card couldn't be read.")
                             .scaledFont(13).foregroundColor(Theme.no)
@@ -719,7 +722,7 @@ struct VersionCardSheet: View {
                         dismiss()
                         Task { await model.useVersion(version, of: tafID, shownDraft: shown, approving: approving) }
                     }
-                    .disabled(draft?.cards == nil)
+                    .disabled(draft?.cards == nil || (scenePhase == .active && model.approvalBlocked))
                 }
             }
         }

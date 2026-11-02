@@ -97,13 +97,15 @@ struct HeldCallCard: View {
                 // Approving or extra room would fail: the way out instead. Refuse stays below.
                 ApprovalKeyLostLine()
             } else if call.approvableOnce {
-                Button {
-                    if call.install != nil { install() } else { send(.approveOnce) }
-                } label: {
-                    Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
+                ApprovalGate {
+                    Button {
+                        if call.install != nil { install() } else { send(.approveOnce) }
+                    } label: {
+                        Label(call.install == nil ? "Approve once with \(Biometry.name)" : "Install with \(Biometry.name)", systemImage: Biometry.symbol)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(sending)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(sending)
             } else {
                 // Over a total the Card keeps across calls: approving once can't pass it
                 // (kiff/tafs#138, item 49). Extra room can, for this call, until that total
@@ -120,11 +122,13 @@ struct HeldCallCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if model.canManageCards {
-                    Button { send(.extraRoom) } label: {
-                        Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                    ApprovalGate {
+                        Button { send(.extraRoom) } label: {
+                            Label("Extra room with \(Biometry.name)", systemImage: Biometry.symbol)
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(sending)
                     }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(sending)
                 }
                 if model.mayUseCoach {
                     Button {

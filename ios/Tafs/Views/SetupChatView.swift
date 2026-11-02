@@ -164,13 +164,21 @@ struct SetupChatView: View {
             Text("Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for \(Biometry.name).")
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
+            if model.tafs.isEmpty {
+                // Before the first taf (kiff/tafs#423): finishing it takes approvals.
+                Text("Approving is needed to finish your first taf: Coach asks you to approve the tool it connects and the taf's Card on this device.")
+                    .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let error = model.setupError ?? model.lastError {
                 Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
             }
             Spacer()
-            Button(model.startingSetup ? "Starting…" : "Start") { Task { _ = await model.startSetup() } }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(model.startingSetup || model.mode != .kiff)
+            ApprovalGate {
+                Button(model.startingSetup ? "Starting…" : "Start") { Task { _ = await model.startSetup() } }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(model.startingSetup || model.mode != .kiff)
+            }
             Text("Starting asks for \(Biometry.name) once.").scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                 .frame(maxWidth: .infinity)
         }
@@ -1412,11 +1420,13 @@ struct SetupApproval: View {
                 HStack(spacing: 10) {
                     Button("Decline") { Task { await model.answer(component, "declined") } }
                         .buttonStyle(OutlineButtonStyle())
-                    Button(state == .working ? "Approving…" : state.isFailure ? "Try again" : "Approve") {
-                        Task { await model.approve(component, shown: grant?.digest, shownDraft: draft?.version) }
+                    ApprovalGate {
+                        Button(state == .working ? "Approving…" : state.isFailure ? "Try again" : "Approve") {
+                            Task { await model.approve(component, shown: grant?.digest, shownDraft: draft?.version) }
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil))
                     }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil))
                 }
                 .disabled(busy || (answered && !state.isFailure))
                 CardNote(id: component.id)

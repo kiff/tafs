@@ -1447,7 +1447,7 @@ final class AppModel: ObservableObject {
             do {
                 _ = try await signer.sign(answer: .approveOnce, heldID: "card-\(UUID().uuidString)", reason: "Issue \(draft.name)'s Card")
             } catch {
-                lastError = "The Card was not issued: it wasn't confirmed."
+                lastError = "The Card was not issued. " + ApprovalReadiness.notApproved(error, kind: Biometry.kind)
                 return nil
             }
         }
@@ -1691,6 +1691,11 @@ final class AppModel: ObservableObject {
                 signature = try await signer.sign(answer: answer, heldID: call.id.uuidString, reason: reason)
             }
         } catch {
+            // Closed by the person: cancelled, and the request stays in Needs you.
+            if let words = ApprovalReadiness.cancelled(error) {
+                lastError = words
+                return
+            }
             // A prompt closed without a recognized face or finger, while the key is still good.
             lastError = sessionHasApprovalKey && (answer == .approveOnce || answer == .extraRoom)
                 ? KIFFClient.notRecognized : "Not sent: it wasn't confirmed."
@@ -4292,7 +4297,7 @@ final class AppModel: ObservableObject {
                 _ = try await signer.sign(Data("tafs.cards.v1|\(tenant)|\(draft.id)|\(draft.version)".utf8),
                                           reason: "Give \(draft.agentID) its Card", grants: true)
             } catch {
-                quietStop = Self.notConfirmed
+                quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
                 return nil
             }
             guard gen == accountGeneration else { return nil }
@@ -4327,7 +4332,7 @@ final class AppModel: ObservableObject {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
                                       reason: "Connect \(grant.vendor) to \(grant.request.agent)", grants: true)
         } catch {
-            quietStop = Self.notConfirmed
+            quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return nil
         }
         guard gen == accountGeneration else { return nil }
@@ -5395,7 +5400,6 @@ final class AppModel: ObservableObject {
     /// Why the last connect stopped before anything happened that Setup should hear of: the
     /// owner reads it on the card, which offers Approve again (kiff/tafs#236, item 1).
     private var quietStop: String?
-    static var notConfirmed: String { "\(Biometry.name) didn't confirm, so nothing was approved. Approve again when you're ready." }
 
     /// A line on a card whose tap ended without reaching Setup: why, in the owner's words
     /// (kiff/tafs#236). A tap always shows something: the vendor's sign-in, Setup's answer, or this.

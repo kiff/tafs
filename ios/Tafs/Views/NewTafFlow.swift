@@ -108,18 +108,20 @@ struct NewTafFlow: View {
                 rule("Outside it,", "it waits for you, here and on your lock screen.", Theme.amber)
                 rule("Revoked,", "no new action goes through.", Theme.no)
             }
-            Button {
-                issuing = true
-                Task {
-                    let started = await model.start(draft)
-                    issuing = false
-                    if started != nil { dismiss() }
+            ApprovalGate {
+                Button {
+                    issuing = true
+                    Task {
+                        let started = await model.start(draft)
+                        issuing = false
+                        if started != nil { dismiss() }
+                    }
+                } label: {
+                    Label("Issue with \(Biometry.name)", systemImage: Biometry.symbol)
                 }
-            } label: {
-                Label("Issue with \(Biometry.name)", systemImage: Biometry.symbol)
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(issuing)
             }
-            .buttonStyle(PrimaryButtonStyle())
-            .disabled(issuing)
         }
     }
 

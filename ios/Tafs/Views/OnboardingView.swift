@@ -49,7 +49,7 @@ struct OnboardingView: View {
         .padding(.bottom, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .screenBackground()
-        .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
+        .sheet(isPresented: $signingIn) { SignInGate().environmentObject(model) }
     }
 
     private func point(_ lead: String, _ rest: String, _ color: Color) -> some View {
@@ -57,6 +57,26 @@ struct OnboardingView: View {
             Circle().fill(color).frame(width: 9, height: 9).accessibilityHidden(true)
             (Text(lead).bold().foregroundColor(Theme.ink) + Text(" " + rest).foregroundColor(Theme.soft))
                 .scaledFont(15)
+        }
+    }
+}
+
+/// Sign-in, after "Set up approvals on this device" when this device can't approve yet: set
+/// up there, or go on without approvals (kiff/tafs#423). A device that is ready goes straight
+/// to sign-in.
+struct SignInGate: View {
+    @State private var goOn = false
+    /// Read once, when sign-in opens: a device that becomes ready while the screen shows
+    /// keeps the screen, which says it is ready, and Continue goes on.
+    @State private var neededSetup = !ApprovalReadiness.current().isReady
+
+    var body: some View {
+        if goOn || !neededSetup {
+            SignInView()
+        } else {
+            ReadinessReader { readiness, checkAgain in
+                ApprovalSetupView(readiness: readiness, checkAgain: checkAgain) { goOn = true }
+            }
         }
     }
 }
