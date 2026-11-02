@@ -9,11 +9,30 @@ import SwiftUI
 ///
 /// Drawn on the design's 360-point grid, scaled to the space it's given.
 struct TafKnobView: View {
+    /// What the face shows: the job, a chosen stop, or a held call that waits on the owner.
+    enum Face: Equatable {
+        case overview
+        case chosen(TafsCloud.Knob.Ring, String)
+        case held(UUID)
+    }
+
     let knob: TafsCloud.Knob
+    @Binding var face: Face
+    /// The held calls the face can show (K3), the taf's own.
+    var held: [HeldCall] = []
     /// The face was tapped on a chosen stop whose `tap` says it does something.
     var press: (TafsCloud.Knob.Ring, TafsCloud.Knob.Item) -> Void = { _, _ in }
+    /// The face was tapped on a held call: approve it once.
+    var approve: (HeldCall) -> Void = { _ in }
 
-    @State private var chosen: (ring: TafsCloud.Knob.Ring, id: String)?
+    private var chosen: (ring: TafsCloud.Knob.Ring, id: String)? {
+        if case .chosen(let ring, let id) = face { return (ring, id) }
+        return nil
+    }
+    private var heldCall: HeldCall? {
+        if case .held(let id) = face { return held.first { $0.id == id } }
+        return nil
+    }
     /// Each ring's turn, in stops.
     @State private var turns: [TafsCloud.Knob.Ring: Int] = [:]
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -133,9 +152,13 @@ struct TafKnobView: View {
 
     private func face(_ k: CGFloat) -> some View {
         let item = chosenItem
-        let tint = chosen.map { Self.color($0.ring) } ?? Theme.ink
-        let big = item.map { $0.state ?? $0.label } ?? knob.does.label
+        let tint = heldCall != nil ? Theme.amberText : chosen.map { Self.color($0.ring) } ?? Theme.ink
+        let big = heldCall.map { $0.proposed.amount?.formatted ?? $0.proposed.summary } ?? item.map { $0.state ?? $0.label } ?? knob.does.label
         return Button {
+            if let call = heldCall {
+                if call.approvableOnce { approve(call) }
+                return
+            }
             guard let chosen, let item, item.tap != nil else {
                 if chosen == nil { choose(.wakes, knob.wakes.first, index: 0) }
                 return
@@ -166,23 +189,25 @@ struct TafKnobView: View {
     }
 
     private var kicker: String {
+        if let call = heldCall { return call.proposed.summary.uppercased() }
         guard let chosen, let item = chosenItem else { return Self.does }
         return "\(chosen.ring.title) · \(item.label)".uppercased()
     }
 
     private var hint: String {
+        if let call = heldCall { return call.approvableOnce ? Self.approveOnce : "" }
         guard chosen != nil else { return Self.tapARing }
         return chosenItem?.tap ?? ""
     }
 
-    private var note: String { chosenItem?.words ?? knob.does.line }
+    private var note: String { heldCall?.reason ?? chosenItem?.words ?? knob.does.line }
 
     private func choose(_ ring: Ring, _ item: TafsCloud.Knob.Item?, index: Int) {
         guard let item else { return }
         let n = knob.items(ring).count
         withMotion(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8)) {
             turns[ring] = Self.nearestTurn(from: turns[ring] ?? 0, to: index, stops: n)
-            chosen = (ring, item.id)
+            face = .chosen(ring, item.id)
         }
     }
 
@@ -199,4 +224,5 @@ struct TafKnobView: View {
     /// The dial's own words, the same on iPhone, iPad and Android.
     static let does = "DOES"
     static let tapARing = "Tap a ring"
+    static let approveOnce = "Tap to approve once"
 }

@@ -1481,6 +1481,32 @@ final class AppModel: ObservableObject {
 
     /// Runs a taf now, outside its schedule. Returns the run's session; nil when it didn't
     /// start, or when a run request for it is already on its way.
+    /// Each taf's dial as tafs cloud last sent it (`GET /v1/tafs/{id}/knob`), by its id here.
+    @Published private(set) var knobs: [UUID: TafsCloud.Knob] = [:]
+
+    /// Reads the taf's dial from tafs cloud.
+    func loadKnob(_ tafID: UUID) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        do {
+            let knob = try await cloud.knob(c.id)
+            guard gen == accountGeneration else { return }
+            knobs[tafID] = knob
+        } catch {
+            lastError = "The dial couldn't be read: \(error.localizedDescription)"
+        }
+    }
+
+    /// The face was tapped on a stop whose `tap` says it does something. Run now starts a run;
+    /// the rest go through the knob's changes once tafs cloud says how.
+    func pressKnob(_ tafID: UUID, _ item: TafsCloud.Knob.Item) async {
+        guard let c = cloudTaf(for: tafID) else { return }
+        if item.kind == "run_now" {
+            _ = await runNow(c)
+            await loadKnob(tafID)
+        }
+    }
+
     func runNow(_ cloudTaf: TafsCloud.CloudTaf) async -> String? {
         guard runsInFlight.insert(cloudTaf.id).inserted else { return nil }
         defer { runsInFlight.remove(cloudTaf.id) }
