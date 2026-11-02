@@ -1279,6 +1279,8 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return }
             }
             await refreshConnections()
+            // The plan, for Settings' Plan card and Home's line: KIFF's usage read alone, quietly.
+            await refreshPlan(gen: gen)
         } catch KIFFClient.KIFFError.unauthorized {
             forgetSession()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
@@ -1932,6 +1934,13 @@ final class AppModel: ObservableObject {
                 usageError = "Usage couldn't be read: \(error.localizedDescription)"
             }
         }
+    }
+
+    /// The plan as KIFF says it, with no counted tasks or AI use (Plan & usage reads those): a
+    /// failure leaves what was read.
+    private func refreshPlan(gen: Int) async {
+        guard let read = try? await kiff.usage(), gen == accountGeneration else { return }
+        usage = read
     }
 
     // MARK: Tasks and plans
@@ -3014,7 +3023,12 @@ final class AppModel: ObservableObject {
 
     static func removeOpenedFiles() {
         try? FileManager.default.removeItem(at: openedFiles)
+        // The last export's files too: a person's chats never stay on the phone after them.
+        try? FileManager.default.removeItem(at: exportedFiles)
     }
+
+    /// Where Export my chats writes its two files (kiff/tafs#424): removed with the opened files.
+    static let exportedFiles = FileManager.default.temporaryDirectory.appendingPathComponent("export", isDirectory: true)
 
     /// A file the person attached, downloaded to open full size: a temporary copy under its
     /// own name, removed by the system. Nil when it couldn't be read; the notice says why.
@@ -3776,7 +3790,7 @@ final class AppModel: ObservableObject {
             return (nil, "Your chats weren't exported. Check your connection and try again.")
         }
         do {
-            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("export", isDirectory: true)
+            let dir = Self.exportedFiles
             try? FileManager.default.removeItem(at: dir)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             let json = dir.appendingPathComponent("tafs-chats.json"), text = dir.appendingPathComponent("tafs-chats.txt")
@@ -4498,6 +4512,13 @@ final class AppModel: ObservableObject {
     /// The taf on screen is offered in it, to improve with one tap.
     func newCoachConversation() {
         newSetupChat()
+    }
+
+    /// Coach's conversation has nothing in it yet: no message, card or answer, sent or on its
+    /// way, and no taf it improves. New conversation keeps it, with what's typed.
+    var coachChatIsEmpty: Bool {
+        setupImproving == nil && setupThread.items.isEmpty && setupSent.isEmpty && setupUnsent.isEmpty
+            && setupQueued == nil && setupLive == nil && !setupThinking
     }
 
     /// Starting a new taf is a conversation (kiff/tafs#138, item 59): Coach mode opens in a

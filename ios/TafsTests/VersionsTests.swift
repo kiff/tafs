@@ -59,6 +59,8 @@ final class VersionsTests: XCTestCase {
 
         model.newCoachConversation()
         XCTAssertNil(model.setupImproving, "a new one anywhere else has no taf in mind")
+        // Nothing in it yet: New conversation keeps it (the view shows its top), never a dead tap.
+        XCTAssertTrue(model.coachChatIsEmpty)
 
         // On the taf's page, New conversation is still on no taf: "I want a taf that…" there
         // made the open taf's next version (kiff/tafs#138, item 36).
@@ -67,6 +69,7 @@ final class VersionsTests: XCTestCase {
         XCTAssertNil(model.setupImproving, "New conversation on a taf's page is on no taf")
         model.improveTaf(id)
         XCTAssertEqual(model.setupImproving?.id, cloudID, "its offer improves the taf on screen")
+        XCTAssertFalse(model.coachChatIsEmpty, "one on a taf gives way to a new one, on no taf")
     }
 
     /// Start a new taf opens Coach mode in a new conversation on no taf, even from a taf's

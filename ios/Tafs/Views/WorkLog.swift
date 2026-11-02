@@ -236,7 +236,7 @@ struct WorkSummary: View {
                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Worked for \(WorkLog.duration(ms: work.ms)), \(rows.count) steps")
+            .accessibilityLabel("Worked for \(WorkLog.duration(ms: work.ms)), \(rows.count == 1 ? "1 step" : "\(rows.count) steps")")
             .accessibilityHint(open ? "Hides the steps" : "Shows the steps")
             if open { StepList(rows: rows).transition(.opacity) }
         }

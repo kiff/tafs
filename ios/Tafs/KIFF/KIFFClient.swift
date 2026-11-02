@@ -540,14 +540,21 @@ final class KIFFClient {
         var packList: [HeldPack]? = nil
         /// Whether this person may add tasks: someone who can't asks an admin.
         var canAddTasks: Bool? = nil
+        /// Whether packs are offered now: only while a plan runs, so an ended trial holds what
+        /// it has until Solo starts. Nil from a KIFF that doesn't say, which offers them to
+        /// whoever may add tasks.
+        var canAddPacks: Bool? = nil
         var store: Store? = nil
         /// Members' requests for more tasks: every open one for someone who may add tasks,
         /// this person's own otherwise.
         var requests: [PackRequest]? = nil
 
         enum CodingKeys: String, CodingKey {
-            case plan, period, tasks, actions, trial, seats, ai, billing, packList = "pack_list", canAddTasks = "can_add_tasks", store, requests
+            case plan, period, tasks, actions, trial, seats, ai, billing, packList = "pack_list", canAddTasks = "can_add_tasks", canAddPacks = "can_add_packs", store, requests
         }
+
+        /// Packs are on sale to this person now.
+        var packsOffered: Bool { canAddPacks ?? (canAddTasks == true) }
     }
 
     /// A member's request that an admin add a pack.

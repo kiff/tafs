@@ -274,6 +274,8 @@ struct HomeSplitView: View {
             // KIFF can't be reached just now (the 930 test): under the account's name, with
             // the status page; nothing when all is well.
             if let words = model.unreachable { UnreachableLine(words: words, retrying: model.retryingRefresh) }
+            // The plan, only when it needs the owner: a trial ended or ending, tasks nearly gone.
+            PlanLine()
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(Theme.raised)
