@@ -7,6 +7,13 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, Set up approvals on this device:** before sign-in, only when the phone can't approve
+  yet, a screen says why approvals need a fingerprint and where this phone stands: none set up
+  (Open settings goes straight to adding one), the sensor busy just now (Check again), or no
+  sensor tafs can use (approve from another device), with Continue without approvals. Before the
+  first taf, and at every approval, the same words stand in the button's place until the phone
+  can approve; Refuse, Decline and Halt stay. It says up front that adding a fingerprint later
+  stops approvals until they're approved again.
 - **Android, Copy under an answer:** every finished answer from Coach or a taf has Copy under it,
   which copies the whole answer, and its text can be selected. Report this answer moves under
   More actions (⋯), so it's never the only thing a long press finds.

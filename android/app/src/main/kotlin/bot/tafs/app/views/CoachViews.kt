@@ -145,8 +145,15 @@ private fun CoachIntro(state: AppState, start: suspend () -> Unit) {
     Text("Coach", style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
     Text("${CoachWords.INTRO} Each connection and each Card waits for $biometry.", style = scaled(16, color = Theme.soft))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
-    PrimaryButton(if (state.startingCoach) "Starting…" else "Start", { scope.launch { start() } }, enabled = !state.startingCoach)
-    Text("Starting asks for $biometry once.", style = scaled(12, color = Theme.dim))
+    // Starting issues Coach's own Cards, an approval: before the first taf, say so while this phone can't approve yet.
+    val readiness = LocalApprovalReadiness.current
+    if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready) {
+      Text(bot.tafs.app.model.ApprovalWords.FIRST_TAF, style = scaled(15, color = Theme.ink))
+      ApprovalsUnavailable(readiness)
+    } else {
+      PrimaryButton(if (state.startingCoach) "Starting…" else "Start", { scope.launch { start() } }, enabled = !state.startingCoach)
+      Text("Starting asks for $biometry once.", style = scaled(12, color = Theme.dim))
+    }
   }
 }
 
@@ -273,8 +280,11 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           Text(CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
         } else {
           val biometry = LocalBiometry.current
+          // Approving signs with the approval key: while this phone can't, its state in the button's place. Decline still works.
+          val readiness = LocalApprovalReadiness.current
+          if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready && !grant.needsReconnect) ApprovalsUnavailable(readiness)
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            OutlineButton(
+            if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
               if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else "Approve with $biometry",
               { actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f),

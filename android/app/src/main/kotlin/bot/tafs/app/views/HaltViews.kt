@@ -128,7 +128,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
             { scope.launch { busy = true; actions.halt(tafId); busy = false; follow() } },
             Modifier.fillMaxWidth(), color = Theme.no, enabled = !busy,
           )
-          h.halted -> if (!HaltWords.resumesWithAccount(h, tafId)) {
+          h.halted -> if (!HaltWords.resumesWithAccount(h, tafId)) ApprovalGate {
             OutlineButton(
               if (busy) "Resuming…" else "Resume with ${LocalBiometry.current}",
               { scope.launch { busy = true; actions.resumeHalt(tafId); busy = false } },

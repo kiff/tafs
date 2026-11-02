@@ -320,13 +320,13 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         }
       } else if (call.install != null) {
         // Installing is approving: the version goes live, then Coach hears. Not offered where it can't be done.
-        if (install != null) PrimaryButton(if (sending) "Installing…" else "Install with $biometry", install, enabled = !sending)
+        if (install != null) ApprovalGate { PrimaryButton(if (sending) "Installing…" else "Install with $biometry", install, enabled = !sending) }
       } else if (call.approvableOnce) {
         // Back after extra room: the first step went through, and this is the second, said plainly with KIFF's reason.
         if (call.kiffId != null && call.kiffId in state.roomGiven) {
           Text(SecondStep.words(call.reason), style = scaled(13, color = Theme.amberText))
         }
-        PrimaryButton("Approve once with $biometry", { send(Answer.ApproveOnce) }, enabled = !sending)
+        ApprovalGate { PrimaryButton("Approve once with $biometry", { send(Answer.ApproveOnce) }, enabled = !sending) }
       } else {
         // Over a total the Card keeps across calls: approving once can't pass it (kiff/tafs#138, item 49). Extra room
         // can, for this call, until that total resets (kiff/tafs#211, 6.13); a lasting change is Coach's.
@@ -340,7 +340,7 @@ private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sendin
         )
         // How much of its totals is from calls the tool refused, in KIFF's words: they count until KIFF confirms nothing moved.
         state.taf(call.tafId)?.let(::pendingLines)?.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
-        if (state.canManageCards) PrimaryButton("Extra room with $biometry", { send(Answer.ExtraRoom) }, enabled = !sending)
+        if (state.canManageCards) ApprovalGate { PrimaryButton("Extra room with $biometry", { send(Answer.ExtraRoom) }, enabled = !sending) }
         // A lasting change is Coach's: a new conversation about this taf (kiff/tafs#107).
         improveInCoach?.let { improve ->
           OutlineButton("Change the limit in Coach mode", { improve(call.tafId) }, Modifier.fillMaxWidth(), enabled = !sending)

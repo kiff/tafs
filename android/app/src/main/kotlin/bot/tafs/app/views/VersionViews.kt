@@ -296,11 +296,19 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
   }
   if (confirmInstall && trial != null) {
     val biometry = LocalBiometry.current
+    // Installing is an approval: while this phone can't approve, the dialog says why in the button's place.
+    val readiness = LocalApprovalReadiness.current
+    val ready = readiness == bot.tafs.app.model.ApprovalReadiness.Ready
     AlertDialog(
       onDismissRequest = { confirmInstall = false },
       title = { Text("Install version ${trial.n}?") },
-      text = { Text("Version ${trial.n} becomes the live version, with its Card. This chat is deleted.") },
-      confirmButton = { TextButton({ confirmInstall = false; scope.launch { actions.installTrial(tafId) } }) { Text("Install with $biometry", color = Theme.amber) } },
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text("Version ${trial.n} becomes the live version, with its Card. This chat is deleted.")
+          if (!ready) ApprovalsUnavailable(readiness)
+        }
+      },
+      confirmButton = { if (ready) TextButton({ confirmInstall = false; scope.launch { actions.installTrial(tafId) } }) { Text("Install with $biometry", color = Theme.amber) } },
       dismissButton = { TextButton({ confirmInstall = false }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )
@@ -383,7 +391,7 @@ fun VersionCardSheet(
           CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = Theme.amber)
         }
         val readable = draft?.cards != null
-        OutlineButton("Install this version", { onInstall(draft?.version) }, Modifier.fillMaxWidth(), enabled = readable)
+        ApprovalGate { OutlineButton("Install this version", { onInstall(draft?.version) }, Modifier.fillMaxWidth(), enabled = readable) }
       }
     }
   }

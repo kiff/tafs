@@ -151,6 +151,36 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
 The simulator has no Secure Enclave; it uses a software key, fine for a demo and never
 for production.
 
+## Set up approvals on this device
+
+Approving needs the approval key, and the approval key needs a fingerprint or face the phone
+counts as strong. The app asks the phone where it stands and says so before an approval is
+needed, never only at a prompt that fails.
+
+- **The states,** each in its own words (`ApprovalReadiness`, `ApprovalWords` on Android):
+  - set up: approvals work;
+  - none enrolled: "No fingerprint is set up on this phone. Add one in its settings, then come
+    back.", with **Open settings**, which on Android opens the phone's own screen to add one
+    (`ACTION_BIOMETRIC_ENROLL`, asking for a strong biometric; its security settings where
+    that screen isn't there);
+  - temporarily unavailable (the sensor locked after tries, busy, an update pending): wait a
+    moment, or unlock the phone once, then **Check again**;
+  - unsupported (no strong biometric at all): approve from another supported device.
+- **Before sign-in,** only when it isn't set up: the screen **Set up approvals on this device**,
+  with **Continue without approvals**. Without them the person can still sign in, review,
+  refuse and halt. Once the phone says it's set up, sign-in goes on by itself.
+- **Before the first taf:** Coach's Start is an approval, so while the phone can't approve it
+  says "Setting up a taf needs approvals" with the state and what to do, in Start's place.
+- **At each approval** (Approve once, Extra room, Install, Issue, Resume, Coach's Approve, a
+  trial's Install): while the phone can't approve, the state and what to do stand in the
+  button's place (`ApprovalGate`). Refuse, Decline and Halt stay. When it can, the button
+  says what it does, under the card that shows what is being approved, before the prompt.
+- **Read again** each time the app comes back, so returning from the phone's settings shows
+  the new state at once.
+- **A new fingerprint** ends the approval key, and the screen says so up front: "If you add
+  another fingerprint later, approving on this phone stops until you approve it again."
+  ([How an answer is signed](#how-an-answer-is-signed)).
+
 ## After the answer
 
 1. The answer goes to KIFF: `POST /v1/me/card-exceptions/{id}/approve-once`, `reject` or `change-card`, with its signature.
