@@ -370,8 +370,8 @@ final class UsageTests: XCTestCase {
          "billing":{"source":"contract"}}
         """#)
         XCTAssertEqual(UsageView.planLine(company, now: Self.now), "Company · 472 tasks this period")
-        let internal = KIFFClient.Usage(plan: "internal", period: company.period, tasks: company.tasks, actions: company.actions, trial: nil)
-        XCTAssertEqual(UsageView.planLine(internal, now: Self.now), "Internal · 472 tasks this period")
+        let ours = KIFFClient.Usage(plan: "internal", period: company.period, tasks: company.tasks, actions: company.actions, trial: nil)
+        XCTAssertEqual(UsageView.planLine(ours, now: Self.now), "Internal · 472 tasks this period")
     }
 
     /// Home's line shows only when the plan needs the owner, at Android's thresholds.
