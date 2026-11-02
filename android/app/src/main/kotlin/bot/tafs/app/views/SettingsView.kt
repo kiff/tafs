@@ -85,6 +85,8 @@ fun SettingsSheet(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
+        // The plan first: what the account is on and what's left, one tap from Plan & usage.
+        if (state.mode != Mode.signedOut) Section("Plan") { PlanRow(state, onUsage) }
         Section("Account") {
           Value("Mode", when (state.mode) {
             Mode.kiff -> "Signed in with KIFF"
@@ -147,9 +149,6 @@ fun SettingsSheet(
           }
         }
         // This period's tasks, and what the tafs did that counted.
-        Section("Usage") {
-          Action(UsageWords.TITLE, Theme.ink, onUsage)
-        }
         Section("How it works") {
           Text(
             "Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this phone.",
@@ -216,6 +215,28 @@ private fun Section(title: String, content: @Composable ColumnScope.() -> Unit) 
     val shape = RoundedCornerShape(14.dp)
     Column(Modifier.fillMaxWidth().clip(shape).background(Theme.panel).border(BorderStroke(1.dp, Theme.line), shape)) {
       content()
+    }
+  }
+}
+
+/** The plan's line, in its tone, and Plan & usage under it; just the title until KIFF's usage is read. */
+@Composable
+private fun PlanRow(state: AppState, onUsage: () -> Unit) {
+  val usage = state.usage
+  Column(
+    Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(onClick = onUsage).padding(horizontal = 12.dp, vertical = 10.dp),
+    verticalArrangement = Arrangement.spacedBy(2.dp),
+  ) {
+    if (usage != null) {
+      val color = when (UsageWords.planTone(usage)) {
+        UsageWords.PlanTone.Attention -> Theme.amberText
+        UsageWords.PlanTone.Out -> Theme.no
+        UsageWords.PlanTone.Calm -> Theme.ink
+      }
+      Text(UsageWords.planLine(usage), style = scaled(16, FontWeight.SemiBold, color))
+      Text(UsageWords.TITLE, style = scaled(13, color = Theme.amberText))
+    } else {
+      Text(UsageWords.TITLE, style = scaled(16, color = Theme.ink))
     }
   }
 }

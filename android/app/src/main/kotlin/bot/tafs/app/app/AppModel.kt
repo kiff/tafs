@@ -856,6 +856,8 @@ class AppModel(
       show(read)
       // planque's grants too, after the list: a taf whose connection its vendor signed out waits on the owner there.
       refreshConnections()
+      // The plan, for Settings' Plan card and Home's line: KIFF's usage read alone, quietly.
+      refreshPlan(generation)
       // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
       if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
       nameRecordLines(generation)
@@ -4316,6 +4318,12 @@ class AppModel(
         }
       }
     }
+  }
+
+  /** The plan as KIFF says it, with no counted tasks or AI use (Plan & usage reads those): a failure leaves what was read. */
+  private suspend fun refreshPlan(generation: Int) {
+    val read = attempt { kiff.usage() } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(usage = read) }
   }
 
   /** Reads the period's usage if it isn't yet, and the taf's own counted tasks. */

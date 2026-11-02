@@ -201,6 +201,52 @@ class UsageTest {
     assertFalse(UsageWords.noPeriod(usedUp, now))
   }
 
+  // The plan where it shows outside Plan & usage: Settings' Plan card, and Home's line when it needs the owner.
+  @Test fun thePlanCardSaysThePlanInOneLine() {
+    val now = java.time.Instant.parse("2026-10-28T00:00:00Z")
+    val store = """"can_add_tasks":true,"store":{"google_solo_product":"bot.tafs.solo.monthly","packs":[]}"""
+    val running = usageOf("""{"plan":"trial",$period,"tasks":{"counted":7,"included":25,"left":18},"trial":{"ends_at":"2026-11-02T00:00:00Z","days_left":5,"tasks_left":18}}""")
+    assertEquals("Trial · 5 days and 18 tasks left", UsageWords.planLine(running, now))
+    assertEquals(UsageWords.PlanTone.Calm, UsageWords.planTone(running, now))
+    val notStarted = usageOf("""{"plan":"trial",$period,"tasks":{"counted":0,"included":25,"left":25},"trial":{"days_left":0,"tasks_left":25}}""")
+    assertEquals("Trial · not started", UsageWords.planLine(notStarted, now))
+    assertEquals(UsageWords.PlanTone.Attention, UsageWords.planTone(notStarted, now))
+    val ended = usageOf("""{"plan":"trial",$period,"tasks":{"counted":0,"included":0,"left":0,"packs":0},$store,"trial":{"ends_at":"2026-10-20T00:00:00Z","days_left":0,"tasks_left":0}}""")
+    assertEquals("Trial ended · Start Solo", UsageWords.planLine(ended, now))
+    assertEquals(UsageWords.PlanTone.Attention, UsageWords.planTone(ended, now))
+    val solo = usageOf("""{"plan":"solo",$period,"tasks":{"counted":8,"included":20,"left":12,"packs":0},"billing":{"source":"google"}}""")
+    assertEquals("Solo · 12 of 20 tasks left · Google Play", UsageWords.planLine(solo, now))
+    val soloOut = usageOf("""{"plan":"solo",$period,"tasks":{"counted":32,"included":20,"left":0,"packs":12},"billing":{"source":"apple"}}""")
+    assertEquals("Solo · 0 of 32 tasks left · Apple", UsageWords.planLine(soloOut, now))
+    assertEquals(UsageWords.PlanTone.Out, UsageWords.planTone(soloOut, now))
+    val company = usageOf("""{"plan":"company",$period,"tasks":{"counted":472,"included":0},"billing":{"source":"contract"}}""")
+    assertEquals("Company · 472 tasks this period", UsageWords.planLine(company, now))
+    assertEquals("Your plan · 1 task this period", UsageWords.planLine(usageOf("""{"plan":"internal",$period,"tasks":{"counted":1}}"""), now))
+  }
+
+  @Test fun homeSaysThePlanOnlyWhenItNeedsTheOwner() {
+    val now = java.time.Instant.parse("2026-10-28T00:00:00Z")
+    fun trial(days: Int, left: Int) = usageOf(
+      """{"plan":"trial",$period,"tasks":{"counted":${25 - left},"included":25,"left":$left},"trial":{"ends_at":"2026-11-0${days + 1}T00:00:00Z","days_left":$days,"tasks_left":$left}}""",
+    )
+    assertNull("a trial with days and tasks to spare", UsageWords.homeLine(trial(5, 18), now))
+    assertEquals("Your trial ends in 2 days.", UsageWords.homeLine(trial(2, 18), now))
+    assertEquals("Your trial ends within a day.", UsageWords.homeLine(trial(1, 18), now))
+    assertEquals("Your trial's tasks are used. Your tafs are paused until tasks are added.", UsageWords.homeLine(trial(5, 0), now))
+    val ended = usageOf("""{"plan":"trial",$period,"tasks":{"counted":0,"included":0,"left":0},"can_add_tasks":true,"store":{"google_solo_product":"bot.tafs.solo.monthly","packs":[]},"trial":{"ends_at":"2026-10-20T00:00:00Z","days_left":0,"tasks_left":0}}""")
+    assertEquals("Your trial has ended. ${UsageWords.START_SOLO}", UsageWords.homeLine(ended, now))
+    assertEquals("Your trial hasn't started.", UsageWords.homeLine(usageOf("""{"plan":"trial",$period,"tasks":{"counted":0,"included":25,"left":25},"trial":{"days_left":0,"tasks_left":25}}"""), now))
+    fun solo(left: Int) = usageOf("""{"plan":"solo",$period,"tasks":{"counted":${20 - left},"included":20,"left":$left,"packs":0}}""")
+    assertNull("Solo with tasks to spare", UsageWords.homeLine(solo(3), now))
+    assertEquals("2 tasks left this period.", UsageWords.homeLine(solo(2), now))
+    assertEquals("1 task left this period.", UsageWords.homeLine(solo(1), now))
+    assertEquals(
+      "This period's tasks are used. Your tafs are paused until tasks are added or the next period starts.",
+      UsageWords.homeLine(solo(0), now),
+    )
+    assertNull("no limit", UsageWords.homeLine(usageOf("""{"plan":"company",$period,"tasks":{"counted":472,"included":0}}"""), now))
+  }
+
   @Test fun packsAreOfferedOnlyWhileAPlanRunsAsKiffSays() {
     fun u(extra: String) = usageOf("""{"plan":"trial",$period,"tasks":{"counted":0},$extra}""")
     assertFalse(u(""""can_add_tasks":true,"can_add_packs":false""").packsOffered)

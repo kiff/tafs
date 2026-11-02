@@ -425,6 +425,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onSettings = { showingSettings = true },
               onHaltAll = { haltTaf = null; haltOpen = true },
               onCoach = { coachOpen = true },
+              onUsage = { usageTaf = null; usageOpen = true },
             )
           }
           val detail: @Composable (String) -> Unit = { id ->

@@ -63,6 +63,7 @@ import bot.tafs.app.design.scaled
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Money
 import bot.tafs.app.model.Taf
+import bot.tafs.app.model.UsageWords
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +76,8 @@ fun HomeView(
   onSettings: () -> Unit,
   onHaltAll: () -> Unit,
   onCoach: () -> Unit,
+  /** Opens Plan & usage, from the plan's line when it needs the owner. */
+  onUsage: () -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   // Pulling to refresh plays the sample's next round; signed in, it reads KIFF again.
@@ -112,6 +115,8 @@ fun HomeView(
           state.unreachable?.let { UnreachableLine(it, state.retryingRefresh) }
           // The phone can't approve until a new sign-in: one calm line, said at launch rather than after a tap.
           if (state.mode == Mode.kiff && state.approvalKeyLost) ApprovalKeyLine(Modifier.padding(top = 4.dp))
+          // The plan, only when it needs the owner: a trial ended or ending, tasks nearly gone. Home stays about the tafs.
+          if (state.mode == Mode.kiff) state.usage?.let { u -> UsageWords.homeLine(u)?.let { PlanLine(it, UsageWords.planTone(u), onUsage) } }
         }
       }
       if (sample) {
@@ -177,6 +182,21 @@ fun HomeView(
 
 /** KIFF's status page, served apart from KIFF, so it answers when KIFF doesn't. */
 private const val STATUS_PAGE = "https://status.kiff.dev"
+
+/** The plan's line on Home, in its tone, opening Plan & usage. */
+@Composable
+fun PlanLine(words: String, tone: UsageWords.PlanTone, onUsage: () -> Unit) {
+  val color = if (tone == UsageWords.PlanTone.Out) Theme.no else Theme.amberText
+  Row(
+    Modifier.fillMaxWidth().clickable(onClick = onUsage).padding(vertical = 6.dp).semantics { contentDescription = "$words Opens Plan & usage." },
+    horizontalArrangement = Arrangement.spacedBy(6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Box(Modifier.size(7.dp).clip(CircleShape).background(color))
+    Text(words, style = scaled(13, color = color), modifier = Modifier.weight(1f))
+    Text(UsageWords.TITLE, style = scaled(12, FontWeight.SemiBold, Theme.amberText))
+  }
+}
 
 /** While a refresh can't get through: one quiet line under the account's name, with the status page beside it. */
 @Composable

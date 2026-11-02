@@ -37,8 +37,8 @@ object HaltWords {
 
 /** What the Usage screens say, in the words iOS's has. */
 object UsageWords {
-  /** The account's screen is the account's, apart from a taf's own. */
-  const val TITLE = "Account usage"
+  /** The account's screen: its plan, and what the period used. */
+  const val TITLE = "Plan & usage"
 
   /** Whose the account's numbers are: every taf's together. */
   const val ALL_TAFS = "All tafs"
@@ -137,6 +137,66 @@ object UsageWords {
     val days = if (trial.daysLeft == 1) "1 day" else "${trial.daysLeft} days"
     val left = u.tasks.left ?: trial.tasksLeft
     return "Your trial: $days and ${if (left == 1) "1 task" else "$left tasks"} left."
+  }
+
+  // MARK: The plan, where it shows outside Plan & usage
+
+  /** How the plan line reads: calm, wanting the owner (a trial ended or not started), or out of tasks. */
+  enum class PlanTone { Calm, Attention, Out }
+
+  /** Who bills the plan, short, for the plan line; null when no one does or a contract does. */
+  private fun billedBy(u: Usage): String? = when (u.billing?.source) {
+    "google" -> "Google Play"
+    "apple" -> "Apple"
+    "stripe" -> "KIFF"
+    else -> null
+  }
+
+  /** "12 of 20 tasks left", or "472 tasks this period" where there's no limit. */
+  private fun tasksLine(u: Usage): String {
+    val left = u.tasks.left ?: return "${tasks(u.tasks.counted)} this period"
+    return if (u.tasks.total > 0) "$left of ${tasks(u.tasks.total)} left" else "${tasks(left)} left"
+  }
+
+  /**
+   * The plan in one line, for Settings' Plan card: "Trial · 5 days and 18 tasks left", "Trial ended · Start Solo",
+   * "Solo · 12 of 20 tasks left · Google Play".
+   */
+  fun planLine(u: Usage, now: Instant = Instant.now()): String {
+    if (u.plan == "trial") {
+      if (trialEnded(u, now)) return if (offersSolo(u)) "Trial ended · Start Solo" else "Trial ended"
+      val trial = u.trial
+      if (trial?.endsAt == null) return "Trial · not started"
+      val days = if (trial.daysLeft == 1) "1 day" else "${trial.daysLeft} days"
+      val left = u.tasks.left ?: trial.tasksLeft
+      return "Trial · $days and ${tasks(left)} left"
+    }
+    val name = planName(u.plan) ?: "Your plan"
+    return listOfNotNull(name, tasksLine(u), billedBy(u)).joinToString(" · ")
+  }
+
+  fun planTone(u: Usage, now: Instant = Instant.now()): PlanTone = when {
+    u.plan == "trial" && (trialEnded(u, now) || u.trial?.endsAt == null) -> PlanTone.Attention
+    u.tasks.usedUp -> PlanTone.Out
+    else -> PlanTone.Calm
+  }
+
+  /**
+   * Home's line about the plan, only when something needs the owner: a trial ended, not started or ending within 2 days,
+   * and tasks used up or down to a tenth of the period's. Null otherwise: Home stays about the tafs.
+   */
+  fun homeLine(u: Usage, now: Instant = Instant.now()): String? {
+    if (u.plan == "trial") {
+      if (trialEnded(u, now)) return if (offersSolo(u)) "Your trial has ended. $START_SOLO" else "Your trial has ended."
+      val trial = u.trial ?: return null
+      if (trial.endsAt == null) return "Your trial hasn't started."
+      if (u.tasks.usedUp) return notice(u, now)
+      if (trial.daysLeft <= 2) return if (trial.daysLeft <= 1) "Your trial ends within a day." else "Your trial ends in 2 days."
+    }
+    if (u.tasks.usedUp) return notice(u, now)
+    val left = u.tasks.left ?: return null
+    val total = u.tasks.total
+    return if (total > 0 && left * 10 <= total) "${tasks(left)} left this period." else null
   }
 
   /** A counted task's tool as the Record names it: KIFF's title, else its name in words. */
