@@ -1,6 +1,7 @@
 package bot.tafs.app
 
 import androidx.compose.runtime.CompositionLocalProvider
+import bot.tafs.app.app.Mode
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -14,6 +15,7 @@ import bot.tafs.app.views.ApprovalGate
 import bot.tafs.app.views.ApprovalsSetupScreen
 import bot.tafs.app.views.LocalApprovalReadiness
 import bot.tafs.app.views.LocalRecheckApprovals
+import bot.tafs.app.views.ProvideApprovalReadiness
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -75,6 +77,31 @@ class ApprovalsSetupTest {
         ApprovalGate { PrimaryButton("Approve once with your fingerprint", {}) }
       }
     }
+  }
+
+  private fun provided(mode: Mode, device: ApprovalReadiness) = rule.setShown {
+    TafsTheme {
+      ProvideApprovalReadiness(mode, device, recheck = {}) {
+        ApprovalGate { PrimaryButton("Approve once with your fingerprint", {}) }
+      }
+    }
+  }
+
+  @Test fun inTheSampleTheButtonStaysOnAPhoneWithNoFingerprint() {
+    provided(Mode.sample, ApprovalReadiness.NoneEnrolled)
+    rule.onNodeWithText("Approve once with your fingerprint").assertIsDisplayed()
+    assertEquals(0, count(ApprovalWords.cantApprove(ApprovalReadiness.NoneEnrolled)))
+  }
+
+  @Test fun inTheSampleTheButtonStaysOnAPhoneThatCantApprove() {
+    provided(Mode.sample, ApprovalReadiness.Unsupported)
+    rule.onNodeWithText("Approve once with your fingerprint").assertIsDisplayed()
+  }
+
+  @Test fun withKiffThePhonesOwnAnswerGates() {
+    provided(Mode.kiff, ApprovalReadiness.NoneEnrolled)
+    assertEquals(0, count("Approve once with your fingerprint"))
+    rule.onNodeWithText(ApprovalWords.cantApprove(ApprovalReadiness.NoneEnrolled)).assertIsDisplayed()
   }
 
   @Test fun anApprovalsButtonShowsWhenThePhoneCanApprove() {

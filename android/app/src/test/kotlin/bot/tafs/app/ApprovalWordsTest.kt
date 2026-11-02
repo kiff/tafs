@@ -1,8 +1,10 @@
 package bot.tafs.app
 
 import androidx.biometric.BiometricManager
+import bot.tafs.app.app.Mode
 import bot.tafs.app.model.ApprovalReadiness
 import bot.tafs.app.model.ApprovalWords
+import bot.tafs.app.views.gateReadiness
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -27,6 +29,13 @@ class ApprovalWordsTest {
     val cant = states.filter { it != ApprovalReadiness.Ready }
     assertEquals(cant.size, cant.map(ApprovalWords::cantApprove).toSet().size)
     cant.forEach { assertNotEquals("", ApprovalWords.cantApprove(it)) }
+  }
+
+  @Test fun theSampleNeverWaitsOnThePhone() {
+    ApprovalReadiness.entries.forEach {
+      assertEquals("the sample signs nothing", ApprovalReadiness.Ready, gateReadiness(Mode.sample, it))
+      assertEquals("with KIFF, the phone's own answer", it, gateReadiness(Mode.kiff, it))
+    }
   }
 
   @Test fun theWordsSayWhatToDo() {

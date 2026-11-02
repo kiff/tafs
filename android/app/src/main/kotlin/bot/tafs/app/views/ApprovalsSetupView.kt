@@ -20,11 +20,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import bot.tafs.app.app.Mode
 import bot.tafs.app.design.OutlineButton
 import bot.tafs.app.design.Panel
 import bot.tafs.app.design.PrimaryButton
@@ -38,6 +40,18 @@ val LocalApprovalReadiness = compositionLocalOf { ApprovalReadiness.Ready }
 
 /** Reads it again at once: Check again. */
 val LocalRecheckApprovals = compositionLocalOf<() -> Unit> { {} }
+
+/**
+ * What the approval buttons see: the phone's own answer with KIFF. The sample signs nothing (its approvals are local
+ * demonstrations), so there it's always Ready, whatever the phone has.
+ */
+fun gateReadiness(mode: Mode, device: ApprovalReadiness): ApprovalReadiness = if (mode == Mode.kiff) device else ApprovalReadiness.Ready
+
+/** Gives the screens below [gateReadiness] and Check again. */
+@Composable
+fun ProvideApprovalReadiness(mode: Mode, device: ApprovalReadiness, recheck: () -> Unit, content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalApprovalReadiness provides gateReadiness(mode, device), LocalRecheckApprovals provides recheck, content = content)
+}
 
 /** The phone's own answer: a biometric it counts as strong, the only one the approval key opens with. */
 fun approvalReadiness(context: Context): ApprovalReadiness =

@@ -196,7 +196,7 @@ fun RootView(model: AppModel) {
     if (settingUpApprovals && readiness == bot.tafs.app.model.ApprovalReadiness.Ready) { settingUpApprovals = false; signingIn = true }
   }
 
-  CompositionLocalProvider(bot.tafs.app.views.LocalApprovalReadiness provides readiness, bot.tafs.app.views.LocalRecheckApprovals provides recheck) {
+  bot.tafs.app.views.ProvideApprovalReadiness(state.mode, readiness, recheck) {
   Box(Modifier.fillMaxSize().background(Theme.background)) {
     when {
       // Nothing draws until it is known, so the first screen never flashes up for someone signed in.
