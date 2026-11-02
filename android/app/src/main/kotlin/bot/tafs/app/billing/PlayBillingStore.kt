@@ -67,7 +67,9 @@ class PlayBillingStore(context: Context) : PlayStore {
         override fun onBillingServiceDisconnected() = Unit
       })
     }
-    if (result.responseCode != BillingClient.BillingResponseCode.OK) throw IllegalStateException(result.debugMessage.ifEmpty { "Google Play isn't available on this phone." })
+    if (result.responseCode != BillingClient.BillingResponseCode.OK) {
+      throw IllegalStateException(if (unreachable(result.responseCode)) Purchases.PLAY_UNREACHABLE else result.debugMessage.ifEmpty { "Google Play isn't available on this phone." })
+    }
   }
 
   override suspend fun products(ids: List<String>): List<StoreProduct> {
@@ -76,7 +78,10 @@ class PlayBillingStore(context: Context) : PlayStore {
       val params = QueryProductDetailsParams.newBuilder()
         .setProductList(ids.map { QueryProductDetailsParams.Product.newBuilder().setProductId(it).setProductType(type).build() })
         .build()
-      client.queryProductDetails(params).productDetailsList.orEmpty()
+      val read = client.queryProductDetails(params)
+      // Play not answering isn't Play not selling: said as unreachable, so the purchase says to try again.
+      if (read.billingResult.responseCode != BillingClient.BillingResponseCode.OK) throw IllegalStateException(unreachableOr(read.billingResult))
+      read.productDetailsList.orEmpty()
     }
     // What Play lists now, for this Google account: a product it no longer lists is forgotten, never sold from an older read.
     ids.forEach { details.remove(it) }
@@ -160,7 +165,18 @@ class PlayBillingStore(context: Context) : PlayStore {
       ?: offers.firstOrNull()
   }
 
+  private fun unreachableOr(r: BillingResult): String =
+    if (unreachable(r.responseCode)) Purchases.PLAY_UNREACHABLE else r.debugMessage.ifEmpty { Purchases.PLAY_UNREACHABLE }
+
   companion object {
+    /** Play's codes for not being reached now (no network, its service down or gone): worth trying again, unlike not selling. */
+    fun unreachable(code: Int): Boolean = code in setOf(
+      BillingClient.BillingResponseCode.NETWORK_ERROR,
+      BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE,
+      BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+      BillingClient.BillingResponseCode.SERVICE_TIMEOUT,
+    )
+
     /** "P1M" → "month", as a price is said per period. */
     fun periodWords(iso: String): String = when (iso) {
       "P1W" -> "week"

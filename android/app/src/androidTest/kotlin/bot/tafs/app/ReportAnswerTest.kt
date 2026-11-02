@@ -1,23 +1,22 @@
 package bot.tafs.app
 
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.performTouchInput
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.model.ReportResult
 import bot.tafs.app.model.ReportWords
-import bot.tafs.app.views.ReportableAnswer
+import bot.tafs.app.views.AnswerWithActions
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
 /**
- * Reporting an answer from inside the app (docs/chat.md): a long press on it, Report this answer, a reason and a note, Send.
+ * Under an answer (docs/chat.md): Copy, and More actions with Report this answer, a reason and a note, Send.
  * Run with `-e hold 8` to keep the sheet for a screenshot.
  */
 class ReportAnswerTest {
@@ -29,12 +28,12 @@ class ReportAnswerTest {
 
   private fun show(answer: ReportResult) = rule.setShown {
     TafsTheme {
-      ReportableAnswer({ reason, note -> sent += reason to note; answer }) { Text("Refunded Ana €40.") }
+      AnswerWithActions("Refunded Ana €40.", { reason, note -> sent += reason to note; answer }) { Text("Refunded Ana €40.") }
     }
   }
 
   private fun report(note: String? = null) {
-    rule.onNodeWithText("Refunded Ana €40.").performTouchInput { longClick() }
+    rule.onNodeWithContentDescription(bot.tafs.app.model.AnswerWords.MORE).performClick()
     rule.onNodeWithText(ReportWords.MENU).assertIsDisplayed().performClick()
     rule.onNodeWithText("Wrong").assertIsDisplayed().performClick()
     note?.let { rule.onNodeWithText("Add a note (optional)").performTextInput(it) }
@@ -47,6 +46,26 @@ class ReportAnswerTest {
     rule.onNodeWithText(ReportWords.THANKS).assertIsDisplayed()
     assertEquals(listOf("wrong" to "It refunded the wrong order."), sent)
     rule.onNodeWithText("Done").performClick()
+  }
+
+  @Test fun copyCopiesTheWholeAnswerAndSaysSo() {
+    show(ReportResult.Sent(first = true))
+    rule.onNodeWithText(bot.tafs.app.model.AnswerWords.COPY).assertIsDisplayed().performClick()
+    rule.onNodeWithText(bot.tafs.app.model.AnswerWords.COPIED).assertIsDisplayed()
+    val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
+    val copied = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().let { i ->
+      var text: CharSequence? = null
+      i.runOnMainSync { text = (context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).primaryClip?.getItemAt(0)?.text }
+      text?.toString()
+    }
+    assertEquals("Refunded Ana €40.", copied)
+    assertEquals("opening nothing reported", emptyList<Pair<String, String?>>(), sent)
+  }
+
+  @Test fun anAnswerThatCantBeReportedStillCopiesAndHasNoMoreActions() {
+    rule.setShown { TafsTheme { AnswerWithActions("Lately: refund order #4471.", null) { Text("Lately: refund order #4471.") } } }
+    rule.onNodeWithText(bot.tafs.app.model.AnswerWords.COPY).assertIsDisplayed()
+    assertEquals(0, rule.onAllNodes(androidx.compose.ui.test.hasContentDescription(bot.tafs.app.model.AnswerWords.MORE)).fetchSemanticsNodes().size)
   }
 
   @Test fun anAnswerReportedBeforeSaysSo() {

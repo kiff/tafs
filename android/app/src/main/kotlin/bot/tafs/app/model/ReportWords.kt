@@ -20,3 +20,12 @@ sealed interface ReportResult {
   data class Sent(val first: Boolean) : ReportResult
   data class NotSent(val why: String) : ReportResult
 }
+
+/** Under a finished answer from Coach or a taf: Copy, and More actions (which holds Report this answer). */
+object AnswerWords {
+  const val COPY = "Copy"
+  const val COPIED = "Copied"
+  /** What TalkBack says Copy does. */
+  const val COPY_LABEL = "Copy this answer"
+  const val MORE = "More actions"
+}

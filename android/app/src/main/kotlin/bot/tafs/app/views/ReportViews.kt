@@ -1,11 +1,18 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.model.AnswerWords
+import kotlinx.coroutines.delay
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.foundation.text.selection.SelectionContainer
+import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,26 +57,55 @@ import bot.tafs.app.model.ReportWords
 import kotlinx.coroutines.launch
 
 /**
- * An answer Coach or a taf wrote, which a long press can report (docs/chat.md): Report this answer opens the sheet. [onReport]
- * sends the reason and the note; null where the answer can't be reported (the sample's, or one tafs cloud has no id for yet).
+ * A finished answer from Coach or a taf (docs/chat.md): its text selectable as any text is, and under it Copy, which copies the
+ * whole answer, and More actions, which holds Report this answer. [onReport] sends the reason and the note; null where the
+ * answer can't be reported (the sample's, or one tafs cloud has no id for yet), and More actions isn't shown then.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ReportableAnswer(onReport: (suspend (String, String?) -> ReportResult)?, content: @Composable () -> Unit) {
-  if (onReport == null) {
-    content()
-    return
-  }
+fun AnswerWithActions(text: String, onReport: (suspend (String, String?) -> ReportResult)?, content: @Composable () -> Unit) {
+  val clipboard = LocalClipboard.current
+  val scope = rememberCoroutineScope()
+  var copied by remember { mutableStateOf(false) }
   var menu by remember { mutableStateOf(false) }
   var reporting by remember { mutableStateOf(false) }
-  // TalkBack names the long press, so the report is found without seeing the menu.
-  Box(Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClickLabel = ReportWords.MENU, onLongClick = { menu = true })) {
-    content()
-    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
-      DropdownMenuItem(text = { Text(ReportWords.MENU) }, onClick = { menu = false; reporting = true })
+  Column(Modifier.fillMaxWidth()) {
+    SelectionContainer { content() }
+    if (text.isBlank()) return@Column
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(
+        if (copied) AnswerWords.COPIED else AnswerWords.COPY,
+        style = scaled(13, FontWeight.Medium, Theme.dim),
+        modifier = Modifier
+          .heightIn(min = 40.dp)
+          .clickable(onClickLabel = AnswerWords.COPY_LABEL) {
+            scope.launch {
+              clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("answer", text)))
+              copied = true
+              delay(2_000)
+              copied = false
+            }
+          }
+          .padding(horizontal = 6.dp, vertical = 10.dp)
+          .semantics { liveRegion = LiveRegionMode.Polite },
+      )
+      if (onReport != null) Box {
+        Text(
+          "⋯",
+          style = scaled(16, FontWeight.Bold, Theme.dim),
+          modifier = Modifier
+            .heightIn(min = 40.dp)
+            .clickable(onClickLabel = AnswerWords.MORE) { menu = true }
+            .semantics { contentDescription = AnswerWords.MORE }
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        )
+        // Opening the menu sends nothing: Report opens its sheet, which asks why first.
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+          DropdownMenuItem(text = { Text(ReportWords.MENU) }, onClick = { menu = false; reporting = true })
+        }
+      }
     }
   }
-  if (reporting) ReportSheet(onReport, onClose = { reporting = false })
+  if (reporting && onReport != null) ReportSheet(onReport, onClose = { reporting = false })
 }
 
 /** Why the answer is reported, an optional note, and Send. A report that didn't go keeps the sheet open, to send again. */
