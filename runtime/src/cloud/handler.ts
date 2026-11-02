@@ -12,6 +12,7 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
+import { dayIn, DOES, knobOf } from "./knob.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { stepWords, Steps, type ToolTitles } from "./steps.js";
@@ -54,6 +55,7 @@ import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
+ *   GET  /v1/tafs/{id}/knob             its dial: what wakes it, when, where results go, and today's work, in tafs cloud's words
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
@@ -249,6 +251,8 @@ export interface Taf {
    * its job's fixed line. Absent on a taf from before, or one not made by Coach.
    */
   summary?: string;
+  /** What it does in one word, for its dial's face ("Refund"), as Coach's result said it. */
+  does?: string;
   /**
    * The versions made from Setup's results (kiff/tafs#107), by the result
    * they came from: a result makes its version once, however often the app
@@ -428,7 +432,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer archive archived attachments calls chats components continue conversation " +
-  "delete deletions deliveries doors door email whatsapp ended events halt holds home improve install jobs keys kiff knocks live mcp " +
+  "delete deletions deliveries doors door email whatsapp ended events halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "memory messages pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks").split(" "));
 
@@ -557,6 +561,27 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again), skipped: skippedOf(fired, zone, now) };
+  }
+  if (parts.length === 4 && method === "GET" && action === "knob") {
+    // The taf's dial (docs/api.md, "The knob"): every label and line written here.
+    const now = deps.now?.() ?? new Date();
+    const zone = me.timeZone ?? "UTC";
+    const [runs, schedule, doors] = await Promise.all([
+      agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
+      taf.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
+      // A taf's doors are for the people who manage it; someone it's only shared with sees none.
+      deps.doors && await managesTaf(event, me, taf, deps) ? listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors) : Promise.resolve([]),
+    ]);
+    const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
+    const { counts } = workOf(today, zone, now, []);
+    const job = JOBS.find((j) => j.id === taf.job);
+    return knobOf({
+      name: taf.name,
+      does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
+      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf),
+      today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
+      zone, now,
+    });
   }
   if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
     // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
