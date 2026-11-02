@@ -114,11 +114,14 @@ the app in sample mode.
   dim, and the face shows tafs cloud's `state` and `tap` for it. It lays out what
   `GET /v1/tafs/{id}/knob` sends (`TafsCloud.Knob`), every label and line as tafs cloud wrote
   it; the app's own words are only "DOES", "Tap a ring", "Tap to approve once" and the ring
-  titles. `TafDialScreen` puts it on a screen (K1 to K3): the taf's name and "Needs you · N",
-  which puts its oldest held call in the face, where a tap approves it once; then Overview,
-  Ask Coach and Pause. The face's tap opens or closes a door through the doors API (its
-  `door`) and starts a run for Run now, as today, with no new version; every other change goes
-  through the knob's own route. It isn't reachable from the app's navigation yet.
+  titles. It sits in the taf's page where the doors' dial was (`DoorsView`): the doors are
+  stops on Wakes it, with the face's state and tap, and When and Results go are the outer
+  rings. Choosing a door's stop picks that door for its settings below (paired senders,
+  today's limits), as before. A held call of the taf can show in the face, where a tap
+  approves it once; ‹ Overview goes back. The face's tap opens or closes a door through the
+  doors API (its `door`) and starts a run for Run now, as today, with no new version; every
+  other change goes through the knob's own route. When the dial can't be read, the doors'
+  own dial shows instead.
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
   `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
   (`POST /v1/profiles/words`) and checked against the profile's digest and their own before

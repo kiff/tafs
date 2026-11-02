@@ -75,6 +75,10 @@ struct TafDetailView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 if section == 3, hasDoors(taf), let doors = model.doors(for: taf.id) {
                                     DoorsView(taf: taf, doors: doors, manages: model.manages(taf.id), myEmail: model.kiffAccount?.email)
+                                        .knob(model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
+                                              press: { await model.pressKnob(taf.id, $0) },
+                                              approve: { call in Task { await model.answer(call, with: .approveOnce) } })
+                                        .task(id: taf.id) { await model.loadKnob(taf.id) }
                                 } else if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)

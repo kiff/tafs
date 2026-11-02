@@ -1,10 +1,21 @@
 import SwiftUI
 
-/// A taf's Doors tab (docs/doors.md): a dial around the taf, one stop per door and a
-/// last stop to add one. Turn it to pick a door, press the taf to open or close it.
-/// Below it, the door at the top: its address, who may give it work, and its day.
+/// A taf's Doors tab (docs/doors.md): the taf's dial ("The knob, end to end"), its doors
+/// stops on Wakes it with When and Results go around them; tapping a door's stop picks it,
+/// pressing the face opens or closes it. Without the dial (it couldn't be read), the doors'
+/// own dial: one stop per door and a last stop to add one.
+/// Below it, the door picked: its address, who may give it work, and its day.
 struct DoorsView: View {
     let taf: Taf
+    /// The taf's dial, as tafs cloud last sent it; nil: the doors' own dial.
+    var knob: TafsCloud.Knob? = nil
+    /// The held calls the dial's face can show, the taf's own.
+    var held: [HeldCall] = []
+    /// The face was pressed on a chosen stop that does something.
+    var pressKnob: (TafsCloud.Knob.Item) async -> Void = { _ in }
+    /// The face was tapped on a held call: approve it once.
+    var approve: (HeldCall) -> Void = { _ in }
+    @State private var face: TafKnobView.Face = .overview
     @ObservedObject private var doors: DoorsModel
     @State private var selected = 0
     @State private var adding = false
@@ -24,21 +35,51 @@ struct DoorsView: View {
         self.doors = doors
     }
 
+    /// This Doors tab with the taf's dial in place of the doors' own.
+    func knob(_ knob: TafsCloud.Knob?, held: [HeldCall], press: @escaping (TafsCloud.Knob.Item) async -> Void,
+              approve: @escaping (HeldCall) -> Void) -> DoorsView {
+        var v = self
+        v.knob = knob
+        v.held = held
+        v.pressKnob = press
+        v.approve = approve
+        return v
+    }
+
     private var door: TafsCloud.Door? { selected < doors.doors.count ? doors.doors[selected] : nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Panel {
-                Eyebrow(text: "Doors · turn to pick, press to open")
-                DoorDial(taf: taf, doors: doors.doors, knocks: doors.openKnocks, selected: $selected,
-                         press: { press() })
-                    .frame(height: 300)
-                Text(hint).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                    .frame(maxWidth: .infinity)
-                if let settings = door?.words?.settings {
-                    Text(settings).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+            if let knob {
+                Panel {
+                    TafKnobView(knob: knob, face: $face, held: held,
+                                press: { _, item in
+                                    guard manages else { return }
+                                    Task {
+                                        await pressKnob(item)
+                                        await doors.load()
+                                    }
+                                },
+                                approve: approve)
+                    if face != .overview {
+                        Button("‹ Overview") { withMotion { face = .overview } }
+                            .buttonStyle(OutlineButtonStyle())
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+            } else {
+                Panel {
+                    Eyebrow(text: "Doors · turn to pick, press to open")
+                    DoorDial(taf: taf, doors: doors.doors, knocks: doors.openKnocks, selected: $selected,
+                             press: { press() })
+                        .frame(height: 300)
+                    Text(hint).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                         .frame(maxWidth: .infinity)
                 }
+            }
+            if let settings = door?.words?.settings {
+                Text(settings).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .frame(maxWidth: .infinity)
             }
             if let door { panel(door) } else if manages { addPanel } else {
                 Text("\(taf.name) has no door yet. Someone who manages it can add one.")
@@ -67,6 +108,17 @@ struct DoorsView: View {
                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
         }
         .task { await doors.load() }
+        .onChange(of: face) { face in
+            // A door's stop on Wakes it picks that door for its settings below.
+            guard case .chosen(.wakes, let id) = face,
+                  let doorID = knob?.wakes.first(where: { $0.id == id })?.door,
+                  let i = doors.doors.firstIndex(where: { $0.id == doorID }) else { return }
+            selected = i
+        }
+        .onChange(of: held.map(\.id)) { ids in
+            // An answered call leaves the face.
+            if case .held(let id) = face, !ids.contains(id) { face = .overview }
+        }
         .sheet(isPresented: $adding) { AddDoorSheet(doors: doors) { added in if added { selected = doors.doors.count - 1 } } }
         .sheet(item: $pairing) { PairSheet(door: $0, doors: doors) }
         .confirmationDialog("Remove the \(confirmRemove?.label.lowercased() ?? "") door?", isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
