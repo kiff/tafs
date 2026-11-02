@@ -11,6 +11,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, KIFF's words for a connection:** a connection that carries its profile shows
+  KIFF's words for it on the approval card, read from KIFF and checked against their digests,
+  and the approval signs both. Approve waits until they're shown.
+- **Android, the taf's dial:** Wakes it, When and Results go around the job, with a rim that
+  counts today's work; choosing a stop says what it is in the face (not yet on a screen).
 - **Setup, for any vendor:** its rules name roles, not one payments vendor's tools: the
   argument a call acts on, the read that says its unit, money in its own units, test or live when
   the vendor has both. A vendor with a REST API and no MCP server is connected by its key, which

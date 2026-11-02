@@ -155,6 +155,16 @@ failures (signing, signing in, a file that didn't upload) keep their words (`Own
 Coach still hears the server's reason for an approval that failed, as the card's answer,
 so it can say what went wrong and ask again.
 
+## The dial
+
+A taf's dial (`TafKnob`, from the approved "The knob, end to end"): the job in the face, and
+**Wakes it**, **When** and **Results go** around it, inside to out, each stop's word along its
+ring. The rim counts today's work: done, working, retrying, needs you. Tapping a word chooses
+it: its ring keeps its colour, the other two dim, and the face shows tafs cloud's `state` and
+`tap` for it. A held call can take the face, to approve once. It lays out what
+`GET /v1/tafs/{id}/knob` sends (`KnobWire`), every label and line as tafs cloud wrote it; the
+app's own words are only "DOES", "Tap a ring", "Tap to approve once" and the ring titles.
+
 ## Signing
 
 Two keys in the Android Keystore, in StrongBox where the phone has it

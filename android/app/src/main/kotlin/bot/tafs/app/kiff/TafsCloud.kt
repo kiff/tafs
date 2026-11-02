@@ -384,6 +384,13 @@ class TafsCloud(
   /** Where the taf's work stands (docs/reliability.md, "The taf's view"): every line and time in tafs cloud's words. */
   suspend fun work(id: String): TafWork = get<TafWork>("/v1/tafs/${escaped(id)}/work")
 
+  /** A taf's dial (the knob API). */
+  suspend fun knob(id: String): KnobWire = get("/v1/tafs/${escaped(id)}/knob")
+
+  /** Connect apps: the catalog, filtered by [q] when given. */
+  suspend fun connectApps(q: String? = null): ConnectApps =
+    get("/v1/connect/apps" + (q?.takeIf { it.isNotBlank() }?.let { "?q=" + escaped(it) } ?: ""))
+
   /**
    * Send again: the door reply of [run], given up on after its tries, sent once more. It does no work and signs nothing.
    * Returns the delivery's state: sent, not_sent or waiting.
