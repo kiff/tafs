@@ -13,11 +13,7 @@ struct TafDetailView: View {
     @State private var runTapped = false
     /// The Card in front of the stack (kiff/tafs#211); nil for the first, the live one.
     @State private var frontCard: String?
-    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
-    #else
-    private let sizeClass: UserInterfaceSizeClass? = .regular
-    #endif
     @State private var width: CGFloat = 0
     @State private var height: CGFloat = 0
     /// Share, the version and the Card's line folded away while the page scrolls down, so
@@ -39,7 +35,7 @@ struct TafDetailView: View {
 
     /// A wide screen (kiff/tafs#85): beside the chat or the activity, a second column with
     /// the call waiting for the owner and the Cards. Only in landscape and only when the chat
-    /// keeps an iPhone's width beside it (kiff/tafs#211): iPad landscape and the Mac. A
+    /// keeps an iPhone's width beside it (kiff/tafs#211): iPad landscape. A
     /// narrower screen keeps one column, with the Card bar above it.
     private var sideColumn: Bool {
         sizeClass == .regular && section < 2 && width > height
@@ -160,10 +156,8 @@ struct TafDetailView: View {
     private func headerLine(_ taf: Taf) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             versionLine(taf)
-            #if os(iOS)
             // Who it's shared with, and Share: the taf's manager's to see (the 870 test).
             if model.manages(taf.id) { ShareLine(tafID: taf.id) }
-            #endif
         }
         .transition(.opacity)
     }
@@ -672,8 +666,6 @@ struct VersionsPanel: View {
 struct VersionCardSheet: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
-    /// Read so approvalBlocked is asked again when the app comes back from Settings.
-    @Environment(\.scenePhase) private var scenePhase
     let version: TafsCloud.Version
     let tafID: UUID
     /// Coach's held install this answers (kiff/tafs#206): approved with the same Face ID,
@@ -722,7 +714,7 @@ struct VersionCardSheet: View {
                         dismiss()
                         Task { await model.useVersion(version, of: tafID, shownDraft: shown, approving: approving) }
                     }
-                    .disabled(draft?.cards == nil || (scenePhase == .active && model.approvalBlocked))
+                    .disabled(draft?.cards == nil || model.approvalBlocked)
                 }
             }
         }

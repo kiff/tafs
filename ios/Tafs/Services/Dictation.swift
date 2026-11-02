@@ -1,9 +1,7 @@
 import Foundation
-#if os(iOS)
 import AVFoundation
 import Speech
 import UIKit
-#endif
 
 /// Speaking a message instead of typing it (kiff/tafs#208), in a taf's chat and in Coach
 /// mode. The words go into the message box as they're spoken, and the owner sends them
@@ -115,19 +113,11 @@ final class Dictation: ObservableObject {
     private var quietEnds = 0
 
     init(engine: SpeechEngine? = nil, language: Language? = nil) {
-        #if os(iOS)
         let engine = engine ?? DeviceSpeech()
-        #else
-        let engine = engine ?? NoSpeech()
-        #endif
         self.engine = engine
         // The language the owner last dictated in, when the device still has it; only the
         // device's recognizer keeps it, never a stand-in.
-        #if os(iOS)
         remembers = engine is DeviceSpeech
-        #else
-        remembers = false
-        #endif
         let have = engine.languages()
         let last = remembers ? UserDefaults.standard.string(forKey: Self.lastLanguageKey).flatMap { id in have.first { $0.id == id } } : nil
         self.language = language ?? last ?? have.first ?? .english
@@ -353,19 +343,6 @@ protocol SpeechEngine: AnyObject {
     func stop()
 }
 
-/// No speech on this platform (the Mac is out of v1's scope).
-@MainActor
-final class NoSpeech: SpeechEngine {
-    func authorize() async -> String? { "Dictation isn't available here." }
-    func languages() -> [Dictation.Language] { [] }
-    var noLanguage: String { "Dictation isn't available here." }
-    func unavailable(_ language: Dictation.Language) -> String? { "Dictation isn't available here." }
-    func start(language: Dictation.Language, hints: [String], onText: @escaping @Sendable (String, Bool) -> Void,
-               onLevel: @escaping @Sendable (Float) -> Void, onEnd: @escaping @Sendable (String?) -> Void) throws {}
-    func stop() {}
-}
-
-#if os(iOS)
 /// Apple's speech recognition, made to run on the device: no audio leaves the phone.
 ///
 /// Speech and the microphone call back on their own threads. In Swift 6 a closure written
@@ -497,4 +474,3 @@ enum DictationError: LocalizedError {
     case unavailable
     var errorDescription: String? { "Speech recognition isn't available for this language." }
 }
-#endif

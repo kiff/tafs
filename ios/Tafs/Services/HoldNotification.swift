@@ -1,4 +1,3 @@
-#if os(iOS)
 import Foundation
 import UserNotifications
 
@@ -61,4 +60,3 @@ enum HoldNotification {
         await fill(content, kiff: kiff, cloud: TafsCloud(token: token))
     }
 }
-#endif

@@ -48,7 +48,6 @@ struct Money: Hashable, Comparable, Codable {
         }
         let f = NumberFormatter()
         let whole = minor % Self.power(scale) == 0
-        // NSLocale's list: Locale's is macOS 13 and later, and the Mac app runs on 12 (kiff/tafs#85).
         if NSLocale.commonISOCurrencyCodes.contains(currency.uppercased()) {
             f.numberStyle = .currency
             f.currencyCode = currency.uppercased()

@@ -1,17 +1,19 @@
 import SwiftUI
+import UIKit
 
-/// This device's approval readiness, checked again whenever the app comes back to the screen:
-/// the person may have just set up Face ID in Settings (kiff/tafs#423).
+/// This device's approval readiness, the model's one value, read again when the view appears
+/// and whenever the app comes back to it: the person may have just set up Face ID in Settings
+/// (kiff/tafs#423). Check again reads it again for every view at once.
 struct ReadinessReader<Content: View>: View {
+    @EnvironmentObject private var model: AppModel
     @Environment(\.scenePhase) private var scenePhase
-    @State private var readiness = ApprovalReadiness.current()
     @ViewBuilder let content: (ApprovalReadiness, _ checkAgain: @escaping () -> Void) -> Content
 
     var body: some View {
-        content(readiness) { readiness = ApprovalReadiness.current() }
-            .onAppear { readiness = ApprovalReadiness.current() }
+        content(model.approvalReadiness) { model.checkApprovalReadiness() }
+            .onAppear { model.checkApprovalReadiness() }
             .onChange(of: scenePhase) { phase in
-                if phase == .active { readiness = ApprovalReadiness.current() }
+                if phase == .active { model.checkApprovalReadiness() }
             }
     }
 }
@@ -43,7 +45,7 @@ struct ApprovalSetupView: View {
                 Text("A taf asks before it does anything outside its Card, and Coach asks before it connects a tool or issues a Card. You approve on this device, and that needs Face ID or Touch ID.")
                     .scaledFont(16).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(readiness.words(device: Biometry.device, kind: Biometry.kind))
+                Text(readiness.words(device: ThisDevice.kind, kind: Biometry.kind))
                     .scaledFont(16, weight: .semibold).foregroundColor(readiness.isReady ? Theme.ok : Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("approvalReadiness")
@@ -107,7 +109,8 @@ struct ApprovalGate<Approve: View>: View {
 }
 
 /// The same words, for an approval whose button stays where it is (a toolbar's, a
-/// confirmation's), disabled with `approvalBlocked`: nothing while the device can approve.
+/// confirmation's), disabled with the model's `approvalBlocked`, which reads the same value:
+/// Check again here enables the button too. Nothing while the device can approve.
 struct ApprovalNotice: View {
     @EnvironmentObject private var model: AppModel
 
@@ -120,12 +123,6 @@ struct ApprovalNotice: View {
             }
         }
     }
-}
-
-extension AppModel {
-    /// This device can't approve now, so an approval's button is disabled. The view reading it
-    /// also reads the scene phase, so it is asked again when the app comes back.
-    var approvalBlocked: Bool { mode == .kiff && !ApprovalReadiness.current().isReady }
 }
 
 /// Why this device can't approve, and what to do: Open Settings where tafs' settings help,

@@ -1,5 +1,4 @@
 import LocalAuthentication
-import UIKit
 
 /// What this device asks for before it signs, in the words the owner knows (kiff/tafs#87):
 /// Face ID on most iPhones, Touch ID on many iPads and Macs, else the passcode.
@@ -157,7 +156,4 @@ enum ApprovalReadiness: Equatable {
 extension Biometry {
     /// "Face ID" or "Touch ID" when the device has one, for the setup words.
     static var kind: String? { name == "your passcode" ? nil : name }
-
-    /// "iPhone" or "iPad".
-    @MainActor static var device: String { UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone" }
 }

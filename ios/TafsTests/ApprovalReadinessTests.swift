@@ -52,4 +52,49 @@ final class ApprovalReadinessTests: XCTestCase {
         // The signer lets the Simulator's demo through, so its screens show the approvals.
         XCTAssertTrue(ApprovalReadiness.current().isReady)
     }
+
+    /// Check again reads readiness once for every view: a version's notice clears and its
+    /// Install enables together, with no trip to the background (kiff/tafs#423).
+    @MainActor
+    func testCheckAgainUnblocksTheNoticeAndTheButtonTogether() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        StubProtocol.thenRespond = [:]
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: StubSigner(), kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        await model.useSession("kiff_dev_x", tenant: "t_01")
+        defer {
+            Keychain.delete(AppModel.tokenAccount)
+            Keychain.delete(AppModel.tenantAccount)
+            Keychain.delete(AppModel.keyedAccount)
+        }
+        XCTAssertEqual(model.mode, .kiff)
+
+        var device = ApprovalReadiness.unavailable(lockedOut: true)
+        model.readApprovalReadiness = { device }
+        model.checkApprovalReadiness()
+        XCTAssertEqual(model.approvalReadiness, device)
+        XCTAssertTrue(model.approvalBlocked)
+
+        // The lockout clears; the notice's Check again reads it, and the button is free too.
+        device = .ready
+        model.checkApprovalReadiness()
+        XCTAssertTrue(model.approvalReadiness.isReady)
+        XCTAssertFalse(model.approvalBlocked)
+    }
+
+    /// Sample mode signs nothing for real: it is never blocked.
+    @MainActor
+    func testSampleModeIsNeverBlocked() async {
+        let model = AppModel(signer: StubSigner())
+        await model.startSample()
+        model.readApprovalReadiness = { .unsupported }
+        model.checkApprovalReadiness()
+        XCTAssertFalse(model.approvalBlocked)
+    }
 }

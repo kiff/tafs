@@ -38,7 +38,7 @@ struct SetupShapePanel: View {
                 HStack(alignment: .top, spacing: 10) {
                     StepMark(status: Self.mark(step.state)).padding(.top, 1)
                     VStack(alignment: .leading, spacing: 2) {
-                        // Text's own strikethrough, before the font: a view's is macOS 13 (kiff/tafs#85).
+                        // Text's own strikethrough, before the font.
                         Text(step.label)
                             .strikethrough(step.state == .skipped)
                             .scaledFont(14, weight: step.state == .needsYou || step.state == .now ? .semibold : .regular)

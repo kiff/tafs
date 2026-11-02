@@ -45,6 +45,8 @@ struct TafsApp: App {
             // Back from the browser: a re-link waiting there asks KIFF again at once.
             if phase == .active, model.relink != nil { model.nudgeSignIn() }
             if phase == .active, model.mode == .kiff { Task { await model.refresh(); model.settleListOrder() } }
+            // Back from Settings: whether this device can approve now (kiff/tafs#423).
+            if phase == .active { model.checkApprovalReadiness() }
             if phase == .active, wasAway { wasAway = false; model.settleSampleOnReturn() }
         }
     }

@@ -47,7 +47,7 @@ them do.
 
 ## What it does
 
-A working iPhone and iPad app, with a Mac window, in two modes: signed in with KIFF, or
+A working iPhone and iPad app, in two modes: signed in with KIFF, or
 with sample data on the phone. Each feature has a page in [docs/](docs/README.md):
 
 - **[A taf](docs/tafs.md):** its job, Cards, runs, reports, memory and Record; pausing,

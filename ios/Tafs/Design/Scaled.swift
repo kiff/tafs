@@ -1,7 +1,5 @@
 import SwiftUI
-#if canImport(UIKit)
 import UIKit
-#endif
 
 /// A system font at `size` points at the default text size, growing and shrinking with
 /// the owner's Dynamic Type setting (kiff/tafs#58).
@@ -34,17 +32,10 @@ extension View {
 enum Haptics {
     static let key = "haptics"
     static var enabled: Bool { UserDefaults.standard.object(forKey: key) as? Bool ?? true }
-    #if canImport(UIKit)
     static func tap() { if enabled { UIImpactFeedbackGenerator(style: .light).impactOccurred() } }
     static func success() { if enabled { UINotificationFeedbackGenerator().notificationOccurred(.success) } }
     /// A click as a dial reaches each stop.
     static func step() { if enabled { UISelectionFeedbackGenerator().selectionChanged() } }
-    #else
-    // A Mac has no taps to give.
-    static func tap() {}
-    static func success() {}
-    static func step() {}
-    #endif
 }
 
 /// One line at the usual text sizes; at the accessibility sizes the text wraps rather than
@@ -65,12 +56,7 @@ extension View {
 @MainActor
 enum Motion {
     static var reduced: Bool {
-        // iPhone and iPad (v1); the Mac target only compiles.
-        #if canImport(UIKit)
         UIAccessibility.isReduceMotionEnabled
-        #else
-        false
-        #endif
     }
 }
 

@@ -1,8 +1,5 @@
 import SwiftUI
 
-// The iPhone's and iPad's: the Mac app reads Cards and answers holds, and changes no one's
-// access.
-#if os(iOS)
 
 /// People and groups, in Settings: the account's groups, each with its people
 /// and the tafs it uses. A manager sees the group's work on those tafs; its members use
@@ -286,4 +283,3 @@ struct PersonBadge: View {
             .accessibilityHidden(true)
     }
 }
-#endif

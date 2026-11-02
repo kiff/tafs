@@ -1,6 +1,4 @@
-#if os(iOS)
 import ActivityKit
-#endif
 import Foundation
 import UserNotifications
 
@@ -42,7 +40,6 @@ enum AlertAnswers {
     }
 }
 
-#if os(iOS)
 /// Refuse, sent from a hold's notification with the session and key the app keeps.
 @MainActor
 enum NotificationRefuse {
@@ -107,4 +104,3 @@ enum NotificationRefuse {
         }
     }
 }
-#endif

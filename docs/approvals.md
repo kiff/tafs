@@ -182,6 +182,39 @@ needed, never only at a prompt that fails.
   another fingerprint later, approving on this phone stops until you approve it again."
   ([How an answer is signed](#how-an-answer-is-signed)).
 
+### On iPhone and iPad
+
+The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Touch ID
+(`ApprovalReadiness` in `Biometry.swift`, the screens in `ApprovalSetupView.swift`):
+
+- **The states,** each from its `LAError`:
+  - set up: approvals work;
+  - none enrolled (`biometryNotEnrolled`, `passcodeNotSet`): the path in words, **Settings →
+    Face ID & Passcode** (Touch ID & Passcode on a device with Touch ID). iOS opens no page of
+    Settings for an app but its own, so **Open Settings** opens tafs' settings;
+  - turned off for tafs (`biometryNotAvailable` on a device that has Face ID or Touch ID):
+    **Open Settings** opens tafs' settings, where its Face ID switch is;
+  - temporarily unavailable: locked after too many tries (`biometryLockout`), "lock this
+    iPhone, unlock it with its passcode, then check again"; anything else, "try again in a
+    moment"; both with **Check again**;
+  - unsupported (`biometryNotAvailable` with no Face ID or Touch ID): approve on another
+    iPhone, iPad or Android phone signed in to the account.
+- **Before sign-in,** only when it isn't set up: the screen, with **Open Settings**, **Check
+  again** and **Continue without approvals**. Once it's set up there, the same screen says so,
+  with **Continue**.
+- **Before the first taf:** Coach's start says approving is needed to finish it, and Start is
+  gated, since it asks for Face ID.
+- **At each approval** (Approve once, Extra room, Install from Needs you, Coach's Approve,
+  Issue): while the device can't approve, the state and what to do stand in the button's place
+  (`ApprovalGate`). A version's or a trial's Install, in a toolbar or a confirmation, stays
+  where it is, disabled, with the words beside it (`ApprovalNotice`).
+- **One readiness for every screen:** the model's `approvalReadiness`, read again when the app
+  comes back and on any **Check again**, so a notice and the button it stands for change
+  together. Sample mode signs nothing for real and is never blocked. The Simulator counts as
+  set up, as its signer lets the demo through.
+- **After an approval:** "Cancelled", "didn't recognise you", or the device's state, each with
+  "The request is kept".
+
 ## After the answer
 
 1. The answer goes to KIFF: `POST /v1/me/card-exceptions/{id}/approve-once`, `reject` or `change-card`, with its signature.

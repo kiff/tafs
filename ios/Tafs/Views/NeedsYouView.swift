@@ -301,7 +301,7 @@ struct HeldCallCard: View {
     private func remaining(at date: Date) -> Text {
         let seconds = Int(call.expiresAt.timeIntervalSince(date))
         guard seconds >= 1 else { return Text("expired") }
-        if #available(iOS 16, macOS 13, *) {
+        if #available(iOS 16, *) {
             return Text(timerInterval: date...call.expiresAt, countsDown: true) + Text(" left")
         }
         return Text(String(format: "%d:%02d left", seconds / 60, seconds % 60))

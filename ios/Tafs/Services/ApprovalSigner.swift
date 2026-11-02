@@ -133,14 +133,8 @@ final class ApprovalSigner: ApprovalSigning {
                 enclave = key
             }
         }
-        #if os(macOS)
-        // A Mac without a Secure Enclave holds no key at all: it never signs with a
-        // software key, and approves on the owner's iPhone (kiff/tafs#85).
-        let softwareAllowed = false
-        #else
         // The Simulator has no Secure Enclave.
         let softwareAllowed = true
-        #endif
         if enclave == nil, softwareAllowed {
             if let saved, let key = try? P256.Signing.PrivateKey(rawRepresentation: saved) {
                 software = key
@@ -156,7 +150,6 @@ final class ApprovalSigner: ApprovalSigning {
         var handle: Data?
         var approvalPublic = Data()
         var softwareApproval: P256.Signing.PrivateKey?
-        #if os(iOS)
         let savedApproval = Keychain.load(Self.approvalKeyAccount).flatMap { Data(base64Encoded: $0) }
         // The key that also took the passcode is never used again.
         Keychain.delete(Self.looseApprovalKeyAccount)
@@ -178,13 +171,11 @@ final class ApprovalSigner: ApprovalSigning {
             softwareApproval = key
             approvalPublic = key.publicKey.derRepresentation
         }
-        #endif
         approvalHandle = handle
         self.approvalPublic = approvalPublic
         softwareApprovalKey = softwareApproval
     }
 
-    #if os(iOS)
     /// The approval key's access control: the faces or fingerprints enrolled now, and nothing
     /// else. A new enrollment ends the key, and the passcode never unlocks it.
     nonisolated static let approvalKeyFlags: SecAccessControlCreateFlags = [.privateKeyUsage, .biometryCurrentSet]
@@ -206,10 +197,8 @@ final class ApprovalSigner: ApprovalSigning {
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) else { return nil }
         return context.evaluatedPolicyDomainState
     }
-    #endif
 
     func renewApprovalKeyIfBiometricsChanged() -> Bool {
-        #if os(iOS)
         guard approvalHandle != nil, SecureEnclave.isAvailable else { return false }
         let made = Keychain.load(Self.approvalDomainAccount).flatMap { Data(base64Encoded: $0) }
         guard Self.biometricsChanged(made: made, now: Self.biometricsDomain()) else { return false }
@@ -225,9 +214,6 @@ final class ApprovalSigner: ApprovalSigning {
             approvalPublic = Data()
         }
         return true
-        #else
-        return false
-        #endif
     }
 
     var approvalPublicKeyDER: Data { approvalPublic }

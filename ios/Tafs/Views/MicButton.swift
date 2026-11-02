@@ -1,4 +1,3 @@
-#if os(iOS)
 import SwiftUI
 import UIKit
 
@@ -121,4 +120,3 @@ private struct Waveform: View {
         }
     }
 }
-#endif

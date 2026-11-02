@@ -1,7 +1,5 @@
 import SwiftUI
-#if canImport(UIKit)
 import UIKit
-#endif
 
 /// The setup chat (kiff/tafs#50): the owner tells Setup what to connect, and Setup shows
 /// its plan, asks, and hands over approvals the owner signs on this phone. A component
@@ -53,11 +51,7 @@ struct SetupChatView: View {
     @State private var toTop = 0
     /// The answer of Coach's being reported, from its menu (kiff/tafs#421).
     @State private var reporting: ReportedAnswer?
-    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
-    #else
-    private let sizeClass: UserInterfaceSizeClass? = .regular
-    #endif
     /// The screen's width, so the "Taking shape" panel shows only where it fits beside the chat.
     @State private var width: CGFloat = 0
 
@@ -82,9 +76,7 @@ struct SetupChatView: View {
                             .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.bottom, 4)
                     }
                     composer
-                    #if os(iOS)
                     DictationBar(dictation: model.dictation)
-                    #endif
                 }
             }
             if shaping {
@@ -605,9 +597,7 @@ struct SetupChatView: View {
         return VStack(spacing: 0) {
         FileTray(key: key)
         HStack(alignment: .bottom, spacing: 10) {
-            #if os(iOS)
             if model.filesTarget(key) != nil { AttachButton(key: key) }
-            #endif
             ChatField(title: thinking ? "Write the next message" : "Ask anything about your tafs", text: $model.setupDraft, cursor: { model.dictation.cursor = $0 })
                 .focused($typing)
                 .scaledFont(16)
@@ -615,10 +605,8 @@ struct SetupChatView: View {
                 .background(Theme.panel)
                 .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            #if os(iOS)
             // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
             MicButton(dictation: model.dictation, text: $model.setupDraft)
-            #endif
             if thinking && empty {
                 // While Setup works, Send is Stop: its run is cancelled.
                 Button { Task { await model.stopSetup() } } label: {
@@ -1005,7 +993,7 @@ struct SetupPlan: View {
                 ForEach(Array(steps.enumerated()), id: \.offset) { _, step in
                     HStack(spacing: 10) {
                         StepMark(status: step.status)
-                        // Text's own strikethrough, before the font: a view's is macOS 13 (kiff/tafs#85).
+                        // Text's own strikethrough, before the font.
                         Text(step.label)
                             .strikethrough(step.status == "skipped")
                             .scaledFont(14, weight: step.status == "active" ? .semibold : .regular)
@@ -1050,11 +1038,7 @@ struct StepMark: View {
 /// One component in the thread.
 struct SetupComponentView: View {
     @EnvironmentObject private var model: AppModel
-    #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
-    #else
-    private let sizeClass: UserInterfaceSizeClass? = .regular
-    #endif
     let shown: ShownComponent
 
     var body: some View {
@@ -1481,7 +1465,7 @@ extension AppModel.CardState {
 }
 
 /// Buttons that wrap onto as many lines as they need.
-@available(iOS 16, macOS 13, *)
+@available(iOS 16, *)
 struct FlowRow: Layout {
     var spacing: CGFloat = 8
 
@@ -1518,9 +1502,8 @@ struct FlowRow: Layout {
 }
 
 private extension View {
-    /// The iPhone's chrome around Setup's chat; a Mac window has no tab bar or navigation bar.
+    /// The chrome around Setup's chat: no tab bar, and its own navigation bar on a wide screen.
     @ViewBuilder func setupChrome(wide: Bool) -> some View {
-        #if os(iOS)
         self
             // A focused task (#82): the app's tabs stay out of it.
             .toolbar(.hidden, for: .tabBar)
@@ -1528,9 +1511,6 @@ private extension View {
             // and the conversations button sits in the bar, not over the panel.
             .toolbarBackground(wide ? Visibility.visible : .automatic, for: .navigationBar)
             .toolbarBackground(Theme.background, for: .navigationBar)
-        #else
-        self
-        #endif
     }
 }
 

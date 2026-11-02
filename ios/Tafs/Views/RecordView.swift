@@ -473,9 +473,7 @@ struct ReceiptView: View {
         if let raw, let text = String(data: raw, encoding: .utf8) {
             HStack(spacing: 8) {
                 Button("Copy receipt") { Clipboard.copy(text) }.buttonStyle(OutlineButtonStyle())
-                #if os(iOS)
                 if share { ShareLink("Share", item: text).buttonStyle(OutlineButtonStyle()) }
-                #endif
             }
         }
     }

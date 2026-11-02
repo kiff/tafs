@@ -60,7 +60,7 @@ struct Eyebrow: View {
     var color: Color = Theme.dim
 
     var body: some View {
-        // Text's own tracking, before the font: a view's is macOS 13 and later (kiff/tafs#85).
+        // Text's own tracking, before the font.
         Text(text.uppercased())
             .tracking(0.7)
             .scaledFont(12, design: .monospaced, relativeTo: .caption)

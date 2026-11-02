@@ -5,6 +5,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+### Removed
+
+- The `TafsMac` target and `ios/Mac/`: the Apple app is built for iPhone and iPad only.
+
 ### Added
 
 - **Android, Set up approvals on this device:** before sign-in, only when the phone can't approve
@@ -14,6 +18,15 @@ version headings refer to releases, not merely to merged pull requests.
   first taf, and at every approval, the same words stand in the button's place until the phone
   can approve; Refuse, Decline and Halt stay. It says up front that adding a fingerprint later
   stops approvals until they're approved again.
+- **iPhone and iPad, Set up approvals on this device:** before sign-in, only when the device
+  can't approve yet, a screen says where it stands: no Face ID or Touch ID set up (the path in
+  Settings, in words), turned off for tafs (Open Settings), locked after too many tries or
+  unavailable just now (Check again), or none on this device (approve on another one), with
+  Continue without approvals. Before the first taf Coach's start says approving is needed, and at
+  every approval the same words stand in the button's place, or beside a disabled one, until the
+  device can approve; Check again updates both at once. A cancelled or unrecognised approval says
+  so, and that the request is kept. It says up front that adding a face or fingerprint later
+  means approving this device again.
 - **Android, Copy under an answer:** every finished answer from Coach or a taf has Copy under it,
   which copies the whole answer, and its text can be selected. Report this answer moves under
   More actions (⋯), so it's never the only thing a long press finds.

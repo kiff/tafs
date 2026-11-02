@@ -13,6 +13,12 @@ final class AppModel: ObservableObject {
     enum Mode: String, Codable { case signedOut, sample, kiff }
 
     @Published private(set) var mode: Mode = .signedOut
+    /// Whether this device can approve (kiff/tafs#423), one value for every approval's button,
+    /// notice and disabled state: Check again anywhere updates them all at once. Read again
+    /// when the app comes back.
+    @Published private(set) var approvalReadiness: ApprovalReadiness = ApprovalReadiness.current()
+    /// How readiness is read: this device's, or a test's.
+    var readApprovalReadiness: () -> ApprovalReadiness = { ApprovalReadiness.current() }
     @Published private(set) var tafs: [Taf] = []
     /// The account's other agents with Cards, the ones tafs doesn't run (made through KIFF's
     /// API): listed apart, never counted as working.
@@ -405,8 +411,8 @@ final class AppModel: ObservableObject {
         var tries = 0
         while true {
             do {
-                // A Mac without a Secure Enclave holds no key (kiff/tafs#85): it signs in
-                // without one, and KIFF takes a platform only with a key.
+                // A device without a Secure Enclave holds no key: it signs in without one,
+                // and KIFF takes a platform only with a key.
                 let key = signer.publicKeyDER
                 let approvalKey = signer.approvalPublicKeyDER
                 return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key,
@@ -1286,7 +1292,7 @@ final class AppModel: ObservableObject {
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
         } catch is CancellationError {
             // A refresh the app itself dropped (a newer one, a view that went away): not an
-            // error to show (the Mac's "Couldn't reach KIFF: cancelled", kiff/tafs#85).
+            // error to show ("Couldn't reach KIFF: cancelled").
             cancelled = true
         } catch let error as URLError where error.code == .cancelled {
             cancelled = true
@@ -5537,4 +5543,16 @@ enum Screenshots {
         default: return .tafs
         }
     }
+}
+
+extension AppModel {
+    /// Reads this device's readiness again: Check again, and the app coming back.
+    func checkApprovalReadiness() {
+        let now = readApprovalReadiness()
+        if now != approvalReadiness { approvalReadiness = now }
+    }
+
+    /// This device can't approve now, so an approval's button is disabled. Sample mode signs
+    /// nothing for real, so nothing is blocked there.
+    var approvalBlocked: Bool { mode == .kiff && !approvalReadiness.isReady }
 }

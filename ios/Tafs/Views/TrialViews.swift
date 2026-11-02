@@ -5,8 +5,6 @@ import SwiftUI
 struct TrialStartSheet: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
-    /// Read so approvalBlocked is asked again when the app comes back from Settings.
-    @Environment(\.scenePhase) private var scenePhase
     let version: TafsCloud.Version
     let tafID: UUID
     /// Started: its chat, which opens next (kiff/tafs#247).
@@ -66,7 +64,7 @@ struct TrialStartSheet: View {
                             }
                         }
                     }
-                    .disabled(draft?.cards == nil || model.trialBusy.contains(tafID) || (scenePhase == .active && model.approvalBlocked))
+                    .disabled(draft?.cards == nil || model.trialBusy.contains(tafID) || model.approvalBlocked)
                 }
             }
         }
@@ -106,8 +104,6 @@ struct OpenTrialLink<Label: View>: View {
 struct TrialScreen: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
-    /// Read so approvalBlocked is asked again when the app comes back from Settings.
-    @Environment(\.scenePhase) private var scenePhase
     let chatID: UUID
     let tafID: UUID
     @State private var confirmBack = false
@@ -180,7 +176,7 @@ struct TrialScreen: View {
                     }
                 Button(busy ? "Working…" : "Install") { confirmInstall = true }
                     .buttonStyle(OutlineButtonStyle())
-                    .disabled(busy || (scenePhase == .active && model.approvalBlocked))
+                    .disabled(busy || model.approvalBlocked)
                     .confirmationDialog("Install version \(trial.n)?", isPresented: $confirmInstall, titleVisibility: .visible) {
                         Button("Install with \(Biometry.name)") { Task { if await model.installTrial(tafID) { ended() } } }
                     } message: {

@@ -1,4 +1,3 @@
-#if os(iOS)
 import AppIntents
 import Foundation
 
@@ -97,4 +96,3 @@ enum HaltAll {
         }
     }
 }
-#endif
