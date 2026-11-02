@@ -390,7 +390,9 @@ final class PurchasesTests: XCTestCase {
         await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
             DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
         }
-        _ = await model.signOut()
+        // The switch, as the app makes it, with no request of its own: the stub holds the PUT,
+        // and a sign-out's request would wait behind it.
+        model.forgetSession()
         let readsBefore = StubProtocol.sent.filter { $0.url?.path == "/v1/usage/ai" }.count
         StubProtocol.release.signal()
         let answer = await going.value
