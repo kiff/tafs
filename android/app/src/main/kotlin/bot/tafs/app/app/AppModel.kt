@@ -245,6 +245,10 @@ data class AppState(
   val countedTasks: List<CountedTask> = emptyList(),
   val tafTasks: Map<String, List<CountedTask>> = emptyMap(),
   val aiUse: AIUse? = null,
+  /** Go on is on its way: one fingerprint, then KIFF. */
+  val goingOn: Boolean = false,
+  /** Why Go on didn't go through, under its button. */
+  val goOnError: String? = null,
   /** What this person may do with each KIFF agent, as KIFF says; empty until read, and then nothing is shown that needs it. */
   val access: Map<String, Access> = emptyMap(),
   /** Each taf's versions, oldest first, as tafs cloud keeps them; and why one couldn't be loaded or installed. */
@@ -4294,6 +4298,53 @@ class AppModel(
     is PurchaseOutcome.NeedsSupport -> o.why
     // Play unreachable is said on its own, with what to do: nothing was bought.
     is PurchaseOutcome.Failed -> if (o.why == bot.tafs.app.billing.Purchases.PLAY_UNREACHABLE) o.why else "The purchase didn't go through: ${o.why}"
+  }
+
+  /**
+   * Go on (kiff/tafs#185): lets the tafs go on past this period's AI use bound, from Settings › AI use, for the person who may
+   * (`can_go_on`). KIFF's signed `PUT /v1/me/usage/ai`, by the approval key behind one fingerprint; KIFF refuses a replayed
+   * signature, so one tap is one go-on. Then AI use is read again: tafs cloud says where the tafs ask next.
+   */
+  suspend fun goOnAI(): Boolean {
+    if (_state.value.mode != Mode.kiff || _state.value.goingOn || _state.value.aiUse?.offersGoOn != true) return false
+    val tenant = kiffTenant
+    if (!_state.value.sessionHasKey || tenant == null) {
+      _state.update { it.copy(goOnError = "Sign in with KIFF again: this sign-in can't sign for the phone.") }
+      return false
+    }
+    if (_state.value.approvalKeyLost) {
+      _state.update { it.copy(goOnError = KiffClient.APPROVAL_KEY_LOST) }
+      return false
+    }
+    val generation = accountGeneration
+    _state.update { it.copy(goingOn = true, goOnError = null) }
+    try {
+      confirmGrant("tafs.ai-go-on.v1|$tenant", "Let your tafs go on past this month's AI use")
+      if (generation != accountGeneration) return false
+      kiff.tenant = tenant
+      val signer = signer
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.goOnAI()
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) _state.update { it.copy(goOnError = notSigned(e, "Not done: it wasn't confirmed.")) }
+      return false
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(goOnError = KiffClient.APPROVAL_KEY_LOST) }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(goOnError = "Your tafs didn't go on. ${ErrorWords.of(e)}") }
+      return false
+    } finally {
+      kiff.setupSigner = null
+      if (generation == accountGeneration) _state.update { it.copy(goingOn = false) }
+    }
+    if (generation != accountGeneration) return false
+    // KIFF has it: read again, so the panel says where the tafs ask next. A read that fails leaves the last one.
+    val ai = attempt { cloud.aiUse() }
+    if (generation == accountGeneration && ai != null) _state.update { it.copy(aiUse = ai) }
+    return true
   }
 
   suspend fun refreshUsage() {

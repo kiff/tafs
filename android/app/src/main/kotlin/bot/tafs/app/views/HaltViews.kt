@@ -58,6 +58,8 @@ class AccountActions(
   /** An admin approves a request by buying its pack (its Play product, the request), or declines it with a note. */
   val approveRequest: suspend (String, String) -> Unit = { _, _ -> },
   val declineRequest: suspend (String, String) -> Boolean = { _, _ -> false },
+  /** Lets the tafs go on past this period's AI use, signed (the billing admin only). */
+  val goOnAI: suspend () -> Boolean = { false },
 )
 
 /** How often a halt is read again while it is halting, and for how long: every 2 seconds, up to 2 minutes. */

@@ -316,6 +316,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       withdrawRequest = model::withdrawRequest,
       approveRequest = { product, request -> model.buy(product, request) },
       declineRequest = model::declineRequest,
+      goOnAI = model::goOnAI,
     )
   }
   val people = remember(model) {

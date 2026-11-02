@@ -478,6 +478,11 @@ class KiffClient(
   /** KIFF's receipt for a call, as KIFF wrote it: its bytes are what [ReceiptCheck] checks, never decoded and written again. */
   suspend fun receipt(traceId: String): ByteArray = send("GET", "/v1/receipts/${escaped(traceId)}")
 
+  /** Lets the tafs go on past the AI use bound, signed: KIFF raises it by one more base, and refuses (403) without `billing.manage`. */
+  suspend fun goOnAI() {
+    sendJson("PUT", AI_USE, JsonObject(mapOf("go_on" to JsonPrimitive(true))))
+  }
+
   /** Asks the account's admins for a pack, with a reason. */
   suspend fun askForPack(pack: String, reason: String): PackRequest = call("POST", "/v1/me/pack-requests", mapOf("pack" to pack, "reason" to reason))
 
@@ -611,7 +616,10 @@ class KiffClient(
      * taf, the alert target that tells tafs cloud when a call is held, the connector key planque
      * keeps, the account's time zone, and deleting the account (kiff/tafs#185).
      */
-    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete")
+    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", AI_USE)
+
+    /** KIFF's AI use bound: Go on is a signed PUT here. */
+    const val AI_USE = "/v1/me/usage/ai"
 
     /**
      * Whether KIFF takes [path] from a phone only with its signature: the paths above, confirming a
@@ -642,6 +650,8 @@ class KiffClient(
      * resuming a halt. Taking authority away (ending a trial, unsharing) is the current key.
      */
     fun grantsAuthority(method: String, path: String): Boolean {
+      // Going on past the AI use bound lets the tafs spend more: the approval key, one fingerprint per tap.
+      if (method == "PUT" && path == AI_USE) return true
       if (method != "POST") return false
       if (path == "/v1/me/agent-drafts") return true
       val parts = path.split("/")

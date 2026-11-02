@@ -156,7 +156,16 @@ data class AIUse(
   @SerialName("used_pct") val usedPct: Int? = null,
   @SerialName("asks_at_pct") val asksAtPct: Int? = null,
   val paused: Boolean = false,
-)
+  /** This person may let the tafs go on (`billing.manage`); KIFF checks the role again on Go on. */
+  @SerialName("can_go_on") val canGoOn: Boolean = false,
+  /** When the AI use starts again by itself: the period's end. Null when KIFF gives none. */
+  @SerialName("starts_again") @Serializable(with = InstantAsString::class) val startsAgain: java.time.Instant? = null,
+  /** All of it in tafs cloud's words, shown as they are; null from a tafs cloud before it wrote them. */
+  val words: String? = null,
+) {
+  /** Go on shows only while the tafs wait and only to who may. */
+  val offersGoOn: Boolean get() = paused && canGoOn
+}
 
 /** A halt of one taf or of the whole account, as tafs cloud reads it from kiff/agents, KIFF and planque. */
 @Serializable
