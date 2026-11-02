@@ -112,6 +112,12 @@ last result. Who uses the taf shows only to whoever manages it.
 - what wasn't counted, and why: refused by KIFF, held then refused, halted, failed at the
   tool, not valid, retries, reads, trials of a new version, Coach and Setup.
 
+On Android, a trial that has ended (its `trial.ends_at` past, a lapsed Solo included) says
+"Your trial has ended.", never that its tasks are used: KIFF gives it no tasks on purpose. Where
+Solo is offered, "Start Solo to keep your tafs running." follows it. A trial that hasn't started
+or has ended runs no period, so Usage shows no period end and no meter (`UsageWords.notice`,
+`trialEnded`, `noPeriod`). iOS follows.
+
 Each taf's own part is a row on its Card tab (`TafUsageView`).
 
 **Buying in the app** (`Purchases`), through the App Store only:

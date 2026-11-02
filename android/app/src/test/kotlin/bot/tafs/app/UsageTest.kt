@@ -185,6 +185,22 @@ class UsageTest {
   private fun usageOf(json: String): Usage = KiffClient.json.decodeFromString(json)
   private val period = """"period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"}"""
 
+  @Test fun anEndedTrialSaysItEndedNotThatItsTasksAreUsedAndRunsNoPeriod() {
+    val now = java.time.Instant.parse("2026-11-02T00:00:00Z")
+    // As KIFF sends an ended trial today: no tasks on purpose, no packs counted, and its end in the past.
+    val ended = usageOf("""{"plan":"trial",$period,"tasks":{"counted":0,"included":0,"left":0,"packs":0},"can_add_tasks":true,"can_add_packs":false,"trial":{"ends_at":"2026-11-01T21:56:00Z","days_left":0,"tasks_left":0}}""")
+    assertEquals("Your trial has ended.", UsageWords.notice(ended, now))
+    assertTrue(UsageWords.trialEnded(ended, now))
+    assertTrue("no period line and no meter", UsageWords.noPeriod(ended, now))
+    val notStarted = usageOf("""{"plan":"trial",$period,"tasks":{"counted":0,"included":25,"left":25},"trial":{"days_left":0,"tasks_left":25}}""")
+    assertEquals("Your trial hasn't started.", UsageWords.notice(notStarted, now))
+    assertTrue(UsageWords.noPeriod(notStarted, now))
+    // A trial that runs, with its tasks used: that one says used, and runs its period.
+    val usedUp = usageOf("""{"plan":"trial",$period,"tasks":{"counted":25,"included":25,"left":0},"trial":{"ends_at":"2026-11-05T00:00:00Z","days_left":3,"tasks_left":0}}""")
+    assertEquals("Your trial's tasks are used. Your tafs are paused until tasks are added.", UsageWords.notice(usedUp, now))
+    assertFalse(UsageWords.noPeriod(usedUp, now))
+  }
+
   @Test fun packsAreOfferedOnlyWhileAPlanRunsAsKiffSays() {
     fun u(extra: String) = usageOf("""{"plan":"trial",$period,"tasks":{"counted":0},$extra}""")
     assertFalse(u(""""can_add_tasks":true,"can_add_packs":false""").packsOffered)

@@ -178,6 +178,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Fixed
 
+- **Android, an ended trial:** Usage says "Your trial has ended." (with "Start Solo to keep your
+  tafs running." where Solo is offered), not that its tasks are used, and shows no past period
+  end and no red meter.
+- **Android, New conversation:** never greyed out in Coach's menu. On an empty conversation it
+  keeps it; otherwise it opens a new one.
+
 - **Android, Solo's free trial only while Play offers it:** Play's offers are read again each
   time Usage shows and after every purchase, never kept from an earlier read, so a trial already
   used reads "€10.99 a month", not "Free for 1 week".

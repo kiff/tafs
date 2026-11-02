@@ -245,6 +245,10 @@ object CoachWords {
   fun improvable(state: bot.tafs.app.app.AppState): List<bot.tafs.app.model.Taf> =
     state.tafs.filter { it.cloudId != null && state.manages(it.id) }
 
+  /** Coach's conversation has nothing in it yet: new, or with no message, card or one on its way. New conversation keeps it. */
+  fun isEmptyChat(state: bot.tafs.app.app.AppState): Boolean =
+    state.coachFresh || (state.chatItems(bot.tafs.app.app.COACH_CHAT).isEmpty() && state.chatSent[bot.tafs.app.app.COACH_CHAT].isNullOrEmpty())
+
   const val ANSWERING = "Sending your answer…"
 
   /**
