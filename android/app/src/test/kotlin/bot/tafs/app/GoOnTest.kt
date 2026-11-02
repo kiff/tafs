@@ -9,6 +9,7 @@ import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Base64
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -98,6 +99,54 @@ class GoOnTest {
     assertFalse(m.state.value.aiUse!!.paused)
     assertFalse(m.state.value.goingOn)
     assertNull(m.state.value.goOnError)
+  }
+
+  @Test fun whileTheUseIsReadAfterAGoOnASecondTapSendsNothing() = runTest {
+    val m = model(paused)
+    transport.answer("PUT /v1/me/usage/ai", 200, "{}")
+    transport.answer("GET /v1/usage/ai", 200, goneOn)
+    transport.hold("GET /v1/usage/ai")
+    val first = launch { m.goOnAI() }
+    testScheduler.runCurrent()
+    // KIFF took it and the read hangs: still busy, so the button stays off and a second call does nothing.
+    assertTrue(m.state.value.goingOn)
+    assertFalse(m.goOnAI())
+    assertEquals(1, transport.requestsTo("PUT /v1/me/usage/ai").size)
+    assertEquals(1, auth.asked.size)
+    transport.release("GET /v1/usage/ai")
+    first.join()
+    assertFalse(m.state.value.goingOn)
+    assertFalse(m.state.value.aiUse!!.paused)
+  }
+
+  @Test fun aGoOnWhoseReadFailsSaysItWentOnAndOffersOnlyReadingAgain() = runTest {
+    val m = model(paused)
+    transport.answer("PUT /v1/me/usage/ai", 200, "{}")
+    transport.answer("GET /v1/usage/ai", 503, """{"error":"down"}""")
+    assertTrue("KIFF took it", m.goOnAI())
+    assertTrue(m.state.value.aiUseStale)
+    assertFalse(m.state.value.goingOn)
+    // What's shown is from before: no second go-on, no prompt, until the use is read.
+    assertFalse(m.goOnAI())
+    assertEquals(1, transport.requestsTo("PUT /v1/me/usage/ai").size)
+    assertEquals(1, auth.asked.size)
+    // A read that still fails keeps it stale; reading signs nothing.
+    transport.answer("GET /v1/usage/ai", 503, """{"error":"down"}""")
+    m.readAIUse()
+    assertTrue(m.state.value.aiUseStale)
+    // Plan & usage read again, still failing: stale too.
+    transport.answer("GET /v1/me/usage", 200, """{"plan":"solo","period":{"start":"2026-10-01T00:00:00Z","end":"2026-11-01T00:00:00Z"},"tasks":{"counted":1,"included":20,"packs":0,"left":19}}""")
+    transport.answer("GET /v1/me/usage/tasks", 200, """{"items":[]}""")
+    transport.answer("GET /v1/usage/ai", 503, """{"error":"down"}""")
+    m.refreshUsage()
+    assertTrue(m.state.value.aiUseStale)
+    // Read: the use as it is now, and no longer stale.
+    transport.answer("GET /v1/usage/ai", 200, goneOn)
+    m.readAIUse()
+    assertFalse(m.state.value.aiUseStale)
+    assertEquals(200, m.state.value.aiUse!!.asksAtPct)
+    assertEquals(1, auth.asked.size)
+    assertEquals(1, transport.requestsTo("PUT /v1/me/usage/ai").size)
   }
 
   @Test fun someoneWhoMayNotGoOnSendsNothing() = runTest {

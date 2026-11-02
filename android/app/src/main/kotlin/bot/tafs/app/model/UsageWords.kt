@@ -218,6 +218,9 @@ object UsageWords {
     return "Chats with your tafs and Setup are included. 100% is this month's fair use. $next It's never billed."
   }
 
+  /** After a go-on that went through, while AI use couldn't be read since: never a second Go on. */
+  const val WENT_ON_UNREAD = "Your tafs went on. This month's AI use couldn't be read since."
+
   const val AI_ASKING = "This month's AI use is high: your tafs ask before going on."
 
   // MARK: Asking an admin for tasks, as iOS's Usage says it

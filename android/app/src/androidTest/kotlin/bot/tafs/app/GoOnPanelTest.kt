@@ -26,7 +26,9 @@ class GoOnPanelTest {
 
   private var wentOn = 0
 
-  private fun show(ai: AIUse, readiness: ApprovalReadiness = ApprovalReadiness.Ready) = rule.setShown {
+  private var read = 0
+
+  private fun show(ai: AIUse, readiness: ApprovalReadiness = ApprovalReadiness.Ready, stale: Boolean = false) = rule.setShown {
     TafsTheme {
       ProvideApprovalReadiness(Mode.kiff, readiness, recheck = {}) {
         AIUsePanel(
@@ -63,5 +65,15 @@ class GoOnPanelTest {
     show(AIUse(100, 100, paused = true, canGoOn = true, words = "Your tafs wait for you."), ApprovalReadiness.NoneEnrolled)
     assertEquals(0, count("Go on with"))
     rule.onNodeWithText(ApprovalWords.cantApprove(ApprovalReadiness.NoneEnrolled)).assertIsDisplayed()
+  }
+
+  @Test fun afterAGoOnWhoseReadFailedOnlyReadingAgainIsOffered() {
+    show(AIUse(100, 100, paused = true, canGoOn = true, words = "Your tafs wait for you."), stale = true)
+    rule.onNodeWithText(bot.tafs.app.model.UsageWords.WENT_ON_UNREAD).assertIsDisplayed()
+    assertEquals("never a second Go on against the use from before", 0, count("Go on with"))
+    rule.onNodeWithText("Read it again").performClick()
+    rule.waitForIdle()
+    assertEquals(1, read)
+    assertEquals(0, wentOn)
   }
 }

@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalUriHandler
 import bot.tafs.app.billing.Purchases
 import bot.tafs.app.design.PrimaryButton
+import bot.tafs.app.design.OutlineButton
 import bot.tafs.app.design.LocalBiometry
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -142,7 +143,11 @@ fun AIUsePanel(ai: bot.tafs.app.kiff.AIUse, state: AppState, actions: AccountAct
       Text(UsageWords.aiExplain(ai.asksAtPct), style = scaled(13, color = Theme.soft))
       if (ai.paused) Text(UsageWords.AI_ASKING, style = scaled(15, color = Theme.ink))
     }
-    if (ai.offersGoOn) {
+    if (state.aiUseStale) {
+      // It went through; what's above is from before. Reading signs nothing, and no Go on until it's read.
+      Text(UsageWords.WENT_ON_UNREAD, style = scaled(15, color = Theme.ink))
+      OutlineButton(if (state.readingAIUse) "Reading…" else "Read it again", { scope.launch { actions.readAIUse() } }, Modifier.fillMaxWidth(), enabled = !state.readingAIUse)
+    } else if (ai.offersGoOn) {
       // Going on lets the tafs spend more, so it waits on the phone being able to approve, as on iOS. KIFF takes it signed by the
       // device key, once the person confirms.
       val biometry = LocalBiometry.current

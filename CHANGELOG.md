@@ -23,7 +23,9 @@ version headings refer to releases, not merely to merged pull requests.
   that read fails, it says the tafs went on and offers Read it again, never a second Go on.
 
 - **Android, Go on:** while the tafs wait past this period's AI use, the billing admin sees **Go
-  on** in Plan & usage's AI use. It asks once, then the phone's device key signs it for KIFF.
+  on** in Plan & usage's AI use. It asks once, then the phone's device key signs it for KIFF. If
+  AI use can't be read after it, it says the tafs went on and offers Read it again, never a second
+  Go on.
   Anyone else reads tafs cloud's words on who can, and when AI use starts again.
 - **Android, a taf shared with you:** its Card reads as issued by the account, by name, never
   "You"; that stays only for a taf you manage. Settings labels your own address "Signed in as".

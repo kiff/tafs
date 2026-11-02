@@ -249,6 +249,13 @@ data class AppState(
   val goingOn: Boolean = false,
   /** Why Go on didn't go through, under its button. */
   val goOnError: String? = null,
+  /**
+   * A go-on went through but AI use couldn't be read since: what's shown is from before it, so no Go on is offered (a second
+   * would raise the bound again), only Read it again, which signs nothing.
+   */
+  val aiUseStale: Boolean = false,
+  /** Read it again is on its way. */
+  val readingAIUse: Boolean = false,
   /** What this person may do with each KIFF agent, as KIFF says; empty until read, and then nothing is shown that needs it. */
   val access: Map<String, Access> = emptyMap(),
   /** Each taf's versions, oldest first, as tafs cloud keeps them; and why one couldn't be loaded or installed. */
@@ -4313,7 +4320,7 @@ class AppModel(
    * read again: tafs cloud says where the tafs ask next.
    */
   suspend fun goOnAI(): Boolean {
-    if (_state.value.mode != Mode.kiff || _state.value.goingOn || _state.value.aiUse?.offersGoOn != true) return false
+    if (_state.value.mode != Mode.kiff || _state.value.goingOn || _state.value.aiUseStale || _state.value.aiUse?.offersGoOn != true) return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
       _state.update { it.copy(goOnError = "Sign in with KIFF again: this sign-in can't sign for the phone.") }
@@ -4321,6 +4328,8 @@ class AppModel(
     }
     val generation = accountGeneration
     _state.update { it.copy(goingOn = true, goOnError = null) }
+    // Busy until AI use is read after KIFF took it: never a second tap against the use from before.
+    var sent = false
     try {
       signer.sign("tafs.ai-go-on.v1|$tenant".toByteArray(), "Let your tafs go on past this month's AI use")
       if (generation != accountGeneration) return false
@@ -4328,6 +4337,7 @@ class AppModel(
       val signer = signer
       kiff.setupSigner = { signer.signConfirmed(it) }
       kiff.goOnAI()
+      sent = true
     } catch (e: SignerException) {
       if (generation == accountGeneration) _state.update { it.copy(goOnError = notSigned(e, "Not done: it wasn't confirmed.")) }
       return false
@@ -4338,13 +4348,26 @@ class AppModel(
       return false
     } finally {
       kiff.setupSigner = null
-      if (generation == accountGeneration) _state.update { it.copy(goingOn = false) }
+      if (!sent && generation == accountGeneration) _state.update { it.copy(goingOn = false) }
     }
     if (generation != accountGeneration) return false
-    // KIFF has it: read again, so the panel says where the tafs ask next. A read that fails leaves the last one.
-    val ai = attempt { cloud.aiUse() }
-    if (generation == accountGeneration && ai != null) _state.update { it.copy(aiUse = ai) }
+    // KIFF has it: read again, so the panel says where the tafs ask next. A read that fails marks what's shown stale.
+    val ai = try {
+      attempt { cloud.aiUse() }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(goingOn = false) }
+    }
+    if (generation == accountGeneration) _state.update { if (ai != null) it.copy(aiUse = ai, aiUseStale = false) else it.copy(aiUseStale = true) }
     return true
+  }
+
+  /** Read it again, after a go-on whose read failed: reads AI use and nothing else. Signs nothing. */
+  suspend fun readAIUse() {
+    if (_state.value.mode != Mode.kiff || _state.value.readingAIUse) return
+    val generation = accountGeneration
+    _state.update { it.copy(readingAIUse = true) }
+    val ai = try { attempt { cloud.aiUse() } } finally { if (generation == accountGeneration) _state.update { it.copy(readingAIUse = false) } }
+    if (generation == accountGeneration && ai != null) _state.update { it.copy(aiUse = ai, aiUseStale = false) }
   }
 
   suspend fun refreshUsage() {
@@ -4362,7 +4385,11 @@ class AppModel(
           // AI use is tafs cloud's; the rest of the screen doesn't wait on it.
           val ai = attempt { cloud.aiUse() }
           if (generation != accountGeneration) return
-          _state.update { it.copy(usage = read, countedTasks = page?.items.orEmpty(), usageError = null, aiUse = ai) }
+          // A use that couldn't be read keeps the stale mark, so Go on stays off until one is read.
+          _state.update {
+            val stale = it.aiUseStale && ai == null
+            it.copy(usage = read, countedTasks = page?.items.orEmpty(), usageError = null, aiUse = ai ?: if (stale) it.aiUse else null, aiUseStale = stale)
+          }
           loadStore()
         } catch (e: CancellationException) {
           throw e
