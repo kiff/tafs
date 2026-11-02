@@ -175,6 +175,11 @@ of the account can let the tafs go on, and the day the AI use starts again by it
 (`starts_again`, the period's end), named by role, never by email. A chat refused for AI use
 says the same in its `words`, so its words point to Go on or to whoever can.
 
+On Android, AI use is in Plan & usage (`AIUsePanel`), with tafs cloud's `words` as they are.
+Go on is the approval key's (`AppModel.goOnAI`), so while the phone can't approve, its state
+stands in the button's place ([approvals.md](approvals.md#set-up-approvals-on-this-device)).
+After it, AI use is read again. A chat refused for AI use shows its `words` and has no button.
+
 ## The account's time zone
 
 Every time the app shows is in the account's time zone (`AccountTime`), and a Card's day
