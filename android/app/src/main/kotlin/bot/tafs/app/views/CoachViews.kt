@@ -75,7 +75,9 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
   }
   Column(Modifier.fillMaxSize().statusBarsPadding()) {
     val started = state.mayUseCoach && state.coachChecked && state.coachCloudId != null
-    if (started) CoachHeader(state, chats, onBack) else BackBar(onBack)
+    // New conversation always does something: on a conversation with nothing in it yet, it stays there and shows its top.
+    val newChat = { if (CoachWords.isEmptyChat(state)) folded = false else chats.newChat() }
+    if (started) CoachHeader(state, chats, newChat, onBack) else BackBar(onBack)
     when {
       !state.mayUseCoach -> Note(CoachWords.NOT_ALLOWED)
       !state.coachChecked -> Row(Modifier.fillMaxWidth().padding(24.dp), horizontalArrangement = Arrangement.Center) {
@@ -97,7 +99,7 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
 
 /** Coach's header, one row: back, its name, and a menu with a new conversation and the earlier ones. */
 @Composable
-private fun CoachHeader(state: AppState, chats: CoachChatActions, onBack: () -> Unit) {
+private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () -> Unit, onBack: () -> Unit) {
   var menu by remember { mutableStateOf(false) }
   var listing by remember { mutableStateOf(false) }
   Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -114,10 +116,10 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onBack: () -> 
         modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = "Coach's conversations") { menu = true }.padding(top = 6.dp, start = 12.dp),
       )
       androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+        // Never greyed out, as in other chat apps: an empty conversation is kept, any other gives way to a new one.
         androidx.compose.material3.DropdownMenuItem(
-          text = { Text("New conversation", style = scaled(15, color = if (state.coachFresh) Theme.dim else Theme.ink)) },
-          enabled = !state.coachFresh,
-          onClick = { menu = false; chats.newChat() },
+          text = { Text("New conversation", style = scaled(15, color = Theme.ink)) },
+          onClick = { menu = false; onNewChat() },
         )
         androidx.compose.material3.DropdownMenuItem(
           text = { Text("Previous conversations", style = scaled(15, color = Theme.ink)) },

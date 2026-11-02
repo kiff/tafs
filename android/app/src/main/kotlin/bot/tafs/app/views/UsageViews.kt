@@ -67,7 +67,15 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
     val why = state.usageError
     if (read && usage != null) {
       TasksPanel(usage)
-      UsageWords.notice(usage)?.let { Panel { Text(it, style = scaled(15, color = Theme.ink)) } }
+      UsageWords.notice(usage)?.let { notice ->
+        Panel {
+          Text(notice, style = scaled(15, color = Theme.ink))
+          // An ended trial: Solo keeps the tafs running, said only where Solo is offered.
+          if (UsageWords.trialEnded(usage) && state.offersPurchases && UsageWords.offersSolo(usage)) {
+            Text(UsageWords.START_SOLO, style = scaled(14, color = Theme.soft))
+          }
+        }
+      }
       if (state.mode == Mode.kiff) UsageWords.billingLine(usage)?.let { line ->
         Panel {
           Text(line, style = scaled(15, color = Theme.ink))
@@ -258,11 +266,13 @@ private fun TasksPanel(u: Usage) {
       UsageWords.count(u.tasks.counted, if (u.tasks.left == null) 0 else u.tasks.total, "tasks"),
       style = scaled(26, FontWeight.Bold, Theme.ink, display = true),
     )
-    if (u.tasks.left != null && u.tasks.total > 0) {
+    // A trial that hasn't started or has ended runs no period: no meter, nothing in red, and no end date (it would be past).
+    val running = !UsageWords.noPeriod(u)
+    if (running && u.tasks.left != null && u.tasks.total > 0) {
       Meter(u.tasks.counted.toDouble() / u.tasks.total, if (u.tasks.usedUp) Theme.no else Theme.ok)
     }
-    UsageWords.leftLine(u)?.let { Text(it, style = scaled(15, FontWeight.SemiBold, if (u.tasks.usedUp) Theme.no else Theme.ink)) }
-    Text(UsageWords.periodEnds(u.period.end), style = scaled(13, color = Theme.soft))
+    UsageWords.leftLine(u)?.let { Text(it, style = scaled(15, FontWeight.SemiBold, if (running && u.tasks.usedUp) Theme.no else Theme.ink)) }
+    if (running) Text(UsageWords.periodEnds(u.period.end), style = scaled(13, color = Theme.soft))
   }
 }
 

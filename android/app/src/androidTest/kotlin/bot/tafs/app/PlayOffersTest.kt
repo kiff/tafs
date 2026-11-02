@@ -87,7 +87,7 @@ class PlayOffersTest {
   @Test fun beforeOrAfterATrialOnlySoloIsOfferedAndHeldPacksWaitForIt() {
     val ended = KiffClient.json.decodeFromString<Usage>(
       """{"plan":"trial","period":{"start":"2026-11-01T00:00:00Z","end":"2026-12-01T00:00:00Z"},"can_add_tasks":true,"can_add_packs":false,"billing":{"source":""},
-      "tasks":{"counted":0,"included":0,"left":0,"packs":0},
+      "tasks":{"counted":0,"included":0,"left":0,"packs":0},"trial":{"ends_at":"2026-11-01T21:56:00Z","days_left":0,"tasks_left":0},
       "pack_list":[{"id":"pk_1","name":"Pico","tasks":12,"tasks_left":12,"expires_at":"2027-11-01T00:00:00Z"}],
       "store":{"app_account_token":"acct_1","google_solo_product":"solo_monthly",
         "packs":[{"id":"rayo","name":"Rayo","line":"Rayo · 70 tasks","tasks":70,"months":12,"google_product":"pack_rayo"}]}}""",
@@ -104,6 +104,11 @@ class PlayOffersTest {
     rule.onNodeWithText("Start Solo").performScrollTo().assertIsDisplayed()
     assertEquals("no pack offered", 0, rule.onAllNodesWithTextCount("Rayo · 70 tasks"))
     rule.onNodeWithText(bot.tafs.app.model.UsageWords.PACKS_WAIT_FOR_SOLO).performScrollTo().assertIsDisplayed()
+    // Ended: said so, with Solo to keep the tafs running; no period line (its date would be past).
+    rule.onNodeWithText("Your trial has ended.").performScrollTo().assertIsDisplayed()
+    rule.onNodeWithText(bot.tafs.app.model.UsageWords.START_SOLO).assertIsDisplayed()
+    assertEquals(0, rule.onAllNodes(androidx.compose.ui.test.hasText("This period ends", substring = true)).fetchSemanticsNodes().size)
+    assertEquals(0, rule.onAllNodesWithTextCount("Your trial's tasks are used. Your tafs are paused until tasks are added."))
   }
 
   @Test fun nothingIsOfferedUntilKiffNamesPlaysProducts() {

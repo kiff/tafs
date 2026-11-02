@@ -114,7 +114,19 @@ object UsageWords {
   fun packLeft(p: UsagePack): String = "${p.tasksLeft} of ${p.tasks} left" + (p.expiresAt?.let { ", until ${shownDate(it)}" } ?: "")
 
   /** What the account should know now: tasks used up, an ended trial, or what is left of it. Null when there is nothing to say. */
-  fun notice(u: Usage): String? {
+  /** A trial whose end has passed, Solo lapsed included: KIFF gives it no tasks (`left: 0`), and nothing was used up. */
+  fun trialEnded(u: Usage, now: Instant = Instant.now()): Boolean = u.plan == "trial" && u.trial?.endsAt?.let { it <= now } == true
+
+  /** No period runs: a trial that hasn't started or has ended. No period line and no meter then. */
+  fun noPeriod(u: Usage, now: Instant = Instant.now()): Boolean = u.plan == "trial" && (u.trial?.endsAt == null || trialEnded(u, now))
+
+  /** Under an ended trial's notice, where Solo is offered. */
+  const val START_SOLO = "Start Solo to keep your tafs running."
+
+  fun notice(u: Usage, now: Instant = Instant.now()): String? {
+    // Before used-up: an ended trial has left 0 by design, though nothing was used.
+    if (trialEnded(u, now)) return "Your trial has ended."
+    if (u.plan == "trial" && u.trial != null && u.trial.endsAt == null) return "Your trial hasn't started."
     if (u.tasks.usedUp) {
       return if (u.plan == "trial") "Your trial's tasks are used. Your tafs are paused until tasks are added."
       else "This period's tasks are used. Your tafs are paused until tasks are added or the next period starts."

@@ -1,5 +1,7 @@
 package bot.tafs.app
 
+import org.junit.Assert.assertEquals
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -131,6 +133,39 @@ class CoachScreenTest {
     rule.onNodeWithText("New conversation").assertIsDisplayed()
     rule.onNodeWithText("Previous conversations").assertIsDisplayed()
     hold()
+  }
+
+  @Test fun newConversationIsAlwaysEnabledAndOpensANewOneFromAConversationWithMessages() {
+    var opened = 0
+    rule.setShown {
+      TafsTheme {
+        CompositionLocalProvider(LocalBiometry provides "your fingerprint") {
+          CoachScreen(state(null), actions, loadCoach = {}, onBack = {}, chats = bot.tafs.app.views.CoachChatActions(newChat = { opened += 1 }))
+        }
+      }
+    }
+    rule.onNodeWithText("⋯").performClick()
+    rule.onNodeWithText("New conversation").assertIsEnabled().performClick()
+    rule.waitForIdle()
+    assertEquals(1, opened)
+  }
+
+  @Test fun onAnEmptyConversationNewConversationIsEnabledAndKeepsIt() {
+    var opened = 0
+    val empty = state(null).copy(coachFresh = true, coachChat = null, coachComponents = emptyList(), chats = emptyMap())
+    rule.setShown {
+      TafsTheme {
+        CompositionLocalProvider(LocalBiometry provides "your fingerprint") {
+          CoachScreen(empty, actions, loadCoach = {}, onBack = {}, chats = bot.tafs.app.views.CoachChatActions(newChat = { opened += 1 }))
+        }
+      }
+    }
+    rule.onNodeWithText("⋯").performClick()
+    // Never greyed out: a tap is never dead. The empty conversation stays, and no other is opened.
+    rule.onNodeWithText("New conversation").assertIsEnabled().performClick()
+    rule.waitForIdle()
+    assertEquals(0, opened)
+    rule.onNodeWithText("Coach").assertIsDisplayed()
   }
 
   @Test fun theLiveLineIsTafsCloudsAndNoThinkingTextShows() {
