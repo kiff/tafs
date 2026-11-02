@@ -166,6 +166,14 @@ enrolled phone. Each signature names this device's id in KIFF (`d=`), which plan
 with KIFF. The id is the signed-in account's: Android reads it again after any sign-in or
 sign-out, so after switching accounts planque never gets the last account's device.
 
+### Connect apps
+
+Settings › **Connect apps** lists the apps tafs cloud offers (`GET /v1/connect/apps`, with a
+search): the reviewed catalog first, then KIFF's own apps for Google, Microsoft and Slack. Each
+says whether it's connected, or needs signing in again, as tafs cloud sends it. **Not listed?
+Ask Coach** opens Coach, which can connect an app that isn't listed from its own docs. On
+Android, the list reads and searches; starting a connection from it comes next.
+
 ### KIFF's words for a connection (KIFF's profile contract)
 
 A connection can carry a **profile**: KIFF's facts about how each of its tools is counted and

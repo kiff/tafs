@@ -1,0 +1,49 @@
+package bot.tafs.app
+
+import bot.tafs.app.app.AppModel
+import bot.tafs.app.kiff.InMemorySecretStore
+import java.time.Instant
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/** Connect apps: tafs cloud's list (the knob API), read for a search, and said in words when it can't be read. */
+class ConnectAppsTest {
+  private val transport = FakeTransport()
+  private val secrets = InMemorySecretStore()
+  private val apps = "GET /v1/connect/apps"
+
+  private suspend fun model(): AppModel {
+    transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","tenant_display_name":"Acme Pay"}""")
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    secrets.save("at_1", AppModel.TOKEN)
+    secrets.save("t_01", AppModel.TENANT)
+    secrets.save("1", AppModel.KEYED)
+    return testModel(transport = transport, secrets = secrets, clock = { Instant.parse("2026-11-02T21:00:00Z") }, start = false).also { it.restore() }
+  }
+
+  @Test fun theListIsTafsCloudsInItsOrderAndASearchIsSentAsTyped() = runTest {
+    val m = model()
+    transport.answer(apps, 200, """{"apps":[{"entry":"notion@1","vendor":"Notion","title":"Notion","state":"available"},{"entry":"stripe@1","vendor":"Stripe","title":"Stripe","state":"connected","grant":"g1"}],"by_key":true}""")
+    m.loadConnectApps()
+    assertEquals("https://cloud.tafs.kiff.dev/v1/connect/apps", transport.requestsTo(apps).single().url)
+    assertEquals(listOf("Notion", "Stripe"), m.state.value.connectApps!!.apps.map { it.title })
+    assertTrue(m.state.value.connectApps!!.byKey)
+    transport.answer(apps, 200, """{"apps":[{"entry":"google","vendor":"Google","title":"Google Sheets","state":"available"}],"by_key":true}""")
+    m.loadConnectApps("google sheets")
+    assertEquals("https://cloud.tafs.kiff.dev/v1/connect/apps?q=google%20sheets", transport.requestsTo(apps).last().url)
+    assertEquals(listOf("Google Sheets"), m.state.value.connectApps!!.apps.map { it.title })
+    assertNull(m.state.value.connectAppsError)
+  }
+
+  @Test fun aListThatCantBeReadIsSaidInWords() = runTest {
+    val m = model()
+    transport.answer(apps, 503, """{"error":"down"}""")
+    m.loadConnectApps()
+    assertTrue(m.state.value.connectAppsError!!.startsWith("The apps couldn't be read."))
+  }
+}

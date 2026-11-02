@@ -11,6 +11,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, Connect apps:** Settings lists the apps tafs cloud offers, searchable, each saying
+  whether it's connected; an app nobody listed goes to Coach.
 - **Android, KIFF's words for a connection:** a connection that carries its profile shows
   KIFF's words for it on the approval card, read from KIFF and checked against their digests,
   and the approval signs both. Approve waits until they're shown.

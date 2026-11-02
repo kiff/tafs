@@ -57,6 +57,7 @@ fun SettingsSheet(
   onTurnOnAlerts: () -> Unit,
   onAlertSound: (Boolean) -> Unit,
   onDevices: () -> Unit,
+  onConnectApps: () -> Unit = {},
   onPeople: () -> Unit,
   onUseDeviceZone: () -> Unit,
   onDeleteAccount: () -> Unit,
@@ -114,6 +115,8 @@ fun SettingsSheet(
           // The account's groups and who is in each.
           if (state.mode == Mode.kiff) Action("People & groups", Theme.ink, onPeople)
           if (state.mode == Mode.kiff) Action("Devices", Theme.ink, onDevices)
+          // The apps the account's tafs work with: the catalog, and what's connected.
+          if (state.mode == Mode.kiff) Action(ConnectAppsWords.TITLE, Theme.ink, onConnectApps)
           // Their own chats and notes, for their rights of access and portability (docs/data.md).
           if (state.mode == Mode.kiff) ExportChatsRow(onExport)
           // Another account this person is on: KIFF's sign-in page lists each one. This session ends at KIFF first, as Sign out's

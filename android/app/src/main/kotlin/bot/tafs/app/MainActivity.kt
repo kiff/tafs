@@ -280,6 +280,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
+  var showingConnectApps by rememberSaveable { mutableStateOf(false) }
   var showingPeople by rememberSaveable { mutableStateOf(false) }
   // The Halt screen, of one taf or (with none) of every taf; and Usage, the account's or one taf's.
   var haltOpen by rememberSaveable { mutableStateOf(false) }
@@ -534,6 +535,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onTurnOnAlerts = { scope.launch { model.turnOnAlerts() } },
         onAlertSound = model::setAlertSound,
         onDevices = { showingSettings = false; showingDevices = true },
+        onConnectApps = { showingSettings = false; showingConnectApps = true },
         onPeople = { showingSettings = false; showingPeople = true },
         onUseDeviceZone = { scope.launch { model.useThisDevicesTimeZone() } },
         onDeleteAccount = { showingSettings = false; deletingAccount = true },
@@ -544,6 +546,14 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
       DevicesSheet(state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { showingDevices = false })
+    }
+    if (showingConnectApps) {
+      // Connect waits on how a connection started here is approved; until then the list shows what's connected.
+      bot.tafs.app.views.ConnectAppsSheet(
+        state, load = model::loadConnectApps, onConnect = null,
+        onAskCoach = { showingConnectApps = false; coachOpen = true },
+        onClose = { showingConnectApps = false },
+      )
     }
     if (deletingAccount) {
       DeleteAccountSheet(state, delete = model::deleteAccount, clearError = model::clearDeleteAccountError, onClose = { deletingAccount = false })

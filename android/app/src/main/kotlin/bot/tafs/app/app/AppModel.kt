@@ -316,6 +316,10 @@ data class AppState(
   val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
+  /** Connect apps: the catalog as tafs cloud lists it, for the last search; null before it's read. */
+  val connectApps: bot.tafs.app.kiff.ConnectApps? = null,
+  /** Why Connect apps couldn't be read. */
+  val connectAppsError: String? = null,
   /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
   val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
@@ -2191,6 +2195,20 @@ class AppModel(
    * grant. [shownDigest] is the grant's digest as the owner's screen showed it, and [shownDraft] the draft's version: the
    * confirmation signs exactly that. Terms that changed since are put on screen and not signed; nothing shown, nothing signed.
    */
+  /** Connect apps: tafs cloud's list, the catalog first, for [q] when given. The sample has none. */
+  suspend fun loadConnectApps(q: String? = null) {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    try {
+      val apps = cloud.connectApps(q)
+      if (generation == accountGeneration) _state.update { it.copy(connectApps = apps, connectAppsError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "The apps couldn't be read. ${ErrorWords.of(e)}") }
+    }
+  }
+
   /**
    * KIFF's words for [grantId]'s profile (KIFF's profile contract, `kiff.words.v1`), read with this person's session and checked against their digests, so
    * the card shows them before any approval. Nothing is read for a grant with no profile.
