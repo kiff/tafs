@@ -11,6 +11,12 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Setup, for any vendor:** its rules name roles, not one payments vendor's tools: the
+  argument a call acts on, the read that says its unit, money in its own units, test or live when
+  the vendor has both. A vendor with a REST API and no MCP server is connected by its key, which
+  the owner gives on the phone, never in the chat. A plan step can name the call it waits on, and
+  is done only once that call went through.
+
 - **iPhone and iPad, an empty home for someone a taf is shared with:** "Tafs shared with you show
   here." Only someone who may use Coach reads "Connect a tool to set up your first taf".
 
