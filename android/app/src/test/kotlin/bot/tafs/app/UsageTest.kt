@@ -247,7 +247,9 @@ class UsageTest {
       "This period's tasks are used. Your tafs are paused until tasks are added or the next period starts.",
       UsageWords.notice(usageOf("""{"plan":"team",$period,"tasks":{"counted":25,"included":25,"left":0}}""")),
     )
-    fun trial(json: String) = UsageWords.notice(usageOf("""{"plan":"trial",$period,"tasks":{"counted":14,"included":25,"left":11},"trial":$json}"""))
+    // A fixed now: the trials below end on 2 Nov 2026, so the real clock would end them.
+    val now = java.time.Instant.parse("2026-10-28T00:00:00Z")
+    fun trial(json: String) = UsageWords.notice(usageOf("""{"plan":"trial",$period,"tasks":{"counted":14,"included":25,"left":11},"trial":$json}"""), now)
     assertEquals("Your trial: 5 days and 11 tasks left.", trial("""{"ends_at":"2026-11-02T00:00:00Z","days_left":5,"tasks_left":11}"""))
     assertEquals("Your trial: 1 day and 11 tasks left.", trial("""{"ends_at":"2026-11-02T00:00:00Z","days_left":1,"tasks_left":11}"""))
     assertEquals("Your trial has ended.", trial("""{"ends_at":"2026-10-20T00:00:00Z","days_left":0,"tasks_left":11}"""))
