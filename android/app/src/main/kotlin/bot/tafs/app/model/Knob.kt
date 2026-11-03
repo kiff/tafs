@@ -37,13 +37,9 @@ data class KnobStop(
   val about: String,
   /** Its one choice's value now ("09:00"), when it has one for − and +. */
   val size: String? = null,
+  /** A door stop's look, as tafs cloud sends it: open (its arc lit), closed (dashed), resting (grey) or knock (amber). */
+  val look: String? = null,
 )
-
-/**
- * A door's look on its When stop, from the taf's doors: its arc lit when open, dashed when closed, grey when resting, amber
- * while a knock waits, and a light for a moment when a message arrives.
- */
-data class DoorLook(val open: Boolean, val resting: Boolean = false, val knocking: Boolean = false, val arrived: Boolean = false)
 
 /** Today's work around the rim, as counts: done, working, retrying, and waiting on the owner. */
 data class KnobRim(val done: Int = 0, val working: Int = 0, val retrying: Int = 0, val needsYou: Int = 0) {
@@ -68,7 +64,9 @@ object KnobWords {
   const val CAPTION = "When starts it, What it does in order, Where the result goes."
   const val ASK_COACH = "Ask Coach"
   const val ASK_COACH_TO_CHANGE = "Ask Coach to change"
-  const val SET_UP_BY_COACH = "Coach set this up"
+  const val TAP_A_RING = "Tap a ring"
+  const val USE_SIZE = "Use − and +"
+  const val BACK_TO_WHY = "‹ Why"
   const val BACK = "Back"
   const val LOWER = "Lower"
   const val PAUSE = "Pause"
@@ -77,7 +75,8 @@ object KnobWords {
   const val NEXT = "Next"
   const val DRAFT = "The dial Coach drafted"
   const val READING_DRAFT = "Reading the dial Coach drafted…"
-  const val REPLACED = "This dial was replaced by a newer one."
+  const val REPLACED = "A newer dial replaced this one."
+  const val LIVE = "This dial is live."
   const val CHANGE = "Change"
   const val ONE_CONFIRMATION = "One confirmation sets all three rings."
 
@@ -90,6 +89,12 @@ object KnobWords {
   /** The changes collected from − and +, made live in one switch: "Make 2 changes live with your fingerprint". */
   fun makeLive(changes: Int, biometry: String): String =
     "Make ${if (changes == 1) "1 change" else "$changes changes"} live with $biometry"
+
+  /** Over the dial while a change waits to go live: "DRAFT · V9 · NOT LIVE". */
+  fun notLive(version: Int): String = "DRAFT · V$version · NOT LIVE"
+
+  /** A connection in "Showing ▾", with its stops: "Slack · 2 stops". */
+  fun withStops(name: String, stops: Int): String = "$name · $stops ${if (stops == 1) "stop" else "stops"}"
 
   /** The face's top line for a chosen stop: "WHEN · SLACK". */
   fun chosen(ring: KnobRing, stop: KnobStop): String = "${ring.name} · ${stop.label}".uppercase()

@@ -70,8 +70,9 @@ object KnobColors {
 
 /**
  * The taf's dial, as settled: the face holds its Why, and When, What and Where ring it, inside to out, each with its stops from
- * the top, clockwise. The rim counts today's work. Tap a word to choose it: its ring keeps its colour, the other two dim, and the
- * face says what it is. Pressing the face is OK, the chosen stop's one action.
+ * the top, clockwise. The rim counts today's work. Tap a word to choose it: its ring turns it under the pointer at the top and
+ * keeps its colour, the other two dim, and the face says what it is. A ring past six stops shows the six that hold the chosen one.
+ * Pressing the face is OK: the chosen stop's one action, or, with nothing chosen, the first stop.
  */
 @Composable
 fun TafKnob(
@@ -80,16 +81,29 @@ fun TafKnob(
   onChoose: (KnobRing.Kind, String) -> Unit,
   onFace: () -> Unit,
   modifier: Modifier = Modifier,
-  /** Each door stop's look on When, by stop id. */
-  doors: Map<String, bot.tafs.app.model.DoorLook> = emptyMap(),
+  /** Door stops a message just arrived at, by stop id: each glows for a moment. */
+  arrived: Set<String> = emptySet(),
 ) {
   val chosen = (face as? KnobFace.Chosen)
   // A message just arrived at a door: its light, for a moment.
-  val glow = if (doors.values.any { it.arrived }) {
+  val glow = if (arrived.isNotEmpty()) {
     androidx.compose.animation.core.rememberInfiniteTransition(label = "arrival").animateFloat(
       0.15f, 0.55f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(700), androidx.compose.animation.core.RepeatMode.Reverse), label = "light",
     ).value
   } else 0f
+  // Each ring: the stops it shows (one page of them), and its turn, which puts the chosen stop under the pointer.
+  val rings = knob.rings.take(3).map { ring ->
+    val index = if (chosen?.ring?.kind == ring.kind) ring.stops.indexOfFirst { it.id == chosen.stop.id } else -1
+    val page = bot.tafs.app.model.DialMath.page(index)
+    val shown = ring.stops.drop(page * bot.tafs.app.model.DialMath.PAGE).take(bot.tafs.app.model.DialMath.PAGE)
+    val target = bot.tafs.app.model.DialMath.ringTurn(if (index < 0) 0 else index % bot.tafs.app.model.DialMath.PAGE, shown.size)
+    // The short way round from where it stands.
+    val turn = androidx.compose.runtime.remember(ring.kind) { androidx.compose.animation.core.Animatable(0f) }
+    androidx.compose.runtime.LaunchedEffect(ring.kind, target) {
+      turn.animateTo(turn.value + bot.tafs.app.model.DialMath.delta(turn.value.toDouble(), target).toFloat(), androidx.compose.animation.core.tween(260))
+    }
+    Triple(ring, shown, turn.value.toDouble())
+  }
   BoxWithConstraints(modifier.fillMaxWidth().aspectRatio(1f)) {
     val px = with(LocalDensity.current) { maxWidth.toPx() }
     // The design is drawn on a 360 grid; everything scales from it.
@@ -106,31 +120,31 @@ fun TafKnob(
         drawCircle(Theme.ink.copy(alpha = 0.08f), outer * u, c, style = Stroke(1f))
         drawCircle(Theme.ink.copy(alpha = 0.08f), inner * u, c, style = Stroke(1f))
       }
-      // Each door on When: its arc on the ring's outer edge, under its word.
-      knob.rings.firstOrNull { it.kind == KnobRing.Kind.WakesIt }?.let { ring ->
+      // Each door on When: its arc on the ring's outer edge, under its word, as tafs cloud says it looks.
+      rings.firstOrNull { it.first.kind == KnobRing.Kind.WakesIt }?.let { (_, shown, turn) ->
         val r = 104f * u
-        val span = (360f / ring.stops.size.coerceAtLeast(1) * 0.7f).coerceAtMost(48f)
-        ring.stops.forEachIndexed { j, stop ->
-          val look = doors[stop.id] ?: return@forEachIndexed
-          val at = -90f + j * 360f / ring.stops.size
-          val color = when {
-            look.knocking -> KnobColors.needsYou
-            look.resting -> Theme.dim
-            look.open -> KnobColors.wakesIt
+        val span = (360f / shown.size.coerceAtLeast(1) * 0.7f).coerceAtMost(48f)
+        shown.forEachIndexed { j, stop ->
+          val look = stop.look ?: return@forEachIndexed
+          val at = (-90.0 + j * 360.0 / shown.size + turn).toFloat()
+          val color = when (look) {
+            "knock" -> KnobColors.needsYou
+            "resting" -> Theme.dim
+            "open" -> KnobColors.wakesIt
             else -> Theme.ink.copy(alpha = 0.25f)
           }
           drawArc(
             color, at - span / 2, span, false, topLeft = c - Offset(r, r), size = Size(r * 2, r * 2),
             style = Stroke(
-              (if (look.open || look.knocking) 3.5f else 2f) * u,
+              (if (look == "open" || look == "knock") 3.5f else 2f) * u,
               cap = androidx.compose.ui.graphics.StrokeCap.Round,
-              pathEffect = if (look.open || look.knocking || look.resting) null else androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(3f * u, 5f * u)),
+              pathEffect = if (look == "closed") androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(3f * u, 5f * u)) else null,
             ),
           )
           val a = Math.toRadians(at.toDouble())
           val p = c + Offset(cos(a).toFloat(), sin(a).toFloat()) * r
-          if (look.arrived) drawCircle(KnobColors.wakesIt.copy(alpha = glow), 9f * u, p)
-          if (look.knocking) drawCircle(KnobColors.needsYou, 3.5f * u, p)
+          if (stop.id in arrived) drawCircle(KnobColors.wakesIt.copy(alpha = glow), 9f * u, p)
+          if (look == "knock") drawCircle(KnobColors.needsYou, 3.5f * u, p)
         }
       }
       // The rim: today's work, done to needs you, clockwise from the top.
@@ -147,21 +161,29 @@ fun TafKnob(
             at += sweep
           }
       }
+      // The pointer at the top: the chosen stop turns under it.
+      val tip = androidx.compose.ui.graphics.Path().apply {
+        moveTo(c.x - 6f * u, c.y - 180f * u)
+        lineTo(c.x + 6f * u, c.y - 180f * u)
+        lineTo(c.x, c.y - 171f * u)
+        close()
+      }
+      drawPath(tip, Theme.ink)
       // The face.
       drawCircle(Brush.radialGradient(listOf(Color.White, Theme.raised), center = c - Offset(0f, 30f * u), radius = 90f * u), 64f * u, c)
       drawCircle(Theme.ink.copy(alpha = 0.10f), 64f * u, c, style = Stroke(1f))
     }
-    // Each ring's words, from the top, clockwise.
-    knob.rings.take(3).forEachIndexed { i, ring ->
+    // Each ring's words, from the top, clockwise, turned with their ring.
+    rings.forEachIndexed { i, (ring, shown, turn) ->
       val (inner, outer) = bands[i]
       val mid = (inner + outer) / 2 * u
       val color = KnobColors.of(ring.kind)
       val dim = chosen != null && chosen.ring.kind != ring.kind
-      ring.stops.forEachIndexed { j, stop ->
-        val fromTop = j * 360.0 / ring.stops.size
+      shown.forEachIndexed { j, stop ->
+        val fromTop = j * 360.0 / shown.size + turn
         val a = (-90 + fromTop) * PI / 180
         // Along the ring, and always upright: the lower half turns half a turn more.
-        val turn = bot.tafs.app.model.DialMath.upright(fromTop).toFloat()
+        val upright = bot.tafs.app.model.DialMath.upright(fromTop).toFloat()
         val isChosen = chosen?.ring?.kind == ring.kind && chosen.stop.id == stop.id
         val tint = when {
           isChosen -> color
@@ -175,7 +197,7 @@ fun TafKnob(
           softWrap = false,
           modifier = Modifier
             .centerAt(c.x + cos(a).toFloat() * mid, c.y + sin(a).toFloat() * mid)
-            .graphicsLayer { rotationZ = turn }
+            .graphicsLayer { rotationZ = upright }
             .alpha(if (dim) 0.45f else 1f)
             .heightIn(min = 32.dp)
             .clip(CircleShape)
@@ -191,14 +213,17 @@ fun TafKnob(
     }
     // The face: what it shows, and what a tap there does.
     val (top, big, tap, bigColor) = when (face) {
-      KnobFace.Overview -> Quad(KnobWords.WHY, knob.does, null, Theme.ink)
-      is KnobFace.Chosen -> Quad(KnobWords.chosen(face.ring, face.stop), face.stop.state ?: face.stop.size ?: face.stop.label, face.stop.tap, KnobColors.of(face.ring.kind))
+      KnobFace.Overview -> Quad(KnobWords.WHY, knob.does, KnobWords.TAP_A_RING.takeIf { knob.stops.isNotEmpty() }, Theme.ink)
+      is KnobFace.Chosen -> Quad(
+        KnobWords.chosen(face.ring, face.stop), face.stop.state ?: face.stop.size ?: face.stop.label,
+        face.stop.tap ?: if (face.stop.size != null) KnobWords.USE_SIZE else KnobWords.ASK_COACH_TO_CHANGE, KnobColors.of(face.ring.kind),
+      )
       is KnobFace.Held -> Quad(KnobWords.heldTop(face.call), face.call.proposed.amount?.figure ?: "", KnobWords.APPROVE_ONCE, KnobColors.heldAmount)
     }
     Box(
       Modifier.centerAt(c.x, c.y).size((128 * u / LocalDensity.current.density).dp).clip(CircleShape)
         .semantics { contentDescription = listOfNotNull(top, big, tap).joinToString(", ") }
-        .let { m -> if (face == KnobFace.Overview) m else m.clickable(onClick = onFace).semantics { onClick(label = tap) { onFace(); true } } },
+        .clickable(onClick = onFace).semantics { onClick(label = tap) { onFace(); true } },
       contentAlignment = Alignment.Center,
     ) {
       Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -226,12 +251,13 @@ private fun Modifier.centerAt(x: Float, y: Float): Modifier = layout { measurabl
 /**
  * The settled dial in a taf's Doors tab: Coach builds it, and this only shows it, with a remote's controls.
  * - Above it: "Ask Coach or find anything", and "Showing ▾" (All services, This taf, each connection) to see one input's stops.
- * - The dial: tap a word to choose its stop. Pressing the face is OK, the stop's one action: open or close a door, run now,
- *   remove a follow-up, approve a held call.
+ * - The dial: tap a word to choose its stop; "‹ Why" goes back to the Why. Pressing the face is OK, the stop's one action as
+ *   tafs cloud names it (`ok`: open or close a door, run once, remove a follow-up, Coach), or approve a held call.
  * - The remote: ◀ ▶ step through the stops, − + move the chosen stop's one size (its choice's setting, read back as the next
  *   version), ⏻ pauses the taf. A stop with no size says "Ask Coach to change".
- * - Changes collect into "Make N changes live", the usual version switch.
- * - Under it: "Coach set this up · today's work ›", which opens the request the rim points at.
+ * - A change waiting to go live (tafs cloud's `pending`): "DRAFT · Vn · NOT LIVE" over the dial, and "Make N changes live",
+ *   the usual version switch.
+ * - Under it: today's work ("12 done today ›"), which opens the request the rim points at.
  */
 @Composable
 fun TafDialPanel(
@@ -281,6 +307,7 @@ fun TafDialPanel(
       arrivals = arrivals - fresh
     }
   }
+  val arrived = wire.wakes.filter { it.door != null && it.door in arrivals }.map { it.id }.toSet()
 
   Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
     // Above the dial: Coach, and which input's stops show.
@@ -290,54 +317,63 @@ fun TafDialPanel(
       modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
         .background(Theme.panel).clickable { actions.askCoach(taf.id) }.padding(horizontal = 14.dp, vertical = 12.dp),
     )
-    Box {
-      val name = when (showing) {
-        null -> KnobWords.ALL
-        bot.tafs.app.kiff.KnobWire.THIS_TAF -> KnobWords.THIS_TAF
-        else -> wire.connections.firstOrNull { it.grant == showing }?.name ?: KnobWords.ALL
-      }
-      Text(
-        KnobWords.SHOWING + " " + name + " ▾",
-        style = scaled(14, FontWeight.SemiBold, Theme.ink),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { showingOpen = true }.padding(vertical = 12.dp),
-      )
-      androidx.compose.material3.DropdownMenu(showingOpen, { showingOpen = false }) {
-        val options = listOf<Pair<String?, String>>(null to KnobWords.ALL, bot.tafs.app.kiff.KnobWire.THIS_TAF to KnobWords.THIS_TAF) +
-          wire.connections.map { it.grant to it.name }
-        options.forEach { (key, label) ->
-          // Each input with how many stops it has on the dial.
-          val count = key?.let { k -> wire.knob(k).stops.size }
-          androidx.compose.material3.DropdownMenuItem(
-            text = { Text(label + (count?.let { " · $it" } ?: "")) },
-            onClick = { showing = key; showingOpen = false; choose(null) },
-          )
+    wire.pending?.let { Text(KnobWords.notLive(it.version), style = scaled(11, FontWeight.SemiBold, Theme.amberText, mono = true)) }
+    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+      Box(Modifier.weight(1f)) {
+        val name = when (showing) {
+          null -> KnobWords.ALL
+          bot.tafs.app.kiff.KnobWire.THIS_TAF -> KnobWords.THIS_TAF
+          else -> wire.connections.firstOrNull { it.grant == showing }?.name ?: KnobWords.ALL
+        }
+        Text(
+          KnobWords.SHOWING + " " + name + " ▾",
+          style = scaled(14, FontWeight.SemiBold, Theme.ink),
+          modifier = Modifier.heightIn(min = 44.dp).clickable { showingOpen = true }.padding(vertical = 12.dp),
+        )
+        androidx.compose.material3.DropdownMenu(showingOpen, { showingOpen = false }) {
+          val options = listOf<Pair<String?, String>>(null to KnobWords.ALL, bot.tafs.app.kiff.KnobWire.THIS_TAF to KnobWords.THIS_TAF) +
+            wire.connections.map { it.grant to it.name }
+          options.forEach { (key, label) ->
+            // Each connection with how many stops it has on the dial.
+            val connection = key != null && key != bot.tafs.app.kiff.KnobWire.THIS_TAF
+            androidx.compose.material3.DropdownMenuItem(
+              text = { Text(if (connection) KnobWords.withStops(label, wire.knob(key).stops.size) else label) },
+              onClick = { showing = key; showingOpen = false; choose(null) },
+            )
+          }
         }
       }
+      if (face is KnobFace.Chosen) {
+        Text(
+          KnobWords.BACK_TO_WHY,
+          style = scaled(14, FontWeight.SemiBold, Theme.soft),
+          modifier = Modifier.heightIn(min = 44.dp).clickable { choose(null) }.padding(horizontal = 8.dp, vertical = 12.dp),
+        )
+      }
     }
-    val looks = doorLooks(wire, doors, arrivals)
     TafKnob(
       knob, face,
-      doors = looks,
+      arrived = arrived,
       onChoose = { _, id -> choose(id) },
       onFace = {
-        work {
-          when (face) {
-            is KnobFace.Held -> actions.approveOnce(face.call)
-            is KnobFace.Chosen -> {
-              val door = item?.door?.let { id -> doors.doors.firstOrNull { it.id == id } }
-              when {
-                door != null -> { actions.setOpen(taf.id, door, !door.open); actions.loadKnob(taf.id) }
-                item?.kind == "run_now" -> actions.runNow(taf.id)
-                // A follow-up the taf set itself: OK removes it, for whoever manages the taf.
-                item?.followUp != null && manages -> actions.removeFollowUp(taf.id, item.followUp)
-              }
+        when (face) {
+          // Nothing chosen: OK goes to the first stop.
+          KnobFace.Overview -> stops.firstOrNull()?.let { choose(it.second.id) }
+          is KnobFace.Held -> work { actions.approveOnce(face.call) }
+          // What OK does is tafs cloud's to say, the same in both apps.
+          is KnobFace.Chosen -> when (item?.ok) {
+            "door" -> item.door?.let { id -> doors.doors.firstOrNull { it.id == id } }?.let { door ->
+              work { actions.setOpen(taf.id, door, !item.on); actions.loadKnob(taf.id) }
             }
-            KnobFace.Overview -> Unit
+            "run" -> work { actions.runNow(taf.id) }
+            "remove_follow_up" -> item.followUp?.let { fid -> work { actions.removeFollowUp(taf.id, fid) } }
+            "coach" -> actions.askCoach(taf.id)
+            else -> Unit
           }
         }
       },
     )
-    Text(KnobWords.CAPTION, style = scaled(12, color = Theme.dim))
+    if (face == KnobFace.Overview) Text(KnobWords.CAPTION, style = scaled(12, color = Theme.dim))
     val sentence = when (face) {
       is KnobFace.Chosen -> face.stop.about
       is KnobFace.Held -> face.call.reason
@@ -365,31 +401,32 @@ fun TafDialPanel(
       RemoteKey("−", KnobWords.LOWER, enabled = manages && !busy && size?.step(-1) != null) {
         size?.step(-1)?.let { c -> work { actions.changeKnobSize(taf.id, c.setting) } }
       }
-      RemoteKey(POWER, if (taf.paused) KnobWords.RESUME else KnobWords.PAUSE, enabled = manages && !busy) { work { actions.setPaused(taf.id, !taf.paused) } }
+      RemoteKey(POWER, if (taf.paused) KnobWords.RESUME else KnobWords.PAUSE, enabled = manages && !busy) { work { actions.setPaused(taf.id, !taf.paused); actions.loadKnob(taf.id) } }
       RemoteKey("+", KnobWords.RAISE, enabled = manages && !busy && size?.step(1) != null) {
         size?.step(1)?.let { c -> work { actions.changeKnobSize(taf.id, c.setting) } }
       }
       RemoteKey("▶", KnobWords.NEXT, enabled = stops.isNotEmpty()) { choose(stops[(at + 1) % stops.size].second.id) }
     }
     state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
-    // Changes from − and +, or Coach's draft, made live in one switch.
-    val pending = state.knobChanges[taf.id] ?: wire.draft?.let { bot.tafs.app.kiff.KnobWire.Change(it.version, it.lines) }
+    // The change waiting to go live (− and +, or Coach's draft), as tafs cloud counts it, made live in one switch.
+    val pending = wire.pending
     if (pending != null && manages) {
-      val count = state.knobChangeCount[taf.id] ?: 1
       ApprovalGate {
         bot.tafs.app.design.PrimaryButton(
-          KnobWords.makeLive(count, bot.tafs.app.design.LocalBiometry.current),
+          KnobWords.makeLive(pending.changes, bot.tafs.app.design.LocalBiometry.current),
           { work { actions.confirmKnobChange(taf.id) } },
           enabled = !busy && taf.id !in state.switchingVersion,
         )
       }
     }
-    // Under it: who set it up, and today's work, which opens the request the rim points at.
-    Text(
-      KnobWords.SET_UP_BY_COACH + (knob.summary?.let { " · $it ›" } ?: ""),
-      style = scaled(13, color = Theme.dim),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = knob.summary != null) { scope.launch { actions.openRimRequest(taf.id) } }.padding(top = 12.dp),
-    )
+    // Under it: today's work, which opens the request the rim points at.
+    knob.summary?.let { line ->
+      Text(
+        "$line ›",
+        style = scaled(13, color = Theme.dim),
+        modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.openRimRequest(taf.id) } }.padding(top = 12.dp),
+      )
+    }
   }
 }
 
@@ -419,10 +456,3 @@ private fun RemoteKey(symbol: String, label: String, enabled: Boolean, onClick: 
 /** The remote's Pause key, drawn as the power mark. */
 private const val POWER = "⏻"
 
-/** Each door on When as the doors say, by stop id: open, closed, resting, a knock waiting, or a message just in (`arrived`, by door id). */
-internal fun doorLooks(wire: bot.tafs.app.kiff.KnobWire, doors: bot.tafs.app.app.TafDoors, arrived: Set<String> = emptySet()): Map<String, bot.tafs.app.model.DoorLook> =
-  wire.wakes.mapNotNull { w ->
-    val door = w.door?.let { id -> doors.doors.firstOrNull { it.id == id } } ?: return@mapNotNull null
-    val knocking = doors.openKnocks.any { it.door == door.id && !it.isLine }
-    w.id to bot.tafs.app.model.DoorLook(door.open, door.resting, knocking, arrived = door.id in arrived)
-  }.toMap()

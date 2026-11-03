@@ -19,6 +19,12 @@ version headings refer to releases, not merely to merged pull requests.
   grey while resting, amber with a dot while a knock waits, and lights up when a message arrives.
 - **Android, the dial's words read upright:** a stop's word in the lower half of its ring turns
   half a turn more, so nothing on the dial reads upside down.
+- **Android, the dial follows tafs cloud's rules:** what OK does on each stop, a door's look and
+  the change waiting to go live ("DRAFT · Vn · NOT LIVE", "Make N changes live") come from the
+  knob, and Add a door and an empty recipe's step ask Coach. A chosen stop turns under the pointer,
+  a ring past six stops pages, OK with nothing chosen goes to the first stop, "‹ Why" goes back,
+  ⏻ reads the dial again, and the footer is today's work alone. Coach's card says when its dial
+  is live.
 
 - **iPhone and iPad, the universal dial:** When, What and Where surround the taf's Why.
   A Showing menu filters any number of connections; Back/Next walk every stop, Lower/Raise

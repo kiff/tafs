@@ -31,11 +31,11 @@ class KnobDraftCardTest {
   private val card = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"knob","id":"k1","taf_id":"taf_1","version":9}""")
   private val log = mutableListOf<String>()
 
-  private fun show(draftVersion: Int) = rule.setShown {
-    val knob = KiffClient.json.decodeFromString<KnobWire>(
-      """{"does":{"label":"Refund","line":""},"rim":{},"draft":{"version":$draftVersion,
-          "wakes":["An email to refunds@yourshop.com, or a message in #refunds"],"when":["As they arrive, and weekdays at 09:00"],"results":["A reply to the sender"]}}""",
-    )
+  private fun show(draftVersion: Int?, live: Int = 8) = rule.setShown {
+    val draft = draftVersion?.let {
+      """{"version":$it,"wakes":["An email to refunds@yourshop.com, or a message in #refunds"],"when":["As they arrive, and weekdays at 09:00"],"results":["A reply to the sender"]}"""
+    } ?: "null"
+    val knob = KiffClient.json.decodeFromString<KnobWire>("""{"version":$live,"does":{"label":"Refund","line":""},"rim":{},"draft":$draft}""")
     TafsTheme {
       CoachCard(
         ShownComponent(Instant.parse("2026-11-03T01:00:00Z"), "s1", "r1", card),
@@ -68,5 +68,10 @@ class KnobDraftCardTest {
   @Test fun aNewerDraftReplacesTheCard() {
     show(draftVersion = 10)
     rule.onNodeWithText(KnobWords.REPLACED).assertIsDisplayed()
+  }
+
+  @Test fun onceLiveTheCardSaysSo() {
+    show(draftVersion = null, live = 9)
+    rule.onNodeWithText(KnobWords.LIVE).assertIsDisplayed()
   }
 }

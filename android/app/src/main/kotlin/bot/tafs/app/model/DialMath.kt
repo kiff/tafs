@@ -38,4 +38,13 @@ object DialMath {
     val at = ((fromTop % 360) + 360) % 360
     return if (at > 90 && at < 270) at + 180 else at
   }
+
+  /** A ring shows at most this many stops at once; past it, it pages. */
+  const val PAGE = 6
+
+  /** The page of a ring that holds its [index]th stop (the first page when none is chosen). */
+  fun page(index: Int): Int = if (index < 0) 0 else index / PAGE
+
+  /** The ring's turn, in degrees, that puts the [at]th of its [shown] stops under the pointer at the top. */
+  fun ringTurn(at: Int, shown: Int): Double = if (at <= 0 || shown <= 0) 0.0 else -at * 360.0 / shown
 }

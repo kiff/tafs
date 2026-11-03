@@ -32,6 +32,8 @@ data class KnobWire(
   val rim: Rim = Rim(),
   /** The newest dial change waiting to go live, or null. */
   val draft: Draft? = null,
+  /** The change Make it live switches to, and how many stops it changes from the live dial; null, nothing waits. */
+  val pending: Pending? = null,
   /** The shown version's rings as `PUT` takes them. */
   val setting: JsonObject? = null,
 ) {
@@ -43,6 +45,9 @@ data class KnobWire(
 
   @Serializable
   data class Connection(val grant: String, val name: String = "")
+
+  @Serializable
+  data class Pending(val version: Int, val changes: Int = 1)
 
   /** One stop: a trigger on When, a step on What, a place on Where. */
   @Serializable
@@ -70,6 +75,10 @@ data class KnobWire(
     val grant: String? = null,
     /** Its one choice for − and +, when it has one. */
     val size: Size? = null,
+    /** What OK (pressing the face) does on it: door, run, remove_follow_up or coach; none, nothing. */
+    val ok: String? = null,
+    /** A door stop's look: open, closed, resting or knock. */
+    val look: String? = null,
   )
 
   /** A stop's one choice: its name, the value now, and each value's whole `PUT` body. */
@@ -162,7 +171,7 @@ data class KnobWire(
   }
 
   // A recipe step reads "1 · Check"; anything else, its label as tafs cloud wrote it.
-  private fun stop(i: Item) = KnobStop(i.id, i.step?.let { "$it · ${i.label}" } ?: i.label, i.on, i.state, i.tap, i.words, i.size?.now?.label)
+  private fun stop(i: Item) = KnobStop(i.id, i.step?.let { "$it · ${i.label}" } ?: i.label, i.on, i.state, i.tap, i.words, i.size?.now?.label, i.look)
 
   companion object {
     /** "Showing ▾"'s choice for the taf's own stops, the ones with no connection. */

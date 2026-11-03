@@ -161,31 +161,42 @@ A taf's dial, as settled ("The knob, end to end"): Coach builds it with the owne
 shows it, with a remote's controls only (`TafKnob`, `TafDialPanel`, in the taf's Doors tab; the
 doors' own dial stays for a taf whose dial can't be read).
 
-- **Three rings, the same on every taf,** inner to outer as tafs cloud names them: **When**
-  (what starts it: doors, a connected app's event, a schedule, run now), **What** (the recipe,
-  its steps numbered "1 · Check") and **Where** (where results go). The face is the taf's
-  **Why**; a chosen stop shows on it instead (ring · stop, its value, what OK does).
-  Each stop's word sits along its ring and always reads upright: in the lower half (past 90°
-  and before 270° from the top) it turns half a turn more (`DialMath.upright`).
+- **Three rings, the same on every taf,** in the order tafs cloud sends `rings`: **When**
+  (what starts it: doors, a connected app's event, a schedule, run now, and Add a door last for
+  whoever manages the taf), **What** (the recipe, its steps numbered "1 · Check"; an empty one
+  shows a step that asks Coach) and **Where** (where results go). The face is the taf's **Why**,
+  with "Tap a ring" under it; a chosen stop shows on it instead ("WHAT · 1 · CHECK", its state,
+  else its size's value, and its `tap`, else "Use − and +" for a stop with a size, else "Ask
+  Coach to change"). "‹ Why" goes back.
+- **The rings turn:** a chosen stop's ring turns it under the pointer at the top, the short way
+  round. A ring past six stops shows the six that hold the chosen one (`DialMath.page`,
+  `DialMath.ringTurn`). Each stop's word sits along its ring and always reads upright: in the
+  lower half (past 90° and before 270° from the top, after the turn) it turns half a turn more
+  (`DialMath.upright`).
 - **Above it:** "Ask Coach or find anything", which opens Coach about the taf, and **Showing ▾**:
-  All services, This taf (the stops with no connection), then each connection with its number
-  of stops. Picking one shows only that input's stops (`KnobWire.knob(showing)`).
+  All services, This taf (the stops with no connection), then each connection with its stops
+  ("Slack · 2 stops"). Picking one shows only that input's stops (`KnobWire.knob(showing)`).
 - **The remote under it:** ◀ Back and Next ▶ step through the stops, ring by ring from the
-  inside; − Lower and + Raise move the chosen stop's one size; ⏻ pauses or resumes the taf.
-  Pressing the face is OK: open or close a door, run now, remove a follow-up the taf set, or
-  approve a held call once (a held call takes the face while nothing is chosen).
+  inside; − Lower and + Raise move the chosen stop's one size; ⏻ pauses or resumes the taf, then
+  reads the dial again. Pressing the face is OK, and what it does is tafs cloud's (`ok`): `door`
+  opens or closes the door, `run` runs once, `remove_follow_up` removes a follow-up the taf set,
+  `coach` opens Coach; none, nothing. With nothing chosen, OK goes to the first stop. A held call
+  that can be approved once takes the face while nothing is chosen, and OK approves it once.
 - **One size per stop:** tafs cloud's `size` (a time, how often, a place on or off). − or +
   sends that choice's whole `setting` to `PUT …/knob`, which makes the next version, then reads
   it back (`?version=N`) so the next change builds on it. A stop with no size says "Ask Coach to
-  change". Changes collect into **Make N changes live**, the usual version switch. While one
-  waits, every read of the dial (after a door or ⏻ too) asks for that version.
-- **Under it:** "When starts it, What it does in order, Where the result goes.", the chosen
-  stop's words, and "Coach set this up · today's work ›", which opens the request the rim
-  points at.
-- **A door on its When stop** shows its state as an arc on the ring's edge, from the taf's
-  doors: lit when open, dashed when closed, grey while it rests, amber with a dot while a knock
-  waits (Do it, Pair them and Ignore stay in the knock's panel under the dial), and a light for
-  a moment when a message arrives.
+  change".
+- **The change waiting to go live** is tafs cloud's `pending {version, changes}`: "DRAFT · Vn ·
+  NOT LIVE" over the dial, and **Make N changes live** with its `changes`, which switches
+  `pending.version` (the usual version switch). While one waits, every read of the dial (after a
+  door or ⏻ too) shows that version. None waiting, no button.
+- **Under it:** with nothing chosen, "When starts it, What it does in order, Where the result
+  goes." and what the taf does; a chosen stop's words instead. Then today's work ("12 done today
+  ›", the rim's line), which opens the request the rim points at.
+- **A door on its When stop** shows tafs cloud's `look` as an arc on the ring's outer edge: lit
+  when `open`, dashed when `closed`, grey when `resting`, amber with a dot for `knock` (Do it,
+  Pair them and Ignore stay in the knock's panel under the dial). When a message arrives, its
+  stop glows for 3 seconds.
 
 <p>
   <img src="screenshots/android/dial-overview.png" width="180" alt="The dial: the Why on the face, When, What and Where around it, an email door with a knock waiting and a closed Slack door">
@@ -194,7 +205,9 @@ doors' own dial stays for a taf whose dial can't be read).
 </p>
 
 No chips and no "+ Add": anything new (an app, a step, a place) goes through Coach. Every word
-on a stop is tafs cloud's; the app's own are the ring of controls and these few lines.
+on a stop is tafs cloud's, and so are the rules both apps share (what OK does, a door's look, the
+change waiting and how many stops it changes); the app's own are the ring of controls and these
+few lines.
 
 **A request, step by step** (`RequestSheet`): today's work under the dial opens the request the rim
 points at, the first not done, else the newest. A request's row in Activity opens the same

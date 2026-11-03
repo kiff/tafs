@@ -326,10 +326,6 @@ data class AppState(
   val slackChannels: Map<String, List<bot.tafs.app.kiff.SlackChannel>> = emptyMap(),
   /** Each taf's dial as tafs cloud last sent it, by taf id. */
   val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
-  /** The newest dial change made into a version, waiting for the owner to make it live, by taf id. */
-  val knobChanges: Map<String, bot.tafs.app.kiff.KnobWire.Change> = emptyMap(),
-  /** How many − and + changes it holds, for "Make N changes live", by taf id. */
-  val knobChangeCount: Map<String, Int> = emptyMap(),
   /** Why a dial change didn't go through, in tafs cloud's words when it sends them, by taf id. */
   val knobErrors: Map<String, String> = emptyMap(),
   /** Money calls whose outcome KIFF can't prove, waiting on "Did this happen?" in Needs you. */
@@ -2432,15 +2428,25 @@ class AppModel(
   }
 
   /**
-   * A taf's dial (`GET /v1/tafs/{id}/knob`), read quietly: with none, its Doors tab keeps the doors' own dial. With [version], a
-   * dial change waiting to go live, so the next − or + builds on it.
+   * A taf's dial (`GET /v1/tafs/{id}/knob`), read quietly: with none, its Doors tab keeps the doors' own dial. While a change
+   * waits to go live (tafs cloud's `pending`), the dial shows that version (`?version=N`), so the next − or + builds on it and a
+   * door or ⏻ doesn't lose it from view. [version] reads that one directly.
    */
   suspend fun loadKnob(tafId: String, version: Int? = null) {
     if (_state.value.mode != Mode.kiff) return
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     val generation = accountGeneration
-    // While a change waits to go live, the dial shows that version, so a door or ⏻ doesn't lose it from view.
-    val knob = attempt { cloud.knob(cloudId, version ?: _state.value.knobChanges[tafId]?.version) } ?: return
+    val first = attempt { cloud.knob(cloudId, version) } ?: return
+    val waiting = first.pending?.version
+    val knob = if (version == null && waiting != null && first.shown != waiting) {
+      try {
+        cloud.knob(cloudId, waiting)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        first
+      }
+    } else first
     if (generation == accountGeneration) _state.update { it.copy(knobs = it.knobs + (tafId to knob)) }
   }
 
@@ -2457,7 +2463,6 @@ class AppModel(
     return try {
       val change = cloud.changeKnob(cloudId, setting)
       if (generation != accountGeneration) return false
-      _state.update { it.copy(knobChanges = it.knobChanges + (tafId to change), knobChangeCount = it.knobChangeCount + (tafId to (it.knobChangeCount[tafId] ?: 0) + 1)) }
       loadKnob(tafId, change.version)
       true
     } catch (e: CancellationException) {
@@ -2470,20 +2475,17 @@ class AppModel(
   }
 
   /**
-   * Makes the dial's change live: the version a tap made, or Coach's draft the knob says waits, switched as any version is (with
-   * Face ID where its Card changes).
+   * Makes the dial's change live: the version tafs cloud says waits (`pending`, from − and + or Coach's draft), switched as any
+   * version is (with the fingerprint where its Card changes).
    */
   suspend fun confirmKnobChange(tafId: String): Boolean {
-    val change = _state.value.knobChanges[tafId]
-      ?: _state.value.knobs[tafId]?.draft?.let { bot.tafs.app.kiff.KnobWire.Change(it.version, it.lines) }
-      ?: return false
+    val pending = _state.value.knobs[tafId]?.pending ?: return false
     loadVersions(tafId)
-    val version = _state.value.versions[tafId]?.firstOrNull { it.n == change.version } ?: run {
-      _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Version ${change.version} couldn't be read. Try again.")) }
+    val version = _state.value.versions[tafId]?.firstOrNull { it.n == pending.version } ?: run {
+      _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Version ${pending.version} couldn't be read. Try again.")) }
       return false
     }
     if (!useVersion(version, tafId)) return false
-    _state.update { it.copy(knobChanges = it.knobChanges - tafId, knobChangeCount = it.knobChangeCount - tafId) }
     loadKnob(tafId)
     return true
   }

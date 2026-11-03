@@ -62,6 +62,21 @@ class KnobWireTest {
     assertEquals(listOf("Slack"), wire.connections.map { it.name })
   }
 
+  @Test fun theRulesBothAppsShareComeFromTafsCloud() {
+    val wire = KiffClient.json.decodeFromString<KnobWire>(
+      """{"version":7,"wakes":[{"id":"door_e","kind":"door","door":"e","label":"Email","ok":"door","look":"knock"},
+          {"id":"run_now","kind":"run_now","label":"Run now","ok":"run"},{"id":"add_door","kind":"add_door","label":"Add a door","ok":"coach"}],
+          "what":[{"id":"what_ask","kind":"step","step":1,"label":"Ask Coach","ok":"coach"}],
+          "pending":{"version":8,"changes":2},"rim":{}}""",
+    )
+    assertEquals(listOf("door", "run", "coach"), wire.wakes.map { it.ok })
+    assertEquals("a door's look, as sent", "knock", wire.knob().rings[0].stops[0].look)
+    assertEquals("Add a door is When's last stop, as sent", "add_door", wire.knob().rings[0].stops.last().id)
+    assertEquals("1 · Ask Coach", wire.knob().rings[1].stops.single().label)
+    assertEquals(KnobWire.Pending(8, 2), wire.pending)
+    assertNull("nothing waits", KiffClient.json.decodeFromString<KnobWire>("""{"rim":{}}""").pending)
+  }
+
   @Test fun aSizeStepsThroughItsChoicesAndStopsAtTheEnds() {
     val size = KiffClient.json.decodeFromString<KnobWire>(dial).item("trg_3")!!.size!!
     assertEquals("09:00", size.now!!.label)

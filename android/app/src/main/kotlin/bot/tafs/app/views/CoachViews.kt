@@ -554,7 +554,7 @@ fun ProfileWordsLines(words: bot.tafs.app.kiff.ProfileWords) {
 /**
  * Coach's dial card (K4): the dial Coach drafted for a taf, drawn from that taf's knob `draft` while it's this card's version.
  * Wakes it, When and Results go in tafs cloud's words; one confirmation makes it live (the version switch, with the fingerprint
- * where the Card changes); Change goes back to Coach. A newer draft replaces it.
+ * where the Card changes); Change goes back to Coach. Once its version is live it says so; a newer draft replaces it.
  */
 @Composable
 private fun KnobDraftCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
@@ -570,6 +570,8 @@ private fun KnobDraftCard(c: SetupComponent, state: AppState, answered: String?,
     Eyebrow(taf?.let { bot.tafs.app.model.KnobWords.draftTitle(it.name) } ?: bot.tafs.app.model.KnobWords.DRAFT, Theme.amberText)
     when {
       taf == null || state.knobs[taf.id] == null -> Text(bot.tafs.app.model.KnobWords.READING_DRAFT, style = scaled(14, color = Theme.soft))
+      // This card's version is the live one now.
+      c.version != null && state.knobs[taf.id]?.version == c.version && draft?.version != c.version -> Text(bot.tafs.app.model.KnobWords.LIVE, style = scaled(14, color = Theme.soft))
       draft == null || (c.version != null && draft.version != c.version) -> Text(bot.tafs.app.model.KnobWords.REPLACED, style = scaled(14, color = Theme.soft))
       else -> {
         // By connection, as tafs cloud groups it (each app's lines, then This taf); by ring from one that doesn't group yet.
