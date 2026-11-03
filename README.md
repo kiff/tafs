@@ -96,8 +96,8 @@ What tafs still needs from KIFF: [docs/needs-from-kiff.md](docs/needs-from-kiff.
 
 Every taf runs on [kiff/agents](https://github.com/kiff/agents), tafs's own
 agent runtime: stored definitions, runs that pause on a held call and go on
-when it is answered, chats, notes and schedules, in an EU region (eu-west-1).
-tafs cloud calls it with its AWS role; the phone never does.
+when it is answered, chats, notes and schedules, in the EU. tafs cloud calls it;
+the phone never does.
 
 - **A taf** is one agent definition (`runtime/src/cloud/tafdef.ts`):
   `claude-opus-5-5`, its job's instructions, how its notes work, what the
@@ -107,8 +107,8 @@ tafs cloud calls it with its AWS role; the phone never does.
   KIFF's reference for the call and the identifier of what it acted on (a
   payment's id, never the customer's details) for 30 days, so the Record can say
   which payment (kiff/tafs#167). Its only tools are the company's, reached through KIFF's
-  gateway (`mcp.kiff.dev`), and its memory. Its KIFF agent key is in Secrets
-  Manager, which tafs cloud writes and can't read back; the definition only
+  gateway (`mcp.kiff.dev`), and its memory. Its KIFF agent key is kept in a
+  secret store that tafs cloud writes and can't read back; the definition only
   names it.
 - **A held call pauses the run.** The owner answers on their phone, KIFF's
   signed alert reaches tafs cloud (push) and kiff/agents (the run goes on),
@@ -134,9 +134,8 @@ through the Upgrade workflow, once kiff/agents' nightly eval has passed on it.
 
 ## tafs cloud
 
-The phone talks to tafs cloud (`runtime/src/cloud/`), an AWS Lambda in eu-west-1,
-at `https://cloud.tafs.kiff.dev` (CloudFront in front of its function URL). A chat's
-streamed answer comes straight from the streaming function's URL.
+The phone talks to tafs cloud (`runtime/src/cloud/`), which runs in the EU. A
+chat's answer streams to the phone as it's written.
 It keeps no accounts: the phone sends its KIFF sign-in, and KIFF says who that
 is, on which account, with which rights. A company sees and changes only its
 own tafs; another company's taf answers like a missing one. It holds no model
@@ -150,26 +149,8 @@ down what it learns about the owner and their customers. Notes shape how it
 works; they never change what its Card allows, since KIFF still decides every
 action.
 
-Setting it up, once, with AWS credentials for the account. kiff/agents comes
-before tafs cloud, whose script reads its URLs. The model key comes first of
-all: `tafs/anthropic-api-key` (us-east-1), replicated to eu-west-1, where
-kiff/agents reads the replica; tafs cloud never reads it.
-
-```sh
-cd runtime && npm ci && npm run bundle && cd ..
-# The model key, without it on a command line (the clipboard holds it):
-pbpaste | tr -d '[:space:]' | aws --region us-east-1 secretsmanager create-secret \
-  --name tafs/anthropic-api-key --tags Key=project,Value=tafs --secret-string file:///dev/stdin
-aws --region us-east-1 secretsmanager replicate-secret-to-regions \
-  --secret-id tafs/anthropic-api-key --add-replica-regions Region=eu-west-1
-# kiff/agents, reading that replica (its own infra/aws.sh):
-AGENTS_MODEL_KEY_SECRET=tafs/anthropic-api-key ../agents/infra/aws.sh
-APNS_KEY_ID=… APNS_TEAM_ID=… infra/aws.sh runtime/lambda.zip   # the function, its role, the table, the deploy role
-gh variable set TAFS_CLOUD --repo kiff/tafs --body on            # main then deploys on every merge
-```
-
-To rotate the key, `put-secret-value` on `tafs/anthropic-api-key` (the same
-pipe); the replica follows.
+Deploying tafs cloud and kiff/agents is done by the maintainers; `infra/` holds
+the scripts.
 
 ## TestFlight
 
@@ -177,10 +158,8 @@ pipe); the replica follows.
 runners. A `v*` tag or a manual run (Actions → iOS → Run workflow) also uploads
 to TestFlight: the internal testers ("Team") get it at once, and the external group
 "Beta testers" after Apple's Beta App Review, unless a manual run sets `external` to
-false. Its repository secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8` (an
-App Store Connect API key with the Admin role), `APPLE_TEAM_ID`, the distribution
-certificate (`DIST_P12`, `DIST_P12_PASSWORD`), and for the external group
-`BETA_TESTERS`, `BETA_CONTACT` and `BETA_FEEDBACK_EMAIL`.
+false. Its signing and upload credentials are repository secrets, set by the
+maintainers.
 
 ## Build
 
