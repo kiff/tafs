@@ -351,6 +351,8 @@ data class AppState(
   val listApproval: String? = null,
   /** Whether that connection takes an API key, given on the sheet instead of a vendor's sign-in. */
   val listApprovalNeedsKey: Boolean = false,
+  /** A connection from Connect apps that just came back signed in or connected: said at once, over the list. */
+  val connectedNow: bot.tafs.app.kiff.Grant? = null,
   /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
   val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
@@ -2645,11 +2647,18 @@ class AppModel(
 
   /** Approve on the sheet over Connect apps: the same as Coach's card (KIFF's words, the signature, the vendor's sign-in), then the list again. */
   fun startListApproval(grantId: String, shownDigest: String) {
-    scope.launch {
+    scope.launch { approveFromList(grantId, shownDigest) }
+  }
+
+  /** The approval from Connect apps, run to its end: then what came of it is said at once, and the list read again. */
+  suspend fun approveFromList(grantId: String, shownDigest: String) {
+    run {
       when (val result = connect(ConnectWords.cardKey(grantId), grantId, shownDigest)) {
         is Connected.Done, is Connected.AlreadyApproved -> {
           note(ConnectWords.cardKey(grantId), null)
-          _state.update { it.copy(listApproval = null) }
+          // Said at once: signed in, and what comes next, as planque says the grant is now.
+          val done = (result as? Connected.Done)?.grant
+          _state.update { it.copy(listApproval = null, connectedNow = done?.takeIf { g -> g.listed || g.connected }) }
           loadConnectApps()
         }
         is Connected.Failed -> note(ConnectWords.cardKey(grantId), result.why)
@@ -2657,6 +2666,8 @@ class AppModel(
       }
     }
   }
+
+  fun dismissConnectedNow() = _state.update { it.copy(connectedNow = null) }
 
   fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
 

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.model.ReportResult
@@ -32,20 +33,21 @@ class ReportAnswerTest {
     }
   }
 
+  // The sheet scrolls: on a small screen (CI's emulator is 320×640) each part is scrolled to, as a person would.
   private fun report(note: String? = null) {
     rule.onNodeWithContentDescription(bot.tafs.app.model.AnswerWords.MORE).performClick()
     rule.onNodeWithText(ReportWords.MENU).assertIsDisplayed().performClick()
-    rule.onNodeWithText("Wrong").assertIsDisplayed().performClick()
-    note?.let { rule.onNodeWithText("Add a note (optional)").performTextInput(it) }
-    rule.onNodeWithText("Send").performClick()
+    rule.onNodeWithText("Wrong").performScrollTo().assertIsDisplayed().performClick()
+    note?.let { rule.onNodeWithText("Add a note (optional)").performScrollTo().performTextInput(it) }
+    rule.onNodeWithText("Send").performScrollTo().performClick()
   }
 
   @Test fun anAnswerIsReportedFromItsLongPressAndTheSheetSaysThanks() {
     show(ReportResult.Sent(first = true))
     report("It refunded the wrong order.")
-    // On a slow emulator the sheet settles after the keyboard goes: wait for the thanks, then check it shows.
-    rule.waitUntil(10_000) { runCatching { rule.onNodeWithText(ReportWords.THANKS).assertIsDisplayed() }.isSuccess }
-    rule.onNodeWithText(ReportWords.THANKS).assertIsDisplayed()
+    // On a slow emulator the sheet settles after the keyboard goes: wait for the thanks, then scroll to it.
+    rule.waitUntil(10_000) { rule.onAllNodes(androidx.compose.ui.test.hasText(ReportWords.THANKS)).fetchSemanticsNodes().isNotEmpty() }
+    rule.onNodeWithText(ReportWords.THANKS).performScrollTo().assertIsDisplayed()
     assertEquals(listOf("wrong" to "It refunded the wrong order."), sent)
     rule.onNodeWithText("Done").performClick()
   }
@@ -73,13 +75,13 @@ class ReportAnswerTest {
   @Test fun anAnswerReportedBeforeSaysSo() {
     show(ReportResult.Sent(first = false))
     report()
-    rule.onNodeWithText(ReportWords.ALREADY).assertIsDisplayed()
+    rule.onNodeWithText(ReportWords.ALREADY).performScrollTo().assertIsDisplayed()
   }
 
   @Test fun aReportThatDidntGoKeepsTheSheetToSendAgain() {
     show(ReportResult.NotSent("You're offline. Try again once you're online."))
     report()
-    rule.onNodeWithText(ReportWords.notSent("You're offline. Try again once you're online.")).assertIsDisplayed()
-    rule.onNodeWithText("Send").assertIsDisplayed()
+    rule.onNodeWithText(ReportWords.notSent("You're offline. Try again once you're online.")).performScrollTo().assertIsDisplayed()
+    rule.onNodeWithText("Send").performScrollTo().assertIsDisplayed()
   }
 }

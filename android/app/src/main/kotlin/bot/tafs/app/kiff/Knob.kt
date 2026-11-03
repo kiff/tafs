@@ -223,6 +223,8 @@ data class ConnectApps(
   ) {
     val connected: Boolean get() = state == "connected"
     val needsReconnect: Boolean get() = state == "needs_reconnect"
+    /** Signed in at the app, its actions still to choose with Coach (`signed_in`, or `listed` as planque names it). */
+    val signedIn: Boolean get() = state == "signed_in" || state == "listed"
   }
 }
 
