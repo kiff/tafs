@@ -351,6 +351,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       unpair = { taf, door, key -> model.unpairDoor(taf, door, key) },
       answer = { taf, knock, action, say -> model.answerKnock(taf, knock, action, say) },
       dismissError = model::dismissDoorsError,
+      loadKnob = model::loadKnob,
+      runNow = { taf -> model.runNow(taf); model.loadKnob(taf) },
+      approveOnce = { call -> model.answer(call, bot.tafs.app.model.Answer.ApproveOnce) },
     )
   }
   // Coach: the account's Setup, in place of the list. Closing never ends a conversation.

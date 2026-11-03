@@ -70,6 +70,18 @@ class ConnectAppsTest {
     assertEquals("g2", m.state.value.listApproval)
   }
 
+  @Test fun aTafsDialIsReadFromTafsCloudByItsCloudId() = runTest {
+    // Kept with Connect apps: the same signed-in account with one taf it manages.
+    val m = model()
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"does":{"label":"Refund","line":""},"wakes":[{"id":"trg_1","kind":"run_now","label":"Run now"}],"rim":{"done":2}}""")
+    m.loadKnob("refunds-1")
+    assertEquals("Refund", m.state.value.knobs.getValue("refunds-1").does.label)
+    // A dial that can't be read leaves the doors' own dial: nothing is kept.
+    transport.answer("GET /v1/tafs/taf_1/knob", 503, """{"error":"down"}""")
+    m.loadKnob("refunds-1")
+    assertEquals("the last one read stays", "Refund", m.state.value.knobs.getValue("refunds-1").does.label)
+  }
+
   @Test fun aListThatCantBeReadIsSaidInWords() = runTest {
     val m = model()
     transport.answer(apps, 503, """{"error":"down"}""")

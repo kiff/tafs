@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -40,6 +42,7 @@ import bot.tafs.app.model.Knob
 import bot.tafs.app.model.KnobFace
 import bot.tafs.app.model.KnobRing
 import bot.tafs.app.model.KnobWords
+import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -176,4 +179,78 @@ private data class Quad(val top: String, val big: String, val tap: String?, val 
 private fun Modifier.centerAt(x: Float, y: Float): Modifier = layout { measurable, constraints ->
   val p = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
   layout(p.width, p.height) { p.place((x - p.width / 2f).roundToInt(), (y - p.height / 2f).roundToInt()) }
+}
+
+/**
+ * The dial in a taf's Doors tab: [TafKnob] with what each tap does. Choosing a door on Wakes it picks that door for its settings
+ * below ([onDoor]). The face's tap opens or closes that door, or runs the taf now, through their own routes (no new version); a
+ * held call on the face is approved once. Under it: the chosen stop's sentence, or the job's, and today's work.
+ */
+@Composable
+fun TafDialPanel(
+  taf: bot.tafs.app.model.Taf,
+  wire: bot.tafs.app.kiff.KnobWire,
+  state: bot.tafs.app.app.AppState,
+  doors: bot.tafs.app.app.TafDoors,
+  actions: DoorActions,
+  onDoor: (String) -> Unit,
+) {
+  val knob = wire.knob()
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
+  var chosen by androidx.compose.runtime.saveable.rememberSaveable(taf.id) { androidx.compose.runtime.mutableStateOf<String?>(null) }
+  var busy by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+  val ready = LocalApprovalReadiness.current == bot.tafs.app.model.ApprovalReadiness.Ready
+  // A held call that can be approved once takes the face while nothing is chosen.
+  val held = state.heldCalls(taf.id).firstOrNull { it.approvableOnce && it.install == null }?.takeIf { state.canAnswer(it) && ready }
+  val chosenStop = chosen?.let { id -> knob.rings.firstNotNullOfOrNull { ring -> ring.stops.firstOrNull { it.id == id }?.let { ring.kind to it } } }
+  val face = when {
+    chosenStop != null -> KnobFace.Chosen(chosenStop.first, chosenStop.second)
+    held != null -> KnobFace.Held(held)
+    else -> KnobFace.Overview
+  }
+  bot.tafs.app.design.Panel {
+    TafKnob(
+      knob, face,
+      onChoose = { ring, id ->
+        chosen = id
+        if (ring == KnobRing.Kind.WakesIt) wire.wakes.firstOrNull { it.id == id }?.door?.let(onDoor)
+      },
+      onFace = {
+        if (busy) return@TafKnob
+        scope.launch {
+          busy = true
+          try {
+            when (face) {
+              is KnobFace.Held -> actions.approveOnce(face.call)
+              is KnobFace.Chosen -> {
+                val item = wire.wakes.firstOrNull { it.id == face.stop.id }
+                val door = item?.door?.let { id -> doors.doors.firstOrNull { it.id == id } }
+                when {
+                  door != null -> { actions.setOpen(taf.id, door, !door.open); actions.loadKnob(taf.id) }
+                  item?.kind == "run_now" -> actions.runNow(taf.id)
+                }
+              }
+              KnobFace.Overview -> Unit
+            }
+          } finally {
+            busy = false
+          }
+        }
+      },
+    )
+    val sentence = when (face) {
+      is KnobFace.Chosen -> face.stop.about
+      is KnobFace.Held -> face.call.reason
+      KnobFace.Overview -> knob.overview
+    }
+    if (sentence.isNotBlank()) Text(sentence, style = scaled(14, color = Theme.ink))
+    knob.summary?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+    if (chosen != null) {
+      Text(
+        "‹ ${KnobWords.OVERVIEW}",
+        style = scaled(14, FontWeight.SemiBold, Theme.dim),
+        modifier = Modifier.heightIn(min = 44.dp).clickable { chosen = null }.padding(top = 10.dp),
+      )
+    }
+  }
 }

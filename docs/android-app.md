@@ -165,6 +165,12 @@ it: its ring keeps its colour, the other two dim, and the face shows tafs cloud'
 `GET /v1/tafs/{id}/knob` sends (`KnobWire`), every label and line as tafs cloud wrote it; the
 app's own words are only "DOES", "Tap a ring", "Tap to approve once" and the ring titles.
 
+It's in the taf's Doors tab, where the doors' dial was (`TafDialPanel`); the doors' dial stays
+for a taf whose dial can't be read. Choosing a door on Wakes it picks that door for its settings
+below. The face's tap opens or closes that door, or runs the taf now, through their own routes
+(no new version). A held call that can be approved once takes the face. Under the dial are the
+chosen stop's words, or the job's, and today's work.
+
 ## Signing
 
 Two keys in the Android Keystore, in StrongBox where the phone has it

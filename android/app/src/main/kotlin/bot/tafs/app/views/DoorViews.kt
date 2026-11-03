@@ -77,6 +77,11 @@ class DoorActions(
   val unpair: suspend (String, Door, DoorKey) -> Unit,
   val answer: suspend (String, Knock, String, String?) -> Unit,
   val dismissError: (String) -> Unit,
+  /** The taf's dial, read again; and Run now, from its face. */
+  val loadKnob: suspend (String) -> Unit = {},
+  val runNow: suspend (String) -> Unit = {},
+  /** Approves a held call once, from the dial's face. */
+  val approveOnce: suspend (bot.tafs.app.model.HeldCall) -> Unit = {},
 )
 
 /**
@@ -92,10 +97,14 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
   var adding by rememberSaveable { mutableStateOf(false) }
   var pairing by remember { mutableStateOf<Door?>(null) }
   var removing by remember { mutableStateOf<Door?>(null) }
-  LaunchedEffect(taf.id) { actions.load(taf.id) }
+  LaunchedEffect(taf.id) { actions.load(taf.id); actions.loadKnob(taf.id) }
   val door = doors.doors.getOrNull(selected)
+  val knob = state.knobs[taf.id]
 
-  Panel {
+  if (knob != null) {
+    // The taf's dial, where the doors' dial was: its doors are stops on Wakes it, and choosing one picks it for below.
+    TafDialPanel(taf, knob, state, doors, actions, onDoor = { id -> doors.doors.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { selected = it } })
+  } else Panel {
     Eyebrow("Doors · turn to pick, press to open")
     DoorDial(
       taf, doors.doors, doors.openKnocks, selected,

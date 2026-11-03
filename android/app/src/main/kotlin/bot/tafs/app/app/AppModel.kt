@@ -317,6 +317,8 @@ data class AppState(
   val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
+  /** Each taf's dial as tafs cloud last sent it, by taf id. */
+  val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
   /** Money calls whose outcome KIFF can't prove, waiting on "Did this happen?" in Needs you. */
   val unsure: List<bot.tafs.app.kiff.UnsureCall> = emptyList(),
   /** The proposal whose answer is on its way. */
@@ -2271,6 +2273,15 @@ class AppModel(
     // The Card's room may be back: read its numbers again.
     refresh()
     return true
+  }
+
+  /** A taf's dial (`GET /v1/tafs/{id}/knob`), read quietly: with none, its Doors tab keeps the doors' own dial. */
+  suspend fun loadKnob(tafId: String) {
+    if (_state.value.mode != Mode.kiff) return
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    val knob = attempt { cloud.knob(cloudId) } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(knobs = it.knobs + (tafId to knob)) }
   }
 
   /**
