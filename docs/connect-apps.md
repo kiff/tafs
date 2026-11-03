@@ -99,7 +99,8 @@ Both use the taf's Slack connection.
 
 A taf's connections are on its **Card** tab: whose sign-in, which actions, and what
 happened last. **Disconnect**, with Face ID or your fingerprint, takes the app's actions
-away from the taf at once: nothing more reaches the app through that connection. It also
+away from the taf at once. New actions stop through that connection; an action already
+sent may still finish. It also
 asks the app to revoke the sign-in; that part may finish later, on the app's side. If the app signs you out on its side (a
 changed password, an expired session), the taf says so and waits for you: **Sign in again**
 asks for one approval, then the app's own page.
