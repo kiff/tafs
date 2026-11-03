@@ -4559,7 +4559,9 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
   const fetchFn = deps.fetch ?? fetch;
   try {
     if (parts.length === 3 && method === "GET") {
-      return await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), new URLSearchParams(event.rawQueryString ?? "").get("q") ?? "");
+      const query = new URLSearchParams(event.rawQueryString ?? "");
+      return await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), query.get("q") ?? "",
+        { cursor: query.get("cursor") ?? undefined, provider: query.get("provider") ?? undefined });
     }
     if (parts.length === 4 && method === "POST") {
       need(me, "cards.manage");

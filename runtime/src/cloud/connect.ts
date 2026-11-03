@@ -24,7 +24,14 @@ export class ConnectError extends Error {
   }
 }
 
-const ENTRY = /^[A-Za-z0-9._@-]{1,128}$/;
+/**
+ * A catalog entry's id: a reviewed one ("notion@1") or a managed provider's ("connector:composio:_1password",
+ * whose app slugs may start with "_"). No "/", "?" or "%": it goes into planque's path encoded, as a whole.
+ */
+const ENTRY = /^[A-Za-z0-9._@:-]{1,300}$/;
+/** A provider's id and its page cursor, as planque gives them back: passed on as they are. */
+const PROVIDER = /^[A-Za-z0-9_-]{1,64}$/;
+const CURSOR = /^[\x21-\x7e]{1,4096}$/;
 
 async function call(fetchFn: Fetch, url: string, bearer: string, init: { method: string; body?: unknown }): Promise<unknown> {
   let res: Response;
@@ -48,11 +55,26 @@ async function call(fetchFn: Fetch, url: string, bearer: string, init: { method:
   }
 }
 
-/** The catalog, the account's connections marked, searched by q. */
-export async function listApps(fetchFn: Fetch, base: string, tenant: string, bearer: string, q: string): Promise<{ apps: CatalogApp[]; by_key: boolean }> {
-  const query = q.trim() ? `?q=${encodeURIComponent(q.trim().slice(0, 100))}` : "";
+/** One page of the catalog, the account's connections marked, searched by q. */
+export interface AppsPage {
+  apps: CatalogApp[];
+  by_key: boolean;
+  /** The managed provider whose apps this page lists, and the cursor of its next page: absent on the last. */
+  provider?: string;
+  next_cursor?: string;
+  /** Entries planque left out of this page as malformed or unsupported. */
+  skipped?: number;
+}
+
+/** One page of the catalog, the account's connections marked, searched by q; page.cursor asks for the next. */
+export async function listApps(fetchFn: Fetch, base: string, tenant: string, bearer: string, q: string, page: { cursor?: string; provider?: string } = {}): Promise<AppsPage> {
+  const params = new URLSearchParams();
+  if (q.trim()) params.set("q", q.trim().slice(0, 100));
+  if (page.provider && PROVIDER.test(page.provider)) params.set("provider", page.provider);
+  if (page.cursor && CURSOR.test(page.cursor)) params.set("cursor", page.cursor);
+  const query = params.size ? `?${params.toString().replace(/\+/g, "%20")}` : "";
   const got = await call(fetchFn, `${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/catalog${query}`, bearer, { method: "GET" }) as
-    { entries?: unknown; by_key?: unknown };
+    { entries?: unknown; by_key?: unknown; provider?: unknown; next_cursor?: unknown; skipped?: unknown };
   const entries = Array.isArray(got.entries) ? got.entries : [];
   const apps: CatalogApp[] = [];
   for (const e of entries as Record<string, unknown>[]) {
@@ -65,7 +87,12 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
       how, state, ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
     });
   }
-  return { apps, by_key: got.by_key === true };
+  return {
+    apps, by_key: got.by_key === true,
+    ...(typeof got.provider === "string" && PROVIDER.test(got.provider) ? { provider: got.provider } : {}),
+    ...(typeof got.next_cursor === "string" && CURSOR.test(got.next_cursor) ? { next_cursor: got.next_cursor } : {}),
+    ...(Number.isInteger(got.skipped) && (got.skipped as number) > 0 ? { skipped: got.skipped as number } : {}),
+  };
 }
 
 /** Starts a connection of entry for agent, the taf's KIFF agent: the grant to approve, nothing signed. */

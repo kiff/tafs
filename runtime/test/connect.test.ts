@@ -27,6 +27,24 @@ describe("Connect apps", () => {
     ] });
   });
 
+  it("lists a managed provider's apps a page at a time, its entries as planque names them", async () => {
+    const seen: { url?: string; init?: RequestInit }[] = [];
+    const got = await listApps(fake(200, { entries: [
+      { entry: "connector:composio:_1password", vendor: "_1password", title: "1Password", how: "oauth", state: "available" },
+      { entry: "connector:composio:gmail", vendor: "gmail", title: "Gmail", how: "oauth", state: "connected", grant: "g9" },
+    ], by_key: true, provider: "composio", next_cursor: "Y3Vyc29yOjE=", skipped: 2 }, seen), BASE, "t1", "sess", "", { provider: "composio", cursor: "Y3Vyc29yOjA=" });
+    expect(seen[0]!.url).toBe("https://planque.test/v1/accounts/t1/catalog?provider=composio&cursor=Y3Vyc29yOjA%3D");
+    expect(got.apps.map((a) => a.entry)).toEqual(["connector:composio:_1password", "connector:composio:gmail"]);
+    expect(got).toMatchObject({ provider: "composio", next_cursor: "Y3Vyc29yOjE=", skipped: 2 });
+    // The last page has no next cursor; a bad provider or cursor is never passed on.
+    const last = await listApps(fake(200, { entries: [], by_key: true, provider: "composio", next_cursor: "" }, seen), BASE, "t1", "s", "", { provider: "../x", cursor: "a b" });
+    expect(seen[1]!.url).toBe("https://planque.test/v1/accounts/t1/catalog");
+    expect(last).toEqual({ apps: [], by_key: true, provider: "composio" });
+    // Starting one sends its whole id, encoded.
+    await startApp(fake(200, { grant: { id: "g" } }, seen), BASE, "t1", "s", "connector:composio:_1password", "a");
+    expect(seen[2]!.url).toBe("https://planque.test/v1/accounts/t1/catalog/connector%3Acomposio%3A_1password/grants");
+  });
+
   it("starts a connection for the taf's KIFF agent, and gives back the grant to approve", async () => {
     const seen: { url?: string; init?: RequestInit }[] = [];
     const got = await startApp(fake(200, { grant: { id: "g2", request: { profile: {} } }, needs_key: true }, seen), BASE, "t1", "sess", "holded@1", "agent-refunds");
