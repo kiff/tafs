@@ -2439,7 +2439,8 @@ class AppModel(
     if (_state.value.mode != Mode.kiff) return
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     val generation = accountGeneration
-    val knob = attempt { cloud.knob(cloudId, version) } ?: return
+    // While a change waits to go live, the dial shows that version, so a door or ⏻ doesn't lose it from view.
+    val knob = attempt { cloud.knob(cloudId, version ?: _state.value.knobChanges[tafId]?.version) } ?: return
     if (generation == accountGeneration) _state.update { it.copy(knobs = it.knobs + (tafId to knob)) }
   }
 

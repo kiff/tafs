@@ -165,6 +165,8 @@ doors' own dial stays for a taf whose dial can't be read).
   (what starts it: doors, a connected app's event, a schedule, run now), **What** (the recipe,
   its steps numbered "1 · Check") and **Where** (where results go). The face is the taf's
   **Why**; a chosen stop shows on it instead (ring · stop, its value, what OK does).
+  Each stop's word sits along its ring and always reads upright: in the lower half (past 90°
+  and before 270° from the top) it turns half a turn more (`DialMath.upright`).
 - **Above it:** "Ask Coach or find anything", which opens Coach about the taf, and **Showing ▾**:
   All services, This taf (the stops with no connection), then each connection with its number
   of stops. Picking one shows only that input's stops (`KnobWire.knob(showing)`).
@@ -175,7 +177,8 @@ doors' own dial stays for a taf whose dial can't be read).
 - **One size per stop:** tafs cloud's `size` (a time, how often, a place on or off). − or +
   sends that choice's whole `setting` to `PUT …/knob`, which makes the next version, then reads
   it back (`?version=N`) so the next change builds on it. A stop with no size says "Ask Coach to
-  change". Changes collect into **Make N changes live**, the usual version switch.
+  change". Changes collect into **Make N changes live**, the usual version switch. While one
+  waits, every read of the dial (after a door or ⏻ too) asks for that version.
 - **Under it:** "When starts it, What it does in order, Where the result goes.", the chosen
   stop's words, and "Coach set this up · today's work ›", which opens the request the rim
   points at.

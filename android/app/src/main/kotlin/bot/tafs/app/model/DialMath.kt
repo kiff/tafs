@@ -29,4 +29,13 @@ object DialMath {
     if (d > stops / 2.0) d -= stops
     return d
   }
+
+  /**
+   * How far a ring's label turns at [fromTop] degrees clockwise from the top, so it always reads upright:
+   * along the ring, and half a turn more in the lower half (past 90° and before 270°).
+   */
+  fun upright(fromTop: Double): Double {
+    val at = ((fromTop % 360) + 360) % 360
+    return if (at > 90 && at < 270) at + 180 else at
+  }
 }

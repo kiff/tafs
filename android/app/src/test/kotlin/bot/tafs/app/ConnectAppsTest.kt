@@ -101,6 +101,16 @@ class ConnectAppsTest {
     assertEquals("one change so far", 1, m.state.value.knobChangeCount.getValue("refunds-1"))
   }
 
+  @Test fun aReloadWhileAChangeWaitsReadsThatVersionNotTheLiveOne() = runTest {
+    val m = model()
+    transport.answer("PUT /v1/tafs/taf_1/knob", 200, """{"version":8,"words":["Weekdays at 12:00."]}""")
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":7,"shown":8,"why":"Refund double charges","rim":{}}""")
+    assertTrue(m.changeKnobSize("refunds-1", kotlinx.serialization.json.JsonObject(emptyMap())))
+    // A door opened or the taf paused: the dial is read again.
+    m.loadKnob("refunds-1")
+    assertEquals("the waiting change stays in view", "https://cloud.tafs.kiff.dev/v1/tafs/taf_1/knob?version=8", transport.requestsTo("GET /v1/tafs/taf_1/knob").last().url)
+  }
+
   @Test fun aFormTheSchedulerCantKeepIsSaidInTafsCloudsWords() = runTest {
     val m = model()
     transport.answer("PUT /v1/tafs/taf_1/knob", 400, """{"error":"bad","words":"Every 25 minutes can't be kept exactly: the nearest is every 20 minutes."}""")

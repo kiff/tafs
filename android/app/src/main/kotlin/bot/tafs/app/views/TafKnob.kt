@@ -160,8 +160,8 @@ fun TafKnob(
       ring.stops.forEachIndexed { j, stop ->
         val fromTop = j * 360.0 / ring.stops.size
         val a = (-90 + fromTop) * PI / 180
-        // Along the ring, turned as the settled design turns each word.
-        val turn = fromTop.toFloat()
+        // Along the ring, and always upright: the lower half turns half a turn more.
+        val turn = bot.tafs.app.model.DialMath.upright(fromTop).toFloat()
         val isChosen = chosen?.ring?.kind == ring.kind && chosen.stop.id == stop.id
         val tint = when {
           isChosen -> color
