@@ -82,6 +82,14 @@ class KnobWireTest {
     assertFalse("a taf that works from its chat", KiffClient.json.decodeFromString<KnobWire>("""{"can_pause":false,"rim":{}}""").canPause)
   }
 
+  @Test fun anAppSignedInWithItsActionsToChooseIsNeitherConnectedNorToConnect() {
+    for (state in listOf("signed_in", "listed")) {
+      val app = KiffClient.json.decodeFromString<ConnectApps>("""{"apps":[{"entry":"connector:composio:notion","title":"Notion","state":"$state","grant":"g7"}]}""").apps.single()
+      assertTrue(state, app.signedIn)
+      assertFalse(app.connected)
+    }
+  }
+
   @Test fun aSizeStepsThroughItsChoicesAndStopsAtTheEnds() {
     val size = KiffClient.json.decodeFromString<KnobWire>(dial).item("trg_3")!!.size!!
     assertEquals("09:00", size.now!!.label)

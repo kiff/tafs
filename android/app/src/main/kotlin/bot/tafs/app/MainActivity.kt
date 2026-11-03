@@ -569,6 +569,13 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onConnect = if (state.canManageCards) ({ app, taf -> scope.launch { model.startConnectApp(app, taf) } }) else null,
         onAskCoach = { showingConnectApps = false; coachOpen = true },
         onClose = { showingConnectApps = false },
+        // The taf it's signed in for, by its grant: that taf's Coach chooses its actions.
+        onChooseActions = { app ->
+          showingConnectApps = false
+          state.grants.firstOrNull { it.id == app.grant }?.request?.agent?.let(model::improveInCoach) ?: run { coachOpen = true }
+        },
+        onConnectedNow = { grant -> model.dismissConnectedNow(); showingConnectApps = false; model.improveInCoach(grant.request.agent) },
+        dismissConnectedNow = model::dismissConnectedNow,
       )
       // Its approval, over the list: KIFF's words, the signature, then the vendor's page.
       state.listApproval?.let { grantId ->

@@ -236,7 +236,12 @@ taf, and **Ask Coach** opens a conversation about the taf.
 Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#connect-apps) says:
 tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
 over the list (`ConnectApprovalSheet`). With several tafs, **Which taf is this for?** is asked
-first, in a dialog over the list wherever Connect was tapped, as on iPhone and iPad. A row is the app's title alone, never the provider's id
+first, in a dialog over the list wherever Connect was tapped, as on iPhone and iPad. When a sign-in
+comes back, what happened is said at once, over the list: "Notion is signed in for Refunds. Next,
+Coach chooses its actions and you approve them.", with **Choose its actions**, which opens the
+taf's Coach (or "… is connected" when it's done). A row tafs cloud sends as signed in
+(`signed_in`, or `listed`) reads **Signed in · choose its actions** in place of Connect, and
+opens the same Coach. A row is the app's title alone, never the provider's id
 for it. Only the newest search's answer is shown: an earlier read that comes back late (the
 first, unfiltered one) is dropped. An app that signs in at the vendor is approved, then
 signed in. An app that takes an API key (`needs_key`) takes it on the same sheet, as on iPhone

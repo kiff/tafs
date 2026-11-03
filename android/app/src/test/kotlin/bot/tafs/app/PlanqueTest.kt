@@ -286,6 +286,27 @@ class PlanqueTest {
     assertNull("the signer a confirmed step set is gone", m.state.value.connecting)
   }
 
+  @Test fun aSignInFromConnectAppsIsSaidAtOnceWithItsNextStep() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, twoTafs)
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    // Signed in, its tools listed for Coach to choose from.
+    transport.answer(confirm, 200, grant("g1", "listed"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.refresh()
+    m.refreshConnections()
+    m.approveFromList("g1", digest)
+    val now = m.state.value.connectedNow!!
+    assertTrue(now.listed)
+    assertEquals(
+      "mcp.stripe.com is signed in for Refunds. Next, Coach chooses its actions and you approve them.",
+      bot.tafs.app.model.ConnectWords.signedInFor(now.vendor, m.state.value.taf(now.request.agent)?.name),
+    )
+    m.dismissConnectedNow()
+    assertNull(m.state.value.connectedNow)
+  }
+
   // MARK: A connection with a profile (KIFF's profile contract): KIFF's words, read by the phone and signed with the approval
 
   private fun resource(name: String) = javaClass.classLoader!!.getResource("profile/$name.json")!!.readText()

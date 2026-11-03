@@ -26,6 +26,7 @@ class ConnectAppsSheetTest {
       ConnectApps.App("stripe@1", "Stripe", "Stripe", state = "connected", grant = "g1"),
       ConnectApps.App("notion@1", "Notion", "Notion"),
       ConnectApps.App("google", "Google", "Google Sheets", state = "needs_reconnect", grant = "g2"),
+      ConnectApps.App("connector:composio:gmail", "Gmail", "Gmail", state = "signed_in", grant = "g7"),
     ),
     byKey = true,
   )
@@ -35,14 +36,18 @@ class ConnectAppsSheetTest {
   private fun taf(id: String, name: String) =
     bot.tafs.app.model.Taf(id = id, name = name, job = "", tools = emptyList(), colorIndex = 1, card = bot.tafs.app.model.Card(rules = emptyList(), issuedBy = "You"), now = "", cloudId = "cloud_$id")
 
-  private fun show(connect: Boolean, tafs: List<bot.tafs.app.model.Taf> = listOf(taf("refunds-1", "Refunds"))) = rule.setShown {
+  private val chose = mutableListOf<String>()
+
+  private fun show(connect: Boolean, tafs: List<bot.tafs.app.model.Taf> = listOf(taf("refunds-1", "Refunds")), connectedNow: bot.tafs.app.kiff.Grant? = null) = rule.setShown {
     TafsTheme {
       ConnectAppsSheet(
-        AppState(mode = Mode.kiff, ready = true, connectApps = list, tafs = tafs, access = tafs.associate { it.id to bot.tafs.app.kiff.Access(use = true, manage = true) }),
+        AppState(mode = Mode.kiff, ready = true, connectApps = list, tafs = tafs, access = tafs.associate { it.id to bot.tafs.app.kiff.Access(use = true, manage = true) }, connectedNow = connectedNow),
         load = {},
         onConnect = if (connect) ({ app, taf -> started += "${app.entry}>$taf" }) else null,
         onAskCoach = { askedCoach += 1 },
         onClose = {},
+        onChooseActions = { chose += "row ${it.grant}" },
+        onConnectedNow = { chose += "now ${it.id}" },
       )
     }
   }
@@ -107,5 +112,24 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText(ConnectAppsWords.NOT_LISTED).performClick()
     rule.waitForIdle()
     assertEquals(1, askedCoach)
+  }
+
+  @Test fun anAppSignedInSaysItsNextStepAndOpensItsCoach() {
+    show(connect = true)
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.SIGNED_IN_ROW).performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("row g7"), chose)
+    assertEquals("one Connect: Notion's, not Gmail's", 1, count(ConnectAppsWords.CONNECT))
+  }
+
+  @Test fun aSignInThatJustCameBackIsSaidAtOnceWithItsNextStep() {
+    val grant = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(
+      """{"id":"g7","status":"listed","vendor":"Notion","request":{"server":"","agent":"refunds-1","tools":[]}}""",
+    )
+    show(connect = true, connectedNow = grant)
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.signedInFor("Notion", "Refunds")).assertIsDisplayed()
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.CHOOSE_ACTIONS).performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("now g7"), chose)
   }
 }

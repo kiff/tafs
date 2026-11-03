@@ -66,6 +66,11 @@ fun ConnectAppsSheet(
   onConnect: ((ConnectApps.App, String?) -> Unit)?,
   onAskCoach: () -> Unit,
   onClose: () -> Unit,
+  /** A signed-in app's next step: its taf's Coach, to choose its actions (the app, and its grant's taf when known). */
+  onChooseActions: (ConnectApps.App) -> Unit = { onAskCoach() },
+  /** The connection that just came back signed in, and leaving that note. */
+  onConnectedNow: (bot.tafs.app.kiff.Grant) -> Unit = {},
+  dismissConnectedNow: () -> Unit = {},
 ) {
   var query by rememberSaveable { mutableStateOf("") }
   // An app is connected for a taf: with several, the owner picks which first; with none, there's nothing to connect it for.
@@ -84,6 +89,32 @@ fun ConnectAppsSheet(
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
   ) {
+    // A sign-in that just came back: said at once, over the list, with the next step.
+    state.connectedNow?.let { grant ->
+      val taf = state.tafs.firstOrNull { it.id == grant.request.agent }?.name
+      androidx.compose.material3.AlertDialog(
+        onDismissRequest = dismissConnectedNow,
+        containerColor = Theme.background,
+        text = {
+          Text(
+            if (grant.listed) bot.tafs.app.model.ConnectWords.signedInFor(grant.vendor, taf) else bot.tafs.app.model.ConnectWords.connectedFor(grant.vendor, taf),
+            style = scaled(16, color = Theme.ink),
+          )
+        },
+        confirmButton = {
+          if (grant.listed) {
+            Text(
+              bot.tafs.app.model.ConnectWords.CHOOSE_ACTIONS,
+              style = scaled(15, FontWeight.SemiBold, Theme.amber),
+              modifier = Modifier.heightIn(min = 44.dp).clickable { onConnectedNow(grant) }.padding(12.dp),
+            )
+          }
+        },
+        dismissButton = {
+          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = dismissConnectedNow).padding(12.dp))
+        },
+      )
+    }
     // Which taf: asked over the list, wherever Connect was tapped, before anything starts.
     picking?.let { app ->
       androidx.compose.material3.AlertDialog(
@@ -121,7 +152,7 @@ fun ConnectAppsSheet(
         if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
-        apps?.apps?.forEach { app -> AppRow(app, connect) }
+        apps?.apps?.forEach { app -> AppRow(app, connect, onChooseActions) }
         if (apps != null && apps.apps.isEmpty() && query.isNotBlank()) Text(ConnectAppsWords.NONE, style = scaled(14, color = Theme.soft))
         // The managed provider's catalog comes a page at a time.
         if (apps?.nextCursor != null) {
@@ -148,7 +179,7 @@ fun ConnectAppsSheet(
 }
 
 @Composable
-private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?) {
+private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?, onChooseActions: (ConnectApps.App) -> Unit = {}) {
   Panel {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
       // The app's initial on a tile; tafs cloud names the app, the tile is only a marker.
@@ -159,6 +190,12 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
       Text(app.title, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
       when {
         app.connected -> Text(ConnectAppsWords.CONNECTED, style = scaled(14, FontWeight.SemiBold, Theme.ok))
+        // Signed in, its actions still to choose: the next step is the taf's Coach, not Connect again.
+        app.signedIn -> Text(
+          bot.tafs.app.model.ConnectWords.SIGNED_IN_ROW,
+          style = scaled(14, FontWeight.SemiBold, Theme.amber),
+          modifier = Modifier.heightIn(min = 44.dp).clickable { onChooseActions(app) }.padding(top = 10.dp),
+        )
         onConnect != null -> Text(
           if (app.needsReconnect) ConnectAppsWords.SIGN_IN_AGAIN else ConnectAppsWords.CONNECT,
           style = scaled(15, FontWeight.SemiBold, if (app.needsReconnect) Theme.amberText else Theme.amber),
