@@ -1627,7 +1627,8 @@ final class AppModel: ObservableObject {
 
     /// The face was tapped on a stop whose `tap` says it does something: a door opens or
     /// closes through the doors API, and Run now starts a run, each as today, with no new
-    /// version. Every other change goes through the knob's own route.
+    /// version. If busy and a result place change the dial (`changeKnob`): the next version.
+    /// A schedule's form, and adding or removing triggers, go through Coach's draft.
     func pressKnob(_ tafID: UUID, _ item: TafsCloud.Knob.Item) async {
         guard let c = cloudTaf(for: tafID) else { return }
         if let door = item.door {
@@ -1638,6 +1639,12 @@ final class AppModel: ObservableObject {
             _ = await runNow(c)
         } else if item.kind == "busy" {
             _ = await changeKnob(tafID) { $0.busy = $0.busy == "latest" ? "skip" : "latest" }
+            return
+        } else if let place = item.place {
+            // A result place turned on or off. Schedules and triggers change through Coach.
+            _ = await changeKnob(tafID) { s in
+                if s.results.contains(place) { s.results.removeAll { $0 == place } } else { s.results.append(place) }
+            }
             return
         } else {
             return

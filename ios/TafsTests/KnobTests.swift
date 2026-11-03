@@ -87,6 +87,8 @@ final class KnobTests: XCTestCase {
         XCTAssertEqual(wakes.count, 2)
         XCTAssertEqual(wakes[1]["every_minutes"] as? Int, 20, "a number stays a number")
         XCTAssertEqual((wakes[1]["args"] as? [String: Any])?["q"] as? String, "refund")
+        setting.results.removeAll { $0 == "owner_email" } // a result place turned off
+        XCTAssertEqual(setting.results, ["app"])
         let made = try JSONDecoder().decode(TafsCloud.Knob.Change.self, from: Data(#"{"version":4,"words":["If busy, runs the latest once it's free"]}"#.utf8))
         XCTAssertEqual(made, TafsCloud.Knob.Change(version: 4, words: ["If busy, runs the latest once it's free"]))
     }

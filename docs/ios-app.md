@@ -121,7 +121,8 @@ the app in sample mode.
   approves it once; ‹ Overview goes back. The face's tap opens or closes a door through the
   doors API (its `door`) and starts a run for Run now, as today, with no new version; every
   other change goes through the knob's own route: a stop whose `tap` changes the dial (If
-  busy) copies the live `setting`, changes that one thing and sends it whole to `PUT …/knob`
+  busy, a result place on or off; a schedule's form and adding or removing triggers go
+  through Coach's draft) copies the live `setting`, changes that one thing and sends it whole to `PUT …/knob`
   (`AppModel.changeKnob`); tafs cloud's words for the next version show under the dial, with
   Versions to switch to it. When the dial can't be read, the doors' own dial shows instead.
   Whether the person manages a taf, which decides its Doors, dial, Versions and Halt, is read
