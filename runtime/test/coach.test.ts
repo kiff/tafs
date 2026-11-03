@@ -97,7 +97,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const init = await w.rpc("initialize", { protocolVersion: "2025-06-18" });
     expect(init.result).toMatchObject({ protocolVersion: "2025-06-18", serverInfo: { name: "tafs" } });
     const list = await w.rpc("tools/list");
-    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "version_try", "version_install"]);
+    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install"]);
     for (const t of list.result?.tools ?? []) expect(t.inputSchema.required).toContain(OP_ARG);
     expect(TOOLS.map((t) => t.name)).not.toContain("hold_answer");
   });
@@ -218,6 +218,17 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect((await w.tool("tafs_state", {})).json).toMatchObject({ tafs: [expect.objectContaining({ id: RAE, results: ["door_reply", "owner_email"] })] });
     expect(await w.tool("taf_results", { taf: RAE, places: [] })).toMatchObject({ isError: true, text: expect.stringContaining("places is one or more of") });
     expect(await w.tool("taf_results", { taf: RAE, places: ["sms"] })).toMatchObject({ isError: true });
+  });
+
+  it("taf_dial drafts the dial as the taf's next version, checked like a tap, and runs nothing", async () => {
+    const w = world();
+    w.agents.versions.set(`${T}|${RAE}`, []);
+    expect(await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "every", every_minutes: 25 }] }))
+      .toMatchObject({ isError: true, text: expect.stringContaining("the nearest is every 20 minutes") });
+    const made = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], when: { busy: "latest" } })).json as { version: number; words: string[] };
+    expect(made.words).toEqual(["Weekdays at 09:00", "If busy, runs the latest once it's free", "Results go to door_reply"]);
+    expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(made.version)]).toEqual({ wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], busy: "latest", results: ["door_reply"] });
+    expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c))).toEqual([]);
   });
 
   it("run_stop and taf_pause act through kiff/agents; an unknown taf is refused", async () => {

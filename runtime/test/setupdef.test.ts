@@ -17,7 +17,7 @@ describe("Setup's definition on kiff/agents", () => {
       ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "speed", "thinking"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
-    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "version_try", "version_install"]);
+    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install"]);
   });
 
   it("runs as a taf runs, with its own cost cap and effort", () => {
@@ -90,7 +90,8 @@ describe("Setup's definition on kiff/agents", () => {
 
   it("calls taf_results and lets it be held, never reading its 0 a day as forbidden", () => {
     const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
-    expect(flat).toContain("version_install and taf_results tools see and act on them");
+    expect(flat).toContain("version_install, taf_results and taf_dial tools see and act on them");
+    expect(flat).toContain("Then show {type: \"knob\", version, taf_id} so the owner sees the change on the dial's rings");
     expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
   });
 

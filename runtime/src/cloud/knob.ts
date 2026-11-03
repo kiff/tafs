@@ -40,7 +40,8 @@ export interface Knob {
   when: RingItem[];
   results: (Omit<RingItem, "kind"> & { place: ResultPlace })[];
   rim: { done: number; working: number; retrying: number; needs_you: number; line: string };
-  draft: null | { version: number; words: string[] };
+  /** A dial change waiting for the owner: its words, all of them and by ring, for Coach's card and the dial. */
+  draft: null | { version: number; words: string[]; wakes: string[]; when: string[]; results: string[] };
   /** The shown version's dial as PUT takes it: a tap copies it, changes one thing and sends it back. */
   setting: KnobSetting;
 }
@@ -62,6 +63,8 @@ export interface KnobInput {
   busy?: "skip" | "latest";
   /** The follow-ups the taf set itself, waiting to fire. */
   followUps?: Schedule[];
+  /** A newer version's dial, made and not yet live: what waits for the owner's confirmation. */
+  draft?: { version: number; setting: KnobSetting };
   /** The live version's dial, when a tap or Coach's draft set it; else it's read from the schedule. */
   setting?: KnobSetting;
   version?: number;
@@ -157,12 +160,27 @@ export function knobOf(k: KnobInput): Knob {
     ...(k.version !== undefined ? { version: k.version } : {}),
     does: k.does, wakes, when, results,
     rim: { ...t, line: parts.join(" · ") },
-    draft: null,
+    draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting) } : null,
     setting: k.setting ?? {
       wakes: [...(k.doors.length ? [{ kind: "door" as const }] : []), ...(fromSchedule ? [fromSchedule] : [])],
       busy, results: k.places,
     },
   };
+}
+
+/** What a dial change does, by ring, for the owner to confirm. */
+export function ringWords(k: KnobSetting): { wakes: string[]; when: string[]; results: string[] } {
+  return {
+    wakes: k.wakes.map(triggerWords),
+    when: [k.busy === "latest" ? "If busy, runs the latest once it's free" : "If busy, skips the run"],
+    results: [`Results go to ${k.results.join(", ")}`],
+  };
+}
+
+/** The same words in one list, as a dial change answers them. */
+export function settingWords(k: KnobSetting): string[] {
+  const r = ringWords(k);
+  return [...r.wakes, ...r.when, ...r.results];
 }
 
 /** A trigger's word on the ring and its line. */

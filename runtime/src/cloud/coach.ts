@@ -83,6 +83,24 @@ export const TOOLS: ToolDef[] = [
       "Say \"Waiting for your approval\" once. tafs_state shows each taf's results.",
   },
   {
+    name: "taf_dial", line: "Draft a change to a taf's dial",
+    properties: {
+      taf: TAF,
+      wakes: {
+        type: "array", maxItems: 10, description: "Every trigger, as it should be: {kind: \"schedule\", form: daily|weekdays|weekly|monthly|monthly_last_day|times_a_day|every|once, " +
+          "at?: \"09:00\", days?: [\"mon\"…], times?: [\"09:00\"…], every_minutes?: 15|20|30|60·k, between?: {from, to} on the hour, date?: day of month or \"2026-11-05T09:00\"}, " +
+          "{kind: \"app_check\", operation, args, items, cursor, every_minutes}, or {kind: \"door\"}. Times are in the account's zone.",
+        items: { type: "object" },
+      },
+      when: { type: "object", properties: { busy: { type: "string", enum: ["skip", "latest"] } }, description: "What it does when a trigger fires while it works." },
+      results: { type: "array", items: { type: "string", enum: ["door_reply", "app", "owner_email"] }, description: "Every place its results go; omitted, as they are." },
+    },
+    required: ["taf", "wakes"],
+    description: "Drafts a taf's dial, all its triggers at once: it becomes the taf's next version, and nothing runs from it. " +
+      "A time the scheduler can't keep exactly is refused with the nearest one: offer that. Then version_install that version; " +
+      "the owner sees its rings on the taf's dial and confirms it in tafs.",
+  },
+  {
     name: "version_try", line: "Try a version of a taf, sending nothing",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 }, input: { type: "string", description: "What the trial works on; omitted, what each scheduled run asks." } },
     required: ["taf", "n"],
@@ -111,6 +129,8 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-taf-pause", actions: ["taf_pause"], limit: 50, asks: false },
   { id: "coach-version-install", actions: ["version_install"], limit: 0, asks: true },
   { id: "coach-taf-results", actions: ["taf_results"], limit: 0, asks: true },
+  // A dial draft makes a version and runs nothing: installing it is held above.
+  { id: "coach-taf-dial", actions: ["taf_dial"], limit: 20, asks: false },
 ];
 
 /** A connection in KIFF's gateway, as tafs cloud reads it. */

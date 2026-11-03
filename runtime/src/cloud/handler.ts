@@ -12,10 +12,10 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
-import { dayIn, DOES, knobOf, type KnobSetting } from "./knob.js";
+import { dayIn, DOES, knobOf, type KnobSetting, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { ConnectError, listApps, startApp } from "./connect.js";
-import { instantIn, schedulesOf, TriggerError, triggerWords, type Trigger } from "./triggers.js";
+import { instantIn, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
@@ -614,29 +614,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // makes one. Nothing runs from it until it goes live (docs/api.md, "The knob").
     await needTaf(event, me, taf, deps);
     if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
-    const body = parseBody(event);
-    const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
-    const when = (body.when ?? {}) as { busy?: unknown };
-    const busy = when.busy === "latest" ? "latest" : "skip";
-    if (wakes.length > 10) throw new HTTPError(400, "a taf has at most 10 triggers");
-    for (const t of wakes) {
-      try {
-        schedulesOf(t, busy);
-      } catch (err) {
-        if (err instanceof TriggerError) throw new HTTPError(400, err.nearest ? `${err.message}: the nearest is ${err.nearest}` : err.message);
-        throw err;
-      }
-    }
-    const results = body.results === undefined ? placesOf(taf) : resultPlaces(body.results);
-    const words = [...wakes.map(triggerWords), busy === "latest" ? "If busy, runs the latest once it's free" : "If busy, skips the run",
-      `Results go to ${results.join(", ")}`];
-    const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE) }, me, taf, deps, event);
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const cur = await deps.tafs.get(me.tenantID, taf.id);
-      if (!cur) break;
-      if (await deps.tafs.putIf(me.tenantID, { ...cur, knobs: { ...cur.knobs, [String(version)]: { wakes, busy, results } } }, cur)) break;
-    }
-    return { version, words };
+    return dialVersion(parseBody(event), me, taf, deps, event);
   }
   if (parts.length === 4 && method === "GET" && action === "knob") {
     // The taf's dial (docs/api.md, "The knob"): every label and line written here.
@@ -652,6 +630,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
       .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
     const setting = live !== undefined ? taf.knobs?.[String(live)] : undefined;
+    // The newest dial change made after the live version and not yet live: it waits for the owner.
+    const pending = Object.keys(taf.knobs ?? {}).map(Number).filter((n) => live === undefined || n > live).sort((a, b) => b - a)[0];
     const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
     const { counts } = workOf(today, zone, now, []);
     const job = JOBS.find((j) => j.id === taf.job);
@@ -660,6 +640,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
       unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps,
       ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}),
+      ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
       today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
       zone, now,
     });
@@ -2579,6 +2560,35 @@ async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, d
 }
 
 /**
+ * A dial change, from a tap (PUT …/knob) or Coach's draft (taf_dial): each trigger checked, then the taf's
+ * next version, as an improvement makes one, with its dial kept by version. Nothing runs from it until it
+ * goes live (applyKnob).
+ */
+async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number; words: string[] }> {
+  const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
+  const when = (body.when ?? {}) as { busy?: unknown };
+  const busy = when.busy === "latest" ? "latest" : "skip";
+  if (wakes.length > 10) throw new HTTPError(400, "a taf has at most 10 triggers");
+  for (const t of wakes) {
+    try {
+      schedulesOf(t, busy);
+    } catch (err) {
+      if (err instanceof TriggerError) throw new HTTPError(400, err.nearest ? `${err.message}: the nearest is ${err.nearest}` : err.message);
+      throw err;
+    }
+  }
+  const results = body.results === undefined ? placesOf(taf) : resultPlaces(body.results);
+  const words = settingWords({ wakes, busy, results });
+  const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE) }, me, taf, deps, event);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const cur = await deps.tafs.get(me.tenantID, taf.id);
+    if (!cur) break;
+    if (await deps.tafs.putIf(me.tenantID, { ...cur, knobs: { ...cur.knobs, [String(version)]: { wakes, busy, results } } }, cur)) break;
+  }
+  return { version, words };
+}
+
+/**
  * The live version's dial, written where it acts: its triggers to kiff/agents' scheduler (the
  * taf's own schedule first, then one more per firing time the scheduler can say exactly, any left
  * over switched off), and where its results go. A version with no dial changes none of it.
@@ -4046,6 +4056,20 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     try { places = resultPlaces(args.places); } catch (err) { throw new ToolRefusal((err as Error).message); }
     await deps.tafs.put(call.tenant, { ...taf, results: places });
     return { taf: taf.name, results: places };
+  }
+  if (name === "taf_dial") {
+    // Coach's draft of the dial: the taf's next version, nothing running from it. Installing it is
+    // version_install, held for the owner, who sees its rings on the dial's draft.
+    if (may && !may.manage) throw new ToolRefusal(`changing ${taf.name}'s dial is for the people who manage it`);
+    if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no dial");
+    try {
+      const made = await dialVersion(args, { tenantID: call.tenant, subject: call.person?.subject ?? call.coach, apiKey: false, agentID: "", capabilities: [] }, taf, deps);
+      return { taf: taf.name, taf_id: taf.id, version: made.version, words: made.words,
+        next: `show {type: "knob", version: ${made.version}, taf_id: "${taf.id}"}, then version_install ${made.version}: the owner confirms it in tafs` };
+    } catch (err) {
+      if (err instanceof HTTPError) throw new ToolRefusal(err.message);
+      throw err;
+    }
   }
   if (may && !may.manage) throw new ToolRefusal(`changing ${taf.name}'s version is for the people who manage it`);
   if (!Number.isInteger(n) || n < 1) throw new ToolRefusal("n is a version number, from tafs_state");
