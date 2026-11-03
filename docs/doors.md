@@ -131,7 +131,7 @@ Nothing here is on until the deployment sets it up. tafs cloud reads:
 **What the owner does.** Connect the Slack bot for the taf from Connect apps: Composio's managed
 Slack bot sign-in, approved on the phone like any connection, so there's no Slack app of our own
 and no Slack token in tafs cloud. Then, in Doors, add a Slack door on one of its channels. A message
-there is handed over by planque, and the taf works it like any door's.
+there is handed over by planque, and the taf works it like any door's. The app subscribes the channel in planque first (signed), then adds the door with `{app: "slack", grant, channel, trigger}`, `trigger` being planque's subscription id; the door gives `grant`, `channel` and `trigger` back, so removing it deletes that subscription too.
 
 **How it arrives.** planque listens through the bot's triggers and hands each message to
 `POST /v1/doors/planque` as `planque.door.v1`: `{id, tenant, agent, grant, provider, account, trigger,

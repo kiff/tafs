@@ -49,6 +49,8 @@ export interface Door {
   /** A Slack door's connection in planque (the grant whose Slack bot it listens through) and its channel. */
   grant?: string;
   channel?: string;
+  /** planque's subscription that hands this channel's messages over: the app deletes it when the door goes. */
+  trigger?: string;
 }
 
 /** Where a door's answer goes back, in the same thread: what the door's provider needs. */

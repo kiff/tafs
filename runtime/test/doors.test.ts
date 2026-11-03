@@ -1058,9 +1058,9 @@ describe("the Slack door, through planque", () => {
   it("opens on a channel of the taf's Slack bot connection; paired members give work, the taf answers in Slack itself", async () => {
     const w = world();
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", grant: "grt_slack1" } })).status).toBe(400);
-    const made = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", grant: "grt_slack1", channel: "c0refunds" } });
+    const made = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", grant: "grt_slack1", channel: "c0refunds", trigger: "trg_9" } });
     expect(made.status).toBe(200);
-    expect(made.body.door).toMatchObject({ id: "slack", kind: "slack", address: "#C0REFUNDS", open: true, proof: "proven" });
+    expect(made.body.door).toMatchObject({ id: "slack", kind: "slack", address: "#C0REFUNDS", open: true, proof: "proven", grant: "grt_slack1", channel: "C0REFUNDS", trigger: "trg_9" });
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/slack/keys`, { token: "ana", body: { id: "ben@x.example" } })).status).toBe(400);
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/slack/keys`, { token: "ana", body: { id: "U0BEN", name: "Ben" } })).status).toBe(200);
 

@@ -618,6 +618,8 @@ export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, o
     today: today.keys, limit: DOOR.keysPerDay, resting: today.keys >= DOOR.keysPerDay,
     others_today: today.others, others_limit: DOOR.othersPerDay,
     words: doorWords(d, app, today),
+    // A Slack door names its connection, channel and planque subscription, for the app to undo it with the door.
+    ...(d.kind === "slack" ? { grant: d.grant, channel: d.channel, ...(d.trigger ? { trigger: d.trigger } : {}) } : {}),
   };
 }
 
@@ -730,7 +732,8 @@ export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: R
     if (!/^[A-Za-z0-9_-]{1,128}$/.test(grant) || !/^[CGD][A-Z0-9]{2,30}$/.test(channel)) throw new DoorError(400, "connect the Slack bot first, then pick its channel");
     const route = `slack:${grant}:${channel}`;
     if (!(await store.create(doorKeys.route(route), { tenant: owner.tenant, taf: taf.id, door: "slack" }))) throw new DoorError(409, "that channel is already a taf's door");
-    door = { id: "slack", kind: "slack", app: "slack", open: true, address: `#${channel}`, route, grant, channel, keys: [], created: now };
+    const trigger = typeof body.trigger === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(body.trigger.trim()) ? body.trigger.trim() : undefined;
+    door = { id: "slack", kind: "slack", app: "slack", open: true, address: `#${channel}`, route, grant, channel, ...(trigger ? { trigger } : {}), keys: [], created: now };
   } else {
     door = await connectWhatsApp(ctx, cfg, owner, taf, body, now);
   }
