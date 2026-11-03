@@ -15,6 +15,8 @@ version headings refer to releases, not merely to merged pull requests.
   anything", Showing ▾ one connection's stops, and a remote: ◀ ▶ through the stops, − + the chosen
   stop's one size, ⏻ pause, the face as OK. Changes collect into "Make N changes live". No chips
   and no "+ Add": new things go through Coach.
+- **Android, door states on the dial:** a door's When stop is lit when open, dashed when closed,
+  grey while resting, amber with a dot while a knock waits, and lights up when a message arrives.
 - **Android, Coach sets the dial:** Coach's dial card shows Wakes it, When and Results go in tafs
   cloud's words, made live with one confirmation, or Change back to Coach; the dial shows the same
   draft with Make it live.

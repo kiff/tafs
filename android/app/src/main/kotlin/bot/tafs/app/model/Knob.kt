@@ -39,6 +39,12 @@ data class KnobStop(
   val size: String? = null,
 )
 
+/**
+ * A door's look on its When stop, from the taf's doors: its arc lit when open, dashed when closed, grey when resting, amber
+ * while a knock waits, and a light for a moment when a message arrives.
+ */
+data class DoorLook(val open: Boolean, val resting: Boolean = false, val knocking: Boolean = false, val arrived: Boolean = false)
+
 /** Today's work around the rim, as counts: done, working, retrying, and waiting on the owner. */
 data class KnobRim(val done: Int = 0, val working: Int = 0, val retrying: Int = 0, val needsYou: Int = 0) {
   val total: Int get() = done + working + retrying + needsYou

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -79,8 +80,16 @@ fun TafKnob(
   onChoose: (KnobRing.Kind, String) -> Unit,
   onFace: () -> Unit,
   modifier: Modifier = Modifier,
+  /** Each door stop's look on When, by stop id. */
+  doors: Map<String, bot.tafs.app.model.DoorLook> = emptyMap(),
 ) {
   val chosen = (face as? KnobFace.Chosen)
+  // A message just arrived at a door: its light, for a moment.
+  val glow = if (doors.values.any { it.arrived }) {
+    androidx.compose.animation.core.rememberInfiniteTransition(label = "arrival").animateFloat(
+      0.15f, 0.55f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(700), androidx.compose.animation.core.RepeatMode.Reverse), label = "light",
+    ).value
+  } else 0f
   BoxWithConstraints(modifier.fillMaxWidth().aspectRatio(1f)) {
     val px = with(LocalDensity.current) { maxWidth.toPx() }
     // The design is drawn on a 360 grid; everything scales from it.
@@ -96,6 +105,33 @@ fun TafKnob(
         drawCircle(Color.White.copy(alpha = if (dim) 0.45f else 1f), mid, c, style = Stroke((outer - inner) * u))
         drawCircle(Theme.ink.copy(alpha = 0.08f), outer * u, c, style = Stroke(1f))
         drawCircle(Theme.ink.copy(alpha = 0.08f), inner * u, c, style = Stroke(1f))
+      }
+      // Each door on When: its arc on the ring's outer edge, under its word.
+      knob.rings.firstOrNull { it.kind == KnobRing.Kind.WakesIt }?.let { ring ->
+        val r = 104f * u
+        val span = (360f / ring.stops.size.coerceAtLeast(1) * 0.7f).coerceAtMost(48f)
+        ring.stops.forEachIndexed { j, stop ->
+          val look = doors[stop.id] ?: return@forEachIndexed
+          val at = -90f + j * 360f / ring.stops.size
+          val color = when {
+            look.knocking -> KnobColors.needsYou
+            look.resting -> Theme.dim
+            look.open -> KnobColors.wakesIt
+            else -> Theme.ink.copy(alpha = 0.25f)
+          }
+          drawArc(
+            color, at - span / 2, span, false, topLeft = c - Offset(r, r), size = Size(r * 2, r * 2),
+            style = Stroke(
+              (if (look.open || look.knocking) 3.5f else 2f) * u,
+              cap = androidx.compose.ui.graphics.StrokeCap.Round,
+              pathEffect = if (look.open || look.knocking || look.resting) null else androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(3f * u, 5f * u)),
+            ),
+          )
+          val a = Math.toRadians(at.toDouble())
+          val p = c + Offset(cos(a).toFloat(), sin(a).toFloat()) * r
+          if (look.arrived) drawCircle(KnobColors.wakesIt.copy(alpha = glow), 9f * u, p)
+          if (look.knocking) drawCircle(KnobColors.needsYou, 3.5f * u, p)
+        }
       }
       // The rim: today's work, done to needs you, clockwise from the top.
       val rim = knob.rim
@@ -233,6 +269,18 @@ fun TafDialPanel(
     scope.launch { busy = true; try { block() } finally { busy = false } }
   }
   val item = chosen?.let { wire.item(it) }
+  // A door whose count today went up since it was last drawn: lit for a few seconds.
+  val seen = androidx.compose.runtime.remember(taf.id) { mutableMapOf<String, Int>() }
+  var arrivals by androidx.compose.runtime.remember(taf.id) { androidx.compose.runtime.mutableStateOf(emptySet<String>()) }
+  androidx.compose.runtime.LaunchedEffect(doors.doors.map { it.id to it.today }) {
+    val fresh = doors.doors.filter { d -> seen[d.id]?.let { d.today > it } == true }.map { it.id }.toSet()
+    doors.doors.forEach { seen[it.id] = it.today }
+    if (fresh.isNotEmpty()) {
+      arrivals = arrivals + fresh
+      kotlinx.coroutines.delay(3000)
+      arrivals = arrivals - fresh
+    }
+  }
 
   Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
     // Above the dial: Coach, and which input's stops show.
@@ -266,8 +314,10 @@ fun TafDialPanel(
         }
       }
     }
+    val looks = doorLooks(wire, doors, arrivals)
     TafKnob(
       knob, face,
+      doors = looks,
       onChoose = { _, id -> choose(id) },
       onFace = {
         work {
@@ -368,3 +418,11 @@ private fun RemoteKey(symbol: String, label: String, enabled: Boolean, onClick: 
 
 /** The remote's Pause key, drawn as the power mark. */
 private const val POWER = "⏻"
+
+/** Each door on When as the doors say, by stop id: open, closed, resting, a knock waiting, or a message just in (`arrived`, by door id). */
+internal fun doorLooks(wire: bot.tafs.app.kiff.KnobWire, doors: bot.tafs.app.app.TafDoors, arrived: Set<String> = emptySet()): Map<String, bot.tafs.app.model.DoorLook> =
+  wire.wakes.mapNotNull { w ->
+    val door = w.door?.let { id -> doors.doors.firstOrNull { it.id == id } } ?: return@mapNotNull null
+    val knocking = doors.openKnocks.any { it.door == door.id && !it.isLine }
+    w.id to bot.tafs.app.model.DoorLook(door.open, door.resting, knocking, arrived = door.id in arrived)
+  }.toMap()

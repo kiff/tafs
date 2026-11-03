@@ -179,6 +179,16 @@ doors' own dial stays for a taf whose dial can't be read).
 - **Under it:** "When starts it, What it does in order, Where the result goes.", the chosen
   stop's words, and "Coach set this up · today's work ›", which opens the request the rim
   points at.
+- **A door on its When stop** shows its state as an arc on the ring's edge, from the taf's
+  doors: lit when open, dashed when closed, grey while it rests, amber with a dot while a knock
+  waits (Do it, Pair them and Ignore stay in the knock's panel under the dial), and a light for
+  a moment when a message arrives.
+
+<p>
+  <img src="screenshots/android/dial-overview.png" width="180" alt="The dial: the Why on the face, When, What and Where around it, an email door with a knock waiting and a closed Slack door">
+  <img src="screenshots/android/dial-stop-size.png" width="180" alt="A stop chosen: Weekdays at 09:00, its size, and Make 1 change live">
+  <img src="screenshots/android/dial-coach-card.png" width="180" alt="Coach's card: the dial it drafted, by connection, with one confirmation">
+</p>
 
 No chips and no "+ Add": anything new (an app, a step, a place) goes through Coach. Every word
 on a stop is tafs cloud's; the app's own are the ring of controls and these few lines.
