@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Android:** an app that takes an API key is connected from Connect apps, as on iPhone and iPad. Its approval sheet takes the key and gives it to planque with the same confirmation, instead of sending the owner to Coach.
 - **iPhone and iPad:** Connect apps clears its list and approval when the account changes and ignores stale search replies. Removing a Slack door waits until the phone can stop its subscription.
 
 ### Removed

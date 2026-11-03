@@ -176,7 +176,12 @@ fun ConnectApprovalSheet(
   loadWords: suspend (String) -> Unit,
   onApprove: (bot.tafs.app.kiff.Grant) -> Unit,
   onClose: () -> Unit,
+  /** An API-key connection: the key is typed here and given with the same confirmation, instead of a vendor's sign-in. */
+  needsKey: Boolean = false,
+  onGiveKey: (bot.tafs.app.kiff.Grant, String) -> Unit = { _, _ -> },
 ) {
+  // Kept only while the sheet is open, never saved: it goes to planque once.
+  var key by androidx.compose.runtime.remember(grant?.id) { mutableStateOf("") }
   ModalBottomSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -205,11 +210,28 @@ fun ConnectApprovalSheet(
           Text(bot.tafs.app.model.CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
         } else {
           val busy = state.connecting == grant.id
+          if (needsKey) {
+            OutlinedTextField(
+              key, { key = it }, Modifier.fillMaxWidth(),
+              placeholder = { Text(bot.tafs.app.model.ConnectWords.KEY) },
+              singleLine = true,
+              enabled = !busy,
+              visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+              keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false,
+              ),
+            )
+          }
           ApprovalGate {
+            val biometry = bot.tafs.app.design.LocalBiometry.current
             bot.tafs.app.design.PrimaryButton(
-              if (busy) state.connectStep ?: "Approving…" else "Approve with ${bot.tafs.app.design.LocalBiometry.current}",
-              { onApprove(grant) },
-              enabled = !busy && (!profiled || words != null),
+              when {
+                busy -> state.connectStep ?: "Approving…"
+                needsKey -> bot.tafs.app.model.ConnectWords.giveKeyWith(biometry)
+                else -> "Approve with $biometry"
+              },
+              { if (needsKey) onGiveKey(grant, key) else onApprove(grant) },
+              enabled = !busy && (!profiled || words != null) && (!needsKey || key.isNotBlank()),
             )
           }
         }

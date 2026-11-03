@@ -219,6 +219,23 @@ class PlanqueClient(
     return decode(raw("POST", "grants/${escaped(grant.id)}/approve", body))
   }
 
+  /**
+   * Gives an API-key connection its key, as shown, with the same checks as approving: the body carries the digest the owner
+   * approved, the key's SHA-256 and `kiff_profile` when it has one, and is signed; the key itself goes once, in
+   * `Planque-Vendor-Key`, to planque, which keeps it. Neither the phone nor tafs cloud keeps it.
+   */
+  suspend fun giveKey(grant: Grant, key: String, words: ProfileWords? = null): Grant {
+    if (!grant.digestMatches) throw PlanqueError.DigestMismatch
+    val trimmed = key.trim()
+    val fields = buildMap {
+      put("digest", kotlinx.serialization.json.JsonPrimitive(grant.digest))
+      put("key_sha256", kotlinx.serialization.json.JsonPrimitive(sha256Hex(trimmed.toByteArray())))
+      words?.let { put("kiff_profile", it.approval()) }
+    }
+    val body = KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(fields)).toByteArray()
+    return decode(raw("POST", "grants/${escaped(grant.id)}/key", body, headers = mapOf(VENDOR_KEY to trimmed)))
+  }
+
   /** Confirms the vendor sign-in with the code it handed back to the app. Only the phone that approved can, within 15 minutes; then planque registers the tools in KIFF. */
   suspend fun confirm(grantId: String, code: String): Grant =
     decode(raw("POST", "grants/${escaped(grantId)}/confirm", body("confirm" to code)))
@@ -268,7 +285,7 @@ class PlanqueClient(
 
   private fun escaped(s: String): String = java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 
-  private suspend fun raw(method: String, path: String, body: ByteArray?, override: ((ByteArray) -> String)? = null): ByteArray {
+  private suspend fun raw(method: String, path: String, body: ByteArray?, override: ((ByteArray) -> String)? = null, headers: Map<String, String> = emptyMap()): ByteArray {
     val account = tenant
     val sign = override ?: signer
     if (account == null || sign == null) throw PlanqueError.NotSigning
@@ -279,13 +296,14 @@ class PlanqueClient(
     // planque asks KIFF whether this device signed: never a key alone. One read while the account changed is kept only if the
     // account is still this request's: kept otherwise, it would name the last account's device to the next.
     val device = deviceId ?: deviceLoader?.invoke()?.also { if (tenant == account) deviceId = it } ?: throw PlanqueError.NoDevice
-    val headers = linkedMapOf(
+    val sent = linkedMapOf(
       "Accept" to "application/json",
       "User-Agent" to "tafs-android",
       "Planque-Device-Signature" to "t=$signedAt,v1=${sign(message)},d=$device",
     )
-    if (body != null) headers["Content-Type"] = "application/json"
-    val response = transport.send(HttpRequest(method, baseUrl.trimEnd('/') + uri, headers, body))
+    if (body != null) sent["Content-Type"] = "application/json"
+    sent.putAll(headers)
+    val response = transport.send(HttpRequest(method, baseUrl.trimEnd('/') + uri, sent, body))
     if (response.status !in 200..299) {
       val said = runCatching { KiffClient.json.parseToJsonElement(String(response.body)).jsonObject["error"]?.jsonPrimitive?.content }.getOrNull()
       throw PlanqueError.Server(response.status, said ?: "The connection answered ${response.status}")
@@ -294,6 +312,9 @@ class PlanqueClient(
   }
 
   companion object {
+    /** The header an API-key connection's key goes to planque in, once. */
+    const val VENDOR_KEY = "Planque-Vendor-Key"
+
     /** What the phone signs (planque's `device.Message`): seven lines, no trailing newline. */
     fun message(base: String, tenant: String, method: String, uri: String, body: ByteArray, signedAt: String): ByteArray =
       listOf("planque.request.v1", base.trimEnd('/'), tenant, method, uri, sha256Hex(body), signedAt).joinToString("\n").toByteArray()

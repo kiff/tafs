@@ -347,6 +347,8 @@ data class AppState(
   val startingApp: String? = null,
   /** The grant whose approval is open over Connect apps. */
   val listApproval: String? = null,
+  /** Whether that connection takes an API key, given on the sheet instead of a vendor's sign-in. */
+  val listApprovalNeedsKey: Boolean = false,
   /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
   val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
@@ -2508,13 +2510,13 @@ class AppModel(
 
   /**
    * Connect from Connect apps: starts the app's grant (or, for one to sign in again, takes the grant it has) and opens its
-   * approval over the list. A vendor that takes a key is Coach's to set up for now.
+   * approval over the list. A vendor that takes an API key (`needs_key`) takes it on the same sheet ([startGiveKey]).
    */
   suspend fun startConnectApp(app: bot.tafs.app.kiff.ConnectApps.App, tafId: String? = null) {
     if (_state.value.mode != Mode.kiff || _state.value.startingApp != null) return
     if (app.needsReconnect && app.grant != null) {
       refreshConnections()
-      _state.update { it.copy(listApproval = app.grant) }
+      _state.update { it.copy(listApproval = app.grant, listApprovalNeedsKey = false) }
       return
     }
     // The taf it's for, by its tafs cloud id: the one chosen, or the only one this person manages.
@@ -2525,12 +2527,8 @@ class AppModel(
     try {
       val started = cloud.startConnect(app.entry, cloudId)
       if (generation != accountGeneration) return
-      if (started.needsKey) {
-        _state.update { it.copy(connectAppsError = ConnectWords.needsKey(app.title)) }
-        return
-      }
       refreshConnections()
-      if (generation == accountGeneration) _state.update { it.copy(listApproval = started.grant) }
+      if (generation == accountGeneration) _state.update { it.copy(listApproval = started.grant, listApprovalNeedsKey = started.needsKey) }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -2555,7 +2553,75 @@ class AppModel(
     }
   }
 
-  fun closeListApproval() = _state.update { it.copy(listApproval = null) }
+  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
+
+  /** Give the key on the sheet over Connect apps, run by the model as an approval is; then the list again. */
+  fun startGiveKey(grantId: String, shownDigest: String, key: String) {
+    scope.launch {
+      if (giveKey(grantId, shownDigest, key)) {
+        _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false) }
+        loadConnectApps()
+      }
+    }
+  }
+
+  /**
+   * Gives an API-key connection its key: the same checks as approving one (the digest the owner was shown, KIFF's words for its
+   * profile), confirmed with the approval key, then sent to planque signed by this device. The key goes to planque once and is
+   * kept nowhere here. What went wrong is said on the sheet.
+   */
+  suspend fun giveKey(grantId: String, shownDigest: String, key: String): Boolean {
+    val noteKey = ConnectWords.cardKey(grantId)
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
+      note(noteKey, "Connecting tools isn't set up for this account from this phone.")
+      return false
+    }
+    if (_state.value.approvalKeyLost) return false.also { note(noteKey, KiffClient.APPROVAL_KEY_LOST) }
+    if (key.isBlank() || _state.value.connecting != null) return false
+    _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - noteKey) }
+    val generation = accountGeneration
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    planque.signer = { signer.signConfirmed(it) }
+    try {
+      val grant = try {
+        planque.grants().firstOrNull { it.id == grantId }
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        return false.also { note(noteKey, "Couldn't read what to approve. ${ErrorWords.of(e)}") }
+      } ?: return false.also { note(noteKey, "There's no connection with that id.") }
+      if (!grant.digestMatches) return false.also { note(noteKey, PlanqueError.DigestMismatch.message!!) }
+      if (grant.digest != shownDigest) {
+        _state.update { s -> s.copy(grants = s.grants.map { if (it.id == grant.id) grant else it }) }
+        return false.also { note(noteKey, VersionWords.OUT_OF_DATE_CARD) }
+      }
+      val words = grant.request.profile?.let { profile ->
+        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
+          ?: return false.also { note(noteKey, "KIFF's words for this connection aren't read yet. Nothing was approved.") }
+      }
+      try {
+        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Give ${grant.vendor} its key for ${grant.request.agent}")
+      } catch (_: SignerException) {
+        return false.also { note(noteKey, "Not done: it wasn't confirmed.") }
+      }
+      if (generation != accountGeneration) return false
+      try {
+        planque.giveKey(grant, key, words)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        return false.also { note(noteKey, "The key wasn't given. ${ErrorWords.of(e)}") }
+      }
+      refreshConnections()
+      return true
+    } finally {
+      planque.signer = null
+      if (generation == accountGeneration) _state.update { it.copy(connecting = null) }
+    }
+  }
 
   /**
    * KIFF's words for [grantId]'s profile (KIFF's profile contract, `kiff.words.v1`), read with this person's session and checked against their digests, so
