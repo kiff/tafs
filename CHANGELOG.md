@@ -13,6 +13,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Docs:** `docs/dial.md`, the dial for the person using it; the README covers Android, the dial, Connect apps, Did this happen? and the Slack door, with the Android screenshots.
+
 - **Android, the settled dial:** When · What · Where around the taf's Why, with "Ask Coach or find
   anything", Showing ▾ one connection's stops, and a remote: ◀ ▶ through the stops, − + the chosen
   stop's one size, ⏻ pause, the face as OK. Changes collect into "Make N changes live". No chips

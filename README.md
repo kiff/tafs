@@ -4,10 +4,11 @@
 
 **They taf. You kiff.**
 
-tafs is an iPhone and iPad app where a business hands jobs to AI agents, called tafs, and
+tafs is an app for iPhone, iPad and Android where a business hands jobs to AI agents, called tafs, and
 gives each one a Card: the limits it works inside. Inside the Card a taf acts and
 leaves a receipt. Outside it, the taf waits for the owner's answer on their phone.
-Revoked, no new action goes through.
+Revoked, no new action goes through. tafs is in a closed test on Android and on
+TestFlight for iPhone and iPad.
 
 Cards are enforced by [KIFF](https://kiff.dev): every action a taf takes passes
 through KIFF's gateway, which checks the Card before any call reaches a tool.
@@ -29,8 +30,21 @@ On iPad:
   <img src="docs/screenshots/ipad-needs-you.png" width="340" alt="Needs you on iPad: held actions with Approve once and Refuse">
 </p>
 
-Screenshots come from CI: a run that changes a screen uploads them as the
-`screenshots` artifact. Other changes skip them.
+On Android: the taf's dial (When, What and Where around its Why), a stop with its
+size and a change waiting to go live, Coach's card for a dial it drafted, and a
+taf's page with its chat:
+
+<p>
+  <img src="docs/screenshots/android/dial-overview.png" width="180" alt="The dial: the Why on the face, When, What and Where around it, an email door with a knock waiting and a closed Slack door">
+  <img src="docs/screenshots/android/dial-stop-size.png" width="180" alt="A stop chosen: Weekdays at 09:00, its size, and Make 1 change live">
+  <img src="docs/screenshots/android/dial-coach-card.png" width="180" alt="Coach's card: the dial it drafted, by connection, with one confirmation">
+  <img src="docs/screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">
+  <img src="docs/screenshots/android/taf-page.png" width="180" alt="A taf's page: one header row, the tabs and the Card's line, then the chat">
+</p>
+
+Screenshots come from CI, with sample data. On iOS, a run that changes a screen
+uploads them as the `screenshots` artifact; other changes skip them. On Android,
+the UI tests draw them from synthetic data ([docs/android-app.md](docs/android-app.md)).
 
 ## The first five jobs
 
@@ -47,23 +61,32 @@ them do.
 
 ## What it does
 
-A working iPhone and iPad app, in two modes: signed in with KIFF, or
-with sample data on the phone. Each feature has a page in [docs/](docs/README.md):
+A working app for iPhone and iPad (SwiftUI) and for Android phones and tablets
+(Kotlin and Jetpack Compose, Android 11 and later), in two modes: signed in with
+KIFF, or with sample data on the phone. Both use the same public routes of KIFF,
+tafs cloud and planque. Each feature has a page in [docs/](docs/README.md):
 
 - **[A taf](docs/tafs.md):** its job, Cards, runs, reports, memory and Record; pausing,
   halting and removing it.
 - **[Chat](docs/chat.md):** ask a taf what it did or tell it what to do; its answer and
   its work stream as it goes, and a held call shows where it was made.
-- **[Coach mode](docs/coach.md):** say the job; Coach connects the tools, drafts the taf
-  and its Card, and you confirm with Face ID or Touch ID. Improve a taf, try a new
+- **[The dial](docs/dial.md):** each taf's When, What and Where around its Why, with
+  today's work on the rim. − and + change a stop's size, and the changes wait as the
+  taf's next version until you make them live; Pause stops every schedule, follow-ups
+  included.
+- **[Coach mode](docs/coach.md):** say the job; Coach connects the tools, drafts the taf,
+  its Card and its dial, and you confirm with Face ID, Touch ID or your fingerprint. Improve a taf, try a new
   version under a trial Card, then install it.
 - **[Held calls](docs/approvals.md):** in Needs you, the chat, the lock screen and a push
   alert. Approve once, refuse, or give the Card extra room: each answer is signed on the
-  phone and checked by KIFF.
+  phone and checked by KIFF. **Did this happen?** asks about a money call whose outcome
+  KIFF can't prove; No gives the Card its room back.
+- **Connect apps**, from Settings: the apps a taf can work in, searched as you type,
+  each approved on the phone before you sign in at the app.
 - **[Accounts](docs/accounts.md):** sign in with KIFF, people and groups, sharing a taf,
-  usage, Solo and task packs through the App Store, deleting the account.
+  usage, Solo and task packs through the App Store or Google Play, deleting the account.
 - **[Photos and files](docs/attachments.md)** on a message, and **[doors](docs/doors.md)**:
-  an email address or WhatsApp number a taf takes work from.
+  an email address, a Slack channel or a WhatsApp number a taf takes work from.
 
 How the pieces fit: [docs/README.md](docs/README.md). The API: [docs/api.md](docs/api.md).
 Where tafs data lives, for how long, and who deletes it: [docs/data.md](docs/data.md).
@@ -161,6 +184,8 @@ certificate (`DIST_P12`, `DIST_P12_PASSWORD`), and for the external group
 
 ## Build
 
+iOS:
+
 ```bash
 cd ios
 xcodegen generate          # project.yml → Tafs.xcodeproj (not committed)
@@ -171,6 +196,18 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs \
 
 Needs a current Xcode (CI uses Xcode 26 on macOS 26) and runs on iOS 16 and
 later. App Store builds come from CI.
+
+Android:
+
+```bash
+cd android
+./gradlew :app:testDebugUnitTest          # the unit tests
+./gradlew :app:assembleDebug              # a debug build
+./gradlew :app:connectedDebugAndroidTest  # the UI tests, on an emulator or phone
+```
+
+Needs a JDK 17 or later. Google Play builds come from CI
+([docs/android-app.md](docs/android-app.md#building-and-testing)).
 
 ## License
 
