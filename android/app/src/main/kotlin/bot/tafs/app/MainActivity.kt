@@ -360,6 +360,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       confirmKnobChange = { taf -> model.confirmKnobChange(taf) },
       setPaused = model::setPaused,
       askCoach = model::improveInCoach,
+      approveEvent = model::approveKnobEvent,
       openRimRequest = model::openRimRequest,
       removeFollowUp = model::removeFollowUp,
     )

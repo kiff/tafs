@@ -720,6 +720,97 @@ class PlanqueTest {
     assertNotNull(PlanqueError.NotSigning.message)
   }
 
+  // MARK: An app's event on the dial: the owner approves its filters, planque subscribes them, tafs cloud records it
+
+  private val knobRoute = "GET /v1/tafs/taf_1/knob"
+  private val record = "POST /v1/tafs/taf_1/knob/subscriptions"
+  private val eventTriggers = "POST /v1/accounts/t_01/grants/gs/triggers"
+  private val filters = """{"pipeline":"sales","amount_over":500}"""
+  private fun eventKnob(state: String = "needed", config: String = filters, subscription: String? = null) =
+    """{"version":7,"wakes":[{"id":"trg_e","kind":"app_event","grant":"gs","label":"New deal","words":"A won deal in HubSpot starts a check.","ok":"approve",
+        "approval":{"state":"$state","grant":"gs","event":"HUBSPOT_DEAL_WON","config":$config${subscription?.let { ""","subscription":"$it"""" } ?: ""}}}],"rim":{}}"""
+
+  @Test fun anApprovedEventIsSubscribedAtPlanqueThenRecordedByTafsCloudForThatVersion() = runTest {
+    val m = slackModel()
+    transport.answer(knobRoute, 200, eventKnob())
+    transport.answer(knobRoute, 200, eventKnob())
+    transport.answer(knobRoute, 200, eventKnob("approved", subscription = "sub_1"))
+    transport.answer(eventTriggers, 201, """{"id":"sub_1"}""")
+    transport.answer(record, 200, eventKnob("approved", subscription = "sub_1"))
+    m.loadKnob("refunds-1")
+    assertTrue(m.approveKnobEvent("refunds-1", "trg_e"))
+    assertEquals("one confirmation, in tafs cloud's words for it", listOf("A won deal in HubSpot starts a check."), auth.asked)
+    val sub = transport.requestsTo(eventTriggers).single()
+    assertEquals(
+      "the account, the event and its filters as tafs cloud gave them",
+      KiffClient.json.parseToJsonElement("""{"account":"ca_1","slug":"HUBSPOT_DEAL_WON","config":$filters}"""),
+      KiffClient.json.parseToJsonElement(String(sub.body!!)),
+    )
+    assertTrue("device-signed", sub.headers.containsKey("Planque-Device-Signature"))
+    val recorded = transport.requestsTo(record).single()
+    assertEquals(KiffClient.json.parseToJsonElement("""{"trigger":"trg_e","subscription":"sub_1","version":7}"""), KiffClient.json.parseToJsonElement(String(recorded.body!!)))
+    assertTrue("planque first", transport.requests.indexOf(sub) < transport.requests.indexOf(recorded))
+    assertEquals("the dial as tafs cloud has it", "approved", m.state.value.knobs.getValue("refunds-1").item("trg_e")!!.approval!!.state)
+    assertTrue(m.state.value.approvingEvent.isEmpty())
+  }
+
+  @Test fun anEventWhoseFiltersChangedSinceTheyWereShownIsNeverApproved() = runTest {
+    val m = slackModel()
+    transport.answer(knobRoute, 200, eventKnob())
+    transport.answer(knobRoute, 200, eventKnob(config = """{"pipeline":"all"}"""))
+    m.loadKnob("refunds-1")
+    assertFalse(m.approveKnobEvent("refunds-1", "trg_e"))
+    assertTrue("nothing asked", auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(eventTriggers).isEmpty())
+    assertEquals(bot.tafs.app.model.KnobWords.EVENT_CHANGED, m.state.value.knobErrors["refunds-1"])
+  }
+
+  @Test fun theSameFiltersInAnotherKeyOrderAreTheSameFilters() = runTest {
+    val m = slackModel()
+    transport.answer(knobRoute, 200, eventKnob())
+    transport.answer(knobRoute, 200, eventKnob(config = """{"amount_over":500,"pipeline":"sales"}"""))
+    transport.answer(eventTriggers, 201, """{"id":"sub_1"}""")
+    transport.answer(record, 200, eventKnob("approved", subscription = "sub_1"))
+    m.loadKnob("refunds-1")
+    assertTrue(m.approveKnobEvent("refunds-1", "trg_e"))
+  }
+
+  @Test fun anOwnerWhoDoesNotConfirmApprovesNoEvent() = runTest {
+    val m = slackModel()
+    transport.answer(knobRoute, 200, eventKnob())
+    m.loadKnob("refunds-1")
+    auth.confirms = false
+    assertFalse(m.approveKnobEvent("refunds-1", "trg_e"))
+    assertTrue(transport.requestsTo(eventTriggers).isEmpty())
+    assertTrue(transport.requestsTo(record).isEmpty())
+  }
+
+  @Test fun aSubscriptionTafsCloudDidntRecordIsRecordedAgainWithoutAskingOrSubscribingTwice() = runTest {
+    val m = slackModel()
+    repeat(4) { transport.answer(knobRoute, 200, eventKnob()) }
+    transport.answer(knobRoute, 200, eventKnob("approved", subscription = "sub_1"))
+    transport.answer(eventTriggers, 201, """{"id":"sub_1"}""")
+    transport.answer(record, 503, """{"error":"try again"}""")
+    transport.answer(record, 200, eventKnob("approved", subscription = "sub_1"))
+    m.loadKnob("refunds-1")
+    assertFalse(m.approveKnobEvent("refunds-1", "trg_e"))
+    assertEquals("still needed, as tafs cloud says", "needed", m.state.value.knobs.getValue("refunds-1").item("trg_e")!!.approval!!.state)
+    assertTrue(m.approveKnobEvent("refunds-1", "trg_e"))
+    assertEquals("asked once", 1, auth.asked.size)
+    assertEquals("subscribed once", 1, transport.requestsTo(eventTriggers).size)
+    assertEquals(listOf("sub_1", "sub_1"), transport.requestsTo(record).map { KiffClient.json.parseToJsonElement(String(it.body!!)).jsonObject.getValue("subscription").jsonPrimitive.content })
+  }
+
+  @Test fun aRefusalFromPlanqueIsSaidInItsWords() = runTest {
+    val m = slackModel()
+    transport.answer(knobRoute, 200, eventKnob())
+    transport.answer(eventTriggers, 400, """{"error":"amount_over isn't a filter of this event"}""")
+    m.loadKnob("refunds-1")
+    assertFalse(m.approveKnobEvent("refunds-1", "trg_e"))
+    assertTrue(m.state.value.knobErrors.getValue("refunds-1").contains("amount_over isn't a filter of this event"))
+    assertTrue(transport.requestsTo(record).isEmpty())
+  }
+
   // MARK: A Slack door: planque's subscription first, then tafs cloud's door
 
   private val slackBot =

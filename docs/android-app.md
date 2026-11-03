@@ -196,6 +196,17 @@ doors' own dial stays for a taf whose dial can't be read).
 - **Under it:** with nothing chosen, "When starts it, What it does in order, Where the result
   goes." and what the taf does; a chosen stop's words instead. Then today's work ("12 done today
   ›", the rim's line), which opens the request the rim points at.
+- **An app's event on When** (`kind: app_event`) waits for the owner while its `approval` is
+  `needed`: OK (`ok: approve`) opens its filters, as tafs cloud gives them, and **Approve with
+  your fingerprint** approves exactly those (`AppModel.approveKnobEvent`). The live dial is read
+  again first, and anything changed (version, connection, event or filters, compared in their
+  canonical form) stops it there. The owner confirms with the approval key over
+  `tafs.event.v1|tenant|taf|version|trigger|grant|event|sha256(filters)`. planque subscribes the
+  event with `{account, slug, config}`, signed by this device (`PlanqueClient.subscribeEvent`),
+  and tafs cloud records planque's id for that version (`POST …/knob/subscriptions {trigger,
+  subscription, version}`). Whether it's approved is only tafs cloud's answer. A subscription
+  made but not recorded is kept for this account, so approving again records it, with no
+  second confirmation or subscription. A refusal is said in planque's or tafs cloud's words.
 - **A door on its When stop** shows tafs cloud's `look` as an arc on the ring's outer edge: lit
   when `open`, dashed when `closed`, grey when `resting`, amber with a dot for `knock` (Do it,
   Pair them and Ignore stay in the knock's panel under the dial). When a message arrives, its

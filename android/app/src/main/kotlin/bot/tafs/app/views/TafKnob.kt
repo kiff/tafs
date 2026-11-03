@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -279,6 +280,8 @@ fun TafDialPanel(
   var showingOpen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
   var chosen by androidx.compose.runtime.saveable.rememberSaveable(taf.id) { androidx.compose.runtime.mutableStateOf<String?>(null) }
   var busy by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+  // The app event whose filters are open for approval, by its stop id.
+  var approving by androidx.compose.runtime.remember(taf.id) { androidx.compose.runtime.mutableStateOf<String?>(null) }
   val knob = wire.knob(showing)
   val manages = state.manages(taf.id)
   val ready = LocalApprovalReadiness.current == bot.tafs.app.model.ApprovalReadiness.Ready
@@ -381,6 +384,8 @@ fun TafDialPanel(
             "run" -> work { actions.runNow(taf.id) }
             "remove_follow_up" -> item.followUp?.let { fid -> work { actions.removeFollowUp(taf.id, fid) } }
             "coach" -> actions.askCoach(taf.id)
+            // An app's event: its filters first, then the approval.
+            "approve" -> approving = item.id
             else -> Unit
           }
         }
@@ -439,6 +444,13 @@ fun TafDialPanel(
         )
       }
     }
+    approving?.let { id -> wire.item(id) }?.takeIf { it.approval?.needed == true }?.let { event ->
+      EventApprovalSheet(
+        event, busy = taf.id in state.approvingEvent, error = state.knobErrors[taf.id],
+        onApprove = { scope.launch { if (actions.approveEvent(taf.id, event.id)) approving = null } },
+        onClose = { approving = null },
+      )
+    }
     // Under it: today's work, which opens the request the rim points at.
     knob.summary?.let { line ->
       Text(
@@ -476,3 +488,46 @@ private fun RemoteKey(symbol: String, label: String, enabled: Boolean, onClick: 
 /** The remote's Pause key, drawn as the power mark. */
 private const val POWER = "⏻"
 
+/**
+ * An app's event on When, before it's approved: what it listens to (tafs cloud's words) and its filters, exactly as they'll be
+ * subscribed, then one approval. Approving makes the connection listen; tafs cloud then says it's approved.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+internal fun EventApprovalSheet(event: bot.tafs.app.kiff.KnobWire.Item, busy: Boolean, error: String?, onApprove: () -> Unit, onClose: () -> Unit) {
+  androidx.compose.material3.ModalBottomSheet(
+    onDismissRequest = onClose,
+    sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    containerColor = Theme.background,
+  ) {
+    Column(
+      Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
+      verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+    ) {
+      Text(event.label, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
+      Text(event.words, style = scaled(15, color = Theme.ink))
+      val filters = event.approval?.config.orEmpty()
+      if (filters.isNotEmpty()) {
+        bot.tafs.app.design.Eyebrow(KnobWords.EVENT_FILTERS)
+        // Each filter as tafs cloud gives it: its name and value, the same ones planque subscribes.
+        filters.forEach { (name, value) ->
+          val shown = (value as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content ?: value.toString()
+          Text("$name · $shown", style = scaled(14, color = Theme.soft, mono = true))
+        }
+      }
+      error?.let { Text(it, style = scaled(13, color = Theme.no)) }
+      ApprovalGate {
+        bot.tafs.app.design.PrimaryButton(
+          if (busy) "Approving…" else KnobWords.approveWith(bot.tafs.app.design.LocalBiometry.current),
+          onApprove,
+          enabled = !busy,
+        )
+      }
+      Text(
+        bot.tafs.app.model.ConnectWords.CANCEL,
+        style = scaled(15, FontWeight.SemiBold, Theme.dim),
+        modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy, onClick = onClose).padding(top = 10.dp),
+      )
+    }
+  }
+}

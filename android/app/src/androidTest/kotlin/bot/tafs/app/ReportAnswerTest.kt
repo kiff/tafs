@@ -43,6 +43,8 @@ class ReportAnswerTest {
   @Test fun anAnswerIsReportedFromItsLongPressAndTheSheetSaysThanks() {
     show(ReportResult.Sent(first = true))
     report("It refunded the wrong order.")
+    // On a slow emulator the sheet settles after the keyboard goes: wait for the thanks, then check it shows.
+    rule.waitUntil(10_000) { runCatching { rule.onNodeWithText(ReportWords.THANKS).assertIsDisplayed() }.isSuccess }
     rule.onNodeWithText(ReportWords.THANKS).assertIsDisplayed()
     assertEquals(listOf("wrong" to "It refunded the wrong order."), sent)
     rule.onNodeWithText("Done").performClick()

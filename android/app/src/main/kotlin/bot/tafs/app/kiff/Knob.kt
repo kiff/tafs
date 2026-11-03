@@ -81,7 +81,24 @@ data class KnobWire(
     val ok: String? = null,
     /** A door stop's look: open, closed, resting or knock. */
     val look: String? = null,
+    /** An app's event on When: whether the owner approved its filters at planque, and what approving signs. */
+    val approval: Approval? = null,
   )
+
+  /**
+   * An `app_event` stop's approval, as tafs cloud sends it: `needed` until planque's subscription for exactly these filters is
+   * recorded, then `approved` with it. The phone subscribes [config] as it is and tells tafs cloud planque's id.
+   */
+  @Serializable
+  data class Approval(
+    val state: String = "",
+    val grant: String = "",
+    val event: String = "",
+    val config: JsonObject = JsonObject(emptyMap()),
+    val subscription: String? = null,
+  ) {
+    val needed: Boolean get() = state == "needed"
+  }
 
   /** A stop's one choice: its name, the value now, and each value's whole `PUT` body. */
   @Serializable
