@@ -243,11 +243,17 @@ extension TafsCloud {
         var apps: [App] = []
         /// Coach can draft a vendor that isn't listed.
         var byKey = false
-        enum CodingKeys: String, CodingKey { case apps, byKey = "by_key" }
+        /// The managed provider this page lists apps of, and its next page's cursor: none on
+        /// the last page.
+        var provider: String?
+        var nextCursor: String?
+        enum CodingKeys: String, CodingKey { case apps, byKey = "by_key", provider, nextCursor = "next_cursor" }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             apps = try c.decodeIfPresent([App].self, forKey: .apps) ?? []
             byKey = try c.decodeIfPresent(Bool.self, forKey: .byKey) ?? false
+            provider = try c.decodeIfPresent(String.self, forKey: .provider)
+            nextCursor = try c.decodeIfPresent(String.self, forKey: .nextCursor)
         }
     }
 
@@ -275,9 +281,17 @@ extension TafsCloud {
         try await send("POST", "/v1/connect/apps/\(escaped(entry))", body: ["taf": taf])
     }
 
-    /// Connect apps, filtered by `q` when given.
-    func connectApps(_ q: String? = nil) async throws -> ConnectApps {
-        let query = q.map { $0.trimmingCharacters(in: .whitespaces) }.flatMap { $0.isEmpty ? nil : "?q=\(escaped($0))" } ?? ""
+    /// One page of Connect apps, filtered by `q` when given; the next page with the
+    /// provider and cursor the last one gave.
+    func connectApps(_ q: String? = nil, provider: String? = nil, cursor: String? = nil) async throws -> ConnectApps {
+        var items: [URLQueryItem] = []
+        if let q = q?.trimmingCharacters(in: .whitespaces), !q.isEmpty { items.append(URLQueryItem(name: "q", value: q)) }
+        if let provider { items.append(URLQueryItem(name: "provider", value: provider)) }
+        if let cursor { items.append(URLQueryItem(name: "cursor", value: cursor)) }
+        var c = URLComponents()
+        c.queryItems = items.isEmpty ? nil : items
+        // A cursor may hold + or /: encoded as a value, never as a separator.
+        let query = (c.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")).map { "?" + $0 } ?? ""
         return try await send("GET", "/v1/connect/apps" + query)
     }
 }

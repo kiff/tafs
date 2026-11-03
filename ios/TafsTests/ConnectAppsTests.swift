@@ -15,6 +15,28 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertEqual(whole, TafsCloud.ConnectStart(grant: "g_3", needsKey: true))
     }
 
+    /// Connect apps comes a page at a time: the next with the provider and cursor the last gave,
+    /// a cursor's + kept as a value.
+    func testTheNextPageAsksWithItsCursor() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        StubProtocol.responses["GET /v1/connect/apps?q=mail"] = (200, #"{"apps":[{"entry":"connector:composio:gmail","vendor":"Gmail","title":"Gmail","how":"oauth"}],"by_key":true,"provider":"composio","next_cursor":"a+b/c"}"#)
+        let first = try await cloud.connectApps("mail")
+        XCTAssertEqual(first.provider, "composio")
+        XCTAssertEqual(first.nextCursor, "a+b/c")
+        _ = try? await cloud.connectApps("mail", provider: first.provider, cursor: first.nextCursor) // what it asks is what's checked
+        let url = try XCTUnwrap(StubProtocol.sent.last?.url)
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertEqual(items.first { $0.name == "cursor" }?.value, "a+b/c")
+        XCTAssertEqual(items.first { $0.name == "provider" }?.value, "composio")
+        XCTAssertEqual(items.first { $0.name == "q" }?.value, "mail")
+        XCTAssertTrue(url.absoluteString.contains("a%2Bb"), url.absoluteString)
+    }
+
     /// A connection starts for one taf: its tafs cloud id goes in the body.
     func testStartNamesItsTaf() async throws {
         StubProtocol.responses = [:]

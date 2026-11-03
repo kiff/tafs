@@ -13,6 +13,7 @@ struct ConnectAppsView: View {
     var taf: UUID?
     @State private var query = ""
     @State private var starting: String?
+    @State private var loadingMore = false
     /// The app waiting for its taf to be chosen.
     @State private var choosing: TafsCloud.ConnectApps.App?
 
@@ -20,6 +21,14 @@ struct ConnectAppsView: View {
         List {
             if let apps = model.connectApps {
                 ForEach(apps.apps) { app in row(app) }
+                if apps.nextCursor != nil {
+                    Button(loadingMore ? "Loading…" : "More apps") {
+                        loadingMore = true
+                        Task { await model.loadMoreConnectApps(); loadingMore = false }
+                    }
+                    .disabled(loadingMore)
+                    .accessibilityIdentifier("connect.more")
+                }
                 if apps.byKey {
                     Button("Not listed? Ask Coach") { model.openCoach() }
                         .accessibilityIdentifier("connect.askCoach")

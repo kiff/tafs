@@ -1540,11 +1540,35 @@ final class AppModel: ObservableObject {
     /// The connection started from the list, waiting for its approval sheet.
     @Published var connectStart: TafsCloud.ConnectStart?
 
-    /// Reads Connect apps, filtered by what the owner typed.
+    /// The search Connect apps last listed, for its next page.
+    private var connectAppsQuery = ""
+
+    /// Reads Connect apps' first page, filtered by what the owner typed.
     func loadConnectApps(_ q: String = "") async {
         guard mode == .kiff else { return }
-        do { connectApps = try await cloud.connectApps(q) } catch {
+        do {
+            let page = try await cloud.connectApps(q)
+            connectAppsQuery = q
+            connectApps = page
+        } catch {
             lastError = "The apps couldn't be listed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Adds Connect apps' next page, for the same search; an app listed already isn't again.
+    func loadMoreConnectApps() async {
+        guard mode == .kiff, let shown = connectApps, let cursor = shown.nextCursor else { return }
+        let q = connectAppsQuery
+        do {
+            let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor)
+            guard q == connectAppsQuery, connectApps?.nextCursor == cursor else { return }
+            var merged = page
+            let seen = Set(shown.apps.map(\.entry))
+            merged.apps = shown.apps + page.apps.filter { !seen.contains($0.entry) }
+            merged.byKey = shown.byKey || page.byKey
+            connectApps = merged
+        } catch {
+            lastError = "More apps couldn't be listed: \(error.localizedDescription)"
         }
     }
 
