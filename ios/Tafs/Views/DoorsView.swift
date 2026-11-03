@@ -15,6 +15,8 @@ struct DoorsView: View {
     var pressKnob: (TafsCloud.Knob.Item) async -> Void = { _ in }
     /// The face was tapped on a held call: approve it once.
     var approve: (HeldCall) -> Void = { _ in }
+    /// Adding a Slack door: its own sheet, which picks the connection and the channel.
+    var addSlack: ((TafsCloud.DoorApp) -> Void)? = nil
     @State private var face: TafKnobView.Face = .overview
     @ObservedObject private var doors: DoorsModel
     @State private var selected = 0
@@ -43,6 +45,13 @@ struct DoorsView: View {
         v.held = held
         v.pressKnob = press
         v.approve = approve
+        return v
+    }
+
+    /// This Doors tab with Slack's own sheet for adding a Slack door.
+    func slack(_ add: @escaping (TafsCloud.DoorApp) -> Void) -> DoorsView {
+        var v = self
+        v.addSlack = add
         return v
     }
 
@@ -119,7 +128,7 @@ struct DoorsView: View {
             // An answered call leaves the face.
             if case .held(let id) = face, !ids.contains(id) { face = .overview }
         }
-        .sheet(isPresented: $adding) { AddDoorSheet(doors: doors) { added in if added { selected = doors.doors.count - 1 } } }
+        .sheet(isPresented: $adding) { AddDoorSheet(doors: doors, addSlack: addSlack) { added in if added { selected = doors.doors.count - 1 } } }
         .sheet(item: $pairing) { PairSheet(door: $0, doors: doors) }
         .confirmationDialog("Remove the \(confirmRemove?.label.lowercased() ?? "") door?", isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
             Button("Remove", role: .destructive) {
@@ -496,6 +505,7 @@ enum DoorNames {
 /// Picks the app a new door opens on: those that can tell who's writing first.
 struct AddDoorSheet: View {
     @ObservedObject var doors: DoorsModel
+    var addSlack: ((TafsCloud.DoorApp) -> Void)? = nil
     let done: (Bool) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
@@ -536,6 +546,11 @@ struct AddDoorSheet: View {
             Eyebrow(text: title).padding(.top, 6)
             ForEach(apps) { app in
                 Button {
+                    if app.kind == "slack", let addSlack {
+                        dismiss()
+                        addSlack(app)
+                        return
+                    }
                     Task {
                         let added = await doors.add(app) != nil
                         done(added)
@@ -575,7 +590,8 @@ struct PairSheet: View {
             Text("Pair someone").scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text("Their messages to this \(door.label.lowercased()) door give work, within the Card. Anyone else's only knock.")
                 .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            TextField(door.kind == "email" ? "Email address" : door.kind == "whatsapp" ? "Phone number, with its country code" : "Who, as \(door.label) names them", text: $sender)
+            TextField(door.kind == "email" ? "Email address" : door.kind == "whatsapp" ? "Phone number, with its country code"
+                      : door.kind == "slack" ? "Slack member ID, such as U012AB3CD" : "Who, as \(door.label) names them", text: $sender)
                 .textFieldStyle(.roundedBorder)
                 .disableAutocorrection(true)
             TextField("Name (optional)", text: $name).textFieldStyle(.roundedBorder)
@@ -790,5 +806,93 @@ struct PerimeterArc: Shape {
         var arc = edge.trimmedPath(from: from, to: 1)
         arc.addPath(edge.trimmedPath(from: 0, to: to - 1))
         return arc
+    }
+}
+
+/// Adding a Slack door: one of the taf's Slack bot connections, then one of its channels.
+/// Approving with Face ID has planque subscribe that channel, then tafs cloud makes the door.
+/// What's written in the channel reaches the taf as a door message; paired members give it
+/// work, anyone else knocks.
+struct SlackDoorSheet: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    let tafID: UUID
+    @ObservedObject var doors: DoorsModel
+    let app: TafsCloud.DoorApp
+    @State private var grant: PlanqueClient.Grant?
+    @State private var channels: [PlanqueClient.Channel]?
+    @State private var busy = false
+
+    var body: some View {
+        NavStack {
+            List {
+                let bots = model.slackBots(for: tafID)
+                if bots.isEmpty {
+                    Text("Connect the Slack bot for \(model.taf(tafID)?.name ?? "this taf") first, in Connect apps. Then add its door here.")
+                        .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Section("Slack workspace") {
+                        ForEach(bots) { bot in
+                            Button {
+                                grant = bot
+                                channels = nil
+                                Task { channels = await model.slackChannels(bot.id) ?? [] }
+                            } label: {
+                                HStack {
+                                    Text(bot.account ?? bot.vendor).foregroundColor(Theme.ink)
+                                    Spacer()
+                                    if grant?.id == bot.id { Image(systemName: "checkmark").foregroundColor(Theme.ok) }
+                                }
+                            }
+                        }
+                    }
+                    if let grant {
+                        Section("Channel") {
+                            if let channels {
+                                if channels.isEmpty {
+                                    Text("The Slack bot sees no channel yet. Invite it to one in Slack, then come back.")
+                                        .scaledFont(14).foregroundColor(Theme.dim)
+                                }
+                                ForEach(channels) { channel in
+                                    Button { approve(grant, channel) } label: {
+                                        HStack {
+                                            Label("#" + (channel.name.isEmpty ? channel.id : channel.name),
+                                                  systemImage: channel.isPrivate ? "lock" : "number")
+                                                .foregroundColor(Theme.ink)
+                                            Spacer()
+                                        }
+                                    }
+                                    .disabled(busy)
+                                }
+                            } else {
+                                ProgressView()
+                            }
+                        }
+                    }
+                }
+                if let error = model.lastError ?? doors.error {
+                    Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                }
+            }
+            .navigationTitle("Slack door")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .task {
+                await model.refreshConnections()
+                if let only = model.slackBots(for: tafID).first, model.slackBots(for: tafID).count == 1, grant == nil {
+                    grant = only
+                    channels = await model.slackChannels(only.id) ?? []
+                }
+            }
+        }
+    }
+
+    /// One Face ID: planque subscribes the channel, then tafs cloud makes the door.
+    private func approve(_ grant: PlanqueClient.Grant, _ channel: PlanqueClient.Channel) {
+        busy = true
+        Task {
+            defer { busy = false }
+            if await model.addSlackDoor(tafID, doors: doors, app: app, grant: grant, channel: channel) { dismiss() }
+        }
     }
 }

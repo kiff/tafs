@@ -37,6 +37,35 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertTrue(url.absoluteString.contains("a%2Bb"), url.absoluteString)
     }
 
+    /// A Slack door listens through the taf's Slack bot connection, known by planque's mark,
+    /// and the phone signs only the account, the event and the channel: planque builds the rest.
+    func testASlackDoorSubscribesOnlyTheApprovedChannel() async throws {
+        let grantJSON = #"{"id":"g_9","status":"connected","text":"t","digest":"d","account":"T0123","events":[],"request":{"server":"https://composio.test","agent":"desk","tools":[],"connector":{"provider":"composio","toolkit":"slackbot"}}}"#
+        let grant = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(grantJSON.utf8))
+        XCTAssertTrue(grant.slackBot)
+        var marked = grant
+        marked.entry = "connector:composio:notion"
+        XCTAssertFalse(marked.slackBot, "planque's entry decides, when it's there")
+
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: URLSession(configuration: config))
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_phone01"
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_9/triggers"] = (201, #"{"trigger":"ti_1","account":"T0123","channels":["C0REFUNDS"]}"#)
+        let trigger = try await planque.subscribe(grantID: grant.id, account: "T0123", slug: PlanqueClient.slackMessageTrigger, channels: ["C0REFUNDS"])
+        XCTAssertEqual(trigger, "ti_1")
+        let sent = try XCTUnwrap(StubProtocol.sent.last { $0.url?.path == "/v1/accounts/t_01/grants/g_9/triggers" })
+        let body = try XCTUnwrap(try JSONSerialization.jsonObject(with: try XCTUnwrap(sent.httpBody)) as? [String: Any])
+        XCTAssertEqual(Set(body.keys), ["account", "slug", "channels"], "no config: planque builds it from the channels")
+        XCTAssertEqual(body["channels"] as? [String], ["C0REFUNDS"])
+        XCTAssertNotNil(sent.value(forHTTPHeaderField: "Planque-Device-Signature"))
+    }
+
     /// A connection starts for one taf: its tafs cloud id goes in the body.
     func testStartNamesItsTaf() async throws {
         StubProtocol.responses = [:]

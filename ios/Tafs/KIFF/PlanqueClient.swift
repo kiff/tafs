@@ -93,9 +93,15 @@ final class PlanqueClient {
                 /// What the owner reads for it: its title, else its action in words.
                 var words: String { KIFFMapping.name(action, title: title) }
             }
+            /// A managed provider's connection: which provider, and its toolkit ("slackbot").
+            struct Connector: Decodable, Equatable {
+                var provider: String?
+                var toolkit: String?
+            }
             let server: String
             let agent: String
             let tools: [Tool]
+            var connector: Connector?
         }
         struct Event: Decodable, Equatable {
             /// RFC 3339, as planque writes it (Go's nanoseconds included).
@@ -129,6 +135,13 @@ final class PlanqueClient {
         /// When planque revokes a held sign-in nothing connected (RFC 3339, Go's nanoseconds
         /// included, so kept as written).
         let heldUntil: String?
+        /// The catalog entry it was connected from ("connector:composio:slackbot") and its
+        /// provider, as planque marks it: what the app matches on, never a vendor's name.
+        var entry: String?
+        var provider: String?
+        /// The Slack bot connection a Slack door listens through.
+        var slackBot: Bool { entry == Self.slackBotEntry || (entry == nil && request.connector?.toolkit == "slackbot") }
+        static let slackBotEntry = "connector:composio:slackbot"
         /// Whether `digest` is the hash of the request as received: the app shows Approve
         /// only then. Set by `grants()`, never read from planque.
         var digestMatches = false
@@ -137,7 +150,7 @@ final class PlanqueClient {
         /// approving. Set by `grants()`, never decoded.
         var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor" }
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
@@ -263,6 +276,44 @@ final class PlanqueClient {
     /// that approved can, within 15 minutes; then planque registers the tools in KIFF.
     func confirm(grantID: String, code: String) async throws -> Grant {
         try await send("POST", "grants/\(escaped(grantID))/confirm", body: ["confirm": code])
+    }
+
+    /// A Slack channel a Slack bot connection can see: setup metadata, never a message.
+    struct Channel: Decodable, Equatable, Identifiable, Hashable {
+        let id: String
+        var name = ""
+        var isPrivate = false
+        enum CodingKeys: String, CodingKey { case id, name, isPrivate = "private" }
+        init(id: String, name: String = "", isPrivate: Bool = false) { self.id = id; self.name = name; self.isPrivate = isPrivate }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+            isPrivate = try c.decodeIfPresent(Bool.self, forKey: .isPrivate) ?? false
+        }
+    }
+
+    /// The channels a Slack bot connection can see, read through its own list-channels action.
+    func channels(grantID: String, signedBy readSigner: (@MainActor (Data) throws -> String)? = nil) async throws -> [Channel] {
+        struct Response: Decodable { let channels: [Channel] }
+        let data = try await raw("GET", "grants/\(escaped(grantID))/channels", body: nil, signer: readSigner)
+        return try KIFFClient.decoder.decode(Response.self, from: data).channels
+    }
+
+    /// The trigger a Slack door needs: planque subscribes these channels of the connection's
+    /// account to its message event, the request signed by this phone. Its id comes back.
+    static let slackMessageTrigger = "SLACKBOT_CHANNEL_MESSAGE_RECEIVED"
+
+    func subscribe(grantID: String, account: String, slug: String, channels: [String]) async throws -> String {
+        struct Body: Encodable { let account: String; let slug: String; let channels: [String] }
+        struct Response: Decodable { let trigger: String }
+        let r: Response = try await send("POST", "grants/\(escaped(grantID))/triggers", body: Body(account: account, slug: slug, channels: channels))
+        return r.trigger
+    }
+
+    /// Stops a trigger: planque turns its delivery off, then removes it upstream.
+    func unsubscribe(grantID: String, trigger: String) async throws {
+        _ = try await raw("DELETE", "grants/\(escaped(grantID))/triggers/\(escaped(trigger))", body: nil)
     }
 
     /// Removes the grant's tools from KIFF and revokes its token at the vendor.

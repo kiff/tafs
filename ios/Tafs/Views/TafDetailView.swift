@@ -4,6 +4,8 @@ struct TafDetailView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     /// 0 chat, 1 activity, 2 card, 3 doors. Chat first: talking to a taf is the main thing.
+    /// The Slack door being added: its own sheet.
+    @State private var slackApp: TafsCloud.DoorApp?
     @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2 : Screenshots.screen == "doors" ? 3 : 0
     @State private var confirmRevoke = false
     @State private var confirmRemove = false
@@ -78,7 +80,11 @@ struct TafDetailView: View {
                                         .knob(model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
                                               press: { await model.pressKnob(taf.id, $0) },
                                               approve: { call in Task { await model.answer(call, with: .approveOnce) } })
+                                        .slack { slackApp = $0 }
                                         .task(id: taf.id) { await model.loadKnob(taf.id) }
+                                        .sheet(item: $slackApp) { app in
+                                            SlackDoorSheet(tafID: taf.id, doors: doors, app: app).environmentObject(model)
+                                        }
                                     // A change to the dial is the taf's next version: switched to in Versions.
                                     if let made = model.knobChanges[taf.id], model.manages(taf.id) {
                                         Panel {

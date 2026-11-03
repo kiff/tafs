@@ -132,6 +132,14 @@ the app in sample mode.
   (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
   they're shown, verbatim and in order. Approving signs both digests into planque's approve
   body (`kiff_profile`). The tests use KIFF's vectors in `TafsTests/ProfileVectors/`.
+- **The Slack door** (`SlackDoorSheet`, from Add a door in Doors): the taf's Slack bot
+  connections (planque's grants, connected, the taf's agent, marked `connector:composio:slackbot`,
+  or `request.connector.toolkit` until the mark is there), then the channels it sees
+  (`GET …/grants/{id}/channels`, from planque). Picking a channel asks Face ID once: planque
+  subscribes it (`POST …/grants/{id}/triggers {account, slug, channels}`, device-signed; planque
+  builds the subscription from the channels), then tafs cloud makes the door
+  (`POST …/doors {app: "slack", grant, channel}`). If the door can't be made, the subscription is
+  taken back. Pairing asks for a Slack member ID.
 - **Connect apps** (`ConnectAppsView`, from Settings): `GET /v1/connect/apps`, searched as the
   owner types, in tafs cloud's order and words; "Not listed? Ask Coach" when `by_key`.
   Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,

@@ -1593,6 +1593,58 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // MARK: The Slack door
+
+    /// The taf's Slack bot connections a Slack door can listen through: connected, its own
+    /// agent's, marked by planque's catalog entry.
+    func slackBots(for tafID: UUID) -> [PlanqueClient.Grant] {
+        guard let agent = kiffAgent(for: tafID) else { return [] }
+        return grants.filter { $0.slackBot && $0.connected && $0.request.agent == agent }
+    }
+
+    /// The channels a Slack bot connection can see, read through planque.
+    func slackChannels(_ grantID: String) async -> [PlanqueClient.Channel]? {
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return nil }
+        let signer = self.signer
+        planque.tenant = tenant
+        do { return try await planque.channels(grantID: grantID, signedBy: { try signer.signConfirmed($0) }) } catch {
+            lastError = "Slack's channels couldn't be read: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    /// A Slack door on one channel, in the agreed order: planque subscribes the channel,
+    /// approved with Face ID, then tafs cloud makes the door. A door that can't be made takes
+    /// the subscription back, so nothing listens without a door.
+    func addSlackDoor(_ tafID: UUID, doors: DoorsModel, app: TafsCloud.DoorApp, grant: PlanqueClient.Grant, channel: PlanqueClient.Channel) async -> Bool {
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant, let account = grant.account else {
+            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
+            return false
+        }
+        let where_ = channel.name.isEmpty ? channel.id : "#" + channel.name
+        do {
+            _ = try await signer.sign(Data("tafs.door.v1|\(tenant)|\(grant.id)|\(channel.id)".utf8),
+                                      reason: "Let \(taf(tafID)?.name ?? "the taf") read what's written in \(where_)", grants: true)
+        } catch {
+            quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+            return false
+        }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        let trigger: String
+        do {
+            trigger = try await planque.subscribe(grantID: grant.id, account: account, slug: PlanqueClient.slackMessageTrigger, channels: [channel.id])
+        } catch {
+            lastError = "Slack didn't subscribe \(where_): \(error.localizedDescription)"
+            return false
+        }
+        if await doors.addSlack(app, grant: grant.id, channel: channel.id) != nil { return true }
+        try? await planque.unsubscribe(grantID: grant.id, trigger: trigger)
+        return false
+    }
+
     /// Gives an API-key grant its key, as shown, behind Face ID. A grant with a profile needs
     /// KIFF's words for it shown, as approving does.
     func giveKey(grantID: String, shown: String?, key: String) async -> Bool {
