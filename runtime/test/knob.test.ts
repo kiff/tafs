@@ -95,6 +95,31 @@ describe("the dial", () => {
     expect(plain.why).toBe("Refund");
   });
 
+  it("each stop's one size comes from tafs cloud, each choice the whole setting that makes it", () => {
+    const setting = { wakes: [{ kind: "door" as const }, { kind: "schedule" as const, form: "weekdays" as const, at: "09:00" }], busy: "skip" as const, results: ["app" as const, "door_reply" as const] };
+    const k = knobOf({ ...base, schedule: { ...base.schedule!, cron: "0 9 * * 1-5" }, setting });
+    const sched = k.wakes.find((w) => w.kind === "schedule")!;
+    expect(sched.size!.label).toBe("Time");
+    expect(sched.size!.choices[sched.size!.index]!.label).toBe("09:00");
+    const at17 = sched.size!.choices.find((c) => c.label === "17:00")!.setting;
+    expect(at17.wakes).toEqual([{ kind: "door" }, { kind: "schedule", form: "weekdays", at: "17:00" }]);
+    expect(at17.results).toEqual(["app", "door_reply"]);
+    // A place on or off; the email to the owner is off, and turning it on adds it.
+    const email = k.results.find((r) => r.place === "owner_email")!;
+    expect(email.size!.index).toBe(0);
+    expect(email.size!.choices[1]!.setting.results).toEqual(["app", "door_reply", "owner_email"]);
+    const app = k.results.find((r) => r.place === "app")!;
+    expect(app.size!.choices[0]!.setting.results).toEqual(["door_reply"]);
+    // The last place tafs delivers has no size: it can't be turned off.
+    const one = knobOf({ ...base, setting: { ...setting, results: ["app"] } });
+    expect(one.results.find((r) => r.place === "app")!.size).toBeUndefined();
+  });
+
+  it("a draft carries its recipe's lines, for Coach's card", () => {
+    const k = knobOf({ ...base, draft: { version: 4, setting: { wakes: [], busy: "skip", results: ["app"], what: [{ label: "Check", words: "Looks up the charge" }] } } });
+    expect(k.draft!.what).toEqual(["1 · Check: Looks up the charge"]);
+  });
+
   it("a recipe is checked: steps in order, each with a short label", () => {
     expect(recipeOf([{ label: "Check the charge in Stripe now please", words: "x" }])[0]!.label).toBe("Check the charge in Stri");
     expect(() => recipeOf([{ words: "no label" }])).toThrow("short label");

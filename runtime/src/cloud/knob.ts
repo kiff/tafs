@@ -37,6 +37,11 @@ export interface RingItem {
   tap?: string;
   /** The door a door's stop opens or closes (PATCH /v1/tafs/{id}/doors/{door}). */
   door?: string;
+  /**
+   * The stop's one choice, a few fixed values (the dial's − and +): `index` is the value now, and each
+   * choice's `setting` is the whole PUT body that makes it, every other stop as it is.
+   */
+  size?: { label: string; index: number; choices: Array<{ label: string; setting: KnobSetting }> };
   /** A trigger's form exactly as PUT takes it; absent on run now and on a schedule the dial can't set. */
   trigger?: Trigger;
   /** The connection (planque's grant) a connected app's stop belongs to: the dial groups stops by it. */
@@ -63,7 +68,7 @@ export interface Knob {
   results: (Omit<RingItem, "kind"> & { place: ResultPlace | ActionPlace["place"]; grant?: string; action?: string })[];
   rim: { done: number; working: number; retrying: number; needs_you: number; line: string };
   /** A dial change waiting for the owner: its words, all of them and by ring, for Coach's card and the dial. */
-  draft: null | { version: number; words: string[]; wakes: string[]; when: string[]; results: string[] };
+  draft: null | { version: number; words: string[]; wakes: string[]; when: string[]; results: string[]; what: string[] };
   /** The shown version's dial as PUT takes it: a tap copies it, changes one thing and sends it back. */
   setting: KnobSetting;
   /**
@@ -193,6 +198,12 @@ export function knobOf(k: KnobInput): Knob {
     results.push({ id: `res_action_${i + 1}`, place: p.place, grant: p.grant, action: p.action, ...w, on: true, state: "On", tap: `Turn to stop: ${w.words.charAt(0).toLowerCase()}${w.words.slice(1)}` });
   }
 
+  const setting: KnobSetting = k.setting ?? {
+    wakes: [...(k.doors.length ? [{ kind: "door" as const }] : []), ...(fromSchedule ? [fromSchedule] : [])],
+    busy, results: k.places,
+  };
+  sizeStops(wakes, results, setting);
+
   const t = k.today;
   const parts = [`${t.done} done today`, ...(t.working ? [`${t.working} working`] : []), ...(t.retrying ? [`${t.retrying} retrying`] : []),
     ...(t.needs_you ? [`${t.needs_you} need${t.needs_you === 1 ? "s" : ""} you`] : [])];
@@ -204,12 +215,46 @@ export function knobOf(k: KnobInput): Knob {
     what: whatOf(k),
     rim: { ...t, line: parts.join(" · ") },
     connections: connectionsOf(wakes, results),
-    draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting) } : null,
-    setting: k.setting ?? {
-      wakes: [...(k.doors.length ? [{ kind: "door" as const }] : []), ...(fromSchedule ? [fromSchedule] : [])],
-      busy, results: k.places,
-    },
+    draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting),
+      what: (k.draft.setting.what ?? []).map((s, i) => `${i + 1} · ${s.label}: ${s.words}`) } : null,
+    setting,
   };
+}
+
+const TIMES = ["07:00", "08:00", "09:00", "12:00", "17:00", "18:00"];
+const EVERY = [15, 30, 60, 120, 240];
+
+/**
+ * Each stop's one size, from the dial's own forms, so both apps show the same few values: a schedule's time
+ * or how often, and a result place on or off (the last place on stays on).
+ */
+function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting): void {
+  const json = (x: unknown) => JSON.stringify(x);
+  const withWake = (i: number, t: Trigger): KnobSetting => ({ ...s, wakes: s.wakes.map((x, j) => (j === i ? t : x)) });
+  for (const w of wakes) {
+    const i = w.trigger ? s.wakes.findIndex((x) => json(x) === json(w.trigger)) : -1;
+    const t = i >= 0 ? s.wakes[i]! : undefined;
+    if (!t || t.kind !== "schedule") continue;
+    if (t.at && ["daily", "weekdays", "weekly", "monthly", "monthly_last_day"].includes(t.form ?? "")) {
+      const values = [...new Set([...TIMES, t.at])].sort();
+      w.size = { label: "Time", index: values.indexOf(t.at), choices: values.map((v) => ({ label: v, setting: withWake(i, { ...t, at: v }) })) };
+    } else if (t.form === "every" && t.every_minutes) {
+      const values = [...new Set([...EVERY, t.every_minutes])].sort((a, b) => a - b);
+      const say = (n: number) => (n < 60 ? `Every ${n} min` : `Every ${n / 60} h`);
+      w.size = { label: "How often", index: values.indexOf(t.every_minutes), choices: values.map((v) => ({ label: say(v), setting: withWake(i, { ...t, every_minutes: v }) })) };
+    }
+  }
+  const on = (p: Knob["results"][number]) => s.results.some((x) => (typeof x === "string" ? x === p.place : x.grant === p.grant && x.action === p.action));
+  for (const p of results) {
+    const isOn = on(p);
+    const without = s.results.filter((x) => (typeof x === "string" ? x !== p.place : !(x.grant === p.grant && x.action === p.action)));
+    if (isOn && !without.some((x) => typeof x === "string")) continue; // the last place tafs delivers stays on
+    const added = isOn ? s.results : typeof p.place === "string" && p.place !== "action" ? [...s.results, p.place as ResultPlace] : s.results;
+    w(p, isOn, without, added);
+  }
+  function w(p: Knob["results"][number], isOn: boolean, off: KnobSetting["results"], onSet: KnobSetting["results"]) {
+    p.size = { label: "On or off", index: isOn ? 1 : 0, choices: [{ label: "Off", setting: { ...s, results: off } }, { label: "On", setting: { ...s, results: onSet } }] };
+  }
 }
 
 /** The What ring: Coach's recipe, in order; for a taf Coach set none for, each of its tools, by KIFF's title. */

@@ -1573,7 +1573,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     // Until it's live, the dial shows it as the change waiting for the owner.
     const waiting = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(waiting.body.draft).toEqual({ version: n, words: put.body.words, wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door"],
-      when: ["If busy, runs the latest once it's free"], results: ["Results go to door_reply, app"] });
+      when: ["If busy, runs the latest once it's free"], results: ["Results go to door_reply, app"], what: [] });
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
     const writes = w.agents.calls.slice(before).filter((c: string) => /(create|update)Schedule/.test(c));
     expect(writes).toEqual([`updateSchedule ${RAE} cron 0 9,15 * * * latest`, `createSchedule ${RAE}-t2 30 12 * * * UTC`]);
