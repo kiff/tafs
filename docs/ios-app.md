@@ -162,13 +162,13 @@ the app in sample mode.
   builds the subscription from the channels), then tafs cloud makes the door
   (`POST …/doors {app: "slack", grant, channel}`). The door keeps the subscription's id (`trigger`); if the door can't be made, the subscription
   is taken back. Removing it is the reverse: the signed `DELETE …/grants/{grant}/triggers/{trigger}`,
-  then the door. Pairing asks for a Slack member ID.
+  then the door. If the phone cannot sign the subscription's removal, the door stays and the app asks the owner to reconnect first. Pairing asks for a Slack member ID.
 - **Connect apps** (`ConnectAppsView`, from Settings): `GET /v1/connect/apps`, searched as the
   owner types, in tafs cloud's order and words; "Not listed? Ask Coach" when `by_key`.
   Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,
   with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
   API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
-  the device signs only its SHA-256 with the grant's digest.
+  the device signs only its SHA-256 with the grant's digest. Its list and open approval are cleared when the account changes; delayed replies from the previous account or a cancelled search are discarded.
 - **Did this happen?** (`DidThisHappenCard`, in Needs you): KIFF's money calls whose outcome
   it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind
   Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the

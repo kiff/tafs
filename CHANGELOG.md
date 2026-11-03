@@ -5,6 +5,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **iPhone and iPad:** Connect apps clears its list and approval when the account changes and ignores stale search replies. Removing a Slack door waits until the phone can stop its subscription.
+
 ### Removed
 
 - The `TafsMac` target and `ios/Mac/`: the Apple app is built for iPhone and iPad only.

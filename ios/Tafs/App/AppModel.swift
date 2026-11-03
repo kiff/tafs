@@ -503,6 +503,7 @@ final class AppModel: ObservableObject {
         unfinishedRemovals = []
         doorsOffered = []
         grants = []
+        connectApps = nil; connectStart = nil; connectAppsQuery = ""; connectAppsRequest = nil
         grantsReadFor = []
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
@@ -853,6 +854,7 @@ final class AppModel: ObservableObject {
         unfinishedRemovals = []
         doorsOffered = []
         grants = []
+        connectApps = nil; connectStart = nil; connectAppsQuery = ""; connectAppsRequest = nil
         grantsReadFor = []
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
@@ -1542,15 +1544,24 @@ final class AppModel: ObservableObject {
 
     /// The search Connect apps last listed, for its next page.
     private var connectAppsQuery = ""
+    /// Only the newest search may replace its page, even if an older request ignores cancellation.
+    private var connectAppsRequest: UUID?
 
     /// Reads Connect apps' first page, filtered by what the owner typed.
     func loadConnectApps(_ q: String = "") async {
         guard mode == .kiff else { return }
+        let gen = accountGeneration
+        let request = UUID()
+        connectAppsRequest = request
+        // Invalidate pagination for the preceding search immediately.
+        if connectAppsQuery != q { connectApps = nil }
+        connectAppsQuery = q
         do {
             let page = try await cloud.connectApps(q)
-            connectAppsQuery = q
+            guard gen == accountGeneration, request == connectAppsRequest, !Task.isCancelled else { return }
             connectApps = page
         } catch {
+            guard gen == accountGeneration, request == connectAppsRequest, !Task.isCancelled else { return }
             lastError = "The apps couldn't be listed: \(error.localizedDescription)"
         }
     }
@@ -1558,16 +1569,20 @@ final class AppModel: ObservableObject {
     /// Adds Connect apps' next page, for the same search; an app listed already isn't again.
     func loadMoreConnectApps() async {
         guard mode == .kiff, let shown = connectApps, let cursor = shown.nextCursor else { return }
+        let gen = accountGeneration
+        let request = connectAppsRequest
         let q = connectAppsQuery
         do {
             let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor)
-            guard q == connectAppsQuery, connectApps?.nextCursor == cursor else { return }
+            guard gen == accountGeneration, request == connectAppsRequest,
+                  q == connectAppsQuery, connectApps?.nextCursor == cursor else { return }
             var merged = page
             let seen = Set(shown.apps.map(\.entry))
             merged.apps = shown.apps + page.apps.filter { !seen.contains($0.entry) }
             merged.byKey = shown.byKey || page.byKey
             connectApps = merged
         } catch {
+            guard gen == accountGeneration, request == connectAppsRequest else { return }
             lastError = "More apps couldn't be listed: \(error.localizedDescription)"
         }
     }
@@ -1584,11 +1599,15 @@ final class AppModel: ObservableObject {
             lastError = "This taf isn't on tafs cloud yet, so apps can't be connected for it."
             return
         }
+        let gen = accountGeneration
         do {
             let start = try await cloud.startConnect(app.entry, taf: c.id)
+            guard gen == accountGeneration else { return }
             await refreshConnections()
+            guard gen == accountGeneration else { return }
             connectStart = start
         } catch {
+            guard gen == accountGeneration else { return }
             lastError = "\(app.vendor.isEmpty ? app.title : app.vendor) couldn't be connected: \(error.localizedDescription)"
         }
     }
@@ -1648,7 +1667,11 @@ final class AppModel: ObservableObject {
     /// Removes a Slack door in the reverse order: planque's subscription first, signed by
     /// this phone, then the door. One with no subscription named is only the door.
     func removeSlackDoor(_ door: TafsCloud.Door, doors: DoorsModel) async {
-        if let grant = door.grant, let trigger = door.trigger, planqueReady, sessionHasKey, let tenant = kiffTenant {
+        if let grant = door.grant, let trigger = door.trigger {
+            guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
+                lastError = "Start from Connected tools on this \(ThisDevice.kind) first. Slack's subscription must be stopped before removing its door."
+                return
+            }
             let signer = self.signer
             planque.tenant = tenant
             planque.signer = { try signer.signConfirmed($0) }

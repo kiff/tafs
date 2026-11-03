@@ -56,7 +56,7 @@ final class ConnectAppsTests: XCTestCase {
         planque.tenant = "t_01"
         planque.signer = { _ in "sig" }
         planque.deviceID = "dev_phone01"
-        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_9/triggers"] = (201, #"{"id":"ti_1","account":"T0123","channels":["C0REFUNDS"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_9/triggers"] = (201, #"{"trigger":"ti_1","account":"T0123","channels":["C0REFUNDS"]}"#)
         let trigger = try await planque.subscribe(grantID: grant.id, account: "T0123", slug: PlanqueClient.slackMessageTrigger, channels: ["C0REFUNDS"])
         XCTAssertEqual(trigger, "ti_1")
         let sent = try XCTUnwrap(StubProtocol.sent.last { $0.url?.path == "/v1/accounts/t_01/grants/g_9/triggers" })
@@ -124,4 +124,79 @@ final class ConnectAppsTests: XCTestCase {
         }
         XCTAssertTrue(StubProtocol.sent.isEmpty)
     }
+
+    private func signedInModel() async -> AppModel {
+        StubProtocol.responses = [:]; StubProtocol.thenRespond = [:]; StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: StubSigner(),
+            kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+            cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        await model.useSession("kiff_dev_x", tenant: "t_01")
+        return model
+    }
+
+    private static let appsPage = #"{"apps":[{"entry":"connector:composio:gmail","vendor":"Gmail","title":"Gmail","how":"oauth","connected":true}],"by_key":true}"#
+
+    private func untilHeldRequestArrives() async {
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
+    }
+
+    func testAccountResetClearsAppsAndTheOpenApproval() async {
+        let model = await signedInModel()
+        StubProtocol.responses["GET /v1/connect/apps"] = (200, Self.appsPage)
+        await model.loadConnectApps()
+        XCTAssertNotNil(model.connectApps)
+        model.connectStart = TafsCloud.ConnectStart(grant: "g_1", needsKey: false)
+        model.forgetSession()
+        XCTAssertNil(model.connectApps)
+        XCTAssertNil(model.connectStart)
+    }
+
+    func testAnAppsResponseAfterAccountResetIsDropped() async {
+        let model = await signedInModel()
+        StubProtocol.responses["GET /v1/connect/apps"] = (200, Self.appsPage)
+        StubProtocol.holdOnce = "GET /v1/connect/apps"
+        let load = Task { await model.loadConnectApps() }
+        await untilHeldRequestArrives()
+        model.forgetSession()
+        StubProtocol.release.signal()
+        await load.value
+        XCTAssertNil(model.connectApps)
+    }
+
+    func testACancelledSearchDoesNotReplaceThePage() async {
+        let model = await signedInModel()
+        StubProtocol.responses["GET /v1/connect/apps?q=mail"] = (200, Self.appsPage)
+        StubProtocol.holdOnce = "GET /v1/connect/apps?q=mail"
+        let load = Task { await model.loadConnectApps("mail") }
+        await untilHeldRequestArrives()
+        load.cancel()
+        StubProtocol.release.signal()
+        await load.value
+        XCTAssertNil(model.connectApps)
+        model.forgetSession()
+    }
+
+    func testATriggerBackedDoorCannotBeRemovedWithoutASigningSession() async {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: URLSession(configuration: config))
+        let model = AppModel(signer: StubSigner(), cloud: cloud)
+        model.forgetSession()
+        var door = DoorsModel.sample.doors[0]
+        door.grant = "g_1"; door.trigger = "ti_1"
+        let doors = DoorsModel(cloud: cloud, tafID: "taf_01")
+        StubProtocol.sent = []
+        await model.removeSlackDoor(door, doors: doors)
+        XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "DELETE" })
+        XCTAssertTrue(model.lastError?.contains("subscription must be stopped") == true)
+    }
+
 }
