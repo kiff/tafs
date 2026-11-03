@@ -39,6 +39,7 @@ class TafDialPanelTest {
     """{"does":{"label":"Refund","line":"Refunds a payment in Stripe, within its Card."},
         "wakes":[{"id":"trg_1","kind":"door","door":"door_slack","label":"Slack","words":"Messages in #refunds start a request.","state":"Open","tap":"Tap to close"},
                  {"id":"trg_2","kind":"run_now","label":"Run now","words":"Runs it once, now.","state":"Now","tap":"Tap to run once"},
+                 {"id":"trg_f","kind":"follow_up","follow_up":"fu_1","label":"Tomorrow 9:00","words":"Check refund 4402 again","state":"Once","tap":"Tap to remove"},
                  {"id":"trg_3","kind":"schedule","label":"Weekdays","words":"Weekdays at 09:00","state":"On","tap":"Tap to turn off","trigger":{"kind":"schedule","form":"weekdays","at":"09:00"}}],
         "when":[{"id":"when_arrivals","kind":"arrivals","label":"Arrivals","words":"Works each one as it arrives"}],
         "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote","state":"On","tap":"Tap to stop replying"}],
@@ -62,7 +63,7 @@ class TafDialPanelTest {
           load = {}, add = { _, _ -> null }, setOpen = { _, door, open -> log += "open ${door.id} $open" }, remove = { _, _ -> },
           pair = { _, _, _, _ -> }, unpair = { _, _, _ -> }, answer = { _, _, _, _ -> }, dismissError = {},
           loadKnob = { log += "reload" }, runNow = { log += "run" }, approveOnce = { log += "approve ${it.id}" },
-          changeKnob = { _, stop -> log += "change $stop" }, confirmKnobChange = { log += "live" }, dismissKnobChange = { log += "aside" },
+          changeKnob = { _, stop -> log += "change $stop" }, removeFollowUp = { _, fid -> log += "remove $fid" }, confirmKnobChange = { log += "live" }, dismissKnobChange = { log += "aside" },
         ),
         onDoor = { log += "door $it" },
       )
@@ -156,5 +157,13 @@ class TafDialPanelTest {
     rule.onNodeWithText(KnobWords.MAKE_LIVE).performScrollTo().performClick()
     rule.waitForIdle()
     assertEquals(listOf("live"), log)
+  }
+
+  @Test fun aFollowUpTheTafSetIsRemovedFromTheFace() {
+    show()
+    rule.onNodeWithContentDescription("Tomorrow 9:00, Wakes it, once").performClick()
+    rule.onNodeWithText("Tap to remove").performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("remove fu_1"), log)
   }
 }

@@ -2331,6 +2331,23 @@ class AppModel(
 
   fun closeRequest() = _state.update { it.copy(openRequest = null, requestError = null) }
 
+  /** Removes a follow-up the taf set itself, from the dial's face, then reads the dial again. */
+  suspend fun removeFollowUp(tafId: String, followUp: String) {
+    if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    try {
+      cloud.removeFollowUp(cloudId, followUp)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not removed. ${ErrorWords.of(e)}")) }
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
+    loadKnob(tafId)
+  }
+
   /** A taf's dial (`GET /v1/tafs/{id}/knob`), read quietly: with none, its Doors tab keeps the doors' own dial. */
   suspend fun loadKnob(tafId: String) {
     if (_state.value.mode != Mode.kiff) return

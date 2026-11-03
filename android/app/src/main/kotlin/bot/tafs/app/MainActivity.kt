@@ -358,6 +358,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       confirmKnobChange = { taf -> model.confirmKnobChange(taf) },
       dismissKnobChange = model::dismissKnobChange,
       openRimRequest = model::openRimRequest,
+      removeFollowUp = model::removeFollowUp,
     )
   }
   // Coach: the account's Setup, in place of the list. Closing never ends a conversation.

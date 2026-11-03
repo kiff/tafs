@@ -177,7 +177,9 @@ changes that one thing (`KnobWire.changed`) and sends it to
 tafs cloud's words for the change with **Make it live**, which switches that version as any
 version is switched (`AppModel.confirmKnobChange`), or **Not now**. A form the scheduler can't
 keep exactly is said in tafs cloud's words, naming the nearest one.
-Triggers (Wakes it's schedules and checks) change through Coach's draft for now, not by a tap.
+Triggers (Wakes it's schedules and checks) change through Coach's draft for now, not by a tap. A follow-up
+the taf set itself shows on Wakes it, and its face removes it, for whoever manages the taf
+(`DELETE …/follow-ups/{fid}`).
 
 **A request, step by step** (`RequestSheet`): today's work under the dial opens the request the rim
 points at, the first not done, else the newest. A request's row in Activity opens the same

@@ -228,6 +228,8 @@ fun TafDialPanel(
                 when {
                   door != null -> { actions.setOpen(taf.id, door, !door.open); actions.loadKnob(taf.id) }
                   item?.kind == "run_now" -> actions.runNow(taf.id)
+                  // A follow-up the taf set itself: the face removes it, for whoever manages the taf.
+                  item?.followUp != null && state.manages(taf.id) -> actions.removeFollowUp(taf.id, item.followUp)
                   // If busy and where results go change how the taf works: the next version, to make live. Triggers change
                   // through Coach's draft for now.
                   face.ring != KnobRing.Kind.WakesIt && face.stop.tap != null && state.manages(taf.id) -> actions.changeKnob(taf.id, face.stop.id)

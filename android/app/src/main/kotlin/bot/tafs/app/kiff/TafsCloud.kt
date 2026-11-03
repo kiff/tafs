@@ -391,6 +391,11 @@ class TafsCloud(
   suspend fun changeKnob(id: String, setting: kotlinx.serialization.json.JsonObject): KnobWire.Change =
     KiffClient.json.decodeFromString(String(sendJson("PUT", "/v1/tafs/${escaped(id)}/knob", setting)))
 
+  /** Removes a follow-up the taf set itself (`manages`). */
+  suspend fun removeFollowUp(id: String, followUp: String) {
+    send("DELETE", "/v1/tafs/${escaped(id)}/follow-ups/${escaped(followUp)}")
+  }
+
   /** A taf's dial (the knob API). */
   suspend fun knob(id: String): KnobWire = get("/v1/tafs/${escaped(id)}/knob")
 

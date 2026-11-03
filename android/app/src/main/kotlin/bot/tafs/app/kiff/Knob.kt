@@ -47,6 +47,8 @@ data class KnobWire(
     val expires: String? = null,
     /** A door's id, on a door stop: the face opens or closes it through the doors API. */
     val door: String? = null,
+    /** A follow-up the taf set itself, by its id: the face removes it. Never part of the setting. */
+    @SerialName("follow_up") val followUp: String? = null,
     /** A trigger stop's form exactly as `PUT` takes it; none on Run now, nor on a schedule the dial can't set. */
     val trigger: kotlinx.serialization.json.JsonObject? = null,
   )
