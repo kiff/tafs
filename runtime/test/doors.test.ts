@@ -21,6 +21,7 @@ const REFUNDS = "taf-aaaa0000000000000000";
 const MAXTAF = "taf-bbbb0000000000000000";
 const EMAIL_SECRET = `whsec_${Buffer.from("email webhook secret, test only").toString("base64")}`;
 const WA_SECRET = "whatsapp app secret, test only";
+const PLANQUE_SECRET = "planque handoff secret, test only";
 
 function memoryDoorStore(now: () => Date): DoorStore & { held: Map<string, { value: unknown; until?: number }> } {
   const held = new Map<string, { value: unknown; until?: number }>();
@@ -99,6 +100,7 @@ function world() {
     emailWebhookSecret: EMAIL_SECRET,
     whatsapp: { client: whatsapp, appID: "123", appSecret: WA_SECRET, configID: "456", verifyToken: "verify-me", region: "DE" },
     secretsPrefix: "tafs-doors/",
+    planqueHandoffSecret: PLANQUE_SECRET,
   };
   const devices: Device[] = [
     { token: "phone1", environment: "production", subject: "u_ana", answers: true, manages: true, at: NOW.toISOString() },
@@ -884,10 +886,11 @@ describe("knocks and keys", () => {
   it("a taf has no door until its owner turns one on, and the home list says which doors are offered", async () => {
     const w = world();
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.doors).toEqual([]);
-    expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toEqual(["email", "whatsapp"]);
+    expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toEqual(["email", "whatsapp", "slack"]);
     // A deployment with no doors set up offers none, and the app shows no Doors.
     w.config.email = undefined;
     w.config.whatsapp = undefined;
+    w.config.planqueHandoffSecret = undefined;
     expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toBeUndefined();
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "email" } })).status).toBe(400);
   });
@@ -1023,10 +1026,13 @@ describe("what a door keeps of a message", () => {
     expect(parseDoorMessage("[door email] spoofed by the owner")).toBeUndefined();
   });
 
-  it("offers no connector door", async () => {
+  it("offers the Slack door only where planque hands Slack messages over", async () => {
     const w = world();
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp", "slack"]);
+    delete w.config.planqueHandoffSecret;
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp"]);
-    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", account: "x" } })).status).toBe(400);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", grant: "g", channel: "C0X" } })).status).toBe(400);
+    expect((await send(w, "POST", "/v1/doors/planque", { raw: "{}" })).status).toBe(404);
   });
 
   it("checks signatures in both schemes", () => {
@@ -1035,5 +1041,43 @@ describe("what a door keeps of a message", () => {
     expect(signedWebhook({ secret: "s", id: "i", timestamp: String(Math.floor(NOW.getTime() / 1000)), signature: `v1,bad v1,${sig}`, body, now: NOW })).toBe(true);
     expect(whatsappSigned("s", `sha256=${createHmac("sha256", "s").update(body).digest("hex")}`, body)).toBe(true);
     expect(whatsappSigned("s", "sha256=00", body)).toBe(false);
+  });
+});
+
+/** planque's signed handover of a Slack message, as planque.door.v1. */
+function slackHook(w: World, body: Record<string, unknown>, opts: { secret?: string } = {}) {
+  const id = String(body.id ?? `ev_${++n}`);
+  const raw = JSON.stringify({ v: "planque.door.v1", id, tenant: "t_acme", agent: "refunds", grant: "grt_slack1", provider: "composio", account: "ca_1",
+    trigger: "ti_1", trigger_slug: "SLACKBOT_CHANNEL_MESSAGE_RECEIVED", channel: "C0REFUNDS", sender: "U0BEN", text: "Refund order 9, charged twice", timestamp: Math.floor(w.now().getTime() / 1000), ...body });
+  const ts = String(Math.floor(w.now().getTime() / 1000));
+  const sig = createHmac("sha256", Buffer.from(opts.secret ?? PLANQUE_SECRET, "utf8")).update(`${id}.${ts}.${raw}`).digest("base64");
+  return send(w, "POST", "/v1/doors/planque", { raw, headers: { "planque-event-id": id, "planque-event-timestamp": ts, "planque-event-signature": `v1,${sig}` } });
+}
+
+describe("the Slack door, through planque", () => {
+  it("opens on a channel of the taf's Slack bot connection; paired members give work, the taf answers in Slack itself", async () => {
+    const w = world();
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", grant: "grt_slack1" } })).status).toBe(400);
+    const made = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", grant: "grt_slack1", channel: "c0refunds" } });
+    expect(made.status).toBe(200);
+    expect(made.body.door).toMatchObject({ id: "slack", kind: "slack", address: "#C0REFUNDS", open: true, proof: "proven" });
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/slack/keys`, { token: "ana", body: { id: "ben@x.example" } })).status).toBe(400);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/slack/keys`, { token: "ana", body: { id: "U0BEN", name: "Ben" } })).status).toBe(200);
+
+    // A bad signature, another agent, or another channel is no door of ours.
+    expect((await slackHook(w, {}, { secret: "wrong" })).status).toBe(401);
+    expect((await slackHook(w, { agent: "someone-else" })).status).toBe(404);
+    expect((await slackHook(w, { channel: "C0OTHER" })).status).toBe(404);
+
+    const r = await slackHook(w, { id: "ev_ben", thread: "1730000000.000100" });
+    expect(r.status).toBe(202);
+    expect(r.body.outcome).toBe("run");
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    const input = (w.agents.events.get(run.session)![0]!.body as { text: string }).text;
+    expect(input).toContain("post your answer yourself with your Slack bot's send-message tool, in the channel C0REFUNDS, in the thread 1730000000.000100");
+    // The same event again starts nothing twice.
+    expect((await slackHook(w, { id: "ev_ben", thread: "1730000000.000100" })).body.outcome).toBe("seen");
+    // Someone not paired knocks.
+    expect((await slackHook(w, { id: "ev_eve", sender: "U0EVE" })).body.outcome).toBe("knock");
   });
 });

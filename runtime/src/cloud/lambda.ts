@@ -598,6 +598,8 @@ function readDoorsConfig(): Promise<DoorsConfig> {
         verifyToken: str("whatsapp_verify_token"), ...(process.env.DOORS_WHATSAPP_REGION ? { region: process.env.DOORS_WHATSAPP_REGION } : {}),
       };
     }
+    // The Slack door: planque hands its Slack bot's messages over, signed with this (POST /v1/doors/planque).
+    if (str("planque_handoff_secret")) cfg.planqueHandoffSecret = str("planque_handoff_secret");
     return cfg;
   })().catch((err) => {
     doorsConfig = undefined;
