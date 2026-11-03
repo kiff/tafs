@@ -179,6 +179,13 @@ version is switched (`AppModel.confirmKnobChange`), or **Not now**. A form the s
 keep exactly is said in tafs cloud's words, naming the nearest one.
 Triggers (Wakes it's schedules and checks) change through Coach's draft for now, not by a tap.
 
+**A request, step by step** (`RequestSheet`): today's work under the dial opens the request the rim
+points at, the first not done, else the newest. A request's row in Activity opens the same
+(`GET /v1/tafs/{id}/requests/{run}`). It shows the request's line, where it came from, and what
+happened, each step marked done, failed, not made, waiting or next, every line and time as tafs
+cloud wrote it. **Try the reply now** sends a reply given up on again, for whoever manages the
+taf, and **Ask Coach** opens a conversation about the taf.
+
 ## Signing
 
 Two keys in the Android Keystore, in StrongBox where the phone has it

@@ -357,6 +357,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       changeKnob = { taf, stop -> model.changeKnob(taf, stop) },
       confirmKnobChange = { taf -> model.confirmKnobChange(taf) },
       dismissKnobChange = model::dismissKnobChange,
+      openRimRequest = model::openRimRequest,
     )
   }
   // Coach: the account's Setup, in place of the list. Closing never ends a conversation.
@@ -382,6 +383,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadWork = model::loadWork,
       setDraft = model::setDraft,
       sendAgain = model::sendAgain,
+      openRequest = model::openRequest,
       setPaused = model::setPaused,
       remove = model::removeTaf,
       report = model::reportAnswer,
@@ -570,6 +572,17 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           onClose = model::closeListApproval,
         )
       }
+    }
+    // A request from the dial's rim or Activity, step by step.
+    state.openRequest?.let { (tafId, detail) ->
+      val canSend = state.manages(tafId) && detail.deliveries.any { it.sendAgain }
+      bot.tafs.app.views.RequestSheet(
+        detail,
+        sending = detail.id in state.sendingAgain,
+        onTryReply = if (canSend) ({ scope.launch { model.sendAgain(tafId, detail.id); model.openRequest(tafId, detail.id) } }) else null,
+        onAskCoach = if (state.mayUseCoach) ({ model.closeRequest(); model.improveInCoach(tafId) }) else null,
+        onClose = model::closeRequest,
+      )
     }
     if (deletingAccount) {
       DeleteAccountSheet(state, delete = model::deleteAccount, clearError = model::clearDeleteAccountError, onClose = { deletingAccount = false })

@@ -230,6 +230,33 @@ data class WorkRequest(
   val deliveries: List<WorkDelivery> = emptyList(),
 )
 
+/**
+ * One request from the dial's rim, step by step (`GET /v1/tafs/{id}/requests/{run}`): what the taf's work gives for it, where it
+ * came from, and its steps. Every line and time is tafs cloud's, in the account's zone, drawn as it is.
+ */
+@Serializable
+data class RequestDetail(
+  val id: String,
+  @Serializable(with = bot.tafs.app.model.InstantAsString::class) val at: Instant,
+  val state: String = "",
+  val line: String = "",
+  val deliveries: List<WorkDelivery> = emptyList(),
+  /** "By email", "Its schedule", "From its chat", "Run now". */
+  val from: String? = null,
+  val steps: List<RequestStep> = emptyList(),
+)
+
+/** A step: Received, each call by KIFF's title for its tool, a hold, where the reply went, then the end or what comes next. */
+@Serializable
+data class RequestStep(
+  val label: String = "",
+  val line: String? = null,
+  /** Its time as tafs cloud wrote it, in the account's zone. */
+  val at: String? = null,
+  /** done, failed, not_made, waiting or next. */
+  val state: String = "done",
+)
+
 /** Where a request's result went, and whether it can be sent again (a reply given up on after its tries). */
 @Serializable
 data class WorkDelivery(val place: String = "door_reply", val state: String = "", val line: String = "", @SerialName("send_again") val sendAgain: Boolean = false)

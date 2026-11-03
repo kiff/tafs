@@ -11,6 +11,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, a request step by step:** today's work under the dial, or a request in Activity,
+  opens what happened, step by step, with Try the reply now and Ask Coach.
 - **Android, How this is counted:** under a Card's limits, a row opens KIFF's words for how each
   tool's calls are counted, as approved when it was connected.
 - **Android, Did this happen?:** money calls KIFF can't prove show in Needs you in KIFF's words,

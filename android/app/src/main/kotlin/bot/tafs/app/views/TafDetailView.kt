@@ -92,6 +92,8 @@ class TafActions(
   /** Reads where its work stands (docs/reliability.md), and sends a door reply again by its run. */
   val loadWork: suspend (String) -> Unit = {},
   val sendAgain: suspend (String, String) -> Unit = { _, _ -> },
+  /** Opens a request step by step (taf, run). */
+  val openRequest: suspend (String, String) -> Unit = { _, _ -> },
   /** Pauses or resumes its schedule. */
   val setPaused: suspend (String, Boolean) -> Unit = { _, _ -> },
   /** Removes it for good, after one confirmation: what to tell the owner, null when nothing was done. */
@@ -381,7 +383,11 @@ private fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
     work?.let { Chat.workRows(it) }?.forEach { row ->
       when (row) {
         is Chat.WorkRow.Skipped -> Text(row.firing.words, style = scaled(13, color = Theme.dim))
-        is Chat.WorkRow.Request -> Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        is Chat.WorkRow.Request -> Column(
+          // A tap opens it step by step, as from the dial's rim.
+          Modifier.fillMaxWidth().clickable { scope.launch { actions.openRequest(taf.id, row.request.id) } },
+          verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
           val r = row.request
           Text(r.line, style = scaled(14, color = when (r.state) {
             "needs_you" -> Theme.amberText

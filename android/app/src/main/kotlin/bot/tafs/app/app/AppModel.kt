@@ -317,6 +317,10 @@ data class AppState(
   val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
+  /** The request open from the rim or Activity: its taf, and the request step by step. */
+  val openRequest: Pair<String, bot.tafs.app.kiff.RequestDetail>? = null,
+  /** Why a request couldn't be opened. */
+  val requestError: String? = null,
   /** Each taf's dial as tafs cloud last sent it, by taf id. */
   val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
   /** A dial change made into a version, waiting for the owner to make it live, by taf id. */
@@ -2278,6 +2282,32 @@ class AppModel(
     refresh()
     return true
   }
+
+  /** Opens [run] of [tafId], step by step (K5). Someone else's request is only for whoever manages the taf: tafs cloud says no. */
+  suspend fun openRequest(tafId: String, run: String) {
+    if (_state.value.mode != Mode.kiff) return
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    _state.update { it.copy(requestError = null) }
+    try {
+      val detail = cloud.request(cloudId, run)
+      if (generation == accountGeneration) _state.update { it.copy(openRequest = tafId to detail) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(requestError = "That request couldn't be read. ${ErrorWords.of(e)}") }
+    }
+  }
+
+  /** From the dial's rim: the request it points at, the first not done, else the newest. Reads the taf's work first. */
+  suspend fun openRimRequest(tafId: String) {
+    loadWork(tafId)
+    val requests = _state.value.works[tafId]?.requests.orEmpty()
+    val request = requests.firstOrNull { it.state != "done" } ?: requests.firstOrNull() ?: return
+    openRequest(tafId, request.id)
+  }
+
+  fun closeRequest() = _state.update { it.copy(openRequest = null, requestError = null) }
 
   /** A taf's dial (`GET /v1/tafs/{id}/knob`), read quietly: with none, its Doors tab keeps the doors' own dial. */
   suspend fun loadKnob(tafId: String) {

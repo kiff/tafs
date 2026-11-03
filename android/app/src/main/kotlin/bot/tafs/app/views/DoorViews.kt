@@ -86,6 +86,8 @@ class DoorActions(
   val changeKnob: suspend (String, String) -> Unit = { _, _ -> },
   val confirmKnobChange: suspend (String) -> Unit = {},
   val dismissKnobChange: (String) -> Unit = {},
+  /** Opens the request the dial's rim points at. */
+  val openRimRequest: suspend (String) -> Unit = {},
 )
 
 /**

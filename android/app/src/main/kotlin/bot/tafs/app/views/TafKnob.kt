@@ -247,7 +247,14 @@ fun TafDialPanel(
       KnobFace.Overview -> knob.overview
     }
     if (sentence.isNotBlank()) Text(sentence, style = scaled(14, color = Theme.ink))
-    knob.summary?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+    // Today's work: a tap opens the request the rim points at, step by step.
+    knob.summary?.let {
+      Text(
+        "$it ›",
+        style = scaled(13, color = Theme.dim),
+        modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.openRimRequest(taf.id) } }.padding(top = 12.dp),
+      )
+    }
     state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
     // A change made into a version: tafs cloud's words for it, and making it live, or not.
     state.knobChanges[taf.id]?.let { change ->
