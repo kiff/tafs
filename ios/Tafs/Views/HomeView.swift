@@ -155,7 +155,7 @@ struct HomeView: View {
             guard Screenshots.enabled, model.tafs.count >= TafTemplates.all.count else { return }
             try? await Task.sleep(nanoseconds: 500_000_000)
             switch Screenshots.screen {
-            case "taf", "chat", "card", "doors", "knob": openingFirst = true
+            case "taf", "chat", "card", "setup", "starts", "results": openingFirst = true
             case "new": showingNew = true
             case "add-tasks": showingAddTasks = true
             case "solo": showingSolo = true

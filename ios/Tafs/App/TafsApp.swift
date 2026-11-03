@@ -101,17 +101,19 @@ struct RootView: View {
                 let rail = sizeClass == .regular
                 HStack(spacing: 0) {
                     if rail { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: true) }
-                    ZStack {
-                        ForEach(Self.tabs, id: \.self) { t in
-                            if opened.contains(t) || t == tab {
-                                tabContent(t)
-                                    .opacity(t == tab ? 1 : 0)
-                                    .allowsHitTesting(t == tab)
-                                    .accessibilityHidden(t != tab)
+                    // Below the tabs, not over them: a screen's own foot (a chat's field) stays
+                    // above the bar.
+                    VStack(spacing: 0) {
+                        ZStack {
+                            ForEach(Self.tabs, id: \.self) { t in
+                                if opened.contains(t) || t == tab {
+                                    tabContent(t)
+                                        .opacity(t == tab ? 1 : 0)
+                                        .allowsHitTesting(t == tab)
+                                        .accessibilityHidden(t != tab)
+                                }
                             }
                         }
-                    }
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
                         // Off while the keyboard is up, as a tab bar is.
                         if !rail && !keyboardUp { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: false) }
                     }
