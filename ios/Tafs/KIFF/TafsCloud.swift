@@ -240,9 +240,12 @@ final class TafsCloud {
         var trial: OpenTrial? = nil
         /// Its doors, for its avatar's rim; absent when it has none.
         var doors: [DoorLight]? = nil
+        /// Where its results go that tafs cloud delivers (`door_reply`, `app`, `owner_email`), live:
+        /// what Results go to's switches show.
+        var results: [JSONValue]? = nil
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors
+            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
         }
 
@@ -251,7 +254,7 @@ final class TafsCloud {
             // With unscheduled, or the taf page offers Run now and Pause a taf that works from
             // its chat can't take (kiff/tafs#206 section 2).
             id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
-                              unscheduled: unscheduled) }
+                              unscheduled: unscheduled, results: results) }
         }
     }
 

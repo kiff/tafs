@@ -65,7 +65,9 @@ final class ResultsCallsTests: XCTestCase {
             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session),
             planque: PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session))
-        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        // The home list carries each taf's live places, as tafs cloud's /v1/home does.
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae.replacingOccurrences(
+            of: #""kiff_agent":"rae-k3f9""#, with: #""kiff_agent":"rae-k3f9","results":["door_reply"]"#)]))
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active","results":["door_reply"]}]}"#)
         StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
