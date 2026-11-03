@@ -100,7 +100,7 @@ struct TafsBar: View {
                         .padding(.horizontal, 14).frame(minHeight: 44)
                 }
             }
-            .foregroundColor(Theme.background)
+            .foregroundColor(Theme.onFill)
             .background(Theme.ink)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }

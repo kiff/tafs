@@ -75,7 +75,7 @@ struct RecordView: View {
                 if let dot { Circle().fill(dot).frame(width: 8, height: 8) }
                 Text(title).scaledFont(13).lineLimit(1)
             }
-            .foregroundColor(selected ? Theme.background : Theme.soft)
+            .foregroundColor(selected ? Theme.onFill : Theme.soft)
             .padding(.horizontal, 11).padding(.vertical, 5)
             .background(selected ? Theme.ink : Theme.panel)
             .overlay(Capsule().stroke(selected ? Theme.ink : Theme.line))

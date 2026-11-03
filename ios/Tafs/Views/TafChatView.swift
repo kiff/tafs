@@ -449,7 +449,7 @@ struct TafChatView: View {
                 Button { Task { await model.stopChat(tafID) } } label: {
                     Image(systemName: "stop.fill")
                         .scaledFont(14, weight: .bold)
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.onFill)
                         .frame(width: 40, height: 40)
                         .background(Theme.ink)
                         .clipShape(Circle())

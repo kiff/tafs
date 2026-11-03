@@ -15,7 +15,6 @@ struct TafsApp: App {
                 // The screenshots' narrow iPad window (kiff/tafs#210): Slide Over's width.
                 .modifier(NarrowForScreenshots())
                 .environmentObject(model)
-                .preferredColorScheme(.light)
                 .tint(Theme.amber)
                 .task {
                     if Screenshots.enabled {

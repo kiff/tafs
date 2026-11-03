@@ -216,6 +216,7 @@ jobs:
           shoot 8b-starts-when -screenshots YES -tab tafs -screen starts
           shoot 8c-results-go-to -screenshots YES -tab tafs -screen results
           shoot 9-account -screenshots YES -tab account
+          shoot 9b-alerts -screenshots YES -tab account -screen alerts
           # Each product's purchase screen, for its review screenshot in App Store Connect:
           # Solo, and the add-tasks screen with one pack at a time.
           shoot iap-solo -screenshots YES -screen solo
@@ -231,6 +232,7 @@ jobs:
           xcrun simctl ui "$DEVICE_ID" content_size large
           # Dark (the taf layout): the same screens in the phone's dark appearance.
           xcrun simctl ui "$DEVICE_ID" appearance dark
+          shoot dark-alerts -screenshots YES -tab account -screen alerts
           for screen in "tafs" "needs-you" "record" "account"; do
             shoot "dark-tab-$screen" -screenshots YES -tab "$screen"
           done

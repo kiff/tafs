@@ -229,7 +229,7 @@ struct HeldCallCard: View {
                     TafAvatar(taf: taf, size: 32)
                 } else if model.isCoach(call.tafID) {
                     // Coach's own hold, with Coach's mark.
-                    Image(systemName: "sparkle").font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
+                    Image(systemName: "sparkle").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.onFill)
                         .frame(width: 32, height: 32).background(Circle().fill(Theme.coach))
                 }
                 Text(model.holderName(call.tafID) ?? "A taf").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)

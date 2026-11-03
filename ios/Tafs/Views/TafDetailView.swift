@@ -234,7 +234,7 @@ struct TafDetailView: View {
             ForEach(ActivityFilter.allCases, id: \.self) { f in
                 Button { activityFilter = f } label: {
                     Text(f.title).scaledFont(13)
-                        .foregroundColor(activityFilter == f ? Theme.background : Theme.soft)
+                        .foregroundColor(activityFilter == f ? Theme.onFill : Theme.soft)
                         .padding(.horizontal, 11).padding(.vertical, 5)
                         .background(activityFilter == f ? Theme.ink : Theme.panel)
                         .overlay(Capsule().stroke(activityFilter == f ? Theme.ink : Theme.line))

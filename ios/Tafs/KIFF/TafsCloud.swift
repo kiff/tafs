@@ -47,13 +47,18 @@ final class TafsCloud {
         /// It works from its chat (kiff/tafs#138): its tools can't find its work, so no
         /// schedule runs it, and there's nothing to run now or pause.
         var unscheduled: Bool?
+        /// Where its results go that tafs cloud delivers: `door_reply`, `app`, `owner_email`.
+        var results: [JSONValue]?
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, unscheduled
+            case id, name, job, status, unscheduled, results
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
         }
 
         var worksFromChat: Bool { unscheduled == true }
+
+        /// Its results alert the account's phones: it answered someone, never its words.
+        var alertsPhones: Bool { results?.contains { TafsCloud.Knob.Setting.place(of: $0) == "app" } ?? false }
 
         var paused: Bool { status == "paused" }
     }
