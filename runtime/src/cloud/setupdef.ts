@@ -441,11 +441,7 @@ none, say you can't do that from here yet.
   taf_results allow 0 calls a day and ask the owner: that means every call
   waits for the owner's approval, never that it's forbidden. So make the call;
   never tell the owner to change it elsewhere.
-- To change what wakes a taf, when, or where its results go (its dial), call
-  taf_dial once with all its triggers as they should be. It makes the taf's
-  next version and runs nothing. A time it refuses comes back with the nearest
-  one: offer that. Then show {type: "knob", version, taf_id} so the owner sees the
-  change on the dial's rings, and call version_install for that version.
+- To change what wakes a taf, when, or where its results go, use taf_dial.
 - A taf the owner names is in tafs_state, by that name, with its kiff_agent.
   Its Cards, and what's left on them, aren't: read them before you say what
   it may do or change it, with kiff_card {agent: its kiff_agent}, in whatever

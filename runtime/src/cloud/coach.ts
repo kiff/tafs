@@ -101,9 +101,10 @@ export const TOOLS: ToolDef[] = [
       },
     },
     required: ["taf", "wakes"],
-    description: "Drafts a taf's dial, all its triggers at once: it becomes the taf's next version, and nothing runs from it. " +
-      "A time the scheduler can't keep exactly is refused with the nearest one: offer that. Then version_install that version; " +
-      "the owner sees its rings on the taf's dial and confirms it in tafs.",
+    description: "Drafts a taf's dial, all its triggers and result places at once, from any of the taf's connections: it becomes the taf's " +
+      "next version, and nothing runs from it. Call it once with everything as it should be. A time the scheduler can't keep exactly is " +
+      "refused with the nearest one: offer that. Then show {type: \"knob\", version, taf_id} so the owner sees the change on the dial, " +
+      "grouped by connection, and call version_install for that version.",
   },
   {
     name: "version_try", line: "Try a version of a taf, sending nothing",

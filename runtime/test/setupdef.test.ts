@@ -91,7 +91,7 @@ describe("Setup's definition on kiff/agents", () => {
   it("calls taf_results and lets it be held, never reading its 0 a day as forbidden", () => {
     const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
     expect(flat).toContain("version_install, taf_results and taf_dial tools see and act on them");
-    expect(flat).toContain("Then show {type: \"knob\", version, taf_id} so the owner sees the change on the dial's rings");
+    expect(flat).toContain("To change what wakes a taf, when, or where its results go, use taf_dial.");
     expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
   });
 
