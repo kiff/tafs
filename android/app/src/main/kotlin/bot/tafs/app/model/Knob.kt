@@ -56,6 +56,17 @@ object KnobWords {
   const val PAUSE = "Pause"
   const val RESUME = "Resume"
   const val MAKE_LIVE = "Make it live"
+  const val DRAFT = "The dial Coach drafted"
+  const val READING_DRAFT = "Reading the dial Coach drafted…"
+  const val REPLACED = "This dial was replaced by a newer one."
+  const val CHANGE = "Change"
+  const val ONE_CONFIRMATION = "One confirmation sets all three rings."
+
+  /** Over Coach's dial card: "Refunds will work like this". */
+  fun draftTitle(taf: String): String = "$taf will work like this"
+
+  /** The card's confirmation, with this phone's own prompt: "Confirm with your fingerprint". */
+  fun confirmWith(biometry: String): String = "Confirm with $biometry"
   const val NOT_NOW = "Not now"
 
   /** Over a dial change waiting to be made live: "Version 8, not live yet". */

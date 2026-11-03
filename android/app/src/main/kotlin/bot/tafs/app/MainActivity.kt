@@ -397,6 +397,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         openTaf = { coachOpen = false; openTaf = it },
         openVersions = { coachOpen = false; openTaf = it; versionsTaf = it },
         loadProfileWords = model::loadProfileWords,
+        loadKnob = model::loadKnob,
+        confirmKnob = model::confirmKnobChange,
       ),
     )
   }

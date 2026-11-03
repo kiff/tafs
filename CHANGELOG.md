@@ -11,6 +11,9 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, Coach sets the dial:** Coach's dial card shows Wakes it, When and Results go in tafs
+  cloud's words, made live with one confirmation, or Change back to Coach; the dial shows the same
+  draft with Make it live.
 - **Android, a request step by step:** today's work under the dial, or a request in Activity,
   opens what happened, step by step, with Try the reply now and Ask Coach.
 - **Android, How this is counted:** under a Card's limits, a row opens KIFF's words for how each

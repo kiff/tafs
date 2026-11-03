@@ -73,7 +73,7 @@ class TafDialPanelTest {
   @Test fun theJobAndTodaysWorkShowUnderTheDial() {
     show()
     rule.onNodeWithText("Refunds a payment in Stripe, within its Card.").assertIsDisplayed()
-    rule.onNodeWithText("3 done today").assertIsDisplayed()
+    rule.onNodeWithText("3 done today ›").assertIsDisplayed()
   }
 
   @Test fun aDoorStopPicksItsDoorAndTheFaceClosesIt() {
@@ -129,6 +129,30 @@ class TafDialPanelTest {
     show(change = KnobWire.Change(8, listOf("Weekdays at 09:00 stops waking it.")))
     rule.onNodeWithText(KnobWords.changeTitle(8), ignoreCase = true).performScrollTo().assertIsDisplayed()
     rule.onNodeWithText("Weekdays at 09:00 stops waking it.").performScrollTo().assertIsDisplayed()
+    rule.onNodeWithText(KnobWords.MAKE_LIVE).performScrollTo().performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("live"), log)
+  }
+
+  @Test fun coachsDraftWaitsOnTheDialToBeMadeLiveWithNoNotNow() {
+    val drafted = wire.copy(draft = KnobWire.Draft(9, listOf("Wakes on Slack in #refunds too.")))
+    rule.setShown {
+      TafsTheme {
+        androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+          TafDialPanel(
+            taf, drafted, AppState(mode = Mode.kiff, ready = true, tafs = listOf(taf), access = mapOf("refunds-1" to bot.tafs.app.kiff.Access(use = true, manage = true))),
+            TafDoors(doors = listOf(slack), loaded = true),
+            DoorActions(
+              load = {}, add = { _, _ -> null }, setOpen = { _, _, _ -> }, remove = { _, _ -> }, pair = { _, _, _, _ -> }, unpair = { _, _, _ -> },
+              answer = { _, _, _, _ -> }, dismissError = {}, confirmKnobChange = { log += "live" },
+            ),
+            onDoor = {},
+          )
+        }
+      }
+    }
+    rule.onNodeWithText("Wakes on Slack in #refunds too.").performScrollTo().assertIsDisplayed()
+    assertEquals(0, rule.onAllNodes(androidx.compose.ui.test.hasText(KnobWords.NOT_NOW)).fetchSemanticsNodes().size)
     rule.onNodeWithText(KnobWords.MAKE_LIVE).performScrollTo().performClick()
     rule.waitForIdle()
     assertEquals(listOf("live"), log)

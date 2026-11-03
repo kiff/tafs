@@ -123,4 +123,26 @@ class KnobWireTest {
     assertNull(dial.changed("when_arrivals"))
     assertNull("no setting from an older tafs cloud", KiffClient.json.decodeFromString<KnobWire>("""{"wakes":[{"id":"t","trigger":{"kind":"schedule"}}]}""").changed("t"))
   }
+
+  // MARK: Coach's dial card
+
+  @Test fun coachsDialCardNamesItsTafAndVersionWhicheverWayItsSent() {
+    val byId = KiffClient.json.decodeFromString<bot.tafs.app.kiff.SetupComponent>("""{"type":"knob","id":"k1","taf_id":"taf_1","version":9}""")
+    assertEquals("taf_1", byId.knobTaf)
+    assertEquals(9, byId.version)
+    val byTaf = KiffClient.json.decodeFromString<bot.tafs.app.kiff.SetupComponent>("""{"type":"knob","id":"k2","taf":"taf_1","version":9}""")
+    assertEquals("taf_1", byTaf.knobTaf)
+    assertNull("a string taf isn't a hand-over", byTaf.taf)
+    // The hand-over's taf is still an object, read as before.
+    val handOver = KiffClient.json.decodeFromString<bot.tafs.app.kiff.SetupComponent>("""{"type":"result","id":"r1","taf":{"agent":"refunds-1","name":"Refunds"}}""")
+    assertEquals("Refunds", handOver.taf!!.name)
+    assertNull(handOver.knobTaf)
+    assertTrue("knob" in bot.tafs.app.kiff.SetupComponent.KINDS)
+  }
+
+  @Test fun theDraftsWordsComeByRingOrAsOneList() {
+    val byRing = KiffClient.json.decodeFromString<KnobWire.Draft>("""{"version":9,"wakes":["An email to refunds@"],"when":["As they arrive"],"results":["A reply to the sender"]}""")
+    assertEquals(listOf("An email to refunds@", "As they arrive", "A reply to the sender"), byRing.lines)
+    assertEquals(listOf("Older words"), KiffClient.json.decodeFromString<KnobWire.Draft>("""{"version":8,"words":["Older words"]}""").lines)
+  }
 }

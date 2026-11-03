@@ -220,6 +220,9 @@ class CoachActions(
   val openVersions: (String) -> Unit = {},
   /** Reads KIFF's words for a grant's profile, by grant id. */
   val loadProfileWords: suspend (String) -> Unit = {},
+  /** A taf's dial, read again; and Coach's dial draft made live (the version switch), both by taf id. */
+  val loadKnob: suspend (String) -> Unit = {},
+  val confirmKnob: suspend (String) -> Boolean = { false },
 )
 
 /** One of Coach's cards in its thread. What grants authority is read from planque and KIFF, and signed there. */
@@ -238,6 +241,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
     "questions" -> QuestionsCard(c, answered, error, actions.answer)
     "approval" -> ApprovalCard(c, state, answered, error, actions)
     "sign_in" -> SignInCard(c, state, answered, error, actions)
+    "knob" -> KnobDraftCard(c, state, answered, error, actions)
     "result" -> if (c.taf?.improves != null) ImprovementCard(shown, state, actions) else HandOverCard(shown, state, actions)
   }
 }
@@ -543,6 +547,56 @@ fun ProfileWordsLines(words: bot.tafs.app.kiff.ProfileWords) {
   Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
     words.lines.forEach { line ->
       Text(line.text, style = scaled(13, color = if (line.caution) Theme.amberText else Theme.ink))
+    }
+  }
+}
+
+/**
+ * Coach's dial card (K4): the dial Coach drafted for a taf, drawn from that taf's knob `draft` while it's this card's version.
+ * Wakes it, When and Results go in tafs cloud's words; one confirmation makes it live (the version switch, with the fingerprint
+ * where the Card changes); Change goes back to Coach. A newer draft replaces it.
+ */
+@Composable
+private fun KnobDraftCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
+  val taf = c.knobTaf?.let { id -> state.tafs.firstOrNull { it.cloudId == id || it.id == id } }
+  val scope = rememberCoroutineScope()
+  if (taf != null) LaunchedEffect(taf.id, c.version) { actions.loadKnob(taf.id) }
+  if (answered != null) {
+    Text(answered, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    return
+  }
+  val draft = taf?.let { state.knobs[it.id]?.draft }
+  Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
+    Eyebrow(taf?.let { bot.tafs.app.model.KnobWords.draftTitle(it.name) } ?: bot.tafs.app.model.KnobWords.DRAFT, Theme.amberText)
+    when {
+      taf == null || state.knobs[taf.id] == null -> Text(bot.tafs.app.model.KnobWords.READING_DRAFT, style = scaled(14, color = Theme.soft))
+      draft == null || (c.version != null && draft.version != c.version) -> Text(bot.tafs.app.model.KnobWords.REPLACED, style = scaled(14, color = Theme.soft))
+      else -> {
+        listOf(
+          bot.tafs.app.model.KnobRing.Kind.WakesIt to draft.wakes,
+          bot.tafs.app.model.KnobRing.Kind.When to draft.whenLines,
+          bot.tafs.app.model.KnobRing.Kind.ResultsGo to draft.results,
+        ).filter { it.second.isNotEmpty() }.forEach { (ring, lines) ->
+          Text(ring.title, style = scaled(13, FontWeight.SemiBold, KnobColors.of(ring)))
+          lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+        }
+        if (draft.wakes.isEmpty() && draft.whenLines.isEmpty() && draft.results.isEmpty()) draft.words.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+        error?.let { Text(it, style = scaled(13, color = Theme.no)) }
+        state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+        val busy = taf.id in state.switchingVersion
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+          ApprovalGate {
+            OutlineButton(
+              if (busy) "Making it live…" else bot.tafs.app.model.KnobWords.confirmWith(LocalBiometry.current),
+              { scope.launch { if (actions.confirmKnob(taf.id)) actions.answer("knob", c.id, "approved") } },
+              Modifier.weight(1f),
+              enabled = !busy,
+            )
+          }
+          OutlineButton(bot.tafs.app.model.KnobWords.CHANGE, { actions.answer("knob", c.id, "change") }, Modifier.weight(1f), color = Theme.soft, enabled = !busy)
+        }
+        Text(bot.tafs.app.model.KnobWords.ONE_CONFIRMATION, style = scaled(12, color = Theme.dim))
+      }
     }
   }
 }

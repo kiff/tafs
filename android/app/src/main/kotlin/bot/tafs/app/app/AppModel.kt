@@ -2342,9 +2342,14 @@ class AppModel(
     }
   }
 
-  /** Makes the dial's change live: the version it made, switched as any version is (with Face ID where its Card changes). */
+  /**
+   * Makes the dial's change live: the version a tap made, or Coach's draft the knob says waits, switched as any version is (with
+   * Face ID where its Card changes).
+   */
   suspend fun confirmKnobChange(tafId: String): Boolean {
-    val change = _state.value.knobChanges[tafId] ?: return false
+    val change = _state.value.knobChanges[tafId]
+      ?: _state.value.knobs[tafId]?.draft?.let { bot.tafs.app.kiff.KnobWire.Change(it.version, it.lines) }
+      ?: return false
     loadVersions(tafId)
     val version = _state.value.versions[tafId]?.firstOrNull { it.n == change.version } ?: run {
       _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Version ${change.version} couldn't be read. Try again.")) }

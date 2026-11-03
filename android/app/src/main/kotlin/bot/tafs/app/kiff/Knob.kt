@@ -60,8 +60,21 @@ data class KnobWire(
     val line: String? = null,
   )
 
+  /**
+   * The newest dial version made after the live one, waiting to be made live: its words by ring (Coach's `taf_dial`, or an older
+   * tafs cloud's one list in [words]).
+   */
   @Serializable
-  data class Draft(val version: Int, val words: List<String> = emptyList())
+  data class Draft(
+    val version: Int,
+    val words: List<String> = emptyList(),
+    val wakes: List<String> = emptyList(),
+    @SerialName("when") val whenLines: List<String> = emptyList(),
+    val results: List<String> = emptyList(),
+  ) {
+    /** Every line, ring by ring, for a place that shows them together. */
+    val lines: List<String> get() = (wakes + whenLines + results).ifEmpty { words }
+  }
 
   /**
    * The setting with [stopId] changed, the one thing a tap changes, as `PUT` takes it: a result place, or If busy. Null for

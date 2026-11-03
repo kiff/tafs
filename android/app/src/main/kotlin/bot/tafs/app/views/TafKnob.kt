@@ -256,8 +256,10 @@ fun TafDialPanel(
       )
     }
     state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
-    // A change made into a version: tafs cloud's words for it, and making it live, or not.
-    state.knobChanges[taf.id]?.let { change ->
+    // A change made into a version, by a tap or by Coach's draft: tafs cloud's words for it, and making it live. A tap's can be
+    // set aside; Coach's draft stays until it's made live or Coach changes it.
+    val tapped = state.knobChanges[taf.id]
+    (tapped ?: wire.draft?.let { bot.tafs.app.kiff.KnobWire.Change(it.version, it.lines) })?.let { change ->
       bot.tafs.app.design.Eyebrow(KnobWords.changeTitle(change.version), Theme.amberText)
       change.words.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
       androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
@@ -267,7 +269,7 @@ fun TafDialPanel(
           Modifier.weight(1f),
           enabled = !busy && taf.id !in state.switchingVersion,
         )
-        bot.tafs.app.design.OutlineButton(KnobWords.NOT_NOW, { actions.dismissKnobChange(taf.id) }, Modifier.weight(1f), color = Theme.soft, enabled = !busy)
+        if (tapped != null) bot.tafs.app.design.OutlineButton(KnobWords.NOT_NOW, { actions.dismissKnobChange(taf.id) }, Modifier.weight(1f), color = Theme.soft, enabled = !busy)
       }
     }
     if (chosen != null) {
