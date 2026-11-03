@@ -37,6 +37,7 @@ import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.kiff.ConnectApps
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Connect apps' own words; every app's name and state comes from tafs cloud. */
 object ConnectAppsWords {
@@ -48,6 +49,7 @@ object ConnectAppsWords {
   const val NOT_LISTED = "Not listed? Ask Coach"
   const val NOT_LISTED_WHY = "Coach can connect an app that isn't here, from its own docs."
   const val NONE = "No app by that name. Coach can connect one that isn't listed."
+  const val MORE = "Show more apps"
 }
 
 /**
@@ -60,6 +62,7 @@ object ConnectAppsWords {
 fun ConnectAppsSheet(
   state: AppState,
   load: suspend (String?) -> Unit,
+  loadMore: suspend () -> Unit = {},
   onConnect: ((ConnectApps.App, String?) -> Unit)?,
   onAskCoach: () -> Unit,
   onClose: () -> Unit,
@@ -109,6 +112,15 @@ fun ConnectAppsSheet(
         val apps = state.connectApps
         apps?.apps?.forEach { app -> AppRow(app, connect) }
         if (apps != null && apps.apps.isEmpty() && query.isNotBlank()) Text(ConnectAppsWords.NONE, style = scaled(14, color = Theme.soft))
+        // The managed provider's catalog comes a page at a time.
+        if (apps?.nextCursor != null) {
+          val more = androidx.compose.runtime.rememberCoroutineScope()
+          Text(
+            ConnectAppsWords.MORE,
+            style = scaled(15, FontWeight.SemiBold, Theme.amber),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { more.launch { loadMore() } }.padding(top = 10.dp),
+          )
+        }
         if (apps?.byKey == true) {
           Panel {
             Text(

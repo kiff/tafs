@@ -2226,10 +2226,32 @@ class AppModel(
   /** Connect apps: tafs cloud's list, the catalog first, for [q] when given. The sample has none. */
   suspend fun loadConnectApps(q: String? = null) {
     if (_state.value.mode != Mode.kiff) return
+    connectAppsQuery = q
     val generation = accountGeneration
     try {
       val apps = cloud.connectApps(q)
       if (generation == accountGeneration) _state.update { it.copy(connectApps = apps, connectAppsError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "The apps couldn't be read. ${ErrorWords.of(e)}") }
+    }
+  }
+
+  /** The search the shown list is for, sent again with the next page's cursor. */
+  private var connectAppsQuery: String? = null
+
+  /** Show more apps: the next page of the managed provider's catalog, added under the ones shown. */
+  suspend fun loadMoreConnectApps() {
+    val now = _state.value.connectApps ?: return
+    val cursor = now.nextCursor ?: return
+    val generation = accountGeneration
+    try {
+      val page = cloud.connectApps(connectAppsQuery, now.provider, cursor)
+      if (generation == accountGeneration) _state.update { s ->
+        val shown = s.connectApps ?: return@update s
+        s.copy(connectApps = page.copy(apps = shown.apps + page.apps.filter { app -> shown.apps.none { it.entry == app.entry } }), connectAppsError = null)
+      }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {

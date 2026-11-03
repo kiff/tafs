@@ -169,7 +169,8 @@ sign-out, so after switching accounts planque never gets the last account's devi
 ### Connect apps
 
 Settings › **Connect apps** lists the apps tafs cloud offers (`GET /v1/connect/apps`, with a
-search): the reviewed catalog first, then KIFF's own apps for Google, Microsoft and Slack. Each
+search): the reviewed catalog first, then a page at a time of the managed provider's apps
+(**Show more apps** sends back `next_cursor` with the same search and provider). Each
 says whether it's connected, or needs signing in again, as tafs cloud sends it. **Not listed?
 Ask Coach** opens Coach, which can connect an app that isn't listed from its own docs.
 

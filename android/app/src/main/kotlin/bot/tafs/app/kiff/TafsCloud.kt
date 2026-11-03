@@ -398,8 +398,14 @@ class TafsCloud(
   suspend fun startConnect(entry: String, taf: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", mapOf("taf" to taf))
 
   /** Connect apps: the catalog, filtered by [q] when given. */
-  suspend fun connectApps(q: String? = null): ConnectApps =
-    get("/v1/connect/apps" + (q?.takeIf { it.isNotBlank() }?.let { "?q=" + escaped(it) } ?: ""))
+  suspend fun connectApps(q: String? = null, provider: String? = null, cursor: String? = null): ConnectApps {
+    val query = listOfNotNull(
+      q?.takeIf { it.isNotBlank() }?.let { "q=" + escaped(it) },
+      provider?.let { "provider=" + escaped(it) },
+      cursor?.let { "cursor=" + escaped(it) },
+    )
+    return get("/v1/connect/apps" + if (query.isEmpty()) "" else "?" + query.joinToString("&"))
+  }
 
   /**
    * Send again: the door reply of [run], given up on after its tries, sent once more. It does no work and signs nothing.

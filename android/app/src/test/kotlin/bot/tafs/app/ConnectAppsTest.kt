@@ -108,6 +108,18 @@ class ConnectAppsTest {
     assertTrue(m.state.value.knobChanges.isEmpty())
   }
 
+  @Test fun showMoreAddsTheNextPageForTheSameSearch() = runTest {
+    val m = model()
+    transport.answer("GET /v1/connect/apps", 200, """{"apps":[{"entry":"notion@1","title":"Notion"},{"entry":"connector:composio:gmail","title":"Gmail"}],"by_key":true,"provider":"composio","next_cursor":"p2+x"}""")
+    m.loadConnectApps("mail")
+    transport.answer("GET /v1/connect/apps", 200, """{"apps":[{"entry":"connector:composio:gmail","title":"Gmail"},{"entry":"connector:composio:outlook","title":"Outlook"}],"by_key":true,"provider":"composio"}""")
+    m.loadMoreConnectApps()
+    val asked = transport.requestsTo("GET /v1/connect/apps").last().url
+    assertEquals("the same search, its provider, and the cursor with its + kept", "https://cloud.tafs.kiff.dev/v1/connect/apps?q=mail&provider=composio&cursor=p2%2Bx", asked)
+    assertEquals("an app already shown isn't added twice", listOf("Notion", "Gmail", "Outlook"), m.state.value.connectApps!!.apps.map { it.title })
+    assertNull("the last page", m.state.value.connectApps!!.nextCursor)
+  }
+
   @Test fun aListThatCantBeReadIsSaidInWords() = runTest {
     val m = model()
     transport.answer(apps, 503, """{"error":"down"}""")

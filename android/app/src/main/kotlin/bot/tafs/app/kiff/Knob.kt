@@ -143,6 +143,10 @@ data class ConnectApps(
   val apps: List<App> = emptyList(),
   /** Coach can draft a vendor that isn't listed. */
   @SerialName("by_key") val byKey: Boolean = false,
+  /** The managed provider this page came from, sent back with the next page's request. */
+  val provider: String? = null,
+  /** The next page's cursor; none on the last page. */
+  @SerialName("next_cursor") val nextCursor: String? = null,
 ) {
   @Serializable
   data class App(
