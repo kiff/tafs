@@ -3,6 +3,7 @@ package bot.tafs.app
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.kiff.InMemorySecretStore
 import java.time.Instant
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -151,6 +152,22 @@ class ConnectAppsTest {
     assertFalse(m.changeKnobSize("refunds-1", kotlinx.serialization.json.JsonObject(emptyMap())))
     assertTrue(m.state.value.knobErrors.getValue("refunds-1").contains("the nearest is every 20 minutes"))
     assertTrue("nothing read: no version was made", transport.requestsTo("GET /v1/tafs/taf_1/knob").isEmpty())
+  }
+
+  @Test fun aLateAnswerToAnEarlierSearchNeverReplacesTheNewestOne() = runTest {
+    val m = model()
+    // The sheet's first read, unfiltered, is slow; the owner has already typed "gmail".
+    val slow = transport.holdNext(apps)
+    // Answers go out in the order requests are answered: the search's first, then the slow first read's.
+    transport.answer(apps, 200, """{"apps":[{"entry":"connector:composio:gmail","title":"Gmail"}]}""")
+    transport.answer(apps, 200, """{"apps":[{"entry":"0codekit","title":"0CodeKit"}]}""")
+    val first = launch { m.loadConnectApps() }
+    kotlinx.coroutines.yield()
+    m.loadConnectApps("gmail")
+    // The search's answer is shown; then the first read comes back.
+    slow.complete(Unit)
+    first.join()
+    assertEquals("the newest search stays", listOf("Gmail"), m.state.value.connectApps!!.apps.map { it.title })
   }
 
   @Test fun showMoreAddsTheNextPageForTheSameSearch() = runTest {

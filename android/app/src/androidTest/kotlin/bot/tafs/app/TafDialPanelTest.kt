@@ -44,7 +44,7 @@ class TafDialPanelTest {
 
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "", tools = emptyList(), colorIndex = 1, card = Card(rules = emptyList(), issuedBy = "You"), now = "", cloudId = "taf_1")
   private val slack = Door(id = "door_s", app = "slack", kind = "slack", label = "Slack", open = true)
-  private fun wire(pending: String = "null") = KiffClient.json.decodeFromString<KnobWire>(
+  private fun wire(pending: String = "null", canPause: Boolean = true, firstStep: String = "Check") = KiffClient.json.decodeFromString<KnobWire>(
     """{"version":7,"why":"Refund double charges","does":{"label":"Refund","line":"Refunds a payment in Stripe, within its Card."},
         "rings":[{"key":"wakes","name":"When"},{"key":"what","name":"What"},{"key":"results","name":"Where"}],
         "wakes":[{"id":"trg_s","kind":"door","door":"door_s","grant":"g_slack","label":"Slack","words":"Messages in #refunds start a request.","state":"Open","tap":"Tap to close","ok":"door","look":"open"},
@@ -53,20 +53,21 @@ class TafDialPanelTest {
                  {"id":"trg_w","kind":"schedule","label":"Weekdays","words":"Weekdays at 09:00","state":"09:00",
                   "size":{"label":"Time","index":0,"choices":[{"label":"09:00","setting":{"at":"09:00"}},{"label":"12:00","setting":{"at":"12:00"}}]}},
                  {"id":"add_door","kind":"add_door","label":"Add a door","words":"Ask Coach to add a door","state":"Add","tap":"Tap to ask Coach","ok":"coach"}],
-        "what":[{"id":"s1","step":1,"label":"Check","words":"Looks up the charge"}],
+        "what":[{"id":"s1","step":1,"label":"$firstStep","words":"Looks up the charge"}],
         "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote"}],
         "connections":[{"grant":"g_slack","name":"Slack"}],
         "pending":$pending,
+        "can_pause":$canPause,
         "rim":{"done":3,"line":"3 done today"}}""",
   )
   private val log = mutableListOf<String>()
 
-  private fun show(held: List<HeldCall> = emptyList(), pending: String = "null") = rule.setShown {
+  private fun show(held: List<HeldCall> = emptyList(), pending: String = "null", canPause: Boolean = true, firstStep: String = "Check") = rule.setShown {
     TafsTheme {
       // In a scrolling column, as the Doors tab is.
       Column(Modifier.verticalScroll(rememberScrollState())) {
         TafDialPanel(
-          taf, wire(pending),
+          taf, wire(pending, canPause, firstStep),
           AppState(
             mode = Mode.kiff, ready = true, tafs = listOf(taf), held = held,
             access = mapOf("refunds-1" to bot.tafs.app.kiff.Access(use = true, manage = true)),
@@ -211,5 +212,18 @@ class TafDialPanelTest {
     rule.onNode(hasContentDescription(KnobWords.PAUSE)).performScrollTo().performClick()
     rule.waitForIdle()
     assertEquals(listOf("pause true", "reload"), log)
+  }
+
+  @Test fun pauseIsOffWhenTafsCloudSaysItDoesntApply() {
+    show(canPause = false)
+    rule.onNode(hasContentDescription(KnobWords.PAUSE)).performScrollTo().assertIsNotEnabled()
+  }
+
+  @Test fun aLongStepKeepsItsWholeWordsOnTheFaceAndForTalkBack() {
+    val long = "Answer a dispute with evidence, in EUR, from the card network's own form"
+    show(firstStep = long)
+    rule.onNodeWithContentDescription("1 · $long, What").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithContentDescription("WHAT · 1 · ${long.uppercase()}", substring = true).assertIsDisplayed()
   }
 }

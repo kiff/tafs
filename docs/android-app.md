@@ -172,13 +172,16 @@ doors' own dial stays for a taf whose dial can't be read).
   round. A ring past six stops shows the six that hold the chosen one (`DialMath.page`,
   `DialMath.ringTurn`). Each stop's word sits along its ring and always reads upright: in the
   lower half (past 90° and before 270° from the top, after the turn) it turns half a turn more
-  (`DialMath.upright`).
+  (`DialMath.upright`). A word longer than its share of the ring ends in "…"; the face shows it
+  whole when it's chosen (its top line, too, ends in "…" only past the face's width), and
+  TalkBack always reads it whole.
 - **Above it:** "Ask Coach or find anything", which opens Coach about the taf, and **Showing ▾**:
   All services, This taf (the stops with no connection), then each connection with its stops
   ("Slack · 2 stops"). Picking one shows only that input's stops (`KnobWire.knob(showing)`).
 - **The remote under it:** ◀ Back and Next ▶ step through the stops, ring by ring from the
   inside; − Lower and + Raise move the chosen stop's one size; ⏻ pauses or resumes the taf, then
-  reads the dial again. Pressing the face is OK, and what it does is tafs cloud's (`ok`): `door`
+  reads the dial again. ⏻ is off when tafs cloud's `can_pause` is false (a taf that works from its
+  chat has no schedule to pause), and a pause tafs cloud refuses is said in its words. Pressing the face is OK, and what it does is tafs cloud's (`ok`): `door`
   opens or closes the door, `run` runs once, `remove_follow_up` removes a follow-up the taf set,
   `coach` opens Coach; none, nothing. With nothing chosen, OK goes to the first stop. A held call
   that can be approved once takes the face while nothing is chosen, and OK approves it once.
@@ -196,7 +199,8 @@ doors' own dial stays for a taf whose dial can't be read).
 - **A door on its When stop** shows tafs cloud's `look` as an arc on the ring's outer edge: lit
   when `open`, dashed when `closed`, grey when `resting`, amber with a dot for `knock` (Do it,
   Pair them and Ignore stay in the knock's panel under the dial). When a message arrives, its
-  stop glows for 3 seconds.
+  stop glows for 3 seconds. With the dial, a new door is Coach's (the Add a door stop): the
+  Doors tab's own Add a door panel shows only for a taf whose dial can't be read.
 
 <p>
   <img src="screenshots/android/dial-overview.png" width="180" alt="The dial: the Why on the face, When, What and Where around it, an email door with a knock waiting and a closed Slack door">
@@ -220,7 +224,9 @@ taf, and **Ask Coach** opens a conversation about the taf.
 
 Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#connect-apps) says:
 tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
-over the list (`ConnectApprovalSheet`). An app that signs in at the vendor is approved, then
+over the list (`ConnectApprovalSheet`). A row is the app's title alone, never the provider's id
+for it. Only the newest search's answer is shown: an earlier read that comes back late (the
+first, unfiltered one) is dropped. An app that signs in at the vendor is approved, then
 signed in. An app that takes an API key (`needs_key`) takes it on the same sheet, as on iPhone
 and iPad: a password field, and **Give the key with your fingerprint**, which signs the same
 confirmation as an approval and sends the key to planque once (`AppModel.giveKey`,

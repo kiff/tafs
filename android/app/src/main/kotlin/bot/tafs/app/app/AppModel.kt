@@ -1585,7 +1585,9 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("tafs cloud didn't ${if (paused) "pause" else "resume"} it. ${ErrorWords.of(e)}")
+      // A refusal tafs cloud words itself (a taf that works from its chat has no schedule to pause) is said as it is.
+      val said = (e as? bot.tafs.app.kiff.CloudError)?.takeIf { it.status == 409 && it.words == null }?.message
+      if (generation == accountGeneration) fail(said ?: "tafs cloud didn't ${if (paused) "pause" else "resume"} it. ${ErrorWords.of(e)}")
       return
     }
     if (generation != accountGeneration) return
@@ -2238,10 +2240,12 @@ class AppModel(
   suspend fun loadConnectApps(q: String? = null) {
     if (_state.value.mode != Mode.kiff) return
     connectAppsQuery = q
+    // Only the newest search's answer is shown: an earlier one that comes back late (the first, unfiltered read) is dropped.
+    val asked = ++connectAppsAsked
     val generation = accountGeneration
     try {
       val apps = cloud.connectApps(q)
-      if (generation == accountGeneration) _state.update { it.copy(connectApps = apps, connectAppsError = null) }
+      if (generation == accountGeneration && asked == connectAppsAsked) _state.update { it.copy(connectApps = apps, connectAppsError = null) }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -2251,6 +2255,9 @@ class AppModel(
 
   /** The search the shown list is for, sent again with the next page's cursor. */
   private var connectAppsQuery: String? = null
+
+  /** How many searches were asked, so only the newest one's answer is shown. */
+  private var connectAppsAsked = 0
 
   /** Show more apps: the next page of the managed provider's catalog, added under the ones shown. */
   suspend fun loadMoreConnectApps() {

@@ -77,6 +77,11 @@ class KnobWireTest {
     assertNull("nothing waits", KiffClient.json.decodeFromString<KnobWire>("""{"rim":{}}""").pending)
   }
 
+  @Test fun pauseAppliesUnlessTafsCloudSaysItDoesnt() {
+    assertTrue("an older tafs cloud sends none", KiffClient.json.decodeFromString<KnobWire>("""{"rim":{}}""").canPause)
+    assertFalse("a taf that works from its chat", KiffClient.json.decodeFromString<KnobWire>("""{"can_pause":false,"rim":{}}""").canPause)
+  }
+
   @Test fun aSizeStepsThroughItsChoicesAndStopsAtTheEnds() {
     val size = KiffClient.json.decodeFromString<KnobWire>(dial).item("trg_3")!!.size!!
     assertEquals("09:00", size.now!!.label)

@@ -78,10 +78,16 @@ class FakeTransport : Transport {
 
   fun release(key: String) = synchronized(this) { held.remove(key) }?.complete(Unit)
 
+  private val heldOnce = mutableMapOf<String, kotlinx.coroutines.CompletableDeferred<Unit>>()
+
+  /** Only the next request to [key] waits until the answer's deferred completes: a slow answer that comes back late. */
+  fun holdNext(key: String): kotlinx.coroutines.CompletableDeferred<Unit> =
+    kotlinx.coroutines.CompletableDeferred<Unit>().also { synchronized(this) { heldOnce[key] = it } }
+
   private fun key(r: HttpRequest) = "${r.method} ${URI.create(r.url).path}"
 
   override suspend fun send(request: HttpRequest): HttpResponse {
-    synchronized(this) { held[key(request)] }?.await()
+    synchronized(this) { heldOnce.remove(key(request)) ?: held[key(request)] }?.await()
     val next = synchronized(this) {
       synchronized(log) { log += request }
       val key = key(request)
