@@ -1611,6 +1611,12 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(knob.body.setting).toEqual({ wakes: [{ kind: "schedule", form: "times_a_day", times: ["09:00", "15:00", "12:30"] }, { kind: "door" }], busy: "latest", results: ["door_reply", "app"] });
     expect(knob.body.version).toBe(n);
     expect(knob.body.draft).toBeNull();
+    // A size choice's setting goes back to PUT as it is, and keeps everything else, If busy included.
+    const sized = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    const choice = sized.body.results.find((x: { size?: unknown }) => x.size)?.size.choices[0].setting;
+    expect(choice.busy).toBe("latest");
+    const sent = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: choice });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.knobs?.[String(sent.body.version)]?.busy).toBe("latest");
   });
 
   it("a dial change can send results to any connected app's action: the version's instructions carry it, and live, the dial shows it", async () => {

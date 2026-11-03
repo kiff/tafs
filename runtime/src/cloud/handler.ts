@@ -2597,8 +2597,9 @@ async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, d
  */
 async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number; words: string[] }> {
   const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
+  // `when.busy`, or `busy` at the top as a knob's `setting` and each size choice carry it, so a choice is sent back as it is.
   const when = (body.when ?? {}) as { busy?: unknown };
-  const busy = when.busy === "latest" ? "latest" : "skip";
+  const busy = (when.busy ?? body.busy) === "latest" ? "latest" : "skip";
   for (const t of wakes) {
     try {
       schedulesOf(t, busy);
