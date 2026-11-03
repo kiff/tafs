@@ -131,10 +131,12 @@ the app in sample mode.
   and **Pause every start** (`POST …/pause`; a 502 reads "Not every start could be paused. Try
   again."). A change made here (`PUT …/knob`) waits as the taf's next version in `KnobPendingPanel`, made live with Face ID.
 - **Setup › Results go to** (`ResultsGoToView`): Reply to the sender, Alert our phones and Email
-  me change at once (`PUT …/results`, `setResultPlaces`); each connected app's place turns
+  me change at once (`PUT …/results`, `setResultPlaces`), switched from the live taf's `results`, never
+  a waiting version's (`ResultsGoToView.liveBuiltIns`); each connected app's place turns
   through its stop's other choice, as the next version (`PUT …/knob`). At least one of tafs' own places stays on,
   as tafs cloud requires (`PUT …/results` and `PUT …/knob` alike): the last one's switch is
-  disabled, even while an app's place is on. Replies given up on show **Send again**.
+  disabled, even while an app's place is on. Replies given up on show **Send again**, and a failed read of its work or Send again is said
+  there (`workErrors`).
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
   device (Turn on alerts while off), Sound, and What alerts you, read-only; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).

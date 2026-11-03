@@ -311,6 +311,28 @@ struct ResultsGoToView: View {
     }
 
     private static let builtInPlaces: Set<String> = ["door_reply", "app", "owner_email"]
+    static let builtInOrder = ["door_reply", "app", "owner_email"]
+
+    /// tafs' own places on, as the live taf has them: its `results` as tafs cloud last sent
+    /// them, never a waiting version's, which goes live only with Make it live. Without them,
+    /// the dial's when it shows the live version (the sample); nil when they aren't known.
+    static func liveBuiltIns(_ live: [JSONValue]?, knob: TafsCloud.Knob?) -> [String]? {
+        if let live {
+            let on = Set(live.compactMap(TafsCloud.Knob.Setting.place(of:)))
+            return builtInOrder.filter(on.contains)
+        }
+        guard let knob, knob.pending == nil else { return nil }
+        return builtInOrder.filter { p in knob.results.first { $0.place == p }?.on ?? knob.setting?.sends(to: p) ?? false }
+    }
+
+    /// What `PUT …/results` is sent when one of tafs' places is switched: the live ones with
+    /// that one changed, nothing else; nil when it would leave none.
+    static func places(_ live: [String], switching place: String, on: Bool) -> [String]? {
+        var places = live.filter { $0 != place }
+        if on { places.append(place) }
+        let sent = builtInOrder.filter(places.contains)
+        return sent.isEmpty ? nil : sent
+    }
 
     var body: some View {
         let knob = model.setupKnob(tafID)
@@ -319,15 +341,15 @@ struct ResultsGoToView: View {
             VStack(alignment: .leading, spacing: 16) {
                 if let knob {
                     let actions = knob.results.filter { !Self.builtInPlaces.contains($0.place ?? "") }
-                    let builtInsOn = builtIns.filter { isOn(knob, $0.place) }.count
+                    let live = Self.liveBuiltIns(model.cloudTaf(for: tafID)?.results, knob: knob)
                     Text("At least one place stays on.").scaledFont(13).foregroundColor(Theme.dim)
                     KnobPendingPanel(tafID: tafID, knob: knob)
                     Panel {
                         Eyebrow(text: "From tafs")
                         ForEach(builtIns, id: \.place) { b in
-                            let on = isOn(knob, b.place)
+                            let on = live?.contains(b.place) ?? false
                             placeRow(title: b.title, line: b.line, on: on,
-                                     disabled: !manages || busy || (on && builtInsOn <= 1)) { setBuiltIn(knob, b.place, $0) }
+                                     disabled: !manages || busy || live == nil || (on && (live?.count ?? 0) <= 1)) { setBuiltIn(live, b.place, $0) }
                         }
                     }
                     Panel {
@@ -359,11 +381,10 @@ struct ResultsGoToView: View {
             await model.loadKnob(tafID)
             await model.loadWork(tafID)
         }
-        .refreshable { await model.loadKnob(tafID) }
-    }
-
-    private func isOn(_ knob: TafsCloud.Knob, _ place: String) -> Bool {
-        knob.results.first { $0.place == place }?.on ?? knob.setting?.sends(to: place) ?? false
+        .refreshable {
+            await model.loadKnob(tafID)
+            await model.loadWork(tafID)
+        }
     }
 
     /// A place's other choice: on to off, off to on, as tafs cloud offers it.
@@ -385,11 +406,10 @@ struct ResultsGoToView: View {
         .disabled(disabled)
     }
 
-    /// tafs' own places change at once (`PUT …/results`); the last one on can't be turned off.
-    private func setBuiltIn(_ knob: TafsCloud.Knob, _ place: String, _ on: Bool) {
-        var places = builtIns.map(\.place).filter { isOn(knob, $0) }
-        if on { places.append(place) } else { places.removeAll { $0 == place } }
-        guard !places.isEmpty else { return }
+    /// tafs' own places change at once (`PUT …/results`), from the live taf's; the last one on
+    /// can't be turned off.
+    private func setBuiltIn(_ live: [String]?, _ place: String, _ on: Bool) {
+        guard let live, let places = Self.places(live, switching: place, on: on) else { return }
         busy = true
         Task {
             await model.setResultPlaces(tafID, places)
@@ -412,6 +432,12 @@ struct ResultsGoToView: View {
         let unsent = (model.works[tafID]?.rows ?? []).compactMap { row -> TafsCloud.TafWork.Request? in
             if case .request(let r) = row, r.deliveries.contains(where: \.sendAgain) { return r }
             return nil
+        }
+        // A failed read of its work, or a Send again that failed, said here too.
+        if let error = model.workErrors[tafID] {
+            Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("results.workError")
         }
         if !unsent.isEmpty {
             Panel(stroke: Theme.amber.opacity(0.45)) {
