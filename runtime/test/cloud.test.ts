@@ -1587,25 +1587,26 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(knob.body.draft).toBeNull();
   });
 
-  it("a dial change can send results to a vendor: the version's instructions carry it, and live, the dial shows it", async () => {
+  it("a dial change can send results to any connected app's action: the version's instructions carry it, and live, the dial shows it", async () => {
     const w = world();
     w.agents.versions.set(`t_acme|${RAE}`, []);
     const bad = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [], results: ["app", { place: "slack", channel: "C1" }] } });
     expect(bad.status).toBe(400);
-    expect(bad.body.error).toContain("Slack door");
-    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results: ["app", { place: "notion", page: "p1" }] } });
+    expect(bad.body.error).toContain("a place is");
+    const notion = { place: "action", grant: "grt_n1", action: "notion_add_page_k3f9", args: { parent_page_id: "p1" }, name: "Notion · Support log" };
+    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results: ["app", notion] } });
     expect(put.status).toBe(200);
     const n = put.body.version as number;
-    expect(put.body.words).toContain("Results go to app, Notion page p1");
-    expect(JSON.stringify(w.agents.versionDefs.get(`t_acme|${RAE}|${n}`) ?? [...w.agents.versionDefs.values()].at(-1))).toContain("under the Notion page p1");
+    expect(put.body.words).toContain("Results go to app, Notion · Support log");
+    expect(JSON.stringify(w.agents.versionDefs.get(`t_acme|${RAE}|${n}`) ?? [...w.agents.versionDefs.values()].at(-1))).toContain("Call notion_add_page_k3f9 with these arguments as given");
     await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
     const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
     expect(rec.results).toEqual(["app"]);
-    expect(rec.vendorResults).toEqual([{ place: "notion", page: "p1" }]);
+    expect(rec.actionResults).toEqual([notion]);
     const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
-    expect(knob.body.results.filter((r: { on: boolean }) => r.on).map((r: { place: string; label: string }) => [r.place, r.label])).toEqual([["app", "You"], ["notion", "Notion"]]);
-    expect(knob.body.setting.results).toEqual(["app", { place: "notion", page: "p1" }]);
-    expect(knob.body.results.find((r: { place: string }) => r.place === "notion").tap).toBe("Turn to stop: adds a page under Notion page p1");
+    expect(knob.body.results.filter((r: { on: boolean }) => r.on).map((r: { place: string; label: string }) => [r.place, r.label])).toEqual([["app", "You"], ["action", "Notion"]]);
+    expect(knob.body.setting.results).toEqual(["app", notion]);
+    expect(knob.body.results.find((r: { place: string }) => r.place === "action")).toMatchObject({ grant: "grt_n1", action: "notion_add_page_k3f9", tap: "Turn to stop: each result goes to Notion · Support log" });
   });
 
   it("records the Cards a version runs under when it goes live", async () => {

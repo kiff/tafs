@@ -6,11 +6,11 @@
 import type { Schedule } from "./agents.js";
 import type { ResultPlace } from "./handler.js";
 import { type Trigger, triggerOf, triggerWords } from "./triggers.js";
-import { type VendorPlace, vendorLine, vendorWords } from "./places.js";
+import { type ActionPlace, placeWords } from "./places.js";
 import { timeIn } from "./work.js";
 
 /** A version's dial as PUT takes it: its triggers, what a busy taf does, where results go. */
-export interface KnobSetting { wakes: Trigger[]; busy: "skip" | "latest"; results: Array<ResultPlace | VendorPlace> }
+export interface KnobSetting { wakes: Trigger[]; busy: "skip" | "latest"; results: Array<ResultPlace | ActionPlace> }
 
 /** One stop on a ring. */
 export interface RingItem {
@@ -39,7 +39,8 @@ export interface Knob {
   does: { label: string; line: string };
   wakes: RingItem[];
   when: RingItem[];
-  results: (Omit<RingItem, "kind"> & { place: ResultPlace | VendorPlace["place"] })[];
+  /** Each place, on or off; an action place also names its connection and action. */
+  results: (Omit<RingItem, "kind"> & { place: ResultPlace | ActionPlace["place"]; grant?: string; action?: string })[];
   rim: { done: number; working: number; retrying: number; needs_you: number; line: string };
   /** A dial change waiting for the owner: its words, all of them and by ring, for Coach's card and the dial. */
   draft: null | { version: number; words: string[]; wakes: string[]; when: string[]; results: string[] };
@@ -154,10 +155,10 @@ export function knobOf(k: KnobInput): Knob {
     return { id: `res_${p}`, place: p, label: PLACE[p].label, words: PLACE[p].words, on, state: on ? "On" : "Off",
       ...(on && places.length === 1 ? {} : { tap: on ? `Turn to stop: ${PLACE[p].words.toLowerCase()}` : `Turn on: ${PLACE[p].words.toLowerCase()}` }) };
   });
-  // A vendor place the taf writes itself: turning it takes it off; adding one is Coach's draft, since it needs a page, an address or a channel.
-  for (const [i, p] of all.filter((x): x is VendorPlace => typeof x !== "string").entries()) {
-    const w = vendorWords(p);
-    results.push({ id: `res_${p.place}_${i + 1}`, place: p.place, ...w, on: true, state: "On", tap: `Turn to stop: ${w.words.charAt(0).toLowerCase()}${w.words.slice(1)}` });
+  // A connected app's action the taf calls itself: turning it takes it off; adding one is the picker's or Coach's draft.
+  for (const [i, p] of all.filter((x): x is ActionPlace => typeof x !== "string").entries()) {
+    const w = placeWords(p);
+    results.push({ id: `res_action_${i + 1}`, place: p.place, grant: p.grant, action: p.action, ...w, on: true, state: "On", tap: `Turn to stop: ${w.words.charAt(0).toLowerCase()}${w.words.slice(1)}` });
   }
 
   const t = k.today;
@@ -180,7 +181,7 @@ export function ringWords(k: KnobSetting): { wakes: string[]; when: string[]; re
   return {
     wakes: k.wakes.map(triggerWords),
     when: [k.busy === "latest" ? "If busy, runs the latest once it's free" : "If busy, skips the run"],
-    results: [`Results go to ${k.results.map((p) => (typeof p === "string" ? p : vendorLine(p))).join(", ")}`],
+    results: [`Results go to ${k.results.map((p) => (typeof p === "string" ? p : p.name)).join(", ")}`],
   };
 }
 

@@ -1,73 +1,73 @@
 /**
- * Result places at a vendor (RFC 052 B2): a Notion page, an email from the owner's Gmail, a Teams channel.
- * Unlike the built-in places, which tafs cloud delivers itself, the taf writes these with its own connected
- * tool, a write through KIFF inside its Card, so a version's instructions carry them and they go live with it.
+ * Result places at a connected app: any action of any connection the taf has (planque's grants, Composio's
+ * catalog among them), picked on the dial or drafted by Coach. tafs cloud knows no vendor: a place is the
+ * connection, the action as KIFF registered it, the arguments the owner fixed (a page, a channel, a sheet)
+ * and the name they picked it by. The taf makes the call itself, through KIFF inside its Card, so a
+ * version's instructions carry its places and they go live with it.
  */
 
-/** `name` is what the owner picked it by ("Support log", "#refunds"): the ring and the words use it, the instructions the ids. */
-export type VendorPlace =
-  | { place: "notion"; page: string; name?: string }
-  | { place: "gmail"; to: string; name?: string }
-  | { place: "teams"; team: string; channel: string; name?: string };
+export interface ActionPlace {
+  place: "action";
+  /** The connection (planque's grant) the action belongs to. */
+  grant: string;
+  /** The action's tool name, as KIFF registered it for the taf. */
+  action: string;
+  /** The arguments the owner fixed; the taf fills the rest from its result. */
+  args: Record<string, string | number | boolean>;
+  /** What the owner reads: "Notion · Support log". One line, at most 100 characters. */
+  name: string;
+}
 
-const ID = /^[A-Za-z0-9:._@-]{1,200}$/;
-const EMAIL = /^[^\s@<>"]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,}$/;
+const GRANT = /^[A-Za-z0-9_-]{1,128}$/;
+const ACTION = /^[A-Za-z0-9_.-]{1,128}$/;
+const ARG = /^[A-Za-z0-9_.-]{1,64}$/;
+/** At most this many places at connected apps, and this much fixed data in one. */
+export const MAX_ACTION_PLACES = 5;
+const MAX_ARGS_BYTES = 2048;
 
-/** A vendor place from a request, checked; an Error says what's wrong, in words. */
-export function vendorPlace(v: unknown): VendorPlace {
+/** One line for people to read: control characters out, at most `max`. */
+function line(v: unknown, max: number): string {
+  return typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, max) : "";
+}
+
+/** An action place from a request, checked; an Error says what's wrong, in words. */
+export function actionPlace(v: unknown): ActionPlace {
   const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
-  const s = (k: string) => (typeof o[k] === "string" ? (o[k] as string).trim() : "");
-  // A name is for people to read: one line, kept short, never instructions to the taf.
-  const named = s("name").replace(/[\u0000-\u001f\u007f]+/g, " ").slice(0, 100);
-  const name = named ? { name: named } : {};
-  switch (o.place) {
-    case "notion":
-      if (!ID.test(s("page"))) throw new Error("a Notion place names its page's id");
-      return { place: "notion", page: s("page"), ...name };
-    case "gmail":
-      if (!EMAIL.test(s("to"))) throw new Error("a Gmail place names the address it emails");
-      return { place: "gmail", to: s("to"), ...name };
-    case "teams":
-      if (!ID.test(s("team")) || !ID.test(s("channel"))) throw new Error("a Teams place names its team's id and its channel's id");
-      return { place: "teams", team: s("team"), channel: s("channel"), ...name };
-    case "slack":
-      throw new Error("Slack as a result place comes with the taf's Slack door");
+  if (o.place !== "action") throw new Error("a place is door_reply, app, owner_email, or {place: \"action\", grant, action, args, name}");
+  const grant = typeof o.grant === "string" ? o.grant.trim() : "";
+  const action = typeof o.action === "string" ? o.action.trim() : "";
+  if (!GRANT.test(grant)) throw new Error("an action place names its connection (grant)");
+  if (!ACTION.test(action)) throw new Error("an action place names its action, as the connection lists it");
+  const raw = o.args === undefined ? {} : o.args;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("an action place's args are an object");
+  const args: ActionPlace["args"] = {};
+  for (const [k, x] of Object.entries(raw as Record<string, unknown>)) {
+    if (!ARG.test(k)) throw new Error(`${k} isn't an argument name`);
+    if (typeof x !== "string" && typeof x !== "number" && typeof x !== "boolean") throw new Error(`${k} is a text, a number or true/false`);
+    args[k] = typeof x === "string" ? x.slice(0, 500) : x;
   }
-  throw new Error("a place is door_reply, app, owner_email, or {place: notion | gmail | teams, …}");
+  if (JSON.stringify(args).length > MAX_ARGS_BYTES) throw new Error("an action place's args are too long");
+  const name = line(o.name, 100);
+  if (!name) throw new Error("an action place has the name the owner picked it by");
+  return { place: "action", grant, action, args, name };
 }
 
 /** The place on the dial's Results ring, and its line. */
-export function vendorWords(p: VendorPlace): { label: string; words: string } {
-  switch (p.place) {
-    case "notion": return { label: "Notion", words: `Adds a page under ${p.name ? `“${p.name}”` : `Notion page ${p.page}`}` };
-    case "gmail": return { label: "Gmail", words: `Emails ${p.to} each result, from your Gmail` };
-    case "teams": return { label: "Teams", words: `Posts each result in ${p.name ? `“${p.name}”` : `Teams channel ${p.channel}`}` };
-  }
-}
-
-/** The same place as one line of the words a dial change answers. */
-export function vendorLine(p: VendorPlace): string {
-  switch (p.place) {
-    case "notion": return `Notion page ${p.name ? `“${p.name}”` : p.page}`;
-    case "gmail": return `Gmail to ${p.to}`;
-    case "teams": return `Teams channel ${p.name ? `“${p.name}”` : p.channel}`;
-  }
+export function placeWords(p: ActionPlace): { label: string; words: string } {
+  return { label: p.name.split(" · ")[0] || p.name, words: `Each result goes to ${p.name}` };
 }
 
 /** What heads them in a version's instructions. */
-export const VENDOR_PLACES_INTRO = "Where your results also go:\n";
+export const ACTION_PLACES_INTRO = "Where your results also go:\n";
 
-/** A version's instructions for its vendor places: the taf writes each one itself, inside its Card. */
-export function vendorInstructions(ps: VendorPlace[]): string | undefined {
+/**
+ * A version's instructions for its action places: the taf calls each one itself, inside its Card. The ids and
+ * fixed arguments only; the owner's names never reach the instructions, so a name can't steer the taf.
+ */
+export function placesInstructions(ps: ActionPlace[]): string | undefined {
   if (!ps.length) return undefined;
-  const line = (p: VendorPlace) => {
-    switch (p.place) {
-      case "notion": return `- Add a page with the result under the Notion page ${p.page}, with your Notion tool.`;
-      case "gmail": return `- Email the result to ${p.to}, with your Gmail tool.`;
-      case "teams": return `- Post the result in the Teams channel ${p.channel} of team ${p.team}, with your Teams tool.`;
-    }
-  };
-  return `${VENDOR_PLACES_INTRO}${ps.map(line).join("\n")}\n` +
+  const one = (p: ActionPlace) => `- Call ${p.action} with these arguments as given: ${JSON.stringify(p.args)}, filling its other fields from your result.`;
+  return `${ACTION_PLACES_INTRO}${ps.map(one).join("\n")}\n` +
     "Do each one at the end of every request, as a call through KIFF like any other, inside your Card. " +
     "If you have no such tool, or KIFF refuses or holds the call, say so in your result; never skip one silently.";
 }
