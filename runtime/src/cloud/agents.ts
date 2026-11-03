@@ -129,6 +129,8 @@ export interface AgentDefinition {
    * for it, so a Card that adds a vendor's tools mid-conversation keeps the cache (kiff/agents#197).
    */
   defer_vendor_tools?: boolean;
+  /** A run that would end on its tool results with no text gets one more turn, once, for its closing message. */
+  close_in_text?: boolean;
 }
 
 /** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */
@@ -430,6 +432,18 @@ export interface Schedule {
   enabled: boolean;
   /** The next firing, in UTC; absent when it's off. */
   next?: string;
+  /** How it fires: cron (the default), once (at `at`) or monthly_last_day (at its cron's time). */
+  kind?: "cron" | "once" | "monthly_last_day";
+  /** When a once schedule fires, RFC 3339. */
+  at?: string;
+  /** A firing while the taf works: skipped (the default), or the latest kept waiting. */
+  busy?: "skip" | "latest";
+  /** Coming firings the owner skipped, by their due time. */
+  skip?: string[];
+  /** A check of a connected app before each firing: a run only for what's new. */
+  check?: { tool: string; arguments: Record<string, unknown>; items: string; cursor: string };
+  /** A one-off follow-up the taf set itself (its id starts "fu-"): once, within seven days, at most three waiting. */
+  follow_up?: boolean;
 }
 
 /** The ids kiff/agents takes: 1 to 128 letters, digits, '-', '_' or '.', never "." or "..". */
@@ -774,6 +788,15 @@ export class Agents {
     return this.call("PUT", tenant, ["schedules", s.id], writable(s));
   }
 
+  /** The agent's schedules, its follow-ups among them. */
+  async listSchedules(tenant: string, agent: string): Promise<Schedule[]> {
+    return (await this.call<{ schedules: Schedule[] }>("GET", tenant, ["schedules"], undefined, { agent_id: agent })).schedules;
+  }
+
+  deleteSchedule(tenant: string, id: string): Promise<void> {
+    return this.call("DELETE", tenant, ["schedules", id]);
+  }
+
   switchSchedule(tenant: string, id: string, on: boolean): Promise<Schedule> {
     return this.call("POST", tenant, ["schedules", id, on ? "enable" : "disable"]);
   }
@@ -902,7 +925,11 @@ function parseBlock(block: string): RunStreamEvent | undefined {
  * `next` is only ever its answer; the tenant comes from the caller.
  */
 function writable(s: Schedule): Omit<Schedule, "next" | "tenant"> {
-  return { id: s.id, agent: s.agent, cron: s.cron, ...(s.time_zone ? { time_zone: s.time_zone } : {}), input: s.input, enabled: s.enabled };
+  return {
+    id: s.id, agent: s.agent, cron: s.cron, ...(s.time_zone ? { time_zone: s.time_zone } : {}), input: s.input, enabled: s.enabled,
+    ...(s.kind && s.kind !== "cron" ? { kind: s.kind } : {}), ...(s.at ? { at: s.at } : {}), ...(s.busy ? { busy: s.busy } : {}),
+    ...(s.skip?.length ? { skip: s.skip } : {}), ...(s.check ? { check: s.check } : {}),
+  };
 }
 
 function notFound(err: unknown): undefined {

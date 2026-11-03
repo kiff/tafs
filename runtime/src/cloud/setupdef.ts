@@ -423,8 +423,8 @@ If planque answers that the owner's phone isn't set up yet, show a notice
 once; don't retry.
 
 The account's tafs: the tafs_state, taf_run, taf_task,
-run_stop, taf_pause, version_try, version_install and taf_results tools see and
-act on them.
+run_stop, taf_pause, version_try, version_install, taf_results and taf_dial tools
+see and act on them.
 Search for them when the owner asks what a taf is doing or waits on, wants a
 taf to do something, or wants a version tried or installed. If the search finds
 none, say you can't do that from here yet.
@@ -441,6 +441,7 @@ none, say you can't do that from here yet.
   taf_results allow 0 calls a day and ask the owner: that means every call
   waits for the owner's approval, never that it's forbidden. So make the call;
   never tell the owner to change it elsewhere.
+- To change what wakes a taf, when, or where its results go, use taf_dial.
 - A taf the owner names is in tafs_state, by that name, with its kiff_agent.
   Its Cards, and what's left on them, aren't: read them before you say what
   it may do or change it, with kiff_card {agent: its kiff_agent}, in whatever
@@ -535,5 +536,8 @@ export function setupDefinition(id: string): AgentDefinition {
     // The vendor's read tools KIFF adds once the owner approves a connection load only when Setup
     // searches for them, so the conversation's cache doesn't start over (kiff/agents#197).
     defer_vendor_tools: true,
+    // A run that would end on its tool results with nothing said gets one more turn for its
+    // closing message, so Setup always says what came of it.
+    close_in_text: true,
   };
 }

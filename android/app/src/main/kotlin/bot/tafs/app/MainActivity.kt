@@ -280,6 +280,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
+  var showingConnectApps by rememberSaveable { mutableStateOf(false) }
   var showingPeople by rememberSaveable { mutableStateOf(false) }
   // The Halt screen, of one taf or (with none) of every taf; and Usage, the account's or one taf's.
   var haltOpen by rememberSaveable { mutableStateOf(false) }
@@ -344,12 +345,23 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     DoorActions(
       load = model::loadDoors,
       add = { taf, app -> model.addDoor(taf, app) },
+      loadSlackChannels = model::loadSlackChannels,
+      addSlack = { taf, app, grant, channel -> model.addSlackDoor(taf, app, grant, channel) },
       setOpen = { taf, door, open -> model.setDoorOpen(taf, door, open) },
       remove = { taf, door -> model.removeDoor(taf, door) },
       pair = { taf, door, sender, name -> model.pairDoor(taf, door, sender, name) },
       unpair = { taf, door, key -> model.unpairDoor(taf, door, key) },
       answer = { taf, knock, action, say -> model.answerKnock(taf, knock, action, say) },
       dismissError = model::dismissDoorsError,
+      loadKnob = model::loadKnob,
+      runNow = { taf -> model.runNow(taf); model.loadKnob(taf) },
+      approveOnce = { call -> model.answer(call, bot.tafs.app.model.Answer.ApproveOnce) },
+      changeKnobSize = { taf, setting -> model.changeKnobSize(taf, setting) },
+      confirmKnobChange = { taf -> model.confirmKnobChange(taf) },
+      setPaused = model::setPaused,
+      askCoach = model::improveInCoach,
+      openRimRequest = model::openRimRequest,
+      removeFollowUp = model::removeFollowUp,
     )
   }
   // Coach: the account's Setup, in place of the list. Closing never ends a conversation.
@@ -375,6 +387,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadWork = model::loadWork,
       setDraft = model::setDraft,
       sendAgain = model::sendAgain,
+      openRequest = model::openRequest,
       setPaused = model::setPaused,
       remove = model::removeTaf,
       report = model::reportAnswer,
@@ -387,6 +400,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
         openVersions = { coachOpen = false; openTaf = it; versionsTaf = it },
+        loadProfileWords = model::loadProfileWords,
+        loadKnob = model::loadKnob,
+        confirmKnob = model::confirmKnobChange,
       ),
     )
   }
@@ -505,7 +521,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             (open ?: home)()
           }
         }
-        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() })
+        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) })
         Tab.Record -> RecordView(state)
       }
     }
@@ -533,6 +549,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onTurnOnAlerts = { scope.launch { model.turnOnAlerts() } },
         onAlertSound = model::setAlertSound,
         onDevices = { showingSettings = false; showingDevices = true },
+        onConnectApps = { showingSettings = false; showingConnectApps = true },
         onPeople = { showingSettings = false; showingPeople = true },
         onUseDeviceZone = { scope.launch { model.useThisDevicesTimeZone() } },
         onDeleteAccount = { showingSettings = false; deletingAccount = true },
@@ -543,6 +560,35 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
       DevicesSheet(state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { showingDevices = false })
+    }
+    if (showingConnectApps) {
+      // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
+      bot.tafs.app.views.ConnectAppsSheet(
+        state, load = model::loadConnectApps, loadMore = model::loadMoreConnectApps,
+        onConnect = if (state.canManageCards) ({ app, taf -> scope.launch { model.startConnectApp(app, taf) } }) else null,
+        onAskCoach = { showingConnectApps = false; coachOpen = true },
+        onClose = { showingConnectApps = false },
+      )
+      // Its approval, over the list: KIFF's words, the signature, then the vendor's page.
+      state.listApproval?.let { grantId ->
+        bot.tafs.app.views.ConnectApprovalSheet(
+          state, state.grants.firstOrNull { it.id == grantId },
+          loadWords = model::loadProfileWords,
+          onApprove = { grant -> model.startListApproval(grant.id, grant.digest) },
+          onClose = model::closeListApproval,
+        )
+      }
+    }
+    // A request from the dial's rim or Activity, step by step.
+    state.openRequest?.let { (tafId, detail) ->
+      val canSend = state.manages(tafId) && detail.deliveries.any { it.sendAgain }
+      bot.tafs.app.views.RequestSheet(
+        detail,
+        sending = detail.id in state.sendingAgain,
+        onTryReply = if (canSend) ({ scope.launch { model.sendAgain(tafId, detail.id); model.openRequest(tafId, detail.id) } }) else null,
+        onAskCoach = if (state.mayUseCoach) ({ model.closeRequest(); model.improveInCoach(tafId) }) else null,
+        onClose = model::closeRequest,
+      )
     }
     if (deletingAccount) {
       DeleteAccountSheet(state, delete = model::deleteAccount, clearError = model::clearDeleteAccountError, onClose = { deletingAccount = false })

@@ -116,6 +116,8 @@ export interface CardView {
   total: Total<Money> | null;
   /** Its count of calls. */
   calls: Total<number> | null;
+  /** How this is counted: each tool's lines in KIFF's words, as the owner approved them; absent when KIFF has none. */
+  counted?: { tool: string; title: string; lines: string[] }[];
 }
 
 /**
@@ -155,6 +157,8 @@ export interface Mandate {
   valid_until?: string | null;
   revoked_at?: string | null;
   on_exceed?: string | null;
+  /** How each tool it covers is counted: the lines of KIFF's words the owner approved for the tool's profile. */
+  counted?: { tool?: string | null; lines?: string[] | null }[] | null;
 }
 
 /** A held call, as much as the list reads: whose it is. */
@@ -344,9 +348,16 @@ export function cardView(m: Mandate): CardView {
     if (ok && line?.pending_text) calls.pending_text = line.pending_text;
   }
   const environment = (m.environment ?? "").trim();
+  // Passed through as KIFF words it, each under its tool's title.
+  const counted = (m.counted ?? []).flatMap((c) => {
+    const lines = (c.lines ?? []).filter((l): l is string => typeof l === "string" && l.trim() !== "");
+    if (typeof c.tool !== "string" || !c.tool || lines.length === 0) return [];
+    const title = (m.grants ?? []).find((g) => g.action === c.tool)?.title?.trim() || c.tool;
+    return [{ tool: c.tool, title, lines }];
+  });
   return {
     id: m.id, title: m.title?.trim() || lines[0]?.label || "No actions yet", environment, live: isLive(environment),
-    active: m.active, expires: m.valid_until ?? null, rules: lines, total, calls,
+    active: m.active, expires: m.valid_until ?? null, rules: lines, total, calls, ...(counted.length ? { counted } : {}),
   };
 }
 

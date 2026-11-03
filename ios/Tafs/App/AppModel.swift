@@ -496,13 +496,14 @@ final class AppModel: ObservableObject {
         forgetApprovalKey()
         kiff.token = token
         cloud.token = token
-        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]
         holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
         unfinishedRemovals = []
         doorsOffered = []
         grants = []
+        connectApps = nil; connectStart = nil; connectAppsQuery = ""; connectAppsRequest = nil
         grantsReadFor = []
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
@@ -710,19 +711,26 @@ final class AppModel: ObservableObject {
         holderIDs[agent].flatMap { taf($0)?.name }
     }
 
+    /// Reads this person's access to each taf, on its own: one who may not read the account's
+    /// people still manages the tafs they made. Kept as it was when it can't be read.
+    func refreshAccess(gen: Int) async {
+        guard mode == .kiff else { access = [:]; return }
+        guard let access = try? await kiff.myAccess(), gen == accountGeneration else { return }
+        self.access = access
+    }
+
     /// Reads the account's groups, its people and this person's access to each taf.
     func refreshPeople() async {
         guard mode == .kiff else { groups = []; people = []; access = [:]; return }
         let gen = accountGeneration
+        await refreshAccess(gen: gen)
         do {
             async let g = kiff.groups()
             async let p = kiff.people()
-            async let a = kiff.myAccess()
-            let (groups, people, access) = try await (g, p, a)
+            let (groups, people) = try await (g, p)
             guard gen == accountGeneration else { return }
             self.groups = groups.sorted { ($0.everyone == true ? 0 : 1, $0.name.lowercased()) < ($1.everyone == true ? 0 : 1, $1.name.lowercased()) }
             self.people = people.filter(\.active).sorted { $0.label.lowercased() < $1.label.lowercased() }
-            self.access = access
             peopleError = nil
         } catch {
             guard gen == accountGeneration else { return }
@@ -840,12 +848,13 @@ final class AppModel: ObservableObject {
         cloudTafs = [:]; halts = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         holderIDs = [:]
-        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         unfinishedRemovals = []
         doorsOffered = []
         grants = []
+        connectApps = nil; connectStart = nil; connectAppsQuery = ""; connectAppsRequest = nil
         grantsReadFor = []
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
@@ -1287,6 +1296,9 @@ final class AppModel: ObservableObject {
                 // Finishing waited: another account may be signed in now, with its own tafs.
                 guard gen == accountGeneration else { return }
             }
+            // What this person may do with each taf: whether they manage it decides its Doors,
+            // dial, Versions and Halt, so it's read with the list, not only from People.
+            await refreshAccess(gen: gen)
             await refreshConnections()
             // The plan, for Settings' Plan card and Home's line: KIFF's usage read alone, quietly.
             await refreshPlan(gen: gen)
@@ -1481,6 +1493,326 @@ final class AppModel: ObservableObject {
 
     /// Runs a taf now, outside its schedule. Returns the run's session; nil when it didn't
     /// start, or when a run request for it is already on its way.
+    /// "Did this happen?": the money calls whose outcome KIFF can't prove, newest first.
+    @Published private(set) var unproven: [KIFFClient.Unproven] = []
+
+    /// Reads "Did this happen?" from KIFF, for someone who answers held calls.
+    func loadUnproven() async {
+        guard mode == .kiff, mayAnswerHolds else { return }
+        let gen = accountGeneration
+        do {
+            let calls = try await kiff.didThisHappen()
+            guard gen == accountGeneration else { return }
+            unproven = calls
+        } catch {
+            // Read again on the next refresh; nothing is answered from a stale list.
+        }
+    }
+
+    /// The owner's answer behind Face ID, signed like an approval: "No" gives the Card its
+    /// room back, "Yes" keeps it counted. The first answer stands.
+    func answerHappened(_ call: KIFFClient.Unproven, happened: Bool) async -> Bool {
+        guard mode == .kiff, sessionHasKey, let tenant = kiffTenant else {
+            lastError = "Sign in with KIFF again: this sign-in can't sign for the phone."
+            return false
+        }
+        let gen = accountGeneration
+        do {
+            _ = try await signer.sign(Data("tafs.happened.v1|\(tenant)|\(call.proposal)|\(happened ? "yes" : "no")".utf8),
+                                      reason: happened ? "Say it happened: \(call.title)" : "Say it didn't happen: \(call.title)", grants: true)
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        let signer = self.signer
+        kiff.tenant = tenant
+        kiff.setupSigner = { try signer.signConfirmed($0) }
+        defer { kiff.setupSigner = nil }
+        do {
+            try await kiff.answerHappened(call.proposal, happened: happened)
+        } catch {
+            lastError = "KIFF didn't take the answer: \(error.localizedDescription)"
+            return false
+        }
+        unproven.removeAll { $0.proposal == call.proposal }
+        await loadUnproven()
+        return true
+    }
+
+    /// Connect apps as tafs cloud last listed them.
+    @Published private(set) var connectApps: TafsCloud.ConnectApps?
+    /// The connection started from the list, waiting for its approval sheet.
+    @Published var connectStart: TafsCloud.ConnectStart?
+
+    /// The search Connect apps last listed, for its next page.
+    private var connectAppsQuery = ""
+    /// Only the newest search may replace its page, even if an older request ignores cancellation.
+    private var connectAppsRequest: UUID?
+
+    /// Reads Connect apps' first page, filtered by what the owner typed.
+    func loadConnectApps(_ q: String = "") async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        let request = UUID()
+        connectAppsRequest = request
+        // Invalidate pagination for the preceding search immediately.
+        if connectAppsQuery != q { connectApps = nil }
+        connectAppsQuery = q
+        do {
+            let page = try await cloud.connectApps(q)
+            guard gen == accountGeneration, request == connectAppsRequest, !Task.isCancelled else { return }
+            connectApps = page
+        } catch {
+            guard gen == accountGeneration, request == connectAppsRequest, !Task.isCancelled else { return }
+            lastError = "The apps couldn't be listed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Adds Connect apps' next page, for the same search; an app listed already isn't again.
+    func loadMoreConnectApps() async {
+        guard mode == .kiff, let shown = connectApps, let cursor = shown.nextCursor else { return }
+        let gen = accountGeneration
+        let request = connectAppsRequest
+        let q = connectAppsQuery
+        do {
+            let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor)
+            guard gen == accountGeneration, request == connectAppsRequest,
+                  q == connectAppsQuery, connectApps?.nextCursor == cursor else { return }
+            var merged = page
+            let seen = Set(shown.apps.map(\.entry))
+            merged.apps = shown.apps + page.apps.filter { !seen.contains($0.entry) }
+            merged.byKey = shown.byKey || page.byKey
+            connectApps = merged
+        } catch {
+            guard gen == accountGeneration, request == connectAppsRequest else { return }
+            lastError = "More apps couldn't be listed: \(error.localizedDescription)"
+        }
+    }
+
+    /// The tafs an app can be connected for: on tafs cloud, and managed by this person.
+    var connectableTafs: [Taf] {
+        tafs.filter { cloudTaf(for: $0.id) != nil && manages($0.id) }
+    }
+
+    /// Starts connecting an app from the list for one taf; its approval opens as a sheet over
+    /// the list.
+    func startConnect(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) async {
+        guard let c = cloudTaf(for: tafID) else {
+            lastError = "This taf isn't on tafs cloud yet, so apps can't be connected for it."
+            return
+        }
+        let gen = accountGeneration
+        do {
+            let start = try await cloud.startConnect(app.entry, taf: c.id)
+            guard gen == accountGeneration else { return }
+            await refreshConnections()
+            guard gen == accountGeneration else { return }
+            connectStart = start
+        } catch {
+            guard gen == accountGeneration else { return }
+            lastError = "\(app.vendor.isEmpty ? app.title : app.vendor) couldn't be connected: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: The Slack door
+
+    /// The taf's Slack bot connections a Slack door can listen through: connected, its own
+    /// agent's, marked by planque's catalog entry.
+    func slackBots(for tafID: UUID) -> [PlanqueClient.Grant] {
+        guard let agent = kiffAgent(for: tafID) else { return [] }
+        return grants.filter { $0.slackBot && $0.connected && $0.request.agent == agent }
+    }
+
+    /// The channels a Slack bot connection can see, read through planque.
+    func slackChannels(_ grantID: String) async -> [PlanqueClient.Channel]? {
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else { return nil }
+        let signer = self.signer
+        planque.tenant = tenant
+        do { return try await planque.channels(grantID: grantID, signedBy: { try signer.signConfirmed($0) }) } catch {
+            lastError = "Slack's channels couldn't be read: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    /// A Slack door on one channel, in the agreed order: planque subscribes the channel,
+    /// approved with Face ID, then tafs cloud makes the door. A door that can't be made takes
+    /// the subscription back, so nothing listens without a door.
+    func addSlackDoor(_ tafID: UUID, doors: DoorsModel, app: TafsCloud.DoorApp, grant: PlanqueClient.Grant, channel: PlanqueClient.Channel) async -> Bool {
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant, let account = grant.account else {
+            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
+            return false
+        }
+        let where_ = channel.name.isEmpty ? channel.id : "#" + channel.name
+        do {
+            _ = try await signer.sign(Data("tafs.door.v1|\(tenant)|\(grant.id)|\(channel.id)".utf8),
+                                      reason: "Let \(taf(tafID)?.name ?? "the taf") read what's written in \(where_)", grants: true)
+        } catch {
+            quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+            return false
+        }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        let trigger: String
+        do {
+            trigger = try await planque.subscribe(grantID: grant.id, account: account, slug: PlanqueClient.slackMessageTrigger, channels: [channel.id])
+        } catch {
+            lastError = "Slack didn't subscribe \(where_): \(error.localizedDescription)"
+            return false
+        }
+        if await doors.addSlack(app, grant: grant.id, channel: channel.id, trigger: trigger) != nil { return true }
+        try? await planque.unsubscribe(grantID: grant.id, trigger: trigger)
+        return false
+    }
+
+    /// Removes a Slack door in the reverse order: planque's subscription first, signed by
+    /// this phone, then the door. One with no subscription named is only the door.
+    func removeSlackDoor(_ door: TafsCloud.Door, doors: DoorsModel) async {
+        if let grant = door.grant, let trigger = door.trigger {
+            guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
+                lastError = "Start from Connected tools on this \(ThisDevice.kind) first. Slack's subscription must be stopped before removing its door."
+                return
+            }
+            let signer = self.signer
+            planque.tenant = tenant
+            planque.signer = { try signer.signConfirmed($0) }
+            defer { planque.signer = nil }
+            do { try await planque.unsubscribe(grantID: grant, trigger: trigger) } catch {
+                lastError = "Slack's subscription wasn't stopped, so the door stays: \(error.localizedDescription)"
+                return
+            }
+        }
+        await doors.remove(door)
+    }
+
+    /// Gives an API-key grant its key, as shown, behind Face ID. A grant with a profile needs
+    /// KIFF's words for it shown, as approving does.
+    func giveKey(grantID: String, shown: String?, key: String) async -> Bool {
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
+            lastError = "Start from Connected tools on this \(ThisDevice.kind) first."
+            return false
+        }
+        guard let grant = grants.first(where: { $0.id == grantID }), grant.digestMatches, grant.digest == shown else {
+            lastError = PlanqueClient.PlanqueError.digestMismatch.errorDescription
+            return false
+        }
+        let words = shownWords(for: grant)
+        if grant.profile != nil, words == nil {
+            lastError = PlanqueClient.PlanqueError.wordsUnread.errorDescription
+            return false
+        }
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        do {
+            _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
+                                      reason: "Give \(grant.vendor) its key for \(grant.request.agent)", grants: true)
+        } catch {
+            quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+            return false
+        }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        do {
+            _ = try await planque.giveKey(grant, key: key, words: words)
+        } catch {
+            lastError = "The key wasn't given: \(error.localizedDescription)"
+            return false
+        }
+        await refreshConnections()
+        return true
+    }
+
+    /// Each taf's dial as tafs cloud last sent it (`GET /v1/tafs/{id}/knob`), by its id here.
+    @Published private(set) var knobs: [UUID: TafsCloud.Knob] = [:]
+
+    /// Reads the taf's dial from tafs cloud.
+    func loadKnob(_ tafID: UUID) async {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
+        let gen = accountGeneration
+        do {
+            var knob = try await cloud.knob(c.id)
+            guard gen == accountGeneration else { return }
+            if let pending = knob.pending {
+                do { knob = try await cloud.knob(c.id, version: pending.version) }
+                catch let error as TafsCloud.CloudError where error.status == 404 {
+                    // It was installed or replaced while reading: refresh its current state.
+                    knob = try await cloud.knob(c.id)
+                }
+            }
+            guard gen == accountGeneration else { return }
+            knobs[tafID] = knob
+            if lastError?.hasPrefix("The dial couldn't be read:") == true { lastError = nil }
+            // Its change is live now: nothing left to switch to.
+            if let made = knobChanges[tafID], let live = knob.version, live >= made.version { knobChanges[tafID] = nil }
+        } catch {
+            guard gen == accountGeneration else { return }
+            lastError = "The dial couldn't be read: \(error.localizedDescription)"
+        }
+    }
+
+    /// The face was tapped on a stop whose `tap` says it does something: a door opens or
+    /// closes through the doors API, and Run now starts a run, each as today, with no new
+    /// version. Fixed size choices make a pending version; setup belongs to Coach.
+    func pressKnob(_ tafID: UUID, _ item: TafsCloud.Knob.Item) async {
+        guard mode == .kiff, manages(tafID), let c = cloudTaf(for: tafID) else { return }
+        if item.ok == "door", let door = item.door {
+            do { _ = try await cloud.setDoorOpen(c.id, door: door, open: !item.on) } catch {
+                lastError = "The door didn't \(item.on ? "close" : "open"): \(error.localizedDescription)"
+            }
+        } else if item.ok == "run" {
+            _ = await runNow(c)
+        } else if item.ok == "remove_follow_up", let followUp = item.followUp {
+            do { try await cloud.removeFollowUp(c.id, followUp: followUp) }
+            catch { lastError = "The follow-up wasn't removed: \(error.localizedDescription)" }
+        } else {
+            return
+        }
+        await loadKnob(tafID)
+    }
+
+    func requestDetail(_ tafID: UUID, run: String) async throws -> TafsCloud.RequestDetail {
+        guard mode == .kiff, let taf = cloudTaf(for: tafID) else { throw CancellationError() }
+        let generation = accountGeneration
+        let detail = try await cloud.request(taf.id, run: run)
+        guard generation == accountGeneration else { throw CancellationError() }
+        return detail
+    }
+
+    /// A fixed size offered by cloud, including all other settings. No app-specific presets.
+    func adjustKnob(_ tafID: UUID, item: TafsCloud.Knob.Item, direction: Int) async -> Bool {
+        guard manages(tafID), let knob = knobs[tafID],
+              knob.acceptsChoices(waitingFor: knobChanges[tafID]?.version),
+              let current = TafsCloud.Knob.Ring.allCases.flatMap({ knob.items($0) }).first(where: { $0.id == item.id }),
+              current == item, let choice = current.size?.choice(moving: direction) else { return false }
+        guard await changeKnob(tafID, { $0 = choice.setting }) else { return false }
+        await loadKnob(tafID)
+        return true
+    }
+
+    /// The dial's last change on each taf, its next version, until the owner switches to it.
+    @Published var knobChanges: [UUID: TafsCloud.Knob.Change] = [:]
+
+    /// Changes one thing of the taf's dial: its live `setting` copied, changed, and sent whole
+    /// (`PUT …/knob`). tafs cloud makes the next version; nothing runs from it until the
+    /// owner switches to it in Versions.
+    func changeKnob(_ tafID: UUID, _ change: (inout TafsCloud.Knob.Setting) -> Void) async -> Bool {
+        guard mode == .kiff, manages(tafID), let c = cloudTaf(for: tafID), let setting = knobs[tafID]?.setting else { return false }
+        var changed = setting
+        change(&changed)
+        guard changed != setting else { return false }
+        let gen = accountGeneration
+        do {
+            let made = try await cloud.putKnob(c.id, changed)
+            guard gen == accountGeneration else { return false }
+            knobChanges[tafID] = made
+            return true
+        } catch {
+            guard gen == accountGeneration else { return false }
+            lastError = "The dial didn't change: \(error.localizedDescription)"
+            return false
+        }
+    }
+
     func runNow(_ cloudTaf: TafsCloud.CloudTaf) async -> String? {
         guard runsInFlight.insert(cloudTaf.id).inserted else { return nil }
         defer { runsInFlight.remove(cloudTaf.id) }
@@ -1526,6 +1858,11 @@ final class AppModel: ObservableObject {
 
     /// The doors tafs cloud offers this account (docs/doors.md): none, and no taf shows Doors.
     @Published private(set) var doorsOffered: [String] = []
+
+    /// The taf here whose tafs cloud id is `cloudID`, when the list has it.
+    func tafID(cloud cloudID: String) -> UUID? {
+        cloudTafs.first { $0.value.id == cloudID }.flatMap { holderIDs[$0.key] }
+    }
 
     /// The tafs cloud taf behind a taf, when there is one.
     func cloudTaf(for tafID: UUID) -> TafsCloud.CloudTaf? {
@@ -4129,6 +4466,32 @@ final class AppModel: ObservableObject {
 
     /// The account's planque grants: connections, and connections waiting for the owner.
     @Published private(set) var grants: [PlanqueClient.Grant] = []
+    /// KIFF's words for each grant's profile, by grant id, once read and checked.
+    @Published private(set) var profileWords: [String: ProfileWords] = [:]
+    /// Why a grant's words couldn't be shown, by grant id.
+    @Published private(set) var profileWordsError: [String: String] = [:]
+
+    /// Reads KIFF's words for `grant`'s profile with this person's session, checked against
+    /// the profile shown. A grant with no profile has none to read.
+    func loadProfileWords(for grant: PlanqueClient.Grant) async {
+        guard let profile = grant.profile else { return }
+        if let words = profileWords[grant.id], (try? ProfileWords.digest(profile)) == words.profileSHA256 { return }
+        do {
+            let words = try await kiff.profileWords(for: profile)
+            profileWords[grant.id] = words
+            profileWordsError[grant.id] = nil
+        } catch {
+            profileWords[grant.id] = nil
+            profileWordsError[grant.id] = (error as? LocalizedError)?.errorDescription ?? ProfileWords.Failure.notWords.errorDescription
+        }
+    }
+
+    /// The words to show for `grant`: only KIFF's words for exactly its profile.
+    func shownWords(for grant: PlanqueClient.Grant) -> ProfileWords? {
+        guard let profile = grant.profile, let words = profileWords[grant.id],
+              (try? ProfileWords.digest(profile)) == words.profileSHA256 else { return nil }
+        return words
+    }
 
     /// The vendor of each connected tool, by its name in KIFF: what a refusal names.
     private var toolVendors: [String: String] {
@@ -4382,6 +4745,12 @@ final class AppModel: ObservableObject {
             termsChanged()
             return nil
         }
+        // A connection with a profile is approved only with KIFF's words for it shown.
+        let words = shownWords(for: grant)
+        if grant.profile != nil, words == nil {
+            lastError = PlanqueClient.PlanqueError.wordsUnread.errorDescription
+            return nil
+        }
 
         do {
             _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
@@ -4394,7 +4763,7 @@ final class AppModel: ObservableObject {
 
         let connected: PlanqueClient.Grant
         do {
-            let approved = try await planque.approve(grant)
+            let approved = try await planque.approve(grant, words: words)
             guard let signInURL = approved.signInURL else {
                 // planque already holds the sign-in (contract 5): approving the tools Setup
                 // chose from the vendor's list connected them, with no second sign-in.

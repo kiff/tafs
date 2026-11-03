@@ -45,7 +45,38 @@ data class GrantTool(
 }
 
 @Serializable
-data class GrantRequest(val server: String = "", val agent: String = "", val tools: List<GrantTool> = emptyList())
+data class GrantRequest(
+  val server: String = "",
+  val agent: String = "",
+  val tools: List<GrantTool> = emptyList(),
+  /**
+   * The connection's `kiff.profile.v1` (KIFF's profile contract), when planque sends one: inside the request, so the grant's digest the phone
+   * checks covers it. The phone asks KIFF for its words and signs both digests on approval.
+   */
+  val profile: kotlinx.serialization.json.JsonObject? = null,
+  /** A managed provider's connection: which provider and toolkit it is (`{provider, toolkit}`). */
+  val connector: GrantConnector? = null,
+)
+
+/** The catalog entry of a managed Slack bot connection. */
+const val SLACK_BOT_ENTRY = "connector:composio:slackbot"
+
+/** A managed provider's connection, as planque names it: `composio`, and its toolkit, such as `slackbot`. */
+@Serializable
+data class GrantConnector(val provider: String? = null, val toolkit: String? = null)
+
+/** A Slack channel the taf's Slack bot can see, for a Slack door: its ID, its name, and whether it's private. */
+@Serializable
+data class SlackChannel(val id: String, val name: String = "", val private: Boolean = false)
+
+@Serializable
+private data class SlackChannels(val channels: List<SlackChannel> = emptyList())
+
+/** A trigger planque subscribed for a grant: its id, to remove it again. */
+@Serializable
+data class GrantTrigger(val id: String? = null, val trigger: String? = null) {
+  val key: String? get() = id ?: trigger
+}
 
 @Serializable
 data class GrantEvent(
@@ -81,6 +112,8 @@ data class Grant(
   @SerialName("held_until") val heldUntil: String? = null,
   /** The vendor's name, as planque gives it: what its server calls itself. */
   @SerialName("vendor") val vendorName: String? = null,
+  /** The catalog entry it was connected from, such as `connector:composio:slackbot`. */
+  val entry: String? = null,
   /** Whether [digest] is the hash of the request as received: the app shows Approve only then. Set by the client, never read from planque. */
   @Transient val digestMatches: Boolean = false,
   /** planque answered connected to this phone's approval, before its list says so. Never read, only set. */
@@ -88,6 +121,9 @@ data class Grant(
 ) {
   /** The vendor, as the owner knows it: its name, else its server's host. */
   val vendor: String get() = vendorName ?: request.server
+
+  /** A Slack bot connection, which a Slack door listens through: by planque's entry, else its connector's toolkit, never a vendor name. */
+  val isSlackBot: Boolean get() = entry == SLACK_BOT_ENTRY || request.connector?.toolkit == "slackbot"
 
   val connected: Boolean get() = status == "connected" || connectedNow
 
@@ -168,15 +204,54 @@ class PlanqueClient(
     }
   }
 
-  /** Approves [grant] as shown: its digest is signed. Refused here when the digest isn't the hash of the request the owner was shown. */
-  suspend fun approve(grant: Grant): Approved {
+  /**
+   * Approves [grant] as shown: its digest is signed. Refused here when the digest isn't the hash of the request the owner was
+   * shown. With [words], KIFF's words for its profile that the owner read, the body carries `kiff_profile` (KIFF's profile contract), so the
+   * same signature covers the profile and the words.
+   */
+  suspend fun approve(grant: Grant, words: ProfileWords? = null): Approved {
     if (!grant.digestMatches) throw PlanqueError.DigestMismatch
-    return decode(raw("POST", "grants/${escaped(grant.id)}/approve", body("digest" to grant.digest)))
+    val fields = buildMap {
+      put("digest", kotlinx.serialization.json.JsonPrimitive(grant.digest))
+      words?.let { put("kiff_profile", it.approval()) }
+    }
+    val body = KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(fields)).toByteArray()
+    return decode(raw("POST", "grants/${escaped(grant.id)}/approve", body))
   }
 
   /** Confirms the vendor sign-in with the code it handed back to the app. Only the phone that approved can, within 15 minutes; then planque registers the tools in KIFF. */
   suspend fun confirm(grantId: String, code: String): Grant =
     decode(raw("POST", "grants/${escaped(grantId)}/confirm", body("confirm" to code)))
+
+  /** The channels a Slack bot connection can see (at most 200, no message content), for a Slack door. A signed read. */
+  suspend fun slackChannels(grantId: String, signedBy: ((ByteArray) -> String)? = null): List<SlackChannel> {
+    val data = raw("GET", "grants/${escaped(grantId)}/channels", null, signedBy)
+    // A list, or an object holding one.
+    val json = KiffClient.json.parseToJsonElement(String(data))
+    return if (json is kotlinx.serialization.json.JsonArray) KiffClient.json.decodeFromJsonElement(kotlinx.serialization.builtins.ListSerializer(SlackChannel.serializer()), json)
+    else KiffClient.json.decodeFromJsonElement(SlackChannels.serializer(), json).channels
+  }
+
+  /**
+   * Subscribes a Slack bot connection's [slug] to [channels], signed by this device: planque builds the provider's configuration
+   * from these channels alone and pins the trigger's definition. Without it, a Slack door hears nothing.
+   */
+  suspend fun subscribe(grantId: String, account: String, slug: String, channels: List<String>): GrantTrigger {
+    val body = KiffClient.json.encodeToString(
+      JsonObject.serializer(),
+      JsonObject(mapOf(
+        "account" to kotlinx.serialization.json.JsonPrimitive(account),
+        "slug" to kotlinx.serialization.json.JsonPrimitive(slug),
+        "channels" to kotlinx.serialization.json.JsonArray(channels.map { kotlinx.serialization.json.JsonPrimitive(it) }),
+      )),
+    ).toByteArray()
+    return decode(raw("POST", "grants/${escaped(grantId)}/triggers", body))
+  }
+
+  /** Removes a trigger planque subscribed, signed by this device: its delivery stops first, then the provider's listener. */
+  suspend fun unsubscribe(grantId: String, trigger: String, account: String) {
+    raw("DELETE", "grants/${escaped(grantId)}/triggers/${escaped(trigger)}", body("account" to account))
+  }
 
   /** Removes the grant's tools from KIFF and revokes its token at the vendor. */
   suspend fun disconnect(grantId: String): Grant = decode(raw("DELETE", "grants/${escaped(grantId)}", null))

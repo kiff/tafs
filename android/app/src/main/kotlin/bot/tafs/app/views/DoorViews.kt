@@ -77,6 +77,24 @@ class DoorActions(
   val unpair: suspend (String, Door, DoorKey) -> Unit,
   val answer: suspend (String, Knock, String, String?) -> Unit,
   val dismissError: (String) -> Unit,
+  /** A Slack door: the channels a Slack bot connection sees (grant id), and adding the door on one (taf, app, grant, channel). */
+  val loadSlackChannels: suspend (String) -> Unit = {},
+  val addSlack: suspend (String, DoorApp, bot.tafs.app.kiff.Grant, bot.tafs.app.kiff.SlackChannel) -> Door? = { _, _, _, _ -> null },
+  /** The taf's dial, read again; and Run now, from its face. */
+  val loadKnob: suspend (String) -> Unit = {},
+  val runNow: suspend (String) -> Unit = {},
+  /** Approves a held call once, from the dial's face. */
+  val approveOnce: suspend (bot.tafs.app.model.HeldCall) -> Unit = {},
+  /** The remote's − and +: a stop's next choice, as its whole setting (taf, setting); making the changes live; Pause. */
+  val changeKnobSize: suspend (String, kotlinx.serialization.json.JsonObject) -> Unit = { _, _ -> },
+  val confirmKnobChange: suspend (String) -> Unit = {},
+  val setPaused: suspend (String, Boolean) -> Unit = { _, _ -> },
+  /** "Ask Coach or find anything", "Add a door" and "Ask Coach to change": Coach, about this taf. */
+  val askCoach: (String) -> Unit = {},
+  /** Removes a follow-up the taf set itself (taf, follow-up id). */
+  val removeFollowUp: suspend (String, String) -> Unit = { _, _ -> },
+  /** Opens the request the dial's rim points at. */
+  val openRimRequest: suspend (String) -> Unit = {},
 )
 
 /**
@@ -92,10 +110,14 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
   var adding by rememberSaveable { mutableStateOf(false) }
   var pairing by remember { mutableStateOf<Door?>(null) }
   var removing by remember { mutableStateOf<Door?>(null) }
-  LaunchedEffect(taf.id) { actions.load(taf.id) }
+  LaunchedEffect(taf.id) { actions.load(taf.id); actions.loadKnob(taf.id) }
   val door = doors.doors.getOrNull(selected)
+  val knob = state.knobs[taf.id]
 
-  Panel {
+  if (knob != null) {
+    // The taf's dial, where the doors' dial was: its doors are stops on Wakes it, and choosing one picks it for below.
+    TafDialPanel(taf, knob, state, doors, actions, onDoor = { id -> doors.doors.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { selected = it } })
+  } else Panel {
     Eyebrow("Doors · turn to pick, press to open")
     DoorDial(
       taf, doors.doors, doors.openKnocks, selected,
@@ -142,7 +164,18 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
   doors.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
   Text(DoorWords.footer(taf.name), style = scaled(13, color = Theme.dim))
 
-  if (adding) AddDoorSheet(doors, onClose = { adding = false }) { app ->
+  if (adding) AddDoorSheet(
+    doors,
+    slack = SlackPicking(state.slackBots(taf.id), state.slackChannels, actions.loadSlackChannels) { app, grant, channel ->
+      scope.launch {
+        if (actions.addSlack(taf.id, app, grant, channel) != null) {
+          adding = false
+          selected = (state.doors[taf.id]?.doors?.size ?: 1) - 1
+        }
+      }
+    },
+    onClose = { adding = false },
+  ) { app ->
     scope.launch {
       val added = actions.add(taf.id, app)
       if (added != null) {
@@ -271,7 +304,9 @@ private fun doorColor(app: String): Color = when (app) {
 /** Picks the app a new door opens on: those that can tell who's writing first. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddDoorSheet(doors: TafDoors, onClose: () -> Unit, onPick: (DoorApp) -> Unit) {
+private fun AddDoorSheet(doors: TafDoors, slack: SlackPicking, onClose: () -> Unit, onPick: (DoorApp) -> Unit) {
+  // Slack has a step of its own: the taf's Slack bot connection, then a channel it sees.
+  var slackApp by remember { mutableStateOf<DoorApp?>(null) }
   ModalBottomSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -285,8 +320,10 @@ private fun AddDoorSheet(doors: TafDoors, onClose: () -> Unit, onPick: (DoorApp)
       Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // WhatsApp's signup runs in a browser this app doesn't open yet.
         val offered = doors.addable.filter { it.kind != "whatsapp" }
-        AppSection("Knows who's writing · can hold keys", offered.filter { it.proof == "proven" }, doors.busy, onPick)
-        AppSection("Can't prove who's writing · knocks only", offered.filter { it.proof != "proven" }, doors.busy, onPick)
+        val pick: (DoorApp) -> Unit = { app -> if (app.kind == "slack") slackApp = app else onPick(app) }
+        slackApp?.let { app -> SlackDoorStep(app, slack, doors.busy) }
+        AppSection("Knows who's writing · can hold keys", offered.filter { it.proof == "proven" }, doors.busy, pick)
+        AppSection("Can't prove who's writing · knocks only", offered.filter { it.proof != "proven" }, doors.busy, pick)
         if (offered.isEmpty()) Text("No more doors can be added here.", style = scaled(13, color = Theme.dim))
         if (doors.addable.any { it.kind == "whatsapp" }) Text(DoorWords.WHATSAPP_ELSEWHERE, style = scaled(12, color = Theme.dim))
         doors.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -453,4 +490,54 @@ fun DoorStamp(mark: DoorMark, fromOwner: Boolean) {
     textAlign = if (fromOwner) TextAlign.End else TextAlign.Start,
     modifier = Modifier.fillMaxWidth(),
   )
+}
+
+/** What the Slack step needs: the taf's Slack bot connections, the channels read for each, reading them, and adding the door. */
+class SlackPicking(
+  val bots: List<bot.tafs.app.kiff.Grant>,
+  val channels: Map<String, List<bot.tafs.app.kiff.SlackChannel>>,
+  val load: suspend (String) -> Unit,
+  val add: (DoorApp, bot.tafs.app.kiff.Grant, bot.tafs.app.kiff.SlackChannel) -> Unit,
+)
+
+/**
+ * The Slack door's step: the taf's Slack bot connection (one is picked when there's one), then a channel it sees. Picking a
+ * channel asks once, then planque's subscription and the door are made.
+ */
+@Composable
+private fun SlackDoorStep(app: DoorApp, slack: SlackPicking, busy: Boolean) {
+  var bot by remember { mutableStateOf(slack.bots.singleOrNull()) }
+  Panel {
+    Eyebrow("Slack door")
+    if (slack.bots.isEmpty()) {
+      Text(DoorWords.SLACK_CONNECT_FIRST, style = scaled(14, color = Theme.ink))
+      return@Panel
+    }
+    if (bot == null) {
+      Text(DoorWords.SLACK_WHICH_BOT, style = scaled(14, color = Theme.ink))
+      slack.bots.forEach { grant ->
+        Text(
+          grant.account ?: grant.vendor,
+          style = scaled(15, FontWeight.SemiBold, Theme.amber),
+          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { bot = grant }.padding(top = 10.dp),
+        )
+      }
+      return@Panel
+    }
+    val grant = bot!!
+    LaunchedEffect(grant.id) { slack.load(grant.id) }
+    val channels = slack.channels[grant.id]
+    Text(DoorWords.SLACK_WHICH_CHANNEL, style = scaled(14, color = Theme.ink))
+    when {
+      channels == null -> Text("Reading its channels…", style = scaled(13, color = Theme.soft))
+      channels.isEmpty() -> Text(DoorWords.SLACK_NO_CHANNELS, style = scaled(13, color = Theme.soft))
+      else -> channels.forEach { channel ->
+        Text(
+          (if (channel.private) "🔒 " else "#") + channel.name.ifBlank { channel.id },
+          style = scaled(15, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
+          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !busy) { slack.add(app, grant, channel) }.padding(top = 10.dp),
+        )
+      }
+    }
+  }
 }

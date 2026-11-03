@@ -105,6 +105,9 @@ extension TafsCloud {
             skipped = (try? c.decode([Skipped].self, forKey: .skipped)) ?? []
         }
 
+        /// Open the work still asking for attention, otherwise the newest request.
+        var focusedRequest: Request? { requests.first { $0.state != "done" } ?? requests.first }
+
         /// The requests and skipped firings, each in its own place by time, newest first.
         var rows: [Row] {
             (requests.map(Row.request) + skipped.map(Row.skipped)).sorted { $0.at > $1.at }
@@ -114,6 +117,24 @@ extension TafsCloud {
     /// Where the taf's work stands (docs/reliability.md, "The taf's view").
     func work(_ id: String) async throws -> TafWork {
         try await send("GET", "/v1/tafs/\(escaped(id))/work")
+    }
+
+    struct RequestDetail: Decodable, Equatable {
+        struct Step: Decodable, Equatable {
+            var label: String
+            var line: String?
+            var at: String?
+            var state: String
+        }
+        var id: String
+        var from: String
+        var line: String
+        var steps: [Step]
+        var deliveries: [TafWork.Delivery]
+    }
+
+    func request(_ id: String, run: String) async throws -> RequestDetail {
+        try await send("GET", "/v1/tafs/\(escaped(id))/requests/\(escaped(run))")
     }
 
     /// Send again: the door reply of `run`, given up on after its tries, sent once more. It

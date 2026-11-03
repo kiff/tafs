@@ -14,10 +14,10 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.gateway).toBe(KIFF_GATEWAY);
     expect(d.key_ref).toBe(`kiff/${ID}`);
     expect(Object.keys(d).sort()).toEqual(
-      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "price", "price_fast", "show", "speed", "thinking"].sort());
+      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "speed", "thinking"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
-    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "version_try", "version_install"]);
+    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "version_try", "version_install"]);
   });
 
   it("runs as a taf runs, with its own cost cap and effort", () => {
@@ -53,6 +53,9 @@ describe("Setup's definition on kiff/agents", () => {
     // Its own reads are deferred too, so its rules say to search for them before calling them.
     expect(SETUP_INSTRUCTIONS).toContain("isn't among your tools until you\n  look for it: search for it by its name in KIFF");
     expect(definition(ID, jobById("refunds")).defer_vendor_tools).toBeUndefined();
+    // Setup always says what came of its run; a taf's quiet run stays quiet.
+    expect(setupDefinition(ID).close_in_text).toBe(true);
+    expect(definition(ID, jobById("refunds")).close_in_text).toBeUndefined();
   });
 
   it("a taf's definition doesn't get Setup's tools", () => {
@@ -87,7 +90,8 @@ describe("Setup's definition on kiff/agents", () => {
 
   it("calls taf_results and lets it be held, never reading its 0 a day as forbidden", () => {
     const flat = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
-    expect(flat).toContain("version_install and taf_results tools see and act on them");
+    expect(flat).toContain("version_install, taf_results and taf_dial tools see and act on them");
+    expect(flat).toContain("To change what wakes a taf, when, or where its results go, use taf_dial.");
     expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
   });
 

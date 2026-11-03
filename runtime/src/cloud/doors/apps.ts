@@ -21,4 +21,5 @@ export interface DoorApp {
 export const APPS: DoorApp[] = [
   { id: "email", label: "Email", kind: "email", proof: "proven", how: "The email must pass the sender check" },
   { id: "whatsapp", label: "WhatsApp", kind: "whatsapp", proof: "proven", how: "WhatsApp knows the phone number" },
+  { id: "slack", label: "Slack", kind: "slack", proof: "proven", how: "Slack knows who wrote, by their Slack user" },
 ];

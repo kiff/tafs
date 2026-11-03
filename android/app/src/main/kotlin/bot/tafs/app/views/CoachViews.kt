@@ -218,6 +218,11 @@ class CoachActions(
   /** Opens a taf, by its KIFF agent; and a taf's versions. */
   val openTaf: (String) -> Unit = {},
   val openVersions: (String) -> Unit = {},
+  /** Reads KIFF's words for a grant's profile, by grant id. */
+  val loadProfileWords: suspend (String) -> Unit = {},
+  /** A taf's dial, read again; and Coach's dial draft made live (the version switch), both by taf id. */
+  val loadKnob: suspend (String) -> Unit = {},
+  val confirmKnob: suspend (String) -> Boolean = { false },
 )
 
 /** One of Coach's cards in its thread. What grants authority is read from planque and KIFF, and signed there. */
@@ -236,6 +241,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
     "questions" -> QuestionsCard(c, answered, error, actions.answer)
     "approval" -> ApprovalCard(c, state, answered, error, actions)
     "sign_in" -> SignInCard(c, state, answered, error, actions)
+    "knob" -> KnobDraftCard(c, state, answered, error, actions)
     "result" -> if (c.taf?.improves != null) ImprovementCard(shown, state, actions) else HandOverCard(shown, state, actions)
   }
 }
@@ -268,6 +274,17 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
         // planque's own words for what it will do, never Coach's.
         Text(grant.text, style = scaled(14, color = Theme.ink))
         Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
+        // KIFF's words for the connection's profile, verbatim and in order (KIFF's profile contract, `kiff.words.v1`): what the owner's approval signs.
+        val profiled = grant.request.profile != null
+        val words = state.profileWords[grant.id]
+        if (profiled) {
+          LaunchedEffect(grant.id) { actions.loadProfileWords(grant.id) }
+          when {
+            words != null -> ProfileWordsLines(words)
+            state.profileWordsErrors[grant.id] != null -> Text(state.profileWordsErrors.getValue(grant.id), style = scaled(13, color = Theme.no))
+            else -> Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+          }
+        }
         grant.terms?.takeIf { it.isNotEmpty() }?.let { terms ->
           Text(if (details) "▾ Details" else "▸ Details", style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
           if (details) terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) }
@@ -288,7 +305,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
               if (state.connecting == grant.id) state.connectStep ?: "Approving…" else if (grant.needsReconnect) "Sign in again" else "Approve with $biometry",
               { actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f),
-              enabled = !busy,
+              // With a profile, nothing is approved before KIFF's words for it are read and shown.
+              enabled = !busy && (!profiled || words != null),
             )
             OutlineButton("Decline", { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }
@@ -516,6 +534,79 @@ private fun ImprovementCard(shown: ShownComponent, state: AppState, actions: Coa
         Text(CoachWords.COACH_KNOWS, style = scaled(13, color = Theme.dim))
       }
       CoachWords.Improvement.Preparing -> PrimaryButton("Preparing the new version…", {}, enabled = false)
+    }
+  }
+}
+
+/**
+ * KIFF's words for a connection's profile (KIFF's profile contract, `kiff.words.v1`), each line verbatim and in KIFF's order. Its kind only styles it: what
+ * KIFF can't check, probation and an unpinned vendor are in amber, so they're seen before approving.
+ */
+@Composable
+fun ProfileWordsLines(words: bot.tafs.app.kiff.ProfileWords) {
+  Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    words.lines.forEach { line ->
+      Text(line.text, style = scaled(13, color = if (line.caution) Theme.amberText else Theme.ink))
+    }
+  }
+}
+
+/**
+ * Coach's dial card (K4): the dial Coach drafted for a taf, drawn from that taf's knob `draft` while it's this card's version.
+ * Wakes it, When and Results go in tafs cloud's words; one confirmation makes it live (the version switch, with the fingerprint
+ * where the Card changes); Change goes back to Coach. Once its version is live it says so; a newer draft replaces it.
+ */
+@Composable
+private fun KnobDraftCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
+  val taf = c.knobTaf?.let { id -> state.tafs.firstOrNull { it.cloudId == id || it.id == id } }
+  val scope = rememberCoroutineScope()
+  if (taf != null) LaunchedEffect(taf.id, c.version) { actions.loadKnob(taf.id) }
+  if (answered != null) {
+    Text(answered, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    return
+  }
+  val draft = taf?.let { state.knobs[it.id]?.draft }
+  Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
+    Eyebrow(taf?.let { bot.tafs.app.model.KnobWords.draftTitle(it.name) } ?: bot.tafs.app.model.KnobWords.DRAFT, Theme.amberText)
+    when {
+      taf == null || state.knobs[taf.id] == null -> Text(bot.tafs.app.model.KnobWords.READING_DRAFT, style = scaled(14, color = Theme.soft))
+      // This card's version is the live one now.
+      c.version != null && state.knobs[taf.id]?.version == c.version && draft?.version != c.version -> Text(bot.tafs.app.model.KnobWords.LIVE, style = scaled(14, color = Theme.soft))
+      draft == null || (c.version != null && draft.version != c.version) -> Text(bot.tafs.app.model.KnobWords.REPLACED, style = scaled(14, color = Theme.soft))
+      else -> {
+        // By connection, as tafs cloud groups it (each app's lines, then This taf); by ring from one that doesn't group yet.
+        val rings = listOf(bot.tafs.app.model.KnobRing.Kind.WakesIt, bot.tafs.app.model.KnobRing.Kind.What, bot.tafs.app.model.KnobRing.Kind.ResultsGo)
+        if (draft.groups.isNotEmpty()) {
+          draft.groups.forEach { group ->
+            Text(group.name.ifBlank { bot.tafs.app.model.KnobWords.THIS_TAF }, style = scaled(14, FontWeight.Bold, Theme.ink))
+            rings.zip(listOf(group.wakes, group.what, group.results)).filter { it.second.isNotEmpty() }.forEach { (ring, lines) ->
+              Text(ring.title, style = scaled(12, FontWeight.SemiBold, KnobColors.of(ring)))
+              lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+            }
+          }
+        } else {
+          rings.zip(listOf(draft.wakes, draft.what, draft.results)).filter { it.second.isNotEmpty() }.forEach { (ring, lines) ->
+            Text(ring.title, style = scaled(13, FontWeight.SemiBold, KnobColors.of(ring)))
+            lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+          }
+          if (draft.wakes.isEmpty() && draft.what.isEmpty() && draft.results.isEmpty()) draft.lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+        }
+        error?.let { Text(it, style = scaled(13, color = Theme.no)) }
+        state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+        val busy = taf.id in state.switchingVersion
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+          ApprovalGate {
+            OutlineButton(
+              if (busy) "Making it live…" else bot.tafs.app.model.KnobWords.confirmWith(LocalBiometry.current),
+              { scope.launch { if (actions.confirmKnob(taf.id)) actions.answer("knob", c.id, "approved") } },
+              Modifier.weight(1f),
+              enabled = !busy,
+            )
+          }
+          OutlineButton(bot.tafs.app.model.KnobWords.CHANGE, { actions.answer("knob", c.id, "change") }, Modifier.weight(1f), color = Theme.soft, enabled = !busy)
+        }
+        Text(bot.tafs.app.model.KnobWords.ONE_CONFIRMATION, style = scaled(12, color = Theme.dim))
+      }
     }
   }
 }

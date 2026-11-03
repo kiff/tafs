@@ -15,6 +15,8 @@ final class PlanqueClient {
         case noDevice
         /// The grant's digest isn't the hash of the request shown: nothing is approved.
         case digestMismatch
+        /// A connection with a profile is approved only once KIFF's words for it are shown.
+        case wordsUnread
         case server(status: Int, message: String)
 
         var errorDescription: String? {
@@ -22,6 +24,7 @@ final class PlanqueClient {
             case .notSigning: return "This step needs your confirmation first."
             case .noDevice: return "Couldn't reach KIFF to name this device. Check the connection and try again."
             case .digestMismatch: return "This request doesn't match what it asks for. Nothing was approved."
+            case .wordsUnread: return "KIFF's words for this connection aren't shown yet. Nothing was approved."
             case .server(_, let message): return message
             }
         }
@@ -90,9 +93,15 @@ final class PlanqueClient {
                 /// What the owner reads for it: its title, else its action in words.
                 var words: String { KIFFMapping.name(action, title: title) }
             }
+            /// A managed provider's connection: which provider, and its toolkit ("slackbot").
+            struct Connector: Decodable, Equatable {
+                var provider: String?
+                var toolkit: String?
+            }
             let server: String
             let agent: String
             let tools: [Tool]
+            var connector: Connector?
         }
         struct Event: Decodable, Equatable {
             /// RFC 3339, as planque writes it (Go's nanoseconds included).
@@ -126,11 +135,22 @@ final class PlanqueClient {
         /// When planque revokes a held sign-in nothing connected (RFC 3339, Go's nanoseconds
         /// included, so kept as written).
         let heldUntil: String?
+        /// The catalog entry it was connected from ("connector:composio:slackbot") and its
+        /// provider, as planque marks it: what the app matches on, never a vendor's name.
+        var entry: String?
+        var provider: String?
+        /// The Slack bot connection a Slack door listens through.
+        var slackBot: Bool { entry == Self.slackBotEntry || (entry == nil && request.connector?.toolkit == "slackbot") }
+        static let slackBotEntry = "connector:composio:slackbot"
         /// Whether `digest` is the hash of the request as received: the app shows Approve
         /// only then. Set by `grants()`, never read from planque.
         var digestMatches = false
+        /// The connection's `kiff.profile.v1` in the request, as planque sent it:
+        /// the grant's digest covers it. The owner reads KIFF's words for it before
+        /// approving. Set by `grants()`, never decoded.
+        var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor" }
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
@@ -185,6 +205,7 @@ final class PlanqueClient {
                   let canonical = try? JCS.canonical(request) else { continue }
             let hash = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
             grants[i].digestMatches = hash == grants[i].digest
+            grants[i].profile = request["profile"]
         }
         return grants
     }
@@ -198,17 +219,105 @@ final class PlanqueClient {
         enum CodingKeys: String, CodingKey { case status, signInURL = "sign_in_url", expiresAt = "expires_at" }
     }
 
-    /// Approves `grant` as shown: its digest is signed. Refused here when the digest isn't
-    /// the hash of the request the owner was shown.
-    func approve(_ grant: Grant) async throws -> Approved {
+    /// The approve body: the grant's digest, and for a grant with a profile, the digests of
+    /// that profile and of KIFF's words for it. The device signs the body, so
+    /// its signature covers both.
+    struct ApproveBody: Encodable, Equatable {
+        struct KIFFProfile: Encodable, Equatable {
+            let profileSHA256: String
+            let wordsSHA256: String
+            enum CodingKeys: String, CodingKey { case profileSHA256 = "profile_sha256", wordsSHA256 = "words_sha256" }
+        }
+        let digest: String
+        let kiffProfile: KIFFProfile?
+        enum CodingKeys: String, CodingKey { case digest, kiffProfile = "kiff_profile" }
+    }
+
+    /// The body that approves `grant` as shown. Refused when the digest isn't the hash of the
+    /// request the owner was shown, and for a grant with a profile, until KIFF's words for
+    /// exactly that profile were read and checked.
+    static func approveBody(_ grant: Grant, words: ProfileWords?) throws -> ApproveBody {
         guard grant.digestMatches else { throw PlanqueError.digestMismatch }
-        return try await send("POST", "grants/\(escaped(grant.id))/approve", body: ["digest": grant.digest])
+        guard let profile = grant.profile else { return ApproveBody(digest: grant.digest, kiffProfile: nil) }
+        guard let words else { throw PlanqueError.wordsUnread }
+        guard try ProfileWords.digest(profile) == words.profileSHA256 else { throw ProfileWords.Failure.otherProfile }
+        return ApproveBody(digest: grant.digest, kiffProfile: .init(profileSHA256: words.profileSHA256, wordsSHA256: words.wordsSHA256))
+    }
+
+    /// The body that gives an API-key grant its key: the grant's digest, the key's SHA-256 and,
+    /// with a profile, both its digests. The device signs it, so the signature covers which key;
+    /// the key itself goes in a header, never in what's signed or logged.
+    struct KeyBody: Encodable, Equatable {
+        let digest: String
+        let keySHA256: String
+        let kiffProfile: ApproveBody.KIFFProfile?
+        enum CodingKeys: String, CodingKey { case digest, keySHA256 = "key_sha256", kiffProfile = "kiff_profile" }
+    }
+
+    /// The header planque reads a grant's key from.
+    static let keyHeader = "Planque-Vendor-Key"
+
+    /// Gives an API-key grant its key, as shown, with the same checks as approving.
+    func giveKey(_ grant: Grant, key: String, words: ProfileWords? = nil) async throws -> Grant {
+        let approved = try Self.approveBody(grant, words: words)
+        let key = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sum = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
+        let body = try JSONEncoder().encode(KeyBody(digest: approved.digest, keySHA256: sum, kiffProfile: approved.kiffProfile))
+        let data = try await raw("POST", "grants/\(escaped(grant.id))/key", body: body, headers: [Self.keyHeader: key])
+        return try KIFFClient.decoder.decode(Grant.self, from: data)
+    }
+
+    /// Approves `grant` as shown, with KIFF's words for its profile when it has one.
+    func approve(_ grant: Grant, words: ProfileWords? = nil) async throws -> Approved {
+        try await send("POST", "grants/\(escaped(grant.id))/approve", body: try Self.approveBody(grant, words: words))
     }
 
     /// Confirms the vendor sign-in with the code it handed back to the app. Only the phone
     /// that approved can, within 15 minutes; then planque registers the tools in KIFF.
     func confirm(grantID: String, code: String) async throws -> Grant {
         try await send("POST", "grants/\(escaped(grantID))/confirm", body: ["confirm": code])
+    }
+
+    /// A Slack channel a Slack bot connection can see: setup metadata, never a message.
+    struct Channel: Decodable, Equatable, Identifiable, Hashable {
+        let id: String
+        var name = ""
+        var isPrivate = false
+        enum CodingKeys: String, CodingKey { case id, name, isPrivate = "private" }
+        init(id: String, name: String = "", isPrivate: Bool = false) { self.id = id; self.name = name; self.isPrivate = isPrivate }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+            isPrivate = try c.decodeIfPresent(Bool.self, forKey: .isPrivate) ?? false
+        }
+    }
+
+    /// The channels a Slack bot connection can see, read through its own list-channels action.
+    func channels(grantID: String, signedBy readSigner: (@MainActor (Data) throws -> String)? = nil) async throws -> [Channel] {
+        struct Response: Decodable { let channels: [Channel] }
+        let data = try await raw("GET", "grants/\(escaped(grantID))/channels", body: nil, signer: readSigner)
+        return try KIFFClient.decoder.decode(Response.self, from: data).channels
+    }
+
+    /// The trigger a Slack door needs: planque subscribes these channels of the connection's
+    /// account to its message event, the request signed by this phone. Its id comes back.
+    static let slackMessageTrigger = "SLACKBOT_CHANNEL_MESSAGE_RECEIVED"
+
+    func subscribe(grantID: String, account: String, slug: String, channels: [String]) async throws -> String {
+        struct Body: Encodable { let account: String; let slug: String; let channels: [String] }
+        struct Response: Decodable {
+            var trigger: String?
+            var id: String?
+        }
+        let r: Response = try await send("POST", "grants/\(escaped(grantID))/triggers", body: Body(account: account, slug: slug, channels: channels))
+        guard let id = r.id ?? r.trigger else { throw PlanqueError.server(status: 502, message: "planque didn't say which subscription it made") }
+        return id
+    }
+
+    /// Stops a trigger: planque turns its delivery off, then removes it upstream.
+    func unsubscribe(grantID: String, trigger: String) async throws {
+        _ = try await raw("DELETE", "grants/\(escaped(grantID))/triggers/\(escaped(trigger))", body: nil)
     }
 
     /// Removes the grant's tools from KIFF and revokes its token at the vendor.
@@ -250,7 +359,7 @@ final class PlanqueClient {
     }
 
     private func raw(_ method: String, _ path: String, body: Data?,
-                     signer override: (@MainActor (Data) throws -> String)? = nil) async throws -> Data {
+                     signer override: (@MainActor (Data) throws -> String)? = nil, headers: [String: String] = [:]) async throws -> Data {
         guard let tenant, let signer = override ?? signer else { throw PlanqueError.notSigning }
         // The account itself when path is empty (erasing it), else one of its routes.
         let account = "v1/accounts/\(escaped(tenant))"
@@ -265,6 +374,7 @@ final class PlanqueClient {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = body
         }
+        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         let signedAt = SigningTime.next()
         // Signed as planque reads it: the path and query as sent, percent-encoded.
         let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")

@@ -4,6 +4,8 @@ import bot.tafs.app.model.ErrorWords
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import bot.tafs.app.model.ConnectWords
+import bot.tafs.app.model.DoorWords
 import bot.tafs.app.model.Answer
 import bot.tafs.app.model.AttachmentRef
 import bot.tafs.app.model.FilePrep
@@ -316,6 +318,39 @@ data class AppState(
   val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
+  /** The request open from the rim or Activity: its taf, and the request step by step. */
+  val openRequest: Pair<String, bot.tafs.app.kiff.RequestDetail>? = null,
+  /** Why a request couldn't be opened. */
+  val requestError: String? = null,
+  /** The channels each Slack bot connection can see, by grant id, for a Slack door. */
+  val slackChannels: Map<String, List<bot.tafs.app.kiff.SlackChannel>> = emptyMap(),
+  /** Each taf's dial as tafs cloud last sent it, by taf id. */
+  val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
+  /** Why a dial change didn't go through, in tafs cloud's words when it sends them, by taf id. */
+  val knobErrors: Map<String, String> = emptyMap(),
+  /**
+   * The version tafs cloud said a dial change made (or waits on) that couldn't be read back yet, by taf id. Until the dial
+   * shows it, − and + stay off: they'd build on the choices from before.
+   */
+  val knobBehind: Map<String, Int> = emptyMap(),
+  /** Money calls whose outcome KIFF can't prove, waiting on "Did this happen?" in Needs you. */
+  val unsure: List<bot.tafs.app.kiff.UnsureCall> = emptyList(),
+  /** The proposal whose answer is on its way. */
+  val answeringUnsure: String? = null,
+  /** Why an answer to "Did this happen?" didn't go through, by proposal. */
+  val unsureErrors: Map<String, String> = emptyMap(),
+  /** Connect apps: the catalog as tafs cloud lists it, for the last search; null before it's read. */
+  val connectApps: bot.tafs.app.kiff.ConnectApps? = null,
+  /** Why Connect apps couldn't be read, or a connection couldn't start. */
+  val connectAppsError: String? = null,
+  /** The app whose connection is starting, by its entry. */
+  val startingApp: String? = null,
+  /** The grant whose approval is open over Connect apps. */
+  val listApproval: String? = null,
+  /** KIFF's words for a grant's profile, by grant id, checked against their digests ([ProfileWords]). */
+  val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
+  /** Why a grant's words couldn't be read or didn't check out, by grant id. */
+  val profileWordsErrors: Map<String, String> = emptyMap(),
   val planqueReady: Boolean = false,
   /** The grant being connected now, so a second tap starts nothing. */
   val connecting: String? = null,
@@ -373,6 +408,12 @@ data class AppState(
    * it (not read yet, or failed), nothing is shown: an Editor manages only the tafs they made, which the role alone can't say.
    */
   fun manages(tafId: String): Boolean = access[tafId]?.manage ?: false
+
+  /** The taf's connected Slack bot connections, which a Slack door listens through. */
+  fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }
+
+  /** The tafs an app can be connected for: on tafs cloud, and managed by this person. */
+  val connectableTafs: List<Taf> get() = tafs.filter { it.cloudId != null && manages(it.id) }
 
   /**
    * Who a taf's Card reads as issued by: "You" on a taf this person manages, else the account, by its name, never a person
@@ -875,6 +916,10 @@ class AppModel(
       refreshConnections()
       // The plan, for Settings' Plan card and Home's line: KIFF's usage read alone, quietly.
       refreshPlan(generation)
+      // Did this happen?: the money calls KIFF can't prove, for whoever answers held calls, read quietly.
+      if (_state.value.mayAnswerHolds) attempt { kiff.didThisHappen() }?.let { calls ->
+        if (generation == accountGeneration) _state.update { it.copy(unsure = calls) }
+      }
       // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
       if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
       nameRecordLines(generation)
@@ -2187,6 +2232,354 @@ class AppModel(
    * grant. [shownDigest] is the grant's digest as the owner's screen showed it, and [shownDraft] the draft's version: the
    * confirmation signs exactly that. Terms that changed since are put on screen and not signed; nothing shown, nothing signed.
    */
+  /** Connect apps: tafs cloud's list, the catalog first, for [q] when given. The sample has none. */
+  suspend fun loadConnectApps(q: String? = null) {
+    if (_state.value.mode != Mode.kiff) return
+    connectAppsQuery = q
+    val generation = accountGeneration
+    try {
+      val apps = cloud.connectApps(q)
+      if (generation == accountGeneration) _state.update { it.copy(connectApps = apps, connectAppsError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "The apps couldn't be read. ${ErrorWords.of(e)}") }
+    }
+  }
+
+  /** The search the shown list is for, sent again with the next page's cursor. */
+  private var connectAppsQuery: String? = null
+
+  /** Show more apps: the next page of the managed provider's catalog, added under the ones shown. */
+  suspend fun loadMoreConnectApps() {
+    val now = _state.value.connectApps ?: return
+    val cursor = now.nextCursor ?: return
+    val generation = accountGeneration
+    try {
+      val page = cloud.connectApps(connectAppsQuery, now.provider, cursor)
+      if (generation == accountGeneration) _state.update { s ->
+        val shown = s.connectApps ?: return@update s
+        s.copy(connectApps = page.copy(apps = shown.apps + page.apps.filter { app -> shown.apps.none { it.entry == app.entry } }), connectAppsError = null)
+      }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "The apps couldn't be read. ${ErrorWords.of(e)}") }
+    }
+  }
+
+  /**
+   * The owner's answer to "Did this happen?" for [call]: one fingerprint, the approval key signs it whichever the answer, and KIFF
+   * keeps the first. **No** gives the Card its room back. Answered, the call leaves the list.
+   */
+  suspend fun answerDidThisHappen(call: bot.tafs.app.kiff.UnsureCall, happened: Boolean): Boolean {
+    if (_state.value.mode != Mode.kiff || _state.value.answeringUnsure != null) return false
+    val tenant = kiffTenant
+    val key = call.proposal
+    if (!_state.value.sessionHasKey || tenant == null) {
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Sign in with KIFF again: this sign-in can't sign for the phone.")) }
+      return false
+    }
+    if (_state.value.approvalKeyLost) {
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to KiffClient.APPROVAL_KEY_LOST)) }
+      return false
+    }
+    val generation = accountGeneration
+    _state.update { it.copy(answeringUnsure = key, unsureErrors = it.unsureErrors - key) }
+    try {
+      confirmGrant("tafs.did-this-happen.v1|$tenant|$key|$happened", bot.tafs.app.model.DidThisHappenWords.reason(happened))
+      if (generation != accountGeneration) return false
+      kiff.tenant = tenant
+      val signer = signer
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.answerDidThisHappen(key, happened)
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to notSigned(e, "Not sent: it wasn't confirmed."))) }
+      return false
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to KiffClient.APPROVAL_KEY_LOST)) }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Your answer wasn't taken. ${ErrorWords.of(e)}")) }
+      return false
+    } finally {
+      kiff.setupSigner = null
+      if (generation == accountGeneration) _state.update { it.copy(answeringUnsure = null) }
+    }
+    if (generation == accountGeneration) _state.update { s -> s.copy(unsure = s.unsure.filterNot { it.proposal == key }) }
+    // The Card's room may be back: read its numbers again.
+    refresh()
+    return true
+  }
+
+  /** Opens [run] of [tafId], step by step (K5). Someone else's request is only for whoever manages the taf: tafs cloud says no. */
+  suspend fun openRequest(tafId: String, run: String) {
+    if (_state.value.mode != Mode.kiff) return
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    _state.update { it.copy(requestError = null) }
+    try {
+      val detail = cloud.request(cloudId, run)
+      if (generation == accountGeneration) _state.update { it.copy(openRequest = tafId to detail) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(requestError = "That request couldn't be read. ${ErrorWords.of(e)}") }
+    }
+  }
+
+  /** From the dial's rim: the request it points at, the first not done, else the newest. Reads the taf's work first. */
+  suspend fun openRimRequest(tafId: String) {
+    loadWork(tafId)
+    val requests = _state.value.works[tafId]?.requests.orEmpty()
+    val request = requests.firstOrNull { it.state != "done" } ?: requests.firstOrNull() ?: return
+    openRequest(tafId, request.id)
+  }
+
+  fun closeRequest() = _state.update { it.copy(openRequest = null, requestError = null) }
+
+  /** The channels a Slack bot connection can see, from planque: a signed read, for picking a Slack door's channel. */
+  suspend fun loadSlackChannels(grantId: String) {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null) return
+    val generation = accountGeneration
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    val channels = try {
+      planque.slackChannels(grantId) { signer.signConfirmed(it) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(slackChannels = it.slackChannels + (grantId to channels)) }
+  }
+
+  /**
+   * A Slack door: planque first, then tafs cloud. One confirmation, then this device signs planque's subscription of the Slack bot
+   * to new messages in that channel, and only then is the door added in tafs cloud (`{app: "slack", grant, channel}`). If the door
+   * can't be added, the subscription is removed again, so nothing listens for a door that isn't there.
+   */
+  suspend fun addSlackDoor(tafId: String, app: DoorApp, grant: bot.tafs.app.kiff.Grant, channel: bot.tafs.app.kiff.SlackChannel): Door? {
+    val tenant = kiffTenant
+    val taf = _state.value.taf(tafId)
+    val cloudId = taf?.cloudId
+    val account = grant.account
+    if (_state.value.mode != Mode.kiff || tenant == null || cloudId == null) return null
+    if (account == null) {
+      updateDoors(tafId) { it.copy(error = DoorWords.SLACK_NO_ACCOUNT) }
+      return null
+    }
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true, error = null) }
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    try {
+      try {
+        signer.sign("tafs.slack-door.v1|$tenant|${grant.id}|${channel.id}".toByteArray(), DoorWords.slackReason(taf.name, channel.name.ifBlank { channel.id }))
+      } catch (e: SignerException) {
+        updateDoors(tafId) { it.copy(error = notSigned(e, "Not added: it wasn't confirmed.")) }
+        return null
+      }
+      if (generation != accountGeneration) return null
+      planque.signer = { signer.signConfirmed(it) }
+      val trigger = try {
+        planque.subscribe(grant.id, account, DoorWords.SLACK_CHANNEL_MESSAGES, listOf(channel.id))
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = "The Slack bot couldn't listen to that channel. ${ErrorWords.of(e)}") }
+        return null
+      }
+      if (generation != accountGeneration) return null
+      val door = try {
+        // planque's subscription id goes with the door, so removing the door can remove it.
+        cloud.addDoor(cloudId, app.id, mapOf("grant" to grant.id, "channel" to channel.id) + (trigger.key?.let { mapOf("trigger" to it) } ?: emptyMap()))
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        // No door: the subscription goes again, so nothing listens for it.
+        trigger.key?.let { key -> runCatching { planque.unsubscribe(grant.id, key, account) } }
+        if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = "The Slack door wasn't added. ${ErrorWords.of(e)}") }
+        return null
+      }
+      if (generation == accountGeneration) loadDoors(tafId)
+      return door
+    } finally {
+      planque.signer = null
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /** Removes a follow-up the taf set itself, from the dial's face, then reads the dial again. */
+  suspend fun removeFollowUp(tafId: String, followUp: String) {
+    if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    try {
+      cloud.removeFollowUp(cloudId, followUp)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not removed. ${ErrorWords.of(e)}")) }
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
+    loadKnob(tafId)
+  }
+
+  /**
+   * A taf's dial (`GET /v1/tafs/{id}/knob`), read quietly: with none, its Doors tab keeps the doors' own dial. While a change
+   * waits to go live (tafs cloud's `pending`), the dial shows that version (`?version=N`), so the next − or + builds on it and a
+   * door or ⏻ doesn't lose it from view. [version] reads that one directly.
+   */
+  suspend fun loadKnob(tafId: String, version: Int? = null) {
+    if (_state.value.mode != Mode.kiff) return
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    val first = attempt { cloud.knob(cloudId, version) } ?: run {
+      // A version tafs cloud made that couldn't be read: the dial stays behind it.
+      if (version != null && generation == accountGeneration) _state.update { it.copy(knobBehind = it.knobBehind + (tafId to version)) }
+      return
+    }
+    val waiting = first.pending?.version
+    val want = version ?: waiting
+    val knob = if (version == null && waiting != null && first.shown != waiting) {
+      try {
+        cloud.knob(cloudId, waiting)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        first
+      }
+    } else first
+    val behind = want != null && knob.shown != want
+    if (generation == accountGeneration) _state.update {
+      it.copy(knobs = it.knobs + (tafId to knob), knobBehind = if (behind) it.knobBehind + (tafId to want!!) else it.knobBehind - tafId)
+    }
+  }
+
+  /**
+   * − or + on the dial: the stop's next choice, sent as its whole `setting` to `PUT …/knob`, which makes the taf's next version.
+   * That version is then read (`?version=N`), so the next − or + builds on it. Nothing runs from it until the owner makes the
+   * changes live ([confirmKnobChange]).
+   */
+  suspend fun changeKnobSize(tafId: String, setting: kotlinx.serialization.json.JsonObject): Boolean {
+    if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return false
+    // A change not read back yet: a choice from the dial before it would undo it.
+    if (tafId in _state.value.knobBehind) return false
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return false
+    val generation = accountGeneration
+    _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
+    return try {
+      val change = cloud.changeKnob(cloudId, setting)
+      if (generation != accountGeneration) return false
+      _state.update { it.copy(knobBehind = it.knobBehind + (tafId to change.version)) }
+      loadKnob(tafId, change.version)
+      true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // A form the scheduler can't keep exactly: tafs cloud's words name the nearest one.
+      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not changed. ${ErrorWords.of(e)}")) }
+      false
+    }
+  }
+
+  /**
+   * Makes the dial's change live: the version tafs cloud says waits (`pending`, from − and + or Coach's draft), switched as any
+   * version is (with the fingerprint where its Card changes).
+   */
+  suspend fun confirmKnobChange(tafId: String): Boolean {
+    val pending = _state.value.knobs[tafId]?.pending ?: return false
+    loadVersions(tafId)
+    val version = _state.value.versions[tafId]?.firstOrNull { it.n == pending.version } ?: run {
+      _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Version ${pending.version} couldn't be read. Try again.")) }
+      return false
+    }
+    if (!useVersion(version, tafId)) return false
+    loadKnob(tafId)
+    return true
+  }
+
+  /**
+   * Connect from Connect apps: starts the app's grant (or, for one to sign in again, takes the grant it has) and opens its
+   * approval over the list. A vendor that takes a key is Coach's to set up for now.
+   */
+  suspend fun startConnectApp(app: bot.tafs.app.kiff.ConnectApps.App, tafId: String? = null) {
+    if (_state.value.mode != Mode.kiff || _state.value.startingApp != null) return
+    if (app.needsReconnect && app.grant != null) {
+      refreshConnections()
+      _state.update { it.copy(listApproval = app.grant) }
+      return
+    }
+    // The taf it's for, by its tafs cloud id: the one chosen, or the only one this person manages.
+    val taf = tafId?.let { id -> _state.value.taf(id) } ?: _state.value.connectableTafs.singleOrNull()
+    val cloudId = taf?.cloudId ?: return
+    val generation = accountGeneration
+    _state.update { it.copy(startingApp = app.entry, connectAppsError = null) }
+    try {
+      val started = cloud.startConnect(app.entry, cloudId)
+      if (generation != accountGeneration) return
+      if (started.needsKey) {
+        _state.update { it.copy(connectAppsError = ConnectWords.needsKey(app.title)) }
+        return
+      }
+      refreshConnections()
+      if (generation == accountGeneration) _state.update { it.copy(listApproval = started.grant) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = "${app.title} couldn't be started. ${ErrorWords.of(e)}") }
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(startingApp = null) }
+    }
+  }
+
+  /** Approve on the sheet over Connect apps: the same as Coach's card (KIFF's words, the signature, the vendor's sign-in), then the list again. */
+  fun startListApproval(grantId: String, shownDigest: String) {
+    scope.launch {
+      when (val result = connect(ConnectWords.cardKey(grantId), grantId, shownDigest)) {
+        is Connected.Done, is Connected.AlreadyApproved -> {
+          note(ConnectWords.cardKey(grantId), null)
+          _state.update { it.copy(listApproval = null) }
+          loadConnectApps()
+        }
+        is Connected.Failed -> note(ConnectWords.cardKey(grantId), result.why)
+        Connected.Stopped -> Unit
+      }
+    }
+  }
+
+  fun closeListApproval() = _state.update { it.copy(listApproval = null) }
+
+  /**
+   * KIFF's words for [grantId]'s profile (KIFF's profile contract, `kiff.words.v1`), read with this person's session and checked against their digests, so
+   * the card shows them before any approval. Nothing is read for a grant with no profile.
+   */
+  suspend fun loadProfileWords(grantId: String) {
+    if (_state.value.mode != Mode.kiff || grantId in _state.value.profileWords) return
+    val profile = _state.value.grants.firstOrNull { it.id == grantId }?.request?.profile ?: return
+    val generation = accountGeneration
+    val result = try {
+      Result.success(kiff.profileWords(profile))
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+    if (generation != accountGeneration) return
+    result.onSuccess { w -> _state.update { it.copy(profileWords = it.profileWords + (grantId to w), profileWordsErrors = it.profileWordsErrors - grantId) } }
+      .onFailure { e ->
+        val words = if (e is bot.tafs.app.kiff.ProfileWords.Mismatch) e.message!! else "KIFF's words for this connection couldn't be read. ${ErrorWords.of(e)}"
+        _state.update { it.copy(profileWordsErrors = it.profileWordsErrors + (grantId to words)) }
+      }
+  }
+
   suspend fun connect(cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null): Connected {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
@@ -2255,6 +2648,11 @@ class AppModel(
         note(cardId, VersionWords.OUT_OF_DATE_CARD)
         return Connected.Stopped
       }
+      // A connection with a profile is approved only with KIFF's words for exactly that profile, as the owner read them.
+      val words = grant.request.profile?.let { profile ->
+        _state.value.profileWords[grant.id]?.takeIf { it.profileSha256 == bot.tafs.app.kiff.ProfileWords.digest(profile) }
+          ?: return Connected.Failed("KIFF's words for this connection aren't read yet. Nothing was approved.")
+      }
       try {
         signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), "Connect ${grant.vendor} to ${grant.request.agent}")
       } catch (_: SignerException) {
@@ -2263,7 +2661,7 @@ class AppModel(
       }
       if (generation != accountGeneration) return Connected.Stopped
       try {
-        val approved = planque.approve(grant)
+        val approved = planque.approve(grant, words)
         val url = approved.signInUrl
         if (url == null) {
           // planque already holds the sign-in: approving the tools Setup chose from the vendor's list connected them, with no second sign-in.
@@ -3541,6 +3939,27 @@ class AppModel(
   }
 
   suspend fun removeDoor(tafId: String, door: Door) {
+    // A Slack door: planque's subscription goes first (a signed delete), then the door, so nothing listens for a door that's gone.
+    if (door.kind == "slack" && door.grant != null && door.trigger != null) {
+      val tenant = kiffTenant ?: return
+      val account = _state.value.grants.firstOrNull { it.id == door.grant }?.account
+      if (account != null) {
+        planque.tenant = tenant
+        planque.deviceLoader = { kiff.thisDeviceId() }
+        val signer = signer
+        try {
+          planque.signer = { signer.signConfirmed(it) }
+          planque.unsubscribe(door.grant, door.trigger, account)
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          updateDoors(tafId) { it.copy(error = "The Slack bot still listens to that channel, so the door stays. ${ErrorWords.of(e)}") }
+          return
+        } finally {
+          planque.signer = null
+        }
+      }
+    }
     doorWork(tafId) { cloudId ->
       cloud.removeDoor(cloudId, door.id)
       updateDoors(tafId) { d -> d.copy(doors = d.doors.filterNot { it.id == door.id }) }

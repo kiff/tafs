@@ -19,7 +19,8 @@ final class CardsTests: XCTestCase {
                "rules":[{"action":"refund","label":"Refund a payment","outside":"hold","per_action":{"minor":5000,"unit":"EUR","scale":2},
                          "per_window":{"minor":80000,"unit":"EUR","scale":2},"count_per_window":null,"window":"day"}],
                "total":{"limit":{"minor":80000,"unit":"EUR","scale":2},"used":{"minor":18000,"unit":"EUR","scale":2},"window":"day"},
-               "calls":null},
+               "calls":null,
+               "counted":[{"tool":"refund","title":"Refund a payment","lines":["Refund a payment: moves money in Stripe.","Refund a payment: counted by its amount."]}]},
               {"id":"test","title":"Refund a payment","environment":"test","live":false,"active":true,"expires":null,
                "rules":[],"total":null,"calls":{"limit":200,"used":null,"window":"day"}}]}}],
          "others":[],"removing":[]}
@@ -34,6 +35,10 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(cards[1].environmentLabel, "TEST")
         XCTAssertEqual(cards[1].calls, CardTotal(limit: 200, used: nil, window: .day))
         XCTAssertEqual(rae.shownCards.map(\.id), ["live", "test"])
+        // How this is counted: KIFF's words, as tafs cloud passes them on; none on the test Card.
+        XCTAssertEqual(cards[0].counted, [CardCounted(tool: "refund", title: "Refund a payment",
+                                                      lines: ["Refund a payment: moves money in Stripe.", "Refund a payment: counted by its amount."])])
+        XCTAssertNil(cards[1].counted)
     }
 
     func testTheBigFigureIsWhatIsLeft() {

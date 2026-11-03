@@ -79,6 +79,8 @@ final class KIFFClient {
         let bareParts = bare.split(separator: "/", omittingEmptySubsequences: false)
         if bareParts.count == 5 && bare.hasPrefix("/v1/agents/") && bareParts[4] == "grants" && !bareParts[3].isEmpty { return true }
         if parts.count == 6 && path.hasPrefix("/v1/me/pack-requests/") && parts[5] == "decline" && !parts[4].isEmpty { return true }
+        // The owner's answer to "Did this happen?": "No" gives a Card its room back.
+        if Self.answersHappened(path) { return true }
         // Resuming a halted agent, or the whole account: it gives authority back.
         if path == "/v1/resume" || (parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "resume" && !parts[3].isEmpty) { return true }
         // Confirming a draft, and ending its trial (kiff/tafs#247): KIFF takes both from a
@@ -92,7 +94,7 @@ final class KIFFClient {
     /// a trial, and resuming a halt. Ending a trial takes authority away: the current key.
     static func grantsAuthority(_ method: String, _ path: String) -> Bool {
         guard method == "POST" else { return false }
-        if path == "/v1/me/agent-drafts" { return true }
+        if path == "/v1/me/agent-drafts" || answersHappened(path) { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
         // Sharing a taf gives people its use. Taking it away is the current key.
         if parts.count == 5 && path.hasPrefix("/v1/agents/") && parts[4] == "grants" && !parts[3].isEmpty { return true }
@@ -732,7 +734,7 @@ final class KIFFClient {
     func activity(limit: Int = 100) async throws -> [ActivityCall] {
         struct Response: Decodable { let calls: [ActivityCall] }
         let r: Response = try await send("GET", "/v1/me/activity?limit=\(limit)")
-        return r.calls
+        return r.calls ?? []
     }
 
     func heldCalls() async throws -> [CardException] {
@@ -1291,7 +1293,7 @@ final class KIFFClient {
         request.setValue(Self.acceptLanguage(Bundle.main.preferredLocalizations), forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(body)
+            request.httpBody = try (body as? RawJSON)?.data ?? JSONEncoder().encode(body)
         }
         // The gateway takes a control-server connection from a phone only signed (kiff/tafs#206).
         let signed = base == nil ? (Self.signsSetup(path) || path == "/v1/me/device/approval-key" || path == "/v1/me/device/relink")
@@ -1330,6 +1332,81 @@ final class KIFFClient {
         if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }
         if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }
         return try Self.decoder.decode(T.self, from: data)
+    }
+
+    /// `/v1/me/did-this-happen/{proposal}`: an answer to "Did this happen?".
+    static func answersHappened(_ path: String) -> Bool {
+        let parts = path.split(separator: "/", omittingEmptySubsequences: false)
+        return parts.count == 5 && path.hasPrefix("/v1/me/did-this-happen/") && !parts[4].isEmpty
+    }
+
+    /// A money call whose outcome KIFF can't prove: its answer was lost, or the vendor refused
+    /// it with nothing proving no effect. The owner says whether it happened.
+    struct Unproven: Decodable, Equatable, Identifiable {
+        let proposal: String
+        var agent: String?
+        var tool: String?
+        var title: String
+        /// unknown, refused_by_tool, or probation (the first outcomes of an untried money operation).
+        var status: String
+        /// In minor units of `unit`, at `scale`.
+        var amount: Int64?
+        var unit: String?
+        var scale: Int?
+        var at: String?
+        /// KIFF's sentence for the call ("Refund a payment: 40.00 EUR."), shown as it is.
+        var words: String?
+        /// Why KIFF asks, in its words: the answer was lost, the tool refused it, or probation.
+        var statusWords: String?
+        var id: String { proposal }
+        var money: Money? { amount.map { Money(minor: $0, currency: unit, scale: scale ?? 2) } }
+        enum CodingKeys: String, CodingKey { case proposal, agent, tool, title, status, amount, unit, scale, at, words, statusWords = "status_words" }
+        init(proposal: String, agent: String? = nil, tool: String? = nil, title: String, status: String,
+             amount: Int64? = nil, unit: String? = nil, scale: Int? = nil, at: String? = nil, words: String? = nil, statusWords: String? = nil) {
+            self.proposal = proposal; self.agent = agent; self.tool = tool; self.title = title; self.status = status
+            self.amount = amount; self.unit = unit; self.scale = scale; self.at = at; self.words = words; self.statusWords = statusWords
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            proposal = try c.decode(String.self, forKey: .proposal)
+            agent = try c.decodeIfPresent(String.self, forKey: .agent)
+            tool = try c.decodeIfPresent(String.self, forKey: .tool)
+            title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+            status = try c.decodeIfPresent(String.self, forKey: .status) ?? "unknown"
+            amount = try c.decodeIfPresent(Int64.self, forKey: .amount)
+            unit = try c.decodeIfPresent(String.self, forKey: .unit)
+            scale = try c.decodeIfPresent(Int.self, forKey: .scale)
+            at = try c.decodeIfPresent(String.self, forKey: .at)
+            words = try c.decodeIfPresent(String.self, forKey: .words)
+            statusWords = try c.decodeIfPresent(String.self, forKey: .statusWords)
+        }
+    }
+
+    /// "Did this happen?": the money calls waiting for the owner to say, newest first.
+    func didThisHappen() async throws -> [Unproven] {
+        struct Response: Decodable { var calls: [Unproven]? }
+        let r: Response = try await send("GET", "/v1/me/did-this-happen")
+        return r.calls ?? []
+    }
+
+    /// The owner's answer, signed on the phone like an approval: "No" gives the Card its room
+    /// back, "Yes" keeps it counted. The first answer stands.
+    func answerHappened(_ proposal: String, happened: Bool) async throws {
+        let _: Empty = try await send("POST", "/v1/me/did-this-happen/\(escaped(proposal))", body: ["happened": happened])
+    }
+
+    /// A request body sent as these bytes, untouched.
+    struct RawJSON: Encodable {
+        let data: Data
+        func encode(to encoder: Encoder) throws {}
+    }
+
+    /// KIFF's words for `profile`, the `kiff.profile.v1` in a grant's request, read with the
+    /// person's own session: it reads nothing of the account and changes
+    /// nothing. Checked against the profile before they're returned (`ProfileWords.checked`).
+    func profileWords(for profile: JCS.Value) async throws -> ProfileWords {
+        let answer: RawBody = try await send("POST", "/v1/profiles/words", body: RawJSON(data: try JCS.canonical(profile)))
+        return try ProfileWords.checked(answer.data, profile: profile)
     }
 
     /// A response's bytes, untouched.

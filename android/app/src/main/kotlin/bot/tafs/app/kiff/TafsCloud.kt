@@ -384,6 +384,34 @@ class TafsCloud(
   /** Where the taf's work stands (docs/reliability.md, "The taf's view"): every line and time in tafs cloud's words. */
   suspend fun work(id: String): TafWork = get<TafWork>("/v1/tafs/${escaped(id)}/work")
 
+  /** One request, step by step, for the dial's rim and Activity. */
+  suspend fun request(id: String, run: String): RequestDetail = get("/v1/tafs/${escaped(id)}/requests/${escaped(run)}")
+
+  /** The dial changed (`PUT …/knob`): the taf's next version, made as an improvement makes one, and its words. */
+  suspend fun changeKnob(id: String, setting: kotlinx.serialization.json.JsonObject): KnobWire.Change =
+    KiffClient.json.decodeFromString(String(sendJson("PUT", "/v1/tafs/${escaped(id)}/knob", setting)))
+
+  /** Removes a follow-up the taf set itself (`manages`). */
+  suspend fun removeFollowUp(id: String, followUp: String) {
+    send("DELETE", "/v1/tafs/${escaped(id)}/follow-ups/${escaped(followUp)}")
+  }
+
+  /** A taf's dial (the knob API). */
+  suspend fun knob(id: String, version: Int? = null): KnobWire = get("/v1/tafs/${escaped(id)}/knob" + (version?.let { "?version=$it" } ?: ""))
+
+  /** Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval. */
+  suspend fun startConnect(entry: String, taf: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", mapOf("taf" to taf))
+
+  /** Connect apps: the catalog, filtered by [q] when given. */
+  suspend fun connectApps(q: String? = null, provider: String? = null, cursor: String? = null): ConnectApps {
+    val query = listOfNotNull(
+      q?.takeIf { it.isNotBlank() }?.let { "q=" + escaped(it) },
+      provider?.let { "provider=" + escaped(it) },
+      cursor?.let { "cursor=" + escaped(it) },
+    )
+    return get("/v1/connect/apps" + if (query.isEmpty()) "" else "?" + query.joinToString("&"))
+  }
+
   /**
    * Send again: the door reply of [run], given up on after its tries, sent once more. It does no work and signs nothing.
    * Returns the delivery's state: sent, not_sent or waiting.

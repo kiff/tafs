@@ -83,6 +83,37 @@ export const TOOLS: ToolDef[] = [
       "Say \"Waiting for your approval\" once. tafs_state shows each taf's results.",
   },
   {
+    name: "taf_dial", line: "Draft a change to a taf's dial",
+    properties: {
+      taf: TAF,
+      wakes: {
+        type: "array", description: "Every trigger, as it should be: {kind: \"schedule\", form: daily|weekdays|weekly|monthly|monthly_last_day|times_a_day|every|once, " +
+          "at?: \"09:00\", days?: [\"mon\"…], times?: [\"09:00\"…], every_minutes?: 15|20|30|60·k, between?: {from, to} on the hour, date?: day of month or \"2026-11-05T09:00\"}, " +
+          "{kind: \"app_check\", operation, args, items, cursor, every_minutes}, {kind: \"door\"}, or any connected app's event: " +
+          "{kind: \"app_event\", grant: <connection>, event: <its event, as the connection lists it>, config?: {<filters>}, name: \"App · what happens\"}. Times are in the account's zone.",
+        items: { type: "object" },
+      },
+      when: { type: "object", properties: { busy: { type: "string", enum: ["skip", "latest"] } }, description: "What it does when a trigger fires while it works." },
+      what: {
+        type: "array", items: { type: "object" },
+        description: "The taf's recipe, its steps in order, for the dial's What ring: [{label: 2 or 3 words (\"Check\", \"Refund\", \"Log\"), words: one line, tool?: its KIFF tool}]. Few steps, each with a purpose.",
+      },
+      why: { type: "string", description: "The taf's purpose in 2 to 4 words, for the dial's face (\"Refund double charges\")." },
+      results: {
+        type: "array",
+        description: "Every place its results go; omitted, as they are. At least one of door_reply, app, owner_email, which tafs delivers; " +
+          "and any actions of the taf's connected apps, which the taf calls itself inside its Card: " +
+          "{place: \"action\", grant: <connection>, action: <its tool name>, args: {<the fixed arguments: page, channel…>}, name: \"App · what it is\"}.",
+      },
+    },
+    required: ["taf", "wakes"],
+    description: "Drafts a taf's dial, the same three rings on every taf: When (what starts it), What (its recipe, in order) and Where " +
+      "(where results go), with its Why on the face. Give each stop at most one choice. All its triggers and result places at once, from any of the taf's connections: it becomes the taf's " +
+      "next version, and nothing runs from it. Call it once with everything as it should be. A time the scheduler can't keep exactly is " +
+      "refused with the nearest one: offer that. Then show {type: \"knob\", version, taf_id} so the owner sees the change on the dial, " +
+      "grouped by connection, and call version_install for that version.",
+  },
+  {
     name: "version_try", line: "Try a version of a taf, sending nothing",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 }, input: { type: "string", description: "What the trial works on; omitted, what each scheduled run asks." } },
     required: ["taf", "n"],
@@ -111,6 +142,8 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-taf-pause", actions: ["taf_pause"], limit: 50, asks: false },
   { id: "coach-version-install", actions: ["version_install"], limit: 0, asks: true },
   { id: "coach-taf-results", actions: ["taf_results"], limit: 0, asks: true },
+  // A dial draft makes a version and runs nothing: installing it is held above.
+  { id: "coach-taf-dial", actions: ["taf_dial"], limit: 20, asks: false },
 ];
 
 /** A connection in KIFF's gateway, as tafs cloud reads it. */

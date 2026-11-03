@@ -105,6 +105,75 @@ the app in sample mode.
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
 | `-listSettlesOnReturn YES` | The list opens on its first taf, and its last taf moves to the top each time the app comes back (`ListTapUITests`) |
 
+## The dial and KIFF's words
+
+- **The dial** (`TafKnobView`, in the taf's Doors tab): **When**, **What**, **Where**
+  surround its **Why**, with today's done, working, retrying and needs-you counts on the rim.
+  `GET /v1/tafs/{id}/knob` supplies the ring names, purpose, numbered recipe steps and stop
+  words. The legacy `when` rules are not drawn. Ring order follows `rings` as sent;
+  cloud supplies the empty-recipe and Add a door stops. **Showing** filters all three rings by connection grant, or shows **This taf**
+  (stops without a grant). The menu has no connection limit. Rings with more than six stops show a window of
+  labels; **Back/Next** still walk every stop, across empty rings and around the end.
+  Choosing a stop turns its ring to the pointer; the face shows its value and hint.
+  Text in the lower half flips 180° relative to its stop, based on the ring's current turn,
+  so labels never read upside down.
+- **The remote** (`TafDialPanel`): **Lower/Raise** select only the neighbouring value from
+  the stop's server-supplied `size.choices`, within its bounds. There are no vendor presets
+  in the app. A choice's complete setting goes to `PUT …/knob`, then iOS reads the returned
+  draft through `GET …/knob?version=N`. Subsequent choices build on that draft; if its
+  refresh fails, stale choices are disabled until a successful refresh. `pending` supplies the version and change count; it alone shows the Make it live button.
+  Pending settings are labelled **not live**. **Make it live** reads the newest draft and uses the existing version switch
+  and biometric signature (reading a changed Card first). A tweak alone never switches it.
+  The controls for changes are shown only to someone KIFF says manages the taf. Pause uses
+  the existing pause/resume route. The search-shaped **Ask Coach or find anything** button
+  opens Coach in the taf's context.
+- **Doors and needs you:** the face opens/closes the chosen door, runs the taf once or removes the chosen
+  follow-up by the id cloud supplied.
+  An approvable held call takes an unchosen face, or the Needs you button selects it,
+  for **approve once**, using the existing signed answer.
+  Each stop's `ok` supplies its face action, with no action when absent. Door `look` supplies
+  the lit, dashed, resting or amber arc, on When's outer edge; an increase in the server's
+  message count pulses its arrival indicator for three seconds.
+  The server's last When stop is **Add a door**, opening Coach. Existing knock cards retain **Do it**,
+  **Pair them**, and **Ignore**, with pairing and door details beneath the dial.
+  If the knob cannot be read, the existing doors-only dial remains available.
+- **Its work:** the count under the dial opens the first unfinished request, otherwise the newest,
+  with Back to the list. Each request reads
+  `GET …/requests/{run}`, showing the service's ordered steps, delivery state, **Try the
+  reply now** when allowed, and **Ask Coach**. Nothing in this screen infers a work outcome.
+- **Coach's dial card:** `draft.groups` displays each connection's lines and **This taf**,
+  as cloud supplies them. Older responses fall back to words by ring. One confirmation
+  uses the usual version switch for the entire draft.
+- **Dial checks:** `KnobNavigationTests` covers grant filtering, empty rings, crowded rings,
+  bounded sizes and complete setting preservation. `VersionsTests` covers two edits,
+  stale selections, a failed draft read and the absence of an automatic switch.
+  `KnobUITests` uses the synthetic `-screenshots YES -screen knob` fixture with 12 services.
+  The regular `-screen doors` screenshots use that same dial, including the sample email knock.
+- **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
+  `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
+  (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
+  they're shown, verbatim and in order. Approving signs both digests into planque's approve
+  body (`kiff_profile`). The tests use KIFF's vectors in `TafsTests/ProfileVectors/`.
+- **The Slack door** (`SlackDoorSheet`, from Add a door in Doors): the taf's Slack bot
+  connections (planque's grants, connected, the taf's agent, marked `connector:composio:slackbot`,
+  or `request.connector.toolkit` until the mark is there), then the channels it sees
+  (`GET …/grants/{id}/channels`, from planque). Picking a channel asks Face ID once: planque
+  subscribes it (`POST …/grants/{id}/triggers {account, slug, channels}`, device-signed; planque
+  builds the subscription from the channels), then tafs cloud makes the door
+  (`POST …/doors {app: "slack", grant, channel}`). The door keeps the subscription's id (`trigger`); if the door can't be made, the subscription
+  is taken back. Removing it is the reverse: the signed `DELETE …/grants/{grant}/triggers/{trigger}`,
+  then the door. If the phone cannot sign the subscription's removal, the door stays and the app asks the owner to reconnect first. Pairing asks for a Slack member ID.
+- **Connect apps** (`ConnectAppsView`, from Settings): `GET /v1/connect/apps`, searched as the
+  owner types, in tafs cloud's order and words; "Not listed? Ask Coach" when `by_key`.
+  Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,
+  with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
+  API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
+  the device signs only its SHA-256 with the grant's digest. Its list and open approval are cleared when the account changes; delayed replies from the previous account or a cancelled search are discarded.
+- **Did this happen?** (`DidThisHappenCard`, in Needs you): KIFF's money calls whose outcome
+  it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind
+  Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the
+  Card its room back; the first answer stands.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,

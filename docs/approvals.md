@@ -220,6 +220,20 @@ The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Tou
 - **After an approval:** "Cancelled", "didn't recognise you", or the device's state, each with
   "The request is kept".
 
+## Did this happen?
+
+A money call whose outcome KIFF can't prove is counted on its Card until the owner says it
+didn't happen. KIFF lists them (`GET /v1/me/did-this-happen`) for whoever answers held calls:
+its answer was lost, the tool refused it with nothing showing no money moved, or it's one of the
+first three calls of a new money operation (`probation`). Each shows in Needs you in KIFF's
+words (`words`, `status_words`), under the app's own "Did this happen?", with **No** and
+**Yes, it did**.
+
+Either answer is one fingerprint, signed by the approval key (`POST …/did-this-happen/{proposal}`
+with `{happened}`): **No** gives the Card its room back, **Yes** keeps it counted, and KIFF keeps
+the first answer. Answered, the call leaves the list and the Card's numbers are read again. On
+Android: `AppModel.answerDidThisHappen`, `UnsureCallCard`.
+
 ## After the answer
 
 1. The answer goes to KIFF: `POST /v1/me/card-exceptions/{id}/approve-once`, `reject` or `change-card`, with its signature.

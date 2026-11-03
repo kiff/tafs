@@ -29,6 +29,8 @@ export interface DoorsConfig {
   };
   /** Where a WhatsApp number's token is kept: <prefix><tenant>/whatsapp/<number>. */
   secretsPrefix: string;
+  /** The secret planque signs Slack messages with when it hands them over (POST /v1/doors/planque): the Slack door's. */
+  planqueHandoffSecret?: string;
 }
 
 export interface DoorsDeps {
@@ -123,7 +125,7 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
   // is connected.
   const back = `your answer goes back by ${app.label.toLowerCase()} to someone outside the company whom the owner lets give you work: do what they ask within your job, reading what it needs, and answer with what they asked for, in plain words; if something failed, say only that it can't be done right now and that the owner will follow up, never an error, a code, a tool, an id or how things are connected`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
-  return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
+  return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}${slackReply(a)}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
 }
 
 /**
@@ -133,9 +135,19 @@ export function doorMessage(app: DoorApp, a: Arrival, text: string, notes: strin
  */
 export function ownerDoorMessage(app: DoorApp, a: Arrival, text: string, notes: string[]): string {
   const who = a.name ? `${a.name} <${a.from}>` : a.from;
-  const back = `this is the account's owner, writing from their own sign-in; take it as their message in this chat, and your answer also goes back to them by ${app.label.toLowerCase()}`;
+  const back = `this is the account's owner, writing from their own sign-in; take it as their message in this chat, and your answer also goes back to them by ${app.label.toLowerCase()}${slackReply(a)}`;
   const subject = a.subject ? `Subject: ${a.subject}\n\n` : "";
   return `[door ${app.id} · from ${who.replace(/[\]\n]/g, " ")} · ${back}]\n\n${subject}${text}${notes.length ? `\n\n(${notes.join(" ")})` : ""}`;
+}
+
+/**
+ * Slack's answer is the taf's own: tafs cloud holds no Slack token, so the taf posts it with its Slack bot
+ * tool, a write through KIFF inside its Card, in the channel and thread the message came in.
+ */
+function slackReply(a: Arrival): string {
+  if (!a.thread.slack_channel) return "";
+  const thread = a.thread.slack_thread ? `, in the thread ${a.thread.slack_thread}` : "";
+  return `; post your answer yourself with your Slack bot's send-message tool, in the channel ${a.thread.slack_channel}${thread}`;
 }
 
 const DOOR_LINE = /^\[door ([a-z][a-z0-9-]*) · from ([^\]\n]*?) · [^\]\n]*\]\n\n/;
@@ -397,7 +409,9 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
       // The alert says what happened, never the taf's words: only once the door's reply went out. While
       // that reply waits for its next try the alert waits with it, and one given up on is said below.
       if (taf && placesOf(taf).includes("door_reply") && !done.has("door_reply")) continue;
-      if (taf) await tellOwner(ctx, tenant, taf, `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`, "reply");
+      // A Slack answer is the taf's own post, which tafs cloud doesn't see: it says handled, not answered.
+      if (taf) await tellOwner(ctx, tenant, taf, door?.kind === "slack" ? `Handled ${reply.name || reply.to}'s message in Slack; ${taf.name} posts its answer there itself.`
+        : `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`, "reply");
       done.add(place);
     } else if (place === "owner_email") {
       const owner = door?.keys.find((k) => k.auto)?.id ?? (await ownerEmailOf(store, tenant, reply.taf));
@@ -583,6 +597,10 @@ async function sendReply(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, ta
       await cfg.whatsapp.client.send(door.phoneNumberID, token, reply.to, [...text].slice(0, 4000).join(""), reply.thread.message_id);
       return { sent: { ...base, status: "sent" } };
     }
+    if (door.kind === "slack") {
+      // The taf posted it itself, in its run (slackReply): there's nothing for tafs cloud to send.
+      return { sent: { ...base, status: "sent" } };
+    }
     return notSent("this door can't answer");
   } catch (err) {
     console.error("door reply not sent:", err instanceof Error ? err.message : "error");
@@ -602,6 +620,8 @@ export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, o
     today: today.keys, limit: DOOR.keysPerDay, resting: today.keys >= DOOR.keysPerDay,
     others_today: today.others, others_limit: DOOR.othersPerDay,
     words: doorWords(d, app, today),
+    // A Slack door names its connection, channel and planque subscription, for the app to undo it with the door.
+    ...(d.kind === "slack" ? { grant: d.grant, channel: d.channel, ...(d.trigger ? { trigger: d.trigger } : {}) } : {}),
   };
 }
 
@@ -631,7 +651,7 @@ async function todayOf(store: DoorStore, tenant: string, taf: string, door: stri
 
 /** The apps a door can open on here: what the deployment set up. */
 export function offered(cfg: DoorsConfig): Array<{ id: string; label: string; kind: string; proof: string; how: string }> {
-  return APPS.filter((a) => (a.kind === "email" ? Boolean(cfg.email && cfg.emailDomain) : Boolean(cfg.whatsapp)))
+  return APPS.filter((a) => (a.kind === "email" ? Boolean(cfg.email && cfg.emailDomain) : a.kind === "slack" ? Boolean(cfg.planqueHandoffSecret) : Boolean(cfg.whatsapp)))
     .map(({ id, label, kind, proof, how }) => ({ id, label, kind, proof, how }));
 }
 
@@ -694,7 +714,7 @@ export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: R
   const doors = await doorsOf(store, owner.tenant, taf.id);
   const now = ctx.now.toISOString();
   let door: Door;
-  if (doors.some((d) => d.kind === app.kind)) throw new DoorError(409, `${taf.name} already has ${app.kind === "email" ? "an email" : "a WhatsApp"} door`);
+  if (doors.some((d) => d.kind === app.kind)) throw new DoorError(409, `${taf.name} already has ${app.kind === "email" ? "an email" : `a ${app.label}`} door`);
   if (app.kind === "email") {
     const domain = (cfg.emailDomain ?? "").toLowerCase();
     let address = "";
@@ -706,6 +726,16 @@ export async function addDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: R
     if (!address) throw new DoorError(503, "no address was free; try again");
     const keys: Key[] = owner.email ? [{ id: owner.email.toLowerCase(), auto: true, ...(owner.subject ? { subject: owner.subject } : {}), added: now }] : [];
     door = { id: "email", kind: "email", app: "email", open: true, address, route: `email:${address}`, keys, created: now };
+  } else if (app.kind === "slack") {
+    // A channel the taf's Slack bot connection listens to (planque's grant, approved on the owner's phone):
+    // planque hands over what's written there, and the route names exactly that grant and channel.
+    const grant = typeof body.grant === "string" ? body.grant.trim() : "";
+    const channel = typeof body.channel === "string" ? body.channel.trim().toUpperCase() : "";
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(grant) || !/^[CGD][A-Z0-9]{2,30}$/.test(channel)) throw new DoorError(400, "connect the Slack bot first, then pick its channel");
+    const route = `slack:${grant}:${channel}`;
+    if (!(await store.create(doorKeys.route(route), { tenant: owner.tenant, taf: taf.id, door: "slack" }))) throw new DoorError(409, "that channel is already a taf's door");
+    const trigger = typeof body.trigger === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(body.trigger.trim()) ? body.trigger.trim() : undefined;
+    door = { id: "slack", kind: "slack", app: "slack", open: true, address: `#${channel}`, route, grant, channel, ...(trigger ? { trigger } : {}), keys: [], created: now };
   } else {
     door = await connectWhatsApp(ctx, cfg, owner, taf, body, now);
   }
@@ -770,8 +800,12 @@ export async function pair(ctx: DoorsContext, owner: Owner, taf: Taf, id: string
   const d = await withDoor(ctx, owner, taf, id, (door, doors) => {
     const app = appOf(cfg, door.app);
     if (app?.proof !== "proven") throw new DoorError(409, `${app?.label ?? "this door"} can't prove who's writing, so it has no keys`);
-    const key = door.kind === "email" ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) ? raw : "") : raw.replace(/\D/g, "").replace(/^00/, "");
-    if (!key || key.length > 200) throw new DoorError(400, door.kind === "email" ? "write an email address" : "write a phone number with its country code");
+    const key = door.kind === "email" ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw) ? raw : "")
+      : door.kind === "slack" ? (/^[uw][a-z0-9]{2,30}$/.test(raw) ? raw : "")
+      : raw.replace(/\D/g, "").replace(/^00/, "");
+    if (!key || key.length > 200) {
+      throw new DoorError(400, door.kind === "email" ? "write an email address" : door.kind === "slack" ? "write their Slack member ID, such as U012AB3CD" : "write a phone number with its country code");
+    }
     if (door.keys.some((k) => k.id === key)) return doors;
     // A name that's only the address again isn't kept: the sender shows once (kiff/tafs#236, item 20).
     const named = name && name.toLowerCase() !== key && name.replace(/\D/g, "") !== key ? name : "";

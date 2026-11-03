@@ -185,6 +185,22 @@ class PlanqueTest {
     assertEquals(digest, KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").single().body!!)).jsonObject.getValue("digest").jsonPrimitive.content)
   }
 
+  @Test fun approvingWithKiffsWordsSignsBothDigestsInTheSameBody() = runTest {
+    // KIFF's profile contract: the profile and the words the owner read ride in planque's approve body, under the same signature.
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("g1")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1","expires_at":"2026-10-28T09:15:00Z"}""")
+    val client = planque()
+    val words = bot.tafs.app.kiff.ProfileWords("ca81de5f".repeat(8), "50723c8a".repeat(8), emptyList())
+    client.approve(client.grants().single(), words)
+    val sent = transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").single()
+    val body = KiffClient.json.parseToJsonElement(String(sent.body!!)).jsonObject
+    assertEquals(digest, body.getValue("digest").jsonPrimitive.content)
+    val profile = body.getValue("kiff_profile").jsonObject
+    assertEquals("ca81de5f".repeat(8), profile.getValue("profile_sha256").jsonPrimitive.content)
+    assertEquals("50723c8a".repeat(8), profile.getValue("words_sha256").jsonPrimitive.content)
+    assertTrue("signed like any approval", sent.headers.keys.any { it.contains("Signature", ignoreCase = true) })
+  }
+
   @Test fun confirmingSendsTheCodeAndDisconnectingDeletes() = runTest {
     transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("g1", "connected"))
     transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, grant("g1", "disconnected"))
@@ -268,6 +284,65 @@ class PlanqueTest {
     val order = transport.requests.map { it.method + " " + java.net.URI(it.url).path }
     assertTrue(order.indexOf("POST /v1/accounts/t_01/grants/g1/approve") < order.indexOf("POST /v1/accounts/t_01/grants/g1/confirm"))
     assertNull("the signer a confirmed step set is gone", m.state.value.connecting)
+  }
+
+  // MARK: A connection with a profile (KIFF's profile contract): KIFF's words, read by the phone and signed with the approval
+
+  private fun resource(name: String) = javaClass.classLoader!!.getResource("profile/$name.json")!!.readText()
+  private val stripeProfile = resource("stripe-refunds")
+  private val profiledRequest = request.dropLast(1) + ""","profile":""" + stripeProfile + "}"
+  private fun profiledGrant() =
+    """{"id":"g1","status":"pending","text":"Connect Stripe: refund a payment.","digest":"${digestOf(profiledRequest)}","request":$profiledRequest}"""
+  private val words = "POST /v1/profiles/words"
+
+  @Test fun aProfilesWordsAreReadFromKiffCheckedShownAndSignedIntoTheApproval() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    transport.answer(words, 200, resource("stripe-refunds.expected"))
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    m.refreshConnections()
+    assertTrue("the grant's digest covers its profile", m.state.value.grants.single().digestMatches)
+    m.loadProfileWords("g1")
+    // Asked of KIFF with the person's own session, the profile as the body: tafs cloud and planque never hand the phone words.
+    val asked = transport.requestsTo(words).single()
+    assertEquals("https://api.kiff.dev/v1/profiles/words", asked.url)
+    assertEquals("Bearer at_1", asked.headers["Authorization"])
+    assertEquals(Jcs.canonical(stripeProfile), Jcs.canonical(String(asked.body!!)))
+    val shown = m.state.value.profileWords.getValue("g1")
+    assertEquals("Refund a payment: moves money through Stripe. It pays out or charges.", shown.lines[2].text)
+    val result = m.connect("a1", "g1", digestOf(profiledRequest))
+    assertTrue(result.toString(), result is AppModel.Connected.Done)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(approve).single().body!!)).jsonObject
+    val signed = body.getValue("kiff_profile").jsonObject
+    val expected = KiffClient.json.parseToJsonElement(resource("stripe-refunds.expected")).jsonObject
+    assertEquals(expected["profile_sha256"], signed["profile_sha256"])
+    assertEquals(expected["words_sha256"], signed["words_sha256"])
+  }
+
+  @Test fun aConnectionWithAProfileIsNeverApprovedBeforeItsWordsAreRead() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    val m = model()
+    m.refreshConnections()
+    val result = m.connect("a1", "g1", digestOf(profiledRequest))
+    assertTrue(result.toString(), result is AppModel.Connected.Failed)
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+  }
+
+  @Test fun wordsForAnotherProfileAreShownAsWrongAndNothingCanBeApproved() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    transport.answer(words, 200, resource("slack-messages.expected"))
+    val m = model()
+    m.refreshConnections()
+    m.loadProfileWords("g1")
+    assertTrue(m.state.value.profileWords.isEmpty())
+    assertTrue(m.state.value.profileWordsErrors.getValue("g1").contains("Nothing was approved"))
+    assertTrue(m.connect("a1", "g1", digestOf(profiledRequest)) is AppModel.Connected.Failed)
+    assertTrue(transport.requestsTo(approve).isEmpty())
   }
 
   @Test fun aSignInPlanqueAlreadyHoldsConnectsOnApprovalWithNoVendorPage() = runTest {
@@ -584,5 +659,79 @@ class PlanqueTest {
 
   @Test fun planquesOwnRefusalsSayWhatHappened() {
     assertNotNull(PlanqueError.NotSigning.message)
+  }
+
+  // MARK: A Slack door: planque's subscription first, then tafs cloud's door
+
+  private val slackBot =
+    """{"id":"gs","status":"connected","account":"ca_1","entry":"connector:composio:slackbot","text":"Slack bot","digest":"","request":{"server":"","agent":"refunds-1","tools":[]}}"""
+  private val slackApp = bot.tafs.app.kiff.DoorApp(id = "slack", label = "Slack", kind = "slack", proof = "proven")
+
+  private suspend fun slackModel(): AppModel {
+    transport.answer("GET /v1/me", 200, me)
+    transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    transport.answer("GET /v1/me/access", 200, """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}""")
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
+    transport.answer(grants, 200, """{"grants":[$slackBot,${grant("g1")}]}""")
+    val m = model()
+    m.refresh()
+    m.refreshConnections()
+    return m
+  }
+
+  @Test fun theTafsSlackBotIsKnownByItsEntryOrToolkitNeverItsName() = runTest {
+    val m = slackModel()
+    assertEquals(listOf("gs"), m.state.value.slackBots("refunds-1").map { it.id })
+    val byToolkit = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g2","status":"connected","request":{"agent":"refunds-1","connector":{"provider":"composio","toolkit":"slackbot"}}}""")
+    assertTrue(byToolkit.isSlackBot)
+    val named = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g3","status":"connected","vendor":"Slack","request":{"agent":"refunds-1"}}""")
+    assertFalse("a vendor name doesn't make a Slack bot", named.isSlackBot)
+  }
+
+  @Test fun aSlackDoorSubscribesAtPlanqueFirstThenAddsTheDoorWithItsTrigger() = runTest {
+    val m = slackModel()
+    transport.answer("GET /v1/accounts/t_01/grants/gs/channels", 200, """{"channels":[{"id":"C0REFUNDS","name":"refunds","private":false}]}""")
+    m.loadSlackChannels("gs")
+    val channel = m.state.value.slackChannels.getValue("gs").single()
+    transport.answer("POST /v1/accounts/t_01/grants/gs/triggers", 200, """{"id":"trg_9","slug":"SLACKBOT_CHANNEL_MESSAGE_RECEIVED"}""")
+    transport.answer("POST /v1/tafs/taf_1/doors", 200, """{"door":{"id":"door_s","app":"slack","kind":"slack","label":"Slack","grant":"gs","channel":"C0REFUNDS","trigger":"trg_9"}}""")
+    transport.answer("GET /v1/tafs/taf_1/doors", 200, """{"doors":[],"apps":[],"knocks":[]}""")
+    val door = m.addSlackDoor("refunds-1", slackApp, m.state.value.slackBots("refunds-1").single(), channel)
+    assertEquals("door_s", door?.id)
+    assertEquals("one confirmation", listOf(bot.tafs.app.model.DoorWords.slackReason("Refunds", "refunds")), auth.asked)
+    val sub = transport.requestsTo("POST /v1/accounts/t_01/grants/gs/triggers").single()
+    assertEquals(
+      "the account, the slug and the channel; no config",
+      KiffClient.json.parseToJsonElement("""{"account":"ca_1","slug":"SLACKBOT_CHANNEL_MESSAGE_RECEIVED","channels":["C0REFUNDS"]}"""),
+      KiffClient.json.parseToJsonElement(String(sub.body!!)),
+    )
+    assertTrue("device-signed", sub.headers.containsKey("Planque-Device-Signature"))
+    val added = transport.requestsTo("POST /v1/tafs/taf_1/doors").single()
+    val body = KiffClient.json.parseToJsonElement(String(added.body!!)).jsonObject
+    assertEquals("slack", body.getValue("app").jsonPrimitive.content)
+    assertEquals("trg_9", body.getValue("trigger").jsonPrimitive.content)
+    assertTrue("planque first", transport.requests.indexOf(sub) < transport.requests.indexOf(added))
+  }
+
+  @Test fun aDoorThatCantBeAddedTakesItsSubscriptionAway() = runTest {
+    val m = slackModel()
+    transport.answer("POST /v1/accounts/t_01/grants/gs/triggers", 200, """{"id":"trg_9"}""")
+    transport.answer("POST /v1/tafs/taf_1/doors", 400, """{"error":"connect the Slack bot first"}""")
+    transport.answer("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9", 200, "{}")
+    assertNull(m.addSlackDoor("refunds-1", slackApp, m.state.value.slackBots("refunds-1").single(), bot.tafs.app.kiff.SlackChannel("C0REFUNDS", "refunds")))
+    val del = transport.requestsTo("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9").single()
+    assertEquals("ca_1", KiffClient.json.parseToJsonElement(String(del.body!!)).jsonObject.getValue("account").jsonPrimitive.content)
+  }
+
+  @Test fun removingASlackDoorRemovesItsSubscriptionFirst() = runTest {
+    val m = slackModel()
+    transport.answer("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9", 200, "{}")
+    transport.answer("DELETE /v1/tafs/taf_1/doors/door_s", 200, "{}")
+    m.removeDoor("refunds-1", bot.tafs.app.kiff.Door(id = "door_s", app = "slack", kind = "slack", label = "Slack", grant = "gs", channel = "C0REFUNDS", trigger = "trg_9"))
+    val sub = transport.requestsTo("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9").single()
+    val door = transport.requestsTo("DELETE /v1/tafs/taf_1/doors/door_s").single()
+    assertTrue(transport.requests.indexOf(sub) < transport.requests.indexOf(door))
   }
 }

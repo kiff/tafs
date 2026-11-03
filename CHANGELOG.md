@@ -5,12 +5,65 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **iPhone and iPad:** Connect apps clears its list and approval when the account changes and ignores stale search replies. Removing a Slack door waits until the phone can stop its subscription.
+
 ### Removed
 
 - The `TafsMac` target and `ios/Mac/`: the Apple app is built for iPhone and iPad only.
 
 ### Added
 
+- **Android, the settled dial:** When · What · Where around the taf's Why, with "Ask Coach or find
+  anything", Showing ▾ one connection's stops, and a remote: ◀ ▶ through the stops, − + the chosen
+  stop's one size, ⏻ pause, the face as OK. Changes collect into "Make N changes live". No chips
+  and no "+ Add": new things go through Coach.
+- **Android, door states on the dial:** a door's When stop is lit when open, dashed when closed,
+  grey while resting, amber with a dot while a knock waits, and lights up when a message arrives.
+- **Android, the dial's words read upright:** a stop's word in the lower half of its ring turns
+  half a turn more, so nothing on the dial reads upside down.
+- **Android, the dial follows tafs cloud's rules:** what OK does on each stop, a door's look and
+  the change waiting to go live ("DRAFT · Vn · NOT LIVE", "Make N changes live") come from the
+  knob, and Add a door and an empty recipe's step ask Coach. A chosen stop turns under the pointer,
+  a ring past six stops pages, OK with nothing chosen goes to the first stop, "‹ Why" goes back,
+  ⏻ reads the dial again, and the footer is today's work alone. Coach's card says when its dial
+  is live.
+
+- **iPhone and iPad, the universal dial:** When, What and Where surround the taf's Why.
+  A Showing menu filters any number of connections; Back/Next walk every stop, Lower/Raise
+  use the service's fixed choices, and Pause uses the existing pause control. Changes build
+  on the pending draft and become live through the biometric version switch. Coach's draft
+  card groups the setup by connection. Today's count opens request steps and reply retry.
+
+- **Android, Coach sets the dial:** Coach's dial card shows Wakes it, When and Results go in tafs
+  cloud's words, made live with one confirmation, or Change back to Coach; the dial shows the same
+  draft with Make it live.
+- **Android, a request step by step:** today's work under the dial, or a request in Activity,
+  opens what happened, step by step, with Try the reply now and Ask Coach.
+- **Android, How this is counted:** under a Card's limits, a row opens KIFF's words for how each
+  tool's calls are counted, as approved when it was connected.
+- **Android, Did this happen?:** money calls KIFF can't prove show in Needs you in KIFF's words,
+  answered No (the Card gets its room back) or Yes, it did, with one fingerprint.
+- **Android, Connect apps:** Settings lists the apps tafs cloud offers, searchable, each saying
+  whether it's connected; an app nobody listed goes to Coach. Connect asks which taf it's for,
+  then opens the approval over the list, with KIFF's words, then the vendor's sign-in.
+- **Android, KIFF's words for a connection:** a connection that carries its profile shows
+  KIFF's words for it on the approval card, read from KIFF and checked against their digests,
+  and the approval signs both. Approve waits until they're shown.
+- **Android, the taf's dial:** Wakes it, When and Results go around the job, with a rim that
+  counts today's work, in the taf's Doors tab: a door stop picks its door, the face opens or
+  closes it or runs the taf now, and a held call can be approved once from the face.
+  Turning a result place or If busy makes the taf's next version, shown in tafs
+  cloud's words with Make it live.
+- **iPhone and iPad, KIFF's words for a connection:** the same as Android: a connection that
+  carries its profile shows KIFF's words on the approval card, read with the person's session
+  and checked against both digests; the approval signs both, and waits until they're shown.
+- **iPhone and iPad, Connect apps:** from Settings, the apps tafs cloud offers, searched as you
+  type. Connecting shows its approval over the list, with KIFF's words, then the vendor's
+  sign-in; a vendor reached by an API key takes its key there, with Face ID.
+- **iPhone and iPad, Did this happen?:** in Needs you, a money call whose outcome KIFF can't
+  prove asks you whether it happened. No gives its Card the room back.
+- **iPhone and iPad, the taf's dial:** the same dial, drawn from the approved design and laid
+  out from the knob API (not yet on a screen).
 - **Setup, for any vendor:** its rules name roles, not one payments vendor's tools: the
   argument a call acts on, the read that says its unit, money in its own units, test or live when
   the vendor has both. A vendor with a REST API and no MCP server is connected by its key, which

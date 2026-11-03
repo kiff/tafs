@@ -76,7 +76,12 @@ data class SetupComponent(
   val draft: String? = null,
   /** The vendor's host, such as mcp.stripe.com. */
   val service: String? = null,
-  val taf: SetupTaf? = null,
+  /** The hand-over's taf, an object; on a `knob` card, the taf's tafs cloud id, a string. Read as it comes ([taf], [knobTaf]). */
+  @SerialName("taf") val tafValue: kotlinx.serialization.json.JsonElement? = null,
+  /** A `knob` card's taf, by its tafs cloud id, when it's sent under this name. */
+  @SerialName("taf_id") val tafId: String? = null,
+  /** A `knob` card's dial version: the card is drawn from that taf's knob `draft` while it's this version. */
+  val version: Int? = null,
   val tools: List<String>? = null,
   val yes: String? = null,
   val no: String? = null,
@@ -84,11 +89,18 @@ data class SetupComponent(
   /** A plan's one-line form, from tafs cloud: "Step 3 of 6 · Your rules", or "Done · 6 of 6". */
   val line: String? = null,
 ) {
+  /** The hand-over's taf, when [tafValue] is one. */
+  val taf: SetupTaf?
+    get() = (tafValue as? kotlinx.serialization.json.JsonObject)?.let { runCatching { KiffClient.json.decodeFromJsonElement(SetupTaf.serializer(), it) }.getOrNull() }
+
+  /** A `knob` card's taf id, under `taf_id` or `taf`. */
+  val knobTaf: String? get() = tafId ?: (tafValue as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
+
   /** Where a sign-in goes, as the app shows it: from the card's service, never from Coach's words, so a label can't stand in for the destination. */
   val destination: String get() = service ?: "the vendor's page"
 
   companion object {
-    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result")
+    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result", "knob")
   }
 }
 
@@ -228,6 +240,33 @@ data class WorkRequest(
   val state: String = "",
   val line: String = "",
   val deliveries: List<WorkDelivery> = emptyList(),
+)
+
+/**
+ * One request from the dial's rim, step by step (`GET /v1/tafs/{id}/requests/{run}`): what the taf's work gives for it, where it
+ * came from, and its steps. Every line and time is tafs cloud's, in the account's zone, drawn as it is.
+ */
+@Serializable
+data class RequestDetail(
+  val id: String,
+  @Serializable(with = bot.tafs.app.model.InstantAsString::class) val at: Instant,
+  val state: String = "",
+  val line: String = "",
+  val deliveries: List<WorkDelivery> = emptyList(),
+  /** "By email", "Its schedule", "From its chat", "Run now". */
+  val from: String? = null,
+  val steps: List<RequestStep> = emptyList(),
+)
+
+/** A step: Received, each call by KIFF's title for its tool, a hold, where the reply went, then the end or what comes next. */
+@Serializable
+data class RequestStep(
+  val label: String = "",
+  val line: String? = null,
+  /** Its time as tafs cloud wrote it, in the account's zone. */
+  val at: String? = null,
+  /** done, failed, not_made, waiting or next. */
+  val state: String = "done",
 )
 
 /** Where a request's result went, and whether it can be sent again (a reply given up on after its tries). */

@@ -1,8 +1,8 @@
 # Doors
 
 A door is a place where work reaches a taf from outside the app, with the answer
-going back through the same door. A taf can have an email address and a WhatsApp
-number. A taf has no door until its owner turns one on in its **Doors** tab, where
+going back through the same door. A taf can have an email address, a WhatsApp
+number and a Slack channel. A taf has no door until its owner turns one on in its **Doors** tab, where
 they also pair senders and close doors. The app shows Doors only where the
 deployment offers a door; WhatsApp is offered only once it's set up.
 
@@ -17,7 +17,8 @@ deployment offers a door; WhatsApp is offered only once it's set up.
   - **email**: the receiving server's sender check passes (DMARC, or DKIM signed by
     the From domain, with DMARC not failing), and From names one mailbox. A spoofed
     From is treated as anyone else;
-  - **WhatsApp**: WhatsApp gives the sender's number.
+  - **WhatsApp**: WhatsApp gives the sender's number;
+  - **Slack**: Slack gives the sender's member ID (such as `U012AB3CD`), which is what the owner pairs.
 - **The owner's own sign-in email, proven, is the owner writing** (kiff/tafs#423). It's taken
   as their message, in their own live chat, as if they'd typed it in the app: it shows there as
   theirs, marked as by email, and an open chat reads it at the next change. The answer also goes
@@ -120,10 +121,30 @@ Nothing here is on until the deployment sets it up. tafs cloud reads:
   provider receives its mail and signs each delivery to `/v1/doors/email`.
 - `DOORS_SECRET_ID`: one secret, JSON, with the providers' keys:
   `email_api_key`, `email_webhook_secret`; `whatsapp_app_id`, `whatsapp_app_secret`,
-  `whatsapp_config_id`, `whatsapp_verify_token`. A provider whose keys aren't there
-  isn't offered.
+  `whatsapp_config_id`, `whatsapp_verify_token`; `planque_handoff_secret`, the value
+  planque signs Slack messages with. A provider whose keys aren't there isn't offered.
 - `DOORS_WHATSAPP_REGION`: where WhatsApp stores a number's message content, set at
   its registration.
+
+## Slack
+
+**What the owner does.** Connect the Slack bot for the taf from Connect apps: Composio's managed
+Slack bot sign-in, approved on the phone like any connection, so there's no Slack app of our own
+and no Slack token in tafs cloud. Then, in Doors, add a Slack door on one of its channels. A message
+there is handed over by planque, and the taf works it like any door's. The app subscribes the channel in planque first (signed), then adds the door with `{app: "slack", grant, channel, trigger}`, `trigger` being planque's subscription id; the door gives `grant`, `channel` and `trigger` back, so removing it deletes that subscription too.
+
+**How it arrives.** planque listens through the bot's triggers and hands each message to
+`POST /v1/doors/planque` as `planque.door.v1`: `{id, tenant, agent, grant, provider, account, trigger,
+trigger_slug, channel, sender, text, thread?, ts?, timestamp}`: `ts` is the message's own Slack time, so a message that isn't in a thread is answered in a thread under itself. It's signed like the email door's
+deliveries: HMAC-SHA256 over `<id>.<unix seconds>.<raw body>`, sent as `v1,<base64>` in
+`Planque-Event-Signature`, with `Planque-Event-Id` and `Planque-Event-Timestamp`, within five minutes.
+The door is found by its grant and channel only, and `agent` must be the taf's own KIFF agent in that
+account. Answers: 202 taken (or taken before), 401 a bad signature, 404 no such door, 409 a closed door.
+planque sends again only on a 5xx or no answer.
+
+**How it answers.** tafs cloud holds no Slack token, so the taf posts its answer itself, with its
+Slack bot's send-message tool, a write through KIFF inside its Card, in the channel and thread the
+message came in. The chat marks the door's reply as answered in Slack.
 
 ## WhatsApp
 

@@ -12,6 +12,13 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
+import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
+import { requestDetail } from "./request.js";
+import { type ActionPlace, actionPlace } from "./places.js";
+import { ConnectError, listApps, startApp } from "./connect.js";
+import { instantIn, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
+
+/** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { stepWords, Steps, type ToolTitles } from "./steps.js";
@@ -54,6 +61,12 @@ import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
+ *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
+ *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
+ *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
+ *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
+ *   DELETE /v1/tafs/{id}/follow-ups/{fid}  a follow-up the taf set itself, removed
+ *   GET  /v1/tafs/{id}/knob             its dial: what wakes it, when, where results go, and today's work, in tafs cloud's words
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
@@ -115,7 +128,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -180,6 +193,8 @@ export interface Deps {
   reports?: ReportsDeps;
   fetch?: Fetch;
   kiffBase?: string;
+  /** planque, where Connect apps' catalog is (docs/api.md). Missing: Connect apps answers 503. */
+  planqueBase?: string;
   /** KIFF's gateway, where the account's tool connections are (default mcp.kiff.dev). */
   kiffGateway?: string;
   /**
@@ -249,6 +264,19 @@ export interface Taf {
    * its job's fixed line. Absent on a taf from before, or one not made by Coach.
    */
   summary?: string;
+  /** What it does in one word, for its dial's face ("Refund"), as Coach's result said it. */
+  does?: string;
+  /**
+   * The dial's rings each version made from a tap or Coach's draft sets, by version: written to
+   * kiff/agents' scheduler, and its results places kept, only when that version goes live.
+   */
+  knobs?: Record<string, KnobSetting>;
+  /** Paused by its owner (pause, Coach's taf_pause): every schedule of it is off, and stays off when its dial is written. */
+  paused?: boolean;
+  /** The version whose dial was last written where it acts (applyKnob): a live version that isn't, is written again. */
+  knobApplied?: number;
+  /** The schedules its live dial keeps in kiff/agents, beyond the first (its own id). */
+  scheduleIds?: string[];
   /**
    * The versions made from Setup's results (kiff/tafs#107), by the result
    * they came from: a result makes its version once, however often the app
@@ -271,6 +299,10 @@ export interface Taf {
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
   results?: ResultPlace[];
+  /** Where the live version's taf writes its results itself, at a vendor, through KIFF (places.ts). */
+  actionResults?: ActionPlace[];
+  /** The connected apps' events the live version wakes on (applyKnob): what tafs cloud takes from planque for it. */
+  appEvents?: Trigger[];
 }
 
 /** The most a taf's one-line summary keeps, in characters. */
@@ -427,8 +459,8 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 }
 
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
-const ROUTE_WORDS = new Set(("v1 account ai alerts answer archive archived attachments calls chats components continue conversation " +
-  "delete deletions deliveries doors door email whatsapp ended events halt holds home improve install jobs keys kiff knocks live mcp " +
+const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats components connect continue conversation " +
+  "delete deletions deliveries doors door email whatsapp ended events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "memory messages pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks").split(" "));
 
@@ -474,6 +506,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return body.intent === undefined ? deleteAccount(me, deps) : deleteByIntent(me, body, bearer(event), deps);
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
+  if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
   }
@@ -539,7 +572,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume")) {
     await needTaf(event, me, taf, deps);
-    const s = await agentsCall(() => deps.agents.switchSchedule(me.tenantID, taf.id, action === "resume"));
+    const s = await pauseAll(me.tenantID, taf, action === "resume", deps);
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(taf, me, deps, s) };
   }
@@ -557,6 +590,88 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again), skipped: skippedOf(fired, zone, now) };
+  }
+  if (parts.length === 5 && method === "GET" && action === "requests") {
+    // One request from the rim (docs/api.md, "A request"): what it did, step by step. Someone else's,
+    // or a door sender's, is for the people who manage the taf.
+    const run = (await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50))).find((r) => r.id === parts[4]);
+    if (!run) throw new HTTPError(404, "no such request");
+    const others = run.requester?.kind === "door" || (run.requester?.kind === "member" && run.requester.id !== me.subject);
+    if (others && !(await managesTaf(event, me, taf, deps))) throw new HTTPError(404, "no such request");
+    const now = deps.now?.() ?? new Date();
+    const [read, sent, titles] = await Promise.all([
+      deps.agents.session(me.tenantID, run.session, run.requester?.kind === "door" ? undefined : run.requester?.kind === "member" ? `member:${run.requester.id}` : ownerKey(me)).catch(() => undefined),
+      deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
+      titlesOf(event, me, taf, deps),
+    ]);
+    const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
+    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again);
+  }
+  if (parts.length === 5 && method === "DELETE" && action === "follow-ups") {
+    // A follow-up the taf set itself, removed by someone who manages it (docs/api.md, "The knob"). Only a
+    // follow-up of this taf: none of its other schedules goes this way.
+    await needTaf(event, me, taf, deps);
+    const id = parts[4] ?? "";
+    const s = id.startsWith("fu-") ? await deps.agents.getSchedule(me.tenantID, id) : undefined;
+    if (!s || !s.follow_up || s.agent !== taf.id) throw new HTTPError(404, "no such follow-up");
+    await agentsCall(() => deps.agents.deleteSchedule(me.tenantID, id));
+    await tellChange(me.tenantID, "taf", taf.id, deps);
+    return { removed: id };
+  }
+  if (parts.length === 4 && method === "PUT" && action === "knob") {
+    // The dial changed, from a tap or Coach's draft: the taf's next version, as an improvement
+    // makes one. Nothing runs from it until it goes live (docs/api.md, "The knob").
+    await needTaf(event, me, taf, deps);
+    if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
+    return dialVersion(parseBody(event), me, taf, deps, event);
+  }
+  if (parts.length === 4 && method === "GET" && action === "knob") {
+    // The taf's dial (docs/api.md, "The knob"): every label and line written here.
+    const now = deps.now?.() ?? new Date();
+    const zone = me.timeZone ?? "UTC";
+    const manages = deps.doors ? await managesTaf(event, me, taf, deps) : false;
+    const [runs, schedule, doors, live, tools] = await Promise.all([
+      agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
+      taf.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
+      // A taf's doors are for the people who manage it; someone it's only shared with sees none.
+      manages
+        ? Promise.all([listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors),
+          doorLights(deps.doors!.store, me.tenantID, taf.id, now).catch(() => [])])
+          .then(([ds, lights]) => ds.map((d) => {
+            const l = lights.find((x) => x.app === d.app);
+            return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks } : {}) };
+          }))
+        : Promise.resolve([]),
+      deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
+      titlesOf(event, me, taf, deps),
+    ]);
+    const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
+      .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
+    // The newest dial change made after the live version and not yet live: it waits for the owner.
+    const pending = Object.keys(taf.knobs ?? {}).map(Number).filter((n) => live === undefined || n > live).sort((a, b) => b - a)[0];
+    // ?version=N shows a dial change not yet live, so the next − or + builds on it instead of on the live dial.
+    const asked = new URLSearchParams(event.rawQueryString ?? "").get("version");
+    const shown = asked !== null ? Number(asked) : undefined;
+    if (shown !== undefined && (!Number.isInteger(shown) || !taf.knobs?.[String(shown)] || (live !== undefined && shown <= live))) {
+      throw new HTTPError(404, "that version isn't a dial change waiting to go live");
+    }
+    const setting = shown !== undefined ? taf.knobs![String(shown)] : live !== undefined ? taf.knobs?.[String(live)] : undefined;
+    // A live version whose dial was never written where it acts (applyKnob failed after the switch): written now.
+    if (live !== undefined && taf.knobs?.[String(live)] && taf.knobApplied !== live) {
+      await applyKnob(me, taf, live, deps).catch((err) => console.error(`dial of ${taf.id} v${live} not applied:`, err instanceof Error ? err.message : "error"));
+    }
+    const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
+    const { counts } = workOf(today, zone, now, []);
+    const job = JOBS.find((j) => j.id === taf.job);
+    return knobOf({
+      name: taf.name,
+      does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
+      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools, addDoor: manages,
+      ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}), ...(shown !== undefined ? { shown } : {}),
+      ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
+      today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
+      zone, now,
+    });
   }
   if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
     // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
@@ -2286,6 +2401,8 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     // A retry after the version went live but the trial didn't end only ends the trial.
     const live = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.live)?.n;
     if (live !== open.n) await goLive(event, me, taf, open.n, deps);
+    // Live already, but its dial not written (applyKnob failed after the switch): write it now.
+    else if (taf.knobs?.[String(open.n)] && taf.knobApplied !== open.n) await applyKnob(me, taf, open.n, deps);
     const counts = (await trialOf(token, open.draft, deps.fetch, deps.kiffBase)) ?? { calls: 0, held: 0, refused: 0 };
     const ended = await agentsCall(() => deps.agents.endTrial(me.tenantID, taf.id, "installed", counts));
     return { live: open.n, ended };
@@ -2403,7 +2520,8 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   }
   let def: AgentDefinition;
   try {
-    def = definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined });
+    def = definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined,
+      actionResults: Array.isArray(body.actionResults) ? body.actionResults as ActionPlace[] : taf.actionResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
@@ -2466,9 +2584,118 @@ async function recordLiveCards(event: HTTPEvent, me: KIFFIdentity, taf: Taf, sta
 async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
   const cards = await liveCards(event, taf, deps);
   await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
+  await applyKnob(me, taf, n, deps);
   await keepNotes(me, taf, n, deps);
   await tellChange(me.tenantID, "taf", taf.id, deps);
   await tellCoachLive(me, taf, n, deps);
+}
+
+/**
+ * A dial change, from a tap (PUT …/knob) or Coach's draft (taf_dial): each trigger checked, then the taf's
+ * next version, as an improvement makes one, with its dial kept by version. Nothing runs from it until it
+ * goes live (applyKnob).
+ */
+async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number; words: string[] }> {
+  const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
+  // `when.busy`, or `busy` at the top as a knob's `setting` and each size choice carry it, so a choice is sent back as it is.
+  const when = (body.when ?? {}) as { busy?: unknown };
+  const busy = (when.busy ?? body.busy) === "latest" ? "latest" : "skip";
+  for (const t of wakes) {
+    try {
+      schedulesOf(t, busy);
+    } catch (err) {
+      if (err instanceof TriggerError) throw new HTTPError(400, err.nearest ? `${err.message}: the nearest is ${err.nearest}` : err.message);
+      throw err;
+    }
+  }
+  // The built-in places tafs cloud delivers, and the vendor places the taf writes itself (places.ts).
+  let results: KnobSetting["results"];
+  if (body.results === undefined) results = [...placesOf(taf), ...(taf.actionResults ?? [])];
+  else {
+    const all = Array.isArray(body.results) ? body.results : [];
+    let vendor: ActionPlace[];
+    try { vendor = all.filter((p) => typeof p !== "string").map(actionPlace); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+    results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
+  }
+  let what: KnobSetting["what"];
+  try { what = body.what === undefined ? taf.knobs?.[String(Object.keys(taf.knobs ?? {}).map(Number).sort((a, b) => b - a)[0])]?.what : recipeOf(body.what); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  const why = typeof body.why === "string" ? body.why.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 60) : undefined;
+  const words = settingWords({ wakes, busy, results });
+  const actionResults = results.filter((p): p is ActionPlace => typeof p !== "string");
+  const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE), actionResults }, me, taf, deps, event);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const cur = await deps.tafs.get(me.tenantID, taf.id);
+    if (!cur) break;
+    if (await deps.tafs.putIf(me.tenantID, { ...cur, knobs: { ...cur.knobs, [String(version)]: { wakes, busy, results, ...(what?.length ? { what } : {}), ...(why ? { why } : {}) } } }, cur)) break;
+  }
+  return { version, words };
+}
+
+/**
+ * Pauses or resumes everything that starts the taf on a schedule: its own schedule, the dial's others
+ * (`scheduleIds`) and the follow-ups it set itself, still to come. The taf keeps that it's paused first,
+ * so writing its dial again (applyKnob) leaves it paused, and asking again finishes the job. One that
+ * couldn't be switched, or follow-ups that couldn't be listed, answer 502 saying so: a wake may still run.
+ */
+async function pauseAll(tenant: string, taf: Taf, on: boolean, deps: Deps): Promise<Schedule> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const cur = await deps.tafs.get(tenant, taf.id);
+    if (!cur) break;
+    const next: Taf = { ...cur };
+    if (on) delete next.paused; else next.paused = true;
+    if (await deps.tafs.putIf(tenant, next, cur)) break;
+  }
+  const s = await agentsCall(() => deps.agents.switchSchedule(tenant, taf.id, on));
+  const now = (deps.now?.() ?? new Date()).getTime();
+  let missed = 0;
+  const followUps = await deps.agents.listSchedules(tenant, taf.id)
+    .then((all) => all.filter((x) => x.follow_up && x.id.startsWith("fu-") && (!x.at || Date.parse(x.at) > now)).map((x) => x.id), () => { missed++; return []; });
+  for (const id of [...(taf.scheduleIds ?? []), ...followUps]) {
+    await deps.agents.switchSchedule(tenant, id, on).catch((err: unknown) => {
+      // One already gone has nothing left to start.
+      if (!(err instanceof AgentsError && err.status === 404)) missed++;
+    });
+  }
+  if (missed) throw new HTTPError(502, `${taf.name}'s own schedule is ${on ? "on" : "paused"}, but not everything that starts it could be ${on ? "resumed" : "paused"}${on ? "" : ", so it may still wake"}; try again`);
+  return s;
+}
+
+/**
+ * The live version's dial, written where it acts: its triggers to kiff/agents' scheduler (the
+ * taf's own schedule first, then one more per firing time the scheduler can say exactly, any left
+ * over switched off), and where its results go. A version with no dial changes none of it.
+ */
+async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
+  const k = taf.knobs?.[String(n)];
+  if (!k) return;
+  const zone = me.timeZone ?? "UTC";
+  const own = await deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined);
+  const input = own?.input ?? jobById(taf.job).kickoff;
+  // A paused taf stays paused when its dial is written: its schedules are written off.
+  const paused = await deps.tafs.get(me.tenantID, taf.id).then((t) => t?.paused, () => taf.paused);
+  const enabled = paused !== true;
+  const planned = k.wakes.flatMap((t) => schedulesOf(t, k.busy));
+  const ids = planned.map((_, i) => (i === 0 ? taf.id : `${taf.id}-t${i + 1}`));
+  for (const [i, p] of planned.entries()) {
+    const s: Schedule = { id: ids[i]!, agent: taf.id, cron: p.cron ?? "", time_zone: zone, input, enabled, ...(p.kind !== "cron" ? { kind: p.kind } : {}),
+      ...(p.at ? { at: instantIn(p.at, zone) } : {}), busy: p.busy, ...(p.skip ? { skip: p.skip } : {}), ...(p.check ? { check: p.check } : {}) };
+    const exists = i === 0 ? own : await deps.agents.getSchedule(me.tenantID, s.id).catch(() => undefined);
+    await agentsCall(() => (exists ? deps.agents.updateSchedule(me.tenantID, s) : deps.agents.createSchedule(me.tenantID, s)));
+  }
+  // What the dial no longer has starts nothing: the taf's own schedule off when no trigger is a schedule.
+  for (const id of [taf.id, ...(taf.scheduleIds ?? [])].filter((id) => !ids.includes(id))) {
+    await deps.agents.switchSchedule(me.tenantID, id, false).catch(() => undefined);
+  }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const cur = await deps.tafs.get(me.tenantID, taf.id);
+    if (!cur) break;
+    const vendor = k.results.filter((p): p is ActionPlace => typeof p !== "string");
+    const next: Taf = { ...cur, results: k.results.filter((p): p is ResultPlace => typeof p === "string"), scheduleIds: ids.slice(1), knobApplied: n };
+    if (vendor.length) next.actionResults = vendor; else delete next.actionResults;
+    const events = k.wakes.filter((t) => t.kind === "app_event");
+    if (events.length) next.appEvents = events; else delete next.appEvents;
+    if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
+  }
 }
 
 /**
@@ -2538,7 +2765,9 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   try {
     const { definition: live } = await deps.agents.getVersion(me.tenantID, taf.id, n);
     const notes = typeof live.instructions === "string" ? ownerNotesIn(live.instructions) : undefined;
-    const next: Taf = { ...taf, definition: digest(definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes })) };
+    const dial = taf.knobs?.[String(n)];
+    const actionResults = dial ? dial.results.filter((p): p is ActionPlace => typeof p !== "string") : taf.actionResults;
+    const next: Taf = { ...taf, definition: digest(definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes, actionResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
@@ -3391,7 +3620,7 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
         try {
           want = record.job === SETUP_JOB
             ? setupDefinition(record.id)
-            : definition(record.id, jobById(record.job), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes });
+            : definition(record.id, jobById(record.job), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes, actionResults: record.actionResults });
         } catch (err) {
           throw new UpgradeError(`its definition can't be built: ${(err as Error).message}`);
         }
@@ -3900,7 +4129,11 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (!on && args.action !== "pause") throw new ToolRefusal("action is pause or resume");
     if (may && !may.oversee && !may.manage) throw new ToolRefusal(`pausing ${taf.name} is for the people who oversee or manage it`);
     if (taf.unscheduled) throw new ToolRefusal(`${taf.name} works from its chat: it has no schedule to ${on ? "resume" : "pause"}`);
-    const s = await agentsCall(() => deps.agents.switchSchedule(call.tenant, taf.id, on));
+    let s: Schedule;
+    try { s = await pauseAll(call.tenant, taf, on, deps); } catch (err) {
+      if (err instanceof HTTPError) throw new ToolRefusal(err.message);
+      throw err;
+    }
     return { taf: taf.name, schedule: on ? "on" : "paused", ...(s.next ? { next: iso(s.next) } : {}) };
   }
   if (name === "taf_results") {
@@ -3909,6 +4142,20 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     try { places = resultPlaces(args.places); } catch (err) { throw new ToolRefusal((err as Error).message); }
     await deps.tafs.put(call.tenant, { ...taf, results: places });
     return { taf: taf.name, results: places };
+  }
+  if (name === "taf_dial") {
+    // Coach's draft of the dial: the taf's next version, nothing running from it. Installing it is
+    // version_install, held for the owner, who sees its rings on the dial's draft.
+    if (may && !may.manage) throw new ToolRefusal(`changing ${taf.name}'s dial is for the people who manage it`);
+    if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no dial");
+    try {
+      const made = await dialVersion(args, { tenantID: call.tenant, subject: call.person?.subject ?? call.coach, apiKey: false, agentID: "", capabilities: [] }, taf, deps);
+      return { taf: taf.name, taf_id: taf.id, version: made.version, words: made.words,
+        next: `show {type: "knob", version: ${made.version}, taf_id: "${taf.id}"}, then version_install ${made.version}: the owner confirms it in tafs` };
+    } catch (err) {
+      if (err instanceof HTTPError) throw new ToolRefusal(err.message);
+      throw err;
+    }
   }
   if (may && !may.manage) throw new ToolRefusal(`changing ${taf.name}'s version is for the people who manage it`);
   if (!Number.isInteger(n) || n < 1) throw new ToolRefusal("n is a version number, from tafs_state");
@@ -4386,6 +4633,35 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   if (parts.length === 5 && method === "DELETE" && a) return removeDoor(ctx, owner, taf, a);
   if (parts.length === 6 && method === "POST" && a && b === "keys") return pair(ctx, owner, taf, a, body);
   if (parts.length === 7 && method === "DELETE" && a && b === "keys" && c) return unpair(ctx, owner, taf, a, decodeURIComponent(c));
+  throw new HTTPError(404, "not found");
+}
+
+/**
+ * Connect apps (docs/api.md): planque's catalog, and a connection started for one taf, asked with
+ * the person's own session. The approval and the sign-in after it are the phone's and planque's.
+ */
+async function connectApps(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  if (!deps.planqueBase) throw new HTTPError(503, "Connect apps isn't set up here");
+  const fetchFn = deps.fetch ?? fetch;
+  try {
+    if (parts.length === 3 && method === "GET") {
+      const query = new URLSearchParams(event.rawQueryString ?? "");
+      return await listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), query.get("q") ?? "",
+        { cursor: query.get("cursor") ?? undefined, provider: query.get("provider") ?? undefined });
+    }
+    if (parts.length === 4 && method === "POST") {
+      need(me, "cards.manage");
+      const body = parseBody(event);
+      if (typeof body.taf !== "string") throw new HTTPError(400, "taf is the taf this connection is for");
+      const taf = await owned(me, body.taf, deps);
+      await needTaf(event, me, taf, deps);
+      if (!taf.kiffAgent) throw new HTTPError(409, `${taf.name} has no KIFF agent to connect apps for yet`);
+      return await startApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), decodeURIComponent(parts[3] ?? ""), taf.kiffAgent);
+    }
+  } catch (err) {
+    if (err instanceof ConnectError) throw new HTTPError(err.status, err.message);
+    throw err;
+  }
   throw new HTTPError(404, "not found");
 }
 

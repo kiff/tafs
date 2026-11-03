@@ -162,6 +162,11 @@ It has up to four tabs:
   moved: KIFF's `pending_text` on the total says how much, under the Card's limits and on a
   held call over that total (Android: `pendingLines`), from live, active Cards only: a test
   Card's totals aren't what the taf may do for real. The app writes no line of its own.
+  **How this is counted**, a row under the limits, opens its own screen: for each tool the
+  Card covers with a profile the owner approved, KIFF's words for how it's counted, the same
+  lines the owner approved, under the tool's title. tafs cloud passes KIFF's `counted`
+  (`[{tool, lines}]`) on as the Card's `counted` (`[{tool, title, lines}]`), absent when KIFF
+  has none, and the row shows only then.
   On iOS, `unit_words` shows under the Card's limits (`TafCard.unitWords`), and Reconnect
   it in Coach also needs Coach's permission, since it opens Coach on that taf
   (`TafDetailView.offersReconnect`).
@@ -192,6 +197,11 @@ Doors tab, or line saying who it's shared with. For whoever manages it, that lin
 **Share** button with the system's share mark, beside who uses the taf. On its Cards, "Issued by" names who
 issued them to someone who manages the taf, and the account's name to someone who only
 uses it (`AppModel.issuer` on iOS, `AppState.issuer` on Android).
+
+Under a Card's limits, **How this is counted** opens KIFF's words for how each covered tool's calls
+are counted, as the owner approved them when connecting it (the Card's `counted:
+[{tool, title, lines}]`). A tool KIFF says nothing for isn't listed, and a Card with none has no
+row.
 
 ## Runs and reports
 

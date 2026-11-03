@@ -143,6 +143,8 @@ struct SettingsView: View {
                     NavigationLink(NotificationSettingsView.title, destination: NotificationSettingsView().environmentObject(model))
                     if model.mode == .kiff {
                         NavigationLink(DevicesView.title, destination: DevicesView().environmentObject(model))
+                        // The apps a taf can work with, the catalog first.
+                        NavigationLink(ConnectAppsView.title, destination: ConnectAppsView().environmentObject(model))
                     }
                     if model.mode == .sample {
                         Button("Sign in with KIFF") { signingIn = true }

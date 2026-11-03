@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { type Job, systemPrompt } from "../jobs.js";
 import { KIFF_SKILL } from "../kiff-skill.js";
+import { type ActionPlace, ACTION_PLACES_INTRO, placesInstructions } from "./places.js";
 import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, type KeepRule } from "./agents.js";
 
 /**
@@ -143,10 +144,12 @@ const SKILL_TEXT = [
 ].join("\n\n");
 
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
-export function instructions(job: Job, ownerNotes?: string): string {
+export function instructions(job: Job, ownerNotes?: string, actionResults: ActionPlace[] = []): string {
   const parts = [systemPrompt(job), NOTES_INSTRUCTIONS, CALL_INSTRUCTIONS];
   const notes = ownerNotes?.trim();
   if (notes) parts.push(`${OWNER_NOTES_INTRO}${notes}`);
+  const places = placesInstructions(actionResults);
+  if (places) parts.push(places);
   parts.push(`${SKILL_INTRO}${KIFF_SKILL.repo}@${KIFF_SKILL.commit.slice(0, 12)}, its sections for an agent at work):\n\n${SKILL_TEXT}`);
   return parts.join("\n\n");
 }
@@ -160,7 +163,7 @@ export function ownerNotesIn(text: string): string | undefined {
   const start = text.indexOf(OWNER_NOTES_INTRO);
   if (start < 0) return undefined;
   const from = start + OWNER_NOTES_INTRO.length;
-  const end = text.indexOf(`\n\n${SKILL_INTRO}`, from);
+  const end = Math.min(...[`\n\n${ACTION_PLACES_INTRO}`, `\n\n${SKILL_INTRO}`].map((m) => text.indexOf(m, from)).filter((i) => i >= 0), text.length);
   const notes = (end < 0 ? text.slice(from) : text.slice(from, end)).trim();
   return notes || undefined;
 }
@@ -197,11 +200,11 @@ export function keepRules(): AgentDefinition["keep"] {
   return keep;
 }
 
-export function definition(tafID: string, job: Job, opts: { budgetCents?: number; ownerNotes?: string } = {}): AgentDefinition {
+export function definition(tafID: string, job: Job, opts: { budgetCents?: number; ownerNotes?: string; actionResults?: ActionPlace[] } = {}): AgentDefinition {
   const budget = opts.budgetCents ?? DEFAULT_BUDGET_CENTS;
   if (!Number.isInteger(budget) || budget <= 0) throw new Error("the budget is a whole number of cents above zero");
   return {
-    instructions: instructions(job, opts.ownerNotes),
+    instructions: instructions(job, opts.ownerNotes, opts.actionResults),
     model: MODEL,
     price: { ...PRICE },
     max_tokens: MAX_TOKENS,

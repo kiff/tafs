@@ -598,6 +598,8 @@ function readDoorsConfig(): Promise<DoorsConfig> {
         verifyToken: str("whatsapp_verify_token"), ...(process.env.DOORS_WHATSAPP_REGION ? { region: process.env.DOORS_WHATSAPP_REGION } : {}),
       };
     }
+    // The Slack door: planque hands its Slack bot's messages over, signed with this (POST /v1/doors/planque).
+    if (str("planque_handoff_secret")) cfg.planqueHandoffSecret = str("planque_handoff_secret");
     return cfg;
   })().catch((err) => {
     doorsConfig = undefined;
@@ -668,7 +670,7 @@ const deletionPeers = {
 };
 
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
+  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, planqueBase: process.env.PLANQUE_URL ?? PLANQUE, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
 }
 
 /**

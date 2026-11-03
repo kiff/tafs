@@ -237,6 +237,18 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertEqual(model.tafName(agent: "rae-k3f9"), "Rae")
     }
 
+    /// Whether this person manages a taf is read with the list, not only from People: on an
+    /// iPad that never opened People, the owner's own taf had no Doors (nor its dial).
+    func testWhoManagesATafIsReadWithTheList() async throws {
+        let model = await signedIn(TwoKeySigner())
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]}},"checked_at":"2026-11-03T01:00:00Z"}"#)
+        StubProtocol.responses["GET /v1/groups"] = (403, #"{"error":"no"}"#) // People unread doesn't matter
+        await model.refresh()
+        let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" })
+        XCTAssertTrue(model.manages(rae.id))
+        XCTAssertTrue(model.groups.isEmpty)
+    }
+
     /// A change KIFF refuses says why, after the people are read again: the reread that works
     /// used to clear the reason before the owner saw it.
     func testAFailedPeopleChangeKeepsItsReason() async throws {

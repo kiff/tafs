@@ -166,6 +166,56 @@ enrolled phone. Each signature names this device's id in KIFF (`d=`), which plan
 with KIFF. The id is the signed-in account's: Android reads it again after any sign-in or
 sign-out, so after switching accounts planque never gets the last account's device.
 
+### Connect apps
+
+Settings › **Connect apps** lists the apps tafs cloud offers (`GET /v1/connect/apps`, with a
+search): the reviewed catalog first, then a page at a time of the managed provider's apps
+(**Show more apps** sends back `next_cursor` with the same search and provider). Each
+says whether it's connected, or needs signing in again, as tafs cloud sends it. **Not listed?
+Ask Coach** opens Coach, which can connect an app that isn't listed from its own docs.
+
+**Connect** (for whoever manages the account's Cards) starts the app's grant for one taf
+(`POST /v1/connect/apps/{entry}` with `{taf}`, which answers only the grant). With several
+tafs the person manages, it asks "Which taf is this for?" first; with one, it's that one; with
+none, Connect is off and it says to make a taf first. Then it opens the approval as a
+sheet over the list. It's the same as Coach's card: planque's words, KIFF's words for the
+profile, then the signature, and only then the vendor's sign-in page from planque's approve
+answer, and the confirm code. The owner sees what they're connecting before they go to the
+vendor. **Sign in again** opens the same sheet on the grant the app already has. A vendor that
+takes a key (`needs_key`) is set up through Coach for now. On Android: `AppModel.startConnectApp`,
+`startListApproval`, `ConnectApprovalSheet`.
+
+### KIFF's words for a connection (KIFF's profile contract)
+
+A connection can carry a **profile**: KIFF's facts about how each of its tools is counted and
+what its outcomes mean. planque puts it in the grant's `request.profile`, so the grant's digest
+the phone already checks covers it. Before the owner approves:
+- the phone asks KIFF for its words with its own session (`POST /v1/profiles/words`, never
+  through tafs cloud or planque);
+- it checks that the profile's SHA-256 (JCS) is KIFF's `profile_sha256` and the words' is
+  `words_sha256`;
+- the approval card shows each line verbatim, in KIFF's order. What KIFF can't check,
+  probation and a vendor that isn't pinned are in amber.
+
+**Approve** waits until the words are on screen, and approving signs `kiff_profile`
+(`profile_sha256`, `words_sha256`) into planque's approve body, so one signature covers the
+connection, the profile and the words. Words that don't check out are said ("KIFF's words for
+this connection don't check out…"), and nothing can be approved. On Android: `ProfileWords`,
+`AppModel.loadProfileWords`, `ProfileWordsLines`; KIFF's golden vectors are in
+`app/src/test/resources/profile`.
+
+### The dial Coach drafts
+
+Coach sets a taf's dial with its `taf_dial` tool, which makes the taf's next version, and nothing
+runs from it. Then Coach shows `{type: "knob", taf_id, version}` in its chat. The app draws that
+card from the taf's knob `draft`, in tafs cloud's words. The apps group `draft.groups` by
+connection and This taf, with When, What and Where lines; older responses fall back to
+words by ring.
+**Confirm** makes it live with the usual version switch (with the fingerprint where the Card
+changes) and tells Coach it was approved. **Change** goes back to Coach. When the knob's draft is
+no longer that version, the card says it was replaced. The dial shows the same draft, with **Make
+it live**. On Android: `KnobDraftCard`.
+
 ## Improving a taf
 
 **Improve** on a taf (`POST /v1/tafs/{id}/improve`) starts a Coach conversation on that
@@ -247,6 +297,7 @@ under Coach's Cards first.
 | `run_stop` | Stops a run; its held calls are withdrawn |
 | `taf_pause` | Pauses or resumes a taf's schedule |
 | `taf_results` | Sets where a taf's results go, all places at once ([doors.md](doors.md#where-results-go)). KIFF holds every change for the owner, who approves it in tafs |
+| `taf_dial` | Drafts a taf's dial, all its triggers, what it does when busy and where results go, as `PUT /v1/tafs/{id}/knob` takes them ([api.md](api.md)): the taf's next version, nothing running from it. Coach shows `{type: "knob", version, taf_id}` and installs it with `version_install`, held for the owner. Its Card, `coach-taf-dial`, allows 20 a day and holds nothing |
 | `version_try` | Tries a version: KIFF decides each of its writes and sends none |
 | `version_install` | Installs a version. KIFF holds this for the owner, who approves it in tafs: the app stops what's in the way, confirms the version's Card and makes it live |
 

@@ -215,6 +215,8 @@ data class TafCard(
   val total: CardTotal<Money>? = null,
   /** Its count of calls. */
   val calls: CardTotal<Int>? = null,
+  /** How this is counted, per tool, in KIFF's words; empty when KIFF has none. */
+  val counted: List<bot.tafs.app.kiff.CountedTool> = emptyList(),
 ) {
   /** The pill on the face: the environment it's scoped to ("TEST"); nothing for a Card that acts for real. */
   val environmentLabel: String? get() = if (live || environment.isEmpty()) null else environment.uppercase()

@@ -192,9 +192,10 @@ function world() {
 }
 type World = ReturnType<typeof world>;
 
-async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; headers?: Record<string, string> } = {}) {
+async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; headers?: Record<string, string>; query?: string } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
+    ...(opts.query ? { rawQueryString: opts.query } : {}),
     requestContext: { http: { method } },
     headers: { ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}), ...opts.headers },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
@@ -261,6 +262,32 @@ describe("tafs cloud", () => {
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ taf: RAE, time_zone: "UTC", summary: { status: "working" }, counts: { working: 1 } });
     expect(r.body.requests).toHaveLength(1);
+  });
+
+  it("lists the follow-ups a taf set itself on its dial, and removes one, only of that taf", async () => {
+    const w = world();
+    const fu = { id: "fu-1", agent: RAE, cron: "", input: "Check it again", enabled: true, kind: "once" as const, at: "2099-01-01T09:00:00Z", follow_up: true };
+    await w.agents.api.createSchedule("t_acme", fu);
+    await w.agents.api.createSchedule("t_acme", { ...fu, id: "fu-other", agent: "someone_else" });
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.wakes.filter((x: { kind: string }) => x.kind === "follow_up").map((x: { follow_up: string }) => x.follow_up)).toEqual(["fu-1"]);
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/follow-ups/fu-other`, { token: "ana" })).status).toBe(404);
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/follow-ups/${RAE}`, { token: "ana" })).status).toBe(404);
+    const del = await call(w, "DELETE", `/v1/tafs/${RAE}/follow-ups/fu-1`, { token: "ana" });
+    expect(del.status).toBe(200);
+    expect(del.body).toEqual({ removed: "fu-1" });
+    expect(await w.agents.api.getSchedule("t_acme", "fu-1")).toBeUndefined();
+  });
+
+  it("gives one request from the rim, step by step, and 404 for one it doesn't have", async () => {
+    const w = world();
+    await w.agents.api.startRun("t_acme", RAE, "go");
+    const id = w.agents.runs[0]!.id;
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/requests/${id}`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ id, state: "working", from: "Run now" });
+    expect(r.body.steps.map((s: { label: string }) => s.label)).toEqual(["Received", "Working on it"]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/requests/run_nope`, { token: "ana" })).status).toBe(404);
   });
 
   it("shows the firings a taf's schedule skipped lately, in words, and none it ran", async () => {
@@ -1526,6 +1553,109 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(rec.ownerNotes).toBe("Ask before every refund.");
     const upgraded = await upgradeDefinitions(depsOf(w), { dryRun: true });
     expect(upgraded.find((u) => u.taf === RAE)?.outcome).toBe("current");
+  });
+
+  it("a dial change is the next version, and only going live writes its triggers and places", async () => {
+    const w = twoVersions();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const refused = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "schedule", form: "every", every_minutes: 25 }] } });
+    expect(refused.status).toBe(400);
+    expect(refused.body.error).toBe("every 25 minutes can't be kept exactly: the nearest is every 20 minutes");
+    const before = w.agents.calls.length;
+    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: {
+      wakes: [{ kind: "schedule", form: "times_a_day", times: ["09:00", "15:00", "12:30"] }, { kind: "door" }],
+      when: { busy: "latest" }, results: ["door_reply", "app"],
+    } });
+    expect(put.status).toBe(200);
+    const n = put.body.version as number;
+    expect(put.body.words).toEqual(["Every day at 09:00, 15:00, 12:30", "Wakes on its door", "If busy, runs the latest once it's free", "Results go to door_reply, app"]);
+    // Nothing reached the scheduler yet.
+    expect(w.agents.calls.slice(before).filter((c: string) => /Schedule/.test(c))).toEqual([]);
+    // Until it's live, the dial shows it as the change waiting for the owner.
+    const waiting = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    // The waiting change can be shown in full, so a next − or + builds on it; anything else isn't a draft.
+    const asDraft = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana", query: `version=${n}` });
+    expect(asDraft.body.shown).toBe(n);
+    expect(asDraft.body.setting.busy).toBe("latest");
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana", query: "version=99" })).status).toBe(404);
+    expect(waiting.body.draft.groups).toEqual([{ name: "This taf", wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door", "If busy, runs the latest once it's free"], what: [], results: ["Results go to door_reply", "Results go to app"] }]);
+    delete waiting.body.draft.groups;
+    expect(waiting.body.draft).toEqual({ version: n, words: put.body.words, wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door"],
+      when: ["If busy, runs the latest once it's free"], results: ["Results go to door_reply, app"], what: [] });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
+    const writes = w.agents.calls.slice(before).filter((c: string) => /(create|update)Schedule/.test(c));
+    expect(writes).toEqual([`updateSchedule ${RAE} cron 0 9,15 * * * latest`, `createSchedule ${RAE}-t2 30 12 * * * UTC`]);
+    const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rec.results).toEqual(["door_reply", "app"]);
+    expect(rec.scheduleIds).toEqual([`${RAE}-t2`]);
+    expect(rec.knobApplied).toBe(n);
+    // Pause covers every schedule the dial keeps, and a dial written again on a paused taf keeps it paused.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(200);
+    expect(w.agents.calls.filter((c: string) => /switchSchedule .* off/.test(c))).toEqual(expect.arrayContaining([`switchSchedule ${RAE} off`, `switchSchedule ${RAE}-t2 off`]));
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.paused).toBe(true);
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobApplied: undefined });
+    await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect([RAE, `${RAE}-t2`].map((id) => w.agents.schedules.get(`t_acme|${id}`)?.enabled)).toEqual([false, false]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/resume`, { token: "ana" })).status).toBe(200);
+    expect([RAE, `${RAE}-t2`].map((id) => w.agents.schedules.get(`t_acme|${id}`)?.enabled)).toEqual([true, true]);
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.paused).toBeUndefined();
+    // One the scheduler couldn't switch, or follow-ups it couldn't list: not a quiet success, and asking again finishes it.
+    const switchOne = w.agents.api.switchSchedule.bind(w.agents.api), listAll = w.agents.api.listSchedules.bind(w.agents.api);
+    w.agents.api.switchSchedule = async (t: string, id: string, on: boolean) => {
+      if (id === `${RAE}-t2`) throw new Error("scheduler down");
+      return switchOne(t, id, on);
+    };
+    const stuck = await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" });
+    expect(stuck.status).toBe(502);
+    expect(stuck.body.error).toContain("may still wake");
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.paused).toBe(true);
+    w.agents.api.switchSchedule = switchOne;
+    w.agents.api.listSchedules = async () => { throw new Error("scheduler down"); };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(502);
+    w.agents.api.listSchedules = listAll;
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(200);
+    expect([RAE, `${RAE}-t2`].map((id) => w.agents.schedules.get(`t_acme|${id}`)?.enabled)).toEqual([false, false]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/resume`, { token: "ana" })).status).toBe(200);
+    const rec2 = w.tafs.held.get(`t_acme#${RAE}`)!;
+    // A live dial never written where it acts (the write failed after the switch) is written on the next read.
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rec2, knobApplied: undefined, scheduleIds: [] });
+    w.agents.calls.length = 0;
+    await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c)).length).toBeGreaterThan(0);
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.knobApplied).toBe(n);
+    // The live dial reads back as it was set, for the next tap to change one thing.
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.setting).toEqual({ wakes: [{ kind: "schedule", form: "times_a_day", times: ["09:00", "15:00", "12:30"] }, { kind: "door" }], busy: "latest", results: ["door_reply", "app"] });
+    expect(knob.body.version).toBe(n);
+    expect(knob.body.draft).toBeNull();
+    // A size choice's setting goes back to PUT as it is, and keeps everything else, If busy included.
+    const sized = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    const choice = sized.body.results.find((x: { size?: unknown }) => x.size)?.size.choices[0].setting;
+    expect(choice.busy).toBe("latest");
+    const sent = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: choice });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.knobs?.[String(sent.body.version)]?.busy).toBe("latest");
+  });
+
+  it("a dial change can send results to any connected app's action: the version's instructions carry it, and live, the dial shows it", async () => {
+    const w = world();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const bad = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [], results: ["app", { place: "slack", channel: "C1" }] } });
+    expect(bad.status).toBe(400);
+    expect(bad.body.error).toContain("a place is");
+    const notion = { place: "action", grant: "grt_n1", action: "notion_add_page_k3f9", args: { parent_page_id: "p1" }, name: "Notion · Support log" };
+    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results: ["app", notion] } });
+    expect(put.status).toBe(200);
+    const n = put.body.version as number;
+    expect(put.body.words).toContain("Results go to app, Notion · Support log");
+    expect(JSON.stringify(w.agents.versionDefs.get(`t_acme|${RAE}|${n}`) ?? [...w.agents.versionDefs.values()].at(-1))).toContain("Call notion_add_page_k3f9 with these arguments as given");
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
+    const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rec.results).toEqual(["app"]);
+    expect(rec.actionResults).toEqual([notion]);
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.results.filter((r: { on: boolean }) => r.on).map((r: { place: string; label: string }) => [r.place, r.label])).toEqual([["app", "You"], ["action", "Notion"]]);
+    expect(knob.body.setting.results).toEqual(["app", notion]);
+    expect(knob.body.results.find((r: { place: string }) => r.place === "action")).toMatchObject({ grant: "grt_n1", action: "notion_add_page_k3f9", tap: "Turn to stop: each result goes to Notion · Support log" });
   });
 
   it("records the Cards a version runs under when it goes live", async () => {
