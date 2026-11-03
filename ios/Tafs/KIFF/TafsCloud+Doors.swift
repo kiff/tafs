@@ -44,6 +44,11 @@ extension TafsCloud {
         var othersLimit: Int? = nil
         /// tafs cloud's words for the door (docs/doors.md), shown as they are; none from an older tafs cloud.
         var words: Words? = nil
+        /// A Slack door's connection, channel and planque subscription: removing the door
+        /// takes the subscription back first.
+        var grant: String? = nil
+        var channel: String? = nil
+        var trigger: String? = nil
 
         /// Where the door stands, what a tap on it does, and that its settings are below.
         struct Words: Decodable, Equatable {
@@ -53,7 +58,7 @@ extension TafsCloud {
         }
 
         enum CodingKeys: String, CodingKey {
-            case id, app, kind, label, open, address, proof, how, keys, today, limit, resting, words
+            case id, app, kind, label, open, address, proof, how, keys, today, limit, resting, words, grant, channel, trigger
             case othersToday = "others_today", othersLimit = "others_limit"
         }
 

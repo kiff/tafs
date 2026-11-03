@@ -306,9 +306,13 @@ final class PlanqueClient {
 
     func subscribe(grantID: String, account: String, slug: String, channels: [String]) async throws -> String {
         struct Body: Encodable { let account: String; let slug: String; let channels: [String] }
-        struct Response: Decodable { let trigger: String }
+        struct Response: Decodable {
+            var trigger: String?
+            var id: String?
+        }
         let r: Response = try await send("POST", "grants/\(escaped(grantID))/triggers", body: Body(account: account, slug: slug, channels: channels))
-        return r.trigger
+        guard let id = r.id ?? r.trigger else { throw PlanqueError.server(status: 502, message: "planque didn't say which subscription it made") }
+        return id
     }
 
     /// Stops a trigger: planque turns its delivery off, then removes it upstream.

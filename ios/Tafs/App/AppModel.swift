@@ -1640,9 +1640,25 @@ final class AppModel: ObservableObject {
             lastError = "Slack didn't subscribe \(where_): \(error.localizedDescription)"
             return false
         }
-        if await doors.addSlack(app, grant: grant.id, channel: channel.id) != nil { return true }
+        if await doors.addSlack(app, grant: grant.id, channel: channel.id, trigger: trigger) != nil { return true }
         try? await planque.unsubscribe(grantID: grant.id, trigger: trigger)
         return false
+    }
+
+    /// Removes a Slack door in the reverse order: planque's subscription first, signed by
+    /// this phone, then the door. One with no subscription named is only the door.
+    func removeSlackDoor(_ door: TafsCloud.Door, doors: DoorsModel) async {
+        if let grant = door.grant, let trigger = door.trigger, planqueReady, sessionHasKey, let tenant = kiffTenant {
+            let signer = self.signer
+            planque.tenant = tenant
+            planque.signer = { try signer.signConfirmed($0) }
+            defer { planque.signer = nil }
+            do { try await planque.unsubscribe(grantID: grant, trigger: trigger) } catch {
+                lastError = "Slack's subscription wasn't stopped, so the door stays: \(error.localizedDescription)"
+                return
+            }
+        }
+        await doors.remove(door)
     }
 
     /// Gives an API-key grant its key, as shown, behind Face ID. A grant with a profile needs

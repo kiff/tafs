@@ -56,7 +56,7 @@ final class ConnectAppsTests: XCTestCase {
         planque.tenant = "t_01"
         planque.signer = { _ in "sig" }
         planque.deviceID = "dev_phone01"
-        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_9/triggers"] = (201, #"{"trigger":"ti_1","account":"T0123","channels":["C0REFUNDS"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_9/triggers"] = (201, #"{"id":"ti_1","account":"T0123","channels":["C0REFUNDS"]}"#)
         let trigger = try await planque.subscribe(grantID: grant.id, account: "T0123", slug: PlanqueClient.slackMessageTrigger, channels: ["C0REFUNDS"])
         XCTAssertEqual(trigger, "ti_1")
         let sent = try XCTUnwrap(StubProtocol.sent.last { $0.url?.path == "/v1/accounts/t_01/grants/g_9/triggers" })

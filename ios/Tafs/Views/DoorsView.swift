@@ -17,6 +17,8 @@ struct DoorsView: View {
     var approve: (HeldCall) -> Void = { _ in }
     /// Adding a Slack door: its own sheet, which picks the connection and the channel.
     var addSlack: ((TafsCloud.DoorApp) -> Void)? = nil
+    /// Removing a Slack door: planque's subscription first, then the door.
+    var removeSlack: ((TafsCloud.Door) async -> Void)? = nil
     @State private var face: TafKnobView.Face = .overview
     @ObservedObject private var doors: DoorsModel
     @State private var selected = 0
@@ -49,9 +51,10 @@ struct DoorsView: View {
     }
 
     /// This Doors tab with Slack's own sheet for adding a Slack door.
-    func slack(_ add: @escaping (TafsCloud.DoorApp) -> Void) -> DoorsView {
+    func slack(add: @escaping (TafsCloud.DoorApp) -> Void, remove: @escaping (TafsCloud.Door) async -> Void) -> DoorsView {
         var v = self
         v.addSlack = add
+        v.removeSlack = remove
         return v
     }
 
@@ -132,7 +135,12 @@ struct DoorsView: View {
         .sheet(item: $pairing) { PairSheet(door: $0, doors: doors) }
         .confirmationDialog("Remove the \(confirmRemove?.label.lowercased() ?? "") door?", isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
             Button("Remove", role: .destructive) {
-                if let d = confirmRemove { Task { await doors.remove(d); selected = min(selected, doors.doors.count) } }
+                if let d = confirmRemove {
+                    Task {
+                        if d.kind == "slack", let removeSlack { await removeSlack(d) } else { await doors.remove(d) }
+                        selected = min(selected, doors.doors.count)
+                    }
+                }
             }
         } message: {
             Text("Its address stops being \(taf.name)'s. Messages already in its chat stay.")

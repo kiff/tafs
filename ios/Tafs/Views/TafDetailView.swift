@@ -80,7 +80,7 @@ struct TafDetailView: View {
                                         .knob(model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
                                               press: { await model.pressKnob(taf.id, $0) },
                                               approve: { call in Task { await model.answer(call, with: .approveOnce) } })
-                                        .slack { slackApp = $0 }
+                                        .slack(add: { slackApp = $0 }, remove: { await model.removeSlackDoor($0, doors: doors) })
                                         .task(id: taf.id) { await model.loadKnob(taf.id) }
                                         .sheet(item: $slackApp) { app in
                                             SlackDoorSheet(tafID: taf.id, doors: doors, app: app).environmentObject(model)

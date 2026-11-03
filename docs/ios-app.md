@@ -138,8 +138,9 @@ the app in sample mode.
   (`GET …/grants/{id}/channels`, from planque). Picking a channel asks Face ID once: planque
   subscribes it (`POST …/grants/{id}/triggers {account, slug, channels}`, device-signed; planque
   builds the subscription from the channels), then tafs cloud makes the door
-  (`POST …/doors {app: "slack", grant, channel}`). If the door can't be made, the subscription is
-  taken back. Pairing asks for a Slack member ID.
+  (`POST …/doors {app: "slack", grant, channel}`). The door keeps the subscription's id (`trigger`); if the door can't be made, the subscription
+  is taken back. Removing it is the reverse: the signed `DELETE …/grants/{grant}/triggers/{trigger}`,
+  then the door. Pairing asks for a Slack member ID.
 - **Connect apps** (`ConnectAppsView`, from Settings): `GET /v1/connect/apps`, searched as the
   owner types, in tafs cloud's order and words; "Not listed? Ask Coach" when `by_key`.
   Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,

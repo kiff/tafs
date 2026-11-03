@@ -85,9 +85,9 @@ final class DoorsModel: ObservableObject {
 
     /// A Slack door on one channel of one Slack bot connection, once planque subscribed that
     /// channel with the owner's approval: tafs cloud routes what's written there to the taf.
-    func addSlack(_ app: TafsCloud.DoorApp, grant: String, channel: String) async -> TafsCloud.Door? {
+    func addSlack(_ app: TafsCloud.DoorApp, grant: String, channel: String, trigger: String) async -> TafsCloud.Door? {
         let cloud = cloud, tafID = tafID
-        return await work { try await cloud.addDoor(tafID, app: app.id, extra: ["grant": grant, "channel": channel]) }
+        return await work { try await cloud.addDoor(tafID, app: app.id, extra: ["grant": grant, "channel": channel, "trigger": trigger]) }
     }
 
     func setOpen(_ door: TafsCloud.Door, _ open: Bool) async {
