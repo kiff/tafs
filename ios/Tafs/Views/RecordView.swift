@@ -5,6 +5,8 @@ import SwiftUI
 struct RecordView: View {
     @EnvironmentObject private var model: AppModel
     @State private var filter: RecordFilter = .all
+    /// The one taf shown, or every taf.
+    @State private var taf: UUID?
     /// The days whose reads are shown, not folded.
     @State private var openReads: Set<String> = []
 
@@ -14,9 +16,11 @@ struct RecordView: View {
                 Text("Record").scaledFont(34, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 Text("Everything your tafs did, were refused, or asked you. Newest first.")
                     .scaledFont(14).foregroundColor(Theme.soft)
+                tafChips
                 chips
                 ForEach(days, id: \.key) { day in
-                    Text(day.title).scaledFont(11, weight: .medium, design: .monospaced).textCase(.uppercase)
+                    Text([day.title, Self.spent(day.lines + day.reads)].compactMap { $0 }.joined(separator: " · "))
+                        .scaledFont(11, weight: .medium, design: .monospaced).textCase(.uppercase)
                         .foregroundColor(Theme.dim).padding(.top, 6)
                     ForEach(day.lines) { RecordRow(entry: $0, showTaf: true) }
                     if !day.reads.isEmpty {
@@ -33,7 +37,7 @@ struct RecordView: View {
                     }
                 }
                 if days.isEmpty {
-                    Text(filter == .all ? "Nothing yet." : "Nothing here.").scaledFont(14).foregroundColor(Theme.dim).padding(.top, 8)
+                    Text(filter == .all && taf == nil ? "Nothing yet." : "Nothing here.").scaledFont(14).foregroundColor(Theme.dim).padding(.top, 8)
                 }
             }
             // The full width on an iPad, as the other tabs (kiff/tafs#96).
@@ -44,21 +48,60 @@ struct RecordView: View {
         .screenBackground()
     }
 
+    /// "All tafs", then one chip a taf with its colour: it narrows the Record with the filter.
+    private var tafChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                chip("All tafs", selected: taf == nil) { taf = nil }
+                ForEach(model.tafs + model.otherAgents) { t in
+                    chip(t.name, dot: Theme.tafColor(t.colorIndex), selected: taf == t.id) { taf = t.id }
+                }
+            }
+        }
+    }
+
     private var chips: some View {
         HStack(spacing: 6) {
             ForEach(RecordFilter.allCases, id: \.self) { f in
-                Button { filter = f } label: {
-                    Text(f.title).scaledFont(13)
-                        .foregroundColor(filter == f ? .white : Theme.soft)
-                        .padding(.horizontal, 11).padding(.vertical, 5)
-                        .background(filter == f ? Theme.ink : Theme.panel)
-                        .overlay(Capsule().stroke(filter == f ? Theme.ink : Theme.line))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(filter == f ? .isSelected : [])
+                chip(f.title, selected: filter == f) { filter = f }
             }
         }
+    }
+
+    /// A chip; the chosen one inverts: ink fill, the background's colour for its words.
+    private func chip(_ title: String, dot: Color? = nil, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let dot { Circle().fill(dot).frame(width: 8, height: 8) }
+                Text(title).scaledFont(13).lineLimit(1)
+            }
+            .foregroundColor(selected ? Theme.background : Theme.soft)
+            .padding(.horizontal, 11).padding(.vertical, 5)
+            .background(selected ? Theme.ink : Theme.panel)
+            .overlay(Capsule().stroke(selected ? Theme.ink : Theme.line))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    /// "€640 spent": the money moved that day, a sum for each currency; nil when none was.
+    static func spent(_ entries: [RecordEntry]) -> String? {
+        var sums: [String: Money] = [:]
+        var order: [String] = []
+        for e in entries where RecordFilter.moneyMoved.keeps(e) {
+            guard let m = e.money, let unit = m.currency else { continue }
+            if let sum = sums[unit] {
+                let scale = max(sum.scale, m.scale)
+                func at(_ x: Money) -> Int64 { x.minor * Int64(pow(10, Double(scale - x.scale))) }
+                sums[unit] = Money(minor: at(sum) + at(m), currency: unit, scale: scale)
+            } else {
+                sums[unit] = m
+                order.append(unit)
+            }
+        }
+        guard !order.isEmpty else { return nil }
+        return order.compactMap { sums[$0]?.formatted }.joined(separator: " + ") + " spent"
     }
 
     private struct Day {
@@ -72,7 +115,7 @@ struct RecordView: View {
     private var days: [Day] {
         let calendar = AccountTime.calendar
         var out: [Day] = []
-        for entry in model.record.filter(filter.keeps).sorted(by: { $0.at > $1.at }) {
+        for entry in model.record.filter({ filter.keeps($0) && (taf == nil || $0.tafID == taf) }).sorted(by: { $0.at > $1.at }) {
             let start = calendar.startOfDay(for: entry.at)
             let key = ISO8601DateFormatter().string(from: start)
             if out.last?.key != key { out.append(Day(key: key, title: Self.dayTitle(start, calendar: calendar))) }
@@ -116,17 +159,21 @@ extension RecordEntry {
     /// "€150.00", from KIFF's decimal string and its unit; the unit as written when it isn't
     /// a currency.
     var amountText: String? {
-        guard let amount, let value = Decimal(string: amount.value, locale: Locale(identifier: "en_US_POSIX")) else { return nil }
+        guard let amount, Decimal(string: amount.value, locale: Locale(identifier: "en_US_POSIX")) != nil else { return nil }
         guard let unit = amount.unit, !unit.isEmpty else { return amount.value }
-        if unit.count == 3, unit == unit.uppercased(), Locale.isoCurrencyCodes.contains(unit) {
-            // As the app writes money everywhere: "US$80", never "US$80,00" (kiff/tafs#236, item 16).
-            let scale = amount.value.split(separator: ".").dropFirst().first?.count ?? 0
-            var minor = value * Decimal(sign: .plus, exponent: scale, significand: 1)
-            var whole = Decimal()
-            NSDecimalRound(&whole, &minor, 0, .plain)
-            return Money(minor: NSDecimalNumber(decimal: whole).int64Value, currency: unit, scale: scale).formatted
-        }
-        return "\(amount.value) \(unit)"
+        // As the app writes money everywhere: "US$80", never "US$80,00" (kiff/tafs#236, item 16).
+        return money?.formatted ?? "\(amount.value) \(unit)"
+    }
+
+    /// The amount as money, when its unit is a currency.
+    var money: Money? {
+        guard let amount, let value = Decimal(string: amount.value, locale: Locale(identifier: "en_US_POSIX")),
+              let unit = amount.unit, unit.count == 3, unit == unit.uppercased(), Locale.isoCurrencyCodes.contains(unit) else { return nil }
+        let scale = amount.value.split(separator: ".").dropFirst().first?.count ?? 0
+        var minor = value * Decimal(sign: .plus, exponent: scale, significand: 1)
+        var whole = Decimal()
+        NSDecimalRound(&whole, &minor, 0, .plain)
+        return Money(minor: NSDecimalNumber(decimal: whole).int64Value, currency: unit, scale: scale)
     }
 
     /// "Refund €150.00": the action's verb with its amount, as the mockup has it.
@@ -207,7 +254,15 @@ struct RecordRow: View {
             Circle().fill(color).frame(width: 9, height: 9).padding(.top, 6).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(entry.titleWithAmount).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    if showTaf, let taf = model.taf(entry.tafID) {
+                        // "Chargebacks · Refund €120": its taf first, by its colour and name.
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Circle().fill(Theme.tafColor(taf.colorIndex)).frame(width: 8, height: 8).alignmentGuide(.firstTextBaseline) { $0[.bottom] }
+                            Text("\(taf.name) · \(entry.titleWithAmount)").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                        }
+                    } else {
+                        Text(entry.titleWithAmount).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    }
                     Spacer()
                     Text(entry.at.zonedShortTime).scaledFont(12, design: .monospaced).foregroundColor(Theme.dim)
                 }
@@ -229,11 +284,10 @@ struct RecordRow: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// "<taf> · <who decided> · <result at the tool>"; a call from before KIFF said who
-    /// decided reads as it did.
+    /// "<who decided> · <result at the tool>"; a call from before KIFF said who decided reads
+    /// as it did. The taf is the title's.
     private var detail: String {
         var parts: [String] = []
-        if showTaf, let taf = model.taf(entry.tafID) { parts.append(taf.name) }
         if let on = entry.onText { parts.append(on) }
         if entry.kind == .held, !model.isWaiting(entry) {
             // Held, and KIFF no longer holds it (the 789 retest: the row still said "waiting for
