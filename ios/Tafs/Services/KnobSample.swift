@@ -27,6 +27,15 @@ extension Screenshots {
                 knob.wakes[index].state = "Waiting for the next event from the connected business application"
             }
         }
+        if ProcessInfo.processInfo.arguments.contains("-knob-event-approval"),
+           let index = knob.wakes.firstIndex(where: { $0.id == "event_12" }) {
+            knob.wakes[index].label = "Support inbox"
+            knob.wakes[index].ok = "approve"
+            knob.wakes[index].on = false
+            knob.wakes[index].state = "Needs your approval"
+            knob.wakes[index].approval = .init(state: "needed", grant: "sample_12", event: "NEW_TICKET",
+                config: ["queue": .string("Support queue"), "include_archived": .bool(false)], subscription: nil)
+        }
         return knob
     }
 }

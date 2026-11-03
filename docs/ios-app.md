@@ -132,6 +132,15 @@ the app in sample mode.
   `can_pause: false`; older responses keep it available. A refused pause shows the
   service's `words`, or its error message when words are absent. The search-shaped **Ask Coach or find anything** button
   opens Coach in the taf's context.
+- **An app event's approval:** a stop with `ok: approve` shows **Approve with Face ID**
+  (or Touch ID). Its sheet shows the complete filters before confirmation. The phone signs planque's trigger request with the exact `account`,
+  `slug` and filter object supplied by the connected grant and the dial; it adds no filters.
+  It then records planque's returned subscription with the trigger id and the live dial's
+  `version`. The service's updated knob supplies the approved state. A changed live version
+  is refused; a failed recording keeps a receipt so retrying does not subscribe or ask Face ID
+  twice. A lost response is resolved by reading the server's current state. Account reset
+  discards receipts and in-flight results. Provider refusals retain the needed state and
+  show the provider's words. `AppEventApprovalTests` covers these paths with synthetic services.
 - **Doors and needs you:** the face opens/closes the chosen door, runs the taf once or removes the chosen
   follow-up by the id cloud supplied.
   An approvable held call takes an unchosen face, or the Needs you button selects it,

@@ -46,6 +46,14 @@ extension TafsCloud {
             var ok: String?
             var look: String?
             var followUp: String?
+            struct Approval: Decodable, Equatable, Sendable {
+                let state: String
+                let grant: String
+                let event: String
+                let config: [String: JSONValue]
+                let subscription: String?
+            }
+            var approval: Approval?
             struct Size: Decodable, Equatable, Sendable {
                 struct Choice: Decodable, Equatable, Sendable {
                     var label: String
@@ -63,7 +71,7 @@ extension TafsCloud {
             var size: Size?
             var ringLabel: String { step.map { "\($0) · \(label)" } ?? label }
 
-            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door, trigger, grant, step, action, ok, look, size, followUp = "follow_up" }
+            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door, trigger, grant, step, action, ok, look, size, approval, followUp = "follow_up" }
             init(id: String, kind: String? = nil, place: String? = nil, label: String, words: String, on: Bool = true,
                  state: String? = nil, tap: String? = nil, expires: String? = nil, door: String? = nil, grant: String? = nil, step: Int? = nil, ok: String? = nil, look: String? = nil) {
                 self.id = id; self.kind = kind; self.place = place; self.label = label; self.words = words
@@ -88,6 +96,7 @@ extension TafsCloud {
                 ok = try c.decodeIfPresent(String.self, forKey: .ok)
                 look = try c.decodeIfPresent(String.self, forKey: .look)
                 followUp = try c.decodeIfPresent(String.self, forKey: .followUp)
+                approval = try c.decodeIfPresent(Approval.self, forKey: .approval)
                 size = try c.decodeIfPresent(Size.self, forKey: .size)
             }
         }
@@ -322,6 +331,14 @@ extension TafsCloud {
     /// A taf's dial.
     func knob(_ id: String, version: Int? = nil) async throws -> Knob {
         try await send("GET", "/v1/tafs/\(escaped(id))/knob" + (version.map { "?version=\($0)" } ?? ""))
+    }
+
+    /// Record only the receipt planque returned for this live version's event. The server
+    /// decides whether it still matches, and returns the resulting dial.
+    func recordKnobSubscription(_ id: String, trigger: String, subscription: String, version: Int) async throws -> Knob {
+        struct Body: Encodable { let trigger: String; let subscription: String; let version: Int }
+        return try await send("POST", "/v1/tafs/\(escaped(id))/knob/subscriptions",
+                              body: Body(trigger: trigger, subscription: subscription, version: version))
     }
 
     /// Changes the taf's dial: its next version, made live only by the version switch.

@@ -496,7 +496,7 @@ final class AppModel: ObservableObject {
         forgetApprovalKey()
         kiff.token = token
         cloud.token = token
-        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []
         holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
@@ -848,7 +848,7 @@ final class AppModel: ObservableObject {
         cloudTafs = [:]; halts = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         holderIDs = [:]
-        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         unfinishedRemovals = []
@@ -1755,7 +1755,10 @@ final class AppModel: ObservableObject {
     /// version. Fixed size choices make a pending version; setup belongs to Coach.
     func pressKnob(_ tafID: UUID, _ item: TafsCloud.Knob.Item) async {
         guard mode == .kiff, manages(tafID), let c = cloudTaf(for: tafID) else { return }
-        if item.ok == "door", let door = item.door {
+        if item.ok == "approve" {
+            _ = await approveKnobEvent(tafID, item: item)
+            return
+        } else if item.ok == "door", let door = item.door {
             do { _ = try await cloud.setDoorOpen(c.id, door: door, open: !item.on) } catch {
                 lastError = "The door didn't \(item.on ? "close" : "open"): \(error.localizedDescription)"
             }
@@ -1768,6 +1771,103 @@ final class AppModel: ObservableObject {
             return
         }
         await loadKnob(tafID)
+    }
+
+    /// A subscription already signed for at planque but not yet acknowledged by tafs cloud.
+    /// It is only a retry receipt: the dial's approval state always comes from the server.
+    private struct EventSubscriptionReceipt {
+        let version: Int
+        let approval: TafsCloud.Knob.Item.Approval
+        let subscription: String
+    }
+    private var eventSubscriptionReceipts: [UUID: [String: EventSubscriptionReceipt]] = [:]
+    private var eventApprovals: Set<UUID> = []
+
+    @discardableResult
+    func approveKnobEvent(_ tafID: UUID, item: TafsCloud.Knob.Item) async -> Bool {
+        guard mode == .kiff, manages(tafID), planqueReady, sessionHasKey,
+              let tenant = kiffTenant, let taf = cloudTaf(for: tafID),
+              let version = knobs[tafID]?.version, item.kind == "app_event", item.ok == "approve",
+              let approval = item.approval, approval.state == "needed",
+              knobs[tafID]?.wakes.first(where: { $0.id == item.id }) == item else { return false }
+        let gen = accountGeneration
+        guard eventApprovals.insert(tafID).inserted else { return false }
+        defer { if gen == accountGeneration { eventApprovals.remove(tafID) } }
+        lastError = nil
+        do {
+            // Read the live definition before asking the owner. A draft or stale button
+            // must not subscribe different filters. The POST checks the version again.
+            let live = try await cloud.knob(taf.id)
+            guard gen == accountGeneration else { return false }
+            guard live.version == version,
+                  let current = live.wakes.first(where: { $0.id == item.id }),
+                  let currentApproval = current.approval,
+                  currentApproval.grant == approval.grant, currentApproval.event == approval.event,
+                  currentApproval.config == approval.config else {
+                lastError = "This event changed. Read the dial again before approving it."
+                return false
+            }
+            if currentApproval.state == "approved" {
+                knobs[tafID] = live
+                eventSubscriptionReceipts[tafID]?[item.id] = nil
+                return true
+            }
+            guard currentApproval.state == "needed", current.ok == "approve" else { return false }
+            let receipt: EventSubscriptionReceipt
+            if let kept = eventSubscriptionReceipts[tafID]?[item.id], kept.version == version, kept.approval == approval {
+                receipt = kept
+            } else {
+                await refreshConnections()
+                guard gen == accountGeneration else { return false }
+                guard let grant = grants.first(where: { $0.id == approval.grant && $0.connected && $0.request.agent == taf.kiffAgent }),
+                      let account = grant.account, !account.isEmpty else {
+                    lastError = "Connect this app for the taf before approving its event."
+                    return false
+                }
+                guard !approvalBlocked else {
+                    lastError = approvalReadiness.words(device: ThisDevice.kind, kind: Biometry.name)
+                    return false
+                }
+                let signer = self.signer
+                let filters = try JSONEncoder().encode(approval.config)
+                let hash = SHA256.hash(data: filters).map { String(format: "%02x", $0) }.joined()
+                quietStop = nil
+                do {
+                    _ = try await signer.sign(Data("tafs.event.v1|\(tenant)|\(taf.id)|\(version)|\(item.id)|\(approval.grant)|\(approval.event)|\(hash)".utf8),
+                                              reason: item.words, grants: true)
+                } catch {
+                    guard gen == accountGeneration else { return false }
+                    quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                    return false
+                }
+                guard gen == accountGeneration else { return false }
+                planque.tenant = tenant
+                let subscription = try await planque.subscribe(grantID: approval.grant, account: account,
+                    slug: approval.event, config: approval.config, signedBy: { [self] bytes in
+                        guard gen == accountGeneration else { throw CancellationError() }
+                        return try signer.signConfirmed(bytes)
+                    })
+                guard gen == accountGeneration else { return false }
+                receipt = EventSubscriptionReceipt(version: version, approval: approval, subscription: subscription)
+                eventSubscriptionReceipts[tafID, default: [:]][item.id] = receipt
+            }
+            let updated = try await cloud.recordKnobSubscription(taf.id, trigger: item.id,
+                subscription: receipt.subscription, version: receipt.version)
+            guard gen == accountGeneration else { return false }
+            knobs[tafID] = updated
+            guard updated.wakes.first(where: { $0.id == item.id })?.approval?.subscription == receipt.subscription,
+                  updated.wakes.first(where: { $0.id == item.id })?.approval?.state == "approved" else {
+                lastError = "The subscription was made, but the dial hasn't recorded it yet. Try again."
+                return false
+            }
+            eventSubscriptionReceipts[tafID]?[item.id] = nil
+            return true
+        } catch {
+            guard gen == accountGeneration else { return false }
+            if error is CancellationError { return false }
+            lastError = error.localizedDescription
+            return false
+        }
     }
 
     func requestDetail(_ tafID: UUID, run: String) async throws -> TafsCloud.RequestDetail {

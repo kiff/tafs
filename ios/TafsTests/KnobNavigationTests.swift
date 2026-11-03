@@ -135,4 +135,16 @@ final class KnobNavigationTests: XCTestCase {
         XCTAssertTrue(legacy.canPause)
     }
 
+    func testAnAppEventKeepsTheServersApprovalAndCompleteFilters() throws {
+        let json = #"{"version":7,"wakes":[{"id":"trg_event_1","kind":"app_event","label":"Support inbox","ok":"approve","approval":{"state":"needed","grant":"g_1","event":"NEW_TICKET","config":{"queue":"Support","nested":{"enabled":false,"minimum":12.5,"tags":["paid","urgent"]}}}}]}"#
+        let knob = try JSONDecoder().decode(TafsCloud.Knob.self, from: Data(json.utf8))
+        let approval = try XCTUnwrap(knob.wakes.first?.approval)
+        XCTAssertEqual(approval.state, "needed")
+        XCTAssertEqual(approval.grant, "g_1")
+        XCTAssertEqual(approval.event, "NEW_TICKET")
+        XCTAssertNil(approval.subscription)
+        XCTAssertEqual(approval.config["queue"], .string("Support"))
+        XCTAssertEqual(approval.config["nested"], .object(["enabled": .bool(false), "minimum": .number(12.5), "tags": .array([.string("paid"), .string("urgent")])]))
+    }
+
 }

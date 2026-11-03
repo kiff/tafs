@@ -16,6 +16,7 @@ struct TafDialPanel<Details: View>: View {
     @State private var busy = false
     @State private var reading: TafsCloud.Version?
     @State private var requests = false
+    @State private var eventToApprove: TafsCloud.Knob.Item?
 
     var body: some View {
         ScrollView {
@@ -44,6 +45,10 @@ struct TafDialPanel<Details: View>: View {
             VersionCardSheet(version: version, tafID: taf.id).environmentObject(model)
         }
         .sheet(isPresented: $requests) { KnobRequestsSheet(tafID: taf.id).environmentObject(model) }
+        .sheet(item: $eventToApprove) { item in
+            AppEventApprovalSheet(item: item, approve: { await model.approveKnobEvent(taf.id, item: item) })
+                .environmentObject(model)
+        }
     }
 
     private var content: some View {
@@ -54,6 +59,7 @@ struct TafDialPanel<Details: View>: View {
             }
             TafKnobView(knob: knob, face: $face, held: held, press: { _, item in
                 guard manages, !busy else { return }
+                if item.ok == "approve" { eventToApprove = item; return }
                 busy = true
                 Task {
                     defer { busy = false }

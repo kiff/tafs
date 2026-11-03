@@ -43,6 +43,7 @@ final class KnobUITests: XCTestCase {
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "knob"]
         app.launch()
         XCTAssertTrue(app.buttons["knob.next"].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.buttons["knob.power"].isEnabled, "the synthetic manager can pause when the server allows it")
         let keys = ["back", "lower", "power", "raise", "next"].map { app.buttons["knob." + $0] }
         func check() {
             for key in keys {
@@ -81,6 +82,26 @@ final class KnobUITests: XCTestCase {
         let face = app.buttons["knob.face"]
         XCTAssertTrue(face.label.contains("A VERY LONG CONNECTION EVENT NAME THAT MUST REMAIN READABLE WITH VOICEOVER"))
         XCTAssertTrue(face.label.contains("Waiting for the next event from the connected business application"))
+    }
+
+    @MainActor
+    func testEventFiltersAreShownBeforeTheirApproval() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "knob", "-knob-event-approval"]
+        app.launch()
+        let showing = app.buttons["knob.showing"]
+        XCTAssertTrue(showing.waitForExistence(timeout: 30))
+        showing.tap()
+        app.buttons["Service 12 · 2 stops"].tap()
+        app.buttons["knob.next"].tap()
+        app.buttons["knob.face"].tap()
+        let filters = app.staticTexts["event.filters"]
+        XCTAssertTrue(filters.waitForExistence(timeout: 5))
+        XCTAssertTrue(filters.label.contains("Support queue"))
+        XCTAssertTrue(filters.label.contains("include_archived"))
+        XCTAssertTrue(app.buttons["event.approve"].exists)
+        app.buttons["Cancel"].tap()
+        XCTAssertFalse(filters.exists)
     }
 
 }

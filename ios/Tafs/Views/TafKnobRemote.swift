@@ -38,7 +38,7 @@ struct TafKnobRemote: View {
             }
             remoteButton("Next", symbol: "forward.end.fill", enabled: !allStops.isEmpty) { walk(1) }
         }
-        .accessibilityIdentifier("knob.remote")
+        .accessibilityElement(children: .contain)
     }
 
     private func remoteButton(_ title: String, symbol: String, enabled: Bool, power: Bool = false,
