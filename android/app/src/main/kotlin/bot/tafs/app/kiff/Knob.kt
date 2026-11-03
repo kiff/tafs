@@ -64,8 +64,8 @@ data class KnobWire(
   data class Draft(val version: Int, val words: List<String> = emptyList())
 
   /**
-   * The setting with [stopId] changed, the one thing a tap changes, as `PUT` takes it; null when that stop changes nothing here
-   * (a door or Run now, which have their own routes, or a stop the dial can't set).
+   * The setting with [stopId] changed, the one thing a tap changes, as `PUT` takes it: a result place, or If busy. Null for
+   * anything else: a door and Run now have their own routes, and triggers change through Coach's draft for now.
    */
   fun changed(stopId: String): kotlinx.serialization.json.JsonObject? {
     val now = setting ?: return null
@@ -73,11 +73,6 @@ data class KnobWire(
     val wakes = list("wakes")
     val results = list("results")
     var busy = now["busy"]
-    this.wakes.firstOrNull { it.id == stopId }?.let { item ->
-      val trigger = item.trigger ?: return null
-      val next = if (item.on) wakes.filterNot { it == trigger } else wakes + trigger
-      return put(next, busy, results)
-    }
     this.results.firstOrNull { it.id == stopId }?.let { item ->
       val place = item.place ?: return null
       val held = results.firstOrNull { (it as? kotlinx.serialization.json.JsonObject)?.get("place")?.let { p -> (p as? kotlinx.serialization.json.JsonPrimitive)?.content } == place }

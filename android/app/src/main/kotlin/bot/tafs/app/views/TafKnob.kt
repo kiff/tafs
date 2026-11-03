@@ -228,8 +228,9 @@ fun TafDialPanel(
                 when {
                   door != null -> { actions.setOpen(taf.id, door, !door.open); actions.loadKnob(taf.id) }
                   item?.kind == "run_now" -> actions.runNow(taf.id)
-                  // Anything else the face can do changes how the taf works: it becomes the next version, to make live.
-                  face.stop.tap != null && state.manages(taf.id) -> actions.changeKnob(taf.id, face.stop.id)
+                  // If busy and where results go change how the taf works: the next version, to make live. Triggers change
+                  // through Coach's draft for now.
+                  face.ring != KnobRing.Kind.WakesIt && face.stop.tap != null && state.manages(taf.id) -> actions.changeKnob(taf.id, face.stop.id)
                 }
               }
               KnobFace.Overview -> Unit

@@ -97,12 +97,9 @@ class KnobWireTest {
 
   private fun json(s: String) = KiffClient.json.parseToJsonElement(s)
 
-  @Test fun aTriggerOnIsTakenOutAndOneOffIsPutIn() {
-    assertEquals(json("""{"wakes":[{"kind":"door"}],"when":{"busy":"skip"},"results":[{"place":"door_reply"}]}"""), dial.changed("trg_9"))
-    assertEquals(
-      json("""{"wakes":[{"kind":"door"},{"kind":"schedule","form":"weekdays","at":"09:00"},{"kind":"schedule","form":"daily","at":"15:00"}],"when":{"busy":"skip"},"results":[{"place":"door_reply"}]}"""),
-      dial.changed("trg_15"),
-    )
+  @Test fun aTriggerIsntChangedByATapItsCoachsDraft() {
+    assertNull(dial.changed("trg_9"))
+    assertNull(dial.changed("trg_15"))
   }
 
   @Test fun aPlaceIsTakenOutOrAPlainOnePutBack() {

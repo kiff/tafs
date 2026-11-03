@@ -41,7 +41,7 @@ class TafDialPanelTest {
                  {"id":"trg_2","kind":"run_now","label":"Run now","words":"Runs it once, now.","state":"Now","tap":"Tap to run once"},
                  {"id":"trg_3","kind":"schedule","label":"Weekdays","words":"Weekdays at 09:00","state":"On","tap":"Tap to turn off","trigger":{"kind":"schedule","form":"weekdays","at":"09:00"}}],
         "when":[{"id":"when_arrivals","kind":"arrivals","label":"Arrivals","words":"Works each one as it arrives"}],
-        "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote"}],
+        "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote","state":"On","tap":"Tap to stop replying"}],
         "rim":{"done":3,"line":"3 done today"}}""",
   )
   private val log = mutableListOf<String>()
@@ -109,12 +109,20 @@ class TafDialPanelTest {
     assertEquals(listOf("approve h1"), log)
   }
 
-  @Test fun aScheduleTapMakesTheNextVersion() {
+  @Test fun aScheduleTapChangesNothingItsCoachsDraft() {
     show()
     rule.onNodeWithContentDescription("Weekdays, Wakes it, on").performClick()
     rule.onNodeWithText("Tap to turn off").performClick()
     rule.waitForIdle()
-    assertEquals(listOf("change trg_3"), log)
+    assertEquals(emptyList<String>(), log)
+  }
+
+  @Test fun aResultPlaceTapMakesTheNextVersion() {
+    show()
+    rule.onNodeWithContentDescription("Sender, Results go, on").performClick()
+    rule.onNodeWithText("Tap to stop replying").performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("change res_1"), log)
   }
 
   @Test fun aChangeWaitsToBeMadeLiveInTafsCloudsWords() {
