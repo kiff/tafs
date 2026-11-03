@@ -326,8 +326,10 @@ data class AppState(
   val slackChannels: Map<String, List<bot.tafs.app.kiff.SlackChannel>> = emptyMap(),
   /** Each taf's dial as tafs cloud last sent it, by taf id. */
   val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
-  /** A dial change made into a version, waiting for the owner to make it live, by taf id. */
+  /** The newest dial change made into a version, waiting for the owner to make it live, by taf id. */
   val knobChanges: Map<String, bot.tafs.app.kiff.KnobWire.Change> = emptyMap(),
+  /** How many − and + changes it holds, for "Make N changes live", by taf id. */
+  val knobChangeCount: Map<String, Int> = emptyMap(),
   /** Why a dial change didn't go through, in tafs cloud's words when it sends them, by taf id. */
   val knobErrors: Map<String, String> = emptyMap(),
   /** Money calls whose outcome KIFF can't prove, waiting on "Did this happen?" in Needs you. */
@@ -2429,29 +2431,33 @@ class AppModel(
     loadKnob(tafId)
   }
 
-  /** A taf's dial (`GET /v1/tafs/{id}/knob`), read quietly: with none, its Doors tab keeps the doors' own dial. */
-  suspend fun loadKnob(tafId: String) {
+  /**
+   * A taf's dial (`GET /v1/tafs/{id}/knob`), read quietly: with none, its Doors tab keeps the doors' own dial. With [version], a
+   * dial change waiting to go live, so the next − or + builds on it.
+   */
+  suspend fun loadKnob(tafId: String, version: Int? = null) {
     if (_state.value.mode != Mode.kiff) return
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     val generation = accountGeneration
-    val knob = attempt { cloud.knob(cloudId) } ?: return
+    val knob = attempt { cloud.knob(cloudId, version) } ?: return
     if (generation == accountGeneration) _state.update { it.copy(knobs = it.knobs + (tafId to knob)) }
   }
 
   /**
-   * A tap on the dial that changes how the taf works (a trigger on or off, a result place, If busy): the live setting with that one
-   * thing changed goes to `PUT …/knob`, which makes the taf's next version. Nothing runs from it until the owner makes it live
-   * ([confirmKnobChange]). A door and Run now have their own routes and never come here.
+   * − or + on the dial: the stop's next choice, sent as its whole `setting` to `PUT …/knob`, which makes the taf's next version.
+   * That version is then read (`?version=N`), so the next − or + builds on it. Nothing runs from it until the owner makes the
+   * changes live ([confirmKnobChange]).
    */
-  suspend fun changeKnob(tafId: String, stopId: String): Boolean {
+  suspend fun changeKnobSize(tafId: String, setting: kotlinx.serialization.json.JsonObject): Boolean {
     if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return false
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return false
-    val setting = _state.value.knobs[tafId]?.changed(stopId) ?: return false
     val generation = accountGeneration
     _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
     return try {
       val change = cloud.changeKnob(cloudId, setting)
-      if (generation == accountGeneration) _state.update { it.copy(knobChanges = it.knobChanges + (tafId to change)) }
+      if (generation != accountGeneration) return false
+      _state.update { it.copy(knobChanges = it.knobChanges + (tafId to change), knobChangeCount = it.knobChangeCount + (tafId to (it.knobChangeCount[tafId] ?: 0) + 1)) }
+      loadKnob(tafId, change.version)
       true
     } catch (e: CancellationException) {
       throw e
@@ -2476,12 +2482,10 @@ class AppModel(
       return false
     }
     if (!useVersion(version, tafId)) return false
-    _state.update { it.copy(knobChanges = it.knobChanges - tafId) }
+    _state.update { it.copy(knobChanges = it.knobChanges - tafId, knobChangeCount = it.knobChangeCount - tafId) }
     loadKnob(tafId)
     return true
   }
-
-  fun dismissKnobChange(tafId: String) = _state.update { it.copy(knobChanges = it.knobChanges - tafId, knobErrors = it.knobErrors - tafId) }
 
   /**
    * Connect from Connect apps: starts the app's grant (or, for one to sign in again, takes the grant it has) and opens its

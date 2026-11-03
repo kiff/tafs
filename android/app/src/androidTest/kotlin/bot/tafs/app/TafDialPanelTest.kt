@@ -1,12 +1,18 @@
 package bot.tafs.app
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.foundation.verticalScroll
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.app.TafDoors
@@ -27,143 +33,157 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
-/** The dial in a taf's Doors tab: a door stop picks its door, the face opens or closes it or runs the taf, a held call is approved once. */
+/**
+ * The settled dial in a taf's Doors tab: the Why, "Showing ▾", the remote (◀ − ⏻ + ▶ with the face as OK), one size per stop,
+ * and "Make N changes live".
+ */
 class TafDialPanelTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
   @get:Rule(order = 1) val rule = createComposeRule()
 
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "", tools = emptyList(), colorIndex = 1, card = Card(rules = emptyList(), issuedBy = "You"), now = "", cloudId = "taf_1")
-  private val slack = Door(id = "door_slack", app = "slack", kind = "slack", label = "Slack", open = true)
+  private val slack = Door(id = "door_s", app = "slack", kind = "slack", label = "Slack", open = true)
   private val wire = KiffClient.json.decodeFromString<KnobWire>(
-    """{"does":{"label":"Refund","line":"Refunds a payment in Stripe, within its Card."},
-        "wakes":[{"id":"trg_1","kind":"door","door":"door_slack","label":"Slack","words":"Messages in #refunds start a request.","state":"Open","tap":"Tap to close"},
-                 {"id":"trg_2","kind":"run_now","label":"Run now","words":"Runs it once, now.","state":"Now","tap":"Tap to run once"},
+    """{"version":7,"why":"Refund double charges","does":{"label":"Refund","line":"Refunds a payment in Stripe, within its Card."},
+        "rings":[{"key":"wakes","name":"When"},{"key":"what","name":"What"},{"key":"results","name":"Where"}],
+        "wakes":[{"id":"trg_s","kind":"door","door":"door_s","grant":"g_slack","label":"Slack","words":"Messages in #refunds start a request.","state":"Open","tap":"Tap to close"},
+                 {"id":"trg_r","kind":"run_now","label":"Run now","words":"Runs it once, now.","state":"Now","tap":"Tap to run once"},
                  {"id":"trg_f","kind":"follow_up","follow_up":"fu_1","label":"Tomorrow 9:00","words":"Check refund 4402 again","state":"Once","tap":"Tap to remove"},
-                 {"id":"trg_3","kind":"schedule","label":"Weekdays","words":"Weekdays at 09:00","state":"On","tap":"Tap to turn off","trigger":{"kind":"schedule","form":"weekdays","at":"09:00"}}],
-        "when":[{"id":"when_arrivals","kind":"arrivals","label":"Arrivals","words":"Works each one as it arrives"}],
-        "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote","state":"On","tap":"Tap to stop replying"}],
+                 {"id":"trg_w","kind":"schedule","label":"Weekdays","words":"Weekdays at 09:00","state":"09:00",
+                  "size":{"label":"Time","index":0,"choices":[{"label":"09:00","setting":{"at":"09:00"}},{"label":"12:00","setting":{"at":"12:00"}}]}}],
+        "what":[{"id":"s1","step":1,"label":"Check","words":"Looks up the charge"}],
+        "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote"}],
+        "connections":[{"grant":"g_slack","name":"Slack"}],
         "rim":{"done":3,"line":"3 done today"}}""",
   )
   private val log = mutableListOf<String>()
 
-  private fun show(held: List<HeldCall> = emptyList(), change: KnobWire.Change? = null) = rule.setShown {
-    // In a scrolling column, as the Doors tab is: what's under the dial scrolls into view.
+  private fun show(held: List<HeldCall> = emptyList(), changes: Int = 0) = rule.setShown {
     TafsTheme {
-      androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
-      TafDialPanel(
-        taf, wire,
-        AppState(
-          mode = Mode.kiff, ready = true, tafs = listOf(taf), held = held,
-          access = mapOf("refunds-1" to bot.tafs.app.kiff.Access(use = true, manage = true)),
-          knobChanges = change?.let { mapOf("refunds-1" to it) }.orEmpty(),
-        ),
-        TafDoors(doors = listOf(slack), loaded = true),
-        DoorActions(
-          load = {}, add = { _, _ -> null }, setOpen = { _, door, open -> log += "open ${door.id} $open" }, remove = { _, _ -> },
-          pair = { _, _, _, _ -> }, unpair = { _, _, _ -> }, answer = { _, _, _, _ -> }, dismissError = {},
-          loadKnob = { log += "reload" }, runNow = { log += "run" }, approveOnce = { log += "approve ${it.id}" },
-          changeKnob = { _, stop -> log += "change $stop" }, removeFollowUp = { _, fid -> log += "remove $fid" }, confirmKnobChange = { log += "live" }, dismissKnobChange = { log += "aside" },
-        ),
-        onDoor = { log += "door $it" },
-      )
+      // In a scrolling column, as the Doors tab is.
+      Column(Modifier.verticalScroll(rememberScrollState())) {
+        TafDialPanel(
+          taf, wire,
+          AppState(
+            mode = Mode.kiff, ready = true, tafs = listOf(taf), held = held,
+            access = mapOf("refunds-1" to bot.tafs.app.kiff.Access(use = true, manage = true)),
+            knobChanges = if (changes > 0) mapOf("refunds-1" to KnobWire.Change(9)) else emptyMap(),
+            knobChangeCount = if (changes > 0) mapOf("refunds-1" to changes) else emptyMap(),
+          ),
+          TafDoors(doors = listOf(slack), loaded = true),
+          DoorActions(
+            load = {}, add = { _, _ -> null }, setOpen = { _, door, open -> log += "open ${door.id} $open" }, remove = { _, _ -> },
+            pair = { _, _, _, _ -> }, unpair = { _, _, _ -> }, answer = { _, _, _, _ -> }, dismissError = {},
+            loadKnob = { log += "reload" }, runNow = { log += "run" }, approveOnce = { log += "approve ${it.id}" },
+            removeFollowUp = { _, fid -> log += "remove $fid" }, openRimRequest = { log += "rim" },
+            changeKnobSize = { _, setting -> log += "size $setting" }, confirmKnobChange = { log += "live" },
+            setPaused = { _, paused -> log += "pause $paused" }, askCoach = { log += "coach" },
+          ),
+          onDoor = { log += "door $it" },
+        )
       }
     }
   }
 
-  @Test fun theJobAndTodaysWorkShowUnderTheDial() {
+  @Test fun theFaceIsTheWhyWithTodaysWorkUnderIt() {
     show()
-    rule.onNodeWithText("Refunds a payment in Stripe, within its Card.").assertIsDisplayed()
-    rule.onNodeWithText("3 done today ›").assertIsDisplayed()
+    rule.onNodeWithText(KnobWords.WHY).assertIsDisplayed()
+    rule.onNodeWithText("Refund double charges").assertIsDisplayed()
+    rule.onNodeWithText("${KnobWords.SET_UP_BY_COACH} · 3 done today ›").performScrollTo().performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("rim"), log)
   }
 
-  @Test fun aDoorStopPicksItsDoorAndTheFaceClosesIt() {
+  @Test fun theSearchFieldAsksCoach() {
     show()
-    rule.onNodeWithContentDescription("Slack, Wakes it, open").performClick()
+    rule.onNodeWithText(KnobWords.SEARCH, substring = true).performClick()
     rule.waitForIdle()
-    rule.onNodeWithText("Messages in #refunds start a request.").assertIsDisplayed()
+    assertEquals(listOf("coach"), log)
+  }
+
+  @Test fun aDoorStopPicksItsDoorAndOkClosesIt() {
+    show()
+    rule.onNodeWithContentDescription("Slack, When, open").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("Messages in #refunds start a request.").performScrollTo().assertIsDisplayed()
     rule.onNodeWithText("Tap to close").performClick()
     rule.waitForIdle()
-    assertEquals(listOf("door door_slack", "open door_slack false", "reload"), log)
-    rule.onNodeWithText("‹ ${KnobWords.OVERVIEW}").performClick()
-    rule.waitForIdle()
-    rule.onNodeWithText(KnobWords.TAP_A_RING).assertIsDisplayed()
+    assertEquals(listOf("door door_s", "open door_s false", "reload"), log)
   }
 
-  @Test fun runNowRunsTheTafFromTheFace() {
+  @Test fun okRunsTheTafNowAndRemovesAFollowUp() {
     show()
-    rule.onNodeWithContentDescription("Run now, Wakes it, now").performClick()
+    rule.onNodeWithContentDescription("Run now, When, now").performClick()
     rule.onNodeWithText("Tap to run once").performClick()
+    rule.onNodeWithContentDescription("Tomorrow 9:00, When, once").performClick()
+    rule.onNodeWithText("Tap to remove").performClick()
     rule.waitForIdle()
-    assertEquals(listOf("run"), log)
+    assertEquals(listOf("run", "remove fu_1"), log)
   }
 
-  @Test fun aHeldCallTakesTheFaceAndATapApprovesItOnce() {
+  @Test fun aHeldCallTakesTheFaceAndOkApprovesItOnce() {
     val call = HeldCall(
       id = "h1", tafId = "refunds-1", proposed = ProposedAction("refund", "Refund order 4409", Money(6000, "USD", 2)),
       reason = "$60 is over the $50 limit for one refund.", heldAt = Instant.parse("2026-11-03T00:00:00Z"), expiresAt = Instant.parse("2026-11-03T01:00:00Z"),
     )
     show(held = listOf(call))
-    rule.onNodeWithText("$60 is over the $50 limit for one refund.").assertIsDisplayed()
+    rule.onNodeWithText("$60 is over the $50 limit for one refund.").performScrollTo().assertIsDisplayed()
     rule.onNodeWithText(KnobWords.APPROVE_ONCE).performClick()
     rule.waitForIdle()
     assertEquals(listOf("approve h1"), log)
   }
 
-  @Test fun aScheduleTapChangesNothingItsCoachsDraft() {
+  @Test fun nextAndBackStepThroughTheStops() {
     show()
-    rule.onNodeWithContentDescription("Weekdays, Wakes it, on").performClick()
-    rule.onNodeWithText("Tap to turn off").performClick()
+    rule.onNode(hasContentDescription(KnobWords.NEXT)).performScrollTo().performClick()
     rule.waitForIdle()
-    assertEquals(emptyList<String>(), log)
+    rule.onNodeWithText("WHEN · SLACK").assertIsDisplayed()
+    rule.onNode(hasContentDescription(KnobWords.BACK)).performScrollTo().performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("WHERE · SENDER").assertIsDisplayed()
   }
 
-  @Test fun aResultPlaceTapMakesTheNextVersion() {
+  @Test fun raiseSendsTheNextChoiceAndLowerStopsAtTheFirst() {
     show()
-    rule.onNodeWithContentDescription("Sender, Results go, on").performClick()
-    rule.onNodeWithText("Tap to stop replying").performClick()
+    rule.onNodeWithContentDescription("Weekdays, When, 09:00").performClick()
     rule.waitForIdle()
-    assertEquals(listOf("change res_1"), log)
+    rule.onNodeWithText("Time · 09:00").performScrollTo().assertIsDisplayed()
+    rule.onNode(hasContentDescription(KnobWords.LOWER)).performScrollTo().assertIsNotEnabled()
+    rule.onNode(hasContentDescription(KnobWords.RAISE)).performScrollTo().performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("""size {"at":"12:00"}"""), log)
   }
 
-  @Test fun aChangeWaitsToBeMadeLiveInTafsCloudsWords() {
-    show(change = KnobWire.Change(8, listOf("Weekdays at 09:00 stops waking it.")))
-    rule.onNodeWithText(KnobWords.changeTitle(8), ignoreCase = true).performScrollTo().assertIsDisplayed()
-    rule.onNodeWithText("Weekdays at 09:00 stops waking it.").performScrollTo().assertIsDisplayed()
-    rule.onNodeWithText(KnobWords.MAKE_LIVE).performScrollTo().performClick()
+  @Test fun aStopWithNoSizeSaysAskCoachToChange() {
+    show()
+    rule.onNodeWithContentDescription("1 · Check, What").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText(KnobWords.ASK_COACH_TO_CHANGE).performScrollTo().performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("coach"), log)
+  }
+
+  @Test fun showingOneConnectionKeepsOnlyItsStops() {
+    show()
+    rule.onNodeWithText("${KnobWords.SHOWING} ${KnobWords.ALL} ▾").performClick()
+    rule.onNodeWithText("Slack · 1").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("${KnobWords.SHOWING} Slack ▾").assertIsDisplayed()
+    assertEquals("the taf's own stops are hidden", 0, rule.onAllNodes(hasText("Run now")).fetchSemanticsNodes().size)
+  }
+
+  @Test fun changesCollectIntoOneSwitch() {
+    show(changes = 2)
+    rule.onNodeWithText("Make 2 changes live", substring = true).performScrollTo().performClick()
     rule.waitForIdle()
     assertEquals(listOf("live"), log)
   }
 
-  @Test fun coachsDraftWaitsOnTheDialToBeMadeLiveWithNoNotNow() {
-    val drafted = wire.copy(draft = KnobWire.Draft(9, listOf("Wakes on Slack in #refunds too.")))
-    rule.setShown {
-      TafsTheme {
-        androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
-          TafDialPanel(
-            taf, drafted, AppState(mode = Mode.kiff, ready = true, tafs = listOf(taf), access = mapOf("refunds-1" to bot.tafs.app.kiff.Access(use = true, manage = true))),
-            TafDoors(doors = listOf(slack), loaded = true),
-            DoorActions(
-              load = {}, add = { _, _ -> null }, setOpen = { _, _, _ -> }, remove = { _, _ -> }, pair = { _, _, _, _ -> }, unpair = { _, _, _ -> },
-              answer = { _, _, _, _ -> }, dismissError = {}, confirmKnobChange = { log += "live" },
-            ),
-            onDoor = {},
-          )
-        }
-      }
-    }
-    rule.onNodeWithText("Wakes on Slack in #refunds too.").performScrollTo().assertIsDisplayed()
-    assertEquals(0, rule.onAllNodes(androidx.compose.ui.test.hasText(KnobWords.NOT_NOW)).fetchSemanticsNodes().size)
-    rule.onNodeWithText(KnobWords.MAKE_LIVE).performScrollTo().performClick()
-    rule.waitForIdle()
-    assertEquals(listOf("live"), log)
-  }
-
-  @Test fun aFollowUpTheTafSetIsRemovedFromTheFace() {
+  @Test fun pauseIsOnTheRemote() {
     show()
-    rule.onNodeWithContentDescription("Tomorrow 9:00, Wakes it, once").performClick()
-    rule.onNodeWithText("Tap to remove").performClick()
+    rule.onNode(hasContentDescription(KnobWords.PAUSE)).performScrollTo().performClick()
     rule.waitForIdle()
-    assertEquals(listOf("remove fu_1"), log)
+    assertEquals(listOf("pause true"), log)
   }
 }

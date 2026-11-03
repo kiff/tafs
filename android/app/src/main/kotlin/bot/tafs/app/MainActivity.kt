@@ -356,9 +356,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadKnob = model::loadKnob,
       runNow = { taf -> model.runNow(taf); model.loadKnob(taf) },
       approveOnce = { call -> model.answer(call, bot.tafs.app.model.Answer.ApproveOnce) },
-      changeKnob = { taf, stop -> model.changeKnob(taf, stop) },
+      changeKnobSize = { taf, setting -> model.changeKnobSize(taf, setting) },
       confirmKnobChange = { taf -> model.confirmKnobChange(taf) },
-      dismissKnobChange = model::dismissKnobChange,
+      setPaused = model::setPaused,
+      askCoach = model::improveInCoach,
       openRimRequest = model::openRimRequest,
       removeFollowUp = model::removeFollowUp,
     )

@@ -157,29 +157,31 @@ so it can say what went wrong and ask again.
 
 ## The dial
 
-A taf's dial (`TafKnob`, from the approved "The knob, end to end"): the job in the face, and
-**Wakes it**, **When** and **Results go** around it, inside to out, each stop's word along its
-ring. The rim counts today's work: done, working, retrying, needs you. Tapping a word chooses
-it: its ring keeps its colour, the other two dim, and the face shows tafs cloud's `state` and
-`tap` for it. A held call can take the face, to approve once. It lays out what
-`GET /v1/tafs/{id}/knob` sends (`KnobWire`), every label and line as tafs cloud wrote it; the
-app's own words are only "DOES", "Tap a ring", "Tap to approve once" and the ring titles.
+A taf's dial, as settled ("The knob, end to end"): Coach builds it with the owner, and the dial
+shows it, with a remote's controls only (`TafKnob`, `TafDialPanel`, in the taf's Doors tab; the
+doors' own dial stays for a taf whose dial can't be read).
 
-It's in the taf's Doors tab, where the doors' dial was (`TafDialPanel`); the doors' dial stays
-for a taf whose dial can't be read. Choosing a door on Wakes it picks that door for its settings
-below. The face's tap opens or closes that door, or runs the taf now, through their own routes
-(no new version). A held call that can be approved once takes the face. Under the dial are the
-chosen stop's words, or the job's, and today's work.
+- **Three rings, the same on every taf,** inner to outer as tafs cloud names them: **When**
+  (what starts it: doors, a connected app's event, a schedule, run now), **What** (the recipe,
+  its steps numbered "1 · Check") and **Where** (where results go). The face is the taf's
+  **Why**; a chosen stop shows on it instead (ring · stop, its value, what OK does).
+- **Above it:** "Ask Coach or find anything", which opens Coach about the taf, and **Showing ▾**:
+  All services, This taf (the stops with no connection), then each connection with its number
+  of stops. Picking one shows only that input's stops (`KnobWire.knob(showing)`).
+- **The remote under it:** ◀ Back and Next ▶ step through the stops, ring by ring from the
+  inside; − Lower and + Raise move the chosen stop's one size; ⏻ pauses or resumes the taf.
+  Pressing the face is OK: open or close a door, run now, remove a follow-up the taf set, or
+  approve a held call once (a held call takes the face while nothing is chosen).
+- **One size per stop:** tafs cloud's `size` (a time, how often, a place on or off). − or +
+  sends that choice's whole `setting` to `PUT …/knob`, which makes the next version, then reads
+  it back (`?version=N`) so the next change builds on it. A stop with no size says "Ask Coach to
+  change". Changes collect into **Make N changes live**, the usual version switch.
+- **Under it:** "When starts it, What it does in order, Where the result goes.", the chosen
+  stop's words, and "Coach set this up · today's work ›", which opens the request the rim
+  points at.
 
-A tap on a result place or If busy changes how the taf works: it copies the live `setting`,
-changes that one thing (`KnobWire.changed`) and sends it to
-`PUT …/knob`. That makes the taf's next version, and nothing runs from it yet: the panel shows
-tafs cloud's words for the change with **Make it live**, which switches that version as any
-version is switched (`AppModel.confirmKnobChange`), or **Not now**. A form the scheduler can't
-keep exactly is said in tafs cloud's words, naming the nearest one.
-Triggers (Wakes it's schedules and checks) change through Coach's draft for now, not by a tap. A follow-up
-the taf set itself shows on Wakes it, and its face removes it, for whoever manages the taf
-(`DELETE …/follow-ups/{fid}`).
+No chips and no "+ Add": anything new (an app, a step, a place) goes through Coach. Every word
+on a stop is tafs cloud's; the app's own are the ring of controls and these few lines.
 
 **A request, step by step** (`RequestSheet`): today's work under the dial opens the request the rim
 points at, the first not done, else the newest. A request's row in Activity opens the same

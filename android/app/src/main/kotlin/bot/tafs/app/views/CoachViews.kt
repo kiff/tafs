@@ -572,15 +572,23 @@ private fun KnobDraftCard(c: SetupComponent, state: AppState, answered: String?,
       taf == null || state.knobs[taf.id] == null -> Text(bot.tafs.app.model.KnobWords.READING_DRAFT, style = scaled(14, color = Theme.soft))
       draft == null || (c.version != null && draft.version != c.version) -> Text(bot.tafs.app.model.KnobWords.REPLACED, style = scaled(14, color = Theme.soft))
       else -> {
-        listOf(
-          bot.tafs.app.model.KnobRing.Kind.WakesIt to draft.wakes,
-          bot.tafs.app.model.KnobRing.Kind.When to draft.whenLines,
-          bot.tafs.app.model.KnobRing.Kind.ResultsGo to draft.results,
-        ).filter { it.second.isNotEmpty() }.forEach { (ring, lines) ->
-          Text(ring.title, style = scaled(13, FontWeight.SemiBold, KnobColors.of(ring)))
-          lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+        // By connection, as tafs cloud groups it (each app's lines, then This taf); by ring from one that doesn't group yet.
+        val rings = listOf(bot.tafs.app.model.KnobRing.Kind.WakesIt, bot.tafs.app.model.KnobRing.Kind.What, bot.tafs.app.model.KnobRing.Kind.ResultsGo)
+        if (draft.groups.isNotEmpty()) {
+          draft.groups.forEach { group ->
+            Text(group.name.ifBlank { bot.tafs.app.model.KnobWords.THIS_TAF }, style = scaled(14, FontWeight.Bold, Theme.ink))
+            rings.zip(listOf(group.wakes, group.what, group.results)).filter { it.second.isNotEmpty() }.forEach { (ring, lines) ->
+              Text(ring.title, style = scaled(12, FontWeight.SemiBold, KnobColors.of(ring)))
+              lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+            }
+          }
+        } else {
+          rings.zip(listOf(draft.wakes, draft.what, draft.results)).filter { it.second.isNotEmpty() }.forEach { (ring, lines) ->
+            Text(ring.title, style = scaled(13, FontWeight.SemiBold, KnobColors.of(ring)))
+            lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+          }
+          if (draft.wakes.isEmpty() && draft.what.isEmpty() && draft.results.isEmpty()) draft.lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
         }
-        if (draft.wakes.isEmpty() && draft.whenLines.isEmpty() && draft.results.isEmpty()) draft.words.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
         error?.let { Text(it, style = scaled(13, color = Theme.no)) }
         state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
         val busy = taf.id in state.switchingVersion

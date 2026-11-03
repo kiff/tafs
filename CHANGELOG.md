@@ -11,6 +11,10 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, the settled dial:** When · What · Where around the taf's Why, with "Ask Coach or find
+  anything", Showing ▾ one connection's stops, and a remote: ◀ ▶ through the stops, − + the chosen
+  stop's one size, ⏻ pause, the face as OK. Changes collect into "Make N changes live". No chips
+  and no "+ Add": new things go through Coach.
 - **Android, Coach sets the dial:** Coach's dial card shows Wakes it, When and Results go in tafs
   cloud's words, made live with one confirmation, or Change back to Coach; the dial shows the same
   draft with Make it live.

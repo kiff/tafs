@@ -1,6 +1,7 @@
 package bot.tafs.app.views
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -51,7 +52,7 @@ import kotlin.math.sin
 /** The rings' and the rim's colours, from the approved design. */
 object KnobColors {
   val wakesIt = Color(0xFF0B7DA4)
-  val whenRing = Color(0xFF2A64F5)
+  val what = Color(0xFF2A64F5)
   val resultsGo = Color(0xFF7B4DFF)
   val done = Color(0xFF198056)
   val working = Color(0xFF2A64F5)
@@ -61,15 +62,15 @@ object KnobColors {
 
   fun of(kind: KnobRing.Kind): Color = when (kind) {
     KnobRing.Kind.WakesIt -> wakesIt
-    KnobRing.Kind.When -> whenRing
+    KnobRing.Kind.What -> what
     KnobRing.Kind.ResultsGo -> resultsGo
   }
 }
 
 /**
- * The taf's dial (K1 to K3): the face holds the job, and Wakes it, When and Results go ring it, inside to out, each with its
- * stops from the top, clockwise. The rim counts today's work. Tap a word to choose it: its ring keeps its colour, the other two
- * dim, and the face says what it is. Tap the face to act on what it shows.
+ * The taf's dial, as settled: the face holds its Why, and When, What and Where ring it, inside to out, each with its stops from
+ * the top, clockwise. The rim counts today's work. Tap a word to choose it: its ring keeps its colour, the other two dim, and the
+ * face says what it is. Pressing the face is OK, the chosen stop's one action.
  */
 @Composable
 fun TafKnob(
@@ -91,7 +92,7 @@ fun TafKnob(
       bands.forEachIndexed { i, (inner, outer) ->
         val mid = (inner + outer) / 2 * u
         val ring = knob.rings.getOrNull(i)
-        val dim = chosen != null && chosen.ring != ring?.kind
+        val dim = chosen != null && chosen.ring.kind != ring?.kind
         drawCircle(Color.White.copy(alpha = if (dim) 0.45f else 1f), mid, c, style = Stroke((outer - inner) * u))
         drawCircle(Theme.ink.copy(alpha = 0.08f), outer * u, c, style = Stroke(1f))
         drawCircle(Theme.ink.copy(alpha = 0.08f), inner * u, c, style = Stroke(1f))
@@ -119,13 +120,13 @@ fun TafKnob(
       val (inner, outer) = bands[i]
       val mid = (inner + outer) / 2 * u
       val color = KnobColors.of(ring.kind)
-      val dim = chosen != null && chosen.ring != ring.kind
+      val dim = chosen != null && chosen.ring.kind != ring.kind
       ring.stops.forEachIndexed { j, stop ->
         val fromTop = j * 360.0 / ring.stops.size
         val a = (-90 + fromTop) * PI / 180
-        // Along the ring, as the design sets them; never upside down.
-        val turn = (if (fromTop > 90 && fromTop < 270) fromTop - 180 else fromTop).toFloat()
-        val isChosen = chosen?.ring == ring.kind && chosen.stop.id == stop.id
+        // Along the ring, turned as the settled design turns each word.
+        val turn = fromTop.toFloat()
+        val isChosen = chosen?.ring?.kind == ring.kind && chosen.stop.id == stop.id
         val tint = when {
           isChosen -> color
           chosen != null -> Theme.soft
@@ -143,7 +144,7 @@ fun TafKnob(
             .heightIn(min = 32.dp)
             .clip(CircleShape)
             .semantics {
-              contentDescription = KnobWords.spoken(ring.kind, stop)
+              contentDescription = KnobWords.spoken(ring, stop)
               role = Role.Button
               selected = isChosen
             }
@@ -154,8 +155,8 @@ fun TafKnob(
     }
     // The face: what it shows, and what a tap there does.
     val (top, big, tap, bigColor) = when (face) {
-      KnobFace.Overview -> Quad(KnobWords.DOES, knob.does, KnobWords.TAP_A_RING, Theme.ink)
-      is KnobFace.Chosen -> Quad(KnobWords.chosen(face.ring, face.stop), face.stop.state ?: face.stop.label, face.stop.tap, KnobColors.of(face.ring))
+      KnobFace.Overview -> Quad(KnobWords.WHY, knob.does, null, Theme.ink)
+      is KnobFace.Chosen -> Quad(KnobWords.chosen(face.ring, face.stop), face.stop.state ?: face.stop.size ?: face.stop.label, face.stop.tap, KnobColors.of(face.ring.kind))
       is KnobFace.Held -> Quad(KnobWords.heldTop(face.call), face.call.proposed.amount?.figure ?: "", KnobWords.APPROVE_ONCE, KnobColors.heldAmount)
     }
     Box(
@@ -166,7 +167,12 @@ fun TafKnob(
     ) {
       Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(top, style = scaled(9, FontWeight.SemiBold, Theme.dim, mono = true), maxLines = 1, textAlign = TextAlign.Center)
-        Text(big, style = scaled(if (face == KnobFace.Overview) 24 else 30, FontWeight.ExtraBold, bigColor, display = true), maxLines = 1)
+        // The Why takes two lines, as Coach writes it in a few words; a stop's value is one big word.
+        if (face == KnobFace.Overview) {
+          Text(big, style = scaled(17, FontWeight.ExtraBold, bigColor, display = true), maxLines = 2, textAlign = TextAlign.Center)
+        } else {
+          Text(big, style = scaled(30, FontWeight.ExtraBold, bigColor, display = true), maxLines = 1)
+        }
         tap?.let { Text(it, style = scaled(10, color = Theme.dim), maxLines = 1) }
       }
     }
@@ -182,9 +188,14 @@ private fun Modifier.centerAt(x: Float, y: Float): Modifier = layout { measurabl
 }
 
 /**
- * The dial in a taf's Doors tab: [TafKnob] with what each tap does. Choosing a door on Wakes it picks that door for its settings
- * below ([onDoor]). The face's tap opens or closes that door, or runs the taf now, through their own routes (no new version); a
- * held call on the face is approved once. Under it: the chosen stop's sentence, or the job's, and today's work.
+ * The settled dial in a taf's Doors tab: Coach builds it, and this only shows it, with a remote's controls.
+ * - Above it: "Ask Coach or find anything", and "Showing ▾" (All services, This taf, each connection) to see one input's stops.
+ * - The dial: tap a word to choose its stop. Pressing the face is OK, the stop's one action: open or close a door, run now,
+ *   remove a follow-up, approve a held call.
+ * - The remote: ◀ ▶ step through the stops, − + move the chosen stop's one size (its choice's setting, read back as the next
+ *   version), ⏻ pauses the taf. A stop with no size says "Ask Coach to change".
+ * - Changes collect into "Make N changes live", the usual version switch.
+ * - Under it: "Coach set this up · today's work ›", which opens the request the rim points at.
  */
 @Composable
 fun TafDialPanel(
@@ -195,91 +206,165 @@ fun TafDialPanel(
   actions: DoorActions,
   onDoor: (String) -> Unit,
 ) {
-  val knob = wire.knob()
   val scope = androidx.compose.runtime.rememberCoroutineScope()
+  var showing by androidx.compose.runtime.saveable.rememberSaveable(taf.id) { androidx.compose.runtime.mutableStateOf<String?>(null) }
+  var showingOpen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
   var chosen by androidx.compose.runtime.saveable.rememberSaveable(taf.id) { androidx.compose.runtime.mutableStateOf<String?>(null) }
   var busy by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+  val knob = wire.knob(showing)
+  val manages = state.manages(taf.id)
   val ready = LocalApprovalReadiness.current == bot.tafs.app.model.ApprovalReadiness.Ready
   // A held call that can be approved once takes the face while nothing is chosen.
   val held = state.heldCalls(taf.id).firstOrNull { it.approvableOnce && it.install == null }?.takeIf { state.canAnswer(it) && ready }
-  val chosenStop = chosen?.let { id -> knob.rings.firstNotNullOfOrNull { ring -> ring.stops.firstOrNull { it.id == id }?.let { ring.kind to it } } }
+  val stops = knob.stops
+  val chosenStop = chosen?.let { id -> stops.firstOrNull { it.second.id == id } }
   val face = when {
     chosenStop != null -> KnobFace.Chosen(chosenStop.first, chosenStop.second)
     held != null -> KnobFace.Held(held)
     else -> KnobFace.Overview
   }
-  bot.tafs.app.design.Panel {
+  fun choose(id: String?) {
+    chosen = id
+    // A door on When picks that door for its settings below.
+    id?.let { wire.wakes.firstOrNull { w -> w.id == it }?.door }?.let(onDoor)
+  }
+  fun work(block: suspend () -> Unit) {
+    if (busy) return
+    scope.launch { busy = true; try { block() } finally { busy = false } }
+  }
+  val item = chosen?.let { wire.item(it) }
+
+  Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+    // Above the dial: Coach, and which input's stops show.
+    Text(
+      "⌕  " + KnobWords.SEARCH,
+      style = scaled(15, color = Theme.dim),
+      modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+        .background(Theme.panel).clickable { actions.askCoach(taf.id) }.padding(horizontal = 14.dp, vertical = 12.dp),
+    )
+    Box {
+      val name = when (showing) {
+        null -> KnobWords.ALL
+        bot.tafs.app.kiff.KnobWire.THIS_TAF -> KnobWords.THIS_TAF
+        else -> wire.connections.firstOrNull { it.grant == showing }?.name ?: KnobWords.ALL
+      }
+      Text(
+        KnobWords.SHOWING + " " + name + " ▾",
+        style = scaled(14, FontWeight.SemiBold, Theme.ink),
+        modifier = Modifier.heightIn(min = 44.dp).clickable { showingOpen = true }.padding(vertical = 12.dp),
+      )
+      androidx.compose.material3.DropdownMenu(showingOpen, { showingOpen = false }) {
+        val options = listOf<Pair<String?, String>>(null to KnobWords.ALL, bot.tafs.app.kiff.KnobWire.THIS_TAF to KnobWords.THIS_TAF) +
+          wire.connections.map { it.grant to it.name }
+        options.forEach { (key, label) ->
+          // Each input with how many stops it has on the dial.
+          val count = key?.let { k -> wire.knob(k).stops.size }
+          androidx.compose.material3.DropdownMenuItem(
+            text = { Text(label + (count?.let { " · $it" } ?: "")) },
+            onClick = { showing = key; showingOpen = false; choose(null) },
+          )
+        }
+      }
+    }
     TafKnob(
       knob, face,
-      onChoose = { ring, id ->
-        chosen = id
-        if (ring == KnobRing.Kind.WakesIt) wire.wakes.firstOrNull { it.id == id }?.door?.let(onDoor)
-      },
+      onChoose = { _, id -> choose(id) },
       onFace = {
-        if (busy) return@TafKnob
-        scope.launch {
-          busy = true
-          try {
-            when (face) {
-              is KnobFace.Held -> actions.approveOnce(face.call)
-              is KnobFace.Chosen -> {
-                val item = wire.wakes.firstOrNull { it.id == face.stop.id }
-                val door = item?.door?.let { id -> doors.doors.firstOrNull { it.id == id } }
-                when {
-                  door != null -> { actions.setOpen(taf.id, door, !door.open); actions.loadKnob(taf.id) }
-                  item?.kind == "run_now" -> actions.runNow(taf.id)
-                  // A follow-up the taf set itself: the face removes it, for whoever manages the taf.
-                  item?.followUp != null && state.manages(taf.id) -> actions.removeFollowUp(taf.id, item.followUp)
-                  // If busy and where results go change how the taf works: the next version, to make live. Triggers change
-                  // through Coach's draft for now.
-                  face.ring != KnobRing.Kind.WakesIt && face.stop.tap != null && state.manages(taf.id) -> actions.changeKnob(taf.id, face.stop.id)
-                }
+        work {
+          when (face) {
+            is KnobFace.Held -> actions.approveOnce(face.call)
+            is KnobFace.Chosen -> {
+              val door = item?.door?.let { id -> doors.doors.firstOrNull { it.id == id } }
+              when {
+                door != null -> { actions.setOpen(taf.id, door, !door.open); actions.loadKnob(taf.id) }
+                item?.kind == "run_now" -> actions.runNow(taf.id)
+                // A follow-up the taf set itself: OK removes it, for whoever manages the taf.
+                item?.followUp != null && manages -> actions.removeFollowUp(taf.id, item.followUp)
               }
-              KnobFace.Overview -> Unit
             }
-          } finally {
-            busy = false
+            KnobFace.Overview -> Unit
           }
         }
       },
     )
+    Text(KnobWords.CAPTION, style = scaled(12, color = Theme.dim))
     val sentence = when (face) {
       is KnobFace.Chosen -> face.stop.about
       is KnobFace.Held -> face.call.reason
       KnobFace.Overview -> knob.overview
     }
     if (sentence.isNotBlank()) Text(sentence, style = scaled(14, color = Theme.ink))
-    // Today's work: a tap opens the request the rim points at, step by step.
-    knob.summary?.let {
-      Text(
-        "$it ›",
-        style = scaled(13, color = Theme.dim),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { scope.launch { actions.openRimRequest(taf.id) } }.padding(top = 12.dp),
-      )
-    }
-    state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
-    // A change made into a version, by a tap or by Coach's draft: tafs cloud's words for it, and making it live. A tap's can be
-    // set aside; Coach's draft stays until it's made live or Coach changes it.
-    val tapped = state.knobChanges[taf.id]
-    (tapped ?: wire.draft?.let { bot.tafs.app.kiff.KnobWire.Change(it.version, it.lines) })?.let { change ->
-      bot.tafs.app.design.Eyebrow(KnobWords.changeTitle(change.version), Theme.amberText)
-      change.words.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
-      androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
-        bot.tafs.app.design.OutlineButton(
-          KnobWords.MAKE_LIVE,
-          { scope.launch { busy = true; try { actions.confirmKnobChange(taf.id) } finally { busy = false } } },
-          Modifier.weight(1f),
-          enabled = !busy && taf.id !in state.switchingVersion,
+    val size = item?.size
+    // The chosen stop's one size, or Coach.
+    if (face is KnobFace.Chosen) {
+      val now = size?.now
+      if (now != null) {
+        Text(size.label + " · " + now.label, style = scaled(13, FontWeight.SemiBold, Theme.soft, mono = true))
+      } else {
+        Text(
+          KnobWords.ASK_COACH_TO_CHANGE,
+          style = scaled(13, FontWeight.SemiBold, Theme.amber),
+          modifier = Modifier.heightIn(min = 44.dp).clickable { actions.askCoach(taf.id) }.padding(top = 12.dp),
         )
-        if (tapped != null) bot.tafs.app.design.OutlineButton(KnobWords.NOT_NOW, { actions.dismissKnobChange(taf.id) }, Modifier.weight(1f), color = Theme.soft, enabled = !busy)
       }
     }
-    if (chosen != null) {
-      Text(
-        "‹ ${KnobWords.OVERVIEW}",
-        style = scaled(14, FontWeight.SemiBold, Theme.dim),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { chosen = null }.padding(top = 10.dp),
-      )
+    // The remote.
+    val at = stops.indexOfFirst { it.second.id == chosen }
+    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly) {
+      RemoteKey("◀", KnobWords.BACK, enabled = stops.isNotEmpty()) { choose(stops[if (at <= 0) stops.size - 1 else at - 1].second.id) }
+      RemoteKey("−", KnobWords.LOWER, enabled = manages && !busy && size?.step(-1) != null) {
+        size?.step(-1)?.let { c -> work { actions.changeKnobSize(taf.id, c.setting) } }
+      }
+      RemoteKey(POWER, if (taf.paused) KnobWords.RESUME else KnobWords.PAUSE, enabled = manages && !busy) { work { actions.setPaused(taf.id, !taf.paused) } }
+      RemoteKey("+", KnobWords.RAISE, enabled = manages && !busy && size?.step(1) != null) {
+        size?.step(1)?.let { c -> work { actions.changeKnobSize(taf.id, c.setting) } }
+      }
+      RemoteKey("▶", KnobWords.NEXT, enabled = stops.isNotEmpty()) { choose(stops[(at + 1) % stops.size].second.id) }
     }
+    state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+    // Changes from − and +, or Coach's draft, made live in one switch.
+    val pending = state.knobChanges[taf.id] ?: wire.draft?.let { bot.tafs.app.kiff.KnobWire.Change(it.version, it.lines) }
+    if (pending != null && manages) {
+      val count = state.knobChangeCount[taf.id] ?: 1
+      ApprovalGate {
+        bot.tafs.app.design.PrimaryButton(
+          KnobWords.makeLive(count, bot.tafs.app.design.LocalBiometry.current),
+          { work { actions.confirmKnobChange(taf.id) } },
+          enabled = !busy && taf.id !in state.switchingVersion,
+        )
+      }
+    }
+    // Under it: who set it up, and today's work, which opens the request the rim points at.
+    Text(
+      KnobWords.SET_UP_BY_COACH + (knob.summary?.let { " · $it ›" } ?: ""),
+      style = scaled(13, color = Theme.dim),
+      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = knob.summary != null) { scope.launch { actions.openRimRequest(taf.id) } }.padding(top = 12.dp),
+    )
   }
 }
+
+/** One key of the remote: its symbol, and its name in small mono under it. */
+@Composable
+private fun RemoteKey(symbol: String, label: String, enabled: Boolean, onClick: () -> Unit) {
+  Column(
+    Modifier.heightIn(min = 56.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick)
+      .semantics { contentDescription = label }.padding(horizontal = 10.dp, vertical = 6.dp),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    val tint = if (enabled) Theme.ink else Theme.dim.copy(alpha = 0.5f)
+    if (symbol == POWER) {
+      // The power mark isn't in the phone's font: drawn, the size of the other keys' symbols.
+      Canvas(Modifier.size(26.dp).padding(3.dp)) {
+        val stroke = Stroke(2.4.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawArc(tint, -60f, 300f, false, style = stroke)
+        drawLine(tint, Offset(size.width / 2, -1.dp.toPx()), Offset(size.width / 2, size.height / 2), 2.4.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+      }
+    } else {
+      Text(symbol, style = scaled(22, FontWeight.Bold, tint))
+    }
+    Text(label.uppercase(), style = scaled(9, color = Theme.dim, mono = true))
+  }
+}
+
+/** The remote's Pause key, drawn as the power mark. */
+private const val POWER = "⏻"

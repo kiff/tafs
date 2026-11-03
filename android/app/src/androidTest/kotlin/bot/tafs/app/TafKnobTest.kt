@@ -31,10 +31,10 @@ class TafKnobTest {
 
   @get:Rule(order = 1) val rule = createComposeRule()
 
-  private fun stop(id: String, label: String, on: Boolean, state: String, tap: String?, about: String = "") = KnobStop(id, label, on, state, tap, about)
+  private fun stop(id: String, label: String, on: Boolean, state: String?, tap: String?, about: String = "") = KnobStop(id, label, on, state, tap, about)
 
   private val refunds = Knob(
-    does = "Refund",
+    does = "Refund double charges",
     overview = "Refunds a payment in Stripe, within its Card. Wakes on email and Slack, works as they arrive, replies to the sender.",
     rings = listOf(
       KnobRing(KnobRing.Kind.WakesIt, listOf(
@@ -43,11 +43,10 @@ class TafKnobTest {
         stop("slack", "Slack", true, "Open", "Tap to close", "Messages in #refunds start a request. Refunds replies in the thread."),
         stop("run", "Run now", false, "Now", "Tap to run once"),
       )),
-      KnobRing(KnobRing.Kind.When, listOf(
-        stop("arrivals", "Arrivals", true, "On", "Tap to turn off"),
-        stop("weekdays", "Weekdays", true, "09:00", "Tap to change"),
-        stop("missed", "If missed", true, "Next run", null),
-        stop("busy", "If busy", true, "Latest", null),
+      KnobRing(KnobRing.Kind.What, listOf(
+        stop("s1", "1 · Check", true, null, null),
+        stop("s2", "2 · Refund", true, null, null),
+        stop("s3", "3 · Log", true, null, null),
       )),
       KnobRing(KnobRing.Kind.ResultsGo, listOf(
         stop("sender", "Sender", true, "On", "Tap to turn off"),
@@ -74,26 +73,25 @@ class TafKnobTest {
     rule.setShown {
       var face by androidx.compose.runtime.remember { mutableStateOf(start) }
       TafsTheme {
-        TafKnob(refunds, face, onChoose = { ring, id -> face = KnobFace.Chosen(ring, refunds.rings.first { it.kind == ring }.stops.first { it.id == id }) }, onFace = { pressed += 1 })
+        TafKnob(refunds, face, onChoose = { kind, id -> refunds.rings.first { it.kind == kind }.let { ring -> face = KnobFace.Chosen(ring, ring.stops.first { it.id == id }) } }, onFace = { pressed += 1 })
       }
     }
   }
 
-  @Test fun theFaceHoldsTheJobAndEveryRingsWordsShow() {
+  @Test fun theFaceHoldsTheWhyAndEveryRingsWordsShow() {
     show(KnobFace.Overview)
-    rule.onNodeWithText(KnobWords.DOES).assertIsDisplayed()
-    rule.onNodeWithText("Refund").assertIsDisplayed()
-    rule.onNodeWithText(KnobWords.TAP_A_RING).assertIsDisplayed()
-    listOf("Email", "WhatsApp", "Slack", "Run now", "Arrivals", "Weekdays", "If missed", "If busy", "Sender", "You", "Notion", "Summary").forEach {
+    rule.onNodeWithText(KnobWords.WHY).assertIsDisplayed()
+    rule.onNodeWithText("Refund double charges").assertIsDisplayed()
+    listOf("Email", "WhatsApp", "Slack", "Run now", "1 · Check", "2 · Refund", "3 · Log", "Sender", "You", "Notion", "Summary").forEach {
       rule.onNodeWithText(it).assertIsDisplayed()
     }
   }
 
   @Test fun tappingAStopChoosesItAndTheFaceSaysWhatItIs() {
     show(KnobFace.Overview)
-    rule.onNodeWithContentDescription("Slack, Wakes it, open").performClick()
+    rule.onNodeWithContentDescription("Slack, When, open").performClick()
     rule.waitForIdle()
-    rule.onNodeWithText("WAKES IT · SLACK").assertIsDisplayed()
+    rule.onNodeWithText("WHEN · SLACK").assertIsDisplayed()
     rule.onNodeWithText("Open").assertIsDisplayed()
     rule.onNodeWithText("Tap to close").assertIsDisplayed().performClick()
     rule.waitForIdle()

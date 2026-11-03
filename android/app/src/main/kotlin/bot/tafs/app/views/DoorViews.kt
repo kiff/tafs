@@ -85,10 +85,12 @@ class DoorActions(
   val runNow: suspend (String) -> Unit = {},
   /** Approves a held call once, from the dial's face. */
   val approveOnce: suspend (bot.tafs.app.model.HeldCall) -> Unit = {},
-  /** A dial tap that makes the next version (taf, stop); making it live; and setting it aside. */
-  val changeKnob: suspend (String, String) -> Unit = { _, _ -> },
+  /** The remote's − and +: a stop's next choice, as its whole setting (taf, setting); making the changes live; Pause. */
+  val changeKnobSize: suspend (String, kotlinx.serialization.json.JsonObject) -> Unit = { _, _ -> },
   val confirmKnobChange: suspend (String) -> Unit = {},
-  val dismissKnobChange: (String) -> Unit = {},
+  val setPaused: suspend (String, Boolean) -> Unit = { _, _ -> },
+  /** "Ask Coach or find anything", "Add a door" and "Ask Coach to change": Coach, about this taf. */
+  val askCoach: (String) -> Unit = {},
   /** Removes a follow-up the taf set itself (taf, follow-up id). */
   val removeFollowUp: suspend (String, String) -> Unit = { _, _ -> },
   /** Opens the request the dial's rim points at. */

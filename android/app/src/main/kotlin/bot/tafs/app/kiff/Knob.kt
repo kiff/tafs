@@ -6,52 +6,83 @@ import bot.tafs.app.model.KnobRing
 import bot.tafs.app.model.KnobStop
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 /**
- * A taf's dial as tafs cloud sends it (`GET /v1/tafs/{id}/knob`, the knob API). Every label, line and words is tafs
- * cloud's; the app draws them and composes none.
+ * A taf's dial as tafs cloud sends it (`GET /v1/tafs/{id}/knob`, the knob API): When · What · Where around its Why. Every label,
+ * line and word is tafs cloud's; the app draws them and composes none.
  */
 @Serializable
 data class KnobWire(
+  /** The live version. */
   val version: Int? = null,
+  /** The version this dial shows, when it's a change waiting to go live (`?version=N`). */
+  val shown: Int? = null,
+  /** The rings, inner to outer, with their names: When (`wakes`), What (`what`), Where (`results`). */
+  val rings: List<RingName> = emptyList(),
+  /** The face's word when nothing is chosen: the taf's purpose, as Coach wrote it. */
+  val why: String? = null,
   val does: Does = Does(),
   val wakes: List<Item> = emptyList(),
-  @SerialName("when") val whenItems: List<Item> = emptyList(),
+  /** The recipe, its steps in order. */
+  val what: List<Item> = emptyList(),
   val results: List<Item> = emptyList(),
+  /** The connections the stops come from, in order, for "Showing ▾". */
+  val connections: List<Connection> = emptyList(),
   val rim: Rim = Rim(),
-  /** A change waiting for the owner's confirmation, or null. */
+  /** The newest dial change waiting to go live, or null. */
   val draft: Draft? = null,
-  /** The live version's rings as `PUT` takes them: `{wakes: [trigger], busy, results: [place]}`. A tap copies it and changes one thing. */
-  val setting: kotlinx.serialization.json.JsonObject? = null,
+  /** The shown version's rings as `PUT` takes them. */
+  val setting: JsonObject? = null,
 ) {
+  @Serializable
+  data class RingName(val key: String, val name: String)
+
   @Serializable
   data class Does(val label: String = "", val line: String = "")
 
-  /** One stop: a trigger on Wakes it, a rule on When, a place on Results go. */
+  @Serializable
+  data class Connection(val grant: String, val name: String = "")
+
+  /** One stop: a trigger on When, a step on What, a place on Where. */
   @Serializable
   data class Item(
     val id: String = "",
-    /** Wakes it: run_now, door, schedule, vendor_event, app_check, follow_up, before_event. When: arrivals, schedule, missed, busy. */
+    /** When: door, schedule, run_now, app_event, follow_up… */
     val kind: String? = null,
-    /** Results go: door_reply, app, owner_email, slack, notion, gmail, teams. */
     val place: String? = null,
+    /** A step's number on What. */
+    val step: Int? = null,
     val label: String = "",
     val words: String = "",
     /** Whether it's on; a stop that doesn't say is on. */
     val on: Boolean = true,
     /** The face's big word when it's chosen ("Open"), when tafs cloud sends one. */
     val state: String? = null,
-    /** What tapping the face does, said under it ("Tap to close"), when tafs cloud sends it; none, the face does nothing. */
+    /** What pressing the face (OK) does, said under it, when tafs cloud sends it; none, OK does nothing. */
     val tap: String? = null,
-    /** A follow-up's end. */
     val expires: String? = null,
-    /** A door's id, on a door stop: the face opens or closes it through the doors API. */
+    /** A door's id: OK opens or closes it through the doors API. */
     val door: String? = null,
-    /** A follow-up the taf set itself, by its id: the face removes it. Never part of the setting. */
+    /** A follow-up the taf set itself, by its id: OK removes it. */
     @SerialName("follow_up") val followUp: String? = null,
-    /** A trigger stop's form exactly as `PUT` takes it; none on Run now, nor on a schedule the dial can't set. */
-    val trigger: kotlinx.serialization.json.JsonObject? = null,
+    /** The connection a connected app's stop comes from; none on the taf's own. */
+    val grant: String? = null,
+    /** Its one choice for − and +, when it has one. */
+    val size: Size? = null,
   )
+
+  /** A stop's one choice: its name, the value now, and each value's whole `PUT` body. */
+  @Serializable
+  data class Size(val label: String = "", val index: Int = 0, val choices: List<Choice> = emptyList()) {
+    @Serializable
+    data class Choice(val label: String = "", val setting: JsonObject)
+
+    val now: Choice? get() = choices.getOrNull(index)
+
+    /** The choice one step lower or higher, or null at the end. */
+    fun step(by: Int): Choice? = choices.getOrNull(index + by)
+  }
 
   @Serializable
   data class Rim(
@@ -62,81 +93,81 @@ data class KnobWire(
     val line: String? = null,
   )
 
-  /**
-   * The newest dial version made after the live one, waiting to be made live: its words by ring (Coach's `taf_dial`, or an older
-   * tafs cloud's one list in [words]).
-   */
+  /** The newest dial version made after the live one, waiting to go live: its words by ring, and by connection for Coach's card. */
   @Serializable
   data class Draft(
     val version: Int,
     val words: List<String> = emptyList(),
     val wakes: List<String> = emptyList(),
+    val what: List<String> = emptyList(),
     @SerialName("when") val whenLines: List<String> = emptyList(),
     val results: List<String> = emptyList(),
+    val groups: List<Group> = emptyList(),
   ) {
-    /** Every line, ring by ring, for a place that shows them together. */
-    val lines: List<String> get() = (wakes + whenLines + results).ifEmpty { words }
+    /** Every line, ring by ring. */
+    val lines: List<String> get() = (wakes + what + results).ifEmpty { wakes + whenLines + results }.ifEmpty { words }
   }
 
-  /**
-   * The setting with [stopId] changed, the one thing a tap changes, as `PUT` takes it: a result place, or If busy. Null for
-   * anything else: a door and Run now have their own routes, and triggers change through Coach's draft for now.
-   */
-  fun changed(stopId: String): kotlinx.serialization.json.JsonObject? {
-    val now = setting ?: return null
-    fun list(key: String) = (now[key] as? kotlinx.serialization.json.JsonArray)?.toList().orEmpty()
-    val wakes = list("wakes")
-    val results = list("results")
-    var busy = now["busy"]
-    this.results.firstOrNull { it.id == stopId }?.let { item ->
-      val place = item.place ?: return null
-      val held = results.firstOrNull { (it as? kotlinx.serialization.json.JsonObject)?.get("place")?.let { p -> (p as? kotlinx.serialization.json.JsonPrimitive)?.content } == place }
-      val next = when {
-        item.on && held != null -> results - held
-        // Back on: a plain place only; one that names a channel or a page is set where it's chosen, not by a tap.
-        !item.on && place in PLAIN_PLACES -> results + kotlinx.serialization.json.JsonObject(mapOf("place" to kotlinx.serialization.json.JsonPrimitive(place)))
-        else -> return null
-      }
-      return put(wakes, busy, next)
-    }
-    this.whenItems.firstOrNull { it.id == stopId && it.kind == "busy" }?.let { _ ->
-      val was = (busy as? kotlinx.serialization.json.JsonPrimitive)?.content ?: "skip"
-      busy = kotlinx.serialization.json.JsonPrimitive(if (was == "latest") "skip" else "latest")
-      return put(wakes, busy, results)
-    }
-    return null
-  }
+  /** One connection's lines in a draft, or This taf's (no grant). */
+  @Serializable
+  data class Group(
+    val grant: String? = null,
+    val name: String = "",
+    val wakes: List<String> = emptyList(),
+    val what: List<String> = emptyList(),
+    val results: List<String> = emptyList(),
+  )
 
-  private fun put(wakes: List<kotlinx.serialization.json.JsonElement>, busy: kotlinx.serialization.json.JsonElement?, results: List<kotlinx.serialization.json.JsonElement>) =
-    kotlinx.serialization.json.JsonObject(buildMap {
-      put("wakes", kotlinx.serialization.json.JsonArray(wakes))
-      put("when", kotlinx.serialization.json.JsonObject(mapOf("busy" to (busy ?: kotlinx.serialization.json.JsonPrimitive("skip")))))
-      put("results", kotlinx.serialization.json.JsonArray(results))
-    })
-
-  companion object {
-    /** The places a tap can turn back on: they need nothing chosen. */
-    val PLAIN_PLACES = setOf("door_reply", "app", "owner_email")
-  }
-
-  /** What `PUT` answers: the taf's next version, and what it changes in tafs cloud's words. Nothing runs from it until it's live. */
+  /** What `PUT` answers: the taf's next version, and its words. Nothing runs from it until it's live. */
   @Serializable
   data class Change(val version: Int, val words: List<String> = emptyList())
 
-  /** The dial's model: the rings in their order, inside to out, each stop as tafs cloud wrote it. */
-  fun knob(): Knob = Knob(
-    does = does.label,
-    overview = does.line,
-    rings = listOf(
-      KnobRing(KnobRing.Kind.WakesIt, wakes.map(::stop)),
-      KnobRing(KnobRing.Kind.When, whenItems.map(::stop)),
-      KnobRing(KnobRing.Kind.ResultsGo, results.map(::stop)),
-    ),
-    rim = KnobRim(rim.done, rim.working, rim.retrying, rim.needsYou),
-    summary = rim.line,
-  )
+  /** All of a ring's stops, by its key. */
+  fun items(key: String): List<Item> = when (key) {
+    "wakes" -> wakes
+    "what" -> what
+    "results" -> results
+    else -> emptyList()
+  }
 
-  private fun stop(i: Item) = KnobStop(i.id, i.label, i.on, i.state, i.tap, i.words)
+  /** A stop by its id, on any ring. */
+  fun item(id: String): Item? = (wakes + what + results).firstOrNull { it.id == id }
+
+  /**
+   * The dial's model, inner ring to outer: When, What, Where, as [rings] names them. [showing] keeps one connection's stops (its
+   * grant), the taf's own ([THIS_TAF]), or all of them (null).
+   */
+  fun knob(showing: String? = null): Knob {
+    val names = rings.ifEmpty { listOf(RingName("wakes", "When"), RingName("what", "What"), RingName("results", "Where")) }
+    fun keep(i: Item) = when (showing) {
+      null -> true
+      THIS_TAF -> i.grant == null
+      else -> i.grant == showing
+    }
+    return Knob(
+      does = why ?: does.label,
+      overview = does.line,
+      rings = names.mapNotNull { r ->
+        val kind = when (r.key) {
+          "wakes" -> KnobRing.Kind.WakesIt
+          "what" -> KnobRing.Kind.What
+          "results" -> KnobRing.Kind.ResultsGo
+          else -> return@mapNotNull null
+        }
+        KnobRing(kind, items(r.key).filter(::keep).map(::stop), r.name)
+      },
+      rim = KnobRim(rim.done, rim.working, rim.retrying, rim.needsYou),
+      summary = rim.line,
+    )
+  }
+
+  // A recipe step reads "1 · Check"; anything else, its label as tafs cloud wrote it.
+  private fun stop(i: Item) = KnobStop(i.id, i.step?.let { "$it · ${i.label}" } ?: i.label, i.on, i.state, i.tap, i.words, i.size?.now?.label)
+
+  companion object {
+    /** "Showing ▾"'s choice for the taf's own stops, the ones with no connection. */
+    const val THIS_TAF = "this-taf"
+  }
 }
 
 /** Connect apps (`GET /v1/connect/apps`, the knob API): the catalog first, then KIFF's own apps for Google, Microsoft and Slack. */

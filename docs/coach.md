@@ -208,7 +208,8 @@ this connection don't check out…"), and nothing can be approved. On Android: `
 
 Coach sets a taf's dial with its `taf_dial` tool, which makes the taf's next version, and nothing
 runs from it. Then Coach shows `{type: "knob", taf_id, version}` in its chat. The app draws that
-card from the taf's knob `draft`, in tafs cloud's words by ring: Wakes it, When, Results go.
+card from the taf's knob `draft`, in tafs cloud's words by connection (`draft.groups`: each
+connected app, then This taf), each under When, What and Where.
 **Confirm** makes it live with the usual version switch (with the fingerprint where the Card
 changes) and tells Coach it was approved. **Change** goes back to Coach. When the knob's draft is
 no longer that version, the card says it was replaced. The dial shows the same draft, with **Make

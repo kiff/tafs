@@ -83,27 +83,28 @@ class ConnectAppsTest {
     assertEquals("the last one read stays", "Refund", m.state.value.knobs.getValue("refunds-1").does.label)
   }
 
-  @Test fun aDialTapMakesTheNextVersionWithTheLiveSettingChangedOnce() = runTest {
+  @Test fun lowerOrRaiseSendsTheChoicesSettingThenReadsThatVersionToBuildOn() = runTest {
     val m = model()
-    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"does":{"label":"Refund","line":""},"when":[{"id":"when_busy","kind":"busy","label":"If busy"}],"rim":{},
-      "setting":{"wakes":[],"busy":"skip","results":[]}}""")
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":7,"why":"Refund double charges","wakes":[{"id":"t","kind":"schedule","label":"Weekdays",
+      "size":{"label":"Time","index":0,"choices":[{"label":"09:00","setting":{"at":"09:00"}},{"label":"12:00","setting":{"at":"12:00"}}]}}],"rim":{}}""")
     m.loadKnob("refunds-1")
-    transport.answer("PUT /v1/tafs/taf_1/knob", 200, """{"version":8,"words":["If it's busy, it works the latest one."]}""")
-    assertTrue(m.changeKnob("refunds-1", "when_busy"))
+    val raise = m.state.value.knobs.getValue("refunds-1").item("t")!!.size!!.step(1)!!
+    transport.answer("PUT /v1/tafs/taf_1/knob", 200, """{"version":8,"words":["Weekdays at 12:00."]}""")
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":7,"shown":8,"why":"Refund double charges","wakes":[{"id":"t","kind":"schedule","label":"Weekdays",
+      "size":{"label":"Time","index":1,"choices":[{"label":"09:00","setting":{"at":"09:00"}},{"label":"12:00","setting":{"at":"12:00"}}]}}],"rim":{}}""")
+    assertTrue(m.changeKnobSize("refunds-1", raise.setting))
     val body = kotlinx.serialization.json.Json.parseToJsonElement(String(transport.requestsTo("PUT /v1/tafs/taf_1/knob").single().body!!))
-    assertEquals(kotlinx.serialization.json.Json.parseToJsonElement("""{"wakes":[],"when":{"busy":"latest"},"results":[]}"""), body)
+    assertEquals("the choice's setting, as it is", kotlinx.serialization.json.Json.parseToJsonElement("""{"at":"12:00"}"""), body)
+    assertEquals("that version is read, so the next change builds on it", "https://cloud.tafs.kiff.dev/v1/tafs/taf_1/knob?version=8", transport.requestsTo("GET /v1/tafs/taf_1/knob").last().url)
+    assertEquals(8, m.state.value.knobs.getValue("refunds-1").shown)
     assertEquals(8, m.state.value.knobChanges.getValue("refunds-1").version)
-    // Nothing is live from it yet: setting it aside sends nothing.
-    m.dismissKnobChange("refunds-1")
-    assertTrue(m.state.value.knobChanges.isEmpty())
+    assertEquals("one change so far", 1, m.state.value.knobChangeCount.getValue("refunds-1"))
   }
 
   @Test fun aFormTheSchedulerCantKeepIsSaidInTafsCloudsWords() = runTest {
     val m = model()
-    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"does":{"label":"Refund","line":""},"when":[{"id":"when_busy","kind":"busy","label":"If busy"}],"rim":{},"setting":{"wakes":[],"busy":"skip","results":[]}}""")
-    m.loadKnob("refunds-1")
     transport.answer("PUT /v1/tafs/taf_1/knob", 400, """{"error":"bad","words":"Every 25 minutes can't be kept exactly: the nearest is every 20 minutes."}""")
-    assertFalse(m.changeKnob("refunds-1", "when_busy"))
+    assertFalse(m.changeKnobSize("refunds-1", kotlinx.serialization.json.JsonObject(emptyMap())))
     assertTrue(m.state.value.knobErrors.getValue("refunds-1").contains("the nearest is every 20 minutes"))
     assertTrue(m.state.value.knobChanges.isEmpty())
   }
