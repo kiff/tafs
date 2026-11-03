@@ -47,8 +47,8 @@ Some apps don't have a sign-in page. They use a key or a token you create in the
   connections, sealed. The phone signs only a hash of it, and neither the phone nor tafs
   keeps it.
 - **On the connection service's page:** for others, the approval tells you that you'll
-  enter your key on the connection service's page, which keeps it. The taf never sees it
-  either way.
+  enter your key or token on the connection service's page, which keeps it. The taf never
+  sees it either way.
 
 The approval's words always say which one it is.
 
@@ -98,8 +98,9 @@ Both use the taf's Slack connection.
 ## Disconnecting
 
 A taf's connections are on its **Card** tab: whose sign-in, which actions, and what
-happened last. **Disconnect**, with Face ID or your fingerprint, removes the app's actions
-from the taf and revokes the sign-in at the app. If the app signs you out on its side (a
+happened last. **Disconnect**, with Face ID or your fingerprint, takes the app's actions
+away from the taf at once: nothing more reaches the app through that connection. It also
+asks the app to revoke the sign-in; that part may finish later, on the app's side. If the app signs you out on its side (a
 changed password, an expired session), the taf says so and waits for you: **Sign in again**
 asks for one approval, then the app's own page.
 
