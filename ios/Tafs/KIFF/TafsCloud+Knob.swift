@@ -43,6 +43,8 @@ extension TafsCloud {
             var grant: String?
             var step: Int?
             var action: String?
+            var ok: String?
+            var look: String?
             var followUp: String?
             struct Size: Decodable, Equatable, Sendable {
                 struct Choice: Decodable, Equatable, Sendable {
@@ -59,12 +61,13 @@ extension TafsCloud {
                 }
             }
             var size: Size?
+            var ringLabel: String { step.map { "\($0) · \(label)" } ?? label }
 
-            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door, trigger, grant, step, action, size, followUp = "follow_up" }
+            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door, trigger, grant, step, action, ok, look, size, followUp = "follow_up" }
             init(id: String, kind: String? = nil, place: String? = nil, label: String, words: String, on: Bool = true,
-                 state: String? = nil, tap: String? = nil, expires: String? = nil, door: String? = nil, grant: String? = nil, step: Int? = nil) {
+                 state: String? = nil, tap: String? = nil, expires: String? = nil, door: String? = nil, grant: String? = nil, step: Int? = nil, ok: String? = nil, look: String? = nil) {
                 self.id = id; self.kind = kind; self.place = place; self.label = label; self.words = words
-                self.on = on; self.state = state; self.tap = tap; self.expires = expires; self.door = door; self.grant = grant; self.step = step
+                self.on = on; self.state = state; self.tap = tap; self.expires = expires; self.door = door; self.grant = grant; self.step = step; self.ok = ok; self.look = look
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -82,6 +85,8 @@ extension TafsCloud {
                 grant = try c.decodeIfPresent(String.self, forKey: .grant)
                 step = try c.decodeIfPresent(Int.self, forKey: .step)
                 action = try c.decodeIfPresent(String.self, forKey: .action)
+                ok = try c.decodeIfPresent(String.self, forKey: .ok)
+                look = try c.decodeIfPresent(String.self, forKey: .look)
                 followUp = try c.decodeIfPresent(String.self, forKey: .followUp)
                 size = try c.decodeIfPresent(Size.self, forKey: .size)
             }
@@ -164,6 +169,11 @@ extension TafsCloud {
             var name: String
         }
 
+        struct Pending: Decodable, Equatable {
+            var version: Int
+            var changes: Int
+        }
+        var pending: Pending?
         var version: Int?
         var shown: Int?
         var why: String?
@@ -180,13 +190,14 @@ extension TafsCloud {
         /// thing and sends it whole.
         var setting: Setting?
 
-        enum CodingKeys: String, CodingKey { case version, shown, why, does, wakes, when, what, results, rim, draft, setting, connections, rings }
+        enum CodingKeys: String, CodingKey { case pending, version, shown, why, does, wakes, when, what, results, rim, draft, setting, connections, rings }
         init(version: Int? = nil, does: Does = Does(), wakes: [Item] = [], when: [Item] = [], results: [Item] = [], rim: Rim = Rim(), draft: Draft? = nil) {
             self.version = version; self.does = does; self.wakes = wakes; self.when = when; self.results = results; self.rim = rim; self.draft = draft
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             version = try c.decodeIfPresent(Int.self, forKey: .version)
+            pending = try c.decodeIfPresent(Pending.self, forKey: .pending)
             shown = try c.decodeIfPresent(Int.self, forKey: .shown)
             why = try c.decodeIfPresent(String.self, forKey: .why)
             what = try c.decodeIfPresent([Item].self, forKey: .what) ?? []
@@ -276,8 +287,19 @@ extension TafsCloud {
         /// Choices must be based on the newest draft known to this phone. A failed read
         /// after a successful PUT must not allow an older choice to replace that draft.
         func acceptsChoices(waitingFor changedVersion: Int? = nil) -> Bool {
-            let pending = max(draft?.version ?? 0, changedVersion ?? 0)
+            let pending = max(self.pending?.version ?? draft?.version ?? 0, changedVersion ?? 0)
             return pending == 0 || pending <= (version ?? 0) || shown == pending
+        }
+
+        var orderedRings: [Ring] {
+            guard !rings.isEmpty else { return Ring.allCases }
+            var seen = Set<Ring>()
+            return rings.compactMap { name in
+                let ring: Ring?
+                switch name.key { case "wakes": ring = .wakes; case "what": ring = .what; case "results": ring = .results; default: ring = nil }
+                guard let ring, seen.insert(ring).inserted else { return nil }
+                return ring
+            }
         }
 
         func title(_ ring: Ring) -> String {
@@ -288,10 +310,7 @@ extension TafsCloud {
         func items(_ ring: Ring) -> [Item] {
             switch ring {
             case .wakes: return wakes
-            case .what:
-                // Older cloud: show its own recipe line until numbered steps arrive.
-                return what.isEmpty && !does.line.isEmpty
-                    ? [Item(id: "recipe", label: does.label, words: does.line, step: 1)] : what
+            case .what: return what
             case .results: return results
             }
         }
@@ -305,6 +324,11 @@ extension TafsCloud {
     /// Changes the taf's dial: its next version, made live only by the version switch.
     func putKnob(_ id: String, _ setting: Knob.Setting) async throws -> Knob.Change {
         try await send("PUT", "/v1/tafs/\(escaped(id))/knob", body: setting)
+    }
+
+    func removeFollowUp(_ id: String, followUp: String) async throws {
+        struct Removed: Decodable { var removed: String }
+        let _: Removed = try await send("DELETE", "/v1/tafs/\(escaped(id))/follow-ups/\(escaped(followUp))")
     }
 
     /// Connect apps (`GET /v1/connect/apps`): the catalog first, then KIFF's own apps for

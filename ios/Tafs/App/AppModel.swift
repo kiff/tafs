@@ -1709,8 +1709,8 @@ final class AppModel: ObservableObject {
         do {
             var knob = try await cloud.knob(c.id)
             guard gen == accountGeneration else { return }
-            if let draft = knob.draft {
-                do { knob = try await cloud.knob(c.id, version: draft.version) }
+            if let pending = knob.pending {
+                do { knob = try await cloud.knob(c.id, version: pending.version) }
                 catch let error as TafsCloud.CloudError where error.status == 404 {
                     // It was installed or replaced while reading: refresh its current state.
                     knob = try await cloud.knob(c.id)
@@ -1732,12 +1732,15 @@ final class AppModel: ObservableObject {
     /// version. Fixed size choices make a pending version; setup belongs to Coach.
     func pressKnob(_ tafID: UUID, _ item: TafsCloud.Knob.Item) async {
         guard mode == .kiff, manages(tafID), let c = cloudTaf(for: tafID) else { return }
-        if let door = item.door {
+        if item.ok == "door", let door = item.door {
             do { _ = try await cloud.setDoorOpen(c.id, door: door, open: !item.on) } catch {
                 lastError = "The door didn't \(item.on ? "close" : "open"): \(error.localizedDescription)"
             }
-        } else if item.kind == "run_now" {
+        } else if item.ok == "run" {
             _ = await runNow(c)
+        } else if item.ok == "remove_follow_up", let followUp = item.followUp {
+            do { try await cloud.removeFollowUp(c.id, followUp: followUp) }
+            catch { lastError = "The follow-up wasn't removed: \(error.localizedDescription)" }
         } else {
             return
         }

@@ -31,7 +31,7 @@ final class KnobTests: XCTestCase {
         XCTAssertEqual(k.rim, TafsCloud.Knob.Rim(done: 12, working: 1, retrying: 1, needsYou: 1, line: "12 done today · 1 working · 1 retrying its reply"))
         XCTAssertEqual(k.rim.total, 15)
         XCTAssertEqual(k.draft, TafsCloud.Knob.Draft(version: 8, words: ["Runs at 09:00 on weekdays too"]))
-        XCTAssertEqual(TafsCloud.Knob.Ring.allCases.map { k.items($0).count }, [2, 1, 1])
+        XCTAssertEqual(TafsCloud.Knob.Ring.allCases.map { k.items($0).count }, [2, 0, 1])
     }
 
     /// What tafs cloud leaves out has its default, and a null draft is none.

@@ -14,12 +14,11 @@ struct TafDialPanel: View {
     @State private var busy = false
     @State private var reading: TafsCloud.Version?
     @State private var requests = false
-    @State private var changedStops: Set<String> = []
 
     var body: some View {
         VStack(spacing: 14) {
-            if let draft = knob.draft {
-                Text("DRAFT · V\(draft.version) · NOT LIVE").scaledFont(10, weight: .semibold, design: .monospaced)
+            if let pending = knob.pending {
+                Text("DRAFT · V\(pending.version) · NOT LIVE").scaledFont(10, weight: .semibold, design: .monospaced)
                     .foregroundColor(Theme.amberText).frame(maxWidth: .infinity, alignment: .leading)
             }
             TafKnobView(knob: knob, face: $face, held: held, press: { _, item in
@@ -30,19 +29,19 @@ struct TafDialPanel: View {
                     await press(item)
                     await doors.load()
                 }
-            }, doors: doors.doors, knocks: doors.openKnocks,
+            }, doors: doors.doors,
                         paused: model.cloudTaf(for: taf.id)?.paused ?? false,
                         manages: manages, busy: busy,
                         askCoach: { model.openCoach() }, pause: pause,
                         adjust: adjust, canAdjust: { item, direction in
                             knob.acceptsChoices(waitingFor: model.knobChanges[taf.id]?.version) && item.size?.choice(moving: direction) != nil
                         }, approve: approve)
-            if let draft = knob.draft, manages {
+            if let pending = knob.pending, manages {
                 VStack(alignment: .leading, spacing: 6) {
-                    ForEach(Array(draft.words.enumerated()), id: \.offset) { _, line in
+                    ForEach(Array((knob.draft?.words ?? []).enumerated()), id: \.offset) { _, line in
                         Text(line).scaledFont(13).foregroundColor(Theme.soft)
                     }
-                    Button(busy ? "Confirming…" : liveLabel) { confirm(draft.version) }
+                    Button(busy ? "Confirming…" : liveLabel) { confirm(pending.version) }
                         .buttonStyle(PrimaryButtonStyle()).disabled(busy)
                         .accessibilityIdentifier("knob.makeLive")
                 }
@@ -56,11 +55,9 @@ struct TafDialPanel: View {
             .accessibilityIdentifier("knob.requests")
             if let error = model.lastError {
                 Text(error).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
-                Button("Refresh dial") { Task { await model.loadKnob(taf.id) } }.disabled(busy)
             }
         }
         .task { showHeld() }
-        .onChange(of: knob.draft?.version) { version in if version == nil { changedStops = [] } }
         .onChange(of: held.map(\.id)) { _ in showHeld() }
         .sheet(item: $reading) { version in
             VersionCardSheet(version: version, tafID: taf.id).environmentObject(model)
@@ -69,14 +66,13 @@ struct TafDialPanel: View {
     }
 
     private var liveLabel: String {
-        let changes = changedStops.count
-        return changes == 0 ? "Make it live with \(Biometry.name)"
-            : "Make \(changes) change\(changes == 1 ? "" : "s") live with \(Biometry.name)"
+        let changes = knob.pending?.changes ?? 0
+        return "Make \(changes) change\(changes == 1 ? "" : "s") live with \(Biometry.name)"
     }
 
     private func showHeld() {
-        if let call = held.first { face = .held(call.id) }
-        else if case .held = face { face = .overview }
+        if case .held(let id) = face, !held.contains(where: { $0.id == id && $0.approvableOnce }) { face = .overview }
+        if face == .overview, let call = held.first(where: \.approvableOnce) { face = .held(call.id) }
     }
 
     private func adjust(_ item: TafsCloud.Knob.Item, _ direction: Int) {
@@ -84,7 +80,7 @@ struct TafDialPanel: View {
         busy = true
         Task {
             defer { busy = false }
-            if await model.adjustKnob(taf.id, item: item, direction: direction) { changedStops.insert(item.id) }
+            _ = await model.adjustKnob(taf.id, item: item, direction: direction)
         }
     }
 
@@ -105,7 +101,7 @@ struct TafDialPanel: View {
             defer { busy = false }
             await model.loadVersions(taf.id)
             await model.loadKnob(taf.id)
-            guard model.knobs[taf.id]?.draft?.version == n,
+            guard model.knobs[taf.id]?.pending?.version == n,
                   let version = model.versions[taf.id]?.first(where: { $0.n == n }),
                   let change = await model.prepareSwitch(version, of: taf.id) else { return }
             if change.draft == nil { _ = await model.useVersion(version, of: taf.id) }
@@ -139,7 +135,7 @@ struct KnobRequestsSheet: View {
             .navigationDestination(for: String.self) { run in KnobRequestDetail(tafID: tafID, run: run) }
             .task(id: tafID) {
                 await model.loadWork(tafID)
-                if !openedLatest, let latest = model.works[tafID]?.requests.first {
+                if !openedLatest, let latest = model.works[tafID]?.focusedRequest {
                     openedLatest = true
                     path = [latest.id]
                 }

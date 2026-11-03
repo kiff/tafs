@@ -1587,7 +1587,7 @@ struct KnobDraftCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let tafID, let taf = model.taf(tafID) {
-                Eyebrow(text: taf.name)
+                Eyebrow(text: taf.name + " will work like this")
             }
             if let version = component.version, let live, live >= version {
                 Text("This dial is live.").scaledFont(14).foregroundColor(Theme.ok)
@@ -1612,6 +1612,7 @@ struct KnobDraftCard: View {
                             .buttonStyle(PrimaryButtonStyle()).disabled(busy)
                         Button("Change") { model.openCoach() }.buttonStyle(OutlineButtonStyle())
                     }
+                    Text("One confirmation sets all three rings.").scaledFont(12).foregroundColor(Theme.dim)
                 }
             } else if draft != nil || live != nil {
                 Text("A newer dial replaced this one.").scaledFont(14).foregroundColor(Theme.dim)

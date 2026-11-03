@@ -17,7 +17,6 @@ struct TafKnobView: View {
     /// The face was tapped on a chosen stop whose `tap` says it does something.
     var press: (TafsCloud.Knob.Ring, TafsCloud.Knob.Item) -> Void = { _, _ in }
     var doors: [TafsCloud.Door] = []
-    var knocks: [TafsCloud.Knock] = []
     var paused = false
     var manages = true
     var busy = false
@@ -49,7 +48,7 @@ struct TafKnobView: View {
     enum Grid {
         static let size: CGFloat = 360
         static let face: CGFloat = 64
-        static let radii: [Ring: (inner: CGFloat, outer: CGFloat)] = [.wakes: (68, 104), .what: (108, 140), .results: (144, 170)]
+        static let bands: [(inner: CGFloat, outer: CGFloat)] = [(68, 104), (108, 140), (144, 170)]
         static let rim: (inner: CGFloat, outer: CGFloat) = (174, 178)
     }
 
@@ -77,7 +76,7 @@ struct TafKnobView: View {
                 let k = min(g.size.width, g.size.height) / Grid.size
                 ZStack {
                     rim(k)
-                    ForEach(Ring.allCases, id: \.self) { ring in band(ring, k) }
+                    ForEach(knob.orderedRings, id: \.self) { ring in band(ring, k) }
                     pointer(k)
                     face(k)
                 }
@@ -91,6 +90,15 @@ struct TafKnobView: View {
                 .frame(minHeight: 44, alignment: .top)
                 .padding(.horizontal, 12)
                 .accessibilityIdentifier("knob.note")
+            if let size = chosenItem?.size, size.choices.indices.contains(size.index) {
+                Text(size.label + " · " + size.choices[size.index].label)
+                    .scaledFont(12, weight: .medium, design: .monospaced).foregroundColor(Theme.dim)
+            }
+            if held.contains(where: \.approvableOnce) {
+                Button("Needs you") {
+                    if let call = held.first(where: \.approvableOnce) { face = .held(call.id) }
+                }.scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
+            }
             remote
             if face != .overview {
                 Button("‹ Why") { withMotion { face = .overview } }
@@ -144,9 +152,7 @@ struct TafKnobView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Text("SHOWING").scaledFont(10, weight: .semibold, design: .monospaced).foregroundColor(Theme.dim)
-                Image(systemName: "circle.grid.2x2.fill").foregroundColor(Self.color(.wakes))
-                Text(filterName).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                Text("Showing " + filterName).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.down").foregroundColor(Theme.dim)
             }
@@ -191,7 +197,7 @@ struct TafKnobView: View {
     private func items(_ ring: Ring) -> [TafsCloud.Knob.Item] { KnobNavigation.items(knob, ring: ring, filter: filter) }
     private var allStops: [KnobNavigation.Stop] { KnobNavigation.stops(knob, filter: filter) }
     private func visibleItems(_ ring: Ring) -> [TafsCloud.Knob.Item] {
-        KnobNavigation.page(items(ring), selectedID: chosen?.ring == ring ? chosen?.id : nil, capacity: ring == .wakes ? 4 : 6)
+        KnobNavigation.page(items(ring), selectedID: chosen?.ring == ring ? chosen?.id : nil, capacity: 6)
     }
     private func walk(_ direction: Int) {
         guard let stop = KnobNavigation.next(allStops, ring: chosen?.ring, id: chosen?.id, direction: direction) else { return }
@@ -207,8 +213,12 @@ struct TafKnobView: View {
 
     // MARK: Parts
 
+    private func radii(for ring: Ring) -> (inner: CGFloat, outer: CGFloat) {
+        Grid.bands[min(knob.orderedRings.firstIndex(of: ring) ?? 0, Grid.bands.count - 1)]
+    }
+
     private func band(_ ring: Ring, _ k: CGFloat) -> some View {
-        let r = Grid.radii[ring]!
+        let r = radii(for: ring)
         let items = visibleItems(ring)
         let on = chosen?.ring == ring
         let dim = chosen != nil && !on
@@ -231,19 +241,22 @@ struct TafKnobView: View {
     }
 
     private func stop(_ item: TafsCloud.Knob.Item, ring: Ring, index: Int, count: Int, k: CGFloat) -> some View {
-        let r = Grid.radii[ring]!
+        let r = radii(for: ring)
         let mid = (r.inner + r.outer) / 2
         let angle = Double(index) * 360 / Double(max(count, 1))
         let on = chosen?.ring == ring
         let picked = on && chosen?.id == item.id
         let color = picked ? Self.color(ring) : on ? Theme.ink : Self.color(ring).opacity(item.on ? 0.85 : 0.45)
-        let label = item.step.map { "\($0) · \(item.label)" } ?? item.label
+        let label = item.ringLabel
+        let screenAngle = angle - Double(turns[ring] ?? 0) * 360 / Double(max(count, 1))
+        let flip = KnobNavigation.labelFlip(at: screenAngle)
         return ZStack {
             doorArc(item, ring: ring, angle: angle, count: count, k: k)
             Button { choose(ring, item) } label: {
                 Text(label).scaledFont(12, weight: picked ? .bold : .medium, relativeTo: .caption)
                     .foregroundColor(color).lineLimit(1)
                     .frame(width: 100 * k, height: 36 * k)
+                    .rotationEffect(.degrees(flip))
             }
             .buttonStyle(.plain)
             .overlay(alignment: .bottom) { arrivalLight(item, ring: ring, k: k) }
@@ -256,12 +269,12 @@ struct TafKnobView: View {
 
     @ViewBuilder
     private func doorArc(_ item: TafsCloud.Knob.Item, ring: Ring, angle: Double, count: Int, k: CGFloat) -> some View {
-        if let doorID = item.door, let door = doors.first(where: { $0.id == doorID }) {
-            let radius = Grid.radii[ring]!.inner + 2
-            let color = knocks.contains { $0.door == doorID } ? Theme.amber : door.resting ? Theme.dim : Self.color(ring).opacity(door.open ? 0.85 : 0.3)
+        if item.door != nil, let look = item.look {
+            let radius = radii(for: ring).outer - 2
+            let color = look == "knock" ? Theme.amber : look == "resting" ? Theme.dim : Self.color(ring).opacity(look == "open" ? 0.85 : 0.3)
             let end = CGFloat(max(0.015, 1 / Double(max(count, 1)) - 0.015))
             Circle().trim(from: 0.015, to: end)
-                .stroke(color, style: StrokeStyle(lineWidth: 2 * k, dash: door.open ? [] : [3 * k, 4 * k]))
+                .stroke(color, style: StrokeStyle(lineWidth: 2 * k, dash: look == "closed" ? [3 * k, 4 * k] : []))
                 .frame(width: radius * 2 * k, height: radius * 2 * k)
                 .rotationEffect(.degrees(angle - 90 - 180 / Double(max(count, 1))))
                 .accessibilityHidden(true)
@@ -270,10 +283,18 @@ struct TafKnobView: View {
 
     @ViewBuilder
     private func arrivalLight(_ item: TafsCloud.Knob.Item, ring: Ring, k: CGFloat) -> some View {
-        if let doorID = item.door, let door = doors.first(where: { $0.id == doorID }) {
-            let color = knocks.contains { $0.door == doorID } ? Theme.amber : arrivals.contains(doorID) ? Theme.ok
-                : door.resting ? Theme.dim : door.open ? Self.color(ring).opacity(0.4) : Theme.line
-            Circle().fill(color).frame(width: 5 * k, height: 5 * k).accessibilityHidden(true)
+        if let doorID = item.door {
+            let color = item.look == "knock" ? Theme.amber : item.look == "resting" ? Theme.dim : Self.color(ring)
+            ZStack {
+                if arrivals.contains(doorID) {
+                    TimelineView(.animation(minimumInterval: 0.1, paused: reduceMotion)) { context in
+                        let phase = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 0.9) / 0.9
+                        Circle().fill(color.opacity(reduceMotion ? 0.25 : 0.4 * (1 - phase)))
+                            .frame(width: 20 * k, height: 20 * k).scaleEffect(reduceMotion ? 1 : 0.6 + phase)
+                    }
+                }
+                Circle().fill(color.opacity(item.look == "closed" ? 0.2 : 0.9)).frame(width: 5 * k, height: 5 * k)
+            }.frame(width: 5 * k, height: 5 * k).accessibilityHidden(true)
         }
     }
 
@@ -304,7 +325,7 @@ struct TafKnobView: View {
 
     /// Points at the chosen ring's top stop, or at the rim.
     private func pointer(_ k: CGFloat) -> some View {
-        let r = chosen.map { Grid.radii[$0.ring]!.outer } ?? Grid.rim.outer
+        let r = chosen.map { radii(for: $0.ring).outer } ?? Grid.rim.outer
         return Triangle()
             .fill(chosen.map { Self.color($0.ring) } ?? Theme.ink)
             .frame(width: 14 * k, height: 11 * k)
@@ -317,16 +338,17 @@ struct TafKnobView: View {
         let item = chosenItem
         let tint = heldCall != nil ? Theme.amberText : chosen.map { Self.color($0.ring) } ?? Theme.ink
         let big = heldCall.map { $0.proposed.amount?.formatted ?? $0.proposed.summary } ?? item.map { item in
+            if let state = item.state, !state.isEmpty { return state }
             if let size = item.size, size.choices.indices.contains(size.index) { return size.choices[size.index].label }
-            return item.state ?? item.label
+            return item.label
         } ?? (knob.why ?? knob.does.label)
         return Button {
             if let call = heldCall {
                 if call.approvableOnce, manages, !busy { approve(call) }
                 return
             }
-            if item?.kind == "add_door" { askCoach(); return }
-            guard let chosen, let item, item.tap != nil, manages, !busy else {
+            if item?.ok == "coach" { askCoach(); return }
+            guard let chosen, let item, item.ok != nil, manages, !busy else {
                 if chosen == nil { walk(1) }
                 return
             }
@@ -358,18 +380,17 @@ struct TafKnobView: View {
     private var kicker: String {
         if let call = heldCall { return call.proposed.summary.uppercased() }
         guard let chosen, let item = chosenItem else { return Self.why }
-        return "\(knob.title(chosen.ring)) · \(item.label)".uppercased()
+        return "\(knob.title(chosen.ring)) · \(item.ringLabel)".uppercased()
     }
 
     private var hint: String {
         if let call = heldCall { return call.approvableOnce ? Self.approveOnce : "" }
         guard chosen != nil else { return Self.tapARing }
-        if let item = chosenItem, let size = item.size,
-           size.choices.indices.contains(size.index) { return size.label + ": − and +" }
-        return chosenItem?.tap ?? "Ask Coach to change"
+        if let tap = chosenItem?.tap { return tap }
+        return chosenItem?.size != nil ? "Use − and +" : "Ask Coach to change"
     }
 
-    private var note: String { heldCall?.reason ?? chosenItem?.words ?? knob.does.line }
+    private var note: String { heldCall?.reason ?? chosenItem?.words ?? "When starts it, What it does in order, Where the result goes." }
 
     private func choose(_ ring: Ring, _ item: TafsCloud.Knob.Item?) {
         guard let item else { return }

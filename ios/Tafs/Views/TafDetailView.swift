@@ -77,7 +77,7 @@ struct TafDetailView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 if section == 3, hasDoors(taf), let doors = model.doors(for: taf.id) {
                                     DoorsView(taf: taf, doors: doors, manages: model.manages(taf.id), myEmail: model.kiffAccount?.email)
-                                        .knob(Screenshots.enabled && Screenshots.screen == "knob" ? Screenshots.knob : model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
+                                        .knob(Screenshots.enabled && ["doors", "knob"].contains(Screenshots.screen ?? "") ? Screenshots.knob : model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
                                               press: { await model.pressKnob(taf.id, $0) },
                                               approve: { call in Task { await model.answer(call, with: .approveOnce) } })
                                         .slack(add: { slackApp = $0 }, remove: { await model.removeSlackDoor($0, doors: doors) })

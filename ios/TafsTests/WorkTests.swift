@@ -48,6 +48,25 @@ final class WorkTests: XCTestCase {
         XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.httpMethod == "GET" })
     }
 
+    func testTheRimOpensUnfinishedWorkThenTheNewest() {
+        let done = TafsCloud.TafWork.Request(id: "done", at: Date(), state: "done")
+        let waiting = TafsCloud.TafWork.Request(id: "waiting", at: Date(), state: "waiting")
+        XCTAssertEqual(TafsCloud.TafWork(requests: [done, waiting]).focusedRequest?.id, "waiting")
+        XCTAssertEqual(TafsCloud.TafWork(requests: [done]).focusedRequest?.id, "done")
+        XCTAssertNil(TafsCloud.TafWork().focusedRequest)
+    }
+
+    func testTheFaceRemovesTheServersFollowUpByItsOwnID() async throws {
+        StubProtocol.responses = [:]; StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        StubProtocol.responses["DELETE /v1/tafs/taf-1/follow-ups/fu-2"] = (200, #"{"removed":"fu-2"}"#)
+        try await cloud.removeFollowUp("taf-1", followUp: "fu-2")
+        XCTAssertEqual(StubProtocol.sent.last?.httpMethod, "DELETE")
+        XCTAssertEqual(StubProtocol.sent.last?.url?.path, "/v1/tafs/taf-1/follow-ups/fu-2")
+    }
+
     private func taf(_ name: String) -> Taf {
         Taf(name: name, job: "Refunds", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
     }

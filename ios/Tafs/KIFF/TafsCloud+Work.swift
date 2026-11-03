@@ -105,6 +105,9 @@ extension TafsCloud {
             skipped = (try? c.decode([Skipped].self, forKey: .skipped)) ?? []
         }
 
+        /// Open the work still asking for attention, otherwise the newest request.
+        var focusedRequest: Request? { requests.first { $0.state != "done" } ?? requests.first }
+
         /// The requests and skipped firings, each in its own place by time, newest first.
         var rows: [Row] {
             (requests.map(Row.request) + skipped.map(Row.skipped)).sorted { $0.at > $1.at }

@@ -10,22 +10,18 @@ enum KnobNavigation {
     }
 
     static func items(_ knob: Knob, ring: Knob.Ring, filter: Filter) -> [Knob.Item] {
-        var items = knob.items(ring).filter { item in
+        let items = knob.items(ring).filter { item in
             switch filter {
             case .all: return true
             case .taf: return item.grant == nil
             case .connection(let grant): return item.grant == grant
             }
         }
-        if ring == .wakes, filter == .all || filter == .taf {
-            items.append(Knob.Item(id: "add_door", kind: "add_door", label: "Add a door",
-                                   words: "Ask Coach to add a door", state: "+", tap: "Ask Coach"))
-        }
         return items
     }
 
     static func stops(_ knob: Knob, filter: Filter) -> [Stop] {
-        Knob.Ring.allCases.flatMap { ring in items(knob, ring: ring, filter: filter).map { Stop(ring: ring, item: $0) } }
+        knob.orderedRings.flatMap { ring in items(knob, ring: ring, filter: filter).map { Stop(ring: ring, item: $0) } }
     }
 
     static func next(_ stops: [Stop], ring: Knob.Ring?, id: String?, direction: Int) -> Stop? {
@@ -43,6 +39,13 @@ enum KnobNavigation {
         let index = items.firstIndex { $0.id == selectedID } ?? 0
         let start = index / capacity * capacity
         return Array(items.dropFirst(start).prefix(capacity))
+    }
+
+    /// Text on the lower half turns over inside its rotating stop so it reads upright.
+    static func labelFlip(at angle: Double) -> Double {
+        let wrapped = angle.truncatingRemainder(dividingBy: 360)
+        let normalized = wrapped < 0 ? wrapped + 360 : wrapped
+        return normalized > 90 && normalized < 270 ? 180 : 0
     }
 
     static func nearestTurn(from turn: Int, to index: Int, stops: Int) -> Int {

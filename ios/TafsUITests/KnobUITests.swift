@@ -27,9 +27,10 @@ final class KnobUITests: XCTestCase {
         showing.tap()
         app.buttons["This taf"].tap()
         if !next.isHittable { app.swipeUp() }
+        next.tap() // Email, the taf's own door.
         next.tap() // Add a door, always last on When.
         next.tap()
-        XCTAssertTrue(face.label.contains("WHAT · CHECK"))
+        XCTAssertTrue(face.label.contains("WHAT · 1 · CHECK"))
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Universal dial, This taf"
         attachment.lifetime = .keepAlways

@@ -58,7 +58,7 @@ final class VersionsTests: XCTestCase {
                     "choices": [["label": "08:00", "setting": setting("08:00")], ["label": "09:00", "setting": setting("09:00")]]]]],
                 "results": [["id": "email", "label": "Email", "size": ["label": "On or off", "index": 1,
                     "choices": [["label": "Off", "setting": setting(time, email: false)], ["label": "On", "setting": setting(time)]]]]]]
-            if let pending { body["draft"] = ["version": pending, "words": ["Pending changes"]] }
+            if let pending { body["draft"] = ["version": pending, "words": ["Pending changes"]]; body["pending"] = ["version": pending, "changes": 1] }
             if let shown { body["shown"] = shown }
             return try json(body)
         }
