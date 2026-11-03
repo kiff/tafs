@@ -309,6 +309,8 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
   }
   // All of the front Card's limits: the face shows the main one.
   CardLines(shown?.rules ?: emptyList())
+  // How this is counted: KIFF's lines for each tool's profile, as approved, under its limits.
+  shown?.counted?.takeIf { it.isNotEmpty() }?.let { HowCounted(it) }
   // How much of its totals is from calls the tool refused, in KIFF's words: for a live, active Card only.
   shown?.takeIf(::countsForReal)?.let(::pendingOf)?.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
   // Why its amount has no currency, in KIFF's words, and where to fix it: Coach, for whoever manages the taf.
@@ -503,5 +505,22 @@ private fun SideColumn(taf: Taf, state: AppState, actions: TafActions, front: St
     Eyebrow(if (cards.size == 1) "Card" else "Cards")
     CardStack(cards, state.issuer(taf), Theme.tafColor(taf.colorIndex), front, onFront, revoked = taf.card.revoked)
     OutlineButton(if (cards.size == 1) "All of the Card" else "All of the Cards", onAll, Modifier.fillMaxWidth())
+  }
+}
+
+/** "How this is counted": one row under the Card's limits that opens each tool's KIFF lines, shown as the owner approved them. */
+@Composable
+private fun HowCounted(counted: List<bot.tafs.app.kiff.CountedTool>) {
+  var open by rememberSaveable { mutableStateOf(false) }
+  Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Text(
+      (if (open) "▾ " else "▸ ") + bot.tafs.app.model.CardWords.HOW_COUNTED,
+      style = scaled(14, FontWeight.SemiBold, Theme.ink),
+      modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = !open }.padding(vertical = 12.dp),
+    )
+    if (open) counted.forEach { tool ->
+      Text(tool.title.ifBlank { tool.tool }, style = scaled(13, FontWeight.SemiBold, Theme.ink))
+      tool.lines.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
+    }
   }
 }

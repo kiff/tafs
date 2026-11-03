@@ -202,7 +202,9 @@ class MappingTest {
          "cards":[{"id":"card_1","title":"Refunds","environment":"","live":true,"active":true,"expires":"2027-01-01T00:00:00Z",
            "rules":[{"action":"create_refund","label":"Refund a payment","outside":"hold","per_window":{"minor":100000,"unit":"EUR","scale":2},"window":"day"}],
            "total":{"limit":{"minor":100000,"unit":"EUR","scale":2},"used":{"minor":20000,"unit":"EUR","scale":2},"window":"day",
-             "pending_text":"€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved."}},
+             "pending_text":"€49.00 of it is from 1 call the tool refused. It counts until KIFF can confirm nothing moved."},
+           "counted":[{"tool":"create_refund","title":"Refund a payment","lines":["Refund a payment: moves money through Stripe. It pays out or charges.","Refund a payment: counted in the currency Stripe reports."]},
+                      {"tool":"list_charges","title":"List charges","lines":[]}]},
           {"id":"card_t","title":"Refunds (test)","environment":"test","live":false,"active":true,"rules":[],
            "calls":{"limit":50,"used":3,"window":"week","pending_text":"2 of them are from calls the tool refused, in test."}},
           {"id":"card_u","title":"Refunds (reads)","environment":"","live":true,"active":true,"rules":[],
@@ -278,6 +280,14 @@ class MappingTest {
     assertEquals(50, cards[1].calls!!.limit)
     assertEquals(3, cards[1].calls!!.used)
     assertEquals(Window.week, cards[1].calls!!.window)
+  }
+
+  @Test fun howThisIsCountedIsKiffsLinesPerToolAsApproved() {
+    val cards = named("Refunds").kiffCards!!
+    val counted = cards[0].counted
+    assertEquals("a tool with no lines isn't shown", listOf("Refund a payment"), counted.map { it.title })
+    assertEquals("Refund a payment: counted in the currency Stripe reports.", counted.single().lines[1])
+    assertTrue("a Card KIFF says nothing for has none", cards[1].counted.isEmpty())
   }
 
   @Test fun aTafStateReadsInTheAppsWords() {

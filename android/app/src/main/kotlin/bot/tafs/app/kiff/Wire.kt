@@ -67,7 +67,13 @@ data class HomeCardView(
   val rules: List<HomeRule> = emptyList(),
   val total: HomeTotal<HomeAmount>? = null,
   val calls: HomeTotal<Int>? = null,
+  /** How this is counted: each covered tool's lines in KIFF's words, as the owner approved them; none when KIFF has none. */
+  val counted: List<CountedTool>? = null,
 )
+
+/** One tool's "How this is counted": its title, and KIFF's lines for its profile, shown as they are. */
+@Serializable
+data class CountedTool(val tool: String = "", val title: String = "", val lines: List<String> = emptyList())
 
 @Serializable
 data class HomeCardSummary(

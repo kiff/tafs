@@ -174,6 +174,7 @@ object KiffMapping {
             }
           },
           calls = c.calls?.let { CardTotal(it.limit, it.used, window(it.window), it.extraRoom, it.baseLimit, it.roomWindowEnd, it.pendingText) },
+          counted = c.counted.orEmpty().filter { it.lines.isNotEmpty() },
         )
       },
       used = h.card.used.mapNotNull { (action, a) -> amount(a)?.let { action to it } }.toMap(),

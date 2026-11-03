@@ -11,6 +11,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Android, How this is counted:** under a Card's limits, a row opens KIFF's words for how each
+  tool's calls are counted, as approved when it was connected.
 - **Android, Did this happen?:** money calls KIFF can't prove show in Needs you in KIFF's words,
   answered No (the Card gets its room back) or Yes, it did, with one fingerprint.
 - **Android, Connect apps:** Settings lists the apps tafs cloud offers, searchable, each saying

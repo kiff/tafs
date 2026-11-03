@@ -198,6 +198,11 @@ Doors tab, or line saying who it's shared with. For whoever manages it, that lin
 issued them to someone who manages the taf, and the account's name to someone who only
 uses it (`AppModel.issuer` on iOS, `AppState.issuer` on Android).
 
+Under a Card's limits, **How this is counted** opens KIFF's words for how each covered tool's calls
+are counted, as the owner approved them when connecting it (the Card's `counted:
+[{tool, title, lines}]`). A tool KIFF says nothing for isn't listed, and a Card with none has no
+row.
+
 ## Runs and reports
 
 - **Run now** (`POST /v1/tafs/{id}/run`) runs a scheduled taf outside its schedule.
