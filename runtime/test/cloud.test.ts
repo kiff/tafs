@@ -1567,9 +1567,12 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const stop = needed.body.wakes.find((x: { kind: string }) => x.kind === "app_event");
     expect(stop).toMatchObject({ id: "trg_event_1", ok: "approve", approval: { state: "needed", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", config: { pipeline: "1" } } });
     // planque's subscription, once the phone approved it, is recorded on that trigger and the dial answers it on.
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_9", subscription: "sub_1" } })).status).toBe(409);
-    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "../x" } })).status).toBe(400);
-    const ok = await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "sub_1" } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_9", subscription: "sub_1", version: n } })).status).toBe(409);
+    // Read from another version (the live one changed in between), it's refused, and nothing is recorded.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "sub_old", version: n - 1 } })).status).toBe(409);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "sub_1" } })).status).toBe(400);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "../x", version: n } })).status).toBe(400);
+    const ok = await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "sub_1", version: n } });
     expect(ok.status).toBe(200);
     expect(ok.body.wakes.find((x: { kind: string }) => x.kind === "app_event")).toMatchObject({ on: true, approval: { state: "approved", subscription: "sub_1" } });
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.appEvents).toEqual([{ ...ev, subscription: "sub_1" }]);
@@ -1577,6 +1580,11 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobApplied: undefined });
     await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.appEvents).toEqual([{ ...ev, subscription: "sub_1" }]);
+    // A store that keeps refusing the write answers a failure to retry, never a quiet success.
+    const putIf = w.tafs.putIf.bind(w.tafs);
+    w.tafs.putIf = async () => false;
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "sub_2", version: n } })).status).toBe(503);
+    w.tafs.putIf = putIf;
   });
 
   it("a dial change is the next version, and only going live writes its triggers and places", async () => {

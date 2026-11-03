@@ -86,6 +86,10 @@ describe("the dial", () => {
     // Other filters are another subscription: still to approve.
     const other = knobOf({ ...base, setting: { wakes: [{ ...ev, config: { pipeline: "2" } }], busy: "skip", results: ["app"] }, appEvents: [{ ...ev, subscription: "sub_1" }] });
     expect(other.wakes.find((w) => w.kind === "app_event")!.approval!.state).toBe("needed");
+    // The same filters written in another key order are the same subscription.
+    const nested = { ...ev, config: { a: 1, b: { x: 1, y: [1, 2] } } };
+    const reordered = knobOf({ ...base, setting: { wakes: [{ ...ev, config: { b: { y: [1, 2], x: 1 }, a: 1 } }], busy: "skip", results: ["app"] }, appEvents: [{ ...nested, subscription: "sub_2" }] });
+    expect(reordered.wakes.find((w) => w.kind === "app_event")!.approval!.state).toBe("approved");
     // The dial groups stops by connection, for its chips: All · HubSpot · This taf.
     const two = knobOf({ ...base, setting: { wakes: [ev, { ...ev, event: "HUBSPOT_DEAL_WON", name: "HubSpot · deal won" }],
       busy: "skip", results: ["app", { place: "action", grant: "grt_slack", action: "slack_post", args: { channel: "C1" }, name: "Slack · #sales" }] } });

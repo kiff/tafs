@@ -238,5 +238,12 @@ export function triggerOf(s: { cron: string; kind?: string; at?: string; skip?: 
 /** The same app event: one connection, one event, the same filters (planque subscribes exactly these). */
 export function sameAppEvent(a: Trigger, b: Trigger): boolean {
   return a.kind === "app_event" && b.kind === "app_event" && a.grant === b.grant && a.event === b.event
-    && JSON.stringify(a.config ?? {}) === JSON.stringify(b.config ?? {});
+    && canonical(a.config ?? {}) === canonical(b.config ?? {});
+}
+
+/** JSON with every object's keys sorted: the same filters written in another order are the same filters. */
+function canonical(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(canonical).join(",")}]`;
+  if (v && typeof v === "object") return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonical((v as Record<string, unknown>)[k])}`).join(",")}}`;
+  return JSON.stringify(v);
 }

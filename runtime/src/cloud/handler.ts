@@ -634,18 +634,24 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const trigger = typeof body.trigger === "string" ? body.trigger : "";
     const subscription = typeof body.subscription === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(body.subscription) ? body.subscription : "";
     if (!subscription) throw new HTTPError(400, "subscription is planque's id for it");
-    const live = await deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined);
-    const events = (live !== undefined ? taf.knobs?.[String(live)]?.wakes ?? [] : []).filter((t) => t.kind === "app_event");
+    // The version the phone read the trigger from: a subscription approved for one version's filters never
+    // lands on another's, even if the live version changed in between.
+    const version = typeof body.version === "number" && Number.isInteger(body.version) ? body.version : undefined;
+    if (version === undefined) throw new HTTPError(400, "version is the dial's version the trigger was read from");
+    const live = await agentsCall(() => deps.agents.versions(me.tenantID, taf.id)).then((v) => v.versions.find((x) => x.live)?.n);
+    if (live !== version) throw new HTTPError(409, "the dial changed since it was read: read it again and approve that one");
+    const events = (taf.knobs?.[String(live)]?.wakes ?? []).filter((t) => t.kind === "app_event");
     const t = /^trg_event_([1-9][0-9]{0,3})$/.test(trigger) ? events[Number(trigger.slice(10)) - 1] : undefined;
     if (!t) throw new HTTPError(409, "that isn't an app event of the live version");
-    let current = taf;
-    for (let attempt = 0; attempt < 2; attempt++) {
+    let current: Taf | undefined;
+    for (let attempt = 0; attempt < 3 && !current; attempt++) {
       const cur = await deps.tafs.get(me.tenantID, taf.id);
-      if (!cur) break;
+      if (!cur) throw new HTTPError(404, "not found");
       const kept = (cur.appEvents ?? []).filter((a) => !sameAppEvent(a, t));
       const next: Taf = { ...cur, appEvents: [...kept, { ...t, subscription }] };
-      if (await deps.tafs.putIf(me.tenantID, next, cur)) { current = next; break; }
+      if (await deps.tafs.putIf(me.tenantID, next, cur)) current = next;
     }
+    if (!current) throw new HTTPError(503, "the subscription wasn't recorded: try again");
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return knobRoute(event, me, current, deps);
   }
