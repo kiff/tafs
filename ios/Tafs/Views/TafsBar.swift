@@ -58,7 +58,7 @@ struct TafsBar: View {
                     .frame(height: 24)
                     .overlay(alignment: .topTrailing) {
                         if count > 0 {
-                            Text("\(count)").scaledFont(11, weight: .bold).foregroundColor(.white)
+                            Text("\(count)").scaledFont(11, weight: .bold).foregroundColor(Theme.onFill)
                                 .padding(.horizontal, 5).frame(minWidth: 17, minHeight: 17)
                                 .background(Theme.no).clipShape(Capsule())
                                 .offset(x: 10, y: -6)

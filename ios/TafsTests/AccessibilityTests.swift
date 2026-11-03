@@ -47,6 +47,7 @@ final class AccessibilityTests: XCTestCase {
     }
 
     func testTextOnInkCoachAndStatusFillsInBoth() {
+        // Theme.no is the bar's Needs you badge too.
         for fill in [Theme.ink, Theme.coach, Theme.ok, Theme.no] {
             XCTAssertGreaterThanOrEqual(ratio(Theme.onFill, fill), 4.5, "light: \(fill)")
             XCTAssertGreaterThanOrEqual(ratio(dark(Theme.onFill), dark(fill)), 4.5, "dark: \(fill)")

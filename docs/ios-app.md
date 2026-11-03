@@ -19,12 +19,12 @@ page is a map of the code; what each feature does is on its own page
 
 | Folder | What's in it |
 |---|---|
-| `App/` | `TafsApp` (the scene, the three tabs: Tafs, Needs you, Record), `AppModel`, `DoorsModel` |
+| `App/` | `TafsApp` (the scene, and the bar's tabs: Account, Tafs, Needs you, Record), `AppModel`, `DoorsModel` |
 | `KIFF/` | The clients: `KIFFClient` (KIFF's API), `TafsCloud` (+ `TafsCloud+Doors`), `PlanqueClient`; `KIFFMapping` (KIFF's records into the app's), `ReceiptCheck` and `Keccak` (receipts checked on the device), `JCS` (canonical JSON for what's signed), `Keychain`, `SigningTime` |
 | `Model/` | The app's own types: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `CardCheck` (sample mode only), `SentMessages`, `SetupComponent`, `SetupShape`, `QuestionAnswers` |
 | `Services/` | Signing (`ApprovalSigner`, `Biometry`), alerts (`PushDelegate`, `HoldNotification`, `AlertAnswers`, `LockScreen`), `Purchases`, `Attachments`, `Dictation`, `HaltAllIntent`, `VendorSignIn`, `Routes`, `SampleStore`, `TafTemplates`, `ThisDevice` |
 | `Views/` | One file per screen or feature: `HomeSplitView`, `HomeView`, `TafDetailView`, `TafChatView`, `WorkLog`, `SetupChatView`, `CoachMode`, `NeedsYouView`, `RecordView`, `UsageView`, `PeopleViews`, `ShareViews`, `DoorsView`, `TrialViews`, `HaltScreen`… |
-| `Design/` | `Theme` (colours, the amber accent), `Components`, `MarkdownText`, `Scaled` (Dynamic Type), `Keyboard`, `Compat` (what iOS 16 lacks) |
+| `Design/` | `Theme` (colours, light and dark, the amber accent), `Components`, `MarkdownText`, `Scaled` (Dynamic Type), `Keyboard`, `Compat` (what iOS 16 lacks) |
 
 ## AppModel
 
@@ -67,10 +67,10 @@ Every refresh and every push also reads planque's grants again: tafs cloud never
 this is how a connection its vendor signed out reaches the list. A change of a kind the app
 doesn't know is ignored.
 
-Each taf has one `DoorsModel` (`AppModel.doors(for:)`), shared by its Doors tab and its chat,
+Each taf has one `DoorsModel` (`AppModel.doors(for:)`), shared by Setup › Starts when and its chat,
 so a door's knocks sit in the chat at their own times (`ChatItem.knock`). A paired sender's
 message, kept from its knock, reads "Paired · Do it or Ignore this message", calmly, and sits
-apart from strangers' knocks in the Doors tab. A door shows tafs cloud's words for itself
+apart from strangers' knocks on the door's own screen. A door shows tafs cloud's words for itself
 (`words`: `state`, `tap`, `settings`); the app's own lines stand in only where it sends none.
 
 **A connection its vendor signed out** (`needs_reconnect`): its taf waits on the owner at the
@@ -81,7 +81,7 @@ otherwise the list holds its settled order. The taf's Card tab offers **Sign in 
 one approval, then the vendor's own page, and it's signed in only once planque answers
 connected: "Checking the sign-in…" meanwhile (`connectStep`).
 
-**A taf's work:** the Activity tab shows `GET /v1/tafs/{id}/work`
+**A taf's work:** the Activity tab shows the taf's Needs you items, then `GET /v1/tafs/{id}/work`
 ([reliability.md](reliability.md#the-tafs-view); `WorkPanel`, `AppModel.loadWork`): tafs
 cloud's line, then its recent requests and skipped firings, newest first, in tafs cloud's words.
 A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
@@ -98,79 +98,62 @@ the app in sample mode.
 | Argument | What it does |
 |---|---|
 | `-screenshots YES` | Sample mode with the screenshots' data |
-| `-tab tafs \| needs-you \| record` | Opens that tab |
-| `-screen taf \| card \| doors \| chat \| new \| solo \| add-tasks` | Opens that screen |
+| `-tab account \| tafs \| needs-you \| record` | Opens that tab |
+| `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| add-tasks` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
+| `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
 | `-pack <id>` | The add-tasks screen with that pack alone |
 | `-narrow YES` | Laid out at Slide Over's width on an iPad |
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
 | `-listSettlesOnReturn YES` | The list opens on its first taf, and its last taf moves to the top each time the app comes back (`ListTapUITests`) |
 
-## The dial and KIFF's words
+## The taf layout and KIFF's words
 
-- **The dial** (`TafKnobView`, in the taf's Doors tab): **When**, **What**, **Where**
-  surround its **Why**, with today's done, working, retrying and needs-you counts on the rim.
-  `GET /v1/tafs/{id}/knob` supplies the ring names, purpose, numbered recipe steps and stop
-  words. The legacy `when` rules are not drawn. Ring order follows `rings` as sent;
-  cloud supplies the empty-recipe and Add a door stops. **Showing** filters all three rings by connection grant, or shows **This taf**
-  (stops without a grant). The menu has no connection limit. Rings with more than six stops show a window of
-  labels; **Back/Next** still walk every stop, across empty rings and around the end.
-  Choosing a stop turns its ring to the pointer; the face shows its value and hint.
-  Text in the lower half flips 180° relative to its stop, based on the ring's current turn,
-  so labels never read upside down. Each label fits inside its ring segment and truncates
-  with an ellipsis; the face bounds its title, value and hint too. VoiceOver reads the full
-  source words, including text omitted visually.
-- **The remote** (`TafDialPanel` and `TafKnobRemote`): stays in the bottom safe area, above
-  the tab bar, while the dial and door details scroll. **Lower/Raise** select only the neighbouring value from
-  the stop's server-supplied `size.choices`, within its bounds. There are no vendor presets
-  in the app. A choice's complete setting goes to `PUT …/knob`, then iOS reads the returned
-  draft through `GET …/knob?version=N`. Subsequent choices build on that draft; if its
-  refresh fails, stale choices are disabled until a successful refresh. `pending` supplies the version and change count; it alone shows the Make it live button.
-  Pending settings are labelled **not live**. **Make it live** reads the newest draft and uses the existing version switch
-  and biometric signature (reading a changed Card first). A tweak alone never switches it.
-  The controls for changes are shown only to someone KIFF says manages the taf. Pause uses
-  the existing pause/resume route. The power button is disabled when the service sends
-  `can_pause: false`; older responses keep it available. A refused pause shows the
-  service's `words`, or its error message when words are absent. The search-shaped **Ask Coach or find anything** button
-  opens Coach in the taf's context.
-- **An app event's approval:** a stop with `ok: approve` shows **Approve with Face ID**
-  (or Touch ID). Its sheet shows the complete filters before confirmation. The phone signs planque's trigger request with the exact `account`,
-  `slug` and filter object supplied by the connected grant and the dial; it adds no filters.
-  It then records planque's returned subscription with the trigger id and the live dial's
-  `version`. The service's updated knob supplies the approved state. A changed live version
-  is refused; a failed recording keeps a receipt so retrying does not subscribe or ask Face ID
-  twice. A lost response is resolved by reading the server's current state. Account reset
-  discards receipts and in-flight results. Provider refusals retain the needed state and
-  show the provider's words. `AppEventApprovalTests` covers these paths with synthetic services.
-- **Doors and needs you:** the face opens/closes the chosen door, runs the taf once or removes the chosen
-  follow-up by the id cloud supplied.
-  An approvable held call takes an unchosen face, or the Needs you button selects it,
-  for **approve once**, using the existing signed answer.
-  Each stop's `ok` supplies its face action, with no action when absent. Door `look` supplies
-  the lit, dashed, resting or amber arc, on When's outer edge; an increase in the server's
-  message count pulses its arrival indicator for three seconds.
-  The server's last When stop is **Add a door**, opening Coach. Existing knock cards retain **Do it**,
-  **Pair them**, and **Ignore**, with pairing and door details beneath the dial.
-  If the knob cannot be read, the existing doors-only dial remains available.
-- **Its work:** the count under the dial opens the first unfinished request, otherwise the newest,
-  with Back to the list. Each request reads
-  `GET …/requests/{run}`, showing the service's ordered steps, delivery state, **Try the
-  reply now** when allowed, and **Ask Coach**. Nothing in this screen infers a work outcome.
-- **Coach's dial card:** `draft.groups` displays each connection's lines and **This taf**,
-  as cloud supplies them. Older responses fall back to words by ring. One confirmation
-  uses the usual version switch for the entire draft.
-- **Dial checks:** `KnobNavigationTests` covers grant filtering, empty rings, crowded rings,
-  bounded sizes and complete setting preservation. `VersionsTests` covers two edits,
-  stale selections, a failed draft read and the absence of an automatic switch.
-  `KnobUITests` uses the synthetic `-screenshots YES -screen knob` fixture with 12 services.
-  It checks that the remote stays above the tab bar before and after scrolling, a disabled
-  power button, and full accessibility labels when text is long. The regular `-screen doors`
-  screenshots use that same dial, including the sample email knock.
+- **The bar** (`TafsBar`, in `TafsApp`'s `RootView`): **Account · Tafs · Needs you · Record**,
+  then **Coach**, a filled ink button that opens Coach mode, shown only when
+  `signedIn && mode == .kiff && mayUseCoach`. Along the foot on a compact width, below the
+  screens so a chat's field stays above it, and hidden while the keyboard is up; a rail down
+  the left on a regular width, Coach at its foot. Each tab is built the first time it's
+  opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs, Needs you and Record, ⌘,
+  Account, ⌘K Coach.
+- **Record** (`RecordView`): chips for "All tafs" and each taf (its colour) above the type
+  filter, combined with it. Each entry starts with its taf's dot and name; each day's header
+  shows that day's spend (`RecordView.spent`, a sum per currency of the money moved).
+- **A taf's tabs** (`TafDetailView`): **Chat · Activity · Card · Setup**. Activity: the taf's
+  Needs you items, its work and runs, then its record by day (`ActivityFilter`: All, Done, Held,
+  Refused). Card: the Card, its limits, how they're counted, usage, Halt, Revoke. Setup: The job
+  (Improve in Coach), Starts when, connected apps (`ConnectionsPanel`), Results go to, what it
+  remembers, Versions, Pause (sample mode) and Remove for good.
+- **Setup › Starts when** (`StartsWhenView`, `TafSetupViews.swift`), from `GET …/knob`
+  `wakes`: its schedule with − and + through the stop's `size.choices` (`adjustKnob`), Skip it /
+  Run after (`setting.busy`), app events with **Approve** (`AppEventApprovalSheet`, the signed
+  subscription at planque) or **Listening** and **Stop**, doors with **Edit** (`DoorsView.only`,
+  one door's screen) and **Add a door…**, follow-ups with **Remove** (`DELETE …/follow-ups/{fid}`),
+  and **Pause every start** (`POST …/pause`; a 502 reads "Not every start could be paused. Try
+  again."). A change made here (`PUT …/knob`) waits as the taf's next version in `KnobPendingPanel`, made live with Face ID.
+- **Setup › Results go to** (`ResultsGoToView`): Reply to the sender, Alert our phones and Email
+  me change at once (`PUT …/results`, `setResultPlaces`); each connected app's place turns
+  through its stop's other choice, as the next version (`PUT …/knob`). At least one place stays on: the last one's
+  switch is disabled, and when no built-in place would be left the change goes through `PUT …/knob`,
+  since `PUT …/results` keeps one. Replies given up on show **Send again**.
+- **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
+  device (Turn on alerts while off), Sound, and What alerts you, read-only; "A taf answered
+  someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+- **Dark:** each `Theme` colour has a light and a dark value (`Color(light:dark:)`), the values
+  the owner reviewed, the same as Android: background 141311, panel 1F1E1B, raised 2A2824, ink
+  F2EFE9, soft A8A49C, dim 96918A, line F2EFE9 at 12%, amber FF8A1F, amberText F0A45A, ok 4CC38A,
+  no FF8A73, blue and coach 7FA2FF. Text on an ink, Coach, green or red fill is `Theme.onFill`
+  (white in light, 141311 in dark); text on the brand gradient stays white in both.
+  `AccessibilityTests` checks contrast in both.
+- **Checks:** `SetupUITests` covers the bar, Starts when (an event's filters before its
+  approval) and Results go to, with `Screenshots.setupKnob`. CI's screenshots add Setup, its two
+  screens, Account and Alerts, dark on iPhone and iPad, and the iPad in landscape (the iPhone
+  is portrait only).
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
   `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
   (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
   they're shown, verbatim and in order. Approving signs both digests into planque's approve
   body (`kiff_profile`). The tests use KIFF's vectors in `TafsTests/ProfileVectors/`.
-- **The Slack door** (`SlackDoorSheet`, from Add a door in Doors): the taf's Slack bot
+- **The Slack door** (`SlackDoorSheet`, from Add a door… in Setup › Starts when): the taf's Slack bot
   connections (planque's grants, connected, the taf's agent, marked `connector:composio:slackbot`,
   or `request.connector.toolkit` until the mark is there), then the channels it sees
   (`GET …/grants/{id}/channels`, from planque). Picking a channel asks Face ID once: planque
@@ -179,7 +162,7 @@ the app in sample mode.
   (`POST …/doors {app: "slack", grant, channel}`). The door keeps the subscription's id (`trigger`); if the door can't be made, the subscription
   is taken back. Removing it is the reverse: the signed `DELETE …/grants/{grant}/triggers/{trigger}`,
   then the door. If the phone cannot sign the subscription's removal, the door stays and the app asks the owner to reconnect first. Pairing asks for a Slack member ID.
-- **Connect apps** (`ConnectAppsView`, from Settings): `GET /v1/connect/apps`, searched as the
+- **Connect apps** (`ConnectAppsView`, from Account): `GET /v1/connect/apps`, searched as the
   owner types, in tafs cloud's order and words. Rows show only the app's catalog title;
   internal provider ids are not shown. "Not listed? Ask Coach" appears when `by_key`.
   Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,
