@@ -60,8 +60,11 @@ import bot.tafs.app.model.TafState
 import bot.tafs.app.model.shortTime
 import kotlinx.coroutines.launch
 
-/** Chat first: talking to a taf is the main thing. */
-private enum class Section(val title: String) { Chat("Chat"), Activity("Activity"), Card("Card"), Doors("Doors") }
+/**
+ * Chat first: talking to a taf is the main thing. Each tab has one job: Activity, what it did and what waits for you; Card, only
+ * what's on its Card; Setup, how it runs.
+ */
+private enum class Section(val title: String) { Chat("Chat"), Activity("Activity"), Card("Card"), Setup("Setup") }
 
 /** What the screen asks of the model: its changes, so the screen holds no state of the app's. */
 class TafActions(
@@ -100,6 +103,8 @@ class TafActions(
   val remove: suspend (String) -> String? = { null },
   /** Reports an answer Coach or the taf wrote: the chat, the answer, a reason and an optional note. */
   val report: suspend (String, ChatMessage, String, String?) -> ReportResult = { _, _, _, _ -> ReportResult.NotSent("") },
+  /** Where its results go, of tafs' own places (taf, places). */
+  val setResults: suspend (String, List<String>) -> Unit = { _, _ -> },
 )
 
 @Composable
@@ -112,6 +117,8 @@ fun TafDetailView(
   onUsage: (String) -> Unit,
   onVersions: (String) -> Unit,
   people: PeopleActions? = null,
+  /** Connect apps, from Setup's "Connect an app…". */
+  onConnectApps: () -> Unit = {},
   /** Back to the list; not shown beside it, on a tablet. */
   showBack: Boolean = true,
   modifier: Modifier = Modifier,
@@ -134,8 +141,7 @@ fun TafDetailView(
       return@Column
     }
     val canChat = state.canChat(taf.id)
-    val hasDoors = state.hasDoors(taf.id)
-    val sections = Section.entries.filter { (it != Section.Chat || canChat) && (it != Section.Doors || hasDoors) }
+    val sections = Section.entries.filter { it != Section.Chat || canChat }
     var section by rememberSaveable { mutableStateOf(sections.first()) }
     var frontCard by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmRevoke by rememberSaveable { mutableStateOf(false) }
@@ -149,7 +155,7 @@ fun TafDetailView(
     val config = androidx.compose.ui.platform.LocalConfiguration.current
     val pageWidth = config.screenWidthDp - (if (showBack) 0 else 361)
     val side = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE &&
-      section != Section.Card && section != Section.Doors && pageWidth - SIDE_WIDTH - 32 >= CHAT_AT_LEAST
+      section != Section.Card && section != Section.Setup && pageWidth - SIDE_WIDTH - 32 >= CHAT_AT_LEAST
 
     Header(taf, if (showBack) onBack else null)
     Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -181,20 +187,20 @@ fun TafDetailView(
         when (section) {
           Section.Activity -> Activity(taf, state, actions)
           Section.Card -> {
+            // Only what's on its Card: the Card, its limits and how they're counted, its usage, Halt and Revoke.
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, controls = state.mode == Mode.sample, manages = managesHere, onRevoke = { confirmRevoke = true })
-            // Which tools it is connected to, and whose sign-ins: read from planque, for the people who manage it.
-            if (state.canHalt(taf.id) && state.manages(taf.id)) ConnectionsPanel(taf, state, actions.connections)
+            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere, onRevoke = { confirmRevoke = true })
             // Halting is a job of its own: its row opens its screen. Its usage is the account's Usage, with this taf's count.
-            // Only what this person manages, as KIFF says: a Viewer sees no Halt or Versions, each refused only once tapped.
+            // Only what this person manages, as KIFF says: a Viewer sees no Halt, refused only once tapped.
             if (state.canHalt(taf.id) && state.manages(taf.id) && taf.state != TafState.revoked) HaltRow(taf.id, state.haltOf(taf.id), { onHalt(taf.id) })
             if (state.mode == Mode.sample || state.canHalt(taf.id)) UsageRow(state.tafUsage(taf.id)?.counted) { onUsage(taf.id) }
-            // Its versions are a job of their own: their own screen, not another section here.
-            if (state.canHalt(taf.id) && state.manages(taf.id)) VersionsRow { onVersions(taf.id) }
-            // For good: its Cards revoked, its schedule, chats, run reports, memory and key deleted, its name freed.
-            if (managesHere) OutlineButton("Remove for good", { confirmRemove = true }, Modifier.fillMaxWidth(), color = Theme.no)
           }
-          Section.Doors -> DoorsTab(taf, state, actions.doors, state.kiffAccount?.email)
+          Section.Setup -> {
+            // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
+            // name freed) is its last row.
+            val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
+            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ confirmRemove = true }) else null)
+          }
           Section.Chat -> Unit
         }
       }
@@ -279,31 +285,27 @@ private fun Header(taf: Taf, onBack: (() -> Unit)?) {
   }
 }
 
+/**
+ * What it did and what it's waiting for: what waits for you first (its holds, its doors' knocks), then its work and last run, then
+ * its Record by day. Each request opens step by step; each call opens what KIFF signed.
+ */
 @Composable
 private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
-  Panel {
-    Eyebrow("The job")
-    Text(taf.job, style = scaled(15, color = Theme.ink))
-  }
-  // How it does the job, beside the job: not part of its Card (kiff/tafs#96). Signed in, read from tafs cloud.
-  if (state.mode == Mode.sample || taf.cloudId != null) MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions)
+  state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) }
   if (state.mode == Mode.kiff && taf.cloudId != null) {
-    RunsPanel(taf, taf.id in state.runsInFlight, actions)
-    // Change how it works: Coach opens on a new conversation about it, for whoever manages it.
-    LocalImproveInCoach.current?.takeIf { state.manages(taf.id) }?.let { improve ->
-      OutlineButton("Improve in Coach", { improve(taf.id) }, Modifier.fillMaxWidth())
+    if (state.manages(taf.id)) {
+      LaunchedEffect(taf.id) { actions.doors.load(taf.id) }
+      KnocksPanel(taf, state, actions.doors)
     }
+    RunsPanel(taf, taf.id in state.runsInFlight, actions)
     WorkPanel(taf, state, actions)
     RunReportPanel(taf.id, state.reports[taf.id], actions)
   }
-  state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) }
-  val entries = state.entries(taf.id)
-  if (entries.isEmpty()) Text("Nothing yet.", style = scaled(15, color = Theme.dim))
-  entries.forEach { RecordRow(it, state, showTaf = false) }
+  ActivityRecord(state.entries(taf.id), state)
 }
 
 @Composable
-private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, controls: Boolean, manages: Boolean, onRevoke: () -> Unit) {
+private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, manages: Boolean, onRevoke: () -> Unit) {
   val cards = taf.shownCards
   val shown = cards.firstOrNull { it.id == front } ?: cards.firstOrNull()
   Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -326,13 +328,9 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
       )
     }
   }
-  // In the sample, Pause and Revoke are its own; signed in, Revoke is KIFF's, for whoever manages it, and pausing is under
-  // Runs, on the Activity tab.
-  if (taf.state != TafState.revoked && (controls || manages)) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-      if (controls) OutlineButton(if (taf.state == TafState.paused) "Resume" else "Pause", { actions.togglePause(taf.id) }, Modifier.weight(1f))
-      OutlineButton("Revoke", onRevoke, Modifier.weight(1f), color = Theme.no)
-    }
+  // Revoke: in the sample its own; signed in, KIFF's, for whoever manages it. Pausing is in Setup.
+  if (taf.state != TafState.revoked && (taf.cloudId == null || manages)) {
+    OutlineButton("Revoke", onRevoke, Modifier.fillMaxWidth(), color = Theme.no)
   }
 }
 
@@ -447,7 +445,7 @@ private fun RunReportPanel(tafId: String, report: RunReport?, actions: TafAction
 
 /** What the taf has written down about how the owner likes the job done. */
 @Composable
-private fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?, actions: TafActions) {
+internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?, actions: TafActions) {
   LaunchedEffect(tafId) { actions.loadMemory(tafId) }
   // The note waiting for the owner's yes: forgetting can't be undone (the 755 retest).
   var forgetting by remember { mutableStateOf<MemoryNote?>(null) }

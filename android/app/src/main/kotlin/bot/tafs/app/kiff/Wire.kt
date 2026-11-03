@@ -104,6 +104,8 @@ data class HomeTaf(
   /** Its job in words (kiff/tafs#167); absent for an agent tafs doesn't run. */
   @SerialName("job_summary") val jobSummary: String? = null,
   @SerialName("kiff_agent") val kiffAgent: String,
+  /** Where its results go: `door_reply`, `app`, `owner_email` (an action place isn't listed here). */
+  val results: List<String> = emptyList(),
   val status: String? = null,
   @SerialName("next_run") @Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
   @SerialName("last_run") @Serializable(with = InstantAsString::class) val lastRun: Instant? = null,

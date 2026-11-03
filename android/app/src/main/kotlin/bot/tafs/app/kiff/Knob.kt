@@ -83,6 +83,8 @@ data class KnobWire(
     val look: String? = null,
     /** An app's event on When: whether the owner approved its filters at planque, and what approving signs. */
     val approval: Approval? = null,
+    /** A trigger's form exactly as `PUT …/knob` takes it in `setting.wakes`: Stop takes it out. */
+    val trigger: kotlinx.serialization.json.JsonElement? = null,
   )
 
   /**

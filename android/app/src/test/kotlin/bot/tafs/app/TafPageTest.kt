@@ -200,6 +200,36 @@ class TafPageTest {
     assertEquals(TafState.working, taf.state)
   }
 
+  @Test fun aPauseThatReachedOnlySomeStartsSaysSo() = runTest {
+    reads()
+    transport.answer("POST /v1/tafs/taf_1/pause", 502, """{"error":"pause failed for 1 schedule"}""")
+    val m = model()
+    m.setPaused("refunds-1", true)
+    assertEquals(bot.tafs.app.model.SetupWords.NOT_EVERY_PAUSED, m.state.value.lastError)
+  }
+
+  @Test fun whereResultsGoIsSetThroughItsRouteThenTheDialIsReadAgain() = runTest {
+    reads()
+    transport.answer("GET /v1/me/access", 200, """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}""")
+    transport.answer("PUT /v1/tafs/taf_1/results", 200, """{"taf":{"id":"taf_1"}}""")
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":3,"results":[{"id":"r1","place":"door_reply","label":"Sender","on":true},{"id":"r2","place":"app","label":"You","on":true}],"rim":{}}""")
+    val m = model()
+    m.refresh()
+    m.setResults("refunds-1", listOf("door_reply", "app"))
+    val sent = transport.requestsTo("PUT /v1/tafs/taf_1/results").single()
+    assertEquals(bot.tafs.app.kiff.KiffClient.json.parseToJsonElement("""{"places":["door_reply","app"]}"""), bot.tafs.app.kiff.KiffClient.json.parseToJsonElement(String(sent.body!!)))
+    assertEquals("the dial says which are on", listOf("door_reply", "app"), m.state.value.knobs.getValue("refunds-1").results.filter { it.on }.map { it.place })
+  }
+
+  @Test fun theHomeListSaysWhereEachTafsResultsGo() = runTest {
+    reads("""{"tafs":[${taf().dropLast(1)},"results":["door_reply","app"]}],"others":[],"removing":[]}""")
+    val m = model()
+    m.refresh()
+    val taf = m.state.value.taf("refunds-1")!!
+    assertEquals(listOf("door_reply", "app"), taf.results)
+    assertTrue("its answers alert the phones", taf.alertsPhones)
+  }
+
   @Test fun aPauseTafsCloudRefusesIsSaidInItsWords() = runTest {
     reads()
     transport.answer("POST /v1/tafs/taf_1/pause", 409, """{"error":"Refunds works from its chat: it has no schedule to pause. Tell it what to do there"}""")
