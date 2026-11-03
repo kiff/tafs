@@ -19,6 +19,7 @@ struct TafsApp: App {
                 .tint(Theme.amber)
                 .task {
                     if Screenshots.enabled {
+                        if Screenshots.landscape { Screenshots.turnToLandscape() }
                         await model.startSample()
                         return
                     }

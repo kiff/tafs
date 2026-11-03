@@ -19,6 +19,8 @@ struct DoorsView: View {
     var addSlack: ((TafsCloud.DoorApp) -> Void)? = nil
     /// Removing a Slack door: planque's subscription first, then the door.
     var removeSlack: ((TafsCloud.Door) async -> Void)? = nil
+    /// One door's own screen, opened from Setup › Starts when: its settings, no dial.
+    var focus: String? = nil
     @State private var face: TafKnobView.Face = .overview
     @ObservedObject private var doors: DoorsModel
     @State private var selected = 0
@@ -50,6 +52,13 @@ struct DoorsView: View {
         return v
     }
 
+    /// One door's screen: its address, who may give it work and its day (Setup › Starts when).
+    func only(_ doorID: String) -> DoorsView {
+        var v = self
+        v.focus = doorID
+        return v
+    }
+
     /// This Doors tab with Slack's own sheet for adding a Slack door.
     func slack(add: @escaping (TafsCloud.DoorApp) -> Void, remove: @escaping (TafsCloud.Door) async -> Void) -> DoorsView {
         var v = self
@@ -58,11 +67,17 @@ struct DoorsView: View {
         return v
     }
 
-    private var door: TafsCloud.Door? { selected < doors.doors.count ? doors.doors[selected] : nil }
+    private var door: TafsCloud.Door? {
+        if let focus { return doors.doors.first { $0.id == focus } }
+        return selected < doors.doors.count ? doors.doors[selected] : nil
+    }
 
     var body: some View {
         Group {
-            if let knob {
+            if focus != nil {
+                ScrollView { doorDetails.padding(.horizontal, 16).padding(.vertical, 12) }
+                    .navigationTitle(door.map { "\($0.label) door" } ?? "Door")
+            } else if let knob {
                 TafDialPanel(taf: taf, knob: knob, face: $face, doors: doors, manages: manages,
                              held: held, press: pressKnob, approve: approve, details: doorDetails)
             } else {
@@ -112,11 +127,13 @@ struct DoorsView: View {
 
     private var doorDetails: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if let settings = door?.words?.settings, knob == nil {
+            if let settings = door?.words?.settings, knob == nil || focus != nil {
                 Text(settings).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     .frame(maxWidth: .infinity)
             }
-            if let door { panel(door) } else if manages, knob == nil { addPanel } else if !manages {
+            if let door { panel(door) } else if focus != nil {
+                Text("This door was removed.").scaledFont(15).foregroundColor(Theme.soft)
+            } else if manages, knob == nil { addPanel } else if !manages {
                 Text("\(taf.name) has no door yet. Someone who manages it can add one.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
