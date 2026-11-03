@@ -147,7 +147,7 @@ struct TafKnobView: View {
             ForEach(knob.connections) { connection in
                 let count = KnobNavigation.stops(knob, filter: .connection(connection.grant)).count
                 Button { filter = .connection(connection.grant) } label: {
-                    Label("\(connection.name) · \(count) stops", systemImage: "app.connected.to.app.below.fill")
+                    Label("\(connection.name) · \(count) \(count == 1 ? "stop" : "stops")", systemImage: "app.connected.to.app.below.fill")
                 }
             }
         } label: {
