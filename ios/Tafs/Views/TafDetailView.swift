@@ -79,6 +79,19 @@ struct TafDetailView: View {
                                               press: { await model.pressKnob(taf.id, $0) },
                                               approve: { call in Task { await model.answer(call, with: .approveOnce) } })
                                         .task(id: taf.id) { await model.loadKnob(taf.id) }
+                                    // A change to the dial is the taf's next version: switched to in Versions.
+                                    if let made = model.knobChanges[taf.id], model.manages(taf.id) {
+                                        Panel {
+                                            ForEach(made.words, id: \.self) { line in
+                                                Text(line).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        }
+                                        PanelLink { VersionsScreen(tafID: taf.id) } label: {
+                                            Label("Versions", systemImage: "square.stack.3d.up")
+                                                .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                                        }
+                                        .accessibilityIdentifier("knob.versions")
+                                    }
                                 } else if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)

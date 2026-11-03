@@ -61,4 +61,33 @@ final class KnobTests: XCTestCase {
         XCTAssertEqual(TafKnobView.nearestTurn(from: -1, to: 3, stops: 4), -1)
         XCTAssertEqual(TafKnobView.nearestTurn(from: 2, to: 0, stops: 0), 2)
     }
+
+    /// A change copies the live `setting`, changes one thing, and sends it whole, each trigger
+    /// exactly as tafs cloud wrote it, `busy` under `when`.
+    func testAChangeSendsTheSettingBackWhole() throws {
+        let json = #"""
+        {"version":3,"wakes":[{"id":"trg_schedule","kind":"schedule","label":"Weekdays","words":"Weekdays at 09:00",
+           "trigger":{"kind":"schedule","form":"weekdays","at":"09:00"}},{"id":"run_now","kind":"run_now","label":"Run now","words":"Runs it once, now"}],
+         "when":[{"id":"when_busy","kind":"busy","label":"If busy","words":"Skips a run while it's working","state":"Skip"}],
+         "results":[],
+         "setting":{"wakes":[{"kind":"schedule","form":"weekdays","at":"09:00"},{"kind":"app_check","operation":"gmail__list","args":{"q":"refund"},"items":"data","cursor":"created","every_minutes":20}],
+                    "busy":"skip","results":["app","owner_email"]}}
+        """#
+        let k = try JSONDecoder().decode(TafsCloud.Knob.self, from: Data(json.utf8))
+        XCTAssertEqual(k.wakes[0].trigger, .object(["kind": .string("schedule"), "form": .string("weekdays"), "at": .string("09:00")]))
+        XCTAssertNil(k.wakes[1].trigger, "Run now has no form")
+        var setting = try XCTUnwrap(k.setting)
+        XCTAssertEqual(setting.busy, "skip")
+        setting.busy = "latest"
+        let sent = try XCTUnwrap(try JSONSerialization.jsonObject(with: try JSONEncoder().encode(setting)) as? [String: Any])
+        XCTAssertEqual((sent["when"] as? [String: Any])?["busy"] as? String, "latest")
+        XCTAssertNil(sent["busy"], "busy goes under when, as PUT takes it")
+        XCTAssertEqual(sent["results"] as? [String], ["app", "owner_email"])
+        let wakes = try XCTUnwrap(sent["wakes"] as? [[String: Any]])
+        XCTAssertEqual(wakes.count, 2)
+        XCTAssertEqual(wakes[1]["every_minutes"] as? Int, 20, "a number stays a number")
+        XCTAssertEqual((wakes[1]["args"] as? [String: Any])?["q"] as? String, "refund")
+        let made = try JSONDecoder().decode(TafsCloud.Knob.Change.self, from: Data(#"{"version":4,"words":["If busy, runs the latest once it's free"]}"#.utf8))
+        XCTAssertEqual(made, TafsCloud.Knob.Change(version: 4, words: ["If busy, runs the latest once it's free"]))
+    }
 }

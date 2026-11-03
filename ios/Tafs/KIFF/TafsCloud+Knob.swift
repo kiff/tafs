@@ -38,8 +38,11 @@ extension TafsCloud {
             var expires: String?
             /// A door's own id: the face opens or closes it through the doors API.
             var door: String?
+            /// A trigger's form, exactly as `PUT …/knob` takes it; none on Run now, nor on a
+            /// schedule the dial can't set.
+            var trigger: JSONValue?
 
-            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door }
+            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door, trigger }
             init(id: String, kind: String? = nil, place: String? = nil, label: String, words: String, on: Bool = true,
                  state: String? = nil, tap: String? = nil, expires: String? = nil, door: String? = nil) {
                 self.id = id; self.kind = kind; self.place = place; self.label = label; self.words = words
@@ -102,8 +105,11 @@ extension TafsCloud {
         var results: [Item] = []
         var rim = Rim()
         var draft: Draft?
+        /// The live version's dial as `PUT …/knob` takes it: a change copies it, changes one
+        /// thing and sends it whole.
+        var setting: Setting?
 
-        enum CodingKeys: String, CodingKey { case version, does, wakes, when, results, rim, draft }
+        enum CodingKeys: String, CodingKey { case version, does, wakes, when, results, rim, draft, setting }
         init(version: Int? = nil, does: Does = Does(), wakes: [Item] = [], when: [Item] = [], results: [Item] = [], rim: Rim = Rim(), draft: Draft? = nil) {
             self.version = version; self.does = does; self.wakes = wakes; self.when = when; self.results = results; self.rim = rim; self.draft = draft
         }
@@ -116,6 +122,46 @@ extension TafsCloud {
             results = try c.decodeIfPresent([Item].self, forKey: .results) ?? []
             rim = try c.decodeIfPresent(Rim.self, forKey: .rim) ?? Rim()
             draft = try c.decodeIfPresent(Draft.self, forKey: .draft)
+            setting = try c.decodeIfPresent(Setting.self, forKey: .setting)
+        }
+
+        /// What `PUT …/knob` takes: the triggers as tafs cloud wrote them, what a busy taf
+        /// does, and where results go.
+        struct Setting: Codable, Equatable {
+            var wakes: [JSONValue]
+            var busy: String
+            var results: [String]
+
+            enum CodingKeys: String, CodingKey { case wakes, when, results, busy }
+            struct When: Codable, Equatable { var busy: String }
+            init(wakes: [JSONValue], busy: String, results: [String]) { self.wakes = wakes; self.busy = busy; self.results = results }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                wakes = try c.decodeIfPresent([JSONValue].self, forKey: .wakes) ?? []
+                busy = try c.decodeIfPresent(String.self, forKey: .busy) ?? "skip"
+                results = try c.decodeIfPresent([String].self, forKey: .results) ?? []
+            }
+            /// As `PUT` takes it: `when: {busy}`.
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(wakes, forKey: .wakes)
+                try c.encode(When(busy: busy), forKey: .when)
+                try c.encode(results, forKey: .results)
+            }
+        }
+
+        /// What a change made: the taf's next version, and what it changes in words. Nothing
+        /// runs from it until the version switch makes it live.
+        struct Change: Decodable, Equatable {
+            let version: Int
+            var words: [String] = []
+            enum CodingKeys: String, CodingKey { case version, words }
+            init(version: Int, words: [String] = []) { self.version = version; self.words = words }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                version = try c.decode(Int.self, forKey: .version)
+                words = try c.decodeIfPresent([String].self, forKey: .words) ?? []
+            }
         }
 
         /// The rings, inside to out.
@@ -143,6 +189,11 @@ extension TafsCloud {
     /// A taf's dial.
     func knob(_ id: String) async throws -> Knob {
         try await send("GET", "/v1/tafs/\(escaped(id))/knob")
+    }
+
+    /// Changes the taf's dial: its next version, made live only by the version switch.
+    func putKnob(_ id: String, _ setting: Knob.Setting) async throws -> Knob.Change {
+        try await send("PUT", "/v1/tafs/\(escaped(id))/knob", body: setting)
     }
 
     /// Connect apps (`GET /v1/connect/apps`): the catalog first, then KIFF's own apps for
@@ -213,5 +264,32 @@ extension TafsCloud {
     func connectApps(_ q: String? = nil) async throws -> ConnectApps {
         let query = q.map { $0.trimmingCharacters(in: .whitespaces) }.flatMap { $0.isEmpty ? nil : "?q=\(escaped($0))" } ?? ""
         return try await send("GET", "/v1/connect/apps" + query)
+    }
+}
+
+/// Any JSON value, kept as it came: what tafs cloud writes and takes back unchanged.
+enum JSONValue: Codable, Equatable {
+    case string(String), number(Double), bool(Bool), object([String: JSONValue]), array([JSONValue]), null
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if c.decodeNil() { self = .null }
+        else if let b = try? c.decode(Bool.self) { self = .bool(b) }
+        else if let n = try? c.decode(Double.self) { self = .number(n) }
+        else if let s = try? c.decode(String.self) { self = .string(s) }
+        else if let a = try? c.decode([JSONValue].self) { self = .array(a) }
+        else { self = .object(try c.decode([String: JSONValue].self)) }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        switch self {
+        case .string(let s): try c.encode(s)
+        case .number(let n): try c.encode(n)
+        case .bool(let b): try c.encode(b)
+        case .object(let o): try c.encode(o)
+        case .array(let a): try c.encode(a)
+        case .null: try c.encodeNil()
+        }
     }
 }

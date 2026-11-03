@@ -120,8 +120,12 @@ the app in sample mode.
   today's limits), as before. A held call of the taf can show in the face, where a tap
   approves it once; ‹ Overview goes back. The face's tap opens or closes a door through the
   doors API (its `door`) and starts a run for Run now, as today, with no new version; every
-  other change goes through the knob's own route. When the dial can't be read, the doors'
-  own dial shows instead.
+  other change goes through the knob's own route: a stop whose `tap` changes the dial (If
+  busy) copies the live `setting`, changes that one thing and sends it whole to `PUT …/knob`
+  (`AppModel.changeKnob`); tafs cloud's words for the next version show under the dial, with
+  Versions to switch to it. When the dial can't be read, the doors' own dial shows instead.
+  Whether the person manages a taf, which decides its Doors, dial, Versions and Halt, is read
+  with the list (`GET /v1/me/access`), not only when People is opened.
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
   `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
   (`POST /v1/profiles/words`) and checked against the profile's digest and their own before

@@ -710,19 +710,26 @@ final class AppModel: ObservableObject {
         holderIDs[agent].flatMap { taf($0)?.name }
     }
 
+    /// Reads this person's access to each taf, on its own: one who may not read the account's
+    /// people still manages the tafs they made. Kept as it was when it can't be read.
+    func refreshAccess(gen: Int) async {
+        guard mode == .kiff else { access = [:]; return }
+        guard let access = try? await kiff.myAccess(), gen == accountGeneration else { return }
+        self.access = access
+    }
+
     /// Reads the account's groups, its people and this person's access to each taf.
     func refreshPeople() async {
         guard mode == .kiff else { groups = []; people = []; access = [:]; return }
         let gen = accountGeneration
+        await refreshAccess(gen: gen)
         do {
             async let g = kiff.groups()
             async let p = kiff.people()
-            async let a = kiff.myAccess()
-            let (groups, people, access) = try await (g, p, a)
+            let (groups, people) = try await (g, p)
             guard gen == accountGeneration else { return }
             self.groups = groups.sorted { ($0.everyone == true ? 0 : 1, $0.name.lowercased()) < ($1.everyone == true ? 0 : 1, $1.name.lowercased()) }
             self.people = people.filter(\.active).sorted { $0.label.lowercased() < $1.label.lowercased() }
-            self.access = access
             peopleError = nil
         } catch {
             guard gen == accountGeneration else { return }
@@ -1287,6 +1294,9 @@ final class AppModel: ObservableObject {
                 // Finishing waited: another account may be signed in now, with its own tafs.
                 guard gen == accountGeneration else { return }
             }
+            // What this person may do with each taf: whether they manage it decides its Doors,
+            // dial, Versions and Halt, so it's read with the list, not only from People.
+            await refreshAccess(gen: gen)
             await refreshConnections()
             // The plan, for Settings' Plan card and Home's line: KIFF's usage read alone, quietly.
             await refreshPlan(gen: gen)
@@ -1608,6 +1618,8 @@ final class AppModel: ObservableObject {
             let knob = try await cloud.knob(c.id)
             guard gen == accountGeneration else { return }
             knobs[tafID] = knob
+            // Its change is live now: nothing left to switch to.
+            if let made = knobChanges[tafID], let live = knob.version, live >= made.version { knobChanges[tafID] = nil }
         } catch {
             lastError = "The dial couldn't be read: \(error.localizedDescription)"
         }
@@ -1624,10 +1636,36 @@ final class AppModel: ObservableObject {
             }
         } else if item.kind == "run_now" {
             _ = await runNow(c)
+        } else if item.kind == "busy" {
+            _ = await changeKnob(tafID) { $0.busy = $0.busy == "latest" ? "skip" : "latest" }
+            return
         } else {
             return
         }
         await loadKnob(tafID)
+    }
+
+    /// The dial's last change on each taf, its next version, until the owner switches to it.
+    @Published var knobChanges: [UUID: TafsCloud.Knob.Change] = [:]
+
+    /// Changes one thing of the taf's dial: its live `setting` copied, changed, and sent whole
+    /// (`PUT …/knob`). tafs cloud makes the next version; nothing runs from it until the
+    /// owner switches to it in Versions.
+    func changeKnob(_ tafID: UUID, _ change: (inout TafsCloud.Knob.Setting) -> Void) async -> Bool {
+        guard mode == .kiff, let c = cloudTaf(for: tafID), let setting = knobs[tafID]?.setting else { return false }
+        var changed = setting
+        change(&changed)
+        guard changed != setting else { return false }
+        let gen = accountGeneration
+        do {
+            let made = try await cloud.putKnob(c.id, changed)
+            guard gen == accountGeneration else { return false }
+            knobChanges[tafID] = made
+            return true
+        } catch {
+            lastError = "The dial didn't change: \(error.localizedDescription)"
+            return false
+        }
     }
 
     func runNow(_ cloudTaf: TafsCloud.CloudTaf) async -> String? {
