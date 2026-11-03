@@ -115,18 +115,17 @@ class SetupTabTest {
     rule.onNodeWithText(SetupWords.PAUSE_EVERY).performScrollTo().assertIsNotEnabled()
   }
 
-  @Test fun theLastOfTafsOwnPlacesTurnsOffThroughTheDialWhenAnAppsPlaceStaysOn() {
+  @Test fun theLastOfTafsOwnPlacesStaysOnEvenWithAnAppsPlaceOn() {
+    // As tafs cloud sends it: the last of its own places has no Off, and its route needs one of them on.
     show(
       knob(
-        """[{"id":"r1","place":"door_reply","label":"Sender","on":true,"size":{"label":"On or off","index":0,"choices":[{"label":"On","setting":{"results":["door_reply","action"]}},{"label":"Off","setting":{"results":["action"]}}]}},
-            {"id":"r2","place":"app","label":"You","on":false},{"id":"r3","place":"owner_email","label":"Email","on":false},
+        """[{"id":"r1","place":"door_reply","label":"Sender","on":true},{"id":"r2","place":"app","label":"You","on":false},{"id":"r3","place":"owner_email","label":"Email","on":false},
             {"id":"r4","place":"action","label":"Notion · Support log","on":true}]""",
       ),
     )
     rule.onNode(hasText(SetupWords.RESULTS_GO_TO, ignoreCase = true)).performScrollTo().performClick()
     rule.waitForIdle()
-    rule.onNode(hasContentDescription(SetupWords.placeTitle("door_reply"))).assertIsEnabled().performClick()
-    rule.waitForIdle()
-    assertEquals("never an empty PUT …/results: the dial's own choice", listOf("""setting {"results":["action"]}"""), log)
+    rule.onNode(hasContentDescription(SetupWords.placeTitle("door_reply"))).assertIsNotEnabled()
+    rule.onNode(hasContentDescription(SetupWords.placeTitle("app"))).assertIsEnabled()
   }
 }

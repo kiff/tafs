@@ -309,22 +309,17 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
       Text(SetupWords.AT_LEAST_ONE, style = scaled(13, color = Theme.soft))
       PendingChange(taf, knob, state, actions, busy) { work(it) }
 
-      // tafs' own places: switched through `PUT …/results`, at once. That route takes one of them at least, so turning off the last
-      // of them while a place in an app stays on goes through the dial instead, with that place's own on/off choice.
+      // tafs' own places: switched through `PUT …/results`, at once. tafs cloud keeps one of them on at least, on either route (the
+      // dial gives the last of them no Off), so the last of them stays on, whatever app places are on too.
       Eyebrow(SetupWords.FROM_TAFS)
       val tafsOn = SetupWords.TAFS_PLACES.filter { p -> on.any { it.place == p } }
       SetupWords.TAFS_PLACES.forEach { place ->
         val isOn = place in tafsOn
-        val viaDial = isOn && tafsOn.size == 1
-        val choice = knob.results.firstOrNull { it.place == place }?.size?.let { s -> s.choices.firstOrNull { it.label != s.now?.label } }
         PlaceRow(
           SetupWords.placeTitle(place), SetupWords.placeWords(place, state.kiffAccount?.email), isOn,
-          enabled = manages && !busy && !(isOn && on.size == 1) && (!viaDial || choice != null),
+          enabled = manages && !busy && !(isOn && tafsOn.size == 1),
         ) { turnOn ->
-          when {
-            viaDial && !turnOn -> choice?.let { c -> work { actions.doors.changeKnobSize(taf.id, c.setting) } }
-            else -> work { actions.setResults(taf.id, if (turnOn) tafsOn + place else tafsOn - place) }
-          }
+          work { actions.setResults(taf.id, if (turnOn) tafsOn + place else tafsOn - place) }
         }
       }
 
