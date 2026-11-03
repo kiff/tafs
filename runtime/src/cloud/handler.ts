@@ -12,12 +12,11 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
-import { dayIn, DOES, knobOf } from "./knob.js";
+import { dayIn, DOES, knobOf, type KnobSetting } from "./knob.js";
 import { ConnectError, listApps, startApp } from "./connect.js";
 import { instantIn, schedulesOf, TriggerError, triggerWords, type Trigger } from "./triggers.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-export interface KnobSetting { wakes: Trigger[]; busy: "skip" | "latest"; results: ResultPlace[] }
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { stepWords, Steps, type ToolTitles } from "./steps.js";
@@ -613,19 +612,22 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The taf's dial (docs/api.md, "The knob"): every label and line written here.
     const now = deps.now?.() ?? new Date();
     const zone = me.timeZone ?? "UTC";
-    const [runs, schedule, doors] = await Promise.all([
+    const [runs, schedule, doors, live] = await Promise.all([
       agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
       taf.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
       // A taf's doors are for the people who manage it; someone it's only shared with sees none.
       deps.doors && await managesTaf(event, me, taf, deps) ? listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors) : Promise.resolve([]),
+      deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
     ]);
+    const setting = live !== undefined ? taf.knobs?.[String(live)] : undefined;
     const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
     const { counts } = workOf(today, zone, now, []);
     const job = JOBS.find((j) => j.id === taf.job);
     return knobOf({
       name: taf.name,
       does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
-      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf),
+      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy,
+      ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}),
       today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
       zone, now,
     });

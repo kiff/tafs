@@ -164,3 +164,52 @@ export function triggerWords(t: Trigger): string {
   }
   return "On a schedule";
 }
+
+const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+/**
+ * The dial's form for a schedule kiff/agents keeps, exactly as PUT takes it, so an app can change
+ * one stop and send the rest back as they are. A schedule the dial didn't set has none.
+ */
+export function triggerOf(s: { cron: string; kind?: string; at?: string; skip?: string[] }, zone = "UTC"): Trigger | undefined {
+  const skip = s.skip?.length ? { skip: s.skip } : {};
+  const hhmm = (h: string, m: string) => `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+  const f = s.cron.trim().split(/\s+/);
+  if (s.kind === "once") {
+    if (!s.at) return undefined;
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+      .formatToParts(new Date(s.at)).map((x) => [x.type, x.value]));
+    return { kind: "schedule", form: "once", date: `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`, ...skip };
+  }
+  if (f.length !== 5) return undefined;
+  const [min, hour, dom, mon, dow] = f as [string, string, string, string, string];
+  if (mon !== "*") return undefined;
+  const plain = (x: string) => /^\d{1,2}$/.test(x);
+  const dayList = (x: string) => (x === "*" ? [] : x === "1-5" ? undefined : /^[0-6](,[0-6])*$/.test(x) ? x.split(",").map((d) => DAY_NAMES[Number(d)]!) : undefined);
+  if (s.kind === "monthly_last_day") return plain(min) && plain(hour) ? { kind: "schedule", form: "monthly_last_day", at: hhmm(hour, min), ...skip } : undefined;
+  if (dom !== "*") {
+    return plain(min) && plain(hour) && plain(dom) && dow === "*" ? { kind: "schedule", form: "monthly", at: hhmm(hour, min), date: String(Number(dom)), ...skip } : undefined;
+  }
+  const days = dayList(dow);
+  const onDays = days?.length ? { days } : {};
+  const everyMin = /^\*\/(\d+)$/.exec(min);
+  const everyHour = /^\*\/(\d+)$/.exec(hour);
+  const window = /^(\d{1,2})-(\d{1,2})(?:\/(\d+))?$/.exec(hour);
+  if (days !== undefined) {
+    if (everyMin && hour === "*") return { kind: "schedule", form: "every", every_minutes: Number(everyMin[1]), ...onDays, ...skip };
+    if (min === "0" && everyHour) return { kind: "schedule", form: "every", every_minutes: Number(everyHour[1]) * 60, ...onDays, ...skip };
+    const between = window ? { from: hhmm(window[1]!, "0"), to: hhmm(String(Number(window[2]) + 1), "0") } : undefined;
+    if (everyMin && window && !window[3]) return { kind: "schedule", form: "every", every_minutes: Number(everyMin[1]), between, ...onDays, ...skip };
+    if (min === "0" && window?.[3]) return { kind: "schedule", form: "every", every_minutes: Number(window[3]) * 60, between, ...onDays, ...skip };
+  }
+  if (!plain(min) || !/^\d{1,2}(,\d{1,2})*$/.test(hour)) return undefined;
+  const hours = hour.split(",");
+  if (hours.length > 1) {
+    return days === undefined && dow !== "1-5" ? undefined
+      : { kind: "schedule", form: "times_a_day", times: hours.map((h) => hhmm(h, min)), ...(dow === "1-5" ? { days: ["mon", "tue", "wed", "thu", "fri"] } : onDays), ...skip };
+  }
+  const at = hhmm(hour, min);
+  if (dow === "*") return { kind: "schedule", form: "daily", at, ...skip };
+  if (dow === "1-5") return { kind: "schedule", form: "weekdays", at, ...skip };
+  return days ? { kind: "schedule", form: "weekly", at, days, ...skip } : undefined;
+}

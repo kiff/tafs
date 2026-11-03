@@ -1550,6 +1550,10 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
     expect(rec.results).toEqual(["door_reply", "app"]);
     expect(rec.scheduleIds).toEqual([`${RAE}-t2`]);
+    // The live dial reads back as it was set, for the next tap to change one thing.
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.setting).toEqual({ wakes: [{ kind: "schedule", form: "times_a_day", times: ["09:00", "15:00", "12:30"] }, { kind: "door" }], busy: "latest", results: ["door_reply", "app"] });
+    expect(knob.body.version).toBe(n);
   });
 
   it("records the Cards a version runs under when it goes live", async () => {

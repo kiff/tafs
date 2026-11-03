@@ -5,7 +5,11 @@
  */
 import type { Schedule } from "./agents.js";
 import type { ResultPlace } from "./handler.js";
+import { type Trigger, triggerOf, triggerWords } from "./triggers.js";
 import { timeIn } from "./work.js";
+
+/** A version's dial as PUT takes it: its triggers, what a busy taf does, where results go. */
+export interface KnobSetting { wakes: Trigger[]; busy: "skip" | "latest"; results: ResultPlace[] }
 
 /** One stop on a ring. */
 export interface RingItem {
@@ -22,6 +26,8 @@ export interface RingItem {
   tap?: string;
   /** The door a door's stop opens or closes (PATCH /v1/tafs/{id}/doors/{door}). */
   door?: string;
+  /** A trigger's form exactly as PUT takes it; absent on run now and on a schedule the dial can't set. */
+  trigger?: Trigger;
 }
 
 export interface Knob {
@@ -32,6 +38,8 @@ export interface Knob {
   results: (Omit<RingItem, "kind"> & { place: ResultPlace })[];
   rim: { done: number; working: number; retrying: number; needs_you: number; line: string };
   draft: null | { version: number; words: string[] };
+  /** The shown version's dial as PUT takes it: a tap copies it, changes one thing and sends it back. */
+  setting: KnobSetting;
 }
 
 /** A door as the doors list gives it. */
@@ -49,6 +57,8 @@ export interface KnobInput {
   today: { done: number; working: number; retrying: number; needs_you: number };
   /** What it does when a trigger fires while it works. */
   busy?: "skip" | "latest";
+  /** The live version's dial, when a tap or Coach's draft set it; else it's read from the schedule. */
+  setting?: KnobSetting;
   version?: number;
   zone: string;
   now: Date;
@@ -95,11 +105,19 @@ export function knobOf(k: KnobInput): Knob {
     wakes.push({ id: `door_${d.id}`, kind: "door", door: d.id, label: d.label, words: d.words.state, on: d.open,
       state: d.open ? "Open" : "Closed", tap: d.words.tap });
   }
-  if (!k.unscheduled && k.schedule) {
-    const c = cronWords(k.schedule.cron);
-    const next = k.schedule.enabled && k.schedule.next ? `, next ${timeIn(k.schedule.next, k.zone, k.now)}` : "";
-    wakes.push({ id: "trg_schedule", kind: "schedule", label: c.label, words: k.schedule.enabled ? `${c.words}${next}` : `${c.words}, paused`,
-      on: k.schedule.enabled, state: k.schedule.enabled ? c.label : "Paused" });
+  // The dial's triggers: as the live version set them, or the taf's own schedule read back.
+  const fromSchedule = !k.unscheduled && k.schedule ? triggerOf(k.schedule, k.zone) : undefined;
+  const timed = k.setting ? k.setting.wakes.filter((t) => t.kind !== "door") : [];
+  if (!k.unscheduled && k.schedule && (!k.setting || timed.length)) {
+    const s = k.schedule;
+    const next = s.enabled && s.next ? `, next ${timeIn(s.next, k.zone, k.now)}` : "";
+    const stops = k.setting ? timed.map((t) => ({ trigger: t, ...wordsOf(t) })) : [{ trigger: fromSchedule, ...cronWords(s.cron) }];
+    for (const [i, t] of stops.entries()) {
+      // The scheduler says when the taf's own schedule fires next; that's the first trigger's.
+      const words = s.enabled ? `${t.words}${i === 0 ? next : ""}` : `${t.words}, paused`;
+      wakes.push({ id: i === 0 ? "trg_schedule" : `trg_${i + 1}`, kind: t.trigger?.kind === "app_check" ? "app_check" : "schedule", label: t.label, words,
+        on: s.enabled, state: s.enabled ? t.label : "Paused", ...(t.trigger ? { trigger: t.trigger } : {}) });
+    }
   }
   wakes.push({ id: "run_now", kind: "run_now", label: "Run now", words: "Runs it once, now", on: true, state: "Now",
     ...(k.unscheduled ? {} : { tap: "Tap to run once" }) });
@@ -109,7 +127,8 @@ export function knobOf(k: KnobInput): Knob {
   if (!k.unscheduled && k.schedule) {
     when.push({ id: "when_missed", kind: "missed", label: "If missed", words: "A run missed by under an hour runs once; later, it's skipped", on: true, state: "Once" });
   }
-  const latest = k.busy === "latest";
+  const busy = k.setting?.busy ?? k.busy ?? "skip";
+  const latest = busy === "latest";
   when.push({ id: "when_busy", kind: "busy", label: "If busy", words: latest ? "Runs the latest once it's free" : "Skips a run while it's working", on: true,
     state: latest ? "Latest" : "Skip" });
 
@@ -123,7 +142,19 @@ export function knobOf(k: KnobInput): Knob {
     does: k.does, wakes, when, results,
     rim: { ...t, line: parts.join(" · ") },
     draft: null,
+    setting: k.setting ?? {
+      wakes: [...(k.doors.length ? [{ kind: "door" as const }] : []), ...(fromSchedule ? [fromSchedule] : [])],
+      busy, results: k.places,
+    },
   };
+}
+
+/** A trigger's word on the ring and its line. */
+function wordsOf(t: Trigger): { label: string; words: string } {
+  if (t.kind === "app_check") return { label: "Check", words: triggerWords(t) };
+  const label = t.form === "every" ? `Every ${t.every_minutes} min` : t.form === "weekdays" ? "Weekdays" : t.form === "monthly" || t.form === "monthly_last_day" ? "Monthly"
+    : t.form === "once" ? "Once" : t.form === "weekly" ? "Weekly" : t.form === "times_a_day" ? `${t.times?.length ?? 0} a day` : t.at ?? "Schedule";
+  return { label, words: triggerWords(t) };
 }
 
 /** The calendar day of an instant in zone, as YYYY-MM-DD: what "today" means for the rim. */

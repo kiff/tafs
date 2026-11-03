@@ -25,6 +25,25 @@ describe("the dial", () => {
     expect(k.results.map((r) => [r.place, r.label])).toEqual([["door_reply", "Sender"], ["app", "You"]]);
     expect(k.rim.line).toBe("12 done today · 1 working · 1 retrying · 1 needs you");
     expect(k.draft).toBeNull();
+    // Each trigger carries its form as PUT takes it, and the knob the whole setting.
+    expect(k.wakes[1]!.trigger).toEqual({ kind: "schedule", form: "weekdays", at: "09:00" });
+    expect(k.setting).toEqual({ wakes: [{ kind: "door" }, { kind: "schedule", form: "weekdays", at: "09:00" }], busy: "skip", results: ["door_reply", "app"] });
+  });
+
+  it("a version's dial shows each of its triggers, as it set them", () => {
+    const setting = { wakes: [{ kind: "door" as const }, { kind: "schedule" as const, form: "daily" as const, at: "09:00" },
+      { kind: "schedule" as const, form: "every" as const, every_minutes: 30, between: { from: "08:00", to: "18:00" } }], busy: "latest" as const, results: ["app" as const] };
+    const k = knobOf({ ...base, schedule: { ...base.schedule!, cron: "0 9 * * *" }, setting, version: 3 });
+    expect(k.wakes.map((w) => [w.id, w.label, w.words])).toEqual([
+      ["door_d1", "Email", "Open: messages from you and paired senders to r@x start work."],
+      ["trg_schedule", "09:00", "Every day at 09:00, next Tue 09:00"],
+      ["trg_2", "Every 30 min", "Every 30 minutes from 08:00 to 18:00"],
+      ["run_now", "Run now", "Runs it once, now"],
+    ]);
+    expect(k.wakes[2]!.trigger).toEqual(setting.wakes[2]);
+    expect(k.when.find((w) => w.kind === "busy")!.state).toBe("Latest");
+    expect(k.setting).toEqual(setting);
+    expect(k.version).toBe(3);
   });
 
   it("a taf that works from its chat has no schedule, and its face doesn't run it", () => {

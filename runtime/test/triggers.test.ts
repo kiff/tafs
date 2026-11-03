@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nearestEvery, schedulesOf, TriggerError, type Trigger } from "../src/cloud/triggers.js";
+import { instantIn, nearestEvery, schedulesOf, TriggerError, triggerOf, type Trigger } from "../src/cloud/triggers.js";
 
 const crons = (t: Trigger, busy?: "skip" | "latest") => schedulesOf(t, busy).map((s) => s.cron ?? s.at);
 
@@ -63,5 +63,34 @@ describe("a once trigger's time", () => {
     expect(instantIn("2026-07-05T09:00", "Europe/Paris")).toBe("2026-07-05T07:00:00Z");
     expect(instantIn("2026-11-05T09:00", "UTC")).toBe("2026-11-05T09:00:00Z");
     expect(instantIn("2026-11-05T09:00", "America/New_York")).toBe("2026-11-05T14:00:00Z");
+  });
+});
+
+describe("a schedule read back as the dial's form", () => {
+  it.each<Trigger>([
+    { kind: "schedule", form: "daily", at: "09:00" },
+    { kind: "schedule", form: "weekdays", at: "08:30" },
+    { kind: "schedule", form: "weekly", at: "09:00", days: ["mon", "wed"] },
+    { kind: "schedule", form: "monthly", at: "07:00", date: "1" },
+    { kind: "schedule", form: "monthly_last_day", at: "18:00" },
+    { kind: "schedule", form: "times_a_day", times: ["09:00", "15:00"] },
+    { kind: "schedule", form: "every", every_minutes: 20 },
+    { kind: "schedule", form: "every", every_minutes: 120, days: ["mon", "tue", "wed", "thu", "fri"] },
+    { kind: "schedule", form: "every", every_minutes: 30, between: { from: "08:00", to: "18:00" } },
+    { kind: "schedule", form: "every", every_minutes: 60, between: { from: "09:00", to: "17:00" } },
+    { kind: "schedule", form: "daily", at: "09:00", skip: ["2026-11-04T09:00"] },
+  ])("$form", (t) => {
+    const [s] = schedulesOf(t);
+    expect(triggerOf({ cron: s!.cron ?? "", kind: s!.kind, skip: s!.skip })).toEqual(t);
+  });
+
+  it("a once time is read in the account's zone", () => {
+    const at = instantIn("2026-11-05T09:00", "Europe/Paris");
+    expect(triggerOf({ cron: "", kind: "once", at }, "Europe/Paris")).toEqual({ kind: "schedule", form: "once", date: "2026-11-05T09:00" });
+  });
+
+  it("a schedule the dial can't set has no form", () => {
+    expect(triggerOf({ cron: "5 4 * 2 *" })).toBeUndefined();
+    expect(triggerOf({ cron: "0 9 * * 1-3" })).toBeUndefined();
   });
 });
