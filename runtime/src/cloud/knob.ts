@@ -70,7 +70,11 @@ export interface Knob {
   results: (Omit<RingItem, "kind"> & { place: ResultPlace | ActionPlace["place"]; grant?: string; action?: string })[];
   rim: { done: number; working: number; retrying: number; needs_you: number; line: string };
   /** A dial change waiting for the owner: its words, all of them and by ring, for Coach's card and the dial. */
-  draft: null | { version: number; words: string[]; wakes: string[]; when: string[]; results: string[]; what: string[] };
+  draft: null | {
+    version: number; words: string[]; wakes: string[]; when: string[]; results: string[]; what: string[];
+    /** The same lines by connection, for Coach's card: each connected app's, then This taf's (no `grant`). */
+    groups: Array<{ grant?: string; name: string; wakes: string[]; what: string[]; results: string[] }>;
+  };
   /** The shown version's dial as PUT takes it: a tap copies it, changes one thing and sends it back. */
   setting: KnobSetting;
   /**
@@ -219,9 +223,29 @@ export function knobOf(k: KnobInput): Knob {
     rim: { ...t, line: parts.join(" · ") },
     connections: connectionsOf(wakes, results),
     draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting),
-      what: (k.draft.setting.what ?? []).map((s, i) => `${i + 1} · ${s.label}: ${s.words}`) } : null,
+      what: (k.draft.setting.what ?? []).map((s, i) => `${i + 1} · ${s.label}: ${s.words}`), groups: groupsOf(k.draft.setting) } : null,
     setting,
   };
+}
+
+/** A dial change's lines by connection: a connected app's events and actions under it, everything else under This taf. */
+function groupsOf(s: KnobSetting): NonNullable<Knob["draft"]>["groups"] {
+  const by = new Map<string, NonNullable<Knob["draft"]>["groups"][number]>();
+  const own = { name: "This taf", wakes: [] as string[], what: [] as string[], results: [] as string[] };
+  const of = (grant: string | undefined, name: string | undefined) => {
+    if (!grant) return own;
+    let g = by.get(grant);
+    if (!g) by.set(grant, (g = { grant, name: (name ?? "").split(" · ")[0] || "App", wakes: [], what: [], results: [] }));
+    return g;
+  };
+  for (const t of s.wakes) of(t.kind === "app_event" ? t.grant : undefined, t.name).wakes.push(triggerWords(t));
+  for (const [i, w] of (s.what ?? []).entries()) own.what.push(`${i + 1} · ${w.label}: ${w.words}`);
+  for (const p of s.results) {
+    if (typeof p === "string") own.results.push(`Results go to ${p}`);
+    else of(p.grant, p.name).results.push(`Results go to ${p.name}`);
+  }
+  own.wakes.push(s.busy === "latest" ? "If busy, runs the latest once it's free" : "If busy, skips the run");
+  return [...by.values(), own];
 }
 
 const TIMES = ["07:00", "08:00", "09:00", "12:00", "17:00", "18:00"];

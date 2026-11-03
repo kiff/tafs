@@ -1578,6 +1578,8 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(asDraft.body.shown).toBe(n);
     expect(asDraft.body.setting.busy).toBe("latest");
     expect((await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana", query: "version=99" })).status).toBe(404);
+    expect(waiting.body.draft.groups).toEqual([{ name: "This taf", wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door", "If busy, runs the latest once it's free"], what: [], results: ["Results go to door_reply", "Results go to app"] }]);
+    delete waiting.body.draft.groups;
     expect(waiting.body.draft).toEqual({ version: n, words: put.body.words, wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door"],
       when: ["If busy, runs the latest once it's free"], results: ["Results go to door_reply, app"], what: [] });
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });

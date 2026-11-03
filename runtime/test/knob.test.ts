@@ -118,6 +118,11 @@ describe("the dial", () => {
   it("a draft carries its recipe's lines, for Coach's card", () => {
     const k = knobOf({ ...base, draft: { version: 4, setting: { wakes: [], busy: "skip", results: ["app"], what: [{ label: "Check", words: "Looks up the charge" }] } } });
     expect(k.draft!.what).toEqual(["1 · Check: Looks up the charge"]);
+    // By connection, for Coach's card: each connected app's lines, then This taf's.
+    const g = knobOf({ ...base, draft: { version: 5, setting: { wakes: [{ kind: "door" }, { kind: "app_event", grant: "grt_hub", event: "E", name: "HubSpot · deal won" }],
+      busy: "skip", results: ["app", { place: "action", grant: "grt_sl", action: "slack_post", args: {}, name: "Slack · #sales" }] } } });
+    expect(g.draft!.groups.map((x) => [x.grant, x.name, x.wakes.length, x.results.length])).toEqual([
+      ["grt_hub", "HubSpot", 1, 0], ["grt_sl", "Slack", 0, 1], [undefined, "This taf", 2, 1]]);
   });
 
   it("a recipe is checked: steps in order, each with a short label", () => {
