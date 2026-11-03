@@ -88,11 +88,28 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
     });
   }
   return {
-    apps, by_key: got.by_key === true,
+    apps: ordered(apps, q), by_key: got.by_key === true,
     ...(typeof got.provider === "string" && PROVIDER.test(got.provider) ? { provider: got.provider } : {}),
     ...(typeof got.next_cursor === "string" && CURSOR.test(got.next_cursor) ? { next_cursor: got.next_cursor } : {}),
     ...(Number.isInteger(got.skipped) && (got.skipped as number) > 0 ? { skipped: got.skipped as number } : {}),
   };
+}
+
+/**
+ * A page in the order a person looks for an app: the account's own connections first (one to sign in again
+ * before one connected), then, for a search, apps whose name starts with it, then whose name has it, then the
+ * rest; planque's order otherwise. Only within the page: planque pages its catalog.
+ */
+function ordered(apps: CatalogApp[], q: string): CatalogApp[] {
+  const want = q.trim().toLowerCase();
+  const rank = (a: CatalogApp): number => {
+    if (a.state === "needs_reconnect") return 0;
+    if (a.state === "connected") return 1;
+    if (!want) return 2;
+    const name = `${a.title} ${a.vendor}`.toLowerCase();
+    return a.title.toLowerCase().startsWith(want) || a.vendor.toLowerCase().startsWith(want) ? 2 : name.includes(want) ? 3 : 4;
+  };
+  return apps.map((a, i) => ({ a, i, r: rank(a) })).sort((x, y) => x.r - y.r || x.i - y.i).map((x) => x.a);
 }
 
 /** Starts a connection of entry for agent, the taf's KIFF agent: the grant to approve, nothing signed. */

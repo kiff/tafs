@@ -8,11 +8,10 @@ import type { Sent } from "./doors/model.js";
 import { stepWords, type ToolTitles } from "./steps.js";
 import { requestOf, type RequestView, timeIn } from "./work.js";
 
-/** One step of a request: what happened, a line under it, and when. */
+/** One step of a request: what happened, and a line under it with its time, written in the account's zone. */
 export interface RequestStep {
   label: string;
   line?: string;
-  at?: string;
   /** done, failed, not made (refused back unsent), waiting on someone, or still to come. */
   state: "done" | "failed" | "not_made" | "waiting" | "next";
 }
@@ -44,31 +43,31 @@ export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone
   const view = requestOf(r, zone, now, sent, again);
   const from = fromOf(r);
   const at = (t: string) => timeIn(t, zone, now);
-  const steps: RequestStep[] = [{ label: "Received", line: `${from}, ${at(r.created)}`, at: r.created, state: "done" }];
+  const steps: RequestStep[] = [{ label: "Received", line: `${from}, ${at(r.created)}`, state: "done" }];
   for (const e of events.filter((x) => x.run === r.id).sort((a, b) => a.seq - b.seq)) {
     if (e.kind === "usage") {
       for (const c of callsOf(e.body)) {
         // A tool nothing names says it worked, with no tool name.
         const words = stepWords(c.tool, titles) ?? "Worked on it";
-        steps.push({ label: words, line: c.notMade ? `Not made · ${at(e.time)}` : c.error ? `Didn't go through · ${at(e.time)}` : at(e.time), at: e.time,
+        steps.push({ label: words, line: c.notMade ? `Not made · ${at(e.time)}` : c.error ? `Didn't go through · ${at(e.time)}` : at(e.time),
           state: c.notMade ? "not_made" : c.error ? "failed" : "done" });
       }
     } else if (e.kind === "tool_result") {
       const b = (e.body ?? {}) as { state?: unknown };
-      if (b.state === "held") steps.push({ label: "Held for your approval", line: `Over its Card · ${at(e.time)}`, at: e.time, state: "waiting" });
+      if (b.state === "held") steps.push({ label: "Held for your approval", line: `Over its Card · ${at(e.time)}`, state: "waiting" });
     }
   }
   for (const d of view.deliveries) steps.push({ label: d.state === "sent" ? "Replied" : "Reply not delivered", line: d.line, state: d.state === "sent" ? "done" : "failed" });
   switch (view.state) {
     case "retrying":
-      steps.push({ label: r.next_at ? `Next try ${at(r.next_at)}` : "Next try soon", line: r.try && r.of && r.try >= r.of ? "If it fails again, this needs you" : `Try ${(r.try ?? 0) + 1}${r.of ? ` of ${r.of}` : ""}`, ...(r.next_at ? { at: r.next_at } : {}), state: "next" });
+      steps.push({ label: r.next_at ? `Next try ${at(r.next_at)}` : "Next try soon", line: r.try && r.of && r.try >= r.of ? "If it fails again, this needs you" : `Try ${(r.try ?? 0) + 1}${r.of ? ` of ${r.of}` : ""}`, state: "next" });
       break;
     case "needs_you": steps.push({ label: "Needs you", line: view.line, state: "waiting" }); break;
     case "waiting": steps.push({ label: view.line, state: "waiting" }); break;
     case "working": steps.push({ label: "Working on it", state: "next" }); break;
-    case "done": steps.push({ label: "Done", line: at(r.updated), at: r.updated, state: "done" }); break;
-    case "stopped": steps.push({ label: "Stopped", line: at(r.updated), at: r.updated, state: "failed" }); break;
-    case "failed": steps.push({ label: "It failed", line: r.error ?? at(r.updated), at: r.updated, state: "failed" }); break;
+    case "done": steps.push({ label: "Done", line: at(r.updated), state: "done" }); break;
+    case "stopped": steps.push({ label: "Stopped", line: at(r.updated), state: "failed" }); break;
+    case "failed": steps.push({ label: "It failed", line: r.error ?? at(r.updated), state: "failed" }); break;
   }
   return { ...view, from, steps };
 }

@@ -27,6 +27,24 @@ describe("Connect apps", () => {
     ] });
   });
 
+  it("puts the account's own connections first, then the apps whose name matches the search", async () => {
+    const got = await listApps(fake(200, { entries: [
+      { entry: "connector:composio:pylon_mcp", title: "Pylon MCP", how: "oauth" },
+      { entry: "connector:composio:rootly", title: "Rootly", vendor: "Rootly", how: "oauth" },
+      { entry: "connector:composio:slackbot", title: "Slackbot", how: "oauth" },
+      { entry: "connector:composio:slack", title: "Slack", how: "oauth", state: "connected", grant: "g1" },
+      { entry: "connector:composio:myslack", title: "Team MySlack", how: "oauth" },
+      { entry: "connector:composio:stripe", title: "Stripe", how: "key", state: "needs_reconnect", grant: "g2" },
+    ] }), BASE, "t1", "s", "slack");
+    expect(got.apps.map((a) => a.title)).toEqual(["Stripe", "Slack", "Slackbot", "Team MySlack", "Pylon MCP", "Rootly"]);
+    const plain = await listApps(fake(200, { entries: [
+      { entry: "a@1", title: "0CodeKit", how: "oauth" },
+      { entry: "b@1", title: "Notion", how: "oauth", state: "connected", grant: "g" },
+      { entry: "c@1", title: "44API", how: "oauth" },
+    ] }), BASE, "t1", "s", "");
+    expect(plain.apps.map((a) => a.title)).toEqual(["Notion", "0CodeKit", "44API"]);
+  });
+
   it("lists a managed provider's apps a page at a time, its entries as planque names them", async () => {
     const seen: { url?: string; init?: RequestInit }[] = [];
     const got = await listApps(fake(200, { entries: [
@@ -34,7 +52,7 @@ describe("Connect apps", () => {
       { entry: "connector:composio:gmail", vendor: "gmail", title: "Gmail", how: "oauth", state: "connected", grant: "g9" },
     ], by_key: true, provider: "composio", next_cursor: "Y3Vyc29yOjE=", skipped: 2 }, seen), BASE, "t1", "sess", "", { provider: "composio", cursor: "Y3Vyc29yOjA=" });
     expect(seen[0]!.url).toBe("https://planque.test/v1/accounts/t1/catalog?provider=composio&cursor=Y3Vyc29yOjA%3D");
-    expect(got.apps.map((a) => a.entry)).toEqual(["connector:composio:_1password", "connector:composio:gmail"]);
+    expect(got.apps.map((a) => a.entry)).toEqual(["connector:composio:gmail", "connector:composio:_1password"]);
     expect(got).toMatchObject({ provider: "composio", next_cursor: "Y3Vyc29yOjE=", skipped: 2 });
     // The last page has no next cursor; a bad provider or cursor is never passed on.
     const last = await listApps(fake(200, { entries: [], by_key: true, provider: "composio", next_cursor: "" }, seen), BASE, "t1", "s", "", { provider: "../x", cursor: "a b" });
