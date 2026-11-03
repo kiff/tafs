@@ -60,7 +60,7 @@ struct StartsWhenView: View {
         Panel {
             Eyebrow(text: "Its schedule")
             if schedules.isEmpty {
-                Text(cloud?.worksFromChat == true ? "It works when you tell it, in its chat: no schedule runs it." : "No schedule starts it.")
+                Text(cloud?.worksFromChat == true ? "When you tell it, in its chat." : "No schedule starts it.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }
             ForEach(schedules) { item in
