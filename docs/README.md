@@ -12,12 +12,13 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 |---|---|
 | [How tafs fits together](#how-tafs-fits-together) | The app, tafs cloud, kiff/agents, KIFF and planque, and who decides what |
 | [tafs.md](tafs.md) | A taf: its job, definition, schedule, runs, reports, memory, Record, pausing and removing it |
+| [dial.md](dial.md) | The dial: When, What and Where around the Why, sizes, changes made live, Coach's dial card, pause and follow-ups |
 | [chat.md](chat.md) | A taf's chat: sending, the streamed answer, the work block, held calls in the chat, steering, Stop, chats and archives |
 | [coach.md](coach.md) | Coach mode: making a taf, connecting tools, improving a taf, versions, trials, and Coach's own tools |
 | [approvals.md](approvals.md) | Held calls: how they reach the owner, how an answer is signed, what happens next, halting |
 | [accounts.md](accounts.md) | Signing in, roles, people and groups, sharing a taf, usage, plans and purchases, the time zone, deleting the account |
 | [attachments.md](attachments.md) | Photos and files on a message |
-| [doors.md](doors.md) | Doors: email and WhatsApp addresses a taf takes work from |
+| [doors.md](doors.md) | Doors: email, Slack and WhatsApp addresses a taf takes work from |
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
 | [ios-app.md](ios-app.md) | The app's code: its model, screens, services, launch arguments and tests |
