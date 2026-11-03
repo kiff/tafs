@@ -1589,8 +1589,19 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(rec.results).toEqual(["door_reply", "app"]);
     expect(rec.scheduleIds).toEqual([`${RAE}-t2`]);
     expect(rec.knobApplied).toBe(n);
+    // Pause covers every schedule the dial keeps, and a dial written again on a paused taf keeps it paused.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(200);
+    expect(w.agents.calls.filter((c: string) => /switchSchedule .* off/.test(c))).toEqual(expect.arrayContaining([`switchSchedule ${RAE} off`, `switchSchedule ${RAE}-t2 off`]));
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.paused).toBe(true);
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobApplied: undefined });
+    await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect([RAE, `${RAE}-t2`].map((id) => w.agents.schedules.get(`t_acme|${id}`)?.enabled)).toEqual([false, false]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/resume`, { token: "ana" })).status).toBe(200);
+    expect([RAE, `${RAE}-t2`].map((id) => w.agents.schedules.get(`t_acme|${id}`)?.enabled)).toEqual([true, true]);
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.paused).toBeUndefined();
+    const rec2 = w.tafs.held.get(`t_acme#${RAE}`)!;
     // A live dial never written where it acts (the write failed after the switch) is written on the next read.
-    w.tafs.held.set(`t_acme#${RAE}`, { ...rec, knobApplied: undefined, scheduleIds: [] });
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rec2, knobApplied: undefined, scheduleIds: [] });
     w.agents.calls.length = 0;
     await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c)).length).toBeGreaterThan(0);

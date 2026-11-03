@@ -271,6 +271,8 @@ export interface Taf {
    * kiff/agents' scheduler, and its results places kept, only when that version goes live.
    */
   knobs?: Record<string, KnobSetting>;
+  /** Paused by its owner (pause, Coach's taf_pause): every schedule of it is off, and stays off when its dial is written. */
+  paused?: boolean;
   /** The version whose dial was last written where it acts (applyKnob): a live version that isn't, is written again. */
   knobApplied?: number;
   /** The schedules its live dial keeps in kiff/agents, beyond the first (its own id). */
@@ -570,7 +572,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume")) {
     await needTaf(event, me, taf, deps);
-    const s = await agentsCall(() => deps.agents.switchSchedule(me.tenantID, taf.id, action === "resume"));
+    const s = await pauseAll(me.tenantID, taf, action === "resume", deps);
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(taf, me, deps, s) };
   }
@@ -2629,6 +2631,27 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
 }
 
 /**
+ * Pauses or resumes everything that starts the taf on a schedule: its own schedule, the dial's others
+ * (`scheduleIds`) and the follow-ups it set itself, still to come. The taf keeps that it's paused, so
+ * writing its dial again (applyKnob) leaves it paused.
+ */
+async function pauseAll(tenant: string, taf: Taf, on: boolean, deps: Deps): Promise<Schedule> {
+  const s = await agentsCall(() => deps.agents.switchSchedule(tenant, taf.id, on));
+  const now = (deps.now?.() ?? new Date()).getTime();
+  const followUps = await deps.agents.listSchedules(tenant, taf.id)
+    .then((all) => all.filter((x) => x.follow_up && x.id.startsWith("fu-") && (!x.at || Date.parse(x.at) > now)).map((x) => x.id), () => []);
+  for (const id of [...(taf.scheduleIds ?? []), ...followUps]) await deps.agents.switchSchedule(tenant, id, on).catch(() => undefined);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const cur = await deps.tafs.get(tenant, taf.id);
+    if (!cur) break;
+    const next: Taf = { ...cur };
+    if (on) delete next.paused; else next.paused = true;
+    if (await deps.tafs.putIf(tenant, next, cur)) break;
+  }
+  return s;
+}
+
+/**
  * The live version's dial, written where it acts: its triggers to kiff/agents' scheduler (the
  * taf's own schedule first, then one more per firing time the scheduler can say exactly, any left
  * over switched off), and where its results go. A version with no dial changes none of it.
@@ -2639,10 +2662,13 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   const zone = me.timeZone ?? "UTC";
   const own = await deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined);
   const input = own?.input ?? jobById(taf.job).kickoff;
+  // A paused taf stays paused when its dial is written: its schedules are written off.
+  const paused = await deps.tafs.get(me.tenantID, taf.id).then((t) => t?.paused, () => taf.paused);
+  const enabled = paused !== true;
   const planned = k.wakes.flatMap((t) => schedulesOf(t, k.busy));
   const ids = planned.map((_, i) => (i === 0 ? taf.id : `${taf.id}-t${i + 1}`));
   for (const [i, p] of planned.entries()) {
-    const s: Schedule = { id: ids[i]!, agent: taf.id, cron: p.cron ?? "", time_zone: zone, input, enabled: true, ...(p.kind !== "cron" ? { kind: p.kind } : {}),
+    const s: Schedule = { id: ids[i]!, agent: taf.id, cron: p.cron ?? "", time_zone: zone, input, enabled, ...(p.kind !== "cron" ? { kind: p.kind } : {}),
       ...(p.at ? { at: instantIn(p.at, zone) } : {}), busy: p.busy, ...(p.skip ? { skip: p.skip } : {}), ...(p.check ? { check: p.check } : {}) };
     const exists = i === 0 ? own : await deps.agents.getSchedule(me.tenantID, s.id).catch(() => undefined);
     await agentsCall(() => (exists ? deps.agents.updateSchedule(me.tenantID, s) : deps.agents.createSchedule(me.tenantID, s)));
@@ -4094,7 +4120,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (!on && args.action !== "pause") throw new ToolRefusal("action is pause or resume");
     if (may && !may.oversee && !may.manage) throw new ToolRefusal(`pausing ${taf.name} is for the people who oversee or manage it`);
     if (taf.unscheduled) throw new ToolRefusal(`${taf.name} works from its chat: it has no schedule to ${on ? "resume" : "pause"}`);
-    const s = await agentsCall(() => deps.agents.switchSchedule(call.tenant, taf.id, on));
+    const s = await pauseAll(call.tenant, taf, on, deps);
     return { taf: taf.name, schedule: on ? "on" : "paused", ...(s.next ? { next: iso(s.next) } : {}) };
   }
   if (name === "taf_results") {
