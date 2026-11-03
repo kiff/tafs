@@ -15,6 +15,8 @@ version headings refer to releases, not merely to merged pull requests.
 
 ### Added
 
+- **Docs:** `docs/connect-apps.md`, Connect apps for the person running tafs; `docs/dial.md` covers app events' approval, ⏻ off for a taf that works from its chat, and labels cut with "…".
+
 - **Docs:** `docs/dial.md`, the dial for the person using it; the README covers Android, the dial, Connect apps, Did this happen? and the Slack door, with the Android screenshots.
 
 - **Android, the settled dial:** When · What · Where around the taf's Why, with "Ask Coach or find

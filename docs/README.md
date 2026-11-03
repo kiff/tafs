@@ -18,6 +18,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [approvals.md](approvals.md) | Held calls: how they reach the owner, how an answer is signed, what happens next, halting |
 | [accounts.md](accounts.md) | Signing in, roles, people and groups, sharing a taf, usage, plans and purchases, the time zone, deleting the account |
 | [attachments.md](attachments.md) | Photos and files on a message |
+| [connect-apps.md](connect-apps.md) | Connect apps, for the person running tafs: connecting, what you approve, what a taf can do, app events, the Slack door vs an action, disconnecting |
 | [doors.md](doors.md) | Doors: email, Slack and WhatsApp addresses a taf takes work from |
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
