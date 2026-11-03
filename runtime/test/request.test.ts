@@ -29,7 +29,7 @@ describe("a request, step by step", () => {
 
   it("a retrying request says its next try, and that the last one needs you", () => {
     const d = requestDetail({ ...run, status: "RUNNING", state: "retrying", try: 3, of: 3, next_at: "2026-11-02T22:15:00Z" }, [], [], "Europe/Paris", now);
-    expect(d.steps.at(-1)).toEqual({ label: "Next try 23:15", line: "If it fails again, this needs you", at: "2026-11-02T22:15:00Z", state: "next" });
+    expect(d.steps.at(-1)).toEqual({ label: "Next try 23:15", line: "If it fails again, this needs you", state: "next" });
     expect(requestDetail({ ...run, status: "RUNNING", state: "retrying", try: 1, of: 3 }, [], [], "UTC", now).steps.at(-1)).toMatchObject({ label: "Next try soon", line: "Try 2 of 3" });
   });
 
