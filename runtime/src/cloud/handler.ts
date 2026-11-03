@@ -14,7 +14,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
-import { type ActionPlace, actionPlace, MAX_ACTION_PLACES } from "./places.js";
+import { type ActionPlace, actionPlace } from "./places.js";
 import { ConnectError, listApps, startApp } from "./connect.js";
 import { instantIn, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
@@ -2574,7 +2574,6 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
   const when = (body.when ?? {}) as { busy?: unknown };
   const busy = when.busy === "latest" ? "latest" : "skip";
-  if (wakes.length > 10) throw new HTTPError(400, "a taf has at most 10 triggers");
   for (const t of wakes) {
     try {
       schedulesOf(t, busy);
@@ -2590,7 +2589,6 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     const all = Array.isArray(body.results) ? body.results : [];
     let vendor: ActionPlace[];
     try { vendor = all.filter((p) => typeof p !== "string").map(actionPlace); } catch (err) { throw new HTTPError(400, (err as Error).message); }
-    if (vendor.length > MAX_ACTION_PLACES) throw new HTTPError(400, `a taf sends its results to at most ${MAX_ACTION_PLACES} connected apps' actions`);
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
   }
   const words = settingWords({ wakes, busy, results });

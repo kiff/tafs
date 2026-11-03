@@ -74,7 +74,11 @@ describe("the dial", () => {
   it("an app's event the live version wakes on has its own stop, named as the owner picked it", () => {
     const ev = { kind: "app_event" as const, grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", name: "HubSpot · new deal" };
     const k = knobOf({ ...base, setting: { wakes: [{ kind: "door" }, ev], busy: "skip", results: ["app"] } });
-    expect(k.wakes.find((w) => w.kind === "app_event")).toMatchObject({ label: "HubSpot", words: "Wakes on HubSpot · new deal", trigger: ev });
+    expect(k.wakes.find((w) => w.kind === "app_event")).toMatchObject({ grant: "grt_hub", label: "HubSpot", words: "Wakes on HubSpot · new deal", trigger: ev });
+    // The dial groups stops by connection, for its chips: All · HubSpot · This taf.
+    const two = knobOf({ ...base, setting: { wakes: [ev, { ...ev, event: "HUBSPOT_DEAL_WON", name: "HubSpot · deal won" }],
+      busy: "skip", results: ["app", { place: "action", grant: "grt_slack", action: "slack_post", args: { channel: "C1" }, name: "Slack · #sales" }] } });
+    expect(two.connections).toEqual([{ grant: "grt_hub", name: "HubSpot", wakes: 2, results: 0 }, { grant: "grt_slack", name: "Slack", wakes: 0, results: 1 }]);
     // It isn't a schedule: the schedule's stop isn't shown for a dial with no times.
     expect(k.wakes.some((w) => w.kind === "schedule")).toBe(false);
   });

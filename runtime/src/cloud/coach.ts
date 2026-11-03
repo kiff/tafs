@@ -87,7 +87,7 @@ export const TOOLS: ToolDef[] = [
     properties: {
       taf: TAF,
       wakes: {
-        type: "array", maxItems: 10, description: "Every trigger, as it should be: {kind: \"schedule\", form: daily|weekdays|weekly|monthly|monthly_last_day|times_a_day|every|once, " +
+        type: "array", description: "Every trigger, as it should be: {kind: \"schedule\", form: daily|weekdays|weekly|monthly|monthly_last_day|times_a_day|every|once, " +
           "at?: \"09:00\", days?: [\"mon\"…], times?: [\"09:00\"…], every_minutes?: 15|20|30|60·k, between?: {from, to} on the hour, date?: day of month or \"2026-11-05T09:00\"}, " +
           "{kind: \"app_check\", operation, args, items, cursor, every_minutes}, or {kind: \"door\"}. Times are in the account's zone.",
         items: { type: "object" },
@@ -96,7 +96,7 @@ export const TOOLS: ToolDef[] = [
       results: {
         type: "array",
         description: "Every place its results go; omitted, as they are. At least one of door_reply, app, owner_email, which tafs delivers; " +
-          "and up to 5 actions of the taf's connected apps, which the taf calls itself inside its Card: " +
+          "and any actions of the taf's connected apps, which the taf calls itself inside its Card: " +
           "{place: \"action\", grant: <connection>, action: <its tool name>, args: {<the fixed arguments: page, channel…>}, name: \"App · what it is\"}.",
       },
     },

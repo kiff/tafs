@@ -29,6 +29,8 @@ export interface RingItem {
   door?: string;
   /** A trigger's form exactly as PUT takes it; absent on run now and on a schedule the dial can't set. */
   trigger?: Trigger;
+  /** The connection (planque's grant) a connected app's stop belongs to: the dial groups stops by it. */
+  grant?: string;
   /** A follow-up's id, for DELETE /v1/tafs/{id}/follow-ups/{fid}, and when it fires. */
   follow_up?: string;
   expires?: string;
@@ -46,6 +48,11 @@ export interface Knob {
   draft: null | { version: number; words: string[]; wakes: string[]; when: string[]; results: string[] };
   /** The shown version's dial as PUT takes it: a tap copies it, changes one thing and sends it back. */
   setting: KnobSetting;
+  /**
+   * The connections the dial's stops come from, in the order they first appear, for the chips under it
+   * (All · each connection · This taf): a stop with no `grant` is the taf's own.
+   */
+  connections: Array<{ grant: string; name: string; wakes: number; results: number }>;
 }
 
 /** A door as the doors list gives it. */
@@ -132,7 +139,7 @@ export function knobOf(k: KnobInput): Knob {
   // Any connected app's event the live version wakes on: its own stop, named as the owner picked it.
   for (const [i, t] of (k.setting?.wakes ?? []).filter((x) => x.kind === "app_event").entries()) {
     const name = (t.name ?? t.event ?? "").slice(0, 100);
-    wakes.push({ id: `trg_event_${i + 1}`, kind: "app_event", label: name.split(" · ")[0] || name, words: triggerWords(t), on: true, state: "On", trigger: t });
+    wakes.push({ id: `trg_event_${i + 1}`, kind: "app_event", ...(t.grant ? { grant: t.grant } : {}), label: name.split(" · ")[0] || name, words: triggerWords(t), on: true, state: "On", trigger: t });
   }
   for (const f of k.followUps ?? []) {
     const check = f.input.trim().replace(/\s+/g, " ");
@@ -173,12 +180,27 @@ export function knobOf(k: KnobInput): Knob {
     ...(k.version !== undefined ? { version: k.version } : {}),
     does: k.does, wakes, when, results,
     rim: { ...t, line: parts.join(" · ") },
+    connections: connectionsOf(wakes, results),
     draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting) } : null,
     setting: k.setting ?? {
       wakes: [...(k.doors.length ? [{ kind: "door" as const }] : []), ...(fromSchedule ? [fromSchedule] : [])],
       busy, results: k.places,
     },
   };
+}
+
+/** The connections behind the dial's stops, each named by its stops' app ("HubSpot" of "HubSpot · new deal"). */
+function connectionsOf(wakes: RingItem[], results: Knob["results"]): Knob["connections"] {
+  const by = new Map<string, Knob["connections"][number]>();
+  const add = (grant: string | undefined, label: string, ring: "wakes" | "results") => {
+    if (!grant) return;
+    const c = by.get(grant) ?? { grant, name: label, wakes: 0, results: 0 };
+    c[ring]++;
+    by.set(grant, c);
+  };
+  for (const w of wakes) add(w.grant, w.label, "wakes");
+  for (const r of results) if (r.on) add(r.grant, r.label, "results");
+  return [...by.values()];
 }
 
 /** What a dial change does, by ring, for the owner to confirm. */

@@ -21,8 +21,7 @@ export interface ActionPlace {
 const GRANT = /^[A-Za-z0-9_-]{1,128}$/;
 const ACTION = /^[A-Za-z0-9_.-]{1,128}$/;
 const ARG = /^[A-Za-z0-9_.-]{1,64}$/;
-/** At most this many places at connected apps, and this much fixed data in one. */
-export const MAX_ACTION_PLACES = 5;
+/** How much fixed data one place holds: places themselves aren't counted, as many as the owner wants. */
 const MAX_ARGS_BYTES = 2048;
 
 /** One line for people to read: control characters out, at most `max`. */
