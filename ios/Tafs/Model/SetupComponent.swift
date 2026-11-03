@@ -5,7 +5,7 @@ import Foundation
 /// nothing: an approval names planque's grant and KIFF's draft, which the app reads from
 /// those services and the phone signs there.
 struct SetupComponent: Decodable, Equatable {
-    enum Kind: String, Decodable { case steps, notice, confirm, questions, approval, signIn = "sign_in", result }
+    enum Kind: String, Decodable { case steps, notice, confirm, questions, approval, signIn = "sign_in", result, knob }
 
     struct Step: Decodable, Equatable, Hashable {
         /// pending, active, done, failed or skipped.
@@ -81,6 +81,15 @@ struct SetupComponent: Decodable, Equatable {
     let yes: String?
     let no: String?
     let note: String?
+    /// A dial card's version (Coach's `taf_dial`): its words are the knob's `draft`.
+    var version: Int? = nil
+    /// The tafs cloud id of the taf a dial card is for.
+    var tafID: String? = nil
+
+    enum CodingKeys: String, CodingKey {
+        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version
+        case tafID = "taf_id"
+    }
 
     /// Where a sign-in goes, as the app shows it: from the card's service, never from
     /// Setup's words (kiff/agents#112), so a label can't stand in for the destination.

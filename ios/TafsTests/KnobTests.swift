@@ -92,4 +92,20 @@ final class KnobTests: XCTestCase {
         let made = try JSONDecoder().decode(TafsCloud.Knob.Change.self, from: Data(#"{"version":4,"words":["If busy, runs the latest once it's free"]}"#.utf8))
         XCTAssertEqual(made, TafsCloud.Knob.Change(version: 4, words: ["If busy, runs the latest once it's free"]))
     }
+
+    /// Coach's dial card names only the taf and the version; its words are the knob's draft,
+    /// ring by ring (K4).
+    func testCoachsDialCardIsDrawnFromTheDraft() throws {
+        let c = try JSONDecoder().decode(SetupComponent.self, from: Data(#"{"type":"knob","id":"dial-v8","taf_id":"taf-01","version":8}"#.utf8))
+        XCTAssertEqual(c.type, .knob)
+        XCTAssertEqual(c.tafID, "taf-01")
+        XCTAssertEqual(c.version, 8)
+        XCTAssertNil(c.taf, "taf stays the hand-over's object")
+        let k = try JSONDecoder().decode(TafsCloud.Knob.self, from: Data(#"""
+        {"version":7,"draft":{"version":8,"wakes":["Weekdays at 09:00"],"when":["If busy, runs the latest once it's free"],"results":[]}}
+        """#.utf8))
+        let draft = try XCTUnwrap(k.draft)
+        XCTAssertEqual(draft.rings.map { $0.0 }, [.wakes, .when], "an empty ring is left out")
+        XCTAssertEqual(draft.rings.first?.1, ["Weekdays at 09:00"])
+    }
 }

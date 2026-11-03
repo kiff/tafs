@@ -1721,6 +1721,11 @@ final class AppModel: ObservableObject {
     /// The doors tafs cloud offers this account (docs/doors.md): none, and no taf shows Doors.
     @Published private(set) var doorsOffered: [String] = []
 
+    /// The taf here whose tafs cloud id is `cloudID`, when the list has it.
+    func tafID(cloud cloudID: String) -> UUID? {
+        cloudTafs.first { $0.value.id == cloudID }.flatMap { holderIDs[$0.key] }
+    }
+
     /// The tafs cloud taf behind a taf, when there is one.
     func cloudTaf(for tafID: UUID) -> TafsCloud.CloudTaf? {
         // A trial's chat is its taf's, on tafs cloud (kiff/tafs#173).

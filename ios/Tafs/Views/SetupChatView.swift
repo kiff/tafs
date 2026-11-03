@@ -1050,6 +1050,7 @@ struct SetupComponentView: View {
         case .approval: SetupApproval(component: c)
         case .signIn: signIn(c)
         case .result: result(c)
+        case .knob: KnobDraftCard(component: c)
         case .steps: EmptyView()
         }
     }
@@ -1567,5 +1568,73 @@ struct ProfileWordsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.raised)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+/// Coach's dial card (K4): the dial version Coach drafted for a taf, drawn from tafs cloud's
+/// words for it, ring by ring (`GET …/knob`'s `draft`), never Coach's. Confirm with Face ID
+/// is the usual switch to that version; Change goes back to Coach. A draft replaced since says so.
+struct KnobDraftCard: View {
+    @EnvironmentObject private var model: AppModel
+    let component: SetupComponent
+    @State private var reading: TafsCloud.Version?
+    @State private var busy = false
+
+    private var tafID: UUID? { component.tafID.flatMap { model.tafID(cloud: $0) } }
+    private var draft: TafsCloud.Knob.Draft? { tafID.flatMap { model.knobs[$0]?.draft } }
+    private var live: Int? { tafID.flatMap { model.knobs[$0]?.version } }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let tafID, let taf = model.taf(tafID) {
+                Eyebrow(text: taf.name)
+            }
+            if let version = component.version, let live, live >= version {
+                Text("This dial is live.").scaledFont(14).foregroundColor(Theme.ok)
+            } else if let draft, draft.version == component.version {
+                ForEach(Array(draft.rings.enumerated()), id: \.offset) { _, ring in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(ring.0.title).scaledFont(12, weight: .semibold).foregroundColor(TafKnobView.color(ring.0))
+                        ForEach(ring.1, id: \.self) { line in
+                            Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                if draft.rings.isEmpty {
+                    ForEach(draft.words, id: \.self) { Text($0).scaledFont(15).foregroundColor(Theme.ink) }
+                }
+                if let tafID, model.manages(tafID) {
+                    HStack(spacing: 8) {
+                        Button(busy ? "Confirming…" : "Confirm with \(Biometry.name)") { confirm(tafID, draft.version) }
+                            .buttonStyle(PrimaryButtonStyle()).disabled(busy)
+                        Button("Change") { model.openCoach() }.buttonStyle(OutlineButtonStyle())
+                    }
+                }
+            } else if draft != nil || live != nil {
+                Text("A newer dial replaced this one.").scaledFont(14).foregroundColor(Theme.dim)
+            } else {
+                ProgressView().frame(maxWidth: .infinity)
+            }
+        }
+        .padding(14)
+        .background(Theme.raised)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .task(id: component.version) { if let tafID { await model.loadKnob(tafID) } }
+        .sheet(item: $reading) { v in
+            if let tafID { VersionCardSheet(version: v, tafID: tafID).environmentObject(model) }
+        }
+    }
+
+    /// The usual switch: the version's Card read first when it changes one, then Face ID.
+    private func confirm(_ tafID: UUID, _ n: Int) {
+        busy = true
+        Task {
+            defer { busy = false }
+            await model.loadVersions(tafID)
+            guard let v = model.versions[tafID]?.first(where: { $0.n == n }),
+                  let sw = await model.prepareSwitch(v, of: tafID) else { return }
+            if sw.draft == nil { _ = await model.useVersion(v, of: tafID) } else { reading = v }
+            await model.loadKnob(tafID)
+        }
     }
 }

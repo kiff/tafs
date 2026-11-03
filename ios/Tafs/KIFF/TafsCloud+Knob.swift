@@ -87,15 +87,29 @@ extension TafsCloud {
         }
 
         /// A change waiting for the owner's confirmation.
+        /// The newest dial version made after the live one, in tafs cloud's words: by ring,
+        /// for Coach's dial card; `words` all together, from an older tafs cloud.
         struct Draft: Decodable, Equatable {
             let version: Int
             var words: [String] = []
-            enum CodingKeys: String, CodingKey { case version, words }
-            init(version: Int, words: [String] = []) { self.version = version; self.words = words }
+            var wakes: [String] = []
+            var when: [String] = []
+            var results: [String] = []
+            enum CodingKeys: String, CodingKey { case version, words, wakes, when, results }
+            init(version: Int, words: [String] = [], wakes: [String] = [], when: [String] = [], results: [String] = []) {
+                self.version = version; self.words = words; self.wakes = wakes; self.when = when; self.results = results
+            }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 version = try c.decode(Int.self, forKey: .version)
                 words = try c.decodeIfPresent([String].self, forKey: .words) ?? []
+                wakes = try c.decodeIfPresent([String].self, forKey: .wakes) ?? []
+                when = try c.decodeIfPresent([String].self, forKey: .when) ?? []
+                results = try c.decodeIfPresent([String].self, forKey: .results) ?? []
+            }
+            /// Each ring's lines, inside to out, the empty ones left out.
+            var rings: [(Ring, [String])] {
+                [(Ring.wakes, wakes), (.when, when), (.results, results)].filter { !$0.1.isEmpty }
             }
         }
 
