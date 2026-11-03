@@ -61,6 +61,9 @@ describe("Connect apps", () => {
     // Starting one sends its whole id, encoded.
     await startApp(fake(200, { grant: { id: "g" } }, seen), BASE, "t1", "s", "connector:composio:_1password", "a");
     expect(seen[2]!.url).toBe("https://planque.test/v1/accounts/t1/catalog/connector%3Acomposio%3A_1password/grants");
+    // The taf's name goes with it, for the words the owner signs.
+    await startApp(fake(200, { grant: { id: "g" } }, seen), BASE, "t1", "s", "notion@1", "a", "Refunds\n");
+    expect(JSON.parse(String(seen[3]!.init!.body))).toEqual({ agent: "a", agent_name: "Refunds" });
   });
 
   it("starts a connection for the taf's KIFF agent, and gives back the grant to approve", async () => {
