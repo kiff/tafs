@@ -456,8 +456,10 @@ struct WorkPanel: View {
     }
 }
 
-/// The vendors connected to the taf through planque (#51): whose keys, which tools, what
-/// happened last, and Disconnect, which revokes the sign-in at the vendor.
+/// Setup's Connected apps: the vendors connected to the taf through planque (#51), whose keys,
+/// which tools, what happened last, and Disconnect, which revokes the sign-in at the vendor.
+/// One signed in with no actions chosen yet offers Choose actions (Coach); then Connect an
+/// app…, for whoever manages the taf.
 struct ConnectionsPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
@@ -465,11 +467,12 @@ struct ConnectionsPanel: View {
 
     var body: some View {
         let connections = model.connections(for: tafID)
+        let manages = model.manages(tafID)
         // Nothing to show, nothing drawn: someone who only uses the taf sees no connections,
         // and an empty box read as something broken (the 870 test).
-        if model.mode == .kiff, !connections.isEmpty {
+        if model.mode == .kiff, !connections.isEmpty || manages {
             Panel {
-                Eyebrow(text: "Connections")
+                Eyebrow(text: "Connected apps")
                 ForEach(connections) { grant in
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
@@ -496,6 +499,14 @@ struct ConnectionsPanel: View {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
                                 Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
                                     .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
+                                // None chosen yet: Coach chooses them with the owner.
+                                if grant.listed, manages, model.mayUseCoach {
+                                    Button("Choose actions") {
+                                        model.improveTaf(tafID)
+                                        model.coachOpen = true
+                                    }
+                                    .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                                }
                                 if let end = grant.heldUntilDate {
                                     Text("Unless you approve its tools, the sign-in is revoked \(end.shown(date: .abbreviated, time: .shortened)).")
                                         .scaledFont(12).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
@@ -521,6 +532,10 @@ struct ConnectionsPanel: View {
                             Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                         }
                     }
+                }
+                if manages {
+                    NavigationLink("Connect an app…") { ConnectAppsView().environmentObject(model) }
+                        .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
                 }
             }
             .confirmationDialog("Disconnect \(confirming?.vendor ?? "")?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),

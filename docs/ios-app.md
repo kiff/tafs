@@ -121,7 +121,7 @@ the app in sample mode.
 - **A taf's tabs** (`TafDetailView`): **Chat · Activity · Card · Setup**. Activity: the taf's
   Needs you items, its work and runs, then its record by day (`ActivityFilter`: All, Done, Held,
   Refused). Card: the Card, its limits, how they're counted, usage, Halt, Revoke. Setup: The job
-  (Improve in Coach), Starts when, connected apps (`ConnectionsPanel`), Results go to, what it
+  (Improve in Coach), Starts when, Connected apps (`ConnectionsPanel`: **Choose actions**, through Coach, for one signed in with none chosen, then **Connect an app…**), Results go to, what it
   remembers, Versions, Pause (sample mode) and Remove for good.
 - **Setup › Starts when** (`StartsWhenView`, `TafSetupViews.swift`), from `GET …/knob`
   `wakes`: its schedule with − and + through the stop's `size.choices` (`adjustKnob`), Skip it /
