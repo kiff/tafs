@@ -297,6 +297,8 @@ export interface Taf {
   results?: ResultPlace[];
   /** Where the live version's taf writes its results itself, at a vendor, through KIFF (places.ts). */
   actionResults?: ActionPlace[];
+  /** The connected apps' events the live version wakes on (applyKnob): what tafs cloud takes from planque for it. */
+  appEvents?: Trigger[];
 }
 
 /** The most a taf's one-line summary keeps, in characters. */
@@ -2631,6 +2633,8 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const vendor = k.results.filter((p): p is ActionPlace => typeof p !== "string");
     const next: Taf = { ...cur, results: k.results.filter((p): p is ResultPlace => typeof p === "string"), scheduleIds: ids.slice(1) };
     if (vendor.length) next.actionResults = vendor; else delete next.actionResults;
+    const events = k.wakes.filter((t) => t.kind === "app_event");
+    if (events.length) next.appEvents = events; else delete next.appEvents;
     if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
   }
 }

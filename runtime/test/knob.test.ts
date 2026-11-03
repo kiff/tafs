@@ -71,6 +71,14 @@ describe("the dial", () => {
     expect(k.setting.wakes.some((t) => (t.kind as string) === "follow_up")).toBe(false);
   });
 
+  it("an app's event the live version wakes on has its own stop, named as the owner picked it", () => {
+    const ev = { kind: "app_event" as const, grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", name: "HubSpot · new deal" };
+    const k = knobOf({ ...base, setting: { wakes: [{ kind: "door" }, ev], busy: "skip", results: ["app"] } });
+    expect(k.wakes.find((w) => w.kind === "app_event")).toMatchObject({ label: "HubSpot", words: "Wakes on HubSpot · new deal", trigger: ev });
+    // It isn't a schedule: the schedule's stop isn't shown for a dial with no times.
+    expect(k.wakes.some((w) => w.kind === "schedule")).toBe(false);
+  });
+
   it("a paused schedule says so", () => {
     const k = knobOf({ ...base, schedule: { ...base.schedule!, enabled: false, next: undefined } });
     expect(k.wakes[1]).toMatchObject({ on: false, state: "Paused", words: "Weekdays at 09:00, paused" });

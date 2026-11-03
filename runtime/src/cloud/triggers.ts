@@ -17,7 +17,7 @@ export interface PlannedSchedule {
 
 /** A trigger from the dial or Coach's draft. */
 export interface Trigger {
-  kind: "schedule" | "app_check" | "door" | "vendor_event" | "before_event";
+  kind: "schedule" | "app_check" | "door" | "vendor_event" | "before_event" | "app_event";
   form?: "daily" | "weekdays" | "weekly" | "monthly" | "monthly_last_day" | "times_a_day" | "every" | "once";
   at?: string;
   days?: string[];
@@ -30,6 +30,13 @@ export interface Trigger {
   args?: Record<string, unknown>;
   items?: string;
   cursor?: string;
+  /** app_event: the connection (planque's grant), the provider's event, the owner's filters, and planque's subscription. */
+  grant?: string;
+  event?: string;
+  config?: Record<string, unknown>;
+  subscription?: string;
+  /** What the owner reads: "Slack · new message in #refunds". */
+  name?: string;
 }
 
 /** A trigger the scheduler can't keep as written: why, and the nearest form, in words. */
@@ -81,6 +88,13 @@ function every(n: number | undefined): number {
 export function schedulesOf(t: Trigger, busy: "skip" | "latest" = "skip"): PlannedSchedule[] {
   const base = { busy, ...(t.skip?.length ? { skip: t.skip } : {}) };
   if (t.kind === "door" || t.kind === "vendor_event") return [];
+  if (t.kind === "app_event") {
+    // Any connected app's event: planque subscribes it on the owner's signed approval; nothing is scheduled.
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(t.grant ?? "") || !/^[A-Za-z0-9_.-]{1,128}$/.test(t.event ?? "")) throw new TriggerError("an app's event names its connection (grant) and the event, as the connection lists it");
+    if (!t.name?.trim()) throw new TriggerError("an app's event has the name the owner picked it by");
+    if (t.config !== undefined && (typeof t.config !== "object" || Array.isArray(t.config) || JSON.stringify(t.config).length > 2048)) throw new TriggerError("an app's event's filters are a small object");
+    return [];
+  }
   if (t.kind === "before_event") throw new TriggerError("before a calendar event isn't available yet");
   if (t.kind === "app_check") {
     if (!t.operation || !t.cursor) throw new TriggerError("an app check names its read and the field it compares");
@@ -151,6 +165,7 @@ export function triggerWords(t: Trigger): string {
     case "vendor_event": return "Wakes on a vendor's event";
     case "app_check": return `Checks ${t.operation} every ${t.every_minutes} minutes, and works only on what's new`;
     case "before_event": return "Wakes before a calendar event";
+    case "app_event": return `Wakes on ${(t.name ?? t.event ?? "an app's event").replace(/[\u0000-\u001f\u007f]+/g, " ").slice(0, 100)}`;
   }
   switch (t.form) {
     case "daily": return `Every day at ${t.at}`;

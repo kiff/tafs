@@ -94,3 +94,11 @@ describe("a schedule read back as the dial's form", () => {
     expect(triggerOf({ cron: "0 9 * * 1-3" })).toBeUndefined();
   });
 });
+
+describe("a connected app's event as a trigger", () => {
+  it("is checked and scheduled nowhere", () => {
+    expect(schedulesOf({ kind: "app_event", grant: "grt_1", event: "JIRA_ISSUE_UPDATED", name: "Jira · issue changes" })).toEqual([]);
+    expect(() => schedulesOf({ kind: "app_event", grant: "../x", event: "E", name: "n" })).toThrow(TriggerError);
+    expect(() => schedulesOf({ kind: "app_event", grant: "g", event: "E" })).toThrow("name the owner picked");
+  });
+});

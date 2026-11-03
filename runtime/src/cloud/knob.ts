@@ -117,7 +117,7 @@ export function knobOf(k: KnobInput): Knob {
   }
   // The dial's triggers: as the live version set them, or the taf's own schedule read back.
   const fromSchedule = !k.unscheduled && k.schedule ? triggerOf(k.schedule, k.zone) : undefined;
-  const timed = k.setting ? k.setting.wakes.filter((t) => t.kind !== "door") : [];
+  const timed = k.setting ? k.setting.wakes.filter((t) => t.kind === "schedule" || t.kind === "app_check") : [];
   if (!k.unscheduled && k.schedule && (!k.setting || timed.length)) {
     const s = k.schedule;
     const next = s.enabled && s.next ? `, next ${timeIn(s.next, k.zone, k.now)}` : "";
@@ -128,6 +128,11 @@ export function knobOf(k: KnobInput): Knob {
       wakes.push({ id: i === 0 ? "trg_schedule" : `trg_${i + 1}`, kind: t.trigger?.kind === "app_check" ? "app_check" : "schedule", label: t.label, words,
         on: s.enabled, state: s.enabled ? t.label : "Paused", ...(t.trigger ? { trigger: t.trigger } : {}) });
     }
+  }
+  // Any connected app's event the live version wakes on: its own stop, named as the owner picked it.
+  for (const [i, t] of (k.setting?.wakes ?? []).filter((x) => x.kind === "app_event").entries()) {
+    const name = (t.name ?? t.event ?? "").slice(0, 100);
+    wakes.push({ id: `trg_event_${i + 1}`, kind: "app_event", label: name.split(" · ")[0] || name, words: triggerWords(t), on: true, state: "On", trigger: t });
   }
   for (const f of k.followUps ?? []) {
     const check = f.input.trim().replace(/\s+/g, " ");
