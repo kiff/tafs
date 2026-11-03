@@ -118,6 +118,8 @@ fun ReportSheet(onReport: suspend (String, String?) -> ReportResult, onClose: ()
   var sending by remember { mutableStateOf(false) }
   var sent by remember { mutableStateOf<ReportResult.Sent?>(null) }
   var error by remember { mutableStateOf<String?>(null) }
+  val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+  val focus = androidx.compose.ui.platform.LocalFocusManager.current
 
   ModalBottomSheet(
     onDismissRequest = onClose,
@@ -180,7 +182,12 @@ fun ReportSheet(onReport: suspend (String, String?) -> ReportResult, onClose: ()
           error = null
           scope.launch {
             when (val r = onReport(chosen, note.ifBlank { null })) {
-              is ReportResult.Sent -> sent = r
+              is ReportResult.Sent -> {
+                // The note's keyboard goes, so the thanks shows where the form was.
+                keyboard?.hide()
+                focus.clearFocus()
+                sent = r
+              }
               is ReportResult.NotSent -> error = ReportWords.notSent(r.why)
             }
             sending = false
