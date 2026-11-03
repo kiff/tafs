@@ -94,7 +94,7 @@ struct QuestionsCard: View {
                 }
             }
             .multilineTextAlignment(.leading)
-            .foregroundColor(on ? .white : Theme.ink)
+            .foregroundColor(on ? Theme.onFill : Theme.ink)
             .padding(.horizontal, 16).padding(.vertical, 10)
             .frame(minHeight: 44)
             .background(on ? Theme.coach : Theme.panel)

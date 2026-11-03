@@ -41,9 +41,6 @@ struct TafChatView: View {
     /// The pinned message's turn: from its top to the thread's foot, as laid out (the 845 test).
     /// The room under it is the screen less this, so the answer growing below never moves it.
     @State private var turn = PinnedTurn()
-    /// The height of what's under the thread: an error, the field, the dictation bar.
-    @State private var footHeight: CGFloat = 60
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,22 +53,11 @@ struct TafChatView: View {
                 composer
                 DictationBar(dictation: model.dictation)
             }
-            .background(GeometryReader { g in
-                Color.clear.onAppear { footHeight = g.size.height }.onChange(of: g.size.height) { footHeight = $0 }
-            })
         }
         .task(id: tafID) {
             await model.followChat(tafID)
         }
         .sheet(item: $reporting) { ReportAnswerSheet(answer: $0).environmentObject(model) }
-    }
-
-    /// Room at the thread's foot for ✦ Coach mode, which floats over the screen's lower right
-    /// (kiff/tafs#243): the newest line stops above it. None while the button is hidden: the
-    /// keyboard is up, or Coach mode is open.
-    private var coachRoom: CGFloat {
-        guard model.signedIn, model.mode == .kiff, !model.coachOpen, !typing else { return 0 }
-        return max(0, CoachButton.clearance(wide: sizeClass == .regular) - footHeight)
     }
 
     private var thread: some View {
@@ -221,7 +207,6 @@ struct TafChatView: View {
             // What the pin is doing, for the UI test that keeps the 845 test from coming back.
             .accessibilityValue(pinState)
             .dismissesKeyboardInteractively()
-            .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: coachRoom) }
             .background(GeometryReader { g in
                 Color.clear.onAppear { viewport = g.size.height }.onChange(of: g.size.height) { viewport = $0 }
             })
@@ -311,7 +296,6 @@ struct TafChatView: View {
             // Sending puts the keyboard down, and the screen grows as the pin scrolls: the pinned
             // message is put back at the top once it has (the 755 retest).
             .onChange(of: viewport) { _ in repin(proxy) }
-            .onChange(of: coachRoom) { _ in repin(proxy) }
             .onChange(of: thinking) { _ in follow(proxy) }
             .onChange(of: state.live) { _ in if following && pinned == nil { proxy.scrollTo(Self.bottom, anchor: .bottom) } }
             .onChange(of: state.queued) { _ in pinBubble(proxy) }
@@ -465,7 +449,7 @@ struct TafChatView: View {
                 Button { Task { await model.stopChat(tafID) } } label: {
                     Image(systemName: "stop.fill")
                         .scaledFont(14, weight: .bold)
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.onFill)
                         .frame(width: 40, height: 40)
                         .background(Theme.ink)
                         .clipShape(Circle())

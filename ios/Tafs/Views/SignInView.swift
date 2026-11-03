@@ -104,11 +104,14 @@ struct SignInView: View {
     }
 }
 
+/// The bar's Account tab: the plan, the account and its settings.
 struct SettingsView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var signingIn = false
     @State private var confirming: SignOutWay?
+    /// `-screen alerts`: the screenshots open Alerts by themselves.
+    @State private var openAlerts = Screenshots.enabled && Screenshots.screen == "alerts"
 
     var body: some View {
         NavigationStack {
@@ -136,11 +139,12 @@ struct SettingsView: View {
                             LabeledContent("KIFF account", value: account.name)
                         }
                     }
+                    // Alerts first: what reaches this device, and what alerts it.
+                    NavigationLink(NotificationSettingsView.title, destination: NotificationSettingsView().environmentObject(model))
                     // The account's groups and who is in each.
                     if model.mode == .kiff {
                         NavigationLink(PeopleGroupsView.title, destination: PeopleGroupsView().environmentObject(model))
                     }
-                    NavigationLink(NotificationSettingsView.title, destination: NotificationSettingsView().environmentObject(model))
                     if model.mode == .kiff {
                         NavigationLink(DevicesView.title, destination: DevicesView().environmentObject(model))
                         // The apps a taf can work with, the catalog first.
@@ -180,8 +184,8 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .screenBackground()
-            .navigationTitle("Settings")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
+            .navigationTitle("Account")
+            .navigationDestination(isPresented: $openAlerts) { NotificationSettingsView().environmentObject(model) }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
             .confirmingSignOut($confirming) { way in
                 switch way {
@@ -274,7 +278,7 @@ struct AccountView: View {
         }
         .scrollContentBackground(.hidden)
         .screenBackground()
-        .navigationTitle("Account")
+        .navigationTitle("KIFF account")
         .sheet(isPresented: $deletingAccount, onDismiss: { if model.mode != .kiff { done() } }) {
             DeleteAccountView().environmentObject(model)
         }

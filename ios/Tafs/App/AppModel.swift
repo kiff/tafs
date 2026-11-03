@@ -2315,6 +2315,10 @@ final class AppModel: ObservableObject {
                 tafs[i].state = updated.paused ? .paused : .working
                 tafs[i].now = updated.paused ? "Paused by you" : updated.nextRun.map { "Next run \($0.shortTime)" } ?? "Back to work"
             }
+        } catch let error as TafsCloud.CloudError where error.status == 502 && paused {
+            // Its own schedule is paused, but a start may still come: say so plainly.
+            guard gen == accountGeneration else { return }
+            lastError = Self.notEveryStartPaused
         } catch let error as TafsCloud.CloudError {
             guard gen == accountGeneration else { return }
             lastError = error.words ?? error.message
@@ -2322,6 +2326,35 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             lastError = "tafs cloud didn't \(paused ? "pause" : "resume") it: \(error.localizedDescription)"
         }
+    }
+
+    static let notEveryStartPaused = "Not every start could be paused. Try again."
+
+    /// The places tafs cloud delivers its results to itself, set at once (`PUT …/results`).
+    @discardableResult
+    func setResultPlaces(_ tafID: UUID, _ places: [String]) async -> Bool {
+        guard mode == .kiff, manages(tafID), !places.isEmpty, let c = cloudTaf(for: tafID),
+              let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return false }
+        let gen = accountGeneration
+        do {
+            let updated = try await cloud.putResults(c.id, places: places)
+            guard gen == accountGeneration else { return false }
+            cloudTafs[agent] = updated
+            await loadKnob(tafID)
+            return true
+        } catch {
+            guard gen == accountGeneration else { return false }
+            lastError = "Where its results go didn't change: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    /// A follow-up the taf set itself, removed before it fires.
+    func removeFollowUp(_ tafID: UUID, _ followUp: String) async {
+        guard mode == .kiff, manages(tafID), let c = cloudTaf(for: tafID) else { return }
+        do { try await cloud.removeFollowUp(c.id, followUp: followUp) }
+        catch { lastError = "The follow-up wasn't removed: \(error.localizedDescription)" }
+        await loadKnob(tafID)
     }
 
     func togglePause(_ tafID: UUID) {
@@ -5982,8 +6015,9 @@ final class AppModel: ObservableObject {
     }
 }
 
-/// The app's tabs: the tafs, the calls waiting on the owner, and the record.
-enum Tab: Hashable { case tafs, needsYou, record }
+/// The app's tabs, as the bar has them: the account, the tafs, the calls waiting on the owner,
+/// and the record.
+enum Tab: Hashable { case account, tafs, needsYou, record }
 
 /// CI's screenshot run: `-screenshots YES -tab needs-you` opens the sample on a tab,
 /// without asking for notifications.
@@ -6012,6 +6046,14 @@ enum Screenshots {
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
     /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
+    /// `-landscape YES`: the iPad's window turned to landscape, for its screenshots.
+    static var landscape: Bool { UserDefaults.standard.bool(forKey: "landscape") }
+
+    @MainActor static func turnToLandscape() {
+        for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+            scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight)) { _ in }
+        }
+    }
     /// `-sampleReplySeconds 20`: the sample taf thinks, works and writes slowly enough for a UI
     /// test to see each part on a slow simulator.
     static var sampleReplySeconds: Double? {
@@ -6063,6 +6105,7 @@ enum Screenshots {
         switch UserDefaults.standard.string(forKey: "tab") {
         case "needs-you": return .needsYou
         case "record": return .record
+        case "account": return .account
         default: return .tafs
         }
     }

@@ -3,10 +3,15 @@ import SwiftUI
 struct TafDetailView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
-    /// 0 chat, 1 activity, 2 card, 3 doors. Chat first: talking to a taf is the main thing.
-    /// The Slack door being added: its own sheet.
-    @State private var slackApp: TafsCloud.DoorApp?
-    @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2 : ["doors", "knob"].contains(Screenshots.screen ?? "") ? 3 : 0
+    /// 0 chat, 1 activity, 2 card, 3 setup (the taf layout). Chat first: talking to a taf is
+    /// the main thing.
+    @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2
+        : ["setup", "starts", "results"].contains(Screenshots.screen ?? "") ? 3 : 0
+    /// Activity's filter of its record.
+    @State private var activityFilter: ActivityFilter = .all
+    /// The screenshots open Setup's screens by themselves.
+    @State private var openStarts = Screenshots.enabled && Screenshots.screen == "starts"
+    @State private var openResults = Screenshots.enabled && Screenshots.screen == "results"
     @State private var confirmRevoke = false
     @State private var confirmRemove = false
     /// What removing it did, shown once it's done.
@@ -54,12 +59,12 @@ struct TafDetailView: View {
                         if model.canChat(taf.id) { Text("Chat").tag(0) }
                         Text("Activity").tag(1)
                         Text("Card").tag(2)
-                        if hasDoors(taf) { Text("Doors").tag(3) }
+                        Text("Setup").tag(3)
                     }
                     .pickerStyle(.segmented)
                     // Without the side column, the Cards are one line above the chat or the
                     // activity; it opens the Card tab (kiff/tafs#211).
-                    if section != 2 && !sideColumn && !folded, let front = shownFront(taf) {
+                    if section < 2 && !sideColumn && !folded, let front = shownFront(taf) {
                         CardBar(card: front, count: taf.shownCards.count, color: Theme.tafColor(taf.colorIndex), revoked: taf.card.revoked) {
                             section = 2
                         }
@@ -72,32 +77,24 @@ struct TafDetailView: View {
                 HStack(alignment: .top, spacing: 0) {
                     if section == 0 && model.canChat(taf.id) {
                         TafChatView(tafID: taf.id, onScroll: fold)
-                    } else if section == 3, hasDoors(taf), let doors = model.doors(for: taf.id) {
-                        DoorsView(taf: taf, doors: doors, manages: model.manages(taf.id) || (Screenshots.enabled && model.mode == .sample), myEmail: model.kiffAccount?.email)
-                            .knob(Screenshots.enabled && ["doors", "knob"].contains(Screenshots.screen ?? "") ? Screenshots.knob : model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
-                                  press: { await model.pressKnob(taf.id, $0) },
-                                  approve: { call in Task { await model.answer(call, with: .approveOnce) } })
-                            .slack(add: { slackApp = $0 }, remove: { await model.removeSlackDoor($0, doors: doors) })
-                            .task(id: taf.id) { await model.loadKnob(taf.id) }
-                            .sheet(item: $slackApp) { app in
-                                SlackDoorSheet(tafID: taf.id, doors: doors, app: app).environmentObject(model)
-                            }
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
-                                if section == 2 { card(taf) } else { activity(taf) }
+                                switch section {
+                                case 2: card(taf)
+                                case 3: setup(taf)
+                                default: activity(taf)
+                                }
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                         }
-                        .coachClearance()
                         .simultaneousGesture(DragGesture().onChanged { drag in
                             if abs(drag.translation.height) > 24 { fold(drag.translation.height < 0) }
                         })
                     }
                     if sideColumn {
                         ScrollView { side(taf).padding(.horizontal, 16).padding(.vertical, 12) }
-                            .coachClearance()
                             .frame(width: Self.sideWidth)
                     }
                 }
@@ -112,6 +109,8 @@ struct TafDetailView: View {
             // Coach mode opened from here works on this taf (kiff/tafs#138).
             .onAppear { model.tafOnScreen = tafID }
             .onDisappear { if model.tafOnScreen == tafID { model.tafOnScreen = nil } }
+            .navigationDestination(isPresented: $openStarts) { StartsWhenView(tafID: tafID) }
+            .navigationDestination(isPresented: $openResults) { ResultsGoToView(tafID: tafID) }
             .confirmationDialog("Revoke \(taf.name)'s Card?", isPresented: $confirmRevoke, titleVisibility: .visible) {
                 Button("Revoke and stop", role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
@@ -130,15 +129,6 @@ struct TafDetailView: View {
         } else {
             LateNote(text: "This taf is gone.").screenBackground()
         }
-    }
-
-    /// Doors are tafs cloud's, and only where it offers one (docs/doors.md): a taf it runs,
-    /// signed in to KIFF. The sample has none.
-    private func hasDoors(_ taf: Taf) -> Bool {
-        // The docs' screenshot shows the sample's email door (DoorsModel.sample).
-        if Screenshots.enabled && ["doors", "knob"].contains(Screenshots.screen ?? "") { return true }
-        // Doors are the taf's manager's: who may give it work and from where (the 870 test).
-        return model.mode == .kiff && model.cloudTaf(for: taf.id) != nil && model.manages(taf.id)
     }
 
     /// The Card in front of the stack: the one tapped, else the first, the live one.
@@ -202,17 +192,18 @@ struct TafDetailView: View {
         }
     }
 
+    /// Activity: what it waits for from the owner, then what it did, by day.
     @ViewBuilder
     private func activity(_ taf: Taf) -> some View {
-        Panel {
-            Eyebrow(text: "The job")
-            Text(taf.job).scaledFont(15).foregroundColor(Theme.ink)
+        // Beside it on a wide screen, in the second column.
+        if !sideColumn {
+            let held = model.heldCalls(for: taf.id)
+            if !held.isEmpty {
+                Eyebrow(text: "Needs you", color: Theme.amber)
+                ForEach(held) { HeldCallCard(call: $0) }
+            }
         }
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil { WorkPanel(tafID: taf.id) }
-        // How it does the job, beside the job: not part of its Card (kiff/tafs#96).
-        if model.mode == .sample || model.cloudTaf(for: taf.id) != nil {
-            MemoryPanel(tafID: taf.id)
-        }
         if let cloud = model.cloudTaf(for: taf.id) {
             let inFlight = runTapped || model.runsInFlight.contains(cloud.id)
             Panel {
@@ -222,9 +213,8 @@ struct TafDetailView: View {
                     Text("It works when you tell it, in its chat: no schedule runs it.")
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 } else {
-                Text(cloud.paused ? "Paused" : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? "On its schedule")
-                    .scaledFont(15).foregroundColor(Theme.ink)
-                HStack(spacing: 8) {
+                    Text(cloud.paused ? "Paused" : cloud.nextRun.map { "Next run at \($0.shortTime)" } ?? "On its schedule")
+                        .scaledFont(15).foregroundColor(Theme.ink)
                     Button(inFlight ? "Starting a run…" : "Run now") {
                         guard !runTapped else { return }
                         runTapped = true
@@ -235,23 +225,94 @@ struct TafDetailView: View {
                     }
                     .buttonStyle(OutlineButtonStyle())
                     .disabled(inFlight)
-                    Button(cloud.paused ? "Resume" : "Pause") {
-                        Task { await model.setPaused(taf.id, !cloud.paused) }
-                    }
-                    .buttonStyle(OutlineButtonStyle())
-                }
                 }
             }
             RunReportPanel(report: model.reports[cloud.id]) { Task { await model.loadReport(cloud) } }
                 .task(id: cloud.id) { await model.loadReport(cloud) }
         }
-        // Beside it on a wide screen, in the second column.
-        if !sideColumn { ForEach(model.heldCalls(for: taf.id)) { HeldCallCard(call: $0) } }
-        let entries = model.entries(for: taf.id)
-        if entries.isEmpty {
-            Text("Nothing yet.").foregroundColor(Theme.dim)
+        HStack(spacing: 6) {
+            ForEach(ActivityFilter.allCases, id: \.self) { f in
+                Button { activityFilter = f } label: {
+                    Text(f.title).scaledFont(13)
+                        .foregroundColor(activityFilter == f ? Theme.onFill : Theme.soft)
+                        .padding(.horizontal, 11).padding(.vertical, 5)
+                        .background(activityFilter == f ? Theme.ink : Theme.panel)
+                        .overlay(Capsule().stroke(activityFilter == f ? Theme.ink : Theme.line))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(activityFilter == f ? .isSelected : [])
+            }
         }
-        ForEach(entries) { RecordRow(entry: $0) }
+        let entries = model.entries(for: taf.id).filter(activityFilter.keeps)
+        if entries.isEmpty {
+            Text(activityFilter == .all ? "Nothing yet." : "Nothing here.").foregroundColor(Theme.dim)
+        }
+        let calendar = AccountTime.calendar
+        let days = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.at) }
+        ForEach(days.keys.sorted(by: >), id: \.self) { day in
+            let lines = (days[day] ?? []).sorted { $0.at > $1.at }
+            Text([RecordView.dayTitle(day), RecordView.spent(lines)].compactMap { $0 }.joined(separator: " · "))
+                .scaledFont(11, weight: .medium, design: .monospaced).textCase(.uppercase)
+                .foregroundColor(Theme.dim).padding(.top, 6)
+            ForEach(lines) { RecordRow(entry: $0) }
+        }
+    }
+
+    /// Setup: how it runs. The job, what starts it, its connected apps, where results go,
+    /// what it remembers, its versions, and removing it.
+    @ViewBuilder
+    private func setup(_ taf: Taf) -> some View {
+        let cloud = model.cloudTaf(for: taf.id)
+        let manages = model.manages(taf.id)
+        let screenshot = Screenshots.enabled && model.mode == .sample
+        Panel {
+            Eyebrow(text: "The job")
+            Text(taf.job).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            if model.mode == .kiff, manages, model.mayUseCoach, cloud != nil {
+                Button("Improve in Coach") {
+                    model.improveTaf(taf.id)
+                    model.coachOpen = true
+                }
+                .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+            }
+        }
+        if (model.mode == .kiff && cloud != nil) || screenshot {
+            PanelLink { StartsWhenView(tafID: taf.id) } label: {
+                Label(StartsWhenView.title, systemImage: "clock").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                Spacer()
+                Text("Open").scaledFont(14).foregroundColor(Theme.soft)
+            }
+            .accessibilityIdentifier("setup.startsWhen")
+        }
+        ConnectionsPanel(tafID: taf.id)
+        if (model.mode == .kiff && cloud != nil) || screenshot {
+            PanelLink { ResultsGoToView(tafID: taf.id) } label: {
+                Label(ResultsGoToView.title, systemImage: "paperplane").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                Spacer()
+                Text("Open").scaledFont(14).foregroundColor(Theme.soft)
+            }
+            .accessibilityIdentifier("setup.resultsGoTo")
+        }
+        // How it does the job: not part of its Card (kiff/tafs#96).
+        if model.mode == .sample || cloud != nil {
+            MemoryPanel(tafID: taf.id)
+        }
+        // Its versions are a job of their own: their own screen.
+        if model.mode == .kiff, cloud != nil, manages {
+            PanelLink { VersionsScreen(tafID: taf.id) } label: {
+                Label("Versions", systemImage: "square.stack.3d.up")
+                    .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+            }
+        }
+        if model.mode == .sample, taf.state != .revoked {
+            Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
+                .buttonStyle(OutlineButtonStyle())
+        }
+        if model.mode == .kiff, cloud != nil, manages {
+            Button("Remove for good") { confirmRemove = true }
+                .buttonStyle(OutlineButtonStyle(color: Theme.no))
+        }
     }
 
     /// The second column on a wide screen: what waits for the owner, then the Card.
@@ -315,7 +376,6 @@ struct TafDetailView: View {
             }
             .accessibilityIdentifier("card-unit-words")
         }
-        ConnectionsPanel(tafID: taf.id)
         // Halting is a job of its own too: its row opens its screen.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked, model.manages(taf.id) {
             HaltRow(tafID: taf.id, framed: true)
@@ -333,25 +393,8 @@ struct TafDetailView: View {
             // task behind until Usage was opened (the 755 retest).
             .task(id: model.entries(for: taf.id).count) { await model.refreshUsage() }
         }
-        // Its versions are a job of their own: their own screen, not another section here.
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
-            PanelLink { VersionsScreen(tafID: taf.id) } label: {
-                Label("Versions", systemImage: "square.stack.3d.up")
-                    .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-            }
-        }
         if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {
-            HStack(spacing: 8) {
-                if model.mode == .sample {
-                    Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
-                        .buttonStyle(OutlineButtonStyle())
-                }
-                Button("Revoke") { confirmRevoke = true }
-                    .buttonStyle(OutlineButtonStyle(color: Theme.no))
-            }
-        }
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
-            Button("Remove for good") { confirmRemove = true }
+            Button("Revoke") { confirmRevoke = true }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
         }
     }
@@ -413,8 +456,10 @@ struct WorkPanel: View {
     }
 }
 
-/// The vendors connected to the taf through planque (#51): whose keys, which tools, what
-/// happened last, and Disconnect, which revokes the sign-in at the vendor.
+/// Setup's Connected apps: the vendors connected to the taf through planque (#51), whose keys,
+/// which tools, what happened last, and Disconnect, which revokes the sign-in at the vendor.
+/// One signed in with no actions chosen yet offers Choose actions (Coach); then Connect an
+/// app…, for whoever manages the taf.
 struct ConnectionsPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
@@ -422,11 +467,12 @@ struct ConnectionsPanel: View {
 
     var body: some View {
         let connections = model.connections(for: tafID)
+        let manages = model.manages(tafID)
         // Nothing to show, nothing drawn: someone who only uses the taf sees no connections,
         // and an empty box read as something broken (the 870 test).
-        if model.mode == .kiff, !connections.isEmpty {
+        if model.mode == .kiff, !connections.isEmpty || manages {
             Panel {
-                Eyebrow(text: "Connections")
+                Eyebrow(text: "Connected apps")
                 ForEach(connections) { grant in
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
@@ -453,6 +499,14 @@ struct ConnectionsPanel: View {
                                 // Signed in, not connected (contract 5): no tool is in KIFF yet.
                                 Text(grant.listed ? "Signed in · the tools are being chosen" : "Signed in · tools waiting for your approval")
                                     .scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
+                                // None chosen yet: Coach chooses them with the owner.
+                                if grant.listed, manages, model.mayUseCoach {
+                                    Button("Choose actions") {
+                                        model.improveTaf(tafID)
+                                        model.coachOpen = true
+                                    }
+                                    .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                                }
                                 if let end = grant.heldUntilDate {
                                     Text("Unless you approve its tools, the sign-in is revoked \(end.shown(date: .abbreviated, time: .shortened)).")
                                         .scaledFont(12).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
@@ -479,6 +533,10 @@ struct ConnectionsPanel: View {
                         }
                     }
                 }
+                if manages {
+                    NavigationLink("Connect an app…") { ConnectAppsView().environmentObject(model) }
+                        .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                }
             }
             .confirmationDialog("Disconnect \(confirming?.vendor ?? "")?", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } }),
                                 titleVisibility: .visible) {
@@ -500,7 +558,6 @@ struct VersionsScreen: View {
         ScrollView {
             VersionsPanel(tafID: tafID).padding(.horizontal, 16).padding(.vertical, 12)
         }
-        .coachClearance()
         .screenBackground()
         .navigationTitle("Versions")
         .inlineTitle()
@@ -1137,5 +1194,28 @@ struct CountedView: View {
         .navigationTitle(Self.title)
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("counted.\(card)")
+    }
+}
+
+/// Activity's filter of a taf's record: All, Done, Held, Refused.
+enum ActivityFilter: CaseIterable {
+    case all, done, held, refused
+
+    var title: String {
+        switch self {
+        case .all: return "All"
+        case .done: return "Done"
+        case .held: return "Held"
+        case .refused: return "Refused"
+        }
+    }
+
+    func keeps(_ e: RecordEntry) -> Bool {
+        switch self {
+        case .all: return true
+        case .done: return e.kind == .done || e.kind == .approved
+        case .held: return e.kind == .held
+        case .refused: return e.kind == .refused || e.kind == .notDone || e.kind == .revoked
+        }
     }
 }

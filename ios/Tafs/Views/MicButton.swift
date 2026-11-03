@@ -32,7 +32,7 @@ struct MicButton: View {
             } label: {
                 Image(systemName: dictation.listening ? "stop.fill" : "mic.fill")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(dictation.listening ? .white : Theme.ink)
+                    .foregroundColor(dictation.listening ? Theme.onFill : Theme.ink)
                     .frame(width: 40, height: 40)
                     .background(dictation.listening ? Theme.no : Theme.panel)
                     .overlay(Circle().stroke(Theme.line))

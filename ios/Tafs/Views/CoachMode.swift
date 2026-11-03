@@ -1,38 +1,8 @@
 import SwiftUI
 
 /// Coach mode (kiff/tafs#138): where tafs are set up, connected and changed, over whatever
-/// is on screen. Its conversation is Setup's; closing it never ends one, and ✦ reopens it.
-
-/// The floating ✦ on every screen: "✦ Coach mode" on a wide screen, "✦ Coach" on a phone.
-struct CoachButton: View {
-    @EnvironmentObject private var model: AppModel
-    let wide: Bool
-
-    /// Where it sits: this far above the screen's safe-area foot, this tall. The scrolling
-    /// screens keep their last line clear of it from these (coachClearance, review on #153).
-    static let bottomOffset: CGFloat = 112
-    static let height: CGFloat = 44
-    /// Room at the foot of a scroll view, so its last line stops above the button with a gap.
-    /// A phone's tab bar is at the foot, inside the scroll view's own inset; an iPad's is at
-    /// the top.
-    static func clearance(wide: Bool) -> CGFloat {
-        bottomOffset + height + 12 - (wide ? 0 : 49)
-    }
-
-    var body: some View {
-        Button { model.openCoach() } label: {
-            Label(wide ? "Coach mode" : "Coach", systemImage: "sparkle")
-                .scaledFont(15, weight: .semibold)
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .frame(height: Self.height)
-                .background(Theme.coach)
-                .clipShape(Capsule())
-                .shadow(color: Theme.coach.opacity(0.35), radius: 10, y: 4)
-        }
-        .accessibilityLabel("Coach mode")
-    }
-}
+/// is on screen. Its conversation is Setup's; closing it never ends one, and the bar's Coach
+/// reopens it.
 
 /// The conversation, with Close on its title row: in the iPad's panel and the iPhone's sheet.
 /// In the panel, ⤢ makes it full screen and brings it back to the width it had.

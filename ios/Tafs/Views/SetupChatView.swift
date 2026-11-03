@@ -132,7 +132,7 @@ struct SetupChatView: View {
             } label: {
                 Label("New conversation", systemImage: "plus")
                     .scaledFont(14, weight: .semibold)
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.onFill)
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .background(Theme.coach)
                     .clipShape(Capsule())
@@ -538,7 +538,7 @@ struct SetupChatView: View {
             action()
         } label: {
             Text(title).scaledFont(14, weight: .semibold).oneLineUnlessLarge()
-                .foregroundColor(selected ? .white : Theme.coach)
+                .foregroundColor(selected ? Theme.onFill : Theme.coach)
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .background(selected ? Theme.coach : Color.clear)
                 .clipShape(Capsule())
@@ -612,7 +612,7 @@ struct SetupChatView: View {
                 Button { Task { await model.stopSetup() } } label: {
                     Image(systemName: "stop.fill")
                         .scaledFont(14, weight: .bold)
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.onFill)
                         .frame(width: 40, height: 40)
                         .background(Theme.ink)
                         .clipShape(Circle())
@@ -624,7 +624,7 @@ struct SetupChatView: View {
                 Button(action: send) {
                     Image(systemName: "arrow.up")
                         .scaledFont(16, weight: .bold)
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.onFill)
                         .frame(width: 40, height: 40)
                         .background(Theme.coach)
                         .clipShape(Circle())
@@ -1020,10 +1020,10 @@ struct StepMark: View {
             switch status {
             case "done":
                 Circle().fill(Theme.ok)
-                Image(systemName: "checkmark").scaledFont(9, weight: .heavy).foregroundColor(.white)
+                Image(systemName: "checkmark").scaledFont(9, weight: .heavy).foregroundColor(Theme.onFill)
             case "failed":
                 Circle().fill(Theme.no)
-                Image(systemName: "xmark").scaledFont(9, weight: .heavy).foregroundColor(.white)
+                Image(systemName: "xmark").scaledFont(9, weight: .heavy).foregroundColor(Theme.onFill)
             case "active":
                 Circle().stroke(Theme.amber, lineWidth: 2.5)
             default:

@@ -21,6 +21,7 @@ final class KeyboardTests: XCTestCase {
         XCTAssertEqual(combo(.tafs), "⌘1")
         XCTAssertEqual(combo(.needsYou), "⌘2")
         XCTAssertEqual(combo(.record), "⌘3")
+        XCTAssertEqual(combo(.account), "⌘,")
         XCTAssertEqual(combo(.stop), "⌘.")
         XCTAssertEqual(combo(.coach), "⌘k")
     }
