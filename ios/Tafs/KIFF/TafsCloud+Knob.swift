@@ -145,16 +145,29 @@ extension TafsCloud {
         struct Setting: Codable, Equatable, Sendable {
             var wakes: [JSONValue]
             var busy: String
-            var results: [String]
+            /// A place by name ("app"), or with what it needs (`{place: "notion", page}`):
+            /// sent back as tafs cloud wrote it.
+            var results: [JSONValue]
 
             enum CodingKeys: String, CodingKey { case wakes, when, results, busy }
             struct When: Codable, Equatable { var busy: String }
-            init(wakes: [JSONValue], busy: String, results: [String]) { self.wakes = wakes; self.busy = busy; self.results = results }
+            init(wakes: [JSONValue], busy: String, results: [JSONValue]) { self.wakes = wakes; self.busy = busy; self.results = results }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 wakes = try c.decodeIfPresent([JSONValue].self, forKey: .wakes) ?? []
                 busy = try c.decodeIfPresent(String.self, forKey: .busy) ?? "skip"
-                results = try c.decodeIfPresent([String].self, forKey: .results) ?? []
+                results = try c.decodeIfPresent([JSONValue].self, forKey: .results) ?? []
+            }
+
+            /// Whether results go to `place`, named alone or with what it needs.
+            func sends(to place: String) -> Bool { results.contains { Self.place(of: $0) == place } }
+
+            static func place(of v: JSONValue) -> String? {
+                switch v {
+                case .string(let s): return s
+                case .object(let o): if case .string(let s)? = o["place"] { return s } else { return nil }
+                default: return nil
+                }
             }
             /// As `PUT` takes it: `when: {busy}`.
             func encode(to encoder: Encoder) throws {

@@ -71,7 +71,7 @@ final class KnobTests: XCTestCase {
          "when":[{"id":"when_busy","kind":"busy","label":"If busy","words":"Skips a run while it's working","state":"Skip"}],
          "results":[],
          "setting":{"wakes":[{"kind":"schedule","form":"weekdays","at":"09:00"},{"kind":"app_check","operation":"gmail__list","args":{"q":"refund"},"items":"data","cursor":"created","every_minutes":20}],
-                    "busy":"skip","results":["app","owner_email"]}}
+                    "busy":"skip","results":["app","owner_email",{"place":"notion","page":"pg_1"}]}}
         """#
         let k = try JSONDecoder().decode(TafsCloud.Knob.self, from: Data(json.utf8))
         XCTAssertEqual(k.wakes[0].trigger, .object(["kind": .string("schedule"), "form": .string("weekdays"), "at": .string("09:00")]))
@@ -82,13 +82,17 @@ final class KnobTests: XCTestCase {
         let sent = try XCTUnwrap(try JSONSerialization.jsonObject(with: try JSONEncoder().encode(setting)) as? [String: Any])
         XCTAssertEqual((sent["when"] as? [String: Any])?["busy"] as? String, "latest")
         XCTAssertNil(sent["busy"], "busy goes under when, as PUT takes it")
-        XCTAssertEqual(sent["results"] as? [String], ["app", "owner_email"])
+        let results = try XCTUnwrap(sent["results"] as? [Any])
+        XCTAssertEqual(results.count, 3)
+        XCTAssertEqual((results[2] as? [String: Any])?["page"] as? String, "pg_1", "a place with what it needs goes back as it came")
         let wakes = try XCTUnwrap(sent["wakes"] as? [[String: Any]])
         XCTAssertEqual(wakes.count, 2)
         XCTAssertEqual(wakes[1]["every_minutes"] as? Int, 20, "a number stays a number")
         XCTAssertEqual((wakes[1]["args"] as? [String: Any])?["q"] as? String, "refund")
-        setting.results.removeAll { $0 == "owner_email" } // a result place turned off
-        XCTAssertEqual(setting.results, ["app"])
+        XCTAssertTrue(setting.sends(to: "notion"))
+        setting.results.removeAll { TafsCloud.Knob.Setting.place(of: $0) == "notion" } // a result place turned off
+        setting.results.removeAll { TafsCloud.Knob.Setting.place(of: $0) == "owner_email" }
+        XCTAssertEqual(setting.results, [.string("app")])
         let made = try JSONDecoder().decode(TafsCloud.Knob.Change.self, from: Data(#"{"version":4,"words":["If busy, runs the latest once it's free"]}"#.utf8))
         XCTAssertEqual(made, TafsCloud.Knob.Change(version: 4, words: ["If busy, runs the latest once it's free"]))
     }

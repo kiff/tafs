@@ -1667,7 +1667,11 @@ final class AppModel: ObservableObject {
         } else if let place = item.place {
             // A result place turned on or off. Schedules and triggers change through Coach.
             _ = await changeKnob(tafID) { s in
-                if s.results.contains(place) { s.results.removeAll { $0 == place } } else { s.results.append(place) }
+                if s.sends(to: place) {
+                    s.results.removeAll { TafsCloud.Knob.Setting.place(of: $0) == place }
+                } else {
+                    s.results.append(.string(place))
+                }
             }
             return
         } else {
