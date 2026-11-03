@@ -60,11 +60,17 @@ object ConnectAppsWords {
 fun ConnectAppsSheet(
   state: AppState,
   load: suspend (String?) -> Unit,
-  onConnect: ((ConnectApps.App) -> Unit)?,
+  onConnect: ((ConnectApps.App, String?) -> Unit)?,
   onAskCoach: () -> Unit,
   onClose: () -> Unit,
 ) {
   var query by rememberSaveable { mutableStateOf("") }
+  // An app is connected for a taf: with several, the owner picks which first; with none, there's nothing to connect it for.
+  var picking by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
+  val tafs = state.connectableTafs
+  val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
+    { app -> if (tafs.size > 1 && !app.needsReconnect) picking = app else start(app, tafs.singleOrNull()?.id) }
+  }
   // Read again as the search changes, once typing pauses.
   LaunchedEffect(query) {
     if (query.isNotEmpty()) delay(300)
@@ -85,9 +91,23 @@ fun ConnectAppsSheet(
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), placeholder = { Text(ConnectAppsWords.SEARCH) }, singleLine = true)
+        if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
+        picking?.let { app ->
+          Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
+            Text(bot.tafs.app.model.ConnectWords.WHICH_TAF, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+            tafs.forEach { taf ->
+              Text(
+                taf.name,
+                style = scaled(15, FontWeight.SemiBold, Theme.amber),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { picking = null; onConnect?.invoke(app, taf.id) }.padding(top = 10.dp),
+              )
+            }
+            Text("Cancel", style = scaled(14, color = Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { picking = null }.padding(top = 10.dp))
+          }
+        }
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
-        apps?.apps?.forEach { app -> AppRow(app, onConnect) }
+        apps?.apps?.forEach { app -> AppRow(app, connect) }
         if (apps != null && apps.apps.isEmpty() && query.isNotBlank()) Text(ConnectAppsWords.NONE, style = scaled(14, color = Theme.soft))
         if (apps?.byKey == true) {
           Panel {

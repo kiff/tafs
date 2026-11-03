@@ -317,6 +317,12 @@ data class AppState(
   val coachToolsError: String? = null,
   /** The account's planque grants: connections, and connections waiting for the owner; and whether planque answered this phone yet. */
   val grants: List<Grant> = emptyList(),
+  /** Money calls whose outcome KIFF can't prove, waiting on "Did this happen?" in Needs you. */
+  val unsure: List<bot.tafs.app.kiff.UnsureCall> = emptyList(),
+  /** The proposal whose answer is on its way. */
+  val answeringUnsure: String? = null,
+  /** Why an answer to "Did this happen?" didn't go through, by proposal. */
+  val unsureErrors: Map<String, String> = emptyMap(),
   /** Connect apps: the catalog as tafs cloud lists it, for the last search; null before it's read. */
   val connectApps: bot.tafs.app.kiff.ConnectApps? = null,
   /** Why Connect apps couldn't be read, or a connection couldn't start. */
@@ -386,6 +392,9 @@ data class AppState(
    * it (not read yet, or failed), nothing is shown: an Editor manages only the tafs they made, which the role alone can't say.
    */
   fun manages(tafId: String): Boolean = access[tafId]?.manage ?: false
+
+  /** The tafs an app can be connected for: on tafs cloud, and managed by this person. */
+  val connectableTafs: List<Taf> get() = tafs.filter { it.cloudId != null && manages(it.id) }
 
   /**
    * Who a taf's Card reads as issued by: "You" on a taf this person manages, else the account, by its name, never a person
@@ -888,6 +897,10 @@ class AppModel(
       refreshConnections()
       // The plan, for Settings' Plan card and Home's line: KIFF's usage read alone, quietly.
       refreshPlan(generation)
+      // Did this happen?: the money calls KIFF can't prove, for whoever answers held calls, read quietly.
+      if (_state.value.mayAnswerHolds) attempt { kiff.didThisHappen() }?.let { calls ->
+        if (generation == accountGeneration) _state.update { it.copy(unsure = calls) }
+      }
       // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
       if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
       nameRecordLines(generation)
@@ -2215,20 +2228,69 @@ class AppModel(
   }
 
   /**
+   * The owner's answer to "Did this happen?" for [call]: one fingerprint, the approval key signs it whichever the answer, and KIFF
+   * keeps the first. **No** gives the Card its room back. Answered, the call leaves the list.
+   */
+  suspend fun answerDidThisHappen(call: bot.tafs.app.kiff.UnsureCall, happened: Boolean): Boolean {
+    if (_state.value.mode != Mode.kiff || _state.value.answeringUnsure != null) return false
+    val tenant = kiffTenant
+    val key = call.proposal
+    if (!_state.value.sessionHasKey || tenant == null) {
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Sign in with KIFF again: this sign-in can't sign for the phone.")) }
+      return false
+    }
+    if (_state.value.approvalKeyLost) {
+      _state.update { it.copy(unsureErrors = it.unsureErrors + (key to KiffClient.APPROVAL_KEY_LOST)) }
+      return false
+    }
+    val generation = accountGeneration
+    _state.update { it.copy(answeringUnsure = key, unsureErrors = it.unsureErrors - key) }
+    try {
+      confirmGrant("tafs.did-this-happen.v1|$tenant|$key|$happened", bot.tafs.app.model.DidThisHappenWords.reason(happened))
+      if (generation != accountGeneration) return false
+      kiff.tenant = tenant
+      val signer = signer
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.answerDidThisHappen(key, happened)
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to notSigned(e, "Not sent: it wasn't confirmed."))) }
+      return false
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to KiffClient.APPROVAL_KEY_LOST)) }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(unsureErrors = it.unsureErrors + (key to "Your answer wasn't taken. ${ErrorWords.of(e)}")) }
+      return false
+    } finally {
+      kiff.setupSigner = null
+      if (generation == accountGeneration) _state.update { it.copy(answeringUnsure = null) }
+    }
+    if (generation == accountGeneration) _state.update { s -> s.copy(unsure = s.unsure.filterNot { it.proposal == key }) }
+    // The Card's room may be back: read its numbers again.
+    refresh()
+    return true
+  }
+
+  /**
    * Connect from Connect apps: starts the app's grant (or, for one to sign in again, takes the grant it has) and opens its
    * approval over the list. A vendor that takes a key is Coach's to set up for now.
    */
-  suspend fun startConnectApp(app: bot.tafs.app.kiff.ConnectApps.App) {
+  suspend fun startConnectApp(app: bot.tafs.app.kiff.ConnectApps.App, tafId: String? = null) {
     if (_state.value.mode != Mode.kiff || _state.value.startingApp != null) return
     if (app.needsReconnect && app.grant != null) {
       refreshConnections()
       _state.update { it.copy(listApproval = app.grant) }
       return
     }
+    // The taf it's for, by its tafs cloud id: the one chosen, or the only one this person manages.
+    val taf = tafId?.let { id -> _state.value.taf(id) } ?: _state.value.connectableTafs.singleOrNull()
+    val cloudId = taf?.cloudId ?: return
     val generation = accountGeneration
     _state.update { it.copy(startingApp = app.entry, connectAppsError = null) }
     try {
-      val started = cloud.startConnect(app.entry)
+      val started = cloud.startConnect(app.entry, cloudId)
       if (generation != accountGeneration) return
       if (started.needsKey) {
         _state.update { it.copy(connectAppsError = ConnectWords.needsKey(app.title)) }

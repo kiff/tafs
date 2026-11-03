@@ -293,6 +293,14 @@ class KiffClient(
   /** The calls KIFF holds for the owner's answer. */
   suspend fun heldCalls(): List<CardException> = call<CardExceptions>("GET", "/v1/me/card-exceptions?status=held").exceptions
 
+  /** The money calls whose outcome KIFF can't prove, newest first, for someone who answers held calls. */
+  suspend fun didThisHappen(): List<UnsureCall> = call<UnsureCalls>("GET", "/v1/me/did-this-happen").calls
+
+  /** The owner's answer to "Did this happen?", signed by the approval key whichever it is. The first answer stands. */
+  suspend fun answerDidThisHappen(proposal: String, happened: Boolean) {
+    sendJson("POST", "$DID_THIS_HAPPEN/${escaped(proposal)}", JsonObject(mapOf("happened" to JsonPrimitive(happened))))
+  }
+
   /** The account's latest calls, for Activity and the Record. */
   suspend fun activity(limit: Int = 100): List<ActivityCall> = call<ActivityCalls>("GET", "/v1/me/activity?limit=$limit").calls
 
@@ -627,6 +635,9 @@ class KiffClient(
      */
     val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", AI_USE)
 
+    /** KIFF's "Did this happen?": each answer is a POST under it, signed by the approval key. */
+    const val DID_THIS_HAPPEN = "/v1/me/did-this-happen"
+
     /** KIFF's AI use bound: Go on is a PUT here, signed by the device key (KIFF's phone-signed routes, not the approval key's). */
     const val AI_USE = "/v1/me/usage/ai"
 
@@ -637,6 +648,7 @@ class KiffClient(
      */
     fun signsSetup(path: String): Boolean {
       if (path in SIGNED_SETUP_PATHS) return true
+      if (path.startsWith("$DID_THIS_HAPPEN/")) return true
       val parts = path.split("/")
       // Groups and sharing: each change is the person's act behind their confirmation. A group,
       // renamed or deleted (/v1/groups/{id}), or its people (/v1/groups/{id}/members/{subject});
@@ -660,6 +672,8 @@ class KiffClient(
      */
     fun grantsAuthority(method: String, path: String): Boolean {
       if (method != "POST") return false
+      // "Did this happen?": No gives the Card its room back, and KIFF takes either answer only from the approval key.
+      if (path.startsWith("$DID_THIS_HAPPEN/") && path.length > DID_THIS_HAPPEN.length + 1) return true
       if (path == "/v1/me/agent-drafts") return true
       val parts = path.split("/")
       // Sharing a taf gives people its use. Taking it away is the current key.

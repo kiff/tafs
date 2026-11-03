@@ -105,6 +105,12 @@ data class ConnectApps(
  */
 @Serializable
 data class ConnectStart(
-  val grant: String,
+  /** planque's grant: its view as an object, or its id. */
+  @SerialName("grant") val grantValue: kotlinx.serialization.json.JsonElement,
   @SerialName("needs_key") val needsKey: Boolean = false,
-)
+) {
+  /** The grant's id, from either form. */
+  val grant: String
+    get() = (grantValue as? kotlinx.serialization.json.JsonObject)?.get("id")?.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content }
+      ?: (grantValue as? kotlinx.serialization.json.JsonPrimitive)?.content ?: ""
+}

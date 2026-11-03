@@ -387,8 +387,8 @@ class TafsCloud(
   /** A taf's dial (the knob API). */
   suspend fun knob(id: String): KnobWire = get("/v1/tafs/${escaped(id)}/knob")
 
-  /** Starts connecting [entry] (`cards.manage`): its grant, waiting for the owner's approval. */
-  suspend fun startConnect(entry: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", emptyMap())
+  /** Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval. */
+  suspend fun startConnect(entry: String, taf: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", mapOf("taf" to taf))
 
   /** Connect apps: the catalog, filtered by [q] when given. */
   suspend fun connectApps(q: String? = null): ConnectApps =

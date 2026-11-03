@@ -157,7 +157,14 @@ val LocalCoachInstalls = staticCompositionLocalOf<CoachInstalls?> { null }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun NeedsYouView(state: AppState, onAnswer: suspend (HeldCall, Answer) -> Unit, onRefresh: suspend () -> Unit = {}, modifier: Modifier = Modifier) {
+fun NeedsYouView(
+  state: AppState,
+  onAnswer: suspend (HeldCall, Answer) -> Unit,
+  onRefresh: suspend () -> Unit = {},
+  modifier: Modifier = Modifier,
+  onAnswerUnsure: (suspend (bot.tafs.app.kiff.UnsureCall, Boolean) -> Unit)? = null,
+) {
+  val unsureScope = rememberCoroutineScope()
   // Pulling reads KIFF again, as on iOS: a hold made while this screen was open shows without leaving it.
   var refreshing by remember { mutableStateOf(false) }
   val pullScope = rememberCoroutineScope()
@@ -177,7 +184,7 @@ fun NeedsYouView(state: AppState, onAnswer: suspend (HeldCall, Answer) -> Unit, 
     verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {
     item { ScreenTitle("Needs you") }
-    if (state.held.isEmpty()) {
+    if (state.held.isEmpty() && state.unsure.isEmpty()) {
       item {
         Panel {
           Text("Nothing is waiting.", style = scaled(15, FontWeight.SemiBold, Theme.ink))
@@ -189,6 +196,15 @@ fun NeedsYouView(state: AppState, onAnswer: suspend (HeldCall, Answer) -> Unit, 
       }
     } else {
       items(state.held, key = { it.id }) { call -> HeldCallCard(call, state, onAnswer) }
+    }
+    // Money calls KIFF can't prove: Did this happen?, answered by someone who answers held calls.
+    items(state.unsure, key = { "u|" + it.proposal }) { call ->
+      UnsureCallCard(
+        call,
+        answering = state.answeringUnsure == call.proposal,
+        error = state.unsureErrors[call.proposal],
+        onAnswer = onAnswerUnsure?.takeIf { state.mayAnswerHolds }?.let { answer -> { c, happened -> unsureScope.launch { answer(c, happened) } } },
+      )
     }
   }
   }

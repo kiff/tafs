@@ -17,13 +17,14 @@ class ConnectAppsTest {
 
   private suspend fun model(): AppModel {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","tenant_display_name":"Acme Pay"}""")
-    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/access", 200, """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
-    return testModel(transport = transport, secrets = secrets, clock = { Instant.parse("2026-11-02T21:00:00Z") }, start = false).also { it.restore() }
+    return testModel(transport = transport, secrets = secrets, clock = { Instant.parse("2026-11-02T21:00:00Z") }, start = false).also { it.restore(); it.refresh() }
   }
 
   @Test fun theListIsTafsCloudsInItsOrderAndASearchIsSentAsTyped() = runTest {
@@ -42,9 +43,12 @@ class ConnectAppsTest {
 
   @Test fun connectStartsTheGrantAndOpensItsApprovalOverTheList() = runTest {
     val m = model()
-    transport.answer("POST /v1/connect/apps/notion@1", 200, """{"grant":"g7"}""")
+    // planque's grant comes back as its view, an object.
+    transport.answer("POST /v1/connect/apps/notion@1", 200, """{"grant":{"id":"g7","status":"pending"}}""")
     m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"))
-    assertEquals("Bearer at_1", transport.requestsTo("POST /v1/connect/apps/notion@1").single().headers["Authorization"])
+    val sent = transport.requestsTo("POST /v1/connect/apps/notion@1").single()
+    assertEquals("Bearer at_1", sent.headers["Authorization"])
+    assertEquals("for the only taf this person manages, by its tafs cloud id", """{"taf":"taf_1"}""", String(sent.body!!))
     assertEquals("g7", m.state.value.listApproval)
     assertNull(m.state.value.startingApp)
     m.closeListApproval()

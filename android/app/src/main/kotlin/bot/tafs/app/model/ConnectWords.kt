@@ -9,5 +9,7 @@ object ConnectWords {
   fun cardKey(grantId: String): String = "connect:$grantId"
 
   const val APPROVE_TITLE = "Approve this connection"
+  const val WHICH_TAF = "Which taf is this for?"
+  const val NO_TAF = "Make a taf first: an app is connected for a taf to use."
   const val CANCEL = "Not now"
 }

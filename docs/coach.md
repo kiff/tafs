@@ -173,8 +173,10 @@ search): the reviewed catalog first, then KIFF's own apps for Google, Microsoft 
 says whether it's connected, or needs signing in again, as tafs cloud sends it. **Not listed?
 Ask Coach** opens Coach, which can connect an app that isn't listed from its own docs.
 
-**Connect** (for whoever manages the account's Cards) starts the app's grant
-(`POST /v1/connect/apps/{entry}`, which answers only the grant) and opens its approval as a
+**Connect** (for whoever manages the account's Cards) starts the app's grant for one taf
+(`POST /v1/connect/apps/{entry}` with `{taf}`, which answers only the grant). With several
+tafs the person manages, it asks "Which taf is this for?" first; with one, it's that one; with
+none, Connect is off and it says to make a taf first. Then it opens the approval as a
 sheet over the list. It's the same as Coach's card: planque's words, KIFF's words for the
 profile, then the signature, and only then the vendor's sign-in page from planque's approve
 answer, and the confirm code. The owner sees what they're connecting before they go to the

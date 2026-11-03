@@ -507,7 +507,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             (open ?: home)()
           }
         }
-        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() })
+        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) })
         Tab.Record -> RecordView(state)
       }
     }
@@ -551,7 +551,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
       bot.tafs.app.views.ConnectAppsSheet(
         state, load = model::loadConnectApps,
-        onConnect = if (state.canManageCards) ({ app -> scope.launch { model.startConnectApp(app) } }) else null,
+        onConnect = if (state.canManageCards) ({ app, taf -> scope.launch { model.startConnectApp(app, taf) } }) else null,
         onAskCoach = { showingConnectApps = false; coachOpen = true },
         onClose = { showingConnectApps = false },
       )

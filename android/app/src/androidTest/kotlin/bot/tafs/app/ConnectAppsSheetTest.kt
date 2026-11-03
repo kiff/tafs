@@ -32,12 +32,15 @@ class ConnectAppsSheetTest {
   private val started = mutableListOf<String>()
   private var askedCoach = 0
 
-  private fun show(connect: Boolean) = rule.setShown {
+  private fun taf(id: String, name: String) =
+    bot.tafs.app.model.Taf(id = id, name = name, job = "", tools = emptyList(), colorIndex = 1, card = bot.tafs.app.model.Card(rules = emptyList(), issuedBy = "You"), now = "", cloudId = "cloud_$id")
+
+  private fun show(connect: Boolean, tafs: List<bot.tafs.app.model.Taf> = listOf(taf("refunds-1", "Refunds"))) = rule.setShown {
     TafsTheme {
       ConnectAppsSheet(
-        AppState(mode = Mode.kiff, ready = true, connectApps = list),
+        AppState(mode = Mode.kiff, ready = true, connectApps = list, tafs = tafs, access = tafs.associate { it.id to bot.tafs.app.kiff.Access(use = true, manage = true) }),
         load = {},
-        onConnect = if (connect) ({ started += it.entry }) else null,
+        onConnect = if (connect) ({ app, taf -> started += "${app.entry}>$taf" }) else null,
         onAskCoach = { askedCoach += 1 },
         onClose = {},
       )
@@ -53,7 +56,24 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText(ConnectAppsWords.CONNECT).performClick()
     rule.onNodeWithText(ConnectAppsWords.SIGN_IN_AGAIN).performClick()
     rule.waitForIdle()
-    assertEquals(listOf("notion@1", "google"), started)
+    assertEquals("one taf: it's for that one", listOf("notion@1>refunds-1", "google>refunds-1"), started)
+  }
+
+  @Test fun withSeveralTafsConnectAsksWhichFirst() {
+    show(connect = true, tafs = listOf(taf("refunds-1", "Refunds"), taf("billing-1", "Billing")))
+    rule.onNodeWithText(ConnectAppsWords.CONNECT).performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.WHICH_TAF).assertIsDisplayed()
+    assertEquals(0, started.size)
+    rule.onNodeWithText("Billing").performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("notion@1>billing-1"), started)
+  }
+
+  @Test fun withNoTafThereIsNothingToConnectFor() {
+    show(connect = true, tafs = emptyList())
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.NO_TAF).assertIsDisplayed()
+    assertEquals(0, count(ConnectAppsWords.CONNECT))
   }
 
   @Test fun withNoWayToConnectNoAppOffersConnect() {
