@@ -62,6 +62,15 @@ describe("the dial", () => {
     expect(k.rim.line).toBe("0 done today");
   });
 
+  it("a follow-up the taf set itself shows on Wakes it, with when it fires and how to remove it", () => {
+    const f = { id: "fu-ab12", agent: "a", cron: "", input: "Check refund re_9 went through", enabled: true, kind: "once" as const, at: "2026-11-03T08:00:00Z", follow_up: true };
+    const k = knobOf({ ...base, followUps: [f] });
+    expect(k.wakes.find((w) => w.kind === "follow_up")).toEqual({ id: "trg_fu-ab12", kind: "follow_up", follow_up: "fu-ab12", expires: "2026-11-03T08:00:00Z",
+      label: "Follow-up", on: true, state: "Tue 09:00", words: "Checks again Tue 09:00: Check refund re_9 went through", tap: "Tap to remove this follow-up" });
+    // It's not one of the dial's triggers: PUT never carries it.
+    expect(k.setting.wakes.some((t) => (t.kind as string) === "follow_up")).toBe(false);
+  });
+
   it("a paused schedule says so", () => {
     const k = knobOf({ ...base, schedule: { ...base.schedule!, enabled: false, next: undefined } });
     expect(k.wakes[1]).toMatchObject({ on: false, state: "Paused", words: "Weekdays at 09:00, paused" });

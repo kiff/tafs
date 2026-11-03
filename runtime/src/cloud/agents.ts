@@ -442,6 +442,8 @@ export interface Schedule {
   skip?: string[];
   /** A check of a connected app before each firing: a run only for what's new. */
   check?: { tool: string; arguments: Record<string, unknown>; items: string; cursor: string };
+  /** A one-off follow-up the taf set itself (its id starts "fu-"): once, within seven days, at most three waiting. */
+  follow_up?: boolean;
 }
 
 /** The ids kiff/agents takes: 1 to 128 letters, digits, '-', '_' or '.', never "." or "..". */
@@ -784,6 +786,15 @@ export class Agents {
   /** Replaces the schedule; a schedule as read (with its `next`) can be sent back as it is. */
   updateSchedule(tenant: string, s: Schedule): Promise<Schedule> {
     return this.call("PUT", tenant, ["schedules", s.id], writable(s));
+  }
+
+  /** The agent's schedules, its follow-ups among them. */
+  async listSchedules(tenant: string, agent: string): Promise<Schedule[]> {
+    return (await this.call<{ schedules: Schedule[] }>("GET", tenant, ["schedules"], undefined, { agent_id: agent })).schedules;
+  }
+
+  deleteSchedule(tenant: string, id: string): Promise<void> {
+    return this.call("DELETE", tenant, ["schedules", id]);
   }
 
   switchSchedule(tenant: string, id: string, on: boolean): Promise<Schedule> {

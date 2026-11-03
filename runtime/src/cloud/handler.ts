@@ -64,6 +64,7 @@ import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
+ *   DELETE /v1/tafs/{id}/follow-ups/{fid}  a follow-up the taf set itself, removed
  *   GET  /v1/tafs/{id}/knob             its dial: what wakes it, when, where results go, and today's work, in tafs cloud's words
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
@@ -126,7 +127,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
-  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
@@ -450,7 +451,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats components connect continue conversation " +
-  "delete deletions deliveries doors door email whatsapp ended events halt holds home improve install jobs keys kiff knob knocks live mcp " +
+  "delete deletions deliveries doors door email whatsapp ended events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "memory messages pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks").split(" "));
 
@@ -597,6 +598,17 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
     return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again);
   }
+  if (parts.length === 5 && method === "DELETE" && action === "follow-ups") {
+    // A follow-up the taf set itself, removed by someone who manages it (docs/api.md, "The knob"). Only a
+    // follow-up of this taf: none of its other schedules goes this way.
+    await needTaf(event, me, taf, deps);
+    const id = parts[4] ?? "";
+    const s = id.startsWith("fu-") ? await deps.agents.getSchedule(me.tenantID, id) : undefined;
+    if (!s || !s.follow_up || s.agent !== taf.id) throw new HTTPError(404, "no such follow-up");
+    await agentsCall(() => deps.agents.deleteSchedule(me.tenantID, id));
+    await tellChange(me.tenantID, "taf", taf.id, deps);
+    return { removed: id };
+  }
   if (parts.length === 4 && method === "PUT" && action === "knob") {
     // The dial changed, from a tap or Coach's draft: the taf's next version, as an improvement
     // makes one. Nothing runs from it until it goes live (docs/api.md, "The knob").
@@ -637,6 +649,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       deps.doors && await managesTaf(event, me, taf, deps) ? listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors) : Promise.resolve([]),
       deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
     ]);
+    const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
+      .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
     const setting = live !== undefined ? taf.knobs?.[String(live)] : undefined;
     const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
     const { counts } = workOf(today, zone, now, []);
@@ -644,7 +658,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return knobOf({
       name: taf.name,
       does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
-      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy,
+      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps,
       ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}),
       today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
       zone, now,

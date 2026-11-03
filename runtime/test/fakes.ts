@@ -409,6 +409,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     async getSchedule(tenant, id) {
       return schedules.get(k(tenant, id));
     },
+    async listSchedules(tenant, agent) {
+      return [...schedules.values()].filter((s) => s.tenant === tenant && s.agent === agent);
+    },
+    async deleteSchedule(tenant, id) {
+      calls.push(`deleteSchedule ${id}`);
+      if (!schedules.delete(k(tenant, id))) throw gone();
+    },
     async updateSchedule(tenant, sc) {
       calls.push(`updateSchedule ${sc.id} ${sc.kind ?? "cron"} ${sc.cron} ${sc.busy ?? ""}`);
       if (!schedules.has(k(tenant, sc.id))) throw gone();

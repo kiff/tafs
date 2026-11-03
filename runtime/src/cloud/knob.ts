@@ -28,6 +28,9 @@ export interface RingItem {
   door?: string;
   /** A trigger's form exactly as PUT takes it; absent on run now and on a schedule the dial can't set. */
   trigger?: Trigger;
+  /** A follow-up's id, for DELETE /v1/tafs/{id}/follow-ups/{fid}, and when it fires. */
+  follow_up?: string;
+  expires?: string;
 }
 
 export interface Knob {
@@ -57,6 +60,8 @@ export interface KnobInput {
   today: { done: number; working: number; retrying: number; needs_you: number };
   /** What it does when a trigger fires while it works. */
   busy?: "skip" | "latest";
+  /** The follow-ups the taf set itself, waiting to fire. */
+  followUps?: Schedule[];
   /** The live version's dial, when a tap or Coach's draft set it; else it's read from the schedule. */
   setting?: KnobSetting;
   version?: number;
@@ -118,6 +123,11 @@ export function knobOf(k: KnobInput): Knob {
       wakes.push({ id: i === 0 ? "trg_schedule" : `trg_${i + 1}`, kind: t.trigger?.kind === "app_check" ? "app_check" : "schedule", label: t.label, words,
         on: s.enabled, state: s.enabled ? t.label : "Paused", ...(t.trigger ? { trigger: t.trigger } : {}) });
     }
+  }
+  for (const f of k.followUps ?? []) {
+    const check = f.input.trim().replace(/\s+/g, " ");
+    wakes.push({ id: `trg_${f.id}`, kind: "follow_up", follow_up: f.id, expires: f.at!, label: "Follow-up", on: true, state: timeIn(f.at!, k.zone, k.now),
+      words: `Checks again ${timeIn(f.at!, k.zone, k.now)}${check ? `: ${check.length > 120 ? `${check.slice(0, 119)}…` : check}` : ""}`, tap: "Tap to remove this follow-up" });
   }
   wakes.push({ id: "run_now", kind: "run_now", label: "Run now", words: "Runs it once, now", on: true, state: "Now",
     ...(k.unscheduled ? {} : { tap: "Tap to run once" }) });

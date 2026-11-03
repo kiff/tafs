@@ -263,6 +263,21 @@ describe("tafs cloud", () => {
     expect(r.body.requests).toHaveLength(1);
   });
 
+  it("lists the follow-ups a taf set itself on its dial, and removes one, only of that taf", async () => {
+    const w = world();
+    const fu = { id: "fu-1", agent: RAE, cron: "", input: "Check it again", enabled: true, kind: "once" as const, at: "2099-01-01T09:00:00Z", follow_up: true };
+    await w.agents.api.createSchedule("t_acme", fu);
+    await w.agents.api.createSchedule("t_acme", { ...fu, id: "fu-other", agent: "someone_else" });
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.wakes.filter((x: { kind: string }) => x.kind === "follow_up").map((x: { follow_up: string }) => x.follow_up)).toEqual(["fu-1"]);
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/follow-ups/fu-other`, { token: "ana" })).status).toBe(404);
+    expect((await call(w, "DELETE", `/v1/tafs/${RAE}/follow-ups/${RAE}`, { token: "ana" })).status).toBe(404);
+    const del = await call(w, "DELETE", `/v1/tafs/${RAE}/follow-ups/fu-1`, { token: "ana" });
+    expect(del.status).toBe(200);
+    expect(del.body).toEqual({ removed: "fu-1" });
+    expect(await w.agents.api.getSchedule("t_acme", "fu-1")).toBeUndefined();
+  });
+
   it("gives one request from the rim, step by step, and 404 for one it doesn't have", async () => {
     const w = world();
     await w.agents.api.startRun("t_acme", RAE, "go");
