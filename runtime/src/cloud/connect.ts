@@ -117,7 +117,7 @@ export async function startApp(fetchFn: Fetch, base: string, tenant: string, bea
   if (!ENTRY.test(entry)) throw new ConnectError(404, "no such app in the catalog");
   const got = await call(fetchFn, `${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/catalog/${encodeURIComponent(entry)}/grants`, bearer,
     // The taf's name, one line, for the words the owner reads and signs ("Connect Gmail for Refunds").
-    { method: "POST", body: { agent, ...(agentName ? { agent_name: agentName.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 60) } : {}) } }) as { grant?: unknown; needs_key?: unknown };
+    { method: "POST", body: { agent, ...(agentName ? { agent_name: agentName.replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").trim().slice(0, 60).trim() } : {}) } }) as { grant?: unknown; needs_key?: unknown };
   if (!got.grant || typeof got.grant !== "object") throw new ConnectError(502, "planque didn't answer; try again");
   return { grant: got.grant, ...(got.needs_key === true ? { needs_key: true as const } : {}) };
 }
