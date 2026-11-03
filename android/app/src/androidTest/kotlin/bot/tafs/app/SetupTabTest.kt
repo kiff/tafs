@@ -56,7 +56,7 @@ class SetupTabTest {
       sendChat = { _, _, _, _ -> }, issuer = "You",
       doors = DoorActions(
         {}, { _, _ -> null }, { _, _, _ -> }, { _, _ -> }, { _, _, _, _ -> }, { _, _, _ -> }, { _, _, _, _ -> }, {},
-        changeKnobSize = { _, setting -> log += "setting ${setting["busy"]}" },
+        changeKnobSize = { _, setting -> log += "setting $setting" },
       ),
       coach = CoachActions(answer = { _, _, _ -> }, approve = { _, _, _ -> }, cancelSignIn = {}),
       connections = ConnectionActions({}, { false }),
@@ -105,7 +105,7 @@ class SetupTabTest {
     rule.onNodeWithText(SetupWords.APPROVE_NOTE).performScrollTo().assertIsDisplayed()
     rule.onNodeWithText(SetupWords.RUN_AFTER).performScrollTo().performClick()
     rule.waitForIdle()
-    assertEquals(listOf("setting \"latest\""), log)
+    assertEquals(listOf("""setting {"wakes":[],"busy":"latest","results":["door_reply"]}"""), log)
   }
 
   @Test fun pausingEveryStartIsOffForATafThatCantBePaused() {
@@ -113,5 +113,20 @@ class SetupTabTest {
     rule.onNode(hasText(SetupWords.STARTS_WHEN, ignoreCase = true)).performScrollTo().performClick()
     rule.waitForIdle()
     rule.onNodeWithText(SetupWords.PAUSE_EVERY).performScrollTo().assertIsNotEnabled()
+  }
+
+  @Test fun theLastOfTafsOwnPlacesTurnsOffThroughTheDialWhenAnAppsPlaceStaysOn() {
+    show(
+      knob(
+        """[{"id":"r1","place":"door_reply","label":"Sender","on":true,"size":{"label":"On or off","index":0,"choices":[{"label":"On","setting":{"results":["door_reply","action"]}},{"label":"Off","setting":{"results":["action"]}}]}},
+            {"id":"r2","place":"app","label":"You","on":false},{"id":"r3","place":"owner_email","label":"Email","on":false},
+            {"id":"r4","place":"action","label":"Notion · Support log","on":true}]""",
+      ),
+    )
+    rule.onNode(hasText(SetupWords.RESULTS_GO_TO, ignoreCase = true)).performScrollTo().performClick()
+    rule.waitForIdle()
+    rule.onNode(hasContentDescription(SetupWords.placeTitle("door_reply"))).assertIsEnabled().performClick()
+    rule.waitForIdle()
+    assertEquals("never an empty PUT …/results: the dial's own choice", listOf("""setting {"results":["action"]}"""), log)
   }
 }
