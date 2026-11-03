@@ -319,6 +319,10 @@ data class AppState(
   val grants: List<Grant> = emptyList(),
   /** Each taf's dial as tafs cloud last sent it, by taf id. */
   val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
+  /** A dial change made into a version, waiting for the owner to make it live, by taf id. */
+  val knobChanges: Map<String, bot.tafs.app.kiff.KnobWire.Change> = emptyMap(),
+  /** Why a dial change didn't go through, in tafs cloud's words when it sends them, by taf id. */
+  val knobErrors: Map<String, String> = emptyMap(),
   /** Money calls whose outcome KIFF can't prove, waiting on "Did this happen?" in Needs you. */
   val unsure: List<bot.tafs.app.kiff.UnsureCall> = emptyList(),
   /** The proposal whose answer is on its way. */
@@ -2283,6 +2287,46 @@ class AppModel(
     val knob = attempt { cloud.knob(cloudId) } ?: return
     if (generation == accountGeneration) _state.update { it.copy(knobs = it.knobs + (tafId to knob)) }
   }
+
+  /**
+   * A tap on the dial that changes how the taf works (a trigger on or off, a result place, If busy): the live setting with that one
+   * thing changed goes to `PUT …/knob`, which makes the taf's next version. Nothing runs from it until the owner makes it live
+   * ([confirmKnobChange]). A door and Run now have their own routes and never come here.
+   */
+  suspend fun changeKnob(tafId: String, stopId: String): Boolean {
+    if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return false
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return false
+    val setting = _state.value.knobs[tafId]?.changed(stopId) ?: return false
+    val generation = accountGeneration
+    _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
+    return try {
+      val change = cloud.changeKnob(cloudId, setting)
+      if (generation == accountGeneration) _state.update { it.copy(knobChanges = it.knobChanges + (tafId to change)) }
+      true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // A form the scheduler can't keep exactly: tafs cloud's words name the nearest one.
+      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not changed. ${ErrorWords.of(e)}")) }
+      false
+    }
+  }
+
+  /** Makes the dial's change live: the version it made, switched as any version is (with Face ID where its Card changes). */
+  suspend fun confirmKnobChange(tafId: String): Boolean {
+    val change = _state.value.knobChanges[tafId] ?: return false
+    loadVersions(tafId)
+    val version = _state.value.versions[tafId]?.firstOrNull { it.n == change.version } ?: run {
+      _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Version ${change.version} couldn't be read. Try again.")) }
+      return false
+    }
+    if (!useVersion(version, tafId)) return false
+    _state.update { it.copy(knobChanges = it.knobChanges - tafId) }
+    loadKnob(tafId)
+    return true
+  }
+
+  fun dismissKnobChange(tafId: String) = _state.update { it.copy(knobChanges = it.knobChanges - tafId, knobErrors = it.knobErrors - tafId) }
 
   /**
    * Connect from Connect apps: starts the app's grant (or, for one to sign in again, takes the grant it has) and opens its

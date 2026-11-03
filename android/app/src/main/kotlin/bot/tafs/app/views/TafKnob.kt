@@ -228,6 +228,8 @@ fun TafDialPanel(
                 when {
                   door != null -> { actions.setOpen(taf.id, door, !door.open); actions.loadKnob(taf.id) }
                   item?.kind == "run_now" -> actions.runNow(taf.id)
+                  // Anything else the face can do changes how the taf works: it becomes the next version, to make live.
+                  face.stop.tap != null && state.manages(taf.id) -> actions.changeKnob(taf.id, face.stop.id)
                 }
               }
               KnobFace.Overview -> Unit
@@ -245,6 +247,21 @@ fun TafDialPanel(
     }
     if (sentence.isNotBlank()) Text(sentence, style = scaled(14, color = Theme.ink))
     knob.summary?.let { Text(it, style = scaled(13, color = Theme.dim)) }
+    state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+    // A change made into a version: tafs cloud's words for it, and making it live, or not.
+    state.knobChanges[taf.id]?.let { change ->
+      bot.tafs.app.design.Eyebrow(KnobWords.changeTitle(change.version), Theme.amberText)
+      change.words.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+      androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+        bot.tafs.app.design.OutlineButton(
+          KnobWords.MAKE_LIVE,
+          { scope.launch { busy = true; try { actions.confirmKnobChange(taf.id) } finally { busy = false } } },
+          Modifier.weight(1f),
+          enabled = !busy && taf.id !in state.switchingVersion,
+        )
+        bot.tafs.app.design.OutlineButton(KnobWords.NOT_NOW, { actions.dismissKnobChange(taf.id) }, Modifier.weight(1f), color = Theme.soft, enabled = !busy)
+      }
+    }
     if (chosen != null) {
       Text(
         "‹ ${KnobWords.OVERVIEW}",

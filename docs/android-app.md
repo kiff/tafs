@@ -171,6 +171,13 @@ below. The face's tap opens or closes that door, or runs the taf now, through th
 (no new version). A held call that can be approved once takes the face. Under the dial are the
 chosen stop's words, or the job's, and today's work.
 
+Any other tap that changes how the taf works (a trigger on or off, a plain result place, If
+busy) copies the live `setting`, changes that one thing (`KnobWire.changed`) and sends it to
+`PUT …/knob`. That makes the taf's next version, and nothing runs from it yet: the panel shows
+tafs cloud's words for the change with **Make it live**, which switches that version as any
+version is switched (`AppModel.confirmKnobChange`), or **Not now**. A form the scheduler can't
+keep exactly is said in tafs cloud's words, naming the nearest one.
+
 ## Signing
 
 Two keys in the Android Keystore, in StrongBox where the phone has it

@@ -22,6 +22,8 @@ version headings refer to releases, not merely to merged pull requests.
 - **Android, the taf's dial:** Wakes it, When and Results go around the job, with a rim that
   counts today's work, in the taf's Doors tab: a door stop picks its door, the face opens or
   closes it or runs the taf now, and a held call can be approved once from the face.
+  Turning a trigger, a result place or If busy makes the taf's next version, shown in tafs
+  cloud's words with Make it live.
 - **iPhone and iPad, KIFF's words for a connection:** the same as Android: a connection that
   carries its profile shows KIFF's words on the approval card, read with the person's session
   and checked against both digests; the approval signs both, and waits until they're shown.

@@ -55,6 +55,11 @@ object KnobWords {
   const val ASK_COACH = "Ask Coach"
   const val PAUSE = "Pause"
   const val RESUME = "Resume"
+  const val MAKE_LIVE = "Make it live"
+  const val NOT_NOW = "Not now"
+
+  /** Over a dial change waiting to be made live: "Version 8, not live yet". */
+  fun changeTitle(version: Int): String = "Version $version, not live yet"
 
   /** The face's top line for a chosen stop: "WAKES IT · SLACK". */
   fun chosen(ring: KnobRing.Kind, stop: KnobStop): String = "${ring.title} · ${stop.label}".uppercase()

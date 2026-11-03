@@ -82,6 +82,10 @@ class DoorActions(
   val runNow: suspend (String) -> Unit = {},
   /** Approves a held call once, from the dial's face. */
   val approveOnce: suspend (bot.tafs.app.model.HeldCall) -> Unit = {},
+  /** A dial tap that makes the next version (taf, stop); making it live; and setting it aside. */
+  val changeKnob: suspend (String, String) -> Unit = { _, _ -> },
+  val confirmKnobChange: suspend (String) -> Unit = {},
+  val dismissKnobChange: (String) -> Unit = {},
 )
 
 /**

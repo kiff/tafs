@@ -5,6 +5,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.foundation.verticalScroll
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.app.TafDoors
@@ -36,24 +38,35 @@ class TafDialPanelTest {
   private val wire = KiffClient.json.decodeFromString<KnobWire>(
     """{"does":{"label":"Refund","line":"Refunds a payment in Stripe, within its Card."},
         "wakes":[{"id":"trg_1","kind":"door","door":"door_slack","label":"Slack","words":"Messages in #refunds start a request.","state":"Open","tap":"Tap to close"},
-                 {"id":"trg_2","kind":"run_now","label":"Run now","words":"Runs it once, now.","state":"Now","tap":"Tap to run once"}],
+                 {"id":"trg_2","kind":"run_now","label":"Run now","words":"Runs it once, now.","state":"Now","tap":"Tap to run once"},
+                 {"id":"trg_3","kind":"schedule","label":"Weekdays","words":"Weekdays at 09:00","state":"On","tap":"Tap to turn off","trigger":{"kind":"schedule","form":"weekdays","at":"09:00"}}],
         "when":[{"id":"when_arrivals","kind":"arrivals","label":"Arrivals","words":"Works each one as it arrives"}],
         "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote"}],
         "rim":{"done":3,"line":"3 done today"}}""",
   )
   private val log = mutableListOf<String>()
 
-  private fun show(held: List<HeldCall> = emptyList()) = rule.setShown {
+  private fun show(held: List<HeldCall> = emptyList(), change: KnobWire.Change? = null) = rule.setShown {
+    // In a scrolling column, as the Doors tab is: what's under the dial scrolls into view.
     TafsTheme {
+      androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
       TafDialPanel(
-        taf, wire, AppState(mode = Mode.kiff, ready = true, tafs = listOf(taf), held = held), TafDoors(doors = listOf(slack), loaded = true),
+        taf, wire,
+        AppState(
+          mode = Mode.kiff, ready = true, tafs = listOf(taf), held = held,
+          access = mapOf("refunds-1" to bot.tafs.app.kiff.Access(use = true, manage = true)),
+          knobChanges = change?.let { mapOf("refunds-1" to it) }.orEmpty(),
+        ),
+        TafDoors(doors = listOf(slack), loaded = true),
         DoorActions(
           load = {}, add = { _, _ -> null }, setOpen = { _, door, open -> log += "open ${door.id} $open" }, remove = { _, _ -> },
           pair = { _, _, _, _ -> }, unpair = { _, _, _ -> }, answer = { _, _, _, _ -> }, dismissError = {},
           loadKnob = { log += "reload" }, runNow = { log += "run" }, approveOnce = { log += "approve ${it.id}" },
+          changeKnob = { _, stop -> log += "change $stop" }, confirmKnobChange = { log += "live" }, dismissKnobChange = { log += "aside" },
         ),
         onDoor = { log += "door $it" },
       )
+      }
     }
   }
 
@@ -94,5 +107,22 @@ class TafDialPanelTest {
     rule.onNodeWithText(KnobWords.APPROVE_ONCE).performClick()
     rule.waitForIdle()
     assertEquals(listOf("approve h1"), log)
+  }
+
+  @Test fun aScheduleTapMakesTheNextVersion() {
+    show()
+    rule.onNodeWithContentDescription("Weekdays, Wakes it, on").performClick()
+    rule.onNodeWithText("Tap to turn off").performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("change trg_3"), log)
+  }
+
+  @Test fun aChangeWaitsToBeMadeLiveInTafsCloudsWords() {
+    show(change = KnobWire.Change(8, listOf("Weekdays at 09:00 stops waking it.")))
+    rule.onNodeWithText(KnobWords.changeTitle(8), ignoreCase = true).performScrollTo().assertIsDisplayed()
+    rule.onNodeWithText("Weekdays at 09:00 stops waking it.").performScrollTo().assertIsDisplayed()
+    rule.onNodeWithText(KnobWords.MAKE_LIVE).performScrollTo().performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("live"), log)
   }
 }

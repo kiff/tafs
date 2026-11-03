@@ -78,4 +78,52 @@ class KnobWireTest {
     assertFalse(oauth.needsKey)
     assertTrue(KiffClient.json.decodeFromString<ConnectStart>("""{"grant":"g4","needs_key":true}""").needsKey)
   }
+
+  // MARK: A tap changes one thing in the live setting
+
+  private val dial = KiffClient.json.decodeFromString<KnobWire>(
+    """{"does":{"label":"Refund","line":""},
+        "wakes":[{"id":"trg_door","kind":"door","door":"door_1","label":"Email","on":true},
+                 {"id":"trg_run","kind":"run_now","label":"Run now"},
+                 {"id":"trg_9","kind":"schedule","label":"Weekdays","on":true,"trigger":{"kind":"schedule","form":"weekdays","at":"09:00"}},
+                 {"id":"trg_15","kind":"schedule","label":"15:00","on":false,"trigger":{"kind":"schedule","form":"daily","at":"15:00"}}],
+        "when":[{"id":"when_busy","kind":"busy","label":"If busy"},{"id":"when_arrivals","kind":"arrivals","label":"Arrivals"}],
+        "results":[{"id":"res_reply","place":"door_reply","label":"Sender","on":true},
+                   {"id":"res_app","place":"app","label":"You","on":false},
+                   {"id":"res_slack","place":"slack","label":"Slack","on":false}],
+        "rim":{},
+        "setting":{"wakes":[{"kind":"door"},{"kind":"schedule","form":"weekdays","at":"09:00"}],"busy":"skip","results":[{"place":"door_reply"}]}}""",
+  )
+
+  private fun json(s: String) = KiffClient.json.parseToJsonElement(s)
+
+  @Test fun aTriggerOnIsTakenOutAndOneOffIsPutIn() {
+    assertEquals(json("""{"wakes":[{"kind":"door"}],"when":{"busy":"skip"},"results":[{"place":"door_reply"}]}"""), dial.changed("trg_9"))
+    assertEquals(
+      json("""{"wakes":[{"kind":"door"},{"kind":"schedule","form":"weekdays","at":"09:00"},{"kind":"schedule","form":"daily","at":"15:00"}],"when":{"busy":"skip"},"results":[{"place":"door_reply"}]}"""),
+      dial.changed("trg_15"),
+    )
+  }
+
+  @Test fun aPlaceIsTakenOutOrAPlainOnePutBack() {
+    assertEquals(json("""{"wakes":[{"kind":"door"},{"kind":"schedule","form":"weekdays","at":"09:00"}],"when":{"busy":"skip"},"results":[]}"""), dial.changed("res_reply"))
+    assertEquals(
+      json("""{"wakes":[{"kind":"door"},{"kind":"schedule","form":"weekdays","at":"09:00"}],"when":{"busy":"skip"},"results":[{"place":"door_reply"},{"place":"app"}]}"""),
+      dial.changed("res_app"),
+    )
+    assertNull("a place that names a channel is set where it's chosen, not by a tap", dial.changed("res_slack"))
+  }
+
+  @Test fun ifBusyGoesBetweenSkipAndLatest() {
+    val busy = (dial.changed("when_busy")!!["when"] as kotlinx.serialization.json.JsonObject)["busy"] as kotlinx.serialization.json.JsonPrimitive
+    assertEquals("latest", busy.content)
+    assertTrue(busy.isString)
+  }
+
+  @Test fun aDoorRunNowAndAStopTheDialCantSetChangeNoVersion() {
+    assertNull(dial.changed("trg_door"))
+    assertNull(dial.changed("trg_run"))
+    assertNull(dial.changed("when_arrivals"))
+    assertNull("no setting from an older tafs cloud", KiffClient.json.decodeFromString<KnobWire>("""{"wakes":[{"id":"t","trigger":{"kind":"schedule"}}]}""").changed("t"))
+  }
 }

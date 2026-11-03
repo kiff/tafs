@@ -354,6 +354,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadKnob = model::loadKnob,
       runNow = { taf -> model.runNow(taf); model.loadKnob(taf) },
       approveOnce = { call -> model.answer(call, bot.tafs.app.model.Answer.ApproveOnce) },
+      changeKnob = { taf, stop -> model.changeKnob(taf, stop) },
+      confirmKnobChange = { taf -> model.confirmKnobChange(taf) },
+      dismissKnobChange = model::dismissKnobChange,
     )
   }
   // Coach: the account's Setup, in place of the list. Closing never ends a conversation.

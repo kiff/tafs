@@ -5,6 +5,7 @@ import bot.tafs.app.kiff.InMemorySecretStore
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -80,6 +81,31 @@ class ConnectAppsTest {
     transport.answer("GET /v1/tafs/taf_1/knob", 503, """{"error":"down"}""")
     m.loadKnob("refunds-1")
     assertEquals("the last one read stays", "Refund", m.state.value.knobs.getValue("refunds-1").does.label)
+  }
+
+  @Test fun aDialTapMakesTheNextVersionWithTheLiveSettingChangedOnce() = runTest {
+    val m = model()
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"does":{"label":"Refund","line":""},"when":[{"id":"when_busy","kind":"busy","label":"If busy"}],"rim":{},
+      "setting":{"wakes":[],"busy":"skip","results":[]}}""")
+    m.loadKnob("refunds-1")
+    transport.answer("PUT /v1/tafs/taf_1/knob", 200, """{"version":8,"words":["If it's busy, it works the latest one."]}""")
+    assertTrue(m.changeKnob("refunds-1", "when_busy"))
+    val body = kotlinx.serialization.json.Json.parseToJsonElement(String(transport.requestsTo("PUT /v1/tafs/taf_1/knob").single().body!!))
+    assertEquals(kotlinx.serialization.json.Json.parseToJsonElement("""{"wakes":[],"when":{"busy":"latest"},"results":[]}"""), body)
+    assertEquals(8, m.state.value.knobChanges.getValue("refunds-1").version)
+    // Nothing is live from it yet: setting it aside sends nothing.
+    m.dismissKnobChange("refunds-1")
+    assertTrue(m.state.value.knobChanges.isEmpty())
+  }
+
+  @Test fun aFormTheSchedulerCantKeepIsSaidInTafsCloudsWords() = runTest {
+    val m = model()
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"does":{"label":"Refund","line":""},"when":[{"id":"when_busy","kind":"busy","label":"If busy"}],"rim":{},"setting":{"wakes":[],"busy":"skip","results":[]}}""")
+    m.loadKnob("refunds-1")
+    transport.answer("PUT /v1/tafs/taf_1/knob", 400, """{"error":"bad","words":"Every 25 minutes can't be kept exactly: the nearest is every 20 minutes."}""")
+    assertFalse(m.changeKnob("refunds-1", "when_busy"))
+    assertTrue(m.state.value.knobErrors.getValue("refunds-1").contains("the nearest is every 20 minutes"))
+    assertTrue(m.state.value.knobChanges.isEmpty())
   }
 
   @Test fun aListThatCantBeReadIsSaidInWords() = runTest {

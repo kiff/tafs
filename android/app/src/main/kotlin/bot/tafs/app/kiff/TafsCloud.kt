@@ -384,6 +384,10 @@ class TafsCloud(
   /** Where the taf's work stands (docs/reliability.md, "The taf's view"): every line and time in tafs cloud's words. */
   suspend fun work(id: String): TafWork = get<TafWork>("/v1/tafs/${escaped(id)}/work")
 
+  /** The dial changed (`PUT …/knob`): the taf's next version, made as an improvement makes one, and its words. */
+  suspend fun changeKnob(id: String, setting: kotlinx.serialization.json.JsonObject): KnobWire.Change =
+    KiffClient.json.decodeFromString(String(sendJson("PUT", "/v1/tafs/${escaped(id)}/knob", setting)))
+
   /** A taf's dial (the knob API). */
   suspend fun knob(id: String): KnobWire = get("/v1/tafs/${escaped(id)}/knob")
 
