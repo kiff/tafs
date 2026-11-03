@@ -5,7 +5,7 @@
  */
 import type { Schedule } from "./agents.js";
 import type { ResultPlace } from "./handler.js";
-import { type Trigger, triggerOf, triggerWords } from "./triggers.js";
+import { type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
 import { type ActionPlace, placeWords } from "./places.js";
 import { timeIn } from "./work.js";
 
@@ -41,7 +41,12 @@ export interface RingItem {
    * What the dial's OK (pressing the face) does on this stop, the same in both apps: open or close its door,
    * run the taf once, remove a follow-up, or open Coach. Absent: nothing.
    */
-  ok?: "door" | "run" | "remove_follow_up" | "coach";
+  ok?: "door" | "run" | "remove_follow_up" | "coach" | "approve";
+  /**
+   * An app event's subscription at planque: `needed` until the owner's phone approves it (the stop's `ok` is
+   * `approve`), then `approved` with planque's subscription id.
+   */
+  approval?: { state: "needed" | "approved"; grant: string; event: string; config: Record<string, unknown>; subscription?: string };
   /** A door stop's look: its arc lit, dashed, grey while resting, or amber while a knock waits. */
   look?: "open" | "closed" | "resting" | "knock";
   /**
@@ -124,6 +129,8 @@ export interface KnobInput {
   shown?: number;
   /** The live version's dial, when a tap or Coach's draft set it; else it's read from the schedule. */
   setting?: KnobSetting;
+  /** The app events the taf wakes on, as applied, with planque's subscription once approved. */
+  appEvents?: Trigger[];
   version?: number;
   zone: string;
   now: Date;
@@ -188,7 +195,11 @@ export function knobOf(k: KnobInput): Knob {
   // Any connected app's event the live version wakes on: its own stop, named as the owner picked it.
   for (const [i, t] of (k.setting?.wakes ?? []).filter((x) => x.kind === "app_event").entries()) {
     const name = (t.name ?? t.event ?? "").slice(0, 100);
-    wakes.push({ id: `trg_event_${i + 1}`, kind: "app_event", ...(t.grant ? { grant: t.grant } : {}), label: name.split(" · ")[0] || name, words: triggerWords(t), on: true, state: "On", trigger: t });
+    const subscription = k.appEvents?.find((a) => sameAppEvent(a, t))?.subscription;
+    const approval = { state: subscription ? "approved" as const : "needed" as const, grant: t.grant ?? "", event: t.event ?? "", config: t.config ?? {},
+      ...(subscription ? { subscription } : {}) };
+    wakes.push({ id: `trg_event_${i + 1}`, kind: "app_event", ...(t.grant ? { grant: t.grant } : {}), label: name.split(" · ")[0] || name, words: triggerWords(t),
+      on: !!subscription, state: subscription ? "On" : "Needs your approval", approval, ...(subscription ? {} : { ok: "approve" as const, tap: "Approve to start listening" }), trigger: t });
   }
   for (const f of k.followUps ?? []) {
     const check = f.input.trim().replace(/\s+/g, " ");
