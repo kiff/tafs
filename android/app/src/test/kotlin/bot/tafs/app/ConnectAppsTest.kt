@@ -107,6 +107,8 @@ class ConnectAppsTest {
     transport.answer("GET /v1/tafs/taf_1/knob", 503, """{"error":"down"}""")
     assertTrue("the change was made", m.changeKnobSize("refunds-1", kotlinx.serialization.json.JsonObject(emptyMap())))
     assertEquals("− and + wait for version 8", 8, m.state.value.knobBehind["refunds-1"])
+    assertFalse("a choice from before isn't sent", m.changeKnobSize("refunds-1", kotlinx.serialization.json.JsonObject(emptyMap())))
+    assertEquals("one PUT only", 1, transport.requestsTo("PUT /v1/tafs/taf_1/knob").size)
     // Read again: the live dial says 8 waits, and that one can't be read either.
     transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":7,"why":"Refund double charges","pending":{"version":8,"changes":1},"rim":{}}""")
     transport.answer("GET /v1/tafs/taf_1/knob", 503, """{"error":"down"}""")

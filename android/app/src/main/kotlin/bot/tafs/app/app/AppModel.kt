@@ -2470,6 +2470,8 @@ class AppModel(
    */
   suspend fun changeKnobSize(tafId: String, setting: kotlinx.serialization.json.JsonObject): Boolean {
     if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return false
+    // A change not read back yet: a choice from the dial before it would undo it.
+    if (tafId in _state.value.knobBehind) return false
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return false
     val generation = accountGeneration
     _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
