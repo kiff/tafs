@@ -22,7 +22,13 @@ describe("the dial", () => {
     expect(k.wakes[0]!.door).toBe("d1");
     expect(k.wakes[1]!.words).toBe("Weekdays at 09:00, next Tue 09:00");
     expect(k.when.map((w) => w.kind)).toEqual(["arrivals", "missed", "busy"]);
-    expect(k.results.map((r) => [r.place, r.label])).toEqual([["door_reply", "Sender"], ["app", "You"]]);
+    // Every place is on the ring, on or off, and turning one says what it changes; If busy turns too.
+    expect(k.results.map((r) => [r.place, r.label, r.state, r.tap])).toEqual([
+      ["door_reply", "Sender", "On", "Turn to stop: replies to whoever wrote"],
+      ["app", "You", "On", "Turn to stop: shows each result in the app"],
+      ["owner_email", "Email", "Off", "Turn on: emails you each result"],
+    ]);
+    expect(k.when.find((w) => w.kind === "busy")!.tap).toBe("Turn to run the latest once it's free");
     expect(k.rim.line).toBe("12 done today · 1 working · 1 retrying · 1 needs you");
     expect(k.draft).toBeNull();
     // Each trigger carries its form as PUT takes it, and the knob the whole setting.
@@ -44,6 +50,8 @@ describe("the dial", () => {
     expect(k.when.find((w) => w.kind === "busy")!.state).toBe("Latest");
     expect(k.setting).toEqual(setting);
     expect(k.version).toBe(3);
+    // The last place on can't be turned off.
+    expect(k.results.find((r) => r.place === "app")!.tap).toBeUndefined();
   });
 
   it("a taf that works from its chat has no schedule, and its face doesn't run it", () => {

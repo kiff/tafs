@@ -130,9 +130,15 @@ export function knobOf(k: KnobInput): Knob {
   const busy = k.setting?.busy ?? k.busy ?? "skip";
   const latest = busy === "latest";
   when.push({ id: "when_busy", kind: "busy", label: "If busy", words: latest ? "Runs the latest once it's free" : "Skips a run while it's working", on: true,
-    state: latest ? "Latest" : "Skip" });
+    state: latest ? "Latest" : "Skip", tap: latest ? "Turn to skip a run while it's working" : "Turn to run the latest once it's free" });
 
-  const results = k.places.map((p) => ({ id: `res_${p}`, place: p, label: PLACE[p].label, words: PLACE[p].words, on: true, state: "On" }));
+  // Every place, on or off: turning one changes where results go, as the taf's next version. The last one on stays.
+  const places = k.setting?.results ?? k.places;
+  const results = (Object.keys(PLACE) as ResultPlace[]).map((p) => {
+    const on = places.includes(p);
+    return { id: `res_${p}`, place: p, label: PLACE[p].label, words: PLACE[p].words, on, state: on ? "On" : "Off",
+      ...(on && places.length === 1 ? {} : { tap: on ? `Turn to stop: ${PLACE[p].words.toLowerCase()}` : `Turn on: ${PLACE[p].words.toLowerCase()}` }) };
+  });
 
   const t = k.today;
   const parts = [`${t.done} done today`, ...(t.working ? [`${t.working} working`] : []), ...(t.retrying ? [`${t.retrying} retrying`] : []),
