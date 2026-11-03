@@ -69,12 +69,8 @@ struct ConnectAppsView: View {
 
     private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(app.vendor.isEmpty ? app.title : app.vendor).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-                if !app.title.isEmpty, app.title != app.vendor {
-                    Text(app.title).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
-                }
-            }
+            Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                .accessibilityIdentifier("connect.title." + app.entry)
             Spacer()
             if app.connected {
                 Label("Connected", systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)

@@ -117,4 +117,22 @@ final class KnobNavigationTests: XCTestCase {
         knob.version = 8
         XCTAssertTrue(knob.acceptsChoices(waitingFor: 8), "the draft is now live")
     }
+    func testCrowdedInnerRingLabelsFitTheirShareWithoutNegativeWidths() {
+        let inner = KnobNavigation.labelWidth(radius: 90, stops: 6, maximum: 100, gap: 12)
+        XCTAssertTrue(abs(inner - 78) < 0.001)
+        XCTAssertTrue(KnobNavigation.labelWidth(radius: 180, stops: 6, maximum: 100, gap: 12) == 100)
+        XCTAssertEqual(KnobNavigation.labelWidth(radius: 90, stops: 1, maximum: 100, gap: 12), 100)
+        XCTAssertEqual(KnobNavigation.labelWidth(radius: 2, stops: 6, maximum: 100, gap: 12), 0)
+    }
+
+    func testTheServerCanDisablePauseAndOlderServersKeepItAvailable() throws {
+        let decoder = JSONDecoder()
+        let noPause = try decoder.decode(TafsCloud.Knob.self, from: Data(#"{"can_pause":false}"#.utf8))
+        let canPause = try decoder.decode(TafsCloud.Knob.self, from: Data(#"{"can_pause":true}"#.utf8))
+        let legacy = try decoder.decode(TafsCloud.Knob.self, from: Data(#"{}"#.utf8))
+        XCTAssertFalse(noPause.canPause)
+        XCTAssertTrue(canPause.canPause)
+        XCTAssertTrue(legacy.canPause)
+    }
+
 }

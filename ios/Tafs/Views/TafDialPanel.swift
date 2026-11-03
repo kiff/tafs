@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Owns the remote's requests and confirmation, apart from the dial's drawing.
-struct TafDialPanel: View {
+struct TafDialPanel<Details: View>: View {
     @EnvironmentObject private var model: AppModel
     let taf: Taf
     let knob: TafsCloud.Knob
@@ -11,11 +11,42 @@ struct TafDialPanel: View {
     let held: [HeldCall]
     var press: (TafsCloud.Knob.Item) async -> Void
     var approve: (HeldCall) -> Void
+    let details: Details
+    @State private var filter: KnobNavigation.Filter = .all
     @State private var busy = false
     @State private var reading: TafsCloud.Version?
     @State private var requests = false
 
     var body: some View {
+        ScrollView {
+            content.padding(.horizontal, 16).padding(.vertical, 12)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 8) {
+                if let error = model.lastError {
+                    Text(error).scaledFont(13).foregroundColor(Theme.no)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("knob.error")
+                }
+                TafKnobRemote(knob: knob, face: $face, filter: filter,
+                              paused: model.cloudTaf(for: taf.id)?.paused ?? false,
+                              manages: manages, busy: busy, pause: pause, adjust: adjust,
+                              canAdjust: { item, direction in
+                                  knob.acceptsChoices(waitingFor: model.knobChanges[taf.id]?.version) && item.size?.choice(moving: direction) != nil
+                              })
+            }
+            .padding(.horizontal, 16).padding(.vertical, 12)
+            .background(Theme.background)
+        }
+        .task { showHeld() }
+        .onChange(of: held.map(\.id)) { _ in showHeld() }
+        .sheet(item: $reading) { version in
+            VersionCardSheet(version: version, tafID: taf.id).environmentObject(model)
+        }
+        .sheet(isPresented: $requests) { KnobRequestsSheet(tafID: taf.id).environmentObject(model) }
+    }
+
+    private var content: some View {
         VStack(spacing: 14) {
             if let pending = knob.pending {
                 Text("DRAFT · V\(pending.version) · NOT LIVE").scaledFont(10, weight: .semibold, design: .monospaced)
@@ -29,13 +60,8 @@ struct TafDialPanel: View {
                     await press(item)
                     await doors.load()
                 }
-            }, doors: doors.doors,
-                        paused: model.cloudTaf(for: taf.id)?.paused ?? false,
-                        manages: manages, busy: busy,
-                        askCoach: { model.openCoach() }, pause: pause,
-                        adjust: adjust, canAdjust: { item, direction in
-                            knob.acceptsChoices(waitingFor: model.knobChanges[taf.id]?.version) && item.size?.choice(moving: direction) != nil
-                        }, approve: approve)
+            }, doors: doors.doors, manages: manages, busy: busy,
+                        askCoach: { model.openCoach() }, approve: approve, filter: $filter)
             if let pending = knob.pending, manages {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(Array((knob.draft?.words ?? []).enumerated()), id: \.offset) { _, line in
@@ -53,16 +79,8 @@ struct TafDialPanel: View {
                 }.foregroundColor(Theme.dim).frame(minHeight: 44)
             }
             .accessibilityIdentifier("knob.requests")
-            if let error = model.lastError {
-                Text(error).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
-            }
+            details
         }
-        .task { showHeld() }
-        .onChange(of: held.map(\.id)) { _ in showHeld() }
-        .sheet(item: $reading) { version in
-            VersionCardSheet(version: version, tafID: taf.id).environmentObject(model)
-        }
-        .sheet(isPresented: $requests) { KnobRequestsSheet(tafID: taf.id).environmentObject(model) }
     }
 
     private var liveLabel: String {
@@ -85,7 +103,7 @@ struct TafDialPanel: View {
     }
 
     private func pause() {
-        guard manages, !busy, let cloud = model.cloudTaf(for: taf.id) else { return }
+        guard manages, !busy, knob.canPause, let cloud = model.cloudTaf(for: taf.id) else { return }
         busy = true
         Task {
             defer { busy = false }

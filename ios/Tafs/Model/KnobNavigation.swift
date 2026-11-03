@@ -56,4 +56,10 @@ enum KnobNavigation {
         if Double(d) < -Double(stops) / 2 { d += stops }
         return turn + d
     }
+    /// The chord inside a stop's share of its ring, leaving space between neighbours.
+    static func labelWidth(radius: Double, stops: Int, maximum: Double, gap: Double) -> Double {
+        guard stops > 1 else { return max(0, maximum) }
+        return max(0, min(maximum, 2 * radius * sin(.pi / Double(stops)) - gap))
+    }
+
 }

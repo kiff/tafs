@@ -2206,6 +2206,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let c = cloudTaf(for: tafID),
               let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return }
         let gen = accountGeneration
+        lastError = nil
         do {
             let updated = try await cloud.setPaused(c.id, paused)
             guard gen == accountGeneration else { return }
@@ -2214,7 +2215,11 @@ final class AppModel: ObservableObject {
                 tafs[i].state = updated.paused ? .paused : .working
                 tafs[i].now = updated.paused ? "Paused by you" : updated.nextRun.map { "Next run \($0.shortTime)" } ?? "Back to work"
             }
+        } catch let error as TafsCloud.CloudError {
+            guard gen == accountGeneration else { return }
+            lastError = error.words ?? error.message
         } catch {
+            guard gen == accountGeneration else { return }
             lastError = "tafs cloud didn't \(paused ? "pause" : "resume") it: \(error.localizedDescription)"
         }
     }

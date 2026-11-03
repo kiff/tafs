@@ -173,6 +173,8 @@ extension TafsCloud {
             var version: Int
             var changes: Int
         }
+        /// Older servers did not send the flag; preserve their enabled remote until they do.
+        var canPause = true
         var pending: Pending?
         var version: Int?
         var shown: Int?
@@ -190,12 +192,13 @@ extension TafsCloud {
         /// thing and sends it whole.
         var setting: Setting?
 
-        enum CodingKeys: String, CodingKey { case pending, version, shown, why, does, wakes, when, what, results, rim, draft, setting, connections, rings }
+        enum CodingKeys: String, CodingKey { case canPause = "can_pause", pending, version, shown, why, does, wakes, when, what, results, rim, draft, setting, connections, rings }
         init(version: Int? = nil, does: Does = Does(), wakes: [Item] = [], when: [Item] = [], results: [Item] = [], rim: Rim = Rim(), draft: Draft? = nil) {
             self.version = version; self.does = does; self.wakes = wakes; self.when = when; self.results = results; self.rim = rim; self.draft = draft
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
+            canPause = try c.decodeIfPresent(Bool.self, forKey: .canPause) ?? true
             version = try c.decodeIfPresent(Int.self, forKey: .version)
             pending = try c.decodeIfPresent(Pending.self, forKey: .pending)
             shown = try c.decodeIfPresent(Int.self, forKey: .shown)

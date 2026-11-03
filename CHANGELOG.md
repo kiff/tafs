@@ -5,6 +5,11 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **iPhone and iPad:** the dial remote stays above the tab bar while its contents scroll.
+  Long ring and face labels fit with an ellipsis, with full words for VoiceOver. Pause
+  follows the service's availability and shows its refusal words. Connect apps rows show
+  the catalog title without an internal provider id.
+
 - **Android, from the v20 walkthrough:** a long word on the dial ends in "…" within its ring and on the face, and TalkBack reads it whole. ⏻ is off for a taf that can't be paused, and a refused pause is said in tafs cloud's words. With the dial, the Doors tab's own Add a door panel is gone: a new door is Coach's. Connect apps shows each app by its title alone, and a late answer to an earlier search no longer replaces the newest one.
 - **Android:** an app that takes an API key is connected from Connect apps, as on iPhone and iPad. Its approval sheet takes the key and gives it to planque with the same confirmation, instead of sending the owner to Coach.
 - **iPhone and iPad:** Connect apps clears its list and approval when the account changes and ignores stale search replies. Removing a Slack door waits until the phone can stop its subscription.

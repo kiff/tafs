@@ -19,6 +19,14 @@ extension Screenshots {
             .init(id: "log", label: "Log", words: "Keeps a log", state: "Log", step: 3),
         ]
         knob.connections = (1...12).map { .init(grant: "sample_\($0)", name: "Service \($0)", wakes: $0 == 1 ? 0 : 1, results: 1, icon: nil) }
+        knob.canPause = !ProcessInfo.processInfo.arguments.contains("-knob-no-pause")
+        if ProcessInfo.processInfo.arguments.contains("-knob-long-labels") {
+            knob.why = "Refund duplicate charges after checking the original payment and keeping a record"
+            if let index = knob.wakes.firstIndex(where: { $0.id == "event_12" }) {
+                knob.wakes[index].label = "A very long connection event name that must remain readable with VoiceOver"
+                knob.wakes[index].state = "Waiting for the next event from the connected business application"
+            }
+        }
         return knob
     }
 }

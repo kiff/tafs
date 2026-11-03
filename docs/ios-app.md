@@ -116,8 +116,11 @@ the app in sample mode.
   labels; **Back/Next** still walk every stop, across empty rings and around the end.
   Choosing a stop turns its ring to the pointer; the face shows its value and hint.
   Text in the lower half flips 180° relative to its stop, based on the ring's current turn,
-  so labels never read upside down.
-- **The remote** (`TafDialPanel`): **Lower/Raise** select only the neighbouring value from
+  so labels never read upside down. Each label fits inside its ring segment and truncates
+  with an ellipsis; the face bounds its title, value and hint too. VoiceOver reads the full
+  source words, including text omitted visually.
+- **The remote** (`TafDialPanel` and `TafKnobRemote`): stays in the bottom safe area, above
+  the tab bar, while the dial and door details scroll. **Lower/Raise** select only the neighbouring value from
   the stop's server-supplied `size.choices`, within its bounds. There are no vendor presets
   in the app. A choice's complete setting goes to `PUT …/knob`, then iOS reads the returned
   draft through `GET …/knob?version=N`. Subsequent choices build on that draft; if its
@@ -125,7 +128,9 @@ the app in sample mode.
   Pending settings are labelled **not live**. **Make it live** reads the newest draft and uses the existing version switch
   and biometric signature (reading a changed Card first). A tweak alone never switches it.
   The controls for changes are shown only to someone KIFF says manages the taf. Pause uses
-  the existing pause/resume route. The search-shaped **Ask Coach or find anything** button
+  the existing pause/resume route. The power button is disabled when the service sends
+  `can_pause: false`; older responses keep it available. A refused pause shows the
+  service's `words`, or its error message when words are absent. The search-shaped **Ask Coach or find anything** button
   opens Coach in the taf's context.
 - **Doors and needs you:** the face opens/closes the chosen door, runs the taf once or removes the chosen
   follow-up by the id cloud supplied.
@@ -148,7 +153,9 @@ the app in sample mode.
   bounded sizes and complete setting preservation. `VersionsTests` covers two edits,
   stale selections, a failed draft read and the absence of an automatic switch.
   `KnobUITests` uses the synthetic `-screenshots YES -screen knob` fixture with 12 services.
-  The regular `-screen doors` screenshots use that same dial, including the sample email knock.
+  It checks that the remote stays above the tab bar before and after scrolling, a disabled
+  power button, and full accessibility labels when text is long. The regular `-screen doors`
+  screenshots use that same dial, including the sample email knock.
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
   `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
   (`POST /v1/profiles/words`) and checked against the profile's digest and their own before
@@ -164,7 +171,8 @@ the app in sample mode.
   is taken back. Removing it is the reverse: the signed `DELETE …/grants/{grant}/triggers/{trigger}`,
   then the door. If the phone cannot sign the subscription's removal, the door stays and the app asks the owner to reconnect first. Pairing asks for a Slack member ID.
 - **Connect apps** (`ConnectAppsView`, from Settings): `GET /v1/connect/apps`, searched as the
-  owner types, in tafs cloud's order and words; "Not listed? Ask Coach" when `by_key`.
+  owner types, in tafs cloud's order and words. Rows show only the app's catalog title;
+  internal provider ids are not shown. "Not listed? Ask Coach" appears when `by_key`.
   Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,
   with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
   API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
