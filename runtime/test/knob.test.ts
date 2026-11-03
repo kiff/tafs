@@ -60,6 +60,8 @@ describe("the dial", () => {
     expect(k.wakes[0]!.tap).toBeUndefined();
     expect(k.when.map((w) => w.kind)).toEqual(["busy"]);
     expect(k.rim.line).toBe("0 done today");
+    expect(k.can_pause).toBe(false);
+    expect(knobOf(base).can_pause).toBe(true);
   });
 
   it("a follow-up the taf set itself shows on Wakes it, with when it fires and how to remove it", () => {

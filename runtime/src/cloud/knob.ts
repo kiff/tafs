@@ -76,6 +76,8 @@ export interface Knob {
   /** Each place, on or off; an action place also names its connection and action. */
   results: (Omit<RingItem, "kind"> & { place: ResultPlace | ActionPlace["place"]; grant?: string; action?: string })[];
   rim: { done: number; working: number; retrying: number; needs_you: number; line: string };
+  /** Whether ⏻ applies: false for a taf that works from its chat, which has no schedule to pause (409). */
+  can_pause: boolean;
   /**
    * The change waiting to go live, the same in both apps: the version Make it live switches to, and how many
    * stops it changes from the live dial (for "Make N changes live"). Null when nothing waits.
@@ -238,6 +240,7 @@ export function knobOf(k: KnobInput): Knob {
     rings: [{ key: "wakes", name: "When" }, { key: "what", name: "What" }, { key: "results", name: "Where" }],
     what: whatOf(k),
     rim: { ...t, line: parts.join(" · ") },
+    can_pause: !k.unscheduled,
     connections: connectionsOf(wakes, results),
     draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting),
       what: (k.draft.setting.what ?? []).map((s, i) => `${i + 1} · ${s.label}: ${s.words}`), groups: groupsOf(k.draft.setting) } : null,
