@@ -64,8 +64,8 @@ never goes live by itself. Only someone who manages the taf can change Setup.
 
 ## Setup › Results go to
 
-Where the taf's answers go. Each place is a switch, and at least one stays on: the last one
-left can't be turned off.
+Where the taf's answers go. Each place is a switch. At least one of tafs' own places stays
+on: the last of them can't be turned off, even while a place in a connected app is on.
 
 - **From tafs**:
   - **Reply to the sender**: on the same thread, through the door it came in on;
