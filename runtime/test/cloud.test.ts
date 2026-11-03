@@ -1588,6 +1588,13 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
     expect(rec.results).toEqual(["door_reply", "app"]);
     expect(rec.scheduleIds).toEqual([`${RAE}-t2`]);
+    expect(rec.knobApplied).toBe(n);
+    // A live dial never written where it acts (the write failed after the switch) is written on the next read.
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rec, knobApplied: undefined, scheduleIds: [] });
+    w.agents.calls.length = 0;
+    await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c)).length).toBeGreaterThan(0);
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.knobApplied).toBe(n);
     // The live dial reads back as it was set, for the next tap to change one thing.
     const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(knob.body.setting).toEqual({ wakes: [{ kind: "schedule", form: "times_a_day", times: ["09:00", "15:00", "12:30"] }, { kind: "door" }], busy: "latest", results: ["door_reply", "app"] });

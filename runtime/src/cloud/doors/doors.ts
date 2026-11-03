@@ -409,7 +409,9 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
       // The alert says what happened, never the taf's words: only once the door's reply went out. While
       // that reply waits for its next try the alert waits with it, and one given up on is said below.
       if (taf && placesOf(taf).includes("door_reply") && !done.has("door_reply")) continue;
-      if (taf) await tellOwner(ctx, tenant, taf, `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : door?.kind === "slack" ? "Slack" : "email"} door.`, `reply-${ref}`, "reply");
+      // A Slack answer is the taf's own post, which tafs cloud doesn't see: it says handled, not answered.
+      if (taf) await tellOwner(ctx, tenant, taf, door?.kind === "slack" ? `Handled ${reply.name || reply.to}'s message in Slack; ${taf.name} posts its answer there itself.`
+        : `Answered ${reply.name || reply.to} through its ${door?.kind === "whatsapp" ? "WhatsApp" : "email"} door.`, `reply-${ref}`, "reply");
       done.add(place);
     } else if (place === "owner_email") {
       const owner = door?.keys.find((k) => k.auto)?.id ?? (await ownerEmailOf(store, tenant, reply.taf));

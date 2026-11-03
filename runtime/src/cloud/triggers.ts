@@ -67,16 +67,22 @@ function days(ds: string[] | undefined): string {
   return n.join(",");
 }
 
-/** The nearest every-N the scheduler says exactly: 15, 20 or 30 minutes, or whole hours. */
+/** Every N the scheduler keeps exactly, all day long: 15, 20 or 30 minutes, or hours that divide the day. */
+const EXACT_EVERY = [15, 20, 30, 60, 120, 180, 240, 360, 480, 720];
+
+/** The nearest every-N the scheduler says exactly. */
 export function nearestEvery(n: number): number {
-  if (n <= 15) return 15;
-  if (n < 60) return [15, 20, 30, 60].reduce((a, b) => (Math.abs(b - n) < Math.abs(a - n) ? b : a));
-  return Math.max(1, Math.round(n / 60)) * 60;
+  // Halfway between two, minutes round down and hours round up, as people say them.
+  return EXACT_EVERY.reduce((a, b) => {
+    const da = Math.abs(a - n), db = Math.abs(b - n);
+    return db < da || (db === da && n >= 60) ? b : a;
+  });
 }
 
 function every(n: number | undefined): number {
   if (!n || !Number.isInteger(n) || n < 1) throw new TriggerError("every_minutes is how many minutes apart");
-  const exact = n === 15 || n === 20 || n === 30 || (n >= 60 && n % 60 === 0 && n <= 720);
+  // An hour step that doesn't divide the day fires unevenly across midnight (every 5 h: 20:00, then 00:00).
+  const exact = EXACT_EVERY.includes(n);
   if (!exact) {
     const near = nearestEvery(n);
     throw new TriggerError(`every ${n} minutes can't be kept exactly`, near >= 60 ? `every ${near / 60} hour${near === 60 ? "" : "s"}` : `every ${near} minutes`);

@@ -44,6 +44,10 @@ describe("the dial's triggers, as kiff/agents keeps them", () => {
     };
     expect(refused({ kind: "schedule", form: "every", every_minutes: 25 })).toEqual({ why: "every 25 minutes can't be kept exactly", nearest: "every 20 minutes" });
     expect(refused({ kind: "schedule", form: "every", every_minutes: 5 })).toEqual({ why: "every 5 minutes can't be kept exactly", nearest: "every 15 minutes" });
+    // An hour step that doesn't divide the day fires unevenly across midnight: refused, the nearest offered.
+    expect(refused({ kind: "schedule", form: "every", every_minutes: 300 })).toEqual({ why: "every 300 minutes can't be kept exactly", nearest: "every 6 hours" });
+    expect(refused({ kind: "schedule", form: "every", every_minutes: 600 })).toEqual({ why: "every 600 minutes can't be kept exactly", nearest: "every 12 hours" });
+    expect(crons({ kind: "schedule", form: "every", every_minutes: 480 })).toEqual(["0 */8 * * *"]);
     expect(refused({ kind: "schedule", form: "every", every_minutes: 90 })).toMatchObject({ nearest: "every 2 hours" });
     expect(refused({ kind: "schedule", form: "every", every_minutes: 30, between: { from: "08:30", to: "18:00" } })).toMatchObject({ nearest: "from 08:00 to 18:00" });
     expect(refused({ kind: "schedule", form: "monthly", at: "09:00", date: "31" })).toMatchObject({ nearest: "the last day of the month" });

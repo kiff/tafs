@@ -89,7 +89,8 @@ export const TOOLS: ToolDef[] = [
       wakes: {
         type: "array", description: "Every trigger, as it should be: {kind: \"schedule\", form: daily|weekdays|weekly|monthly|monthly_last_day|times_a_day|every|once, " +
           "at?: \"09:00\", days?: [\"mon\"…], times?: [\"09:00\"…], every_minutes?: 15|20|30|60·k, between?: {from, to} on the hour, date?: day of month or \"2026-11-05T09:00\"}, " +
-          "{kind: \"app_check\", operation, args, items, cursor, every_minutes}, or {kind: \"door\"}. Times are in the account's zone.",
+          "{kind: \"app_check\", operation, args, items, cursor, every_minutes}, {kind: \"door\"}, or any connected app's event: " +
+          "{kind: \"app_event\", grant: <connection>, event: <its event, as the connection lists it>, config?: {<filters>}, name: \"App · what happens\"}. Times are in the account's zone.",
         items: { type: "object" },
       },
       when: { type: "object", properties: { busy: { type: "string", enum: ["skip", "latest"] } }, description: "What it does when a trigger fires while it works." },

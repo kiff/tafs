@@ -229,6 +229,10 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(made.words).toEqual(["Weekdays at 09:00", "If busy, runs the latest once it's free", "Results go to door_reply"]);
     expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(made.version)]).toEqual({ wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], busy: "latest", results: ["door_reply"] });
     expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c))).toEqual([]);
+    // Coach can draft any connected app's event too.
+    const ev = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_WON", name: "HubSpot · deal won" }] })).json as { version: number; words: string[] };
+    expect(ev.words[0]).toBe("Wakes on HubSpot · deal won");
+    expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(ev.version)]?.wakes).toEqual([{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_WON", name: "HubSpot · deal won" }]);
     // Coach's recipe and Why go with the version.
     const withRecipe = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "door" }], why: "Refund double charges", what: [{ label: "Check", words: "Looks up the charge" }] })).json as { version: number };
     expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(withRecipe.version)]).toMatchObject({ why: "Refund double charges", what: [{ label: "Check", words: "Looks up the charge" }] });

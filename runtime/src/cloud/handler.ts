@@ -271,6 +271,8 @@ export interface Taf {
    * kiff/agents' scheduler, and its results places kept, only when that version goes live.
    */
   knobs?: Record<string, KnobSetting>;
+  /** The version whose dial was last written where it acts (applyKnob): a live version that isn't, is written again. */
+  knobApplied?: number;
   /** The schedules its live dial keeps in kiff/agents, beyond the first (its own id). */
   scheduleIds?: string[];
   /**
@@ -652,6 +654,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       throw new HTTPError(404, "that version isn't a dial change waiting to go live");
     }
     const setting = shown !== undefined ? taf.knobs![String(shown)] : live !== undefined ? taf.knobs?.[String(live)] : undefined;
+    // A live version whose dial was never written where it acts (applyKnob failed after the switch): written now.
+    if (live !== undefined && taf.knobs?.[String(live)] && taf.knobApplied !== live) {
+      await applyKnob(me, taf, live, deps).catch((err) => console.error(`dial of ${taf.id} v${live} not applied:`, err instanceof Error ? err.message : "error"));
+    }
     const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
     const { counts } = workOf(today, zone, now, []);
     const job = JOBS.find((j) => j.id === taf.job);
@@ -2393,6 +2399,8 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     // A retry after the version went live but the trial didn't end only ends the trial.
     const live = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.live)?.n;
     if (live !== open.n) await goLive(event, me, taf, open.n, deps);
+    // Live already, but its dial not written (applyKnob failed after the switch): write it now.
+    else if (taf.knobs?.[String(open.n)] && taf.knobApplied !== open.n) await applyKnob(me, taf, open.n, deps);
     const counts = (await trialOf(token, open.draft, deps.fetch, deps.kiffBase)) ?? { calls: 0, held: 0, refused: 0 };
     const ended = await agentsCall(() => deps.agents.endTrial(me.tenantID, taf.id, "installed", counts));
     return { live: open.n, ended };
@@ -2647,7 +2655,7 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const cur = await deps.tafs.get(me.tenantID, taf.id);
     if (!cur) break;
     const vendor = k.results.filter((p): p is ActionPlace => typeof p !== "string");
-    const next: Taf = { ...cur, results: k.results.filter((p): p is ResultPlace => typeof p === "string"), scheduleIds: ids.slice(1) };
+    const next: Taf = { ...cur, results: k.results.filter((p): p is ResultPlace => typeof p === "string"), scheduleIds: ids.slice(1), knobApplied: n };
     if (vendor.length) next.actionResults = vendor; else delete next.actionResults;
     const events = k.wakes.filter((t) => t.kind === "app_event");
     if (events.length) next.appEvents = events; else delete next.appEvents;
