@@ -4,10 +4,11 @@
  * tool, a write through KIFF inside its Card, so a version's instructions carry them and they go live with it.
  */
 
+/** `name` is what the owner picked it by ("Support log", "#refunds"): the ring and the words use it, the instructions the ids. */
 export type VendorPlace =
-  | { place: "notion"; page: string }
-  | { place: "gmail"; to: string }
-  | { place: "teams"; team: string; channel: string };
+  | { place: "notion"; page: string; name?: string }
+  | { place: "gmail"; to: string; name?: string }
+  | { place: "teams"; team: string; channel: string; name?: string };
 
 const ID = /^[A-Za-z0-9:._@-]{1,200}$/;
 const EMAIL = /^[^\s@<>"]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,}$/;
@@ -16,16 +17,19 @@ const EMAIL = /^[^\s@<>"]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,}$/;
 export function vendorPlace(v: unknown): VendorPlace {
   const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
   const s = (k: string) => (typeof o[k] === "string" ? (o[k] as string).trim() : "");
+  // A name is for people to read: one line, kept short, never instructions to the taf.
+  const named = s("name").replace(/[\u0000-\u001f\u007f]+/g, " ").slice(0, 100);
+  const name = named ? { name: named } : {};
   switch (o.place) {
     case "notion":
       if (!ID.test(s("page"))) throw new Error("a Notion place names its page's id");
-      return { place: "notion", page: s("page") };
+      return { place: "notion", page: s("page"), ...name };
     case "gmail":
       if (!EMAIL.test(s("to"))) throw new Error("a Gmail place names the address it emails");
-      return { place: "gmail", to: s("to") };
+      return { place: "gmail", to: s("to"), ...name };
     case "teams":
       if (!ID.test(s("team")) || !ID.test(s("channel"))) throw new Error("a Teams place names its team's id and its channel's id");
-      return { place: "teams", team: s("team"), channel: s("channel") };
+      return { place: "teams", team: s("team"), channel: s("channel"), ...name };
     case "slack":
       throw new Error("Slack as a result place comes with the taf's Slack door");
   }
@@ -35,18 +39,18 @@ export function vendorPlace(v: unknown): VendorPlace {
 /** The place on the dial's Results ring, and its line. */
 export function vendorWords(p: VendorPlace): { label: string; words: string } {
   switch (p.place) {
-    case "notion": return { label: "Notion", words: `Adds a page under Notion page ${p.page}` };
+    case "notion": return { label: "Notion", words: `Adds a page under ${p.name ? `“${p.name}”` : `Notion page ${p.page}`}` };
     case "gmail": return { label: "Gmail", words: `Emails ${p.to} each result, from your Gmail` };
-    case "teams": return { label: "Teams", words: `Posts each result in Teams channel ${p.channel}` };
+    case "teams": return { label: "Teams", words: `Posts each result in ${p.name ? `“${p.name}”` : `Teams channel ${p.channel}`}` };
   }
 }
 
 /** The same place as one line of the words a dial change answers. */
 export function vendorLine(p: VendorPlace): string {
   switch (p.place) {
-    case "notion": return `notion page ${p.page}`;
-    case "gmail": return `gmail to ${p.to}`;
-    case "teams": return `teams channel ${p.channel}`;
+    case "notion": return `Notion page ${p.name ? `“${p.name}”` : p.page}`;
+    case "gmail": return `Gmail to ${p.to}`;
+    case "teams": return `Teams channel ${p.name ? `“${p.name}”` : p.channel}`;
   }
 }
 

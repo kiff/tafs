@@ -96,7 +96,7 @@ export const TOOLS: ToolDef[] = [
       results: {
         type: "array",
         description: "Every place its results go; omitted, as they are. At least one of door_reply, app, owner_email, which tafs delivers; " +
-          "and up to 5 the taf writes itself with its own connected tool, inside its Card: {place: \"notion\", page: <page id>}, " +
+          "and up to 5 the taf writes itself with its own connected tool, inside its Card: {place: \"notion\", page: <page id>, name?: its title}, " +
           "{place: \"gmail\", to: <address>}, {place: \"teams\", team: <team id>, channel: <channel id>}. Slack comes with the taf's Slack door.",
       },
     },

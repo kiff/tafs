@@ -1596,7 +1596,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results: ["app", { place: "notion", page: "p1" }] } });
     expect(put.status).toBe(200);
     const n = put.body.version as number;
-    expect(put.body.words).toContain("Results go to app, notion page p1");
+    expect(put.body.words).toContain("Results go to app, Notion page p1");
     expect(JSON.stringify(w.agents.versionDefs.get(`t_acme|${RAE}|${n}`) ?? [...w.agents.versionDefs.values()].at(-1))).toContain("under the Notion page p1");
     await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
     const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
