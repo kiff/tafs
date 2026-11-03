@@ -37,22 +37,6 @@ extension View {
     }
 }
 
-extension View {
-    /// Room at the foot of a scrolling screen for ✦ Coach mode, which floats over it
-    /// (kiff/tafs#138): its last line scrolls clear of the button.
-    func coachClearance() -> some View { modifier(CoachClearance()) }
-}
-
-private struct CoachClearance: ViewModifier {
-    @Environment(\.horizontalSizeClass) private var sizeClass
-
-    func body(content: Content) -> some View {
-        content.safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: CoachButton.clearance(wide: sizeClass == .regular))
-        }
-    }
-}
-
 extension ToolbarItemPlacement {
     /// The navigation bar's trailing end.
     static var trailingBar: ToolbarItemPlacement {

@@ -56,9 +56,11 @@ struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
-    /// The keyboard is up: ✦ keeps off it (kiff/tafs#138).
+    /// The keyboard is up: the bar keeps off it.
     @State private var keyboardUp = false
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
+    /// The tabs opened so far: each is built the first time it's opened, then kept.
+    @State private var opened: Set<Tab> = []
     /// A few seconds after the tafs are in: a phone with alerts on has said so by then, so the
     /// offer of alerts never flashes up on it.
     @State private var settled = false
@@ -73,6 +75,18 @@ struct RootView: View {
     /// Touch ID and then a refusal (the 805 retest).
     private var coachAvailable: Bool { model.signedIn && model.mode == .kiff && model.mayUseCoach }
 
+    private static let tabs: [Tab] = [.account, .tafs, .needsYou, .record]
+
+    @ViewBuilder private func tabContent(_ t: Tab) -> some View {
+        switch t {
+        // A sidebar beside the open taf on a wide screen (kiff/tafs#85).
+        case .tafs: TafsTab(tab: $tab)
+        case .needsYou: NavigationStack { NeedsYouView() }
+        case .record: NavigationStack { RecordView() }
+        case .account: SettingsView()
+        }
+    }
+
     private func showRequestedTab(_ requested: Tab?) {
         guard let requested else { return }
         tab = requested
@@ -82,19 +96,27 @@ struct RootView: View {
     var body: some View {
         Group {
             if model.signedIn {
-                TabView(selection: $tab) {
-                    // A sidebar beside the open taf on a wide screen (kiff/tafs#85).
-                    TafsTab(tab: $tab)
-                        .tabItem { Label("Tafs", systemImage: "square.stack") }
-                        .tag(Tab.tafs)
-                    NavigationStack { NeedsYouView() }
-                        .tabItem { Label("Needs you", systemImage: "bell") }
-                        .badge(model.held.count)
-                        .tag(Tab.needsYou)
-                    NavigationStack { RecordView() }
-                        .tabItem { Label("Record", systemImage: "list.bullet") }
-                        .tag(Tab.record)
+                // The bar's tabs, each kept as it was left once opened; the bar along the
+                // foot on a phone, a rail down the left on a wide screen (the taf layout).
+                let rail = sizeClass == .regular
+                HStack(spacing: 0) {
+                    if rail { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: true) }
+                    ZStack {
+                        ForEach(Self.tabs, id: \.self) { t in
+                            if opened.contains(t) || t == tab {
+                                tabContent(t)
+                                    .opacity(t == tab ? 1 : 0)
+                                    .allowsHitTesting(t == tab)
+                                    .accessibilityHidden(t != tab)
+                            }
+                        }
+                    }
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        // Off while the keyboard is up, as a tab bar is.
+                        if !rail && !keyboardUp { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: false) }
+                    }
                 }
+                .onChange(of: tab) { _ = opened.insert($0) }
             } else {
                 OnboardingView()
             }
@@ -114,14 +136,6 @@ struct RootView: View {
                     layoutEpoch += 1
                     laidOut = size
                 }
-            }
-        }
-        // Coach mode (kiff/tafs#138): ✦ on every screen, above the tab bar and a chat's field.
-        .overlay(alignment: .bottomTrailing) {
-            // Never on the keyboard's edge: hidden while it's up, and pinned to the screen.
-            if coachAvailable && !model.coachOpen && !keyboardUp {
-                CoachButton(wide: sizeClass == .regular).padding(.trailing, 16).padding(.bottom, CoachButton.bottomOffset)
-                    .ignoresSafeArea(.keyboard)
             }
         }
         // The keyboard's shortcuts on every screen (kiff/tafs#210).

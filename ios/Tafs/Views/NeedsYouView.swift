@@ -53,7 +53,6 @@ struct NeedsYouView: View {
         .onChange(of: model.held) { _ in scroll(to: model.requestedHold, reader) }
         .onAppear { scroll(to: model.requestedHold, reader) }
         }
-        .coachClearance()
         .refreshable {
             await model.refresh()
             await model.loadUnproven()

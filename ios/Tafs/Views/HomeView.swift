@@ -4,7 +4,6 @@ struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @Binding var tab: Tab
     @State private var showingNew = false
-    @State private var showingSettings = false
     @State private var showingAddTasks = false
     @State private var showingSolo = false
     @State private var showingExport = false
@@ -107,7 +106,6 @@ struct HomeView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
-        .coachClearance()
         .refreshable { await model.refresh() }
         .screenBackground()
         .navigationDestination(for: UUID.self) { id in
@@ -115,16 +113,15 @@ struct HomeView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button { showingSettings = true } label: {
-                    HStack(spacing: 8) {
-                        Mascot(size: 34)
-                        // The account this is, always in sight (the 870 test).
-                        if let account = model.accountLabel {
-                            Text(account).scaledFont(13, weight: .semibold).foregroundColor(Theme.soft).lineLimit(1)
-                        }
+                // The account this is, always in sight (the 870 test); its settings are the
+                // bar's Account.
+                HStack(spacing: 8) {
+                    Mascot(size: 34)
+                    if let account = model.accountLabel {
+                        Text(account).scaledFont(13, weight: .semibold).foregroundColor(Theme.soft).lineLimit(1)
                     }
                 }
-                .accessibilityLabel(model.accountLabel.map { "Settings, in \($0)" } ?? "Settings")
+                .accessibilityElement(children: .combine)
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if model.canStartTafs {
@@ -142,7 +139,6 @@ struct HomeView: View {
             }
         }
         .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
-        .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
         // The purchase screens, for their screenshots (Screenshots.screen).
         .sheet(isPresented: $showingAddTasks) { AddTasksView().environmentObject(model) }
         .sheet(isPresented: $showingSolo) { NavStack { SoloView() }.environmentObject(model) }

@@ -104,6 +104,7 @@ struct SignInView: View {
     }
 }
 
+/// The bar's Account tab: the plan, the account and its settings.
 struct SettingsView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
@@ -180,8 +181,7 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .screenBackground()
-            .navigationTitle("Settings")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.keyboardShortcut(.cancelAction) } }
+            .navigationTitle("Account")
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
             .confirmingSignOut($confirming) { way in
                 switch way {

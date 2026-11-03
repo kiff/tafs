@@ -90,14 +90,12 @@ struct TafDetailView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                         }
-                        .coachClearance()
                         .simultaneousGesture(DragGesture().onChanged { drag in
                             if abs(drag.translation.height) > 24 { fold(drag.translation.height < 0) }
                         })
                     }
                     if sideColumn {
                         ScrollView { side(taf).padding(.horizontal, 16).padding(.vertical, 12) }
-                            .coachClearance()
                             .frame(width: Self.sideWidth)
                     }
                 }
@@ -500,7 +498,6 @@ struct VersionsScreen: View {
         ScrollView {
             VersionsPanel(tafID: tafID).padding(.horizontal, 16).padding(.vertical, 12)
         }
-        .coachClearance()
         .screenBackground()
         .navigationTitle("Versions")
         .inlineTitle()

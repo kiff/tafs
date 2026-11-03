@@ -68,7 +68,6 @@ struct HaltScreen: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .coachClearance()
         .screenBackground()
         .navigationTitle(tafID == nil ? "Halt all" : "Halt")
         .inlineTitle()

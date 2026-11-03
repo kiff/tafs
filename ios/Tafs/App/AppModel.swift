@@ -5982,8 +5982,9 @@ final class AppModel: ObservableObject {
     }
 }
 
-/// The app's tabs: the tafs, the calls waiting on the owner, and the record.
-enum Tab: Hashable { case tafs, needsYou, record }
+/// The app's tabs, as the bar has them: the account, the tafs, the calls waiting on the owner,
+/// and the record.
+enum Tab: Hashable { case account, tafs, needsYou, record }
 
 /// CI's screenshot run: `-screenshots YES -tab needs-you` opens the sample on a tab,
 /// without asking for notifications.
@@ -6063,6 +6064,7 @@ enum Screenshots {
         switch UserDefaults.standard.string(forKey: "tab") {
         case "needs-you": return .needsYou
         case "record": return .record
+        case "account": return .account
         default: return .tafs
         }
     }
