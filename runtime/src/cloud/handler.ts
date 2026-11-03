@@ -4698,7 +4698,7 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       const taf = await owned(me, body.taf, deps);
       await needTaf(event, me, taf, deps);
       if (!taf.kiffAgent) throw new HTTPError(409, `${taf.name} has no KIFF agent to connect apps for yet`);
-      return await startApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), decodeURIComponent(parts[3] ?? ""), taf.kiffAgent);
+      return await startApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), decodeURIComponent(parts[3] ?? ""), taf.kiffAgent, taf.name);
     }
   } catch (err) {
     if (err instanceof ConnectError) throw new HTTPError(err.status, err.message);

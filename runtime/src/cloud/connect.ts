@@ -113,10 +113,11 @@ function ordered(apps: CatalogApp[], q: string): CatalogApp[] {
 }
 
 /** Starts a connection of entry for agent, the taf's KIFF agent: the grant to approve, nothing signed. */
-export async function startApp(fetchFn: Fetch, base: string, tenant: string, bearer: string, entry: string, agent: string): Promise<{ grant: unknown; needs_key?: true }> {
+export async function startApp(fetchFn: Fetch, base: string, tenant: string, bearer: string, entry: string, agent: string, agentName?: string): Promise<{ grant: unknown; needs_key?: true }> {
   if (!ENTRY.test(entry)) throw new ConnectError(404, "no such app in the catalog");
   const got = await call(fetchFn, `${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/catalog/${encodeURIComponent(entry)}/grants`, bearer,
-    { method: "POST", body: { agent } }) as { grant?: unknown; needs_key?: unknown };
+    // The taf's name, one line, for the words the owner reads and signs ("Connect Gmail for Refunds").
+    { method: "POST", body: { agent, ...(agentName ? { agent_name: agentName.replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").trim().slice(0, 60).trim() } : {}) } }) as { grant?: unknown; needs_key?: unknown };
   if (!got.grant || typeof got.grant !== "object") throw new ConnectError(502, "planque didn't answer; try again");
   return { grant: got.grant, ...(got.needs_key === true ? { needs_key: true as const } : {}) };
 }
