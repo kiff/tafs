@@ -288,7 +288,8 @@ private struct DoorsList: View {
 
 /// Setup › Results go to: the places tafs delivers to itself, set at once (`PUT …/results`),
 /// then each place in a connected app, turned through the dial's next version. At least one
-/// place stays on.
+/// of tafs' own places stays on: tafs cloud takes no change without one, so its last switch
+/// is disabled.
 struct ResultsGoToView: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
@@ -318,7 +319,7 @@ struct ResultsGoToView: View {
             VStack(alignment: .leading, spacing: 16) {
                 if let knob {
                     let actions = knob.results.filter { !Self.builtInPlaces.contains($0.place ?? "") }
-                    let onCount = builtIns.filter { isOn(knob, $0.place) }.count + actions.filter(\.on).count
+                    let builtInsOn = builtIns.filter { isOn(knob, $0.place) }.count
                     Text("At least one place stays on.").scaledFont(13).foregroundColor(Theme.dim)
                     KnobPendingPanel(tafID: tafID, knob: knob)
                     Panel {
@@ -326,14 +327,14 @@ struct ResultsGoToView: View {
                         ForEach(builtIns, id: \.place) { b in
                             let on = isOn(knob, b.place)
                             placeRow(title: b.title, line: b.line, on: on,
-                                     disabled: !manages || busy || (on && onCount <= 1)) { setBuiltIn(knob, b.place, $0) }
+                                     disabled: !manages || busy || (on && builtInsOn <= 1)) { setBuiltIn(knob, b.place, $0) }
                         }
                     }
                     Panel {
                         Eyebrow(text: "In your connected apps")
                         ForEach(actions) { item in
                             placeRow(title: item.label, line: item.words, on: item.on,
-                                     disabled: !manages || busy || (item.on && onCount <= 1) || toggled(item) == nil) { _ in
+                                     disabled: !manages || busy || toggled(item) == nil) { _ in
                                 if let choice = toggled(item) { change { $0 = choice.setting } }
                             }
                         }
@@ -384,15 +385,11 @@ struct ResultsGoToView: View {
         .disabled(disabled)
     }
 
-    /// tafs' own places change at once; when none of them would be left, the change goes
-    /// through the dial instead, since `PUT …/results` keeps at least one.
+    /// tafs' own places change at once (`PUT …/results`); the last one on can't be turned off.
     private func setBuiltIn(_ knob: TafsCloud.Knob, _ place: String, _ on: Bool) {
         var places = builtIns.map(\.place).filter { isOn(knob, $0) }
         if on { places.append(place) } else { places.removeAll { $0 == place } }
-        if places.isEmpty {
-            if let item = knob.results.first(where: { $0.place == place }), let choice = toggled(item) { change { $0 = choice.setting } }
-            return
-        }
+        guard !places.isEmpty else { return }
         busy = true
         Task {
             await model.setResultPlaces(tafID, places)

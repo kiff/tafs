@@ -132,9 +132,9 @@ the app in sample mode.
   again."). A change made here (`PUT …/knob`) waits as the taf's next version in `KnobPendingPanel`, made live with Face ID.
 - **Setup › Results go to** (`ResultsGoToView`): Reply to the sender, Alert our phones and Email
   me change at once (`PUT …/results`, `setResultPlaces`); each connected app's place turns
-  through its stop's other choice, as the next version (`PUT …/knob`). At least one place stays on: the last one's
-  switch is disabled, and when no built-in place would be left the change goes through `PUT …/knob`,
-  since `PUT …/results` keeps one. Replies given up on show **Send again**.
+  through its stop's other choice, as the next version (`PUT …/knob`). At least one of tafs' own places stays on,
+  as tafs cloud requires (`PUT …/results` and `PUT …/knob` alike): the last one's switch is
+  disabled, even while an app's place is on. Replies given up on show **Send again**.
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
   device (Turn on alerts while off), Sound, and What alerts you, read-only; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
