@@ -99,6 +99,26 @@ class ConnectAppsTest {
     assertEquals(8, m.state.value.knobs.getValue("refunds-1").shown)
   }
 
+  @Test fun aChangeThatCantBeReadBackKeepsItsVersionUntilTheDialShowsIt() = runTest {
+    val m = model()
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":7,"why":"Refund double charges","rim":{}}""")
+    m.loadKnob("refunds-1")
+    transport.answer("PUT /v1/tafs/taf_1/knob", 200, """{"version":8,"words":["Weekdays at 12:00."]}""")
+    transport.answer("GET /v1/tafs/taf_1/knob", 503, """{"error":"down"}""")
+    assertTrue("the change was made", m.changeKnobSize("refunds-1", kotlinx.serialization.json.JsonObject(emptyMap())))
+    assertEquals("− and + wait for version 8", 8, m.state.value.knobBehind["refunds-1"])
+    // Read again: the live dial says 8 waits, and that one can't be read either.
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":7,"why":"Refund double charges","pending":{"version":8,"changes":1},"rim":{}}""")
+    transport.answer("GET /v1/tafs/taf_1/knob", 503, """{"error":"down"}""")
+    m.loadKnob("refunds-1")
+    assertEquals("still behind the waiting change", 8, m.state.value.knobBehind["refunds-1"])
+    // Then it reads.
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":7,"why":"Refund double charges","pending":{"version":8,"changes":1},"rim":{}}""")
+    transport.answer("GET /v1/tafs/taf_1/knob", 200, """{"version":7,"shown":8,"why":"Refund double charges","pending":{"version":8,"changes":1},"rim":{}}""")
+    m.loadKnob("refunds-1")
+    assertNull("the dial shows 8: − and + build on it", m.state.value.knobBehind["refunds-1"])
+  }
+
   @Test fun aReloadWhileAChangeWaitsReadsThatVersionNotTheLiveOne() = runTest {
     val m = model()
     // A door opened or the taf paused: the dial is read again, and tafs cloud says a change waits.

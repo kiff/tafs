@@ -328,6 +328,11 @@ data class AppState(
   val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
   /** Why a dial change didn't go through, in tafs cloud's words when it sends them, by taf id. */
   val knobErrors: Map<String, String> = emptyMap(),
+  /**
+   * The version tafs cloud said a dial change made (or waits on) that couldn't be read back yet, by taf id. Until the dial
+   * shows it, − and + stay off: they'd build on the choices from before.
+   */
+  val knobBehind: Map<String, Int> = emptyMap(),
   /** Money calls whose outcome KIFF can't prove, waiting on "Did this happen?" in Needs you. */
   val unsure: List<bot.tafs.app.kiff.UnsureCall> = emptyList(),
   /** The proposal whose answer is on its way. */
@@ -2436,8 +2441,13 @@ class AppModel(
     if (_state.value.mode != Mode.kiff) return
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     val generation = accountGeneration
-    val first = attempt { cloud.knob(cloudId, version) } ?: return
+    val first = attempt { cloud.knob(cloudId, version) } ?: run {
+      // A version tafs cloud made that couldn't be read: the dial stays behind it.
+      if (version != null && generation == accountGeneration) _state.update { it.copy(knobBehind = it.knobBehind + (tafId to version)) }
+      return
+    }
     val waiting = first.pending?.version
+    val want = version ?: waiting
     val knob = if (version == null && waiting != null && first.shown != waiting) {
       try {
         cloud.knob(cloudId, waiting)
@@ -2447,7 +2457,10 @@ class AppModel(
         first
       }
     } else first
-    if (generation == accountGeneration) _state.update { it.copy(knobs = it.knobs + (tafId to knob)) }
+    val behind = want != null && knob.shown != want
+    if (generation == accountGeneration) _state.update {
+      it.copy(knobs = it.knobs + (tafId to knob), knobBehind = if (behind) it.knobBehind + (tafId to want!!) else it.knobBehind - tafId)
+    }
   }
 
   /**
@@ -2463,6 +2476,7 @@ class AppModel(
     return try {
       val change = cloud.changeKnob(cloudId, setting)
       if (generation != accountGeneration) return false
+      _state.update { it.copy(knobBehind = it.knobBehind + (tafId to change.version)) }
       loadKnob(tafId, change.version)
       true
     } catch (e: CancellationException) {

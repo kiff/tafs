@@ -295,16 +295,23 @@ fun TafDialPanel(
     scope.launch { busy = true; try { block() } finally { busy = false } }
   }
   val item = chosen?.let { wire.item(it) }
+  val behind = taf.id in state.knobBehind
   // A door whose count today went up since it was last drawn: lit for a few seconds.
   val seen = androidx.compose.runtime.remember(taf.id) { mutableMapOf<String, Int>() }
   var arrivals by androidx.compose.runtime.remember(taf.id) { androidx.compose.runtime.mutableStateOf(emptySet<String>()) }
+  // Each door's light has its own three seconds, outside the effect, so a newer arrival doesn't leave an older one lit.
+  val glows = androidx.compose.runtime.remember(taf.id) { mutableMapOf<String, kotlinx.coroutines.Job>() }
   androidx.compose.runtime.LaunchedEffect(doors.doors.map { it.id to it.today }) {
-    val fresh = doors.doors.filter { d -> seen[d.id]?.let { d.today > it } == true }.map { it.id }.toSet()
+    val fresh = doors.doors.filter { d -> seen[d.id]?.let { d.today > it } == true }.map { it.id }
     doors.doors.forEach { seen[it.id] = it.today }
-    if (fresh.isNotEmpty()) {
-      arrivals = arrivals + fresh
-      kotlinx.coroutines.delay(3000)
-      arrivals = arrivals - fresh
+    fresh.forEach { id ->
+      glows.remove(id)?.cancel()
+      arrivals = arrivals + id
+      glows[id] = scope.launch {
+        kotlinx.coroutines.delay(3000)
+        arrivals = arrivals - id
+        glows.remove(id)
+      }
     }
   }
   val arrived = wire.wakes.filter { it.door != null && it.door in arrivals }.map { it.id }.toSet()
@@ -398,16 +405,23 @@ fun TafDialPanel(
     val at = stops.indexOfFirst { it.second.id == chosen }
     androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly) {
       RemoteKey("◀", KnobWords.BACK, enabled = stops.isNotEmpty()) { choose(stops[if (at <= 0) stops.size - 1 else at - 1].second.id) }
-      RemoteKey("−", KnobWords.LOWER, enabled = manages && !busy && size?.step(-1) != null) {
+      RemoteKey("−", KnobWords.LOWER, enabled = manages && !busy && !behind && size?.step(-1) != null) {
         size?.step(-1)?.let { c -> work { actions.changeKnobSize(taf.id, c.setting) } }
       }
       RemoteKey(POWER, if (taf.paused) KnobWords.RESUME else KnobWords.PAUSE, enabled = manages && !busy) { work { actions.setPaused(taf.id, !taf.paused); actions.loadKnob(taf.id) } }
-      RemoteKey("+", KnobWords.RAISE, enabled = manages && !busy && size?.step(1) != null) {
+      RemoteKey("+", KnobWords.RAISE, enabled = manages && !busy && !behind && size?.step(1) != null) {
         size?.step(1)?.let { c -> work { actions.changeKnobSize(taf.id, c.setting) } }
       }
       RemoteKey("▶", KnobWords.NEXT, enabled = stops.isNotEmpty()) { choose(stops[(at + 1) % stops.size].second.id) }
     }
     state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+    if (behind) {
+      Text(
+        KnobWords.NOT_READ_BACK,
+        style = scaled(13, color = Theme.amberText),
+        modifier = Modifier.clickable(enabled = !busy) { work { actions.loadKnob(taf.id) } },
+      )
+    }
     // The change waiting to go live (− and +, or Coach's draft), as tafs cloud counts it, made live in one switch.
     val pending = wire.pending
     if (pending != null && manages) {

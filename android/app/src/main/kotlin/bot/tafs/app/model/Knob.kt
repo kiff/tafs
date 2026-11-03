@@ -73,6 +73,7 @@ object KnobWords {
   const val RESUME = "Resume"
   const val RAISE = "Raise"
   const val NEXT = "Next"
+  const val NOT_READ_BACK = "The change was made but couldn't be read back. Tap to read the dial again."
   const val DRAFT = "The dial Coach drafted"
   const val READING_DRAFT = "Reading the dial Coach drafted…"
   const val REPLACED = "A newer dial replaced this one."
