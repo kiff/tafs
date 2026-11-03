@@ -224,7 +224,7 @@ private fun Header(accountLabel: String?, showNew: Boolean, onNewTaf: () -> Unit
         Modifier.size(36.dp).clip(CircleShape).brandBackground().clickable(onClick = onNewTaf).semantics { contentDescription = "Start a new taf" },
         contentAlignment = Alignment.Center,
       ) {
-        Icon(painterResource(R.drawable.ic_plus), contentDescription = null, tint = Theme.amberInk, modifier = Modifier.size(18.dp))
+        Icon(painterResource(R.drawable.ic_plus), contentDescription = null, tint = Theme.onBrand, modifier = Modifier.size(18.dp))
       }
     }
   }

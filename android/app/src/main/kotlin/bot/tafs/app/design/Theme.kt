@@ -46,8 +46,11 @@ object Theme {
   /** Amber as text: the amber itself is 2.2:1 on the light background, this 4.5:1 (kiff/tafs#210), and lighter on dark. */
   val amberText: Color get() = pick(0xFFB35500, 0xFFF0A45A)
 
-  /** Text on the brand gradient and on amber: white on light, the dark ground on dark (7.9:1). */
+  /** Text on a solid amber fill: white on light, the dark ground on dark (7.9:1). Never on the gradient: that's [onBrand]. */
   val amberInk: Color get() = pick(0xFFFFFFFF, 0xFF141311)
+
+  /** Text on the brand gradient, which stays the same in dark: white, 4.5:1 or more on each of its stops. */
+  val onBrand = Color.White
   val ok: Color get() = pick(0xFF198056, 0xFF4CC38A)
   val no: Color get() = pick(0xFFDB1F25, 0xFFFF8A73)
 
@@ -61,7 +64,10 @@ object Theme {
    * deeper than the mascot's, so the text is 4.5:1 all along it (kiff/tafs#210).
    */
   fun brand(width: Float, height: Float): Brush =
-    Brush.linearGradient(listOf(Color(0xFFB35C00), Color(0xFFE8003A), Color(0xFF2A64F5)), start = Offset.Zero, end = Offset(width, height))
+    Brush.linearGradient(BRAND_STOPS, start = Offset.Zero, end = Offset(width, height))
+
+  /** The gradient's stops, the same light or dark. */
+  val BRAND_STOPS = listOf(Color(0xFFB35C00), Color(0xFFE8003A), Color(0xFF2A64F5))
 
   /** Taf colours, from the mascot too: bright, and dark enough for white text, 4.5:1 or more. */
   val tafColors = listOf(
