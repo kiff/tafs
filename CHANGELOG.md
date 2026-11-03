@@ -17,6 +17,13 @@ version headings refer to releases, not merely to merged pull requests.
   and no "+ Add": new things go through Coach.
 - **Android, door states on the dial:** a door's When stop is lit when open, dashed when closed,
   grey while resting, amber with a dot while a knock waits, and lights up when a message arrives.
+
+- **iPhone and iPad, the universal dial:** When, What and Where surround the taf's Why.
+  A Showing menu filters any number of connections; Back/Next walk every stop, Lower/Raise
+  use the service's fixed choices, and Pause uses the existing pause control. Changes build
+  on the pending draft and become live through the biometric version switch. Coach's draft
+  card groups the setup by connection. Today's count opens request steps and reply retry.
+
 - **Android, Coach sets the dial:** Coach's dial card shows Wakes it, When and Results go in tafs
   cloud's words, made live with one confirmation, or Change back to Coach; the dial shows the same
   draft with Make it live.

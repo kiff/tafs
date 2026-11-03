@@ -1592,16 +1592,19 @@ struct KnobDraftCard: View {
             if let version = component.version, let live, live >= version {
                 Text("This dial is live.").scaledFont(14).foregroundColor(Theme.ok)
             } else if let draft, draft.version == component.version {
-                ForEach(Array(draft.rings.enumerated()), id: \.offset) { _, ring in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(ring.0.title).scaledFont(12, weight: .semibold).foregroundColor(TafKnobView.color(ring.0))
-                        ForEach(ring.1, id: \.self) { line in
-                            Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                if !draft.groups.isEmpty {
+                    ForEach(draft.groups) { group in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(group.name).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                            lines(group.rings)
                         }
                     }
-                }
-                if draft.rings.isEmpty {
-                    ForEach(draft.words, id: \.self) { Text($0).scaledFont(15).foregroundColor(Theme.ink) }
+                } else if !draft.rings.isEmpty {
+                    lines(draft.rings)
+                } else {
+                    ForEach(Array(draft.words.enumerated()), id: \.offset) { _, line in
+                        Text(line).scaledFont(15).foregroundColor(Theme.ink)
+                    }
                 }
                 if let tafID, model.manages(tafID) {
                     HStack(spacing: 8) {
@@ -1622,6 +1625,17 @@ struct KnobDraftCard: View {
         .task(id: component.version) { if let tafID { await model.loadKnob(tafID) } }
         .sheet(item: $reading) { v in
             if let tafID { VersionCardSheet(version: v, tafID: tafID).environmentObject(model) }
+        }
+    }
+
+    private func lines(_ rings: [(TafsCloud.Knob.Ring, [String])]) -> some View {
+        ForEach(Array(rings.enumerated()), id: \.offset) { _, ring in
+            VStack(alignment: .leading, spacing: 2) {
+                Text(ring.0.title).scaledFont(11, weight: .semibold).foregroundColor(TafKnobView.color(ring.0))
+                ForEach(Array(ring.1.enumerated()), id: \.offset) { _, line in
+                    Text(line).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 

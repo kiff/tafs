@@ -1,7 +1,7 @@
 import Foundation
 
-/// A taf's dial as tafs cloud sends it (`GET /v1/tafs/{id}/knob`, the knob API): the job in
-/// the face, and Wakes it, When and Results go around it. Every label, line and words is
+/// A taf's dial as tafs cloud sends it (`GET /v1/tafs/{id}/knob`, the knob API): the purpose in
+/// the face, and When, What and Where around it. Every label, line and words is
 /// tafs cloud's, in the account's language and zone; the app draws them and composes none.
 extension TafsCloud {
     struct Knob: Decodable, Equatable {
@@ -17,13 +17,12 @@ extension TafsCloud {
             }
         }
 
-        /// One stop: a trigger on Wakes it, a rule on When, a place on Results go.
+        /// One stop: a trigger on When, a recipe step on What, or a place on Where.
         struct Item: Decodable, Equatable, Identifiable, Sendable {
             let id: String
-            /// Wakes it: run_now, door, schedule, vendor_event, app_check, follow_up,
-            /// before_event. When: arrivals, schedule, missed, busy.
+            /// The server's kind: run_now, door, schedule, app_event, app_check, follow_up or step.
             var kind: String?
-            /// Results go: door_reply, app, owner_email, slack, notion, gmail, teams.
+            /// Where: door_reply, app, owner_email or any connected app action.
             var place: String?
             var label: String
             /// What this stop means for this taf, in one sentence, under the dial.
@@ -41,12 +40,31 @@ extension TafsCloud {
             /// A trigger's form, exactly as `PUT …/knob` takes it; none on Run now, nor on a
             /// schedule the dial can't set.
             var trigger: JSONValue?
+            var grant: String?
+            var step: Int?
+            var action: String?
+            var followUp: String?
+            struct Size: Decodable, Equatable, Sendable {
+                struct Choice: Decodable, Equatable, Sendable {
+                    var label: String
+                    var setting: Setting
+                }
+                var label: String
+                var index: Int
+                var choices: [Choice]
+                func choice(moving direction: Int) -> Choice? {
+                    guard choices.indices.contains(index), direction == -1 || direction == 1,
+                          choices.indices.contains(index + direction) else { return nil }
+                    return choices[index + direction]
+                }
+            }
+            var size: Size?
 
-            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door, trigger }
+            enum CodingKeys: String, CodingKey { case id, kind, place, label, words, on, state, tap, expires, door, trigger, grant, step, action, size, followUp = "follow_up" }
             init(id: String, kind: String? = nil, place: String? = nil, label: String, words: String, on: Bool = true,
-                 state: String? = nil, tap: String? = nil, expires: String? = nil, door: String? = nil) {
+                 state: String? = nil, tap: String? = nil, expires: String? = nil, door: String? = nil, grant: String? = nil, step: Int? = nil) {
                 self.id = id; self.kind = kind; self.place = place; self.label = label; self.words = words
-                self.on = on; self.state = state; self.tap = tap; self.expires = expires; self.door = door
+                self.on = on; self.state = state; self.tap = tap; self.expires = expires; self.door = door; self.grant = grant; self.step = step
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -61,6 +79,11 @@ extension TafsCloud {
                 expires = try c.decodeIfPresent(String.self, forKey: .expires)
                 door = try c.decodeIfPresent(String.self, forKey: .door)
                 trigger = try c.decodeIfPresent(JSONValue.self, forKey: .trigger)
+                grant = try c.decodeIfPresent(String.self, forKey: .grant)
+                step = try c.decodeIfPresent(Int.self, forKey: .step)
+                action = try c.decodeIfPresent(String.self, forKey: .action)
+                followUp = try c.decodeIfPresent(String.self, forKey: .followUp)
+                size = try c.decodeIfPresent(Size.self, forKey: .size)
             }
         }
 
@@ -90,30 +113,63 @@ extension TafsCloud {
         /// The newest dial version made after the live one, in tafs cloud's words: by ring,
         /// for Coach's dial card; `words` all together, from an older tafs cloud.
         struct Draft: Decodable, Equatable {
+            struct Group: Decodable, Equatable, Identifiable {
+                var grant: String?
+                var name: String
+                var wakes: [String]
+                var what: [String]
+                var results: [String]
+                var id: String { grant ?? "taf" }
+                var rings: [(Ring, [String])] {
+                    [(Ring.wakes, wakes), (.what, what), (.results, results)].filter { !$0.1.isEmpty }
+                }
+            }
+            var groups: [Group] = []
             let version: Int
             var words: [String] = []
             var wakes: [String] = []
             var when: [String] = []
+            var what: [String] = []
             var results: [String] = []
-            enum CodingKeys: String, CodingKey { case version, words, wakes, when, results }
-            init(version: Int, words: [String] = [], wakes: [String] = [], when: [String] = [], results: [String] = []) {
-                self.version = version; self.words = words; self.wakes = wakes; self.when = when; self.results = results
+            enum CodingKeys: String, CodingKey { case version, words, wakes, when, what, results, groups }
+            init(version: Int, words: [String] = [], wakes: [String] = [], when: [String] = [], what: [String] = [], results: [String] = []) {
+                self.version = version; self.words = words; self.wakes = wakes; self.when = when; self.what = what; self.results = results
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 version = try c.decode(Int.self, forKey: .version)
+                groups = try c.decodeIfPresent([Group].self, forKey: .groups) ?? []
                 words = try c.decodeIfPresent([String].self, forKey: .words) ?? []
                 wakes = try c.decodeIfPresent([String].self, forKey: .wakes) ?? []
                 when = try c.decodeIfPresent([String].self, forKey: .when) ?? []
+                what = try c.decodeIfPresent([String].self, forKey: .what) ?? []
                 results = try c.decodeIfPresent([String].self, forKey: .results) ?? []
             }
             /// Each ring's lines, inside to out, the empty ones left out.
             var rings: [(Ring, [String])] {
-                [(Ring.wakes, wakes), (.when, when), (.results, results)].filter { !$0.1.isEmpty }
+                [(Ring.wakes, wakes), (.what, what), (.results, results)].filter { !$0.1.isEmpty }
             }
         }
 
+        struct Connection: Decodable, Equatable, Identifiable {
+            var grant: String
+            var name: String
+            var wakes: Int
+            var results: Int
+            var icon: String?
+            var id: String { grant }
+        }
+        struct RingName: Decodable, Equatable {
+            var key: String
+            var name: String
+        }
+
         var version: Int?
+        var shown: Int?
+        var why: String?
+        var what: [Item] = []
+        var connections: [Connection] = []
+        var rings: [RingName] = []
         var does = Does()
         var wakes: [Item] = []
         var when: [Item] = []
@@ -124,13 +180,18 @@ extension TafsCloud {
         /// thing and sends it whole.
         var setting: Setting?
 
-        enum CodingKeys: String, CodingKey { case version, does, wakes, when, results, rim, draft, setting }
+        enum CodingKeys: String, CodingKey { case version, shown, why, does, wakes, when, what, results, rim, draft, setting, connections, rings }
         init(version: Int? = nil, does: Does = Does(), wakes: [Item] = [], when: [Item] = [], results: [Item] = [], rim: Rim = Rim(), draft: Draft? = nil) {
             self.version = version; self.does = does; self.wakes = wakes; self.when = when; self.results = results; self.rim = rim; self.draft = draft
         }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             version = try c.decodeIfPresent(Int.self, forKey: .version)
+            shown = try c.decodeIfPresent(Int.self, forKey: .shown)
+            why = try c.decodeIfPresent(String.self, forKey: .why)
+            what = try c.decodeIfPresent([Item].self, forKey: .what) ?? []
+            connections = try c.decodeIfPresent([Connection].self, forKey: .connections) ?? []
+            rings = try c.decodeIfPresent([RingName].self, forKey: .rings) ?? []
             does = try c.decodeIfPresent(Does.self, forKey: .does) ?? Does()
             wakes = try c.decodeIfPresent([Item].self, forKey: .wakes) ?? []
             when = try c.decodeIfPresent([Item].self, forKey: .when) ?? []
@@ -148,15 +209,20 @@ extension TafsCloud {
             /// A place by name ("app"), or with what it needs (`{place: "notion", page}`):
             /// sent back as tafs cloud wrote it.
             var results: [JSONValue]
+            var what: [JSONValue]?
+            var why: String?
 
-            enum CodingKeys: String, CodingKey { case wakes, when, results, busy }
+            enum CodingKeys: String, CodingKey { case wakes, when, what, why, results, busy }
             struct When: Codable, Equatable { var busy: String }
             init(wakes: [JSONValue], busy: String, results: [JSONValue]) { self.wakes = wakes; self.busy = busy; self.results = results }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 wakes = try c.decodeIfPresent([JSONValue].self, forKey: .wakes) ?? []
-                busy = try c.decodeIfPresent(String.self, forKey: .busy) ?? "skip"
+                busy = try c.decodeIfPresent(String.self, forKey: .busy)
+                    ?? c.decodeIfPresent(When.self, forKey: .when)?.busy ?? "skip"
                 results = try c.decodeIfPresent([JSONValue].self, forKey: .results) ?? []
+                what = try c.decodeIfPresent([JSONValue].self, forKey: .what)
+                why = try c.decodeIfPresent(String.self, forKey: .why)
             }
 
             /// Whether results go to `place`, named alone or with what it needs.
@@ -175,6 +241,8 @@ extension TafsCloud {
                 try c.encode(wakes, forKey: .wakes)
                 try c.encode(When(busy: busy), forKey: .when)
                 try c.encode(results, forKey: .results)
+                try c.encodeIfPresent(what, forKey: .what)
+                try c.encodeIfPresent(why, forKey: .why)
             }
         }
 
@@ -194,29 +262,44 @@ extension TafsCloud {
 
         /// The rings, inside to out.
         enum Ring: Int, CaseIterable {
-            case wakes, when, results
+            case wakes, what, results
             /// The dial's own words, the same on iPhone, iPad and Android.
             var title: String {
                 switch self {
-                case .wakes: return "Wakes it"
-                case .when: return "When"
-                case .results: return "Results go"
+                case .wakes: return "When"
+                case .what: return "What"
+                case .results: return "Where"
                 }
             }
+        }
+
+        /// Choices must be based on the newest draft known to this phone. A failed read
+        /// after a successful PUT must not allow an older choice to replace that draft.
+        func acceptsChoices(waitingFor changedVersion: Int? = nil) -> Bool {
+            let pending = max(draft?.version ?? 0, changedVersion ?? 0)
+            return pending == 0 || pending <= (version ?? 0) || shown == pending
+        }
+
+        func title(_ ring: Ring) -> String {
+            let key = ring == .wakes ? "wakes" : ring == .what ? "what" : "results"
+            return rings.first { $0.key == key }?.name ?? ring.title
         }
 
         func items(_ ring: Ring) -> [Item] {
             switch ring {
             case .wakes: return wakes
-            case .when: return when
+            case .what:
+                // Older cloud: show its own recipe line until numbered steps arrive.
+                return what.isEmpty && !does.line.isEmpty
+                    ? [Item(id: "recipe", label: does.label, words: does.line, step: 1)] : what
             case .results: return results
             }
         }
     }
 
     /// A taf's dial.
-    func knob(_ id: String) async throws -> Knob {
-        try await send("GET", "/v1/tafs/\(escaped(id))/knob")
+    func knob(_ id: String, version: Int? = nil) async throws -> Knob {
+        try await send("GET", "/v1/tafs/\(escaped(id))/knob" + (version.map { "?version=\($0)" } ?? ""))
     }
 
     /// Changes the taf's dial: its next version, made live only by the version switch.

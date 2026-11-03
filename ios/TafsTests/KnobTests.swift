@@ -106,10 +106,10 @@ final class KnobTests: XCTestCase {
         XCTAssertEqual(c.version, 8)
         XCTAssertNil(c.taf, "taf stays the hand-over's object")
         let k = try JSONDecoder().decode(TafsCloud.Knob.self, from: Data(#"""
-        {"version":7,"draft":{"version":8,"wakes":["Weekdays at 09:00"],"when":["If busy, runs the latest once it's free"],"results":[]}}
+        {"version":7,"draft":{"version":8,"wakes":["Weekdays at 09:00"],"what":["1 · Check the charge"],"results":[]}}
         """#.utf8))
         let draft = try XCTUnwrap(k.draft)
-        XCTAssertEqual(draft.rings.map { $0.0 }, [.wakes, .when], "an empty ring is left out")
+        XCTAssertEqual(draft.rings.map { $0.0 }, [.wakes, .what], "an empty ring is left out")
         XCTAssertEqual(draft.rings.first?.1, ["Weekdays at 09:00"])
     }
 }

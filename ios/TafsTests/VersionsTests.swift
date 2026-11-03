@@ -40,6 +40,61 @@ final class VersionsTests: XCTestCase {
 
     private static let twoVersions = #"{"versions":[{"n":1,"by":"setup","created":"2026-10-19T09:00:00Z","digest":"d1","live":true},{"n":2,"note":"Asks for the order number first","by":"setup","created":"2026-10-20T07:00:00.5Z","digest":"d2","live":false,"draft":"d_02"}]}"#
 
+    func testSizeEditsKeepEarlierChangesAndWaitForConfirmation() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        await model.refreshPeople()
+        XCTAssertTrue(model.manages(id))
+
+        func setting(_ time: String, email: Bool = true) -> [String: Any] {
+            ["wakes": [["kind": "schedule", "form": "weekdays", "at": time]], "busy": "latest",
+             "results": email ? ["app", "owner_email"] : ["app"], "why": "Refund double charges",
+             "what": [["label": "Check", "words": "Look up the charge"]]]
+        }
+        func json(_ body: [String: Any]) throws -> String { String(decoding: try JSONSerialization.data(withJSONObject: body), as: UTF8.self) }
+        func dial(_ time: String, pending: Int? = nil, shown: Int? = nil) throws -> String {
+            var body: [String: Any] = ["version": 7, "setting": setting(time),
+                "wakes": [["id": "schedule", "label": "Weekdays", "size": ["label": "Time", "index": time == "09:00" ? 1 : 0,
+                    "choices": [["label": "08:00", "setting": setting("08:00")], ["label": "09:00", "setting": setting("09:00")]]]]],
+                "results": [["id": "email", "label": "Email", "size": ["label": "On or off", "index": 1,
+                    "choices": [["label": "Off", "setting": setting(time, email: false)], ["label": "On", "setting": setting(time)]]]]]]
+            if let pending { body["draft"] = ["version": pending, "words": ["Pending changes"]] }
+            if let shown { body["shown"] = shown }
+            return try json(body)
+        }
+        let route = "/v1/tafs/depl_1/knob"
+        StubProtocol.responses["GET " + route] = (200, try dial("09:00"))
+        await model.loadKnob(id)
+        let old = try XCTUnwrap(model.knobs[id]?.wakes.first)
+        StubProtocol.responses["PUT " + route] = (200, #"{"version":8,"words":["08:00"]}"#)
+        StubProtocol.thenRespond["PUT " + route] = ["GET " + route: (200, try dial("09:00", pending: 8))]
+        StubProtocol.responses["GET " + route + "?version=8"] = (200, try dial("08:00", pending: 8, shown: 8))
+        let first = await model.adjustKnob(id, item: old, direction: -1)
+        XCTAssertTrue(first)
+        XCTAssertEqual(model.knobs[id]?.shown, 8)
+        let stale = await model.adjustKnob(id, item: old, direction: -1)
+        XCTAssertFalse(stale, "a button from an earlier render cannot replace the draft")
+        let email = try XCTUnwrap(model.knobs[id]?.results.first)
+        StubProtocol.responses["PUT " + route] = (200, #"{"version":9,"words":["08:00","No email"]}"#)
+        StubProtocol.thenRespond["PUT " + route] = ["GET " + route: (200, try dial("09:00", pending: 9))]
+        // A lost preview keeps the new version known, and disables older choices.
+        StubProtocol.responses["GET " + route + "?version=9"] = (500, #"{"error":"try again"}"#)
+        let second = await model.adjustKnob(id, item: email, direction: -1)
+        XCTAssertTrue(second, "the change was saved even when its preview could not be read")
+        let blocked = await model.adjustKnob(id, item: email, direction: -1)
+        XCTAssertFalse(blocked)
+        let puts = sent("PUT", route)
+        XCTAssertEqual(puts.count, 2)
+        let body = try XCTUnwrap(try JSONSerialization.jsonObject(with: XCTUnwrap(puts.last?.httpBody)) as? [String: Any])
+        XCTAssertEqual((body["wakes"] as? [[String: Any]])?.first?["at"] as? String, "08:00")
+        XCTAssertEqual(body["results"] as? [String], ["app"])
+        XCTAssertEqual((body["when"] as? [String: Any])?["busy"] as? String, "latest")
+        XCTAssertEqual(body["why"] as? String, "Refund double charges")
+        XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path.hasSuffix("/live") == true || $0.url?.path.hasSuffix("/switch") == true })
+        model.forgetSession()
+        XCTAssertTrue(model.knobs.isEmpty && model.knobChanges.isEmpty)
+    }
+
     /// Coach mode (kiff/tafs#138): opened on a taf, a new conversation takes that taf as its
     /// context; closed and opened again elsewhere, it's as it was; New conversation is on no
     /// taf, even on that taf's page (item 36), and the taf is one tap away.

@@ -107,26 +107,41 @@ the app in sample mode.
 
 ## The dial and KIFF's words
 
-- **The dial** (`TafKnobView`, from the approved "The knob, end to end"): the job in the face,
-  and **Wakes it**, **When** and **Results go** around it, inside to out, each stop's word along
-  its ring, on the design's 360-point grid. The rim counts today's work: done, working,
-  retrying, needs you. Tapping a word turns its ring to bring it to the top; the other rings
-  dim, and the face shows tafs cloud's `state` and `tap` for it. It lays out what
-  `GET /v1/tafs/{id}/knob` sends (`TafsCloud.Knob`), every label and line as tafs cloud wrote
-  it; the app's own words are only "DOES", "Tap a ring", "Tap to approve once" and the ring
-  titles. It sits in the taf's page where the doors' dial was (`DoorsView`): the doors are
-  stops on Wakes it, with the face's state and tap, and When and Results go are the outer
-  rings. Choosing a door's stop picks that door for its settings below (paired senders,
-  today's limits), as before. A held call of the taf can show in the face, where a tap
-  approves it once; ‹ Overview goes back. The face's tap opens or closes a door through the
-  doors API (its `door`) and starts a run for Run now, as today, with no new version; every
-  other change goes through the knob's own route: a stop whose `tap` changes the dial (If
-  busy, a result place on or off; a schedule's form and adding or removing triggers go
-  through Coach's draft) copies the live `setting`, changes that one thing and sends it whole to `PUT …/knob`
-  (`AppModel.changeKnob`); tafs cloud's words for the next version show under the dial, with
-  Versions to switch to it. When the dial can't be read, the doors' own dial shows instead.
-  Whether the person manages a taf, which decides its Doors, dial, Versions and Halt, is read
-  with the list (`GET /v1/me/access`), not only when People is opened.
+- **The dial** (`TafKnobView`, in the taf's Doors tab): **When**, **What**, **Where**
+  surround its **Why**, with today's done, working, retrying and needs-you counts on the rim.
+  `GET /v1/tafs/{id}/knob` supplies the ring names, purpose, numbered recipe steps and stop
+  words. The legacy `when` rules are not drawn; an older server's `does.line` stands in for
+  the recipe. **Showing** filters all three rings by connection grant, or shows **This taf**
+  (stops without a grant). The menu has no connection limit. Crowded rings show a window of
+  labels; **Back/Next** still walk every stop, across empty rings and around the end.
+  Choosing a stop turns its ring to the pointer; the face shows its value and hint.
+- **The remote** (`TafDialPanel`): **Lower/Raise** select only the neighbouring value from
+  the stop's server-supplied `size.choices`, within its bounds. There are no vendor presets
+  in the app. A choice's complete setting goes to `PUT …/knob`, then iOS reads the returned
+  draft through `GET …/knob?version=N`. Subsequent choices build on that draft; if its
+  refresh fails, stale choices are disabled until a successful refresh. Drafts are labelled
+  **not live**. **Make it live** reads the newest draft and uses the existing version switch
+  and biometric signature (reading a changed Card first). A tweak alone never switches it.
+  The controls for changes are shown only to someone KIFF says manages the taf. Pause uses
+  the existing pause/resume route. The search-shaped **Ask Coach or find anything** button
+  opens Coach in the taf's context.
+- **Doors and needs you:** the face opens/closes the chosen door or runs the taf once.
+  A held call takes the face for **approve once**, using the existing signed answer.
+  Door arcs are lit when open and dashed when closed, amber for a waiting knock and grey
+  when resting; an increase in the server's message count lights its arrival indicator.
+  The last When stop is **Add a door**, opening Coach. Existing knock cards retain **Do it**,
+  **Pair them**, and **Ignore**, with pairing and door details beneath the dial.
+  If the knob cannot be read, the existing doors-only dial remains available.
+- **Its work:** the count under the dial opens the latest request, with Back to the list. Each request reads
+  `GET …/requests/{run}`, showing the service's ordered steps, delivery state, **Try the
+  reply now** when allowed, and **Ask Coach**. Nothing in this screen infers a work outcome.
+- **Coach's dial card:** `draft.groups` displays each connection's lines and **This taf**,
+  as cloud supplies them. Older responses fall back to words by ring. One confirmation
+  uses the usual version switch for the entire draft.
+- **Dial checks:** `KnobNavigationTests` covers grant filtering, empty rings, crowded rings,
+  bounded sizes and complete setting preservation. `VersionsTests` covers two edits,
+  stale selections, a failed draft read and the absence of an automatic switch.
+  `KnobUITests` uses the synthetic `-screenshots YES -screen knob` fixture with 12 services.
 - **KIFF's words for a connection** (`ProfileWords`): a grant whose request carries a
   `kiff.profile.v1` shows KIFF's `kiff.words.v1` for it, read with the person's session
   (`POST /v1/profiles/words`) and checked against the profile's digest and their own before

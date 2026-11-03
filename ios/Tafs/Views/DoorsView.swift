@@ -63,22 +63,8 @@ struct DoorsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if let knob {
-                Panel {
-                    TafKnobView(knob: knob, face: $face, held: held,
-                                press: { _, item in
-                                    guard manages else { return }
-                                    Task {
-                                        await pressKnob(item)
-                                        await doors.load()
-                                    }
-                                },
-                                approve: approve)
-                    if face != .overview {
-                        Button("‹ Overview") { withMotion { face = .overview } }
-                            .buttonStyle(OutlineButtonStyle())
-                            .frame(maxWidth: .infinity)
-                    }
-                }
+                TafDialPanel(taf: taf, knob: knob, face: $face, doors: doors, manages: manages,
+                             held: held, press: pressKnob, approve: approve)
             } else {
                 Panel {
                     Eyebrow(text: "Doors · turn to pick, press to open")
@@ -89,11 +75,11 @@ struct DoorsView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            if let settings = door?.words?.settings {
+            if let settings = door?.words?.settings, knob == nil {
                 Text(settings).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     .frame(maxWidth: .infinity)
             }
-            if let door { panel(door) } else if manages { addPanel } else {
+            if let door { panel(door) } else if manages, knob == nil { addPanel } else if !manages {
                 Text("\(taf.name) has no door yet. Someone who manages it can add one.")
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             }

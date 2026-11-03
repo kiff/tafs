@@ -496,7 +496,7 @@ final class AppModel: ObservableObject {
         forgetApprovalKey()
         kiff.token = token
         cloud.token = token
-        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]
         holderIDs = [:]; halts = [:]; chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey) // an earlier session's tafs never show in this one
@@ -847,7 +847,7 @@ final class AppModel: ObservableObject {
         cloudTafs = [:]; halts = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
         holderIDs = [:]
-        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []
+        doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]
         listLoaded = false; listUnread = false
         remembered?.removeObject(forKey: Self.listKey)
         unfinishedRemovals = []
@@ -1707,45 +1707,60 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let c = cloudTaf(for: tafID) else { return }
         let gen = accountGeneration
         do {
-            let knob = try await cloud.knob(c.id)
+            var knob = try await cloud.knob(c.id)
+            guard gen == accountGeneration else { return }
+            if let draft = knob.draft {
+                do { knob = try await cloud.knob(c.id, version: draft.version) }
+                catch let error as TafsCloud.CloudError where error.status == 404 {
+                    // It was installed or replaced while reading: refresh its current state.
+                    knob = try await cloud.knob(c.id)
+                }
+            }
             guard gen == accountGeneration else { return }
             knobs[tafID] = knob
+            if lastError?.hasPrefix("The dial couldn't be read:") == true { lastError = nil }
             // Its change is live now: nothing left to switch to.
             if let made = knobChanges[tafID], let live = knob.version, live >= made.version { knobChanges[tafID] = nil }
         } catch {
+            guard gen == accountGeneration else { return }
             lastError = "The dial couldn't be read: \(error.localizedDescription)"
         }
     }
 
     /// The face was tapped on a stop whose `tap` says it does something: a door opens or
     /// closes through the doors API, and Run now starts a run, each as today, with no new
-    /// version. If busy and a result place change the dial (`changeKnob`): the next version.
-    /// A schedule's form, and adding or removing triggers, go through Coach's draft.
+    /// version. Fixed size choices make a pending version; setup belongs to Coach.
     func pressKnob(_ tafID: UUID, _ item: TafsCloud.Knob.Item) async {
-        guard let c = cloudTaf(for: tafID) else { return }
+        guard mode == .kiff, manages(tafID), let c = cloudTaf(for: tafID) else { return }
         if let door = item.door {
             do { _ = try await cloud.setDoorOpen(c.id, door: door, open: !item.on) } catch {
                 lastError = "The door didn't \(item.on ? "close" : "open"): \(error.localizedDescription)"
             }
         } else if item.kind == "run_now" {
             _ = await runNow(c)
-        } else if item.kind == "busy" {
-            _ = await changeKnob(tafID) { $0.busy = $0.busy == "latest" ? "skip" : "latest" }
-            return
-        } else if let place = item.place {
-            // A result place turned on or off. Schedules and triggers change through Coach.
-            _ = await changeKnob(tafID) { s in
-                if s.sends(to: place) {
-                    s.results.removeAll { TafsCloud.Knob.Setting.place(of: $0) == place }
-                } else {
-                    s.results.append(.string(place))
-                }
-            }
-            return
         } else {
             return
         }
         await loadKnob(tafID)
+    }
+
+    func requestDetail(_ tafID: UUID, run: String) async throws -> TafsCloud.RequestDetail {
+        guard mode == .kiff, let taf = cloudTaf(for: tafID) else { throw CancellationError() }
+        let generation = accountGeneration
+        let detail = try await cloud.request(taf.id, run: run)
+        guard generation == accountGeneration else { throw CancellationError() }
+        return detail
+    }
+
+    /// A fixed size offered by cloud, including all other settings. No app-specific presets.
+    func adjustKnob(_ tafID: UUID, item: TafsCloud.Knob.Item, direction: Int) async -> Bool {
+        guard manages(tafID), let knob = knobs[tafID],
+              knob.acceptsChoices(waitingFor: knobChanges[tafID]?.version),
+              let current = TafsCloud.Knob.Ring.allCases.flatMap({ knob.items($0) }).first(where: { $0.id == item.id }),
+              current == item, let choice = current.size?.choice(moving: direction) else { return false }
+        guard await changeKnob(tafID, { $0 = choice.setting }) else { return false }
+        await loadKnob(tafID)
+        return true
     }
 
     /// The dial's last change on each taf, its next version, until the owner switches to it.
@@ -1755,7 +1770,7 @@ final class AppModel: ObservableObject {
     /// (`PUT …/knob`). tafs cloud makes the next version; nothing runs from it until the
     /// owner switches to it in Versions.
     func changeKnob(_ tafID: UUID, _ change: (inout TafsCloud.Knob.Setting) -> Void) async -> Bool {
-        guard mode == .kiff, let c = cloudTaf(for: tafID), let setting = knobs[tafID]?.setting else { return false }
+        guard mode == .kiff, manages(tafID), let c = cloudTaf(for: tafID), let setting = knobs[tafID]?.setting else { return false }
         var changed = setting
         change(&changed)
         guard changed != setting else { return false }
@@ -1766,6 +1781,7 @@ final class AppModel: ObservableObject {
             knobChanges[tafID] = made
             return true
         } catch {
+            guard gen == accountGeneration else { return false }
             lastError = "The dial didn't change: \(error.localizedDescription)"
             return false
         }

@@ -6,7 +6,7 @@ struct TafDetailView: View {
     /// 0 chat, 1 activity, 2 card, 3 doors. Chat first: talking to a taf is the main thing.
     /// The Slack door being added: its own sheet.
     @State private var slackApp: TafsCloud.DoorApp?
-    @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2 : Screenshots.screen == "doors" ? 3 : 0
+    @State private var section = !Screenshots.enabled ? 0 : Screenshots.screen == "taf" ? 1 : Screenshots.screen == "card" ? 2 : ["doors", "knob"].contains(Screenshots.screen ?? "") ? 3 : 0
     @State private var confirmRevoke = false
     @State private var confirmRemove = false
     /// What removing it did, shown once it's done.
@@ -77,7 +77,7 @@ struct TafDetailView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 if section == 3, hasDoors(taf), let doors = model.doors(for: taf.id) {
                                     DoorsView(taf: taf, doors: doors, manages: model.manages(taf.id), myEmail: model.kiffAccount?.email)
-                                        .knob(model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
+                                        .knob(Screenshots.enabled && Screenshots.screen == "knob" ? Screenshots.knob : model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
                                               press: { await model.pressKnob(taf.id, $0) },
                                               approve: { call in Task { await model.answer(call, with: .approveOnce) } })
                                         .slack(add: { slackApp = $0 }, remove: { await model.removeSlackDoor($0, doors: doors) })
@@ -85,19 +85,7 @@ struct TafDetailView: View {
                                         .sheet(item: $slackApp) { app in
                                             SlackDoorSheet(tafID: taf.id, doors: doors, app: app).environmentObject(model)
                                         }
-                                    // A change to the dial is the taf's next version: switched to in Versions.
-                                    if let made = model.knobChanges[taf.id], model.manages(taf.id) {
-                                        Panel {
-                                            ForEach(made.words, id: \.self) { line in
-                                                Text(line).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                                            }
-                                        }
-                                        PanelLink { VersionsScreen(tafID: taf.id) } label: {
-                                            Label("Versions", systemImage: "square.stack.3d.up")
-                                                .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-                                        }
-                                        .accessibilityIdentifier("knob.versions")
-                                    }
+
                                 } else if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)
@@ -149,9 +137,9 @@ struct TafDetailView: View {
     /// signed in to KIFF. The sample has none.
     private func hasDoors(_ taf: Taf) -> Bool {
         // The docs' screenshot shows the sample's email door (DoorsModel.sample).
-        if Screenshots.enabled && Screenshots.screen == "doors" { return true }
+        if Screenshots.enabled && ["doors", "knob"].contains(Screenshots.screen ?? "") { return true }
         // Doors are the taf's manager's: who may give it work and from where (the 870 test).
-        return model.mode == .kiff && !model.doorsOffered.isEmpty && model.cloudTaf(for: taf.id) != nil && model.manages(taf.id)
+        return model.mode == .kiff && model.cloudTaf(for: taf.id) != nil && model.manages(taf.id)
     }
 
     /// The Card in front of the stack: the one tapped, else the first, the live one.
