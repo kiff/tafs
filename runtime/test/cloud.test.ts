@@ -1580,6 +1580,17 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobApplied: undefined });
     await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.appEvents).toEqual([{ ...ev, subscription: "sub_1" }]);
+    // A newer version applied while the write retries: refused, and its app events aren't touched.
+    const getTaf = w.tafs.get.bind(w.tafs), putIf2 = w.tafs.putIf.bind(w.tafs);
+    let lost = false;
+    w.tafs.putIf = async (t: string, next: unknown, cur: unknown) => {
+      if (!lost) { lost = true; const r = await getTaf(t, RAE); w.tafs.held.set(`t_acme#${RAE}`, { ...r!, knobApplied: n + 1, appEvents: [] }); return false; }
+      return putIf2(t, next as never, cur as never);
+    };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "sub_late", version: n } })).status).toBe(409);
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.appEvents).toEqual([]);
+    w.tafs.putIf = putIf2;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobApplied: n, appEvents: [{ ...ev, subscription: "sub_1" }] });
     // A store that keeps refusing the write answers a failure to retry, never a quiet success.
     const putIf = w.tafs.putIf.bind(w.tafs);
     w.tafs.putIf = async () => false;

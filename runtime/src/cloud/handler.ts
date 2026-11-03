@@ -647,6 +647,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     for (let attempt = 0; attempt < 3 && !current; attempt++) {
       const cur = await deps.tafs.get(me.tenantID, taf.id);
       if (!cur) throw new HTTPError(404, "not found");
+      // Checked again on each try: a version applied since the read (applyKnob) means these filters may no longer be the taf's.
+      const still = (cur.knobs?.[String(version)]?.wakes ?? []).filter((x) => x.kind === "app_event")[Number(trigger.slice(10)) - 1];
+      if (cur.knobApplied !== version || !still || !sameAppEvent(still, t)) {
+        throw new HTTPError(409, "the dial changed since it was read: read it again and approve that one");
+      }
       const kept = (cur.appEvents ?? []).filter((a) => !sameAppEvent(a, t));
       const next: Taf = { ...cur, appEvents: [...kept, { ...t, subscription }] };
       if (await deps.tafs.putIf(me.tenantID, next, cur)) current = next;
