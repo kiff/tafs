@@ -40,6 +40,8 @@ import bot.tafs.app.design.scaled
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.RecordEntry.Kind
 import java.time.LocalDate
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 
 /** The Record's filters (kiff/tafs#167). */
 enum class RecordFilter(val title: String) {
@@ -55,15 +57,28 @@ enum class RecordFilter(val title: String) {
 
 private data class Day(val date: LocalDate, val lines: MutableList<RecordEntry> = mutableListOf(), val reads: MutableList<RecordEntry> = mutableListOf())
 
-/** The Record by day, newest first; a day's reads apart, to fold. */
-private fun days(record: List<RecordEntry>, filter: RecordFilter): List<Day> {
+/** The Record by day, newest first; a day's reads apart, to fold. [taf], one taf's alone. */
+private fun days(record: List<RecordEntry>, filter: RecordFilter, taf: String? = null): List<Day> {
   val out = mutableListOf<Day>()
-  for (entry in record.filter(filter::keeps).sortedByDescending { it.at }) {
+  for (entry in record.filter { filter.keeps(it) && (taf == null || it.tafId == taf) }.sortedByDescending { it.at }) {
     val date = localDate(entry.at)
     if (out.lastOrNull()?.date != date) out += Day(date)
     if (entry.readOnly == true && filter == RecordFilter.All) out.last().reads += entry else out.last().lines += entry
   }
   return out
+}
+
+/**
+ * What a day's money moved came to, by unit, as each amount was recorded: "€120", or "€120 · $30" across units. Null when no
+ * money moved that day.
+ */
+internal fun spentOn(entries: List<RecordEntry>): String? {
+  val sums = entries.filter { RecordFilter.MoneyMoved.keeps(it) }
+    .mapNotNull { e -> e.amountValue?.toBigDecimalOrNull()?.let { e.amountUnit to it } }
+    .groupBy({ it.first }, { it.second })
+    .mapValues { (_, values) -> values.fold(java.math.BigDecimal.ZERO, java.math.BigDecimal::add) }
+  if (sums.isEmpty()) return null
+  return sums.entries.joinToString(" · ") { (unit, sum) -> bot.tafs.app.model.Money.of(sum.unscaledValue().toLong(), unit, sum.scale()).formatted }
 }
 
 /**
@@ -74,9 +89,11 @@ private fun days(record: List<RecordEntry>, filter: RecordFilter): List<Day> {
 @Composable
 fun RecordView(state: AppState, modifier: Modifier = Modifier) {
   var filter by rememberSaveable { mutableStateOf(RecordFilter.All) }
+  // One taf's Record, or every taf's (null).
+  var taf by rememberSaveable { mutableStateOf<String?>(null) }
   // The days whose reads are shown, not folded.
   var openReads by rememberSaveable { mutableStateOf(setOf<String>()) }
-  val days = days(state.record, filter)
+  val days = days(state.record, filter, taf)
 
   LazyColumn(
     modifier.fillMaxSize().statusBarsPadding(),
@@ -85,6 +102,15 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
   ) {
     item { ScreenTitle("Record") }
     item { Text("Everything your tafs did, were refused, or asked you. Newest first.", style = scaled(14, color = Theme.soft)) }
+    // Which taf, above what kind: the two combine.
+    if (state.tafs.size > 1) {
+      item {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+          Chip(ALL_TAFS, selected = taf == null) { taf = null }
+          state.tafs.forEach { t -> Chip(t.name, selected = taf == t.id, dot = Theme.tafColor(t.colorIndex)) { taf = t.id } }
+        }
+      }
+    }
     item {
       FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         RecordFilter.entries.forEach { f -> Chip(f.title, selected = filter == f) { filter = f } }
@@ -92,7 +118,13 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
     }
     for (day in days) {
       item(key = "day-${day.date}") {
-        Text(dayTitle(day.date).uppercase(), style = scaled(11, FontWeight.Medium, Theme.dim, mono = true), modifier = Modifier.padding(top = 6.dp))
+        // The day, and what its money moved came to.
+        val spent = spentOn(day.lines)
+        Text(
+          (dayTitle(day.date) + (spent?.let { " · $it" } ?: "")).uppercase(),
+          style = scaled(11, FontWeight.Medium, Theme.dim, mono = true),
+          modifier = Modifier.padding(top = 6.dp),
+        )
       }
       day.lines.forEach { e -> item(key = e.id) { RecordRow(e, state) } }
       if (day.reads.isNotEmpty()) {
@@ -116,18 +148,26 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Chip(title: String, selected: Boolean, onClick: () -> Unit) {
-  Text(
-    title,
-    style = scaled(13, color = if (selected) Color.White else Theme.soft),
-    modifier = Modifier
+private fun Chip(title: String, selected: Boolean, dot: Color? = null, onClick: () -> Unit) {
+  Row(
+    Modifier
       .clip(CircleShape)
       .background(if (selected) Theme.ink else Theme.panel)
       .border(BorderStroke(1.dp, if (selected) Theme.ink else Theme.line), CircleShape)
       .clickable(onClick = onClick)
+      .semantics { this.selected = selected }
       .padding(horizontal = 11.dp, vertical = 5.dp),
-  )
+    horizontalArrangement = Arrangement.spacedBy(6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    // A taf's chip carries its colour.
+    dot?.let { Dot(it, 8.dp) }
+    Text(title, style = scaled(13, color = if (selected) Theme.background else Theme.soft))
+  }
 }
+
+/** The taf chips' first: every taf's Record. */
+const val ALL_TAFS = "All tafs"
 
 @Composable
 fun RecordRow(entry: RecordEntry, state: AppState, showTaf: Boolean = true) {
@@ -145,16 +185,23 @@ fun RecordRow(entry: RecordEntry, state: AppState, showTaf: Boolean = true) {
       .padding(10.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
-    Dot(entry.kind.color, 9.dp, Modifier.padding(top = 6.dp))
+    // Its taf first, by its colour and name; what happened to it, by the status dot beside the time.
+    val taf = if (showTaf) state.taf(entry.tafId) else null
+    Dot(taf?.let { Theme.tafColor(it.colorIndex) } ?: entry.kind.color, 9.dp, Modifier.padding(top = 6.dp))
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-        Text(entry.titleWithAmount, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f, fill = false))
-        Text(shortTime(entry.at), style = scaled(12, color = Theme.dim, mono = true), modifier = Modifier.padding(start = 6.dp))
+        Text(
+          listOfNotNull(taf?.name, entry.titleWithAmount).joinToString(" · "),
+          style = scaled(14, FontWeight.SemiBold, Theme.ink),
+          modifier = Modifier.weight(1f, fill = false),
+        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+          if (taf != null) Dot(entry.kind.color, 7.dp, Modifier.padding(start = 6.dp))
+          Text(shortTime(entry.at), style = scaled(12, color = Theme.dim, mono = true), modifier = Modifier.padding(start = 6.dp))
+        }
       }
-      // "<taf> · <what it acted on> · <who decided> · <result at the tool>"; a call from before KIFF said who
-      // decided reads as it did.
+      // "<what it acted on> · <who decided> · <result at the tool>"; a call from before KIFF said who decided reads as it did.
       val parts = buildList {
-        if (showTaf) state.taf(entry.tafId)?.let { add(it.name) }
         entry.onText?.let { add(it) }
         when {
           // Held, and KIFF no longer holds it: it may have expired, or been withdrawn when its run stopped.

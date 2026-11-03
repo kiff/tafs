@@ -64,6 +64,7 @@ import bot.tafs.app.kiff.Knock
 import bot.tafs.app.model.DoorMark
 import bot.tafs.app.model.DoorNames
 import bot.tafs.app.model.DoorWords
+import bot.tafs.app.model.SetupWords
 import bot.tafs.app.model.Taf
 import kotlinx.coroutines.launch
 
@@ -100,92 +101,70 @@ class DoorActions(
 )
 
 /**
- * A taf's Doors tab (docs/doors.md): where work reaches it from outside the app. One chip per door and a last one to add
- * one; below, the door picked: its address, who may give it work, and its day.
+ * A taf's doors (docs/doors.md), in Setup › Starts when: each door, open or closed, with Edit for its own screen (its address,
+ * who may give it work, its day), then Add a door….
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) {
+fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) {
   val doors = state.doors[taf.id] ?: TafDoors()
   val scope = rememberCoroutineScope()
-  var selected by rememberSaveable { mutableStateOf(0) }
   var adding by rememberSaveable { mutableStateOf(false) }
+  var editing by rememberSaveable { mutableStateOf<String?>(null) }
   var pairing by remember { mutableStateOf<Door?>(null) }
   var removing by remember { mutableStateOf<Door?>(null) }
-  LaunchedEffect(taf.id) { actions.load(taf.id); actions.loadKnob(taf.id) }
-  val door = doors.doors.getOrNull(selected)
-  val knob = state.knobs[taf.id]
+  LaunchedEffect(taf.id) { actions.load(taf.id) }
 
-  if (knob != null) {
-    // The taf's dial, where the doors' dial was: its doors are stops on Wakes it, and choosing one picks it for below.
-    TafDialPanel(taf, knob, state, doors, actions, onDoor = { id -> doors.doors.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { selected = it } })
-  } else Panel {
-    Eyebrow("Doors · turn to pick, press to open")
-    DoorDial(
-      taf, doors.doors, doors.openKnocks, selected,
-      onSelect = { selected = it },
-      onPress = {
-        // The taf in the middle opens or closes the door at the top; at "Add", it adds one.
-        if (door == null) adding = true else if (!doors.busy) scope.launch { actions.setOpen(taf.id, door, !door.open) }
-      },
-    )
+  doors.doors.forEach { door ->
+    Row(
+      Modifier.fillMaxWidth().heightIn(min = 48.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      DoorBadge(door.app, door.open, 28)
+      Column(Modifier.weight(1f)) {
+        Text(door.label, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+        Text(door.words?.state ?: DoorWords.status(door), style = scaled(13, color = Theme.soft))
+      }
+      Text(
+        SetupWords.EDIT,
+        style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+        modifier = Modifier.heightIn(min = 44.dp).clickable { editing = door.id }.padding(horizontal = 6.dp, vertical = 12.dp),
+      )
+    }
+  }
+  if (doors.loaded && doors.addable.isNotEmpty()) {
     Text(
-      // tafs cloud's words for what a press does; the app's own only until it sends them.
-      door?.let { it.words?.tap ?: "Press ${taf.name} to ${if (it.open) "close" else "open"} ${it.label}" } ?: "Press ${taf.name} to add a door",
-      style = scaled(12, color = Theme.dim),
-      textAlign = TextAlign.Center,
-      modifier = Modifier.fillMaxWidth(),
+      SetupWords.ADD_DOOR,
+      style = scaled(15, FontWeight.SemiBold, Theme.amberText),
+      modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { adding = true }.padding(vertical = 12.dp),
     )
-  }
-  if (door != null) {
-    door.words?.settings?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 4.dp)) }
-    DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
-  }
-  // With the dial, a new door is Coach's (its Add a door stop): this panel is only for a taf whose dial can't be read.
-  else if (knob == null) {
-    Panel {
-      Eyebrow("Add a door")
-      Text(DoorWords.addIntro(taf.name), style = scaled(15, color = Theme.ink))
-      PrimaryButton("Add a door", { adding = true }, enabled = doors.loaded && doors.addable.isNotEmpty())
-      if (doors.loaded && doors.addable.isEmpty()) Text("No more doors can be added here.", style = scaled(13, color = Theme.dim))
-    }
-  }
-  // Strangers' knocks wait on the owner; a paired sender's message, kept from its knock, waits for Do it or Ignore.
-  val (paired, waiting) = doors.openKnocks.filter { !it.isLine }.partition { it.paired }
-  if (waiting.isNotEmpty()) {
-    Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
-      Eyebrow("Knocks · waiting on you", Theme.amber)
-      waiting.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
-    }
-  }
-  if (paired.isNotEmpty()) {
-    Panel {
-      Eyebrow("Paired")
-      paired.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
-    }
   }
   doors.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
-  Text(DoorWords.footer(taf.name), style = scaled(13, color = Theme.dim))
 
+  editing?.let { id -> doors.doors.firstOrNull { it.id == id } }?.let { door ->
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+    androidx.compose.material3.ModalBottomSheet(
+      onDismissRequest = { editing = null },
+      sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+      containerColor = Theme.background,
+    ) {
+      Column(
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 12.dp).padding(bottom = 16.dp).navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
+        DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
+        Text(DoorWords.footer(taf.name), style = scaled(13, color = Theme.dim))
+      }
+    }
+  }
   if (adding) AddDoorSheet(
     doors,
     slack = SlackPicking(state.slackBots(taf.id), state.slackChannels, actions.loadSlackChannels) { app, grant, channel ->
-      scope.launch {
-        if (actions.addSlack(taf.id, app, grant, channel) != null) {
-          adding = false
-          selected = (state.doors[taf.id]?.doors?.size ?: 1) - 1
-        }
-      }
+      scope.launch { if (actions.addSlack(taf.id, app, grant, channel) != null) adding = false }
     },
     onClose = { adding = false },
   ) { app ->
-    scope.launch {
-      val added = actions.add(taf.id, app)
-      if (added != null) {
-        adding = false
-        selected = (state.doors[taf.id]?.doors?.size ?: 1) - 1
-      }
-    }
+    scope.launch { if (actions.add(taf.id, app) != null) adding = false }
   }
   pairing?.let { d ->
     PairDialog(d, doors.busy, onClose = { pairing = null }) { sender, name ->
@@ -203,12 +182,36 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
       confirmButton = {
         TextButton({
           removing = null
-          scope.launch { actions.remove(taf.id, d); selected = minOf(selected, (state.doors[taf.id]?.doors?.size ?: 1) - 1).coerceAtLeast(0) }
+          editing = null
+          scope.launch { actions.remove(taf.id, d) }
         }) { Text("Remove", color = Theme.no) }
       },
       dismissButton = { TextButton({ removing = null }) { Text("Cancel", color = Theme.soft) } },
       containerColor = Theme.panel,
     )
+  }
+}
+
+/**
+ * What waits for the owner at the taf's doors, on its Activity: strangers' knocks (Do it, Pair them, Ignore), then a paired
+ * sender's message kept from its knock.
+ */
+@Composable
+fun KnocksPanel(taf: Taf, state: AppState, actions: DoorActions) {
+  val doors = state.doors[taf.id] ?: return
+  val scope = rememberCoroutineScope()
+  val (paired, waiting) = doors.openKnocks.filter { !it.isLine }.partition { it.paired }
+  if (waiting.isNotEmpty()) {
+    Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
+      Eyebrow("Knocks · waiting on you", Theme.amber)
+      waiting.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
+    }
+  }
+  if (paired.isNotEmpty()) {
+    Panel {
+      Eyebrow("Paired")
+      paired.forEach { KnockCard(it, taf.name, doors.busy, compact = true) { action, say -> scope.launch { actions.answer(taf.id, it, action, say) } } }
+    }
   }
 }
 
@@ -432,7 +435,7 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
         if (DoorWords.canDoIt(knock)) {
           Text(
             "Do it",
-            style = scaled(14, FontWeight.SemiBold, Color.White),
+            style = scaled(14, FontWeight.SemiBold, Theme.panel),
             modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).background(Theme.amberText).clickable(enabled = !busy) { asking = true }.padding(horizontal = 12.dp, vertical = 8.dp),
           )
         }

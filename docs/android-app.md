@@ -94,7 +94,7 @@ Sign in again on the line shown when the phone can't approve, each open a confir
 
 | Package | What's in it |
 |---|---|
-| (root) | `MainActivity` (the three tabs: Tafs, Needs you, Record; the list beside what's open on a tablet), `TafsApplication` (the clients, the keys, alerts, Google Play) |
+| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach, or a rail on a tablet; the list beside what's open on a tablet), `TafsApplication` (the clients, the keys, alerts, Google Play) |
 | `app/` | `AppModel` (the one view model: state, and everything the screens ask of the backends), `SampleStore` |
 | `kiff/` | The clients: `KiffClient` (KIFF's API), `TafsCloud`, `Planque`, `Transport`; `KiffMapping` (KIFF's records into the app's), `Stream` (a chat's streamed events), `ReceiptCheck` (receipts checked on the phone), `Jcs`, `SigningTime`, `SecretStore`, the wire types (`Wire`, `Usage`, `Coach`, `Doors`, `Versions`) |
 | `model/` | The app's own types and words: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `Chat`, `Attachments`, `CardCheck` (the sample only), and one `…Words` object per feature, for words the backends don't send yet |
@@ -103,7 +103,7 @@ Sign in again on the line shown when the phone can't approve, each open a confir
 | `billing/` | `Purchases` and `PlayBillingStore`: Google Play, behind the flag |
 | `files/` | `PhotoPrep`: a photo redrawn as a JPEG, with no metadata |
 | `voice/` | `Dictation` and `DeviceSpeech`: dictation, recognised on the phone |
-| `views/` | One file per screen or feature: `HomeView`, `TafDetailView`, `TafChatView`, `CoachViews`, `CoachChats`, `NeedsYouView`, `RecordView`, `ReceiptSheet`, `UsageViews`, `TaskRequestViews`, `SettingsView`, `PeopleViews`, `ShareViews`, `DevicesView`, `DoorViews`, `DoorDial`, `VersionViews`, `HaltViews`, `AttachViews`, `MicButton`… |
+| `views/` | One file per screen or feature: `HomeView`, `TafDetailView`, `TafChatView`, `CoachViews`, `CoachChats`, `NeedsYouView`, `RecordView`, `ReceiptSheet`, `UsageViews`, `TaskRequestViews`, `SettingsView`, `PeopleViews`, `ShareViews`, `DevicesView`, `DoorViews`, `SetupViews`, `EventApproval`, `VersionViews`, `HaltViews`, `AttachViews`, `MicButton`… |
 | `design/` | `Theme` (colours, the amber accent, type), `Components`, `MarkdownText` |
 
 ## Live updates
@@ -155,81 +155,89 @@ failures (signing, signing in, a file that didn't upload) keep their words (`Own
 Coach still hears the server's reason for an approval that failed, as the card's answer,
 so it can say what went wrong and ask again.
 
-## The dial
+## The bar
 
-A taf's dial, as settled ("The knob, end to end"): Coach builds it with the owner, and the dial
-shows it, with a remote's controls only (`TafKnob`, `TafDialPanel`, in the taf's Doors tab; the
-doors' own dial stays for a taf whose dial can't be read).
+Five places under every screen: **Account** · **Tafs** · **Needs you** · **Record** · **Coach**.
+Account opens Settings and Coach opens Coach; the three between are tabs, and Needs you keeps
+its count. Coach is a filled button (ink, with the ground's colour as its label), shown only to
+someone KIFF lets use Coach, so the bar has four places otherwise. In landscape and on tablets
+the same places are a rail on the left, with Coach at its foot (`TabBar`, `TabRail` in
+`MainActivity`). Home's header keeps the account's name, and in the sample a new taf; Settings
+and Coach are no longer there.
 
-- **Three rings, the same on every taf,** in the order tafs cloud sends `rings`: **When**
-  (what starts it: doors, a connected app's event, a schedule, run now, and Add a door last for
-  whoever manages the taf), **What** (the recipe, its steps numbered "1 · Check"; an empty one
-  shows a step that asks Coach) and **Where** (where results go). The face is the taf's **Why**,
-  with "Tap a ring" under it; a chosen stop shows on it instead ("WHAT · 1 · CHECK", its state,
-  else its size's value, and its `tap`, else "Use − and +" for a stop with a size, else "Ask
-  Coach to change"). "‹ Why" goes back.
-- **The rings turn:** a chosen stop's ring turns it under the pointer at the top, the short way
-  round. A ring past six stops shows the six that hold the chosen one (`DialMath.page`,
-  `DialMath.ringTurn`). Each stop's word sits along its ring and always reads upright: in the
-  lower half (past 90° and before 270° from the top, after the turn) it turns half a turn more
-  (`DialMath.upright`). A word longer than its share of the ring ends in "…"; the face shows it
-  whole when it's chosen (its top line, too, ends in "…" only past the face's width), and
-  TalkBack always reads it whole.
-- **Above it:** "Ask Coach or find anything", which opens Coach about the taf, and **Showing ▾**:
-  All services, This taf (the stops with no connection), then each connection with its stops
-  ("Slack · 2 stops"). Picking one shows only that input's stops (`KnobWire.knob(showing)`).
-- **The remote under it:** ◀ Back and Next ▶ step through the stops, ring by ring from the
-  inside; − Lower and + Raise move the chosen stop's one size; ⏻ pauses or resumes the taf, then
-  reads the dial again. ⏻ is off when tafs cloud's `can_pause` is false (a taf that works from its
-  chat has no schedule to pause), and a pause tafs cloud refuses is said in its words. Pressing the face is OK, and what it does is tafs cloud's (`ok`): `door`
-  opens or closes the door, `run` runs once, `remove_follow_up` removes a follow-up the taf set,
-  `coach` opens Coach; none, nothing. With nothing chosen, OK goes to the first stop. A held call
-  that can be approved once takes the face while nothing is chosen, and OK approves it once.
-- **One size per stop:** tafs cloud's `size` (a time, how often, a place on or off). − or +
-  sends that choice's whole `setting` to `PUT …/knob`, which makes the next version, then reads
-  it back (`?version=N`) so the next change builds on it. A stop with no size says "Ask Coach to
-  change".
-- **The change waiting to go live** is tafs cloud's `pending {version, changes}`: "DRAFT · Vn ·
-  NOT LIVE" over the dial, and **Make N changes live** with its `changes`, which switches
-  `pending.version` (the usual version switch). While one waits, every read of the dial (after a
-  door or ⏻ too) shows that version. None waiting, no button.
-- **Under it:** with nothing chosen, "When starts it, What it does in order, Where the result
-  goes." and what the taf does; a chosen stop's words instead. Then today's work ("12 done today
-  ›", the rim's line), which opens the request the rim points at.
-- **An app's event on When** (`kind: app_event`) waits for the owner while its `approval` is
-  `needed`: OK (`ok: approve`) opens its filters, as tafs cloud gives them, and **Approve with
-  your fingerprint** approves exactly those (`AppModel.approveKnobEvent`). The live dial is read
-  again first, and anything changed (version, connection, event or filters, compared in their
-  canonical form) stops it there. The owner confirms with the approval key over
-  `tafs.event.v1|tenant|taf|version|trigger|grant|event|sha256(filters)`. planque subscribes the
-  event with `{account, slug, config}`, signed by this device (`PlanqueClient.subscribeEvent`),
-  and tafs cloud records planque's id for that version (`POST …/knob/subscriptions {trigger,
-  subscription, version}`). Whether it's approved is only tafs cloud's answer. A subscription
-  made but not recorded is kept for this account, so approving again records it, with no
-  second confirmation or subscription. A refusal is said in planque's or tafs cloud's words.
-- **A door on its When stop** shows tafs cloud's `look` as an arc on the ring's outer edge: lit
-  when `open`, dashed when `closed`, grey when `resting`, amber with a dot for `knock` (Do it,
-  Pair them and Ignore stay in the knock's panel under the dial). When a message arrives, its
-  stop glows for 3 seconds. With the dial, a new door is Coach's (the Add a door stop): the
-  Doors tab's own Add a door panel shows only for a taf whose dial can't be read.
+**Record** filters by taf too: All tafs, then a chip per taf with its colour, combined with the
+kind filter. Each entry starts with its taf's colour and name, and each day says what its money
+moved came to, by unit (`spentOn`).
 
-<p>
-  <img src="screenshots/android/dial-overview.png" width="180" alt="The dial: the Why on the face, When, What and Where around it, an email door with a knock waiting and a closed Slack door">
-  <img src="screenshots/android/dial-stop-size.png" width="180" alt="A stop chosen: Weekdays at 09:00, its size, and Make 1 change live">
-  <img src="screenshots/android/dial-coach-card.png" width="180" alt="Coach's card: the dial it drafted, by connection, with one confirmation">
-</p>
+## The taf's screen
 
-No chips and no "+ Add": anything new (an app, a step, a place) goes through Coach. Every word
-on a stop is tafs cloud's, and so are the rules both apps share (what OK does, a door's look, the
-change waiting and how many stops it changes); the app's own are the ring of controls and these
-few lines.
+Four tabs, each with one job (`TafDetailView`):
+- **Chat:** talking to it.
+- **Activity:** what it did and what waits for you. Its holds and its doors' knocks first (Do it,
+  Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
+  its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
+- **Card:** only what's on its Card: the Card, its limits and how they're counted, its usage,
+  Halt and Revoke.
+- **Setup** (`SetupTab`): how it runs, in sections.
+  - **The job**, with Improve in Coach.
+  - **Starts when**, one line per start in tafs cloud's words, opening its sheet
+    (`StartsWhenSheet`): its schedule (the line, "Next run at 13:00 · Europe/Paris", − and + from
+    its `size`, each choice's `setting` sent as it is), and **If it is still working when the next
+    start comes: Skip it / Run after** (`busy`, sent in the knob's `setting`); its app events, each
+    with its filter in words, **Approve** while it waits for the owner (the signed approval, below)
+    and Listening once approved; its doors, each with **Edit** (the door's own screen) then **Add
+    a door…**; the follow-ups it set itself, each with **Remove**; and **Pause every start** (off
+    when `can_pause` is false; a 502 says "Not every start could be paused. Try again.").
+  - **Connected apps**, read from planque: each connection, **Choose actions** for one signed in
+    with none chosen yet (Coach), then **Connect an app…**.
+  - **Results go to**, the places on, opening its sheet (`ResultsSheet`): tafs' own places (Reply
+    to the sender, Alert our phones, Email me), each a switch sent through `PUT …/results`; each
+    place in a connected app by its name, a switch from its own on/off choice; **Add a place from
+    a connected app…** (Coach). The last place on can't be turned off. A reply given up on shows
+    under **Not sent** with **Send again**.
+  - **What it remembers**, **Versions**, Pause (in the sample) and **Remove for good**.
 
-**A request, step by step** (`RequestSheet`): today's work under the dial opens the request the rim
-points at, the first not done, else the newest. A request's row in Activity opens the same
+A change to the dial's setting (a size, Skip it / Run after, a place in an app) makes the taf's
+next version: "DRAFT · Vn · NOT LIVE" and **Make N changes live** show in the sheet while it waits
+(tafs cloud's `pending`), the usual version switch.
+
+**An app's event** (`kind: app_event`) waits for the owner while its `approval` is `needed`:
+Approve opens its filters, as tafs cloud gives them, and **Approve with your fingerprint**
+approves exactly those (`AppModel.approveKnobEvent`, `EventApprovalSheet`). The live dial is read
+again first, and anything changed (version, connection, event or filters, compared in their
+canonical form) stops it there. The owner confirms with the approval key over
+`tafs.event.v1|tenant|taf|version|trigger|grant|event|sha256(filters)`. planque subscribes the
+event with `{account, slug, config}`, signed by this device (`PlanqueClient.subscribeEvent`), and
+tafs cloud records planque's id for that version (`POST …/knob/subscriptions {trigger,
+subscription, version}`). Whether it's approved is only tafs cloud's answer. A subscription made
+but not recorded is kept for this account, so approving again records it, with no second
+confirmation or subscription. A refusal is said in planque's or tafs cloud's words.
+
+Every word on Setup's rows is tafs cloud's (each start's `words`, each place's `name`), except
+the section titles and tafs' own three places, which are the app's (`SetupWords`).
+
+**A request, step by step** (`RequestSheet`): a request's row in Activity opens it
 (`GET /v1/tafs/{id}/requests/{run}`). It shows the request's line, where it came from, and what
 happened, each step marked done, failed, not made, waiting or next, every line and time as tafs
 cloud wrote it. **Try the reply now** sends a reply given up on again, for whoever manages the
 taf, and **Ask Coach** opens a conversation about the taf.
+
+## Alerts
+
+In Account (Settings), **Alerts** shows how each kind looks on the lock screen (a hold, with
+sound; an answer, silent), then **Alerts on this phone**, **Sound** (for a hold or a halt only)
+and the line under them. **What alerts you** is read only, at the levels `push/Alerts.kt` uses: a
+taf needs you and every taf halted, with sound, always; a taf answered someone, silent, for the
+tafs whose results include our phones (`Taf.results` has `app`; "N tafs ›" lists them); a reply
+wasn't sent, silent.
+
+## Dark
+
+The app follows the phone's dark setting (`TafsTheme`, `Theme.dark`): every colour in `Theme` has
+its dark value, the owner-reviewed warm near-black (background `141311`, panels `1F1E1B` and
+`2A2824`, ink `F2EFE9`) with brighter green, amber and red, each 4.5:1 or more on the dark
+surfaces. Text on a status fill uses the panel's colour, so it stays readable either way; taf
+colours and the Card keep white text.
 
 ## Connect apps
 

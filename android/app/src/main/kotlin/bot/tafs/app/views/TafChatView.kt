@@ -354,7 +354,7 @@ private fun Composer(
           Modifier.size(40.dp).clip(CircleShape).background(Theme.ink).clickable(onClick = onStop).semantics { contentDescription = "Stop" },
           contentAlignment = Alignment.Center,
         ) {
-          Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(Color.White))
+          Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(Theme.background))
         }
       } else Box(
         Modifier
@@ -552,7 +552,7 @@ private fun OutcomeLine(text: String, tone: Color, mark: String) {
     horizontalArrangement = Arrangement.spacedBy(6.dp),
   ) {
     Box(Modifier.padding(top = 2.dp).size(16.dp).clip(CircleShape).background(tone), contentAlignment = Alignment.Center) {
-      Text(mark, style = scaled(10, FontWeight.Bold, Color.White))
+      Text(mark, style = scaled(10, FontWeight.Bold, Theme.panel))
     }
     Text(text, style = scaled(14, color = Theme.soft), modifier = Modifier.weight(1f))
   }

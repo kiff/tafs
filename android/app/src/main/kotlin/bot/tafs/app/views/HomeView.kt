@@ -74,9 +74,7 @@ fun HomeView(
   onPlayNext: suspend () -> Unit,
   onOpenTaf: (String) -> Unit,
   onNewTaf: () -> Unit,
-  onSettings: () -> Unit,
   onHaltAll: () -> Unit,
-  onCoach: () -> Unit,
   /** Opens Plan & usage, from the plan's line when it needs the owner. */
   onUsage: () -> Unit = {},
   modifier: Modifier = Modifier,
@@ -111,7 +109,7 @@ fun HomeView(
     ) {
       item {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-          Header(state.accountLabel, showNew = sample, showCoach = state.mayUseCoach, onSettings, onNewTaf, onCoach)
+          Header(state.accountLabel, showNew = sample, onNewTaf)
           // KIFF can't be reached just now: said quietly, under the account's name.
           state.unreachable?.let { UnreachableLine(it, state.retryingRefresh) }
           // The phone can't approve until a new sign-in: one calm line, said at launch rather than after a tap.
@@ -211,26 +209,14 @@ fun UnreachableLine(words: String, retrying: Boolean) {
   }
 }
 
-/** The bar above the list: the mascot and the account it is in, which open Settings, and a new taf. */
+/** The bar above the list: the mascot and the account it is in, and, in the sample, a new taf. Account and Coach are in the tab bar. */
 @Composable
-private fun Header(accountLabel: String?, showNew: Boolean, showCoach: Boolean, onSettings: () -> Unit, onNewTaf: () -> Unit, onCoach: () -> Unit) {
+private fun Header(accountLabel: String?, showNew: Boolean, onNewTaf: () -> Unit) {
   Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-    Row(
-      Modifier.clickable(onClick = onSettings).semantics { contentDescription = accountLabel?.let { "Settings, in $it" } ?: "Settings" },
-      horizontalArrangement = Arrangement.spacedBy(6.dp),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
       Mascot(34.dp)
       // The account this is, always in sight.
       accountLabel?.let { Text(it, style = scaled(13, FontWeight.SemiBold, Theme.soft), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-    }
-    // Coach: where tafs are made, connected and changed, for the people KIFF lets use it.
-    if (showCoach) {
-      Text(
-        "✦ Coach",
-        style = scaled(14, FontWeight.SemiBold, Color.White),
-        modifier = Modifier.heightIn(min = 36.dp).clip(CircleShape).brandBackground().clickable(onClick = onCoach).padding(horizontal = 10.dp, vertical = 6.dp),
-      )
     }
     // A new taf starts in Coach mode once signed in; the sample starts from its form.
     if (showNew) {
@@ -310,7 +296,7 @@ fun TafRow(taf: Taf, signedOut: String? = null, onClick: () -> Unit) {
           taf.badge?.let {
             Text(
               it,
-              style = scaled(11, FontWeight.Bold, androidx.compose.ui.graphics.Color.White),
+              style = scaled(11, FontWeight.Bold, Theme.amberInk),
               modifier = Modifier.clip(CircleShape).background(Theme.amber).padding(horizontal = 7.dp, vertical = 2.dp),
             )
           }

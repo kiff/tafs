@@ -379,6 +379,14 @@ class TafsCloud(
   suspend fun setPaused(id: String, paused: Boolean): Schedule =
     post<ScheduleBody>("/v1/tafs/${escaped(id)}/${if (paused) "pause" else "resume"}", emptyMap()).taf
 
+  /** Where its results go, of tafs' own places (`door_reply`, `app`, `owner_email`; `manages`). */
+  suspend fun setResults(id: String, places: List<String>) {
+    sendJson(
+      "PUT", "/v1/tafs/${escaped(id)}/results",
+      kotlinx.serialization.json.JsonObject(mapOf("places" to kotlinx.serialization.json.JsonArray(places.map { kotlinx.serialization.json.JsonPrimitive(it) }))),
+    )
+  }
+
   suspend fun runs(id: String): List<Run> = get<Runs>("/v1/tafs/${escaped(id)}/runs").runs
 
   /** Where the taf's work stands (docs/reliability.md, "The taf's view"): every line and time in tafs cloud's words. */

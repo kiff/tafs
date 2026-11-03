@@ -1591,8 +1591,11 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      // A refusal tafs cloud words itself (a taf that works from its chat has no schedule to pause) is said as it is.
-      val said = (e as? bot.tafs.app.kiff.CloudError)?.takeIf { it.status == 409 && it.words == null }?.message
+      // A refusal tafs cloud words itself (a taf that works from its chat has no schedule to pause) is said as it is; a 502 is a
+      // pause that reached some of its starts, not all.
+      val cloud = e as? bot.tafs.app.kiff.CloudError
+      val said = cloud?.takeIf { it.status == 409 && it.words == null }?.message
+        ?: cloud?.takeIf { it.status == 502 && paused }?.let { bot.tafs.app.model.SetupWords.NOT_EVERY_PAUSED }
       if (generation == accountGeneration) fail(said ?: "tafs cloud didn't ${if (paused) "pause" else "resume"} it. ${ErrorWords.of(e)}")
       return
     }
@@ -2522,6 +2525,26 @@ class AppModel(
   private fun knobError(tafId: String, words: String): Boolean {
     _state.update { it.copy(knobErrors = it.knobErrors + (tafId to words)) }
     return false
+  }
+
+  /**
+   * Where the taf's results go, of tafs' own places (`PUT …/results`), for whoever manages it; then the dial is read again, which
+   * says which places are on. tafs cloud keeps at least one on.
+   */
+  suspend fun setResults(tafId: String, places: List<String>) {
+    if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return
+    val generation = accountGeneration
+    try {
+      cloud.setResults(cloudId, places)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not changed. ${ErrorWords.of(e)}")) }
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
+    loadKnob(tafId)
   }
 
   /** Removes a follow-up the taf set itself, from the dial's face, then reads the dial again. */

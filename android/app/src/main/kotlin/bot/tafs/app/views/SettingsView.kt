@@ -129,6 +129,52 @@ fun SettingsSheet(
           // KIFF didn't end the session, so nothing changed here: said under it, to try again.
           state.signOutError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
         }
+        // A held call reaches this phone with tafs closed: only where the build has Firebase's settings.
+        if (state.mode == Mode.kiff) {
+          Section("Alerts") {
+            // How each kind looks on the lock screen: a hold comes with sound, an answer comes silently.
+            LockScreenExample(AlertWords.WITH_SOUND, AlertWords.LOUD_EXAMPLE)
+            LockScreenExample(AlertWords.SILENT, AlertWords.SILENT_EXAMPLE)
+            Value(AlertWords.ON_THIS_PHONE, AlertWords.status(state.alertsAvailable, state.alertsReady))
+            if (state.alertsAvailable && !state.alertsReady) Action(if (state.turningOnAlerts) "Turning on…" else "Turn on alerts", Theme.amberText) { if (!state.turningOnAlerts) onTurnOnAlerts() }
+            if (state.alertsAvailable && state.alertsReady) {
+              Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                  Text(AlertWords.SOUND, style = scaled(16, color = Theme.ink))
+                  Text(AlertWords.SOUND_WORDS, style = scaled(13, color = Theme.dim))
+                }
+                Switch(checked = state.alertSound, onCheckedChange = onAlertSound, colors = SwitchDefaults.colors(checkedTrackColor = Theme.ok))
+              }
+            }
+            AlertWords.foot(state.alertsAvailable, state.canAnswerHolds)?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
+          }
+          // What alerts the owner, at the levels alerts come at (push/Alerts.kt). Read only: a taf's answers alert only where its
+          // results include our phones (Setup › Results go to).
+          Section(AlertWords.WHAT_ALERTS) {
+            Value(AlertWords.NEEDS_YOU, AlertWords.ALWAYS)
+            Value(AlertWords.ALL_HALTED, AlertWords.ALWAYS)
+            val answering = state.tafs.filter { it.alertsPhones }
+            var showing by remember { mutableStateOf(false) }
+            Row(
+              Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(enabled = answering.isNotEmpty()) { showing = true }.padding(horizontal = 12.dp),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Text(AlertWords.ANSWERED, style = scaled(16, color = Theme.ink), modifier = Modifier.weight(1f))
+              Text("${AlertWords.SILENT} · ${AlertWords.tafs(answering.size)}", style = scaled(16, color = Theme.dim), modifier = Modifier.padding(start = 8.dp))
+            }
+            Value(AlertWords.NOT_SENT, AlertWords.SILENT)
+            if (showing) {
+              androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showing = false },
+                title = { Text(AlertWords.ANSWERED) },
+                text = { Text(answering.joinToString("\n") { it.name }) },
+                confirmButton = { androidx.compose.material3.TextButton({ showing = false }) { Text("OK", color = Theme.amberText) } },
+                containerColor = Theme.panel,
+              )
+            }
+          }
+        }
         // A Card's day ends at midnight here, and every time the owner reads is in it; set from the phone as a signed call.
         if (state.mode == Mode.kiff) state.kiffAccount?.let { account ->
           val accountZone = account.timeZone ?: "UTC"
@@ -138,20 +184,6 @@ fun SettingsSheet(
             if (accountZone != device) Action("Use this phone's: $device", Theme.amberText, onUseDeviceZone)
             state.timeZoneError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
             Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.", style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp))
-          }
-        }
-        // A held call reaches this phone with tafs closed: only where the build has Firebase's settings.
-        if (state.mode == Mode.kiff) {
-          Section("Alerts") {
-            Value("Alerts", AlertWords.status(state.alertsAvailable, state.alertsReady))
-            if (state.alertsAvailable && !state.alertsReady) Action(if (state.turningOnAlerts) "Turning on…" else "Turn on alerts", Theme.amberText) { if (!state.turningOnAlerts) onTurnOnAlerts() }
-            if (state.alertsAvailable && state.alertsReady) {
-              Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Sound", style = scaled(16, color = Theme.ink))
-                Switch(checked = state.alertSound, onCheckedChange = onAlertSound, colors = SwitchDefaults.colors(checkedTrackColor = Theme.ok))
-              }
-            }
-            AlertWords.foot(state.alertsAvailable, state.canAnswerHolds)?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
           }
         }
         Section("How it works") {
@@ -243,6 +275,15 @@ private fun PlanRow(state: AppState, onUsage: () -> Unit) {
     } else {
       Text(UsageWords.TITLE, style = scaled(16, color = Theme.ink))
     }
+  }
+}
+
+/** A lock-screen alert, as an example: how it comes, and its words. */
+@Composable
+private fun LockScreenExample(how: String, words: String) {
+  Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(12.dp)).background(Theme.raised).padding(10.dp)) {
+    Text("tafs · ${how.lowercase()}", style = scaled(11, color = Theme.dim, mono = true))
+    Text(words, style = scaled(14, color = Theme.ink))
   }
 }
 
