@@ -74,14 +74,14 @@ What a taf does is decided action by action by its Card.
 ## App events: a taf that wakes on something in an app
 
 A taf can start when something happens in a connected app: a new deal, a new ticket, a
-message in a channel. Coach sets it up on the taf's [dial](dial.md), with the event's
+message in a channel. Coach sets it up in the taf's
+[Setup › Starts when](taf-screen.md#setup--starts-when), with the event's
 filters, for example "deals in the Sales pipeline over €5,000".
 
 Each event needs **your approval of those exact filters**, with Face ID or your fingerprint.
-Until you approve, the event's stop on the dial shows that it needs you, and nothing wakes
+Until you approve, the event shows **Approve** there, and nothing wakes
 the taf. Once you have, the taf wakes only on events that match what you approved, and the
-same event never starts it twice. You approve on the dial on iPhone and iPad; on Android it's
-coming, and until then an event nobody approved starts nothing.
+same event never starts it twice.
 
 ## The Slack door, or an action in Slack
 
@@ -90,7 +90,7 @@ Slack can be two different things for a taf:
 - **A [door](doors.md#slack):** messages in one channel reach the taf as work. People you
   pair give it work, and anyone else knocks for your answer. The taf answers in the thread.
 - **An action:** the taf posts in Slack as part of its job, for example a daily summary in
-  a channel, as a place on the dial's Where ring. It's a call through KIFF like any other,
+  a channel, as a place in the taf's Setup › Results go to. It's a call through KIFF like any other,
   inside the taf's Card.
 
 Both use the taf's Slack connection.

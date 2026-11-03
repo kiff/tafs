@@ -72,12 +72,13 @@ tafs cloud and planque. Each feature has a page in [docs/](docs/README.md):
   halting and removing it.
 - **[Chat](docs/chat.md):** ask a taf what it did or tell it what to do; its answer and
   its work stream as it goes, and a held call shows where it was made.
-- **[The dial](docs/dial.md):** each taf's When, What and Where around its Why, with
-  today's work on the rim. − and + change a stop's size, and the changes wait as the
-  taf's next version until you make them live; Pause stops every schedule, follow-ups
-  included.
+- **[The app's screens](docs/taf-screen.md):** a bar with Account, Tafs, Needs you,
+  Record and Coach; the Record filtered by taf; each taf's Chat, Activity, Card and Setup.
+  Setup says what starts it (schedule, app events you approve, doors, follow-ups, Pause)
+  and where its results go. Changes wait as the taf's next version until you make them
+  live. Light and dark.
 - **[Coach mode](docs/coach.md):** say the job; Coach connects the tools, drafts the taf,
-  its Card and its dial, and you confirm with Face ID, Touch ID or your fingerprint. Improve a taf, try a new
+  its Card and how it runs, and you confirm with Face ID, Touch ID or your fingerprint. Improve a taf, try a new
   version under a trial Card, then install it.
 - **[Held calls](docs/approvals.md):** in Needs you, the chat, the lock screen and a push
   alert. Approve once, refuse, or give the Card extra room: each answer is signed on the
