@@ -53,6 +53,8 @@ export interface RingItem {
 
 export interface Knob {
   version?: number;
+  /** The dial change shown instead of the live dial, when asked for with ?version=N. */
+  shown?: number;
   does: { label: string; line: string };
   /** The face's word when nothing is chosen: the taf's purpose, as Coach wrote it. */
   why: string;
@@ -99,6 +101,7 @@ export interface KnobInput {
   draft?: { version: number; setting: KnobSetting };
   /** The taf's tools through KIFF, by tool, with KIFF's title: the recipe when Coach wrote none. */
   tools?: ReadonlyMap<string, string>;
+  shown?: number;
   /** The live version's dial, when a tap or Coach's draft set it; else it's read from the schedule. */
   setting?: KnobSetting;
   version?: number;
@@ -208,7 +211,7 @@ export function knobOf(k: KnobInput): Knob {
   const parts = [`${t.done} done today`, ...(t.working ? [`${t.working} working`] : []), ...(t.retrying ? [`${t.retrying} retrying`] : []),
     ...(t.needs_you ? [`${t.needs_you} need${t.needs_you === 1 ? "s" : ""} you`] : [])];
   return {
-    ...(k.version !== undefined ? { version: k.version } : {}),
+    ...(k.version !== undefined ? { version: k.version } : {}), ...(k.shown !== undefined ? { shown: k.shown } : {}),
     does: k.does, wakes, when, results,
     why: (k.setting?.why || k.does.label).slice(0, 60),
     rings: [{ key: "wakes", name: "When" }, { key: "what", name: "What" }, { key: "results", name: "Where" }],

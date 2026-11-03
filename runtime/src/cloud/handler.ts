@@ -635,9 +635,15 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     ]);
     const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
       .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
-    const setting = live !== undefined ? taf.knobs?.[String(live)] : undefined;
     // The newest dial change made after the live version and not yet live: it waits for the owner.
     const pending = Object.keys(taf.knobs ?? {}).map(Number).filter((n) => live === undefined || n > live).sort((a, b) => b - a)[0];
+    // ?version=N shows a dial change not yet live, so the next − or + builds on it instead of on the live dial.
+    const asked = new URLSearchParams(event.rawQueryString ?? "").get("version");
+    const shown = asked !== null ? Number(asked) : undefined;
+    if (shown !== undefined && (!Number.isInteger(shown) || !taf.knobs?.[String(shown)] || (live !== undefined && shown <= live))) {
+      throw new HTTPError(404, "that version isn't a dial change waiting to go live");
+    }
+    const setting = shown !== undefined ? taf.knobs![String(shown)] : live !== undefined ? taf.knobs?.[String(live)] : undefined;
     const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
     const { counts } = workOf(today, zone, now, []);
     const job = JOBS.find((j) => j.id === taf.job);
@@ -645,7 +651,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       name: taf.name,
       does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
       unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools,
-      ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}),
+      ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}), ...(shown !== undefined ? { shown } : {}),
       ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
       today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
       zone, now,

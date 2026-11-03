@@ -192,9 +192,10 @@ function world() {
 }
 type World = ReturnType<typeof world>;
 
-async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; headers?: Record<string, string> } = {}) {
+async function call(w: World, method: string, path: string, opts: { token?: string; body?: unknown; headers?: Record<string, string>; query?: string } = {}) {
   const event: HTTPEvent = {
     rawPath: path,
+    ...(opts.query ? { rawQueryString: opts.query } : {}),
     requestContext: { http: { method } },
     headers: { ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}), ...opts.headers },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
@@ -1572,6 +1573,11 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.calls.slice(before).filter((c: string) => /Schedule/.test(c))).toEqual([]);
     // Until it's live, the dial shows it as the change waiting for the owner.
     const waiting = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    // The waiting change can be shown in full, so a next − or + builds on it; anything else isn't a draft.
+    const asDraft = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana", query: `version=${n}` });
+    expect(asDraft.body.shown).toBe(n);
+    expect(asDraft.body.setting.busy).toBe("latest");
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana", query: "version=99" })).status).toBe(404);
     expect(waiting.body.draft).toEqual({ version: n, words: put.body.words, wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door"],
       when: ["If busy, runs the latest once it's free"], results: ["Results go to door_reply, app"], what: [] });
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
