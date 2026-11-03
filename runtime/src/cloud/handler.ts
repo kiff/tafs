@@ -13,6 +13,7 @@ import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary }
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting } from "./knob.js";
+import { requestDetail } from "./request.js";
 import { ConnectError, listApps, startApp } from "./connect.js";
 import { instantIn, schedulesOf, TriggerError, triggerWords, type Trigger } from "./triggers.js";
 
@@ -62,6 +63,7 @@ import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
+ *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
  *   GET  /v1/tafs/{id}/knob             its dial: what wakes it, when, where results go, and today's work, in tafs cloud's words
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
@@ -578,6 +580,22 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now), next_run: v.next_run, ...workOf(runs, zone, now, sent, again), skipped: skippedOf(fired, zone, now) };
+  }
+  if (parts.length === 5 && method === "GET" && action === "requests") {
+    // One request from the rim (docs/api.md, "A request"): what it did, step by step. Someone else's,
+    // or a door sender's, is for the people who manage the taf.
+    const run = (await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50))).find((r) => r.id === parts[4]);
+    if (!run) throw new HTTPError(404, "no such request");
+    const others = run.requester?.kind === "door" || (run.requester?.kind === "member" && run.requester.id !== me.subject);
+    if (others && !(await managesTaf(event, me, taf, deps))) throw new HTTPError(404, "no such request");
+    const now = deps.now?.() ?? new Date();
+    const [read, sent, titles] = await Promise.all([
+      deps.agents.session(me.tenantID, run.session, run.requester?.kind === "door" ? undefined : run.requester?.kind === "member" ? `member:${run.requester.id}` : ownerKey(me)).catch(() => undefined),
+      deps.doors ? sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : Promise.resolve([]),
+      titlesOf(event, me, taf, deps),
+    ]);
+    const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
+    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again);
   }
   if (parts.length === 4 && method === "PUT" && action === "knob") {
     // The dial changed, from a tap or Coach's draft: the taf's next version, as an improvement

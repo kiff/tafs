@@ -263,6 +263,17 @@ describe("tafs cloud", () => {
     expect(r.body.requests).toHaveLength(1);
   });
 
+  it("gives one request from the rim, step by step, and 404 for one it doesn't have", async () => {
+    const w = world();
+    await w.agents.api.startRun("t_acme", RAE, "go");
+    const id = w.agents.runs[0]!.id;
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/requests/${id}`, { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ id, state: "working", from: "Run now" });
+    expect(r.body.steps.map((s: { label: string }) => s.label)).toEqual(["Received", "Working on it"]);
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/requests/run_nope`, { token: "ana" })).status).toBe(404);
+  });
+
   it("shows the firings a taf's schedule skipped lately, in words, and none it ran", async () => {
     const w = world();
     const at = (iso: string) => ({ due: iso, at: iso });
