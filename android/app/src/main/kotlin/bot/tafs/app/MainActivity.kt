@@ -345,6 +345,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     DoorActions(
       load = model::loadDoors,
       add = { taf, app -> model.addDoor(taf, app) },
+      loadSlackChannels = model::loadSlackChannels,
+      addSlack = { taf, app, grant, channel -> model.addSlackDoor(taf, app, grant, channel) },
       setOpen = { taf, door, open -> model.setDoorOpen(taf, door, open) },
       remove = { taf, door -> model.removeDoor(taf, door) },
       pair = { taf, door, sender, name -> model.pairDoor(taf, door, sender, name) },

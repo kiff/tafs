@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import bot.tafs.app.model.ConnectWords
+import bot.tafs.app.model.DoorWords
 import bot.tafs.app.model.Answer
 import bot.tafs.app.model.AttachmentRef
 import bot.tafs.app.model.FilePrep
@@ -321,6 +322,8 @@ data class AppState(
   val openRequest: Pair<String, bot.tafs.app.kiff.RequestDetail>? = null,
   /** Why a request couldn't be opened. */
   val requestError: String? = null,
+  /** The channels each Slack bot connection can see, by grant id, for a Slack door. */
+  val slackChannels: Map<String, List<bot.tafs.app.kiff.SlackChannel>> = emptyMap(),
   /** Each taf's dial as tafs cloud last sent it, by taf id. */
   val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
   /** A dial change made into a version, waiting for the owner to make it live, by taf id. */
@@ -402,6 +405,9 @@ data class AppState(
    * it (not read yet, or failed), nothing is shown: an Editor manages only the tafs they made, which the role alone can't say.
    */
   fun manages(tafId: String): Boolean = access[tafId]?.manage ?: false
+
+  /** The taf's connected Slack bot connections, which a Slack door listens through. */
+  fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }
 
   /** The tafs an app can be connected for: on tafs cloud, and managed by this person. */
   val connectableTafs: List<Taf> get() = tafs.filter { it.cloudId != null && manages(it.id) }
@@ -2331,6 +2337,81 @@ class AppModel(
 
   fun closeRequest() = _state.update { it.copy(openRequest = null, requestError = null) }
 
+  /** The channels a Slack bot connection can see, from planque: a signed read, for picking a Slack door's channel. */
+  suspend fun loadSlackChannels(grantId: String) {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null) return
+    val generation = accountGeneration
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    val channels = try {
+      planque.slackChannels(grantId) { signer.signConfirmed(it) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      return
+    }
+    if (generation == accountGeneration) _state.update { it.copy(slackChannels = it.slackChannels + (grantId to channels)) }
+  }
+
+  /**
+   * A Slack door: planque first, then tafs cloud. One confirmation, then this device signs planque's subscription of the Slack bot
+   * to new messages in that channel, and only then is the door added in tafs cloud (`{app: "slack", grant, channel}`). If the door
+   * can't be added, the subscription is removed again, so nothing listens for a door that isn't there.
+   */
+  suspend fun addSlackDoor(tafId: String, app: DoorApp, grant: bot.tafs.app.kiff.Grant, channel: bot.tafs.app.kiff.SlackChannel): Door? {
+    val tenant = kiffTenant
+    val taf = _state.value.taf(tafId)
+    val cloudId = taf?.cloudId
+    val account = grant.account
+    if (_state.value.mode != Mode.kiff || tenant == null || cloudId == null) return null
+    if (account == null) {
+      updateDoors(tafId) { it.copy(error = DoorWords.SLACK_NO_ACCOUNT) }
+      return null
+    }
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true, error = null) }
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    try {
+      try {
+        signer.sign("tafs.slack-door.v1|$tenant|${grant.id}|${channel.id}".toByteArray(), DoorWords.slackReason(taf.name, channel.name.ifBlank { channel.id }))
+      } catch (e: SignerException) {
+        updateDoors(tafId) { it.copy(error = notSigned(e, "Not added: it wasn't confirmed.")) }
+        return null
+      }
+      if (generation != accountGeneration) return null
+      planque.signer = { signer.signConfirmed(it) }
+      val trigger = try {
+        planque.subscribe(grant.id, account, DoorWords.SLACK_CHANNEL_MESSAGES, listOf(channel.id))
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = "The Slack bot couldn't listen to that channel. ${ErrorWords.of(e)}") }
+        return null
+      }
+      if (generation != accountGeneration) return null
+      val door = try {
+        // planque's subscription id goes with the door, so removing the door can remove it.
+        cloud.addDoor(cloudId, app.id, mapOf("grant" to grant.id, "channel" to channel.id) + (trigger.key?.let { mapOf("trigger" to it) } ?: emptyMap()))
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        // No door: the subscription goes again, so nothing listens for it.
+        trigger.key?.let { key -> runCatching { planque.unsubscribe(grant.id, key, account) } }
+        if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = "The Slack door wasn't added. ${ErrorWords.of(e)}") }
+        return null
+      }
+      if (generation == accountGeneration) loadDoors(tafId)
+      return door
+    } finally {
+      planque.signer = null
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
   /** Removes a follow-up the taf set itself, from the dial's face, then reads the dial again. */
   suspend fun removeFollowUp(tafId: String, followUp: String) {
     if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return
@@ -3835,6 +3916,27 @@ class AppModel(
   }
 
   suspend fun removeDoor(tafId: String, door: Door) {
+    // A Slack door: planque's subscription goes first (a signed delete), then the door, so nothing listens for a door that's gone.
+    if (door.kind == "slack" && door.grant != null && door.trigger != null) {
+      val tenant = kiffTenant ?: return
+      val account = _state.value.grants.firstOrNull { it.id == door.grant }?.account
+      if (account != null) {
+        planque.tenant = tenant
+        planque.deviceLoader = { kiff.thisDeviceId() }
+        val signer = signer
+        try {
+          planque.signer = { signer.signConfirmed(it) }
+          planque.unsubscribe(door.grant, door.trigger, account)
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          updateDoors(tafId) { it.copy(error = "The Slack bot still listens to that channel, so the door stays. ${ErrorWords.of(e)}") }
+          return
+        } finally {
+          planque.signer = null
+        }
+      }
+    }
     doorWork(tafId) { cloudId ->
       cloud.removeDoor(cloudId, door.id)
       updateDoors(tafId) { d -> d.copy(doors = d.doors.filterNot { it.id == door.id }) }

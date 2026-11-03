@@ -660,4 +660,78 @@ class PlanqueTest {
   @Test fun planquesOwnRefusalsSayWhatHappened() {
     assertNotNull(PlanqueError.NotSigning.message)
   }
+
+  // MARK: A Slack door: planque's subscription first, then tafs cloud's door
+
+  private val slackBot =
+    """{"id":"gs","status":"connected","account":"ca_1","entry":"connector:composio:slackbot","text":"Slack bot","digest":"","request":{"server":"","agent":"refunds-1","tools":[]}}"""
+  private val slackApp = bot.tafs.app.kiff.DoorApp(id = "slack", label = "Slack", kind = "slack", proof = "proven")
+
+  private suspend fun slackModel(): AppModel {
+    transport.answer("GET /v1/me", 200, me)
+    transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    transport.answer("GET /v1/me/access", 200, """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}""")
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
+    transport.answer(grants, 200, """{"grants":[$slackBot,${grant("g1")}]}""")
+    val m = model()
+    m.refresh()
+    m.refreshConnections()
+    return m
+  }
+
+  @Test fun theTafsSlackBotIsKnownByItsEntryOrToolkitNeverItsName() = runTest {
+    val m = slackModel()
+    assertEquals(listOf("gs"), m.state.value.slackBots("refunds-1").map { it.id })
+    val byToolkit = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g2","status":"connected","request":{"agent":"refunds-1","connector":{"provider":"composio","toolkit":"slackbot"}}}""")
+    assertTrue(byToolkit.isSlackBot)
+    val named = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g3","status":"connected","vendor":"Slack","request":{"agent":"refunds-1"}}""")
+    assertFalse("a vendor name doesn't make a Slack bot", named.isSlackBot)
+  }
+
+  @Test fun aSlackDoorSubscribesAtPlanqueFirstThenAddsTheDoorWithItsTrigger() = runTest {
+    val m = slackModel()
+    transport.answer("GET /v1/accounts/t_01/grants/gs/channels", 200, """{"channels":[{"id":"C0REFUNDS","name":"refunds","private":false}]}""")
+    m.loadSlackChannels("gs")
+    val channel = m.state.value.slackChannels.getValue("gs").single()
+    transport.answer("POST /v1/accounts/t_01/grants/gs/triggers", 200, """{"id":"trg_9","slug":"SLACKBOT_CHANNEL_MESSAGE_RECEIVED"}""")
+    transport.answer("POST /v1/tafs/taf_1/doors", 200, """{"door":{"id":"door_s","app":"slack","kind":"slack","label":"Slack","grant":"gs","channel":"C0REFUNDS","trigger":"trg_9"}}""")
+    transport.answer("GET /v1/tafs/taf_1/doors", 200, """{"doors":[],"apps":[],"knocks":[]}""")
+    val door = m.addSlackDoor("refunds-1", slackApp, m.state.value.slackBots("refunds-1").single(), channel)
+    assertEquals("door_s", door?.id)
+    assertEquals("one confirmation", listOf(bot.tafs.app.model.DoorWords.slackReason("Refunds", "refunds")), auth.asked)
+    val sub = transport.requestsTo("POST /v1/accounts/t_01/grants/gs/triggers").single()
+    assertEquals(
+      "the account, the slug and the channel; no config",
+      KiffClient.json.parseToJsonElement("""{"account":"ca_1","slug":"SLACKBOT_CHANNEL_MESSAGE_RECEIVED","channels":["C0REFUNDS"]}"""),
+      KiffClient.json.parseToJsonElement(String(sub.body!!)),
+    )
+    assertTrue("device-signed", sub.headers.containsKey("Planque-Device-Signature"))
+    val added = transport.requestsTo("POST /v1/tafs/taf_1/doors").single()
+    val body = KiffClient.json.parseToJsonElement(String(added.body!!)).jsonObject
+    assertEquals("slack", body.getValue("app").jsonPrimitive.content)
+    assertEquals("trg_9", body.getValue("trigger").jsonPrimitive.content)
+    assertTrue("planque first", transport.requests.indexOf(sub) < transport.requests.indexOf(added))
+  }
+
+  @Test fun aDoorThatCantBeAddedTakesItsSubscriptionAway() = runTest {
+    val m = slackModel()
+    transport.answer("POST /v1/accounts/t_01/grants/gs/triggers", 200, """{"id":"trg_9"}""")
+    transport.answer("POST /v1/tafs/taf_1/doors", 400, """{"error":"connect the Slack bot first"}""")
+    transport.answer("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9", 200, "{}")
+    assertNull(m.addSlackDoor("refunds-1", slackApp, m.state.value.slackBots("refunds-1").single(), bot.tafs.app.kiff.SlackChannel("C0REFUNDS", "refunds")))
+    val del = transport.requestsTo("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9").single()
+    assertEquals("ca_1", KiffClient.json.parseToJsonElement(String(del.body!!)).jsonObject.getValue("account").jsonPrimitive.content)
+  }
+
+  @Test fun removingASlackDoorRemovesItsSubscriptionFirst() = runTest {
+    val m = slackModel()
+    transport.answer("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9", 200, "{}")
+    transport.answer("DELETE /v1/tafs/taf_1/doors/door_s", 200, "{}")
+    m.removeDoor("refunds-1", bot.tafs.app.kiff.Door(id = "door_s", app = "slack", kind = "slack", label = "Slack", grant = "gs", channel = "C0REFUNDS", trigger = "trg_9"))
+    val sub = transport.requestsTo("DELETE /v1/accounts/t_01/grants/gs/triggers/trg_9").single()
+    val door = transport.requestsTo("DELETE /v1/tafs/taf_1/doors/door_s").single()
+    assertTrue(transport.requests.indexOf(sub) < transport.requests.indexOf(door))
+  }
 }

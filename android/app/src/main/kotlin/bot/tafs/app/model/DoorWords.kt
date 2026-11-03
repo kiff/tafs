@@ -22,6 +22,22 @@ object DoorNames {
 
 /** What the Doors screens and the chat's knocks say, in the words iOS's has. */
 object DoorWords {
+  /** The Slack bot's trigger a channel door subscribes to. */
+  const val SLACK_CHANNEL_MESSAGES = "SLACKBOT_CHANNEL_MESSAGE_RECEIVED"
+
+  /** No Slack bot connected for this taf yet: it's connected like any app. */
+  const val SLACK_CONNECT_FIRST = "Connect the Slack bot for this taf first, in Settings › Connect apps. Then add its channel here."
+
+  const val SLACK_WHICH_BOT = "Which Slack connection is it for?"
+  const val SLACK_WHICH_CHANNEL = "Which channel does it answer in? New messages there will start work."
+  const val SLACK_NO_CHANNELS = "The Slack bot can't see any channel yet. Add it to a channel in Slack, then try again."
+
+  /** A Slack bot connection planque gives no account for. */
+  const val SLACK_NO_ACCOUNT = "This Slack connection isn't ready yet. Try again in a moment."
+
+  /** What the prompt says for a Slack door: what's being allowed, in words. */
+  fun slackReason(taf: String, channel: String): String = "Let $taf hear new messages in #${channel.removePrefix("#")}"
+
   const val FOOTER_ANYONE = "Anyone can write to a door. Only people you pair can give %s work, and its Card decides the rest."
   const val WHATSAPP_ELSEWHERE = "WhatsApp doors are added from tafs on an iPhone for now; once added, they show here."
 
