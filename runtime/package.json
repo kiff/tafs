@@ -10,7 +10,7 @@
   "license": "SEE LICENSE IN ../README.md",
   "description": "tafs cloud: the phone's API, running every taf on kiff/agents, governed by KIFF",
   "dependencies": {
-    "@smithy/signature-v4": "5.7.4"
+    "@smithy/signature-v4": "5.7.5"
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "3.1157.0",
