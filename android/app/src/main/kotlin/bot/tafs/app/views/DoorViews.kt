@@ -91,6 +91,8 @@ class DoorActions(
   val setPaused: suspend (String, Boolean) -> Unit = { _, _ -> },
   /** "Ask Coach or find anything", "Add a door" and "Ask Coach to change": Coach, about this taf. */
   val askCoach: (String) -> Unit = {},
+  /** An app's event on the dial approved (taf, trigger): its filters subscribed at planque, then recorded by tafs cloud. */
+  val approveEvent: suspend (String, String) -> Boolean = { _, _ -> false },
   /** Removes a follow-up the taf set itself (taf, follow-up id). */
   val removeFollowUp: suspend (String, String) -> Unit = { _, _ -> },
   /** Opens the request the dial's rim points at. */

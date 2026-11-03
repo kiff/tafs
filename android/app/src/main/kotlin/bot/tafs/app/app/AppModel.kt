@@ -326,6 +326,8 @@ data class AppState(
   val slackChannels: Map<String, List<bot.tafs.app.kiff.SlackChannel>> = emptyMap(),
   /** Each taf's dial as tafs cloud last sent it, by taf id. */
   val knobs: Map<String, bot.tafs.app.kiff.KnobWire> = emptyMap(),
+  /** The tafs whose app event is being approved on the dial. */
+  val approvingEvent: Set<String> = emptySet(),
   /** Why a dial change didn't go through, in tafs cloud's words when it sends them, by taf id. */
   val knobErrors: Map<String, String> = emptyMap(),
   /**
@@ -841,6 +843,7 @@ class AppModel(
     cloud.token = token
     kiff.tenant = tenant
     accountGeneration += 1
+    eventReceipts.clear()
     forgetPlanqueDevice()
     relinkJob?.cancel()
     decided.clear()
@@ -1248,6 +1251,7 @@ class AppModel(
     kiff.tenant = null
     kiffTenant = null
     accountGeneration += 1
+    eventReceipts.clear()
     forgetPlanqueDevice()
     relinkJob?.cancel()
     decided.clear()
@@ -2422,6 +2426,100 @@ class AppModel(
       planque.signer = null
       if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
     }
+  }
+
+  /** A subscription planque made for an approved event that tafs cloud hasn't recorded yet: kept only to record it again. */
+  private data class EventReceipt(val version: Int, val approval: bot.tafs.app.kiff.KnobWire.Approval, val subscription: String)
+
+  /** Those receipts, by taf and trigger, so recording again neither asks the owner nor subscribes twice. */
+  private val eventReceipts = mutableMapOf<Pair<String, String>, EventReceipt>()
+
+  /**
+   * Approves an app's event on the dial (`ok: approve`): the live dial is read again first, so only the filters it still shows
+   * are approved; the owner confirms with the approval key, over the taf, version, trigger, connection, event and the filters'
+   * hash; planque subscribes exactly those filters, signed by this device; then tafs cloud records planque's id for that
+   * version. Whether it's approved is tafs cloud's answer alone. A subscription made but not recorded is kept, to record again.
+   */
+  suspend fun approveKnobEvent(tafId: String, triggerId: String): Boolean {
+    val tenant = kiffTenant
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId) || tenant == null || cloudId == null) return false
+    if (!_state.value.sessionHasKey || !_state.value.planqueReady) return knobError(tafId, "Approving events isn't set up for this account from this phone.")
+    val shown = _state.value.knobs[tafId] ?: return false
+    val item = shown.item(triggerId)?.takeIf { it.kind == "app_event" && it.ok == "approve" } ?: return false
+    val approval = item.approval?.takeIf { it.needed } ?: return false
+    val version = shown.version ?: return false
+    val generation = accountGeneration
+    if (!approvingEvents.add(tafId)) return false
+    _state.update { it.copy(knobErrors = it.knobErrors - tafId, approvingEvent = it.approvingEvent + tafId) }
+    try {
+      // Read the live dial before asking: a draft or an older dial must not subscribe other filters.
+      val live = cloud.knob(cloudId)
+      if (generation != accountGeneration) return false
+      val current = live.item(triggerId)?.approval
+      if (live.version != version || current == null || current.grant != approval.grant || current.event != approval.event ||
+        bot.tafs.app.kiff.Jcs.canonical(current.config) != bot.tafs.app.kiff.Jcs.canonical(approval.config)
+      ) {
+        loadKnob(tafId)
+        return knobError(tafId, bot.tafs.app.model.KnobWords.EVENT_CHANGED)
+      }
+      if (current.state == "approved") {
+        eventReceipts.remove(tafId to triggerId)
+        loadKnob(tafId)
+        return true
+      }
+      val key = tafId to triggerId
+      val receipt = eventReceipts[key]?.takeIf { it.version == version && it.approval == approval } ?: run {
+        refreshConnections()
+        if (generation != accountGeneration) return false
+        val grant = _state.value.grants.firstOrNull { it.id == approval.grant && it.connected && it.request.agent == tafId }
+        val account = grant?.account?.takeIf { it.isNotBlank() } ?: return knobError(tafId, bot.tafs.app.model.KnobWords.CONNECT_FIRST)
+        val filters = PlanqueClient.sha256Hex(bot.tafs.app.kiff.Jcs.canonical(approval.config).toByteArray())
+        val signer = signer
+        try {
+          signer.sign("tafs.event.v1|$tenant|$cloudId|$version|$triggerId|${approval.grant}|${approval.event}|$filters".toByteArray(), item.words)
+        } catch (e: SignerException) {
+          return knobError(tafId, notSigned(e, "Not approved: it wasn't confirmed."))
+        }
+        if (generation != accountGeneration) return false
+        planque.tenant = tenant
+        planque.deviceLoader = { kiff.thisDeviceId() }
+        planque.signer = { signer.signConfirmed(it) }
+        val made = try {
+          planque.subscribeEvent(approval.grant, account, approval.event, approval.config)
+        } finally {
+          planque.signer = null
+        }
+        if (generation != accountGeneration) return false
+        val id = made.key ?: return knobError(tafId, "The connection didn't say which subscription it made. Try again.")
+        EventReceipt(version, approval, id).also { eventReceipts[key] = it }
+      }
+      val updated = cloud.recordKnobSubscription(cloudId, triggerId, receipt.subscription, receipt.version)
+      if (generation != accountGeneration) return false
+      _state.update { it.copy(knobs = it.knobs + (tafId to updated)) }
+      val recorded = updated.item(triggerId)?.approval
+      if (recorded?.state != "approved" || recorded.subscription != receipt.subscription) return knobError(tafId, bot.tafs.app.model.KnobWords.NOT_RECORDED)
+      eventReceipts.remove(key)
+      // Shown as tafs cloud has it now, the waiting version included.
+      loadKnob(tafId)
+      return true
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return false
+      val said = (e as? PlanqueError.Server)?.message ?: (e as? bot.tafs.app.kiff.CloudError)?.takeIf { it.status == 409 && it.words == null }?.message
+      return knobError(tafId, "Not approved. " + (said ?: ErrorWords.of(e)))
+    } finally {
+      approvingEvents.remove(tafId)
+      if (generation == accountGeneration) _state.update { it.copy(approvingEvent = it.approvingEvent - tafId) }
+    }
+  }
+
+  private val approvingEvents = mutableSetOf<String>()
+
+  private fun knobError(tafId: String, words: String): Boolean {
+    _state.update { it.copy(knobErrors = it.knobErrors + (tafId to words)) }
+    return false
   }
 
   /** Removes a follow-up the taf set itself, from the dial's face, then reads the dial again. */

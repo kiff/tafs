@@ -396,6 +396,24 @@ class TafsCloud(
     send("DELETE", "/v1/tafs/${escaped(id)}/follow-ups/${escaped(followUp)}")
   }
 
+  /**
+   * Records planque's subscription for an app event the owner approved (`manages`): only while [version] is still live with
+   * that trigger's same filters, else 409. Answers the dial as it is now.
+   */
+  suspend fun recordKnobSubscription(id: String, trigger: String, subscription: String, version: Int): KnobWire =
+    KiffClient.json.decodeFromString(
+      String(
+        sendJson(
+          "POST", "/v1/tafs/${escaped(id)}/knob/subscriptions",
+          kotlinx.serialization.json.buildJsonObject {
+            put("trigger", kotlinx.serialization.json.JsonPrimitive(trigger))
+            put("subscription", kotlinx.serialization.json.JsonPrimitive(subscription))
+            put("version", kotlinx.serialization.json.JsonPrimitive(version))
+          },
+        ),
+      ),
+    )
+
   /** A taf's dial (the knob API). */
   suspend fun knob(id: String, version: Int? = null): KnobWire = get("/v1/tafs/${escaped(id)}/knob" + (version?.let { "?version=$it" } ?: ""))
 

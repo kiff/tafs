@@ -80,6 +80,13 @@ object KnobWords {
   const val LIVE = "This dial is live."
   const val CHANGE = "Change"
   const val ONE_CONFIRMATION = "One confirmation sets all three rings."
+  const val EVENT_FILTERS = "It listens for"
+  const val EVENT_CHANGED = "This event changed. It's shown again as it is now: approve that one."
+  const val CONNECT_FIRST = "Connect this app for the taf before approving its event."
+  const val NOT_RECORDED = "The connection is listening, but the dial hasn't recorded it yet. Approve again to record it."
+
+  /** The approval's button, with this phone's own prompt: "Approve with your fingerprint". */
+  fun approveWith(biometry: String): String = "Approve with $biometry"
 
   /** Over Coach's dial card: "Refunds will work like this". */
   fun draftTitle(taf: String): String = "$taf will work like this"

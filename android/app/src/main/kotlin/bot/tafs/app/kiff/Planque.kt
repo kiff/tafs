@@ -265,6 +265,22 @@ class PlanqueClient(
     return decode(raw("POST", "grants/${escaped(grantId)}/triggers", body))
   }
 
+  /**
+   * Subscribes a connection to an app's event, [slug], with the owner's filters [config] as tafs cloud gave them, signed by
+   * this device: planque checks them against the event's own schema and subscribes exactly those.
+   */
+  suspend fun subscribeEvent(grantId: String, account: String, slug: String, config: JsonObject): GrantTrigger {
+    val body = KiffClient.json.encodeToString(
+      JsonObject.serializer(),
+      JsonObject(mapOf(
+        "account" to kotlinx.serialization.json.JsonPrimitive(account),
+        "slug" to kotlinx.serialization.json.JsonPrimitive(slug),
+        "config" to config,
+      )),
+    ).toByteArray()
+    return decode(raw("POST", "grants/${escaped(grantId)}/triggers", body))
+  }
+
   /** Removes a trigger planque subscribed, signed by this device: its delivery stops first, then the provider's listener. */
   suspend fun unsubscribe(grantId: String, trigger: String, account: String) {
     raw("DELETE", "grants/${escaped(grantId)}/triggers/${escaped(trigger)}", body("account" to account))

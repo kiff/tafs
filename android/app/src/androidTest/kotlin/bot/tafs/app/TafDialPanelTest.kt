@@ -52,6 +52,8 @@ class TafDialPanelTest {
                  {"id":"trg_f","kind":"follow_up","follow_up":"fu_1","label":"Tomorrow 9:00","words":"Check refund 4402 again","state":"Once","tap":"Tap to remove","ok":"remove_follow_up"},
                  {"id":"trg_w","kind":"schedule","label":"Weekdays","words":"Weekdays at 09:00","state":"09:00",
                   "size":{"label":"Time","index":0,"choices":[{"label":"09:00","setting":{"at":"09:00"}},{"label":"12:00","setting":{"at":"12:00"}}]}},
+                 {"id":"trg_e","kind":"app_event","grant":"g_hub","label":"New deal","words":"A won deal in HubSpot starts a check.","state":"Approve","tap":"Tap to approve","ok":"approve",
+                  "approval":{"state":"needed","grant":"g_hub","event":"HUBSPOT_DEAL_WON","config":{"pipeline":"sales","amount_over":500}}},
                  {"id":"add_door","kind":"add_door","label":"Add a door","words":"Ask Coach to add a door","state":"Add","tap":"Tap to ask Coach","ok":"coach"}],
         "what":[{"id":"s1","step":1,"label":"$firstStep","words":"Looks up the charge"}],
         "results":[{"id":"res_1","place":"door_reply","label":"Sender","words":"Replies to whoever wrote"}],
@@ -80,6 +82,7 @@ class TafDialPanelTest {
             removeFollowUp = { _, fid -> log += "remove $fid" }, openRimRequest = { log += "rim" },
             changeKnobSize = { _, setting -> log += "size $setting" }, confirmKnobChange = { log += "live" },
             setPaused = { _, paused -> log += "pause $paused" }, askCoach = { log += "coach" },
+            approveEvent = { _, id -> log += "approve $id"; true },
           ),
           onDoor = { log += "door $it" },
         )
@@ -225,5 +228,18 @@ class TafDialPanelTest {
     rule.onNodeWithContentDescription("1 · $long, What").performClick()
     rule.waitForIdle()
     rule.onNodeWithContentDescription("WHAT · 1 · ${long.uppercase()}", substring = true).assertIsDisplayed()
+  }
+
+  @Test fun anAppsEventShowsItsFiltersThenOneApprovalApprovesIt() {
+    show()
+    rule.onNodeWithContentDescription("New deal, When, approve").performClick()
+    rule.onNodeWithText("Tap to approve").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("pipeline · sales").assertIsDisplayed()
+    rule.onNodeWithText("amount_over · 500").assertIsDisplayed()
+    assertEquals("nothing approved by opening it", emptyList<String>(), log)
+    rule.onNodeWithText("Approve with", substring = true).performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("approve trg_e"), log)
   }
 }
