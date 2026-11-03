@@ -576,6 +576,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           loadWords = model::loadProfileWords,
           onApprove = { grant -> model.startListApproval(grant.id, grant.digest) },
           onClose = model::closeListApproval,
+          needsKey = state.listApprovalNeedsKey,
+          onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
         )
       }
     }

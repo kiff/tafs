@@ -216,6 +216,17 @@ happened, each step marked done, failed, not made, waiting or next, every line a
 cloud wrote it. **Try the reply now** sends a reply given up on again, for whoever manages the
 taf, and **Ask Coach** opens a conversation about the taf.
 
+## Connect apps
+
+Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#connect-apps) says:
+tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
+over the list (`ConnectApprovalSheet`). An app that signs in at the vendor is approved, then
+signed in. An app that takes an API key (`needs_key`) takes it on the same sheet, as on iPhone
+and iPad: a password field, and **Give the key with your fingerprint**, which signs the same
+confirmation as an approval and sends the key to planque once (`AppModel.giveKey`,
+`PlanqueClient.giveKey`, the key in `Planque-Vendor-Key`, its SHA-256 in the signed body). The
+key lives only in the open sheet's field, and nothing on the phone keeps it.
+
 ## Signing
 
 Two keys in the Android Keystore, in StrongBox where the phone has it

@@ -56,12 +56,15 @@ class ConnectAppsTest {
     assertNull(m.state.value.listApproval)
   }
 
-  @Test fun aVendorThatTakesAKeyIsCoachsForNowAndNothingOpens() = runTest {
+  @Test fun aVendorThatTakesAKeyOpensItsApprovalToTakeTheKeyThere() = runTest {
     val m = model()
     transport.answer("POST /v1/connect/apps/holded", 200, """{"grant":"g8","needs_key":true}""")
     m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("holded", "Holded", "Holded", how = "key"))
-    assertNull(m.state.value.listApproval)
-    assertEquals(bot.tafs.app.model.ConnectWords.needsKey("Holded"), m.state.value.connectAppsError)
+    assertEquals("g8", m.state.value.listApproval)
+    assertTrue("the key is typed on the sheet", m.state.value.listApprovalNeedsKey)
+    assertNull(m.state.value.connectAppsError)
+    m.closeListApproval()
+    assertFalse(m.state.value.listApprovalNeedsKey)
   }
 
   @Test fun signingInAgainOpensTheGrantItHasWithNoNewOne() = runTest {

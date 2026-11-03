@@ -182,8 +182,12 @@ sheet over the list. It's the same as Coach's card: planque's words, KIFF's word
 profile, then the signature, and only then the vendor's sign-in page from planque's approve
 answer, and the confirm code. The owner sees what they're connecting before they go to the
 vendor. **Sign in again** opens the same sheet on the grant the app already has. A vendor that
-takes a key (`needs_key`) is set up through Coach for now. On Android: `AppModel.startConnectApp`,
-`startListApproval`, `ConnectApprovalSheet`.
+takes an API key (`needs_key`) takes it on the same sheet, on every app: the owner types it, and
+it's given with the same checks and the same confirmation as an approval
+(`tafs.connect.v1|tenant|grant|digest`, with the approval key). planque gets the key once, in
+`Planque-Vendor-Key`, on `POST …/grants/{id}/key`, whose signed body carries the digest, the
+key's SHA-256 and `kiff_profile`; the phone and tafs cloud keep it nowhere. On Android:
+`AppModel.startConnectApp`, `startListApproval`, `giveKey`, `ConnectApprovalSheet`.
 
 ### KIFF's words for a connection (KIFF's profile contract)
 

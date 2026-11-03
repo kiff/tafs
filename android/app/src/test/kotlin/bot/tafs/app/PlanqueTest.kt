@@ -381,6 +381,65 @@ class PlanqueTest {
     assertNull(m.state.value.connecting)
   }
 
+  // MARK: An API-key connection (Connect apps): the key is given on the sheet, with the same checks and confirmation
+
+  private val key = "POST /v1/accounts/t_01/grants/g1/key"
+
+  @Test fun aKeyIsConfirmedThenGivenToPlanqueOnceAndKeptNowhereHere() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(key, 200, grant("g1", "connected"))
+    val m = model()
+    m.refreshConnections()
+    assertTrue(m.giveKey("g1", digest, "  sk_test_4eC39H  "))
+    assertEquals("confirmed with the approval key", listOf("Give mcp.stripe.com its key for refunds-1"), auth.asked)
+    val sent = transport.requestsTo(key).single()
+    assertEquals("the key, trimmed, in its header alone", "sk_test_4eC39H", sent.headers[PlanqueClient.VENDOR_KEY])
+    val body = String(sent.body!!)
+    assertFalse("never in the body", body.contains("sk_test_4eC39H"))
+    val fields = KiffClient.json.parseToJsonElement(body).jsonObject
+    assertEquals(digest, fields.getValue("digest").jsonPrimitive.content)
+    val sum = MessageDigest.getInstance("SHA-256").digest("sk_test_4eC39H".toByteArray()).joinToString("") { "%02x".format(it) }
+    assertEquals(sum, fields.getValue("key_sha256").jsonPrimitive.content)
+    // Signed by this device, over the body, as every planque request is.
+    val parts = sent.headers.getValue("Planque-Device-Signature").split(",")
+    val message = PlanqueClient.message("https://planque.kiff.dev", "t_01", "POST", "/v1/accounts/t_01/grants/g1/key", sent.body!!, parts[0].removePrefix("t="))
+    assertTrue(verifies(signer.publicKeyDER, message, parts[1].removePrefix("v1=")))
+    assertFalse("kept nowhere in the app's state", m.state.value.toString().contains("sk_test_4eC39H"))
+    assertNull(m.state.value.connecting)
+  }
+
+  @Test fun anOwnerWhoDoesNotConfirmGivesNoKey() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    val m = model()
+    m.refreshConnections()
+    auth.confirms = false
+    assertFalse(m.giveKey("g1", digest, "sk_test_4eC39H"))
+    assertTrue(transport.requestsTo(key).isEmpty())
+    assertEquals("Not done: it wasn't confirmed.", m.state.value.coachNotes[bot.tafs.app.model.ConnectWords.cardKey("g1")])
+  }
+
+  @Test fun aKeyForAConnectionWhoseWordsArentReadIsNeverGiven() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${profiledGrant()}]}""")
+    val m = model()
+    m.refreshConnections()
+    assertFalse(m.giveKey("g1", digestOf(profiledRequest), "sk_test_4eC39H"))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(key).isEmpty())
+  }
+
+  @Test fun aKeyForWhatTheOwnerWasntShownIsNeverGiven() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    val m = model()
+    m.refreshConnections()
+    assertFalse(m.giveKey("g1", "an-older-digest", "sk_test_4eC39H"))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(key).isEmpty())
+  }
+
   @Test fun aRequestWhoseDigestIsNotItsHashIsNeverApproved() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant(digest = "0".repeat(64))}]}""")
