@@ -18,7 +18,7 @@ extension TafsCloud {
         }
 
         /// One stop: a trigger on Wakes it, a rule on When, a place on Results go.
-        struct Item: Decodable, Equatable, Identifiable {
+        struct Item: Decodable, Equatable, Identifiable, Sendable {
             let id: String
             /// Wakes it: run_now, door, schedule, vendor_event, app_check, follow_up,
             /// before_event. When: arrivals, schedule, missed, busy.
@@ -60,6 +60,7 @@ extension TafsCloud {
                 tap = try c.decodeIfPresent(String.self, forKey: .tap)
                 expires = try c.decodeIfPresent(String.self, forKey: .expires)
                 door = try c.decodeIfPresent(String.self, forKey: .door)
+                trigger = try c.decodeIfPresent(JSONValue.self, forKey: .trigger)
             }
         }
 
@@ -127,7 +128,7 @@ extension TafsCloud {
 
         /// What `PUT …/knob` takes: the triggers as tafs cloud wrote them, what a busy taf
         /// does, and where results go.
-        struct Setting: Codable, Equatable {
+        struct Setting: Codable, Equatable, Sendable {
             var wakes: [JSONValue]
             var busy: String
             var results: [String]
@@ -268,7 +269,7 @@ extension TafsCloud {
 }
 
 /// Any JSON value, kept as it came: what tafs cloud writes and takes back unchanged.
-enum JSONValue: Codable, Equatable {
+enum JSONValue: Codable, Equatable, Sendable {
     case string(String), number(Double), bool(Bool), object([String: JSONValue]), array([JSONValue]), null
 
     init(from decoder: Decoder) throws {
