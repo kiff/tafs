@@ -123,7 +123,8 @@ export function planqueArrival(v: unknown, eventID: string): { tenant: string; a
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(s("grant")) || !/^[CGD][A-Z0-9]{2,30}$/.test(s("channel").toUpperCase())) return undefined;
   const channel = s("channel").toUpperCase();
   const route = `slack:${s("grant")}:${channel}`;
-  const thread = s("thread");
+  // A message in a thread answers in that thread; one that isn't starts its own, under itself (its ts).
+  const thread = s("thread") || s("ts");
   const at = typeof b.timestamp === "number" ? new Date(b.timestamp * 1000).toISOString() : s("timestamp") || new Date().toISOString();
   return {
     tenant: s("tenant"), agent: s("agent"), route,

@@ -1077,6 +1077,11 @@ describe("the Slack door, through planque", () => {
     expect(input).toContain("post your answer yourself with your Slack bot's send-message tool, in the channel C0REFUNDS, in the thread 1730000000.000100");
     // The same event again starts nothing twice.
     expect((await slackHook(w, { id: "ev_ben", thread: "1730000000.000100" })).body.outcome).toBe("seen");
+    // A message that isn't in a thread is answered under itself.
+    await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/slack/keys`, { token: "ana", body: { id: "U0CY" } });
+    expect((await slackHook(w, { id: "ev_cy", sender: "U0CY", ts: "1730000001.000200" })).body.outcome).toBe("run");
+    const texts = [...w.agents.events.values()].flat().map((e) => (e.body as { text?: string }).text ?? "");
+    expect(texts.find((t) => t.includes("from u0cy"))).toContain("in the thread 1730000001.000200");
     // Someone not paired knocks.
     expect((await slackHook(w, { id: "ev_eve", sender: "U0EVE" })).body.outcome).toBe("knock");
   });

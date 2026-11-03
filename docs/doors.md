@@ -135,7 +135,7 @@ there is handed over by planque, and the taf works it like any door's.
 
 **How it arrives.** planque listens through the bot's triggers and hands each message to
 `POST /v1/doors/planque` as `planque.door.v1`: `{id, tenant, agent, grant, provider, account, trigger,
-trigger_slug, channel, sender, text, thread?, timestamp}`. It's signed like the email door's
+trigger_slug, channel, sender, text, thread?, ts?, timestamp}`: `ts` is the message's own Slack time, so a message that isn't in a thread is answered in a thread under itself. It's signed like the email door's
 deliveries: HMAC-SHA256 over `<id>.<unix seconds>.<raw body>`, sent as `v1,<base64>` in
 `Planque-Event-Signature`, with `Planque-Event-Id` and `Planque-Event-Timestamp`, within five minutes.
 The door is found by its grant and channel only, and `agent` must be the taf's own KIFF agent in that
