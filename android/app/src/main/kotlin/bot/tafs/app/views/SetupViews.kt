@@ -309,10 +309,12 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
       Text(SetupWords.AT_LEAST_ONE, style = scaled(13, color = Theme.soft))
       PendingChange(taf, knob, state, actions, busy) { work(it) }
 
-      // tafs' own places: switched through `PUT …/results`, at once. tafs cloud keeps one of them on at least, on either route (the
-      // dial gives the last of them no Off), so the last of them stays on, whatever app places are on too.
+      // tafs' own places: switched through `PUT …/results`, at once, so they show the live taf's places, never a waiting draft's
+      // (switching from a draft's would make its other choices live). tafs cloud keeps one of them on at least, on either route
+      // (the dial gives the last of them no Off), so the last of them stays on, whatever app places are on too.
       Eyebrow(SetupWords.FROM_TAFS)
-      val tafsOn = SetupWords.TAFS_PLACES.filter { p -> on.any { it.place == p } }
+      val live = (state.taf(taf.id) ?: taf).results.ifEmpty { listOf("door_reply") }
+      val tafsOn = SetupWords.TAFS_PLACES.filter { it in live }
       SetupWords.TAFS_PLACES.forEach { place ->
         val isOn = place in tafsOn
         PlaceRow(
@@ -328,7 +330,7 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
       Eyebrow(SetupWords.IN_APPS)
       apps.forEach { place ->
         val other = place.size?.let { s -> s.choices.firstOrNull { it.label != s.now?.label } }
-        PlaceRow(place.label, place.words, place.on, enabled = manages && !busy && other != null && !(place.on && on.size == 1)) {
+        PlaceRow(place.label, place.words, place.on, enabled = manages && !busy && other != null) {
           other?.let { c -> work { actions.doors.changeKnobSize(taf.id, c.setting) } }
         }
       }
@@ -356,6 +358,8 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
           }
         }
       }
+      // A failed read of its work, or a Send again that didn't go, in words.
+      state.workErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
       state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
     }
   }

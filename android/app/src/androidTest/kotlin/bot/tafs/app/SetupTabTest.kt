@@ -50,7 +50,8 @@ class SetupTabTest {
         "results":$results,"rim":{}}""",
   )
 
-  private fun show(knob: KnobWire) = rule.setShown {
+  private fun show(knob: KnobWire, live: List<String> = emptyList()) = rule.setShown {
+    val taf = taf.copy(results = live)
     val actions = TafActions(
       answer = { _, _ -> }, togglePause = {}, revoke = {}, loadMemory = {}, forget = { _, _ -> }, loadChat = {},
       sendChat = { _, _, _, _ -> }, issuer = "You",
@@ -127,5 +128,20 @@ class SetupTabTest {
     rule.waitForIdle()
     rule.onNode(hasContentDescription(SetupWords.placeTitle("door_reply"))).assertIsNotEnabled()
     rule.onNode(hasContentDescription(SetupWords.placeTitle("app"))).assertIsEnabled()
+  }
+
+  @Test fun tafsOwnPlacesShowTheLiveTafsNeverAWaitingDrafts() {
+    // Live: Reply only. A draft waiting to go live has Alert our phones on too. Turning Email on sends Reply and Email, not the
+    // draft's choice.
+    show(
+      knob("""[{"id":"r1","place":"door_reply","label":"Sender","on":true},{"id":"r2","place":"app","label":"You","on":true},{"id":"r3","place":"owner_email","label":"Email","on":false}]"""),
+      live = listOf("door_reply"),
+    )
+    rule.onNode(hasText(SetupWords.RESULTS_GO_TO, ignoreCase = true)).performScrollTo().performClick()
+    rule.waitForIdle()
+    rule.onNode(hasContentDescription(SetupWords.placeTitle("door_reply"))).assertIsNotEnabled()
+    rule.onNode(hasContentDescription(SetupWords.placeTitle("owner_email"))).performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("results [door_reply, owner_email]"), log)
   }
 }

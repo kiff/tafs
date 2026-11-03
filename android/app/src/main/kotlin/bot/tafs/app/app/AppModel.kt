@@ -2535,7 +2535,7 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || !_state.value.manages(tafId)) return
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     val generation = accountGeneration
-    try {
+    val kept = try {
       cloud.setResults(cloudId, places)
     } catch (e: CancellationException) {
       throw e
@@ -2543,7 +2543,9 @@ class AppModel(
       if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors + (tafId to "Not changed. ${ErrorWords.of(e)}")) }
       return
     }
-    if (generation == accountGeneration) _state.update { it.copy(knobErrors = it.knobErrors - tafId) }
+    if (generation != accountGeneration) return
+    // The live places, as tafs cloud now keeps them: what the switches show.
+    _state.update { s -> s.copy(knobErrors = s.knobErrors - tafId, tafs = s.tafs.map { if (it.id == tafId) it.copy(results = kept ?: places) else it }) }
     loadKnob(tafId)
   }
 
