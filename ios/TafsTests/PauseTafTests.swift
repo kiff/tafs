@@ -48,6 +48,18 @@ final class PauseTafTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/depl_1/pause"] = (403, #"{"error":"needs cards.manage"}"#)
         await model.setPaused(rae, true)
         XCTAssertNotEqual(model.taf(rae)?.state, .paused)
-        XCTAssertTrue(model.lastError?.hasPrefix("tafs cloud didn't pause it") == true, model.lastError ?? "")
+        XCTAssertEqual(model.lastError, "needs cards.manage")
     }
+    func testPauseShowsTheServersWordsAndASuccessClearsThem() async throws {
+        let (model, rae) = try await signedIn()
+        StubProtocol.responses["POST /v1/tafs/depl_1/pause"] = (409, #"{"error":"no_schedule","words":"Rae works from its chat, so it has no schedule to pause."}"#)
+        await model.setPaused(rae, true)
+        XCTAssertEqual(model.lastError, "Rae works from its chat, so it has no schedule to pause.")
+        XCTAssertNotEqual(model.taf(rae)?.state, .paused)
+        StubProtocol.responses["POST /v1/tafs/depl_1/pause"] = (200, #"{"taf":{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"paused"}}"#)
+        await model.setPaused(rae, true)
+        XCTAssertNil(model.lastError)
+        XCTAssertEqual(model.taf(rae)?.state, .paused)
+    }
+
 }

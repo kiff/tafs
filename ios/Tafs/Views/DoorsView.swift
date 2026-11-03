@@ -61,20 +61,58 @@ struct DoorsView: View {
     private var door: TafsCloud.Door? { selected < doors.doors.count ? doors.doors[selected] : nil }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        Group {
             if let knob {
                 TafDialPanel(taf: taf, knob: knob, face: $face, doors: doors, manages: manages,
-                             held: held, press: pressKnob, approve: approve)
+                             held: held, press: pressKnob, approve: approve, details: doorDetails)
             } else {
-                Panel {
-                    Eyebrow(text: "Doors · turn to pick, press to open")
-                    DoorDial(taf: taf, doors: doors.doors, knocks: doors.openKnocks, selected: $selected,
-                             press: { press() })
-                        .frame(height: 300)
-                    Text(hint).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                        .frame(maxWidth: .infinity)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Panel {
+                            Eyebrow(text: "Doors · turn to pick, press to open")
+                            DoorDial(taf: taf, doors: doors.doors, knocks: doors.openKnocks, selected: $selected,
+                                     press: { press() })
+                                .frame(height: 300)
+                            Text(hint).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                                .frame(maxWidth: .infinity)
+                        }
+                        doorDetails
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 12)
+                }
+                .coachClearance()
+            }
+        }
+        .task { await doors.load() }
+        .onChange(of: face) { face in
+            // A door's stop on Wakes it picks that door for its settings below.
+            guard case .chosen(.wakes, let id) = face,
+                  let doorID = knob?.wakes.first(where: { $0.id == id })?.door,
+                  let i = doors.doors.firstIndex(where: { $0.id == doorID }) else { return }
+            selected = i
+        }
+        .onChange(of: held.map(\.id)) { ids in
+            // An answered call leaves the face.
+            if case .held(let id) = face, !ids.contains(id) { face = .overview }
+        }
+        .sheet(isPresented: $adding) { AddDoorSheet(doors: doors, addSlack: addSlack) { added in if added { selected = doors.doors.count - 1 } } }
+        .sheet(item: $pairing) { PairSheet(door: $0, doors: doors) }
+        .confirmationDialog("Remove the \(confirmRemove?.label.lowercased() ?? "") door?", isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
+            Button("Remove", role: .destructive) {
+                if let d = confirmRemove {
+                    Task {
+                        if d.kind == "slack", let removeSlack { await removeSlack(d) } else { await doors.remove(d) }
+                        selected = min(selected, doors.doors.count)
+                    }
                 }
             }
+        } message: {
+            Text("Its address stops being \(taf.name)'s. Messages already in its chat stay.")
+        }
+    }
+
+    private var doorDetails: some View {
+        VStack(alignment: .leading, spacing: 16) {
             if let settings = door?.words?.settings, knob == nil {
                 Text(settings).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                     .frame(maxWidth: .infinity)
@@ -104,32 +142,6 @@ struct DoorsView: View {
             }
             Text("Anyone can write to a door. Only people you pair can give \(taf.name) work, and its Card decides the rest.")
                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
-        }
-        .task { await doors.load() }
-        .onChange(of: face) { face in
-            // A door's stop on Wakes it picks that door for its settings below.
-            guard case .chosen(.wakes, let id) = face,
-                  let doorID = knob?.wakes.first(where: { $0.id == id })?.door,
-                  let i = doors.doors.firstIndex(where: { $0.id == doorID }) else { return }
-            selected = i
-        }
-        .onChange(of: held.map(\.id)) { ids in
-            // An answered call leaves the face.
-            if case .held(let id) = face, !ids.contains(id) { face = .overview }
-        }
-        .sheet(isPresented: $adding) { AddDoorSheet(doors: doors, addSlack: addSlack) { added in if added { selected = doors.doors.count - 1 } } }
-        .sheet(item: $pairing) { PairSheet(door: $0, doors: doors) }
-        .confirmationDialog("Remove the \(confirmRemove?.label.lowercased() ?? "") door?", isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
-            Button("Remove", role: .destructive) {
-                if let d = confirmRemove {
-                    Task {
-                        if d.kind == "slack", let removeSlack { await removeSlack(d) } else { await doors.remove(d) }
-                        selected = min(selected, doors.doors.count)
-                    }
-                }
-            }
-        } message: {
-            Text("Its address stops being \(taf.name)'s. Messages already in its chat stay.")
         }
     }
 

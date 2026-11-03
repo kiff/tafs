@@ -17,13 +17,9 @@ struct TafKnobView: View {
     /// The face was tapped on a chosen stop whose `tap` says it does something.
     var press: (TafsCloud.Knob.Ring, TafsCloud.Knob.Item) -> Void = { _, _ in }
     var doors: [TafsCloud.Door] = []
-    var paused = false
     var manages = true
     var busy = false
     var askCoach: () -> Void = {}
-    var pause: () -> Void = {}
-    var adjust: (TafsCloud.Knob.Item, Int) -> Void = { _, _ in }
-    var canAdjust: (TafsCloud.Knob.Item, Int) -> Bool = { _, _ in false }
     /// The face was tapped on a held call: approve it once.
     var approve: (HeldCall) -> Void = { _ in }
 
@@ -38,7 +34,7 @@ struct TafKnobView: View {
     /// Each ring's turn, in stops.
     @State private var arrivals: Set<String> = []
     @State private var doorCounts: [String: Int] = [:]
-    @State private var filter: KnobNavigation.Filter = .all
+    @Binding var filter: KnobNavigation.Filter
     @State private var turns: [TafsCloud.Knob.Ring: Int] = [:]
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -99,7 +95,6 @@ struct TafKnobView: View {
                     if let call = held.first(where: \.approvableOnce) { face = .held(call.id) }
                 }.scaledFont(12, weight: .semibold).foregroundColor(Theme.amberText)
             }
-            remote
             if face != .overview {
                 Button("‹ Why") { withMotion { face = .overview } }
                     .scaledFont(12).foregroundColor(Theme.dim).frame(minHeight: 36)
@@ -163,37 +158,6 @@ struct TafKnobView: View {
         .accessibilityLabel("Showing, " + filterName).accessibilityIdentifier("knob.showing")
     }
 
-    private var remote: some View {
-        HStack(alignment: .top, spacing: 8) {
-            remoteButton("Back", symbol: "backward.end.fill", enabled: !allStops.isEmpty) { walk(-1) }
-            remoteButton("Lower", symbol: "minus", enabled: manages && !busy && chosenItem.map { canAdjust($0, -1) } == true) {
-                if let item = chosenItem { adjust(item, -1) }
-            }
-            remoteButton(paused ? "Resume" : "Pause", symbol: "power", enabled: manages && !busy, power: true, action: pause)
-            remoteButton("Raise", symbol: "plus", enabled: manages && !busy && chosenItem.map { canAdjust($0, 1) } == true) {
-                if let item = chosenItem { adjust(item, 1) }
-            }
-            remoteButton("Next", symbol: "forward.end.fill", enabled: !allStops.isEmpty) { walk(1) }
-        }
-    }
-
-    private func remoteButton(_ title: String, symbol: String, enabled: Bool, power: Bool = false,
-                              action: @escaping () -> Void) -> some View {
-        VStack(spacing: 6) {
-            Button(action: action) {
-                Image(systemName: symbol).font(.system(size: 19, weight: .semibold))
-                    .frame(maxWidth: .infinity).frame(minHeight: 52)
-                    .foregroundColor(power ? .white : enabled ? Theme.ink : Theme.dim.opacity(0.4))
-                    .background(RoundedRectangle(cornerRadius: power ? 26 : 16).fill(power ? (paused ? Theme.dim : Theme.ink) : Theme.panel))
-                    .overlay(RoundedRectangle(cornerRadius: power ? 26 : 16).stroke(Theme.line))
-            }
-            .buttonStyle(.plain).disabled(!enabled)
-            .accessibilityLabel(title).accessibilityIdentifier("knob." + (power ? "power" : title.lowercased()))
-            Text(title.uppercased()).scaledFont(9, weight: .semibold, design: .monospaced).foregroundColor(Theme.dim)
-                .lineLimit(1).minimumScaleFactor(0.7)
-        }.frame(maxWidth: .infinity)
-    }
-
     private func items(_ ring: Ring) -> [TafsCloud.Knob.Item] { KnobNavigation.items(knob, ring: ring, filter: filter) }
     private var allStops: [KnobNavigation.Stop] { KnobNavigation.stops(knob, filter: filter) }
     private func visibleItems(_ ring: Ring) -> [TafsCloud.Knob.Item] {
@@ -250,19 +214,20 @@ struct TafKnobView: View {
         let label = item.ringLabel
         let screenAngle = angle - Double(turns[ring] ?? 0) * 360 / Double(max(count, 1))
         let flip = KnobNavigation.labelFlip(at: screenAngle)
+        let labelWidth: CGFloat = KnobNavigation.labelWidth(radius: mid * k, stops: count, maximum: 100 * k, gap: 12 * k)
         return ZStack {
             doorArc(item, ring: ring, angle: angle, count: count, k: k)
             Button { choose(ring, item) } label: {
                 Text(label).scaledFont(12, weight: picked ? .bold : .medium, relativeTo: .caption)
-                    .foregroundColor(color).lineLimit(1)
-                    .frame(width: 100 * k, height: 36 * k)
+                    .foregroundColor(color).lineLimit(1).truncationMode(.tail)
+                    .frame(width: labelWidth, height: 36 * k)
                     .rotationEffect(.degrees(flip))
             }
             .buttonStyle(.plain)
             .overlay(alignment: .bottom) { arrivalLight(item, ring: ring, k: k) }
             .offset(y: -mid * k)
             .rotationEffect(.degrees(angle))
-            .accessibilityLabel([label, knob.title(ring), item.state].compactMap { $0 }.joined(separator: ", "))
+            .accessibilityLabel([label, knob.title(ring), item.state, item.words].compactMap { $0 }.joined(separator: ", "))
             .accessibilityAddTraits(picked ? .isSelected : [])
         }
     }
@@ -356,10 +321,10 @@ struct TafKnobView: View {
         } label: {
             VStack(spacing: 4 * k) {
                 Text(kicker).scaledFont(10, weight: .bold, relativeTo: .caption2).tracking(1.2).foregroundColor(Theme.dim)
-                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .lineLimit(1).truncationMode(.tail)
                 Text(big).scaledFont(big.count > 5 ? 24 : 32, weight: .heavy, relativeTo: .title).foregroundColor(tint)
-                    .lineLimit(3).minimumScaleFactor(0.6)
-                Text(hint).scaledFont(11, relativeTo: .caption2).foregroundColor(Theme.dim).lineLimit(1).minimumScaleFactor(0.7)
+                    .lineLimit(3).truncationMode(.tail)
+                Text(hint).scaledFont(11, relativeTo: .caption2).foregroundColor(Theme.dim).lineLimit(1).truncationMode(.tail)
             }
             .padding(.horizontal, 10 * k)
             .frame(width: Grid.face * 2 * k, height: Grid.face * 2 * k)
@@ -386,6 +351,7 @@ struct TafKnobView: View {
     private var hint: String {
         if let call = heldCall { return call.approvableOnce ? Self.approveOnce : "" }
         guard chosen != nil else { return Self.tapARing }
+        if chosenItem?.ok == "approve" { return "Approve with " + Biometry.name }
         if let tap = chosenItem?.tap { return tap }
         return chosenItem?.size != nil ? "Use − and +" : "Ask Coach to change"
     }

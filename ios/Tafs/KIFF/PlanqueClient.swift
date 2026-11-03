@@ -315,6 +315,21 @@ final class PlanqueClient {
         return id
     }
 
+    /// Any app event: the server-supplied filters go in the same signed request as its
+    /// account and event. No device-specific filters or defaults are added.
+    func subscribe(grantID: String, account: String, slug: String, config: [String: JSONValue],
+                   signedBy: @escaping @MainActor (Data) throws -> String) async throws -> String {
+        struct Body: Encodable { let account: String; let slug: String; let config: [String: JSONValue] }
+        struct Response: Decodable { let id: String?; let trigger: String? }
+        let body = try JSONEncoder().encode(Body(account: account, slug: slug, config: config))
+        let data = try await raw("POST", "grants/\(escaped(grantID))/triggers", body: body, signer: signedBy)
+        let response = try KIFFClient.decoder.decode(Response.self, from: data)
+        guard let id = response.id ?? response.trigger, !id.isEmpty else {
+            throw PlanqueError.server(status: 502, message: "The connection didn't say which subscription it made.")
+        }
+        return id
+    }
+
     /// Stops a trigger: planque turns its delivery off, then removes it upstream.
     func unsubscribe(grantID: String, trigger: String) async throws {
         _ = try await raw("DELETE", "grants/\(escaped(grantID))/triggers/\(escaped(trigger))", body: nil)

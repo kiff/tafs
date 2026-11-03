@@ -72,21 +72,20 @@ struct TafDetailView: View {
                 HStack(alignment: .top, spacing: 0) {
                     if section == 0 && model.canChat(taf.id) {
                         TafChatView(tafID: taf.id, onScroll: fold)
+                    } else if section == 3, hasDoors(taf), let doors = model.doors(for: taf.id) {
+                        DoorsView(taf: taf, doors: doors, manages: model.manages(taf.id) || (Screenshots.enabled && model.mode == .sample), myEmail: model.kiffAccount?.email)
+                            .knob(Screenshots.enabled && ["doors", "knob"].contains(Screenshots.screen ?? "") ? Screenshots.knob : model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
+                                  press: { await model.pressKnob(taf.id, $0) },
+                                  approve: { call in Task { await model.answer(call, with: .approveOnce) } })
+                            .slack(add: { slackApp = $0 }, remove: { await model.removeSlackDoor($0, doors: doors) })
+                            .task(id: taf.id) { await model.loadKnob(taf.id) }
+                            .sheet(item: $slackApp) { app in
+                                SlackDoorSheet(tafID: taf.id, doors: doors, app: app).environmentObject(model)
+                            }
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
-                                if section == 3, hasDoors(taf), let doors = model.doors(for: taf.id) {
-                                    DoorsView(taf: taf, doors: doors, manages: model.manages(taf.id), myEmail: model.kiffAccount?.email)
-                                        .knob(Screenshots.enabled && ["doors", "knob"].contains(Screenshots.screen ?? "") ? Screenshots.knob : model.knobs[taf.id], held: model.heldCalls(for: taf.id).sorted { $0.heldAt < $1.heldAt },
-                                              press: { await model.pressKnob(taf.id, $0) },
-                                              approve: { call in Task { await model.answer(call, with: .approveOnce) } })
-                                        .slack(add: { slackApp = $0 }, remove: { await model.removeSlackDoor($0, doors: doors) })
-                                        .task(id: taf.id) { await model.loadKnob(taf.id) }
-                                        .sheet(item: $slackApp) { app in
-                                            SlackDoorSheet(tafID: taf.id, doors: doors, app: app).environmentObject(model)
-                                        }
-
-                                } else if section == 2 { card(taf) } else { activity(taf) }
+                                if section == 2 { card(taf) } else { activity(taf) }
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
