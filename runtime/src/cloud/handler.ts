@@ -16,7 +16,7 @@ import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from ".
 import { requestDetail } from "./request.js";
 import { type ActionPlace, actionPlace } from "./places.js";
 import { ConnectError, listApps, startApp } from "./connect.js";
-import { instantIn, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
+import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
@@ -625,54 +625,31 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (taf.job === SETUP_JOB) throw new HTTPError(404, "not found");
     return dialVersion(parseBody(event), me, taf, deps, event);
   }
-  if (parts.length === 4 && method === "GET" && action === "knob") {
-    // The taf's dial (docs/api.md, "The knob"): every label and line written here.
-    const now = deps.now?.() ?? new Date();
-    const zone = me.timeZone ?? "UTC";
-    const manages = deps.doors ? await managesTaf(event, me, taf, deps) : false;
-    const [runs, schedule, doors, live, tools] = await Promise.all([
-      agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
-      taf.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
-      // A taf's doors are for the people who manage it; someone it's only shared with sees none.
-      manages
-        ? Promise.all([listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors),
-          doorLights(deps.doors!.store, me.tenantID, taf.id, now).catch(() => [])])
-          .then(([ds, lights]) => ds.map((d) => {
-            const l = lights.find((x) => x.app === d.app);
-            return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks } : {}) };
-          }))
-        : Promise.resolve([]),
-      deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
-      titlesOf(event, me, taf, deps),
-    ]);
-    const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
-      .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
-    // The newest dial change made after the live version and not yet live: it waits for the owner.
-    const pending = Object.keys(taf.knobs ?? {}).map(Number).filter((n) => live === undefined || n > live).sort((a, b) => b - a)[0];
-    // ?version=N shows a dial change not yet live, so the next − or + builds on it instead of on the live dial.
-    const asked = new URLSearchParams(event.rawQueryString ?? "").get("version");
-    const shown = asked !== null ? Number(asked) : undefined;
-    if (shown !== undefined && (!Number.isInteger(shown) || !taf.knobs?.[String(shown)] || (live !== undefined && shown <= live))) {
-      throw new HTTPError(404, "that version isn't a dial change waiting to go live");
+  if (parts.length === 4 && method === "GET" && action === "knob") return knobRoute(event, me, taf, deps);
+  if (parts.length === 5 && method === "POST" && action === "knob" && parts[4] === "subscriptions") {
+    // The owner's phone approved an app event at planque: its subscription is recorded on the trigger, so
+    // the dial shows it on and the taf wakes only on that subscription's events (docs/api.md, "The knob").
+    await needTaf(event, me, taf, deps);
+    const body = parseBody(event);
+    const trigger = typeof body.trigger === "string" ? body.trigger : "";
+    const subscription = typeof body.subscription === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(body.subscription) ? body.subscription : "";
+    if (!subscription) throw new HTTPError(400, "subscription is planque's id for it");
+    const live = await deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined);
+    const events = (live !== undefined ? taf.knobs?.[String(live)]?.wakes ?? [] : []).filter((t) => t.kind === "app_event");
+    const t = /^trg_event_([1-9][0-9]{0,3})$/.test(trigger) ? events[Number(trigger.slice(10)) - 1] : undefined;
+    if (!t) throw new HTTPError(409, "that isn't an app event of the live version");
+    let current = taf;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const cur = await deps.tafs.get(me.tenantID, taf.id);
+      if (!cur) break;
+      const kept = (cur.appEvents ?? []).filter((a) => !sameAppEvent(a, t));
+      const next: Taf = { ...cur, appEvents: [...kept, { ...t, subscription }] };
+      if (await deps.tafs.putIf(me.tenantID, next, cur)) { current = next; break; }
     }
-    const setting = shown !== undefined ? taf.knobs![String(shown)] : live !== undefined ? taf.knobs?.[String(live)] : undefined;
-    // A live version whose dial was never written where it acts (applyKnob failed after the switch): written now.
-    if (live !== undefined && taf.knobs?.[String(live)] && taf.knobApplied !== live) {
-      await applyKnob(me, taf, live, deps).catch((err) => console.error(`dial of ${taf.id} v${live} not applied:`, err instanceof Error ? err.message : "error"));
-    }
-    const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
-    const { counts } = workOf(today, zone, now, []);
-    const job = JOBS.find((j) => j.id === taf.job);
-    return knobOf({
-      name: taf.name,
-      does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
-      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools, addDoor: manages,
-      ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}), ...(shown !== undefined ? { shown } : {}),
-      ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
-      today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
-      zone, now,
-    });
+    await tellChange(me.tenantID, "taf", taf.id, deps);
+    return knobRoute(event, me, current, deps);
   }
+
   if (parts.length === 8 && method === "POST" && action === "requests" && parts[5] === "deliveries" && parts[7] === "send") {
     // Send again: what the taf already wrote, through its door, once more. No work is done and nothing is signed.
     await needTaf(event, me, taf, deps);
@@ -2590,6 +2567,58 @@ async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, d
   await tellCoachLive(me, taf, n, deps);
 }
 
+
+/** The taf's dial (docs/api.md, "The knob"): every label and line written here. */
+async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+    // The taf's dial (docs/api.md, "The knob"): every label and line written here.
+  const now = deps.now?.() ?? new Date();
+  const zone = me.timeZone ?? "UTC";
+  const manages = deps.doors ? await managesTaf(event, me, taf, deps) : false;
+  const [runs, schedule, doors, live, tools] = await Promise.all([
+    agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
+    taf.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
+    // A taf's doors are for the people who manage it; someone it's only shared with sees none.
+    manages
+      ? Promise.all([listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors),
+        doorLights(deps.doors!.store, me.tenantID, taf.id, now).catch(() => [])])
+        .then(([ds, lights]) => ds.map((d) => {
+          const l = lights.find((x) => x.app === d.app);
+          return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks } : {}) };
+        }))
+      : Promise.resolve([]),
+    deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
+    titlesOf(event, me, taf, deps),
+  ]);
+  const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
+    .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
+  // The newest dial change made after the live version and not yet live: it waits for the owner.
+  const pending = Object.keys(taf.knobs ?? {}).map(Number).filter((n) => live === undefined || n > live).sort((a, b) => b - a)[0];
+  // ?version=N shows a dial change not yet live, so the next − or + builds on it instead of on the live dial.
+  const asked = new URLSearchParams(event.rawQueryString ?? "").get("version");
+  const shown = asked !== null ? Number(asked) : undefined;
+  if (shown !== undefined && (!Number.isInteger(shown) || !taf.knobs?.[String(shown)] || (live !== undefined && shown <= live))) {
+    throw new HTTPError(404, "that version isn't a dial change waiting to go live");
+  }
+  const setting = shown !== undefined ? taf.knobs![String(shown)] : live !== undefined ? taf.knobs?.[String(live)] : undefined;
+  // A live version whose dial was never written where it acts (applyKnob failed after the switch): written now.
+  if (live !== undefined && taf.knobs?.[String(live)] && taf.knobApplied !== live) {
+    await applyKnob(me, taf, live, deps).catch((err) => console.error(`dial of ${taf.id} v${live} not applied:`, err instanceof Error ? err.message : "error"));
+  }
+  const today = runs.filter((r) => dayIn(r.created, zone) === dayIn(now.toISOString(), zone));
+  const { counts } = workOf(today, zone, now, []);
+  const job = JOBS.find((j) => j.id === taf.job);
+  return knobOf({
+    name: taf.name,
+    does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
+    unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools, addDoor: manages,
+    ...(taf.appEvents ? { appEvents: taf.appEvents } : {}),
+    ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}), ...(shown !== undefined ? { shown } : {}),
+    ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
+    today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
+    zone, now,
+  });
+  }
+
 /**
  * A dial change, from a tap (PUT …/knob) or Coach's draft (taf_dial): each trigger checked, then the taf's
  * next version, as an improvement makes one, with its dial kept by version. Nothing runs from it until it
@@ -2692,7 +2721,9 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
     const vendor = k.results.filter((p): p is ActionPlace => typeof p !== "string");
     const next: Taf = { ...cur, results: k.results.filter((p): p is ResultPlace => typeof p === "string"), scheduleIds: ids.slice(1), knobApplied: n };
     if (vendor.length) next.actionResults = vendor; else delete next.actionResults;
-    const events = k.wakes.filter((t) => t.kind === "app_event");
+    // An app event planque already subscribed keeps its subscription when the dial is written again.
+    const events = k.wakes.filter((t) => t.kind === "app_event")
+      .map((t) => { const had = cur.appEvents?.find((a) => sameAppEvent(a, t))?.subscription; return had ? { ...t, subscription: had } : t; });
     if (events.length) next.appEvents = events; else delete next.appEvents;
     if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
   }

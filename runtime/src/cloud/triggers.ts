@@ -234,3 +234,9 @@ export function triggerOf(s: { cron: string; kind?: string; at?: string; skip?: 
   if (dow === "1-5") return { kind: "schedule", form: "weekdays", at, ...skip };
   return days ? { kind: "schedule", form: "weekly", at, days, ...skip } : undefined;
 }
+
+/** The same app event: one connection, one event, the same filters (planque subscribes exactly these). */
+export function sameAppEvent(a: Trigger, b: Trigger): boolean {
+  return a.kind === "app_event" && b.kind === "app_event" && a.grant === b.grant && a.event === b.event
+    && JSON.stringify(a.config ?? {}) === JSON.stringify(b.config ?? {});
+}

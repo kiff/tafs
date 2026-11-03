@@ -77,6 +77,15 @@ describe("the dial", () => {
     const ev = { kind: "app_event" as const, grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", name: "HubSpot · new deal" };
     const k = knobOf({ ...base, setting: { wakes: [{ kind: "door" }, ev], busy: "skip", results: ["app"] } });
     expect(k.wakes.find((w) => w.kind === "app_event")).toMatchObject({ grant: "grt_hub", label: "HubSpot", words: "Wakes on HubSpot · new deal", trigger: ev });
+    // Until the owner's phone approves it at planque, the stop says so and pressing the face approves.
+    expect(k.wakes.find((w) => w.kind === "app_event")).toMatchObject({ on: false, ok: "approve",
+      approval: { state: "needed", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", config: {} } });
+    const ok = knobOf({ ...base, setting: { wakes: [ev], busy: "skip", results: ["app"] }, appEvents: [{ ...ev, subscription: "sub_1" }] });
+    expect(ok.wakes.find((w) => w.kind === "app_event")).toMatchObject({ on: true, approval: { state: "approved", subscription: "sub_1" } });
+    expect(ok.wakes.find((w) => w.kind === "app_event")!.ok).toBeUndefined();
+    // Other filters are another subscription: still to approve.
+    const other = knobOf({ ...base, setting: { wakes: [{ ...ev, config: { pipeline: "2" } }], busy: "skip", results: ["app"] }, appEvents: [{ ...ev, subscription: "sub_1" }] });
+    expect(other.wakes.find((w) => w.kind === "app_event")!.approval!.state).toBe("needed");
     // The dial groups stops by connection, for its chips: All · HubSpot · This taf.
     const two = knobOf({ ...base, setting: { wakes: [ev, { ...ev, event: "HUBSPOT_DEAL_WON", name: "HubSpot · deal won" }],
       busy: "skip", results: ["app", { place: "action", grant: "grt_slack", action: "slack_post", args: { channel: "C1" }, name: "Slack · #sales" }] } });

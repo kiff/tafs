@@ -1555,6 +1555,30 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(upgraded.find((u) => u.taf === RAE)?.outcome).toBe("current");
   });
 
+  it("an app event waits for the owner's approval at planque, and keeps it when the dial goes live again", async () => {
+    const w = twoVersions();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const ev = { kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", config: { pipeline: "1" }, name: "HubSpot · new deal" };
+    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [ev], results: ["app"] } });
+    expect(put.status).toBe(200);
+    const n = put.body.version as number;
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).status).toBe(200);
+    const needed = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    const stop = needed.body.wakes.find((x: { kind: string }) => x.kind === "app_event");
+    expect(stop).toMatchObject({ id: "trg_event_1", ok: "approve", approval: { state: "needed", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", config: { pipeline: "1" } } });
+    // planque's subscription, once the phone approved it, is recorded on that trigger and the dial answers it on.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_9", subscription: "sub_1" } })).status).toBe(409);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "../x" } })).status).toBe(400);
+    const ok = await call(w, "POST", `/v1/tafs/${RAE}/knob/subscriptions`, { token: "ana", body: { trigger: "trg_event_1", subscription: "sub_1" } });
+    expect(ok.status).toBe(200);
+    expect(ok.body.wakes.find((x: { kind: string }) => x.kind === "app_event")).toMatchObject({ on: true, approval: { state: "approved", subscription: "sub_1" } });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.appEvents).toEqual([{ ...ev, subscription: "sub_1" }]);
+    // Written again where it acts (a version going live, or the repair on read), it keeps the subscription.
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobApplied: undefined });
+    await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.appEvents).toEqual([{ ...ev, subscription: "sub_1" }]);
+  });
+
   it("a dial change is the next version, and only going live writes its triggers and places", async () => {
     const w = twoVersions();
     w.agents.versions.set(`t_acme|${RAE}`, []);
