@@ -34,6 +34,8 @@ data class KnobWire(
   val draft: Draft? = null,
   /** The change Make it live switches to, and how many stops it changes from the live dial; null, nothing waits. */
   val pending: Pending? = null,
+  /** Whether ⏻ applies: false for a taf that works from its chat, which has no schedule to pause. */
+  @SerialName("can_pause") val canPause: Boolean = true,
   /** The shown version's rings as `PUT` takes them. */
   val setting: JsonObject? = null,
 ) {

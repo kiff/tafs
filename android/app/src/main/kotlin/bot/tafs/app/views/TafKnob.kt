@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -185,6 +186,8 @@ fun TafKnob(
         // Along the ring, and always upright: the lower half turns half a turn more.
         val upright = bot.tafs.app.model.DialMath.upright(fromTop).toFloat()
         val isChosen = chosen?.ring?.kind == ring.kind && chosen.stop.id == stop.id
+        // Its share of the ring, at most: a longer word ends in "…", and the face and TalkBack say it whole.
+        val room = with(LocalDensity.current) { minOf(2 * PI.toFloat() * mid / shown.size * 0.9f, mid * 1.6f).toDp() }
         val tint = when {
           isChosen -> color
           chosen != null -> Theme.soft
@@ -195,8 +198,10 @@ fun TafKnob(
           style = scaled(12, if (isChosen) FontWeight.Bold else FontWeight.Medium, tint).copy(fontSize = with(LocalDensity.current) { (12 * u).toSp() }),
           maxLines = 1,
           softWrap = false,
+          overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
           modifier = Modifier
             .centerAt(c.x + cos(a).toFloat() * mid, c.y + sin(a).toFloat() * mid)
+            .widthIn(max = room)
             .graphicsLayer { rotationZ = upright }
             .alpha(if (dim) 0.45f else 1f)
             .heightIn(min = 32.dp)
@@ -226,15 +231,16 @@ fun TafKnob(
         .clickable(onClick = onFace).semantics { onClick(label = tap) { onFace(); true } },
       contentAlignment = Alignment.Center,
     ) {
-      Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(top, style = scaled(9, FontWeight.SemiBold, Theme.dim, mono = true), maxLines = 1, textAlign = TextAlign.Center)
+      // Each line fits the face, ending in "…" when it's longer; the face's description says it whole.
+      Column(Modifier.padding(horizontal = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(top, style = scaled(9, FontWeight.SemiBold, Theme.dim, mono = true), maxLines = 1, textAlign = TextAlign.Center, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         // The Why takes two lines, as Coach writes it in a few words; a stop's value is one big word.
         if (face == KnobFace.Overview) {
           Text(big, style = scaled(17, FontWeight.ExtraBold, bigColor, display = true), maxLines = 2, textAlign = TextAlign.Center)
         } else {
-          Text(big, style = scaled(30, FontWeight.ExtraBold, bigColor, display = true), maxLines = 1)
+          Text(big, style = scaled(30, FontWeight.ExtraBold, bigColor, display = true), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         }
-        tap?.let { Text(it, style = scaled(10, color = Theme.dim), maxLines = 1) }
+        tap?.let { Text(it, style = scaled(10, color = Theme.dim), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
       }
     }
   }
@@ -408,7 +414,7 @@ fun TafDialPanel(
       RemoteKey("−", KnobWords.LOWER, enabled = manages && !busy && !behind && size?.step(-1) != null) {
         size?.step(-1)?.let { c -> work { actions.changeKnobSize(taf.id, c.setting) } }
       }
-      RemoteKey(POWER, if (taf.paused) KnobWords.RESUME else KnobWords.PAUSE, enabled = manages && !busy) { work { actions.setPaused(taf.id, !taf.paused); actions.loadKnob(taf.id) } }
+      RemoteKey(POWER, if (taf.paused) KnobWords.RESUME else KnobWords.PAUSE, enabled = manages && !busy && wire.canPause) { work { actions.setPaused(taf.id, !taf.paused); actions.loadKnob(taf.id) } }
       RemoteKey("+", KnobWords.RAISE, enabled = manages && !busy && !behind && size?.step(1) != null) {
         size?.step(1)?.let { c -> work { actions.changeKnobSize(taf.id, c.setting) } }
       }

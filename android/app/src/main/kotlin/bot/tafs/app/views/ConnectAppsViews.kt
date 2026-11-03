@@ -144,10 +144,8 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
       Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(tileColor(app.title)), contentAlignment = Alignment.Center) {
         Text(app.title.take(1).uppercase(), style = scaled(15, FontWeight.ExtraBold, Color.White))
       }
-      Column(Modifier.weight(1f)) {
-        Text(app.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
-        if (app.vendor.isNotBlank() && app.vendor != app.title) Text(app.vendor, style = scaled(13, color = Theme.dim))
-      }
+      // Its title alone: the provider's own id for it means nothing to a person.
+      Text(app.title, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
       when {
         app.connected -> Text(ConnectAppsWords.CONNECTED, style = scaled(14, FontWeight.SemiBold, Theme.ok))
         onConnect != null -> Text(

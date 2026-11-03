@@ -59,6 +59,12 @@ class ConnectAppsSheetTest {
     assertEquals("one taf: it's for that one", listOf("notion@1>refunds-1", "google>refunds-1"), started)
   }
 
+  @Test fun aRowIsTheAppsTitleAloneNotTheProvidersIdForIt() {
+    show(connect = true)
+    rule.onNodeWithText("Google Sheets").assertIsDisplayed()
+    assertEquals("the vendor's id isn't shown under it", 0, count("Google"))
+  }
+
   @Test fun withSeveralTafsConnectAsksWhichFirst() {
     show(connect = true, tafs = listOf(taf("refunds-1", "Refunds"), taf("billing-1", "Billing")))
     rule.onNodeWithText(ConnectAppsWords.CONNECT).performClick()

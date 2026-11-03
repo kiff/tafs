@@ -139,7 +139,8 @@ fun DoorsTab(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?) 
     door.words?.settings?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 4.dp)) }
     DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
   }
-  else {
+  // With the dial, a new door is Coach's (its Add a door stop): this panel is only for a taf whose dial can't be read.
+  else if (knob == null) {
     Panel {
       Eyebrow("Add a door")
       Text(DoorWords.addIntro(taf.name), style = scaled(15, color = Theme.ink))

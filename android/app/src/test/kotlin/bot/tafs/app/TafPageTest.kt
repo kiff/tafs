@@ -200,6 +200,15 @@ class TafPageTest {
     assertEquals(TafState.working, taf.state)
   }
 
+  @Test fun aPauseTafsCloudRefusesIsSaidInItsWords() = runTest {
+    reads()
+    transport.answer("POST /v1/tafs/taf_1/pause", 409, """{"error":"Refunds works from its chat: it has no schedule to pause. Tell it what to do there"}""")
+    val m = model()
+    m.setPaused("refunds-1", true)
+    assertEquals("Refunds works from its chat: it has no schedule to pause. Tell it what to do there", m.state.value.lastError)
+    assertFalse(m.state.value.taf("refunds-1")!!.paused)
+  }
+
   // MARK: Revoke
 
   @Test fun revokingSignedInRevokesEachOfItsCardsInKiffBeforeItShowsStopped() = runTest {
