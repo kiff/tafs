@@ -10,7 +10,17 @@ import { type ActionPlace, placeWords } from "./places.js";
 import { timeIn } from "./work.js";
 
 /** A version's dial as PUT takes it: its triggers, what a busy taf does, where results go. */
-export interface KnobSetting { wakes: Trigger[]; busy: "skip" | "latest"; results: Array<ResultPlace | ActionPlace> }
+/** One step of the taf's recipe, as Coach wrote it: what it does, in order. `tool` is the KIFF tool it uses, when one. */
+export interface Step { label: string; words: string; tool?: string }
+
+export interface KnobSetting {
+  wakes: Trigger[];
+  busy: "skip" | "latest";
+  results: Array<ResultPlace | ActionPlace>;
+  /** Coach's recipe and the taf's purpose in a few words, for the What ring and the face. */
+  what?: Step[];
+  why?: string;
+}
 
 /** One stop on a ring. */
 export interface RingItem {
@@ -39,6 +49,14 @@ export interface RingItem {
 export interface Knob {
   version?: number;
   does: { label: string; line: string };
+  /** The face's word when nothing is chosen: the taf's purpose, as Coach wrote it. */
+  why: string;
+  /**
+   * The three rings, the same on every taf, inner to outer: When (`wakes`), What (`what`, the recipe in
+   * order), Where (`results`). `when` is kept for older apps and isn't drawn on the dial.
+   */
+  rings: Array<{ key: "wakes" | "what" | "results"; name: string }>;
+  what: Array<RingItem & { step: number; tool?: string }>;
   wakes: RingItem[];
   when: RingItem[];
   /** Each place, on or off; an action place also names its connection and action. */
@@ -74,6 +92,8 @@ export interface KnobInput {
   followUps?: Schedule[];
   /** A newer version's dial, made and not yet live: what waits for the owner's confirmation. */
   draft?: { version: number; setting: KnobSetting };
+  /** The taf's tools through KIFF, by tool, with KIFF's title: the recipe when Coach wrote none. */
+  tools?: ReadonlyMap<string, string>;
   /** The live version's dial, when a tap or Coach's draft set it; else it's read from the schedule. */
   setting?: KnobSetting;
   version?: number;
@@ -179,6 +199,9 @@ export function knobOf(k: KnobInput): Knob {
   return {
     ...(k.version !== undefined ? { version: k.version } : {}),
     does: k.does, wakes, when, results,
+    why: (k.setting?.why || k.does.label).slice(0, 60),
+    rings: [{ key: "wakes", name: "When" }, { key: "what", name: "What" }, { key: "results", name: "Where" }],
+    what: whatOf(k),
     rim: { ...t, line: parts.join(" · ") },
     connections: connectionsOf(wakes, results),
     draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting) } : null,
@@ -187,6 +210,26 @@ export function knobOf(k: KnobInput): Knob {
       busy, results: k.places,
     },
   };
+}
+
+/** The What ring: Coach's recipe, in order; for a taf Coach set none for, each of its tools, by KIFF's title. */
+function whatOf(k: KnobInput): Knob["what"] {
+  const steps: Step[] = k.setting?.what?.length ? k.setting.what
+    : [...(k.tools ?? new Map()).entries()].map(([tool, title]) => ({ label: title, words: title, tool }));
+  return steps.map((s, i) => ({ id: `what_${i + 1}`, kind: "step", step: i + 1, label: s.label, words: s.words, on: true, state: `Step ${i + 1}`,
+    ...(s.tool ? { tool: s.tool } : {}) }));
+}
+
+/** A recipe from a request: steps in order, each a short label and its line; an Error says what's wrong. */
+export function recipeOf(v: unknown): Step[] {
+  if (!Array.isArray(v)) throw new Error("what is the recipe: a list of steps, in order");
+  const one = (x: unknown, max: number) => (typeof x === "string" ? x.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, max) : "");
+  return v.map((s) => {
+    const o = (s && typeof s === "object" ? s : {}) as Record<string, unknown>;
+    const label = one(o.label, 24), words = one(o.words, 200), tool = one(o.tool, 128);
+    if (!label) throw new Error("each step has a short label");
+    return { label, words: words || label, ...(tool ? { tool } : {}) };
+  });
 }
 
 /** The connections behind the dial's stops, each named by its stops' app ("HubSpot" of "HubSpot · new deal"). */

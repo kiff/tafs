@@ -12,7 +12,7 @@ import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
 import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
-import { dayIn, DOES, knobOf, type KnobSetting, settingWords } from "./knob.js";
+import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { type ActionPlace, actionPlace } from "./places.js";
 import { ConnectError, listApps, startApp } from "./connect.js";
@@ -625,12 +625,13 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The taf's dial (docs/api.md, "The knob"): every label and line written here.
     const now = deps.now?.() ?? new Date();
     const zone = me.timeZone ?? "UTC";
-    const [runs, schedule, doors, live] = await Promise.all([
+    const [runs, schedule, doors, live, tools] = await Promise.all([
       agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
       taf.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
       // A taf's doors are for the people who manage it; someone it's only shared with sees none.
       deps.doors && await managesTaf(event, me, taf, deps) ? listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors) : Promise.resolve([]),
       deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
+      titlesOf(event, me, taf, deps),
     ]);
     const followUps = await deps.agents.listSchedules(me.tenantID, taf.id)
       .then((all) => all.filter((s) => s.follow_up && s.id.startsWith("fu-") && s.enabled && s.at && Date.parse(s.at) > now.getTime()), () => []);
@@ -643,7 +644,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return knobOf({
       name: taf.name,
       does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
-      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps,
+      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools,
       ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}),
       ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
       today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },
@@ -2591,13 +2592,16 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     try { vendor = all.filter((p) => typeof p !== "string").map(actionPlace); } catch (err) { throw new HTTPError(400, (err as Error).message); }
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
   }
+  let what: KnobSetting["what"];
+  try { what = body.what === undefined ? taf.knobs?.[String(Object.keys(taf.knobs ?? {}).map(Number).sort((a, b) => b - a)[0])]?.what : recipeOf(body.what); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+  const why = typeof body.why === "string" ? body.why.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 60) : undefined;
   const words = settingWords({ wakes, busy, results });
   const actionResults = results.filter((p): p is ActionPlace => typeof p !== "string");
   const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE), actionResults }, me, taf, deps, event);
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = await deps.tafs.get(me.tenantID, taf.id);
     if (!cur) break;
-    if (await deps.tafs.putIf(me.tenantID, { ...cur, knobs: { ...cur.knobs, [String(version)]: { wakes, busy, results } } }, cur)) break;
+    if (await deps.tafs.putIf(me.tenantID, { ...cur, knobs: { ...cur.knobs, [String(version)]: { wakes, busy, results, ...(what?.length ? { what } : {}), ...(why ? { why } : {}) } } }, cur)) break;
   }
   return { version, words };
 }

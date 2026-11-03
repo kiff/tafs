@@ -229,6 +229,9 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(made.words).toEqual(["Weekdays at 09:00", "If busy, runs the latest once it's free", "Results go to door_reply"]);
     expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(made.version)]).toEqual({ wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], busy: "latest", results: ["door_reply"] });
     expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c))).toEqual([]);
+    // Coach's recipe and Why go with the version.
+    const withRecipe = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "door" }], why: "Refund double charges", what: [{ label: "Check", words: "Looks up the charge" }] })).json as { version: number };
+    expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(withRecipe.version)]).toMatchObject({ why: "Refund double charges", what: [{ label: "Check", words: "Looks up the charge" }] });
   });
 
   it("run_stop and taf_pause act through kiff/agents; an unknown taf is refused", async () => {

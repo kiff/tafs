@@ -93,6 +93,11 @@ export const TOOLS: ToolDef[] = [
         items: { type: "object" },
       },
       when: { type: "object", properties: { busy: { type: "string", enum: ["skip", "latest"] } }, description: "What it does when a trigger fires while it works." },
+      what: {
+        type: "array", items: { type: "object" },
+        description: "The taf's recipe, its steps in order, for the dial's What ring: [{label: 2 or 3 words (\"Check\", \"Refund\", \"Log\"), words: one line, tool?: its KIFF tool}]. Few steps, each with a purpose.",
+      },
+      why: { type: "string", description: "The taf's purpose in 2 to 4 words, for the dial's face (\"Refund double charges\")." },
       results: {
         type: "array",
         description: "Every place its results go; omitted, as they are. At least one of door_reply, app, owner_email, which tafs delivers; " +
@@ -101,7 +106,8 @@ export const TOOLS: ToolDef[] = [
       },
     },
     required: ["taf", "wakes"],
-    description: "Drafts a taf's dial, all its triggers and result places at once, from any of the taf's connections: it becomes the taf's " +
+    description: "Drafts a taf's dial, the same three rings on every taf: When (what starts it), What (its recipe, in order) and Where " +
+      "(where results go), with its Why on the face. Give each stop at most one choice. All its triggers and result places at once, from any of the taf's connections: it becomes the taf's " +
       "next version, and nothing runs from it. Call it once with everything as it should be. A time the scheduler can't keep exactly is " +
       "refused with the nearest one: offer that. Then show {type: \"knob\", version, taf_id} so the owner sees the change on the dial, " +
       "grouped by connection, and call version_install for that version.",

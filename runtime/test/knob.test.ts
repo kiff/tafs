@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cronWords, dayIn, knobOf, type KnobInput } from "../src/cloud/knob.js";
+import { cronWords, dayIn, knobOf, type KnobInput, recipeOf } from "../src/cloud/knob.js";
 
 const now = new Date("2026-11-02T21:00:00Z");
 const base: KnobInput = {
@@ -81,6 +81,24 @@ describe("the dial", () => {
     expect(two.connections).toEqual([{ grant: "grt_hub", name: "HubSpot", wakes: 2, results: 0 }, { grant: "grt_slack", name: "Slack", wakes: 0, results: 1 }]);
     // It isn't a schedule: the schedule's stop isn't shown for a dial with no times.
     expect(k.wakes.some((w) => w.kind === "schedule")).toBe(false);
+  });
+
+  it("the rings are When, What and Where, the face its Why, and What is Coach's recipe in order", () => {
+    const k = knobOf({ ...base, setting: { wakes: [{ kind: "door" }], busy: "skip", results: ["app"], why: "Refund double charges",
+      what: [{ label: "Check", words: "Looks up the charge in Stripe", tool: "stripe_get_charge" }, { label: "Refund", words: "Refunds it, within its Card" }] } });
+    expect(k.rings.map((r) => r.name)).toEqual(["When", "What", "Where"]);
+    expect(k.why).toBe("Refund double charges");
+    expect(k.what.map((w) => [w.step, w.label, w.tool])).toEqual([[1, "Check", "stripe_get_charge"], [2, "Refund", undefined]]);
+    // A taf Coach set no recipe for: its tools, by KIFF's title; its Why is what it does.
+    const plain = knobOf({ ...base, tools: new Map([["stripe_refund", "Refund a payment"]]) });
+    expect(plain.what.map((w) => w.label)).toEqual(["Refund a payment"]);
+    expect(plain.why).toBe("Refund");
+  });
+
+  it("a recipe is checked: steps in order, each with a short label", () => {
+    expect(recipeOf([{ label: "Check the charge in Stripe now please", words: "x" }])[0]!.label).toBe("Check the charge in Stri");
+    expect(() => recipeOf([{ words: "no label" }])).toThrow("short label");
+    expect(() => recipeOf("check")).toThrow("list of steps");
   });
 
   it("a paused schedule says so", () => {
