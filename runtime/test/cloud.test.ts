@@ -1599,6 +1599,23 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect((await call(w, "POST", `/v1/tafs/${RAE}/resume`, { token: "ana" })).status).toBe(200);
     expect([RAE, `${RAE}-t2`].map((id) => w.agents.schedules.get(`t_acme|${id}`)?.enabled)).toEqual([true, true]);
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.paused).toBeUndefined();
+    // One the scheduler couldn't switch, or follow-ups it couldn't list: not a quiet success, and asking again finishes it.
+    const switchOne = w.agents.api.switchSchedule.bind(w.agents.api), listAll = w.agents.api.listSchedules.bind(w.agents.api);
+    w.agents.api.switchSchedule = async (t: string, id: string, on: boolean) => {
+      if (id === `${RAE}-t2`) throw new Error("scheduler down");
+      return switchOne(t, id, on);
+    };
+    const stuck = await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" });
+    expect(stuck.status).toBe(502);
+    expect(stuck.body.error).toContain("may still wake");
+    expect(w.tafs.held.get(`t_acme#${RAE}`)!.paused).toBe(true);
+    w.agents.api.switchSchedule = switchOne;
+    w.agents.api.listSchedules = async () => { throw new Error("scheduler down"); };
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(502);
+    w.agents.api.listSchedules = listAll;
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(200);
+    expect([RAE, `${RAE}-t2`].map((id) => w.agents.schedules.get(`t_acme|${id}`)?.enabled)).toEqual([false, false]);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/resume`, { token: "ana" })).status).toBe(200);
     const rec2 = w.tafs.held.get(`t_acme#${RAE}`)!;
     // A live dial never written where it acts (the write failed after the switch) is written on the next read.
     w.tafs.held.set(`t_acme#${RAE}`, { ...rec2, knobApplied: undefined, scheduleIds: [] });

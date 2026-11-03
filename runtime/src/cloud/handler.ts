@@ -2633,15 +2633,11 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
 
 /**
  * Pauses or resumes everything that starts the taf on a schedule: its own schedule, the dial's others
- * (`scheduleIds`) and the follow-ups it set itself, still to come. The taf keeps that it's paused, so
- * writing its dial again (applyKnob) leaves it paused.
+ * (`scheduleIds`) and the follow-ups it set itself, still to come. The taf keeps that it's paused first,
+ * so writing its dial again (applyKnob) leaves it paused, and asking again finishes the job. One that
+ * couldn't be switched, or follow-ups that couldn't be listed, answer 502 saying so: a wake may still run.
  */
 async function pauseAll(tenant: string, taf: Taf, on: boolean, deps: Deps): Promise<Schedule> {
-  const s = await agentsCall(() => deps.agents.switchSchedule(tenant, taf.id, on));
-  const now = (deps.now?.() ?? new Date()).getTime();
-  const followUps = await deps.agents.listSchedules(tenant, taf.id)
-    .then((all) => all.filter((x) => x.follow_up && x.id.startsWith("fu-") && (!x.at || Date.parse(x.at) > now)).map((x) => x.id), () => []);
-  for (const id of [...(taf.scheduleIds ?? []), ...followUps]) await deps.agents.switchSchedule(tenant, id, on).catch(() => undefined);
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = await deps.tafs.get(tenant, taf.id);
     if (!cur) break;
@@ -2649,6 +2645,18 @@ async function pauseAll(tenant: string, taf: Taf, on: boolean, deps: Deps): Prom
     if (on) delete next.paused; else next.paused = true;
     if (await deps.tafs.putIf(tenant, next, cur)) break;
   }
+  const s = await agentsCall(() => deps.agents.switchSchedule(tenant, taf.id, on));
+  const now = (deps.now?.() ?? new Date()).getTime();
+  let missed = 0;
+  const followUps = await deps.agents.listSchedules(tenant, taf.id)
+    .then((all) => all.filter((x) => x.follow_up && x.id.startsWith("fu-") && (!x.at || Date.parse(x.at) > now)).map((x) => x.id), () => { missed++; return []; });
+  for (const id of [...(taf.scheduleIds ?? []), ...followUps]) {
+    await deps.agents.switchSchedule(tenant, id, on).catch((err: unknown) => {
+      // One already gone has nothing left to start.
+      if (!(err instanceof AgentsError && err.status === 404)) missed++;
+    });
+  }
+  if (missed) throw new HTTPError(502, `${taf.name}'s own schedule is ${on ? "on" : "paused"}, but not everything that starts it could be ${on ? "resumed" : "paused"}${on ? "" : ", so it may still wake"}; try again`);
   return s;
 }
 
@@ -4121,7 +4129,11 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (!on && args.action !== "pause") throw new ToolRefusal("action is pause or resume");
     if (may && !may.oversee && !may.manage) throw new ToolRefusal(`pausing ${taf.name} is for the people who oversee or manage it`);
     if (taf.unscheduled) throw new ToolRefusal(`${taf.name} works from its chat: it has no schedule to ${on ? "resume" : "pause"}`);
-    const s = await pauseAll(call.tenant, taf, on, deps);
+    let s: Schedule;
+    try { s = await pauseAll(call.tenant, taf, on, deps); } catch (err) {
+      if (err instanceof HTTPError) throw new ToolRefusal(err.message);
+      throw err;
+    }
     return { taf: taf.name, schedule: on ? "on" : "paused", ...(s.next ? { next: iso(s.next) } : {}) };
   }
   if (name === "taf_results") {
