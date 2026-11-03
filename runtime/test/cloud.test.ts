@@ -1605,6 +1605,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(knob.body.results.filter((r: { on: boolean }) => r.on).map((r: { place: string; label: string }) => [r.place, r.label])).toEqual([["app", "You"], ["notion", "Notion"]]);
     expect(knob.body.setting.results).toEqual(["app", { place: "notion", page: "p1" }]);
+    expect(knob.body.results.find((r: { place: string }) => r.place === "notion").tap).toBe("Turn to stop: adds a page under Notion page p1");
   });
 
   it("records the Cards a version runs under when it goes live", async () => {

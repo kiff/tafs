@@ -154,9 +154,10 @@ export function knobOf(k: KnobInput): Knob {
     return { id: `res_${p}`, place: p, label: PLACE[p].label, words: PLACE[p].words, on, state: on ? "On" : "Off",
       ...(on && places.length === 1 ? {} : { tap: on ? `Turn to stop: ${PLACE[p].words.toLowerCase()}` : `Turn on: ${PLACE[p].words.toLowerCase()}` }) };
   });
-  // A vendor place the taf writes itself: on the ring while set, changed through Coach's draft.
+  // A vendor place the taf writes itself: turning it takes it off; adding one is Coach's draft, since it needs a page, an address or a channel.
   for (const [i, p] of all.filter((x): x is VendorPlace => typeof x !== "string").entries()) {
-    results.push({ id: `res_${p.place}_${i + 1}`, place: p.place, ...vendorWords(p), on: true, state: "On" });
+    const w = vendorWords(p);
+    results.push({ id: `res_${p.place}_${i + 1}`, place: p.place, ...w, on: true, state: "On", tap: `Turn to stop: ${w.words.charAt(0).toLowerCase()}${w.words.slice(1)}` });
   }
 
   const t = k.today;
