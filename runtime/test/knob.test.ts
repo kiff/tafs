@@ -66,7 +66,7 @@ describe("the dial", () => {
     const f = { id: "fu-ab12", agent: "a", cron: "", input: "Check refund re_9 went through", enabled: true, kind: "once" as const, at: "2026-11-03T08:00:00Z", follow_up: true };
     const k = knobOf({ ...base, followUps: [f] });
     expect(k.wakes.find((w) => w.kind === "follow_up")).toEqual({ id: "trg_fu-ab12", kind: "follow_up", follow_up: "fu-ab12", expires: "2026-11-03T08:00:00Z",
-      label: "Follow-up", on: true, state: "Tue 09:00", words: "Checks again Tue 09:00: Check refund re_9 went through", tap: "Tap to remove this follow-up" });
+      label: "Follow-up", on: true, state: "Tue 09:00", words: "Checks again Tue 09:00: Check refund re_9 went through", tap: "Tap to remove this follow-up", ok: "remove_follow_up" });
     // It's not one of the dial's triggers: PUT never carries it.
     expect(k.setting.wakes.some((t) => (t.kind as string) === "follow_up")).toBe(false);
   });
@@ -113,6 +113,20 @@ describe("the dial", () => {
     // The last place tafs delivers has no size: it can't be turned off.
     const one = knobOf({ ...base, setting: { ...setting, results: ["app"] } });
     expect(one.results.find((r) => r.place === "app")!.size).toBeUndefined();
+  });
+
+  it("tells both apps the same rules: OK on each stop, a door's look, Add a door, and what's pending", () => {
+    const k = knobOf({ ...base, addDoor: true, doors: [{ ...base.doors[0]!, knocks: 1 }, { id: "slack", label: "Slack", open: false, words: { state: "Closed", tap: "Tap to open" } },
+      { id: "wa", label: "WhatsApp", open: true, resting: true, words: { state: "Resting", tap: "Tap to close" } }] });
+    expect(k.wakes.filter((w) => w.kind === "door").map((w) => [w.label, w.ok, w.look])).toEqual([["Email", "door", "knock"], ["Slack", "door", "closed"], ["WhatsApp", "door", "resting"]]);
+    expect(k.wakes.find((w) => w.kind === "run_now")!.ok).toBe("run");
+    expect(k.wakes.at(-1)).toMatchObject({ id: "add_door", label: "Add a door", ok: "coach" });
+    // No recipe and no tools: a stand-in step that asks Coach.
+    expect(k.what).toEqual([expect.objectContaining({ id: "what_ask", label: "Ask Coach", ok: "coach" })]);
+    expect(k.pending).toBeNull();
+    const live = { wakes: [{ kind: "door" as const }], busy: "skip" as const, results: ["app" as const] };
+    const p = knobOf({ ...base, setting: live, draft: { version: 7, setting: { ...live, busy: "latest", results: ["app", "owner_email"] } } });
+    expect(p.pending).toEqual({ version: 7, changes: 2 });
   });
 
   it("a draft carries its recipe's lines, for Coach's card", () => {

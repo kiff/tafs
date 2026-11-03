@@ -625,11 +625,19 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The taf's dial (docs/api.md, "The knob"): every label and line written here.
     const now = deps.now?.() ?? new Date();
     const zone = me.timeZone ?? "UTC";
+    const manages = deps.doors ? await managesTaf(event, me, taf, deps) : false;
     const [runs, schedule, doors, live, tools] = await Promise.all([
       agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 50)),
       taf.unscheduled ? Promise.resolve(undefined) : deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined),
       // A taf's doors are for the people who manage it; someone it's only shared with sees none.
-      deps.doors && await managesTaf(event, me, taf, deps) ? listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors) : Promise.resolve([]),
+      manages
+        ? Promise.all([listDoors(doorContext(deps), { tenant: me.tenantID, say: async () => undefined }, taf).then((l) => l.doors),
+          doorLights(deps.doors!.store, me.tenantID, taf.id, now).catch(() => [])])
+          .then(([ds, lights]) => ds.map((d) => {
+            const l = lights.find((x) => x.app === d.app);
+            return { ...d, ...(l ? { resting: l.resting, knocks: l.knocks } : {}) };
+          }))
+        : Promise.resolve([]),
       deps.agents.versions(me.tenantID, taf.id).then((v) => v.versions.find((x) => x.live)?.n, () => undefined),
       titlesOf(event, me, taf, deps),
     ]);
@@ -650,7 +658,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return knobOf({
       name: taf.name,
       does: { label: taf.does ?? DOES[taf.job] ?? job?.name ?? taf.name, line: taf.summary || job?.summary || "" },
-      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools,
+      unscheduled: taf.unscheduled === true, schedule, doors, places: placesOf(taf), busy: schedule?.busy, followUps, tools, addDoor: manages,
       ...(setting ? { setting } : {}), ...(live !== undefined ? { version: live } : {}), ...(shown !== undefined ? { shown } : {}),
       ...(pending !== undefined ? { draft: { version: pending, setting: taf.knobs![String(pending)]! } } : {}),
       today: { done: counts.done, working: counts.working, retrying: counts.retrying, needs_you: counts.needs_you },

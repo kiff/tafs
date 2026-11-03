@@ -38,6 +38,13 @@ export interface RingItem {
   /** The door a door's stop opens or closes (PATCH /v1/tafs/{id}/doors/{door}). */
   door?: string;
   /**
+   * What the dial's OK (pressing the face) does on this stop, the same in both apps: open or close its door,
+   * run the taf once, remove a follow-up, or open Coach. Absent: nothing.
+   */
+  ok?: "door" | "run" | "remove_follow_up" | "coach";
+  /** A door stop's look: its arc lit, dashed, grey while resting, or amber while a knock waits. */
+  look?: "open" | "closed" | "resting" | "knock";
+  /**
    * The stop's one choice, a few fixed values (the dial's − and +): `index` is the value now, and each
    * choice's `setting` is the whole PUT body that makes it, every other stop as it is.
    */
@@ -69,6 +76,11 @@ export interface Knob {
   /** Each place, on or off; an action place also names its connection and action. */
   results: (Omit<RingItem, "kind"> & { place: ResultPlace | ActionPlace["place"]; grant?: string; action?: string })[];
   rim: { done: number; working: number; retrying: number; needs_you: number; line: string };
+  /**
+   * The change waiting to go live, the same in both apps: the version Make it live switches to, and how many
+   * stops it changes from the live dial (for "Make N changes live"). Null when nothing waits.
+   */
+  pending: null | { version: number; changes: number };
   /** A dial change waiting for the owner: its words, all of them and by ring, for Coach's card and the dial. */
   draft: null | {
     version: number; words: string[]; wakes: string[]; when: string[]; results: string[]; what: string[];
@@ -85,7 +97,7 @@ export interface Knob {
 }
 
 /** A door as the doors list gives it. */
-export interface KnobDoor { id: string; label: string; open: boolean; words: { state: string; tap: string } }
+export interface KnobDoor { id: string; label: string; open: boolean; words: { state: string; tap: string }; resting?: boolean; knocks?: number }
 
 export interface KnobInput {
   name: string;
@@ -99,6 +111,8 @@ export interface KnobInput {
   today: { done: number; working: number; retrying: number; needs_you: number };
   /** What it does when a trigger fires while it works. */
   busy?: "skip" | "latest";
+  /** Whether the caller manages the taf, so When ends with "Add a door". */
+  addDoor?: boolean;
   /** The follow-ups the taf set itself, waiting to fire. */
   followUps?: Schedule[];
   /** A newer version's dial, made and not yet live: what waits for the owner's confirmation. */
@@ -152,7 +166,8 @@ export function knobOf(k: KnobInput): Knob {
   const wakes: RingItem[] = [];
   for (const d of k.doors) {
     wakes.push({ id: `door_${d.id}`, kind: "door", door: d.id, label: d.label, words: d.words.state, on: d.open,
-      state: d.open ? "Open" : "Closed", tap: d.words.tap });
+      state: d.open ? "Open" : "Closed", tap: d.words.tap, ok: "door",
+      look: d.knocks ? "knock" : d.resting && d.open ? "resting" : d.open ? "open" : "closed" });
   }
   // The dial's triggers: as the live version set them, or the taf's own schedule read back.
   const fromSchedule = !k.unscheduled && k.schedule ? triggerOf(k.schedule, k.zone) : undefined;
@@ -176,10 +191,12 @@ export function knobOf(k: KnobInput): Knob {
   for (const f of k.followUps ?? []) {
     const check = f.input.trim().replace(/\s+/g, " ");
     wakes.push({ id: `trg_${f.id}`, kind: "follow_up", follow_up: f.id, expires: f.at!, label: "Follow-up", on: true, state: timeIn(f.at!, k.zone, k.now),
-      words: `Checks again ${timeIn(f.at!, k.zone, k.now)}${check ? `: ${check.length > 120 ? `${check.slice(0, 119)}…` : check}` : ""}`, tap: "Tap to remove this follow-up" });
+      words: `Checks again ${timeIn(f.at!, k.zone, k.now)}${check ? `: ${check.length > 120 ? `${check.slice(0, 119)}…` : check}` : ""}`, tap: "Tap to remove this follow-up", ok: "remove_follow_up" });
   }
   wakes.push({ id: "run_now", kind: "run_now", label: "Run now", words: "Runs it once, now", on: true, state: "Now",
-    ...(k.unscheduled ? {} : { tap: "Tap to run once" }) });
+    ...(k.unscheduled ? {} : { tap: "Tap to run once", ok: "run" as const }) });
+  // The last When stop, for the people who manage it: a new door is Coach's to set up.
+  if (k.addDoor) wakes.push({ id: "add_door", kind: "add_door", label: "Add a door", words: "Ask Coach to add a door", on: true, state: "Add", tap: "Tap to ask Coach", ok: "coach" });
 
   const when: RingItem[] = [];
   if (k.doors.some((d) => d.open)) when.push({ id: "when_arrivals", kind: "arrivals", label: "Arrivals", words: "Works each one as it arrives", on: true, state: "On" });
@@ -225,7 +242,19 @@ export function knobOf(k: KnobInput): Knob {
     draft: k.draft ? { version: k.draft.version, words: settingWords(k.draft.setting), ...ringWords(k.draft.setting),
       what: (k.draft.setting.what ?? []).map((s, i) => `${i + 1} · ${s.label}: ${s.words}`), groups: groupsOf(k.draft.setting) } : null,
     setting,
+    pending: k.draft ? { version: k.draft.version, changes: Math.max(1, changesOf(k.setting, k.draft.setting)) } : null,
   };
+}
+
+/** How many stops a dial change changes: triggers, places and recipe steps added or removed, and If busy. */
+function changesOf(live: KnobSetting | undefined, next: KnobSetting): number {
+  const key = (x: unknown) => JSON.stringify(x);
+  const diff = (a: unknown[], b: unknown[]) => {
+    const as = a.map(key), bs = b.map(key);
+    return Math.max(as.filter((x) => !bs.includes(x)).length, bs.filter((x) => !as.includes(x)).length);
+  };
+  if (!live) return diff([], next.wakes) + diff([], next.results) + diff([], next.what ?? []);
+  return diff(live.wakes, next.wakes) + diff(live.results, next.results) + diff(live.what ?? [], next.what ?? []) + (live.busy !== next.busy ? 1 : 0);
 }
 
 /** A dial change's lines by connection: a connected app's events and actions under it, everything else under This taf. */
@@ -288,6 +317,7 @@ function sizeStops(wakes: RingItem[], results: Knob["results"], s: KnobSetting):
 function whatOf(k: KnobInput): Knob["what"] {
   const steps: Step[] = k.setting?.what?.length ? k.setting.what
     : [...(k.tools ?? new Map()).entries()].map(([tool, title]) => ({ label: title, words: title, tool }));
+  if (!steps.length) return [{ id: "what_ask", kind: "step", step: 1, label: "Ask Coach", words: "Ask Coach to set what it does", on: true, state: "Ask", tap: "Tap to ask Coach", ok: "coach" }];
   return steps.map((s, i) => ({ id: `what_${i + 1}`, kind: "step", step: i + 1, label: s.label, words: s.words, on: true, state: `Step ${i + 1}`,
     ...(s.tool ? { tool: s.tool } : {}) }));
 }
