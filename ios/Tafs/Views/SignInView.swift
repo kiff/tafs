@@ -278,7 +278,7 @@ struct AccountView: View {
         }
         .scrollContentBackground(.hidden)
         .screenBackground()
-        .navigationTitle("Account")
+        .navigationTitle("KIFF account")
         .sheet(isPresented: $deletingAccount, onDismiss: { if model.mode != .kiff { done() } }) {
             DeleteAccountView().environmentObject(model)
         }
