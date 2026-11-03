@@ -84,6 +84,30 @@ fun ConnectAppsSheet(
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
   ) {
+    // Which taf: asked over the list, wherever Connect was tapped, before anything starts.
+    picking?.let { app ->
+      androidx.compose.material3.AlertDialog(
+        onDismissRequest = { picking = null },
+        containerColor = Theme.background,
+        title = { Text(bot.tafs.app.model.ConnectWords.WHICH_TAF, style = scaled(20, FontWeight.Bold, Theme.ink)) },
+        text = {
+          Column {
+            Text(bot.tafs.app.model.ConnectWords.oneTaf(app.title), style = scaled(14, color = Theme.soft))
+            tafs.forEach { taf ->
+              Text(
+                taf.name,
+                style = scaled(16, FontWeight.SemiBold, Theme.amber),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { picking = null; onConnect?.invoke(app, taf.id) }.padding(top = 14.dp),
+              )
+            }
+          }
+        },
+        confirmButton = {},
+        dismissButton = {
+          Text("Cancel", style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { picking = null }.padding(12.dp))
+        },
+      )
+    }
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(ConnectAppsWords.TITLE, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
@@ -95,19 +119,6 @@ fun ConnectAppsSheet(
       ) {
         OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), placeholder = { Text(ConnectAppsWords.SEARCH) }, singleLine = true)
         if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
-        picking?.let { app ->
-          Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
-            Text(bot.tafs.app.model.ConnectWords.WHICH_TAF, style = scaled(15, FontWeight.SemiBold, Theme.ink))
-            tafs.forEach { taf ->
-              Text(
-                taf.name,
-                style = scaled(15, FontWeight.SemiBold, Theme.amber),
-                modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { picking = null; onConnect?.invoke(app, taf.id) }.padding(top = 10.dp),
-              )
-            }
-            Text("Cancel", style = scaled(14, color = Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { picking = null }.padding(top = 10.dp))
-          }
-        }
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
         apps?.apps?.forEach { app -> AppRow(app, connect) }

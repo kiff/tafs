@@ -76,6 +76,20 @@ class ConnectAppsSheetTest {
     assertEquals(listOf("notion@1>billing-1"), started)
   }
 
+  @Test fun whichTafIsAskedOverTheListAndCancelStartsNothing() {
+    show(connect = true, tafs = listOf(taf("refunds-1", "Refunds"), taf("billing-1", "Billing")))
+    rule.onNodeWithText(ConnectAppsWords.CONNECT).performClick()
+    rule.waitForIdle()
+    // A dialog over the list: its question and its taf choices show where Connect was tapped, with no scrolling.
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.WHICH_TAF).assertIsDisplayed()
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.oneTaf("Notion")).assertIsDisplayed()
+    assertEquals("over the sheet, its own window", 2, rule.onAllNodes(androidx.compose.ui.test.isDialog()).fetchSemanticsNodes().size)
+    rule.onNodeWithText("Cancel").performClick()
+    rule.waitForIdle()
+    assertEquals(0, count(bot.tafs.app.model.ConnectWords.WHICH_TAF))
+    assertEquals(0, started.size)
+  }
+
   @Test fun withNoTafThereIsNothingToConnectFor() {
     show(connect = true, tafs = emptyList())
     rule.onNodeWithText(bot.tafs.app.model.ConnectWords.NO_TAF).assertIsDisplayed()

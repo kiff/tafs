@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Android:** in Connect apps, "Which taf is this for?" is asked in a dialog over the list, where Connect was tapped, instead of at the top of the list, as on iPhone and iPad.
 - **Android, app events approved on the dial (v21):** an app's event that waits for the owner shows its filters, and one approval with the fingerprint subscribes exactly those at the connection, then tafs cloud records it for that version, as on iPhone and iPad. A subscription made but not recorded is recorded again without asking twice.
 - **iPhone and iPad:** the dial remote stays above the tab bar while its contents scroll.
   Long ring and face labels fit with an ellipsis, with full words for VoiceOver. Pause
