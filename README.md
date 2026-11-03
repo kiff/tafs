@@ -20,6 +20,7 @@ through KIFF's gateway, which checks the Card before any call reaches a tool.
   <img src="docs/screenshots/record.png" width="220" alt="Record: everything the tafs did, newest first">
   <img src="docs/screenshots/taf.png" width="220" alt="A taf: its job, its runs and its activity">
   <img src="docs/screenshots/chat.png" width="220" alt="Chat: ask a taf what it did, or tell it what to do differently">
+  <img src="docs/screenshots/dial.png" width="220" alt="A taf's dial on iPhone: When, What and Where around its Why, Refund double charges">
   <img src="docs/screenshots/new-taf.png" width="220" alt="Starting a new taf">
 </p>
 
@@ -28,6 +29,7 @@ On iPad:
 <p>
   <img src="docs/screenshots/ipad-welcome.png" width="340" alt="Welcome on iPad">
   <img src="docs/screenshots/ipad-needs-you.png" width="340" alt="Needs you on iPad: held actions with Approve once and Refuse">
+  <img src="docs/screenshots/ipad-dial.png" width="340" alt="The dial on iPad, beside the list of tafs, with its remote and today's work">
 </p>
 
 On Android: the taf's dial (When, What and Where around its Why), a stop with its

@@ -9,6 +9,7 @@ it. The routes are in [api.md](api.md) (`GET` and `PUT /v1/tafs/{id}/knob`,
 [android-app.md](android-app.md#the-dial).
 
 <p>
+  <img src="screenshots/dial.png" width="180" alt="The dial on iPhone: When, What and Where around the Why">
   <img src="screenshots/android/dial-overview.png" width="180" alt="The dial: the Why on the face, When, What and Where around it, an email door with a knock waiting and a closed Slack door">
   <img src="screenshots/android/dial-stop-size.png" width="180" alt="A stop chosen: Weekdays at 09:00, its size, and Make 1 change live">
   <img src="screenshots/android/dial-coach-card.png" width="180" alt="Coach's card: the dial it drafted, by connection, with one confirmation">
