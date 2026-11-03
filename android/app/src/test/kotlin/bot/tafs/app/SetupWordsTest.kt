@@ -44,4 +44,13 @@ class SetupWordsTest {
     assertNull("nothing moved", spentOn(listOf(call(RecordEntry.Kind.refused, "5.00", "EUR"))))
     assertEquals("two units, both said", 2, spentOn(day + call(RecordEntry.Kind.done, "30", "USD"))!!.split(" · ").size)
   }
+
+  @Test fun stoppingAnEventTakesOnlyItsTriggerOutOfTheSetting() {
+    val setting = KiffClient.json.parseToJsonElement(
+      """{"wakes":[{"kind":"schedule","form":"weekdays","at":"09:00"},{"kind":"app_event","grant":"g","event":"E","config":{"b":2,"a":1}}],"busy":"skip"}""",
+    ) as kotlinx.serialization.json.JsonObject
+    val trigger = KiffClient.json.parseToJsonElement("""{"kind":"app_event","event":"E","grant":"g","config":{"a":1,"b":2}}""")
+    val left = bot.tafs.app.views.withoutTrigger(setting, trigger)
+    assertEquals(KiffClient.json.parseToJsonElement("""{"wakes":[{"kind":"schedule","form":"weekdays","at":"09:00"}],"busy":"skip"}"""), left)
+  }
 }

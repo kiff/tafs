@@ -638,7 +638,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
 
 /** The bar under every screen: Account, the three tabs, and Coach. 56 dp, above the system's gesture bar, as iOS's tab bar. */
 @Composable
-private fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> Unit, onAccount: () -> Unit, onCoach: (() -> Unit)?) {
+internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> Unit, onAccount: () -> Unit, onCoach: (() -> Unit)?) {
   NavigationBar(
     Modifier.navigationBarsPadding().height(56.dp),
     containerColor = Theme.background,
@@ -698,7 +698,7 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
 private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
   val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
   if (t == Tab.NeedsYou && state.held.isNotEmpty()) {
-    BadgedBox(badge = { Badge(containerColor = Theme.no) { Text("${state.held.size}") } }) { icon() }
+    BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("${state.held.size}") } }) { icon() }
   } else {
     icon()
   }

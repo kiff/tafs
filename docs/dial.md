@@ -1,16 +1,12 @@
 # The dial
 
-**On Android the dial is replaced by the taf screen's Setup tab** (Starts when, Results go to,
-its connected apps), as [android-app.md](android-app.md#the-tafs-screen) says; iPhone and iPad
-follow. The routes and rules below stay the same.
-
-Each taf has a dial, in its Doors tab, on iPhone and iPad. It shows how the taf
+Each taf has a dial, in its Doors tab, on iPhone, iPad and Android. It shows how the taf
 works on one screen, and changing it makes the taf's next version, which runs nothing
 until the owner makes it live. This page says what the dial does for the person using
 it. The routes are in [api.md](api.md) (`GET` and `PUT /v1/tafs/{id}/knob`,
 `…/follow-ups/{fid}`, `…/requests/{run}`, `…/pause` and `…/resume`); the code is in
 [ios-app.md](ios-app.md#the-dial-and-kiffs-words) and
-[android-app.md](android-app.md#the-tafs-screen).
+[android-app.md](android-app.md#the-dial).
 
 <p>
   <img src="screenshots/dial.png" width="180" alt="The dial on iPhone: When, What and Where around the Why">

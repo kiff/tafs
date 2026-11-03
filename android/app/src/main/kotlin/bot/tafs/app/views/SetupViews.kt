@@ -219,8 +219,20 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
                 style = scaled(14, FontWeight.SemiBold, Theme.amberText),
                 modifier = Modifier.heightIn(min = 44.dp).clickable { approving = e.id }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
               )
-            } else if (e.approval?.state == "approved") {
-              Text(e.state ?: SetupWords.LISTENING, style = scaled(13, color = Theme.ok))
+            } else if (e.approval?.state == "approved" || e.on) {
+              Text(SetupWords.LISTENING, style = scaled(13, FontWeight.SemiBold, Theme.ok))
+              // Stop: the trigger leaves the dial's setting, a change that waits for one switch like any other.
+              val trigger = e.trigger
+              val setting = knob.setting
+              if (manages && trigger != null && setting != null) {
+                Text(
+                  SetupWords.STOP,
+                  style = scaled(14, FontWeight.SemiBold, Theme.no),
+                  modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) {
+                    work { actions.doors.changeKnobSize(taf.id, withoutTrigger(setting, trigger)) }
+                  }.padding(start = 10.dp, top = 12.dp, bottom = 12.dp),
+                )
+              }
             }
           }
         }
@@ -346,6 +358,13 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
       state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
     }
   }
+}
+
+/** The dial's setting with one trigger taken out of its `wakes`, compared in canonical form. */
+internal fun withoutTrigger(setting: JsonObject, trigger: kotlinx.serialization.json.JsonElement): JsonObject {
+  val wakes = (setting["wakes"] as? kotlinx.serialization.json.JsonArray).orEmpty()
+  val gone = bot.tafs.app.kiff.Jcs.canonical(trigger)
+  return JsonObject(setting + ("wakes" to kotlinx.serialization.json.JsonArray(wakes.filter { bot.tafs.app.kiff.Jcs.canonical(it) != gone })))
 }
 
 /** A change to the dial waiting to go live (tafs cloud's `pending`): made live in one switch. */

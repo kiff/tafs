@@ -222,6 +222,15 @@ happened, each step marked done, failed, not made, waiting or next, every line a
 cloud wrote it. **Try the reply now** sends a reply given up on again, for whoever manages the
 taf, and **Ask Coach** opens a conversation about the taf.
 
+<p>
+  <img src="screenshots/android/home-bar.png" width="160" alt="Home in the sample, with the bar: Account, Tafs, Needs you, Record">
+  <img src="screenshots/android/taf-setup.png" width="160" alt="A taf's Setup: the job, Starts when, Connect an app, Results go to">
+  <img src="screenshots/android/taf-starts-when.png" width="160" alt="Starts when: its schedule with how often, Skip it or Run after, an app event to approve, a door, a follow-up, Pause every start">
+  <img src="screenshots/android/taf-results-dark.png" width="160" alt="Results go to, in dark: reply to the sender, alert our phones, email me, a place in Notion">
+  <img src="screenshots/android/taf-activity-dark.png" width="160" alt="A taf's Activity, in dark: All, Done, Held, Refused, by day">
+  <img src="screenshots/android/record-by-taf-dark.png" width="160" alt="The Record by taf, in dark: a chip per taf, each entry starting with its taf">
+</p>
+
 ## Alerts
 
 In Account (Settings), **Alerts** shows how each kind looks on the lock screen (a hold, with
