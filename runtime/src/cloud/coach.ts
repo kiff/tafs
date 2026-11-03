@@ -93,7 +93,12 @@ export const TOOLS: ToolDef[] = [
         items: { type: "object" },
       },
       when: { type: "object", properties: { busy: { type: "string", enum: ["skip", "latest"] } }, description: "What it does when a trigger fires while it works." },
-      results: { type: "array", items: { type: "string", enum: ["door_reply", "app", "owner_email"] }, description: "Every place its results go; omitted, as they are." },
+      results: {
+        type: "array",
+        description: "Every place its results go; omitted, as they are. At least one of door_reply, app, owner_email, which tafs delivers; " +
+          "and up to 5 the taf writes itself with its own connected tool, inside its Card: {place: \"notion\", page: <page id>}, " +
+          "{place: \"gmail\", to: <address>}, {place: \"teams\", team: <team id>, channel: <channel id>}. Slack comes with the taf's Slack door.",
+      },
     },
     required: ["taf", "wakes"],
     description: "Drafts a taf's dial, all its triggers at once: it becomes the taf's next version, and nothing runs from it. " +

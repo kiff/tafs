@@ -14,6 +14,7 @@ import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
+import { type VendorPlace, vendorPlace } from "./places.js";
 import { ConnectError, listApps, startApp } from "./connect.js";
 import { instantIn, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
@@ -294,6 +295,8 @@ export interface Taf {
    * in the app, an email to the owner. Absent: the door's reply alone, as before.
    */
   results?: ResultPlace[];
+  /** Where the live version's taf writes its results itself, at a vendor, through KIFF (places.ts). */
+  vendorResults?: VendorPlace[];
 }
 
 /** The most a taf's one-line summary keeps, in characters. */
@@ -2490,7 +2493,8 @@ async function makeVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   }
   let def: AgentDefinition;
   try {
-    def = definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined });
+    def = definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes === undefined ? taf.ownerNotes : notes || undefined,
+      vendorResults: Array.isArray(body.vendorResults) ? body.vendorResults as VendorPlace[] : taf.vendorResults });
   } catch (err) {
     throw new HTTPError(409, `its definition can't be built: ${(err as Error).message}`);
   }
@@ -2577,9 +2581,19 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
       throw err;
     }
   }
-  const results = body.results === undefined ? placesOf(taf) : resultPlaces(body.results);
+  // The built-in places tafs cloud delivers, and the vendor places the taf writes itself (places.ts).
+  let results: KnobSetting["results"];
+  if (body.results === undefined) results = [...placesOf(taf), ...(taf.vendorResults ?? [])];
+  else {
+    const all = Array.isArray(body.results) ? body.results : [];
+    let vendor: VendorPlace[];
+    try { vendor = all.filter((p) => typeof p !== "string").map(vendorPlace); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+    if (vendor.length > 5) throw new HTTPError(400, "a taf writes its results to at most 5 vendor places");
+    results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
+  }
   const words = settingWords({ wakes, busy, results });
-  const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE) }, me, taf, deps, event);
+  const vendorResults = results.filter((p): p is VendorPlace => typeof p !== "string");
+  const { version } = await makeVersion({ note: oneLine(`The dial: ${words.join("; ")}`, VERSION_NOTE), vendorResults }, me, taf, deps, event);
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = await deps.tafs.get(me.tenantID, taf.id);
     if (!cur) break;
@@ -2614,7 +2628,10 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   for (let attempt = 0; attempt < 2; attempt++) {
     const cur = await deps.tafs.get(me.tenantID, taf.id);
     if (!cur) break;
-    if (await deps.tafs.putIf(me.tenantID, { ...cur, results: k.results, scheduleIds: ids.slice(1) }, cur)) break;
+    const vendor = k.results.filter((p): p is VendorPlace => typeof p !== "string");
+    const next: Taf = { ...cur, results: k.results.filter((p): p is ResultPlace => typeof p === "string"), scheduleIds: ids.slice(1) };
+    if (vendor.length) next.vendorResults = vendor; else delete next.vendorResults;
+    if (await deps.tafs.putIf(me.tenantID, next, cur)) break;
   }
 }
 
@@ -2685,7 +2702,9 @@ async function keepNotes(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   try {
     const { definition: live } = await deps.agents.getVersion(me.tenantID, taf.id, n);
     const notes = typeof live.instructions === "string" ? ownerNotesIn(live.instructions) : undefined;
-    const next: Taf = { ...taf, definition: digest(definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes })) };
+    const dial = taf.knobs?.[String(n)];
+    const vendorResults = dial ? dial.results.filter((p): p is VendorPlace => typeof p !== "string") : taf.vendorResults;
+    const next: Taf = { ...taf, definition: digest(definition(taf.id, jobById(taf.job), { budgetCents: taf.budgetCents, ownerNotes: notes, vendorResults })) };
     if (notes) next.ownerNotes = notes; else delete next.ownerNotes;
     // What it does now is what the live version does, when Coach said so for it.
     const summary = taf.summaries?.[String(n)];
@@ -3538,7 +3557,7 @@ export async function upgradeDefinitions(deps: Deps, opts: { dryRun: boolean }):
         try {
           want = record.job === SETUP_JOB
             ? setupDefinition(record.id)
-            : definition(record.id, jobById(record.job), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes });
+            : definition(record.id, jobById(record.job), { budgetCents: record.budgetCents, ownerNotes: record.ownerNotes, vendorResults: record.vendorResults });
         } catch (err) {
           throw new UpgradeError(`its definition can't be built: ${(err as Error).message}`);
         }

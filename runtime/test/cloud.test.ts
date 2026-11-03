@@ -1587,6 +1587,26 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(knob.body.draft).toBeNull();
   });
 
+  it("a dial change can send results to a vendor: the version's instructions carry it, and live, the dial shows it", async () => {
+    const w = world();
+    w.agents.versions.set(`t_acme|${RAE}`, []);
+    const bad = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [], results: ["app", { place: "slack", channel: "C1" }] } });
+    expect(bad.status).toBe(400);
+    expect(bad.body.error).toContain("Slack door");
+    const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results: ["app", { place: "notion", page: "p1" }] } });
+    expect(put.status).toBe(200);
+    const n = put.body.version as number;
+    expect(put.body.words).toContain("Results go to app, notion page p1");
+    expect(JSON.stringify(w.agents.versionDefs.get(`t_acme|${RAE}|${n}`) ?? [...w.agents.versionDefs.values()].at(-1))).toContain("under the Notion page p1");
+    await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
+    const rec = w.tafs.held.get(`t_acme#${RAE}`)!;
+    expect(rec.results).toEqual(["app"]);
+    expect(rec.vendorResults).toEqual([{ place: "notion", page: "p1" }]);
+    const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(knob.body.results.filter((r: { on: boolean }) => r.on).map((r: { place: string; label: string }) => [r.place, r.label])).toEqual([["app", "You"], ["notion", "Notion"]]);
+    expect(knob.body.setting.results).toEqual(["app", { place: "notion", page: "p1" }]);
+  });
+
   it("records the Cards a version runs under when it goes live", async () => {
     const w = twoVersions();
     w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", grants: [{ action: "create_refund_k3f9", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] } as Mandate];
