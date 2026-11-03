@@ -80,8 +80,8 @@ filters, for example "deals in the Sales pipeline over €5,000".
 Each event needs **your approval of those exact filters**, with Face ID or your fingerprint.
 Until you approve, the event's stop on the dial shows that it needs you, and nothing wakes
 the taf. Once you have, the taf wakes only on events that match what you approved, and the
-same event never starts it twice. Approving an event's filters on the dial is arriving in the
-apps; until it's in yours, an event nobody approved starts nothing.
+same event never starts it twice. You approve on the dial on iPhone and iPad; on Android it's
+coming, and until then an event nobody approved starts nothing.
 
 ## The Slack door, or an action in Slack
 
