@@ -83,8 +83,8 @@ tafs cloud and planque. Each feature has a page in [docs/](docs/README.md):
   alert. Approve once, refuse, or give the Card extra room: each answer is signed on the
   phone and checked by KIFF. **Did this happen?** asks about a money call whose outcome
   KIFF can't prove; No gives the Card its room back.
-- **Connect apps**, from Settings: the apps a taf can work in, searched as you type,
-  each approved on the phone before you sign in at the app.
+- **[Connect apps](docs/connect-apps.md)**, from Settings: the apps a taf can work in,
+  searched as you type, each approved on the phone before you sign in at the app.
 - **[Accounts](docs/accounts.md):** sign in with KIFF, people and groups, sharing a taf,
   usage, Solo and task packs through the App Store or Google Play, deleting the account.
 - **[Photos and files](docs/attachments.md)** on a message, and **[doors](docs/doors.md)**:
