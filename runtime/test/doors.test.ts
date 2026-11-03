@@ -1108,6 +1108,12 @@ describe("a connected app's event, through planque", () => {
     expect((await appEvent(w, { event: "HUBSPOT_DEAL_DELETED" })).status).toBe(404);
     expect((await appEvent(w, { agent: "someone-else" })).status).toBe(404);
     expect((await appEvent(w, { subscription: "sub_other" })).status).toBe(404);
+    // A trigger the owner hasn't approved yet (no subscription recorded) wakes on nothing, whatever planque sends.
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...w.tafs.held.get(`t_acme#${REFUNDS}`)!, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", name: "HubSpot · new deal" }] });
+    const runsBefore = w.agents.calls.filter((c: string) => /startRun/.test(c)).length;
+    expect((await appEvent(w, { id: "evt_needed" })).status).toBe(404);
+    expect(w.agents.calls.filter((c: string) => /startRun/.test(c)).length).toBe(runsBefore);
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...w.tafs.held.get(`t_acme#${REFUNDS}`)!, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
     const r = await appEvent(w, { id: "ev_deal1" });
     expect(r.status).toBe(202);
     const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
