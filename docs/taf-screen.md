@@ -149,3 +149,9 @@ remain in the adjacent menu. Both chats use one rounded composer, text above
 the attach, mic and send row, growing to six lines. Avatars remain plain letter
 tiles; Android now draws the same animated door rim as iOS, using cloud state.
 
+When agents reports a persistent mismatch between work currency and its Card, Needs you
+and Setup show the same cloud-composed question once per action/currency, with its attempt
+history. Managers can open Coach for that taf with the proposed limit request; this does
+not approve a Card or change its limits. Agents owns stopping repeated attempts and
+clearing or revalidating the standing refusal after a confirmed Card change.
+

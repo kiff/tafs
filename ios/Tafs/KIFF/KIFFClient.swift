@@ -664,6 +664,9 @@ final class KIFFClient {
         struct ToolOutcome: Decodable, Equatable {
             let status: String
             var message: String?
+            var refusedBy: String? = nil
+            var code: String? = nil
+            enum CodingKeys: String, CodingKey { case status, message, code, refusedBy = "refused_by" }
         }
         let proposalID: String
         let actionName: String
@@ -714,8 +717,9 @@ final class KIFFClient {
         var madeAt: Date?
         /// Why it wasn't sent, in KIFF's words, in the app's language.
         var reason: String?
+        var detail: String? = nil
         enum CodingKeys: String, CodingKey {
-            case title, outcome, held, amount, answer, receipt, reasons
+            case title, outcome, held, amount, answer, receipt, reasons, detail
             case proposalID = "proposal_id", actionName = "action_name", actorID = "actor_id"
             case createdAt = "created_at", toolOutcome = "tool_outcome"
             case readOnly = "read_only", entityID = "entity_id", onHash = "on_hash", onArg = "on_arg"

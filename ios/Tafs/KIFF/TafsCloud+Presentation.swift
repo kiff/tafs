@@ -1,6 +1,10 @@
 import Foundation
 
 extension TafsCloud {
+    struct CardUnitAsk: Decodable, Equatable, Identifiable {
+        let id: String; let kind: String; let taf: String; let name: String; let title: String; let words: String
+        let history: String; let action_title: String; let coach_text: String
+    }
     struct AlertChoice: Decodable, Identifiable { let id: String; let title: String; let words: String; let enabled: Bool }
     struct AlertTaf: Decodable, Identifiable { let id: String; let name: String }
     struct PhoneAlerts: Decodable {
@@ -39,6 +43,8 @@ extension TafsCloud {
         struct Memory: Decodable { let count: Int; let title: String; let latest: String? }
         struct Versions: Decodable { let title: String; let summary: String; let live: Int?; let earlier: Int }
         let connections: [ConnectedApp]; let workflow: Workflow; let memory: Memory; let versions: Versions; let connections_error: String?
+        var asks: [CardUnitAsk]? = nil
+        var asks_error: String? = nil
     }
     private func query(_ value: String) -> String {
         value.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? value

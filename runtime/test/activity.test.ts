@@ -17,6 +17,20 @@ function source(calls: ActivityCall[]) {
 }
 
 describe("Activity pages from the source", () => {
+  it("attributes a typed connection refusal without parsing vendor text or changing status, evidence or what counts", () => {
+    const original = { ...call(0, "refused_by_tool"), held: true, amount: { value: "12.30", unit: "EUR" },
+      tool_outcome: { status: "refused_by_tool", refused_by: "connection", code: "halt_unknown", message: "arbitrary text" } };
+    const entry = activityEntry(original, "UTC", now);
+    expect(entry.kind).toBe("not_done");
+    expect(entry.detail).toBe("The connection refused it: it couldn't check whether the taf was halted. Nothing was sent.");
+    expect(entry.call).toBe(original); expect(original.tool_outcome.status).toBe("refused_by_tool"); expect(original.held).toBe(true);
+    const detail = "Not sent: the connection refused it. It still counts toward today's limits.";
+    expect(activityEntry({ ...original, detail }, "UTC", now).detail).toBe(detail);
+    const vendor = { ...original, tool_outcome: { status: "refused_by_tool", code: "halt_unknown", message: "Refused by planque: nothing was sent" } };
+    expect(activityEntry(vendor, "UTC", now).detail).toBe("The app refused it");
+    expect(activityEntry({ ...original, tool_outcome: { ...original.tool_outcome, code: "future_reason" } }, "UTC", now).detail).toBe("The connection refused it before sending. Nothing was sent.");
+    expect(activityEntry({ ...original, tool_outcome: { ...original.tool_outcome, status: "done" } }, "UTC", now).kind).toBe("approved");
+  });
   it("returns twenty newest entries and a cursor, without dropping the next entry", async () => {
     const s = source(Array.from({ length: 45 }, (_, i) => call(i)));
     const one = await activityPage(input(), s.net);

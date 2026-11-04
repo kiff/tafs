@@ -60,6 +60,21 @@ final class PresentationTests: XCTestCase {
         XCTAssertEqual(model.runPages[model.runKey(id, true)]?.pages.count, 2)
         XCTAssertEqual(model.runPages[model.runKey(id, true)]?.pages.last?.end_words, "Nothing older in the retained runs")
     }
+
+    func testACurrencyAskNamesItsTafAndOpensOnlyAnOrdinaryCoachRequest() async throws {
+        let (model, id) = await model()
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        await model.refreshPeople()
+        let data = Data(#"{"id":"depl_1:ask-example","kind":"card_unit","taf":"depl_1","name":"Rae","title":"Rae needs a USD limit","words":"Its Card only allows EUR. Add a USD limit?","history":"Tried 4 times since 2 Nov","action_title":"Add a USD limit in Coach","coach_text":"Add a USD limit to this action for Rae. Read its Card first and ask me to approve."}"#.utf8)
+        let ask = try JSONDecoder().decode(TafsCloud.CardUnitAsk.self, from: data)
+        let before = StubProtocol.sent.count
+        model.discussCardUnit(ask)
+        XCTAssertTrue(model.coachOpen)
+        XCTAssertEqual(model.setupImproving?.id, "depl_1")
+        XCTAssertEqual(model.setupDraft, ask.coach_text)
+        XCTAssertEqual(StubProtocol.sent.count, before, "opening the request signs and sends no Card change")
+        XCTAssertTrue(model.manages(id))
+    }
     func testTerminalPagesKeepCloudWordsAndVersionIncludesTheBuild() throws {
         let activity = try KIFFClient.decoder.decode(TafsCloud.ActivityPage.self, from: Data(#"{"entries":[],"groups":[],"filters":[],"filter":"all","revision":"r","end_words":"Nothing older in this view"}"#.utf8))
         XCTAssertNil(activity.next_cursor)

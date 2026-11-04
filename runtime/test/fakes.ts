@@ -131,6 +131,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     return { ...(agent ? { agent } : {}), halted: Boolean(own?.on || all?.on), own: Boolean(own?.on), tenant: Boolean(all?.on), ...(at ? { halted_at: at } : {}) };
   };
   const api: AgentsAPI = {
+    async asks() { return []; },
     async versions(tenant, id) {
       calls.push(`versions ${id}`);
       if (!agents.has(k(tenant, id))) throw gone();

@@ -19,6 +19,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var tafSetupErrors: [UUID: String] = [:]
     @Published private(set) var activityPages: [String: SourcePages<TafsCloud.ActivityPage>] = [:]
     @Published private(set) var runPages: [String: SourcePages<TafsCloud.RunsPage>] = [:]
+    @Published private(set) var cardUnitAsks: [TafsCloud.CardUnitAsk] = []
+    @Published private(set) var cardUnitAsksError: String?
     private var presentationGeneration = 0
 
     private var alertsEnabledKey: String { "alerts.enabled|\(kiffTenant ?? "")" }
@@ -551,6 +553,7 @@ final class AppModel: ObservableObject {
         didSet {
             phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
             tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
+            cardUnitAsks = []; cardUnitAsksError = nil; setupContextTafID = nil
         }
     }
 
@@ -1484,6 +1487,7 @@ final class AppModel: ObservableObject {
     /// agent and a held call its id from KIFF's, so the lock screen notifies once and rows
     /// are not recreated.
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
+        cardUnitAsks = home.needsYouAsks ?? []; cardUnitAsksError = home.asksError
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running
@@ -5269,6 +5273,14 @@ final class AppModel: ObservableObject {
         newSetupChat()
         setupImproving = cloudTaf(for: tafID)
         setupContextTafID = setupImproving?.id
+    }
+
+    func discussCardUnit(_ ask: TafsCloud.CardUnitAsk) {
+        guard mode == .kiff, mayUseCoach,
+              let taf = tafs.first(where: { cloudTaf(for: $0.id)?.id == ask.taf }), manages(taf.id) else { return }
+        improveTaf(taf.id)
+        setupDraft = ask.coach_text
+        coachOpen = true
     }
 
     /// A new Setup conversation: an empty chat, and the next message starts it.

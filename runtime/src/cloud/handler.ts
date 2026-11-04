@@ -31,6 +31,7 @@ import { activityPage, ActivityError, representationTag } from "./activity.js";
 import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
+import { cardUnitAsks } from "./attention.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -141,7 +142,7 @@ export interface HTTPResult {
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" |
   "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
-  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
+  "versions" | "asks" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" |
   "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
@@ -539,11 +540,21 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "account" && parts.length === 3 && parts[2] === "time-zone" && method === "POST") {
     const me = await person(event, deps);
     need(me, "cards.manage");
-    const zone = me.timeZone ?? "UTC";
     const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB);
-    const result = await syncScheduleZone(deps.agents, me.tenantID, tafs, zone);
-    if (result.failed) throw new HTTPError(503, "The account's time zone changed, but some schedules could not follow it yet. Try again.");
-    return { time_zone: zone, updated: result.updated };
+    let zone = me.timeZone ?? "UTC", updated = 0;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const result = await syncScheduleZone(deps.agents, me.tenantID, tafs, zone);
+      updated += result.updated;
+      // Another confirmed change may have overtaken this request while a schedule write waited.
+      const current = await person(event, deps);
+      if (current.tenantID !== me.tenantID) throw new HTTPError(409, "The account changed; read it again");
+      need(current, "cards.manage");
+      if ((current.timeZone ?? "UTC") !== zone) { zone = current.timeZone ?? "UTC"; continue; }
+      if (!result.failed) return { time_zone: zone, updated };
+      break;
+    }
+    const words = "The account's time zone changed, but some schedules could not follow it yet. Try again.";
+    throw new HTTPError(503, words, { words });
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
@@ -2683,7 +2694,7 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const now = deps.now?.() ?? new Date();
   const token = bearer(event);
   const proof = event.headers?.["planque-device-signature"] ?? "";
-  const [knob, memory, versions, cards, stats, runs, grants] = await Promise.all([
+  const [knob, memory, versions, cards, stats, runs, grants, asks] = await Promise.all([
     knobRoute(event, me, taf, deps), notes(me, taf, deps, true),
     agentsCall(() => deps.agents.versions(me.tenantID, taf.id)),
     readKIFF(token, deps.fetch, deps.kiffBase),
@@ -2692,12 +2703,17 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     deps.planqueBase && proof ? setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch).then((grants) => ({ grants, error: undefined as string | undefined }),
       () => ({ grants: [], error: "Connected apps could not be read; try again" }))
       : Promise.resolve({ grants: [], error: "Connect this phone to read its connected apps" }),
+    Promise.resolve().then(() => deps.agents.asks(me.tenantID, taf.id)).then((asks) => ({ asks, error: false }), () => ({ asks: [], error: true })),
   ]);
   const active = runs.find((r) => r.status === "RUNNING");
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
   const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent)).rules;
+  let attention: ReturnType<typeof cardUnitAsks> = [];
+  try { attention = cardUnitAsks(taf, asks.asks, rules, me.timeZone ?? "UTC", now); }
+  catch { asks.error = true; }
   return { ...setupView({ agent: taf.kiffAgent, grants: grants.grants, knob: knob as import("./knob.js").Knob, rules, notes: memory,
     versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete }),
+    ...(attention.length ? { asks: attention } : {}), ...(asks.error ? { asks_error: "Its requests could not be read; try again" } : {}),
     ...(grants.error ? { connections_error: grants.error } : {}) };
 }
 
@@ -3877,6 +3893,8 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
     time_zone: me.timeZone ?? "UTC",
     time_zone_words: `Times in ${me.timeZone ?? "UTC"}`,
     ...(s ? { schedule_time_zone: s.time_zone || "UTC" } : {}),
+    ...(s && s.kind !== "once" && !s.follow_up && (s.time_zone || "UTC") !== (me.timeZone ?? "UTC")
+      ? { schedule_time_zone_words: `Its schedule still uses ${s.time_zone || "UTC"}. Apply the account's time zone again to update it.` } : {}),
   };
 }
 
@@ -3928,6 +3946,10 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
+  const attention = await Promise.all(tafs.map(async (taf) => {
+    try { return { asks: cardUnitAsks(taf, await deps.agents.asks(me.tenantID, taf.id), summary(cards.get(taf.kiffAgent) ?? []).rules, me.timeZone ?? "UTC", now), error: false }; }
+    catch { return { asks: [], error: true }; }
+  }));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
@@ -3958,7 +3980,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
   // The limits the apps check before sending: tafs cloud's, never a copy on the phone.
   const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
-  return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}) };
+  const asks = attention.flatMap((a) => a.asks);
+  return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
+    ...(asks.length ? { needs_you_asks: asks } : {}), ...(attention.some((a) => a.error) ? { asks_error: "Some taf requests could not be read; try again" } : {}) };
 }
 
 /** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */

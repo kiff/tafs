@@ -270,6 +270,8 @@ struct TafDetailView: View {
         let cloud = model.cloudTaf(for: taf.id)
         let manages = model.manages(taf.id)
         let screenshot = Screenshots.enabled && model.mode == .sample
+        ForEach(model.tafSetups[taf.id]?.asks ?? []) { ask in CardUnitAskPanel(ask: ask) }
+        if let error = model.tafSetups[taf.id]?.asks_error { Text(error).foregroundColor(Theme.no) }
         Panel {
             Eyebrow(text: "The job")
             Text(taf.job).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
@@ -332,6 +334,7 @@ struct TafDetailView: View {
     @ViewBuilder
     private func card(_ taf: Taf) -> some View {
         if model.mode == .kiff, let words = model.cloudTaf(for: taf.id)?.timeZoneWords { Text(words).scaledFont(13).foregroundColor(Theme.soft) }
+        if model.mode == .kiff, let words = model.cloudTaf(for: taf.id)?.scheduleTimeZoneWords { Text(words).scaledFont(13).foregroundColor(Theme.amberText) }
         let cards = taf.shownCards
         let shown = cards.first(where: { $0.id == frontCard }) ?? cards.first
         CardStack(cards: cards, issuedBy: model.issuer(of: taf), color: Theme.tafColor(taf.colorIndex),

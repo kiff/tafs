@@ -313,6 +313,44 @@ describe("tafs cloud", () => {
     expect(r.body.removing).toEqual([]);
   });
 
+  it("names a schedule still using another clock without silently changing it on a read", async () => {
+    const w = world();
+    const schedule = w.agents.schedules.get(`t_acme|${RAE}`)!;
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...schedule, time_zone: "Europe/Paris" });
+    const r = await call(w, "GET", "/v1/tafs", { token: "ana" });
+    expect(r.body.tafs[0]).toMatchObject({ time_zone: "UTC", time_zone_words: "Times in UTC", schedule_time_zone: "Europe/Paris",
+      schedule_time_zone_words: "Its schedule still uses Europe/Paris. Apply the account's time zone again to update it." });
+    expect(w.agents.schedules.get(`t_acme|${RAE}`)?.time_zone).toBe("Europe/Paris");
+  });
+
+  it("reads persistent currency asks only for visible tafs and uses the same row in Needs you and Setup", async () => {
+    const w = world(); const reads: string[] = [];
+    w.agents.api.asks = async (tenant, id) => {
+      reads.push(`${tenant}:${id}`);
+      return [{ id: "ask-example", kind: "card_unit", tool: "answer_case", unit: "USD", card_unit: "EUR", first_at: "2026-10-28T12:00:00Z", last_at: "2026-10-29T09:00:00Z", count: 4 }];
+    };
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.status).toBe(200); expect(home.body.needs_you_asks).toHaveLength(1);
+    expect(home.body.needs_you_asks[0]).toMatchObject({ id: `${RAE}:ask-example`, taf: RAE, name: "Rae" });
+    const setup = await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" });
+    expect(setup.status).toBe(200); expect(setup.body.asks).toEqual(home.body.needs_you_asks);
+    expect(reads).toEqual([`t_acme:${RAE}`, `t_acme:${RAE}`]);
+    w.account.access = {};
+    const hidden = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(hidden.body.needs_you_asks).toBeUndefined(); expect(reads).toHaveLength(2);
+    expect((await call(w, "GET", `/v1/tafs/${MAX}/setup`, { token: "ana" })).status).toBe(404);
+    expect(reads).toHaveLength(2);
+  });
+
+  it("says when standing requests could not be read instead of claiming that none wait", async () => {
+    const w = world();
+    w.agents.api.asks = async () => { throw new Error("unavailable"); };
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.status).toBe(200); expect(home.body.asks_error).toContain("could not be read");
+    const setup = await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" });
+    expect(setup.status).toBe(200); expect(setup.body.asks_error).toContain("could not be read");
+  });
+
   it("counts a chat's run as the taf's last run, never a trial's", async () => {
     const w = world();
     // The owner wrote to it in its chat: that run is its last, though no schedule ran it.

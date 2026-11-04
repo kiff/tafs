@@ -1,5 +1,21 @@
 import SwiftUI
 
+struct CardUnitAskPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let ask: TafsCloud.CardUnitAsk
+    private var canDiscuss: Bool {
+        model.mayUseCoach && model.tafs.contains { model.cloudTaf(for: $0.id)?.id == ask.taf && model.manages($0.id) }
+    }
+    var body: some View {
+        Panel {
+            Text(ask.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+            Text(ask.words).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+            Text(ask.history).scaledFont(12).foregroundColor(Theme.dim)
+            if canDiscuss { Button(ask.action_title) { model.discussCardUnit(ask) } }
+        }
+    }
+}
+
 /// The service supplies the names, mappings, counts, limits and summaries for both apps.
 struct ConnectedToolsRing: View {
     @EnvironmentObject private var model: AppModel

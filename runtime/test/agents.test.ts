@@ -63,6 +63,15 @@ function expectedSignature(s: Sent): string {
 }
 
 describe("kiff/agents client", () => {
+  it("reads persistent asks on the agent, supports an older endpoint, and preserves source failures", async () => {
+    const ask = { id: "ask-example", kind: "card_unit", tool: "answer_case", unit: "USD", first_at: NOW.toISOString(), last_at: NOW.toISOString(), count: 1 };
+    const s = server(() => new Response(JSON.stringify({ asks: [ask] })));
+    expect(await s.agents.asks("account-example", "taf-example")).toEqual([ask]);
+    expect(s.sent[0]!.url.pathname).toBe("/agents/taf-example/asks");
+    expect(await server(() => new Response("{}", { status: 404 })).agents.asks("account-example", "taf-example")).toEqual([]);
+    await expect(server(() => new Response("{}", { status: 503 })).agents.asks("account-example", "taf-example")).rejects.toMatchObject({ status: 503 });
+    await expect(server(() => new Response("{}")).agents.asks("account-example", "taf-example")).rejects.toMatchObject({ status: 502 });
+  });
   it("signs each request with tafs cloud's role, the tenant header included", async () => {
     const { agents, sent } = server();
     await agents.startRun("t_acme", "taf1", "What's waiting?", { session: "s1" });

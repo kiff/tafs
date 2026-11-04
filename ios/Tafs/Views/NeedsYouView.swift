@@ -15,7 +15,9 @@ struct NeedsYouView: View {
                 let knocked = model.tafs.filter { knocks($0) > 0 }
                 // A money call whose outcome KIFF can't prove: the owner says whether it happened.
                 ForEach(model.unproven) { call in DidThisHappenCard(call: call) }
-                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty {
+                ForEach(model.cardUnitAsks) { ask in CardUnitAskPanel(ask: ask) }
+                if let error = model.cardUnitAsksError { Text(error).foregroundColor(Theme.no) }
+                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitAsks.isEmpty && model.cardUnitAsksError == nil {
                     Panel {
                         Text("Nothing is waiting.").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text("When a taf asks for something outside its Card, it shows up here and on your lock screen.")

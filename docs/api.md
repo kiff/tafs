@@ -182,6 +182,11 @@ need retry; repeating it updates only schedules still in another zone.
 New tafs use the account's zone when no explicit zone was supplied at creation.
 Home tafs carry `time_zone`, `time_zone_words` and `schedule_time_zone`, so the
 apps can name the account's clock and identify a schedule still using another.
+`schedule_time_zone_words` is present only for that mismatch and gives the next step
+in words. A failed sync sends its sentence in both `error` and `words`. The cloud
+rechecks KIFF's zone after schedule writes: if another confirmed zone overtook the
+request, it applies the newer one before reporting success; repeated changes or
+unfinished writes return the retryable 503.
 
 `GET /v1/tafs/{id}/activity?filter=all&limit=20&cursor=…` returns `entries`, day
 `groups`, `filters: [{id, title}]`, the selected `filter`, a `revision`, and an
@@ -192,6 +197,12 @@ is never labelled done. Entries carry their ready-to-draw `title`, `detail`,
 signed evidence. `tools` (comma-separated action names) and `from` (an ISO date)
 can narrow an app's seven-day Activity. The server supplies that query on the app's
 setup view; the phones do not identify apps from tool names.
+
+A connection refusal is typed by KIFF as `tool_outcome.status: refused_by_tool`,
+`refused_by: connection` and a machine `code`. Its `detail` is drawn as supplied,
+or composed from that code if absent. Text prefixes never establish provenance.
+Old/vendor errors keep their previous behavior. The call's status, amounts,
+approval flags, receipts and counting remain KIFF's unchanged evidence.
 
 A page is 20 entries by default, 1–50 when specified. Pass `next_cursor` unchanged.
 It is bound to the account, person, taf and filters. A changed snapshot returns
@@ -221,6 +232,21 @@ body when unchanged. Apps keep previously read pages per account, taf and filter
   is empty when it would only repeat its `label`, so the apps don't show the title twice.
 - `memory`: its note `count`, `title` and newest note as `latest`.
 - `versions`: `Changes to how it runs`, the live version, earlier count and summary.
+
+Optional `asks` lists persistent currency-limit requests. Home supplies the same
+rows as `needs_you_asks`, only for tafs visible to that person. Each is
+`{id, kind:"card_unit", taf, name, title, words, history, action_title, coach_text}`.
+The stable id is taf-scoped; the history includes first/last attempts and count.
+`asks_error` means some requests could not be read, rather than that none wait.
+The action opens Coach on that taf with the supplied request; it grants nothing
+and the ordinary signed Card/version change is still required.
+
+The source is kiff/agents' tenant-scoped `GET /agents/{id}/asks`, returning typed
+`{asks:[{id,kind:"card_unit",tool,unit,card_unit?,first_at,last_at,count}]}`. It owns
+deduplication, suppression and revalidation/clearing when the Card changes. A runtime
+that predates this endpoint (404) supplies no asks. Other failures remain visible.
+Rollout needs this endpoint for persistent requests and KIFF's typed connection
+metadata for refusal attribution; older records are not retroactively inferred.
 
 The phone forwards one signed read of planque's account grants using the
 `Planque-Device-Signature` header, signed for planque's `GET
