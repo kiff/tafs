@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertIsDisplayed
@@ -38,17 +39,24 @@ class ReportAnswerTest {
     rule.onNodeWithContentDescription(bot.tafs.app.model.AnswerWords.MORE).performClick()
     rule.onNodeWithText(ReportWords.MENU).assertIsDisplayed().performClick()
     rule.onNodeWithText("Wrong").performScrollTo().assertIsDisplayed().performClick()
-    note?.let { rule.onNodeWithText("Add a note (optional)").performScrollTo().performTextInput(it) }
-    rule.onNodeWithText("Send").performScrollTo().performClick()
+    note?.let {
+      rule.onNodeWithText("Add a note (optional)").performScrollTo().performTextInput(it)
+      // Text input opens a native IME asynchronously. Finish it before measuring the Send tap.
+      closeSoftKeyboard()
+      rule.waitForIdle()
+    }
+    rule.onNodeWithText("Send").performScrollTo().assertIsDisplayed().performClick()
+    // An immediate fake reporter lets a missed tap fail here, rather than as a thanks timeout.
+    rule.runOnIdle { assertEquals("Send did not reach the report callback", "wrong" to note, sent.lastOrNull()) }
   }
 
   @Test fun anAnswerIsReportedFromItsLongPressAndTheSheetSaysThanks() {
     show(ReportResult.Sent(first = true))
-    report("It refunded the wrong order.")
-    // On a slow emulator the sheet settles after the keyboard goes: wait for the thanks, then scroll to it.
+    val note = "It refunded the wrong order."
+    report(note)
     rule.waitUntil(10_000) { rule.onAllNodes(androidx.compose.ui.test.hasText(ReportWords.THANKS)).fetchSemanticsNodes().isNotEmpty() }
     rule.onNodeWithText(ReportWords.THANKS).performScrollTo().assertIsDisplayed()
-    assertEquals(listOf("wrong" to "It refunded the wrong order."), sent)
+    rule.runOnIdle { assertEquals(listOf("wrong" to note), sent) }
     rule.onNodeWithText("Done").performClick()
   }
 
