@@ -93,3 +93,40 @@ Two examples at the top show what alerts look like on the lock screen: one with 
 
 Every screen follows the device's appearance. In dark, the ground is a warm near-black, and
 green, amber and red are brighter. Secondary text keeps at least 4.5:1 contrast in both.
+
+## Account and taf details
+
+Account groups account details, people and apps, Plan, Alerts, Theme, Time zone,
+export and Legal; switching accounts and signing out are last. A bottom fade
+shows when more content remains. Light, Dark and System apply immediately and
+are saved on this device. Time zone offers a searchable cloud list, plus this
+device's zone; changing it uses KIFF's signed setup call.
+
+Alerts can be disabled for this phone without removing the account's alert
+secret. The four alert-kind switches are phone-specific and checked by cloud
+before delivery. The answered-kind link opens the taf's Results go to.
+
+Activity loads server-filtered pages of 20, keeps pages per taf and view, and
+refreshes the first page conditionally with its ETag. A changed snapshot restarts
+paging. Its work previews three runs and pages recent runs on its secondary
+screen. The upstream runs API currently exposes the latest 100 runs; older
+history is not available through this view.
+
+Connected tools shows a ring: a plain letter tile opens the job, app nodes show
+cloud-provided names and action counts, and the dashed + opens Connect apps.
+An active-step arc uses cloud state. Each app's draggable sheet shows actions,
+Card limits, workflow steps and seven-day statistics; its statistics link to
+filtered Activity. Managers can add actions through Coach or disconnect an app.
+Workflow is folded by default, with the cloud's step count and app order.
+
+What it remembers previews the cloud's note count and newest note, limited to
+two lines. See all opens full notes and Forget. Changes to how it runs is on
+Card, with the cloud's live-version and earlier-version summary. Cards behind
+the front Card are full faces with their own corners and shadow.
+
+Coach opens from the right and Back restores the same taf and tab. Its
+new-conversation button uses the square-and-pencil icon; previous conversations
+remain in the adjacent menu. Both chats use one rounded composer, text above
+the attach, mic and send row, growing to six lines. Avatars remain plain letter
+tiles; Android now draws the same animated door rim as iOS, using cloud state.
+

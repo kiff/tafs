@@ -166,3 +166,71 @@ See [doors.md](doors.md). Reading and changing both need managing the taf: someo
 
 A route added or changed in `handler.ts` changes this page in the same pull request, and
 the route list at the top of `handler.ts`.
+
+## Paged Activity and setup views
+
+`GET /v1/time-zones?q=` returns `{zones: [{id, title}]}`, from the service's IANA list,
+searched on the service. Selecting a zone still uses KIFF's signed
+`PUT /v1/me/time-zone`; tafs cloud never signs for the person.
+
+`GET /v1/tafs/{id}/activity?filter=all&limit=20&cursor=…` returns `entries`, day
+`groups`, `filters: [{id, title}]`, the selected `filter`, a `revision`, and an
+optional `next_cursor`. Filters are `all`, `done`, `held`, or `refused`, applied
+on tafs cloud before a page is made. An allowed call with an unknown tool outcome
+is never labelled done. Entries carry their ready-to-draw `title`, `detail`,
+`time`, `day_title` and optional `amount_text`, plus KIFF's original call and
+signed evidence. `tools` (comma-separated action names) and `from` (an ISO date)
+can narrow an app's seven-day Activity. The server supplies that query on the app's
+setup view; the phones do not identify apps from tool names.
+
+A page is 20 entries by default, 1–50 when specified. Pass `next_cursor` unchanged.
+It is bound to the account, person, taf and filters. A changed snapshot returns
+409: refresh from the first page rather than joining inconsistent pages. A page
+can be empty with a cursor when a bounded scan has not reached a matching call yet.
+
+`GET /v1/tafs/{id}/work/runs?limit=20&cursor=…` pages the recent retained runs as
+`requests`, with a `next_cursor` when another page remains. A preview requests
+`limit=3`. This view reads the runtime's latest 100 runs; it is not an archive of
+all past runs. The older `/runs` report endpoint is unchanged. Both new page
+routes send an `ETag`; repeating a read with `If-None-Match` returns 304 with no
+body when unchanged. Apps keep previously read pages per account, taf and filter.
+
+`GET /v1/tafs/{id}/setup` returns:
+
+- `connections`: each app's display `name`, `action_count`, `action_words`,
+  `actions` (each with its title, Card-limit lines and workflow-step numbers),
+  the app's `steps`, `running`, and `stats` for the last seven days. Stats include
+  `calls`, `done`, `held`, ready-to-draw `words`, `complete`, and an `activity_query`.
+  Incomplete source reads are explicitly marked; they are never shown as a complete total.
+- `workflow`: its `title`, `summary`, numbered `steps` with app/grant and running
+  state, and `running_step` only while that step's tool call has no result.
+- `memory`: its note `count`, `title` and newest note as `latest`.
+- `versions`: `Changes to how it runs`, the live version, earlier count and summary.
+
+The phone forwards one signed read of planque's account grants using the
+`Planque-Device-Signature` header, signed for planque's `GET
+/v1/accounts/{tenant}/grants`. tafs cloud forwards that proof unchanged; it does
+not hold a device key, sign or approve anything. A missing or refused proof yields
+`connections_error`; an unreadable connection list is not presented as an empty one.
+
+`GET /v1/tafs/{id}/memory?all=true` returns all shared notes and this person's own
+notes, newest first, plus their `summary`. The older request without `all=true`
+keeps its 100-note limit. Forgetting a shared note still requires managing the taf.
+
+## This phone's alert choices
+
+`GET /v1/push` with `Tafs-Device-Token: <this phone's token>` returns `enabled`,
+`sound`, `kinds: [{id, title, words, enabled}]`, and `answering: {title, tafs}` for
+the per-taf results link. It reads only a registration belonging to the signed-in
+person on this account. Tokens are never displayed or included in request logs.
+
+`POST /v1/push` also accepts `kinds`, an object with boolean choices for
+`needs_you`, `halted`, `answered` and `not_sent`. Missing choices default on; a token
+refresh omitting `kinds` preserves that person's previous choices. They are
+checked before either push provider is called. Disabled kinds count as handled,
+so retries cannot bypass an opt-out. Background synchronization still clears
+previously shown holds. Turning off the whole phone removes its registration.
+
+`DELETE /v1/push` takes `{device_token, platform, environment}` and removes this
+person's matching phone, idempotently, leaving other phones and the account's
+KIFF alert secret in place. The older `DELETE /v1/push/{token}` is unchanged.
