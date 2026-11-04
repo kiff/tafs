@@ -246,6 +246,8 @@ data class AppState(
   val chatSent: Map<String, List<ChatMessage>> = emptyMap(),
   /** Each halt as last read, by the taf's id, "" for the whole account. */
   val halts: Map<String, Halt> = emptyMap(),
+  /** Why the last Halt or Resume didn't go through, shown on the Halt screen itself, where it was asked. */
+  val haltError: String? = null,
   /** The account's usage this period, once read; and why it couldn't be. */
   val usage: Usage? = null,
   val usageError: String? = null,
@@ -375,6 +377,8 @@ data class AppState(
   /** Alerts can work in this build (Firebase is set up), whether this phone gets them, and whether this person may answer holds, as tafs cloud last said. */
   val alertsAvailable: Boolean = false,
   val alertsReady: Boolean = false,
+  /** Alerts were on for this account when this phone signed out, and didn't come back on with the sign-in: it says so once. */
+  val alertsOffSinceSignOut: Boolean = false,
   val canAnswerHolds: Boolean? = null,
   val turningOnAlerts: Boolean = false,
   /** Sound for alerts on this phone: off, tafs cloud sends this phone's alerts quietly. */
@@ -880,9 +884,20 @@ class AppModel(
     _state.value = AppState(mode = Mode.kiff, ready = true, sessionHasKey = tenant != null, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0")
     refresh()
     registerApprovalKey()
+    // Alerts were on for this account when this phone signed out of it: they come back on with no new confirmation while the
+    // account's alerts still reach tafs cloud. Otherwise the phone says they're off, and offers to turn them on.
+    val restoring = tenant != null && push.available && !alertsWanted() && secrets.load(ALERTS_WERE_ON) == tenant
+    if (restoring) secrets.save("1", ALERTS_ON)
     syncPush()
+    if (restoring && !_state.value.alertsReady) {
+      secrets.delete(ALERTS_ON)
+      _state.update { it.copy(alertsOffSinceSignOut = true) }
+    }
     startPurchases()
   }
+
+  /** The "alerts are off" note was read, or acted on. */
+  fun dismissAlertsOff() = _state.update { it.copy(alertsOffSinceSignOut = false) }
 
   /** What the four reads of a refresh found. */
   private class Fetched(val home: Home, val exceptions: List<CardException>, val activity: List<ActivityCall>?, val access: Map<String, Access>?)
@@ -1266,6 +1281,10 @@ class AppModel(
     // This phone stops getting the account's alerts, while the session can still say so.
     if (tellKiff && _state.value.mode == Mode.kiff) pushToken?.let { token -> if (alertsWanted()) runCatching { cloud.unregisterPush(token) } }
     if (tellKiff && _state.value.mode == Mode.kiff) runCatching { kiff.signOut() }
+    // Remembered for this account only: signing in to it again turns this phone's alerts back on, as they were.
+    kiffTenant?.let { tenant ->
+      if (alertsWanted()) secrets.save(tenant, ALERTS_WERE_ON) else if (secrets.load(ALERTS_WERE_ON) == tenant) secrets.delete(ALERTS_WERE_ON)
+    }
     secrets.delete(ALERTS_ON)
     secrets.delete(HANDOFF)
     secrets.delete(TOKEN)
@@ -1435,6 +1454,8 @@ class AppModel(
   private fun leaveCoachChat() {
     coachGeneration++
     followers.remove(COACH_CHAT)?.cancel()
+    // A send to the conversation left may still be on its way: the new one can be written in at once.
+    _state.update { it.copy(chatSending = it.chatSending - COACH_CHAT) }
   }
 
   /** A new Coach conversation on one taf, to improve it: its first message goes to the improve route. */
@@ -3341,6 +3362,10 @@ class AppModel(
     val refs = files.mapNotNull { it.ref }
     _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
     val generation = accountGeneration
+    // A send to a Coach conversation left while it was on its way (another taf's, a new one) goes on at tafs cloud, but nothing
+    // of it lands on the conversation now shown.
+    val coachToken = coachGeneration
+    fun current() = generation == accountGeneration && (tafId != COACH_CHAT || coachToken == coachGeneration)
     val pending = ChatMessage(nextStamp(tafId), ChatMessage.From.owner, words, "pending", attachments = refs)
     append(tafId, pending)
     _state.update { it.copy(chatSent = it.chatSent + (tafId to (it.chatSent[tafId].orEmpty() + pending)), chatEnded = it.chatEnded - tafId) }
@@ -3357,7 +3382,8 @@ class AppModel(
         val improving = if (fresh) _state.value.coachImproving?.let { _state.value.taf(it)?.cloudId } else null
         val session = if (coach && !fresh) _state.value.coachChat else null
         if (improving != null) {
-          settleCoachChat(cloud.improve(improving, words).session)
+          val begun = cloud.improve(improving, words).session
+          if (current()) settleCoachChat(begun)
         } else {
           val run = if (fresh) null else _state.value.chatLive[tafId]?.run ?: _state.value.chatWorking[tafId]?.run
           var steered = false
@@ -3373,15 +3399,17 @@ class AppModel(
           // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
           if (!steered) streamed = openStream(cloudId, words, refs, session, fresh)
           if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh).also { sent ->
-            if (coach) settleCoachChat(sent.session)
-            sent.message?.let { markSent(tafId, pending, it.id) }
+            if (current()) {
+              if (coach) settleCoachChat(sent.session)
+              sent.message?.let { markSent(tafId, pending, it.id) }
+            }
           }
         }
       }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) {
+      if (current()) {
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           s.copy(
@@ -3395,16 +3423,17 @@ class AppModel(
       }
       return false
     } finally {
-      _state.update { it.copy(chatSending = it.chatSending - tafId) }
+      if (current()) _state.update { it.copy(chatSending = it.chatSending - tafId) }
     }
-    if (generation != accountGeneration) return false
+    if (!current()) return false
     // The taf is answering now: until it has, or is at work, it reads as thinking.
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (tafId to clock())) }
     val events = streamed
     if (events != null) {
       _state.update { it.copy(chatLive = it.chatLive + (tafId to LiveAnswer(started = clock()))) }
       readThread(tafId)
-      followStream(tafId, events, retry = words, sent = pending)
+      if (!current()) return false
+      followStream(tafId, events, retry = words, sent = pending, coach = coachToken)
       return true
     }
     readThread(tafId)
@@ -3539,9 +3568,13 @@ class AppModel(
     }
   }
 
-  private fun followStream(tafId: String, events: kotlinx.coroutines.flow.Flow<StreamEvent>, retry: String?, sent: ChatMessage? = null) {
+  private fun followStream(
+    tafId: String, events: kotlinx.coroutines.flow.Flow<StreamEvent>, retry: String?, sent: ChatMessage? = null,
+    // The Coach conversation this stream is of, taken before it was opened: once Coach has left it, nothing of it shows.
+    coach: Int = coachGeneration,
+  ) {
     val generation = accountGeneration
-    val coach = coachGeneration
+    fun current() = generation == accountGeneration && (tafId != COACH_CHAT || coach == coachGeneration)
     followers[tafId]?.cancel()
     followers[tafId] = scope.launch {
       var ended: StreamEvent.End? = null
@@ -3550,8 +3583,7 @@ class AppModel(
       }
       try {
         events.collect { e ->
-          if (generation != accountGeneration) throw CancellationException("another account")
-          if (tafId == COACH_CHAT && coach != coachGeneration) throw CancellationException("another conversation")
+          if (!current()) throw CancellationException("another account or conversation")
           when (e) {
             is StreamEvent.Session -> {
               live { it.copy(session = e.session, run = e.run ?: it.run) }
@@ -3593,7 +3625,7 @@ class AppModel(
       } catch (_: Exception) {
         // The stream dropped: the thread has the rest.
       }
-      if (generation != accountGeneration) return@launch
+      if (!current()) return@launch
       val end = ended
       val run = _state.value.chatLive[tafId]?.run
       _state.update { s ->
@@ -3609,6 +3641,7 @@ class AppModel(
       // Over, or paused on a held call: KIFF is read at once, so the hold shows and the Card's amounts are today's.
       if (end != null) refresh()
       readThread(tafId)
+      if (!current()) return@launch
       _state.update { it.copy(chatLive = it.chatLive - tafId, chatAwaiting = if (end != null) it.chatAwaiting - tafId else it.chatAwaiting) }
       // This stream no longer holds the chat. What goes on after it is read on a timer: a stream that dropped with no end, or a
       // run that paused and went on with no stream open, as Coach's does once tafs cloud answers its result. Its end must show.
@@ -3651,6 +3684,7 @@ class AppModel(
     if (isTrialChat(tafId)) return
     if (!again && (followers[tafId]?.isActive == true || run in resumedRuns)) return
     resumedRuns += run
+    val coach = coachGeneration
     val events = try {
       cloud.resumeRun(cloudId, run)
     } catch (e: CancellationException) {
@@ -3660,9 +3694,10 @@ class AppModel(
       followChat(tafId)
       return
     }
+    if (tafId == COACH_CHAT && coach != coachGeneration) return
     val working = _state.value.chatWorking[tafId]
     _state.update { it.copy(chatLive = it.chatLive + (tafId to LiveAnswer(started = clock(), session = working?.session, run = run))) }
-    followStream(tafId, events, retry = null)
+    followStream(tafId, events, retry = null, coach = coach)
   }
 
   /**
@@ -4628,12 +4663,13 @@ class AppModel(
     val key = haltKey(tafId)
     if (_state.value.mode != Mode.kiff || key == null) return
     val generation = accountGeneration
+    _state.update { it.copy(haltError = null) }
     val halt = try {
       cloud.halt(key.ifEmpty { null })
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("tafs couldn't halt ${if (tafId == null) "your tafs" else "it"}. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) haltFailed("tafs couldn't halt ${if (tafId == null) "your tafs" else "it"}. ${ErrorWords.of(e)}")
       return
     }
     if (generation != accountGeneration) return
@@ -4648,8 +4684,11 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || key == null) return
     val generation = accountGeneration
     val halt = attempt { cloud.halted(key.ifEmpty { null }) } ?: return
-    if (generation == accountGeneration) _state.update { it.copy(halts = it.halts + (tafId.orEmpty() to halt)) }
+    if (generation == accountGeneration) _state.update { it.copy(halts = it.halts + (tafId.orEmpty() to halt), haltError = null) }
   }
+
+  /** A Halt or Resume that didn't go through says why where it was asked, the Halt screen, not behind it. */
+  private fun haltFailed(words: String) = _state.update { it.copy(haltError = words) }
 
   /**
    * Resumes a halted taf, or with none every taf, behind the owner's confirmation: KIFF first, signed by this
@@ -4949,15 +4988,16 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || key == null) return false
     val tenant = kiffTenant
     if (!_state.value.sessionHasKey || tenant == null) {
-      fail("Sign in with KIFF again: this sign-in can't sign for the phone.")
+      haltFailed("Sign in with KIFF again: this sign-in can't sign for the phone.")
       return false
     }
     if (_state.value.approvalKeyLost) {
-      fail(KiffClient.APPROVAL_KEY_LOST)
+      haltFailed(KiffClient.APPROVAL_KEY_LOST)
       return false
     }
     val name = tafId?.let { _state.value.taf(it)?.name }
     val generation = accountGeneration
+    _state.update { it.copy(haltError = null) }
     try {
       // Resuming gives authority back: the approval key signs KIFF's request, behind its own fingerprint.
       confirmGrant("tafs.resume.v1|$tenant|${tafId ?: "*"}", name?.let { "Resume $it" } ?: "Resume all your tafs")
@@ -4967,15 +5007,15 @@ class AppModel(
       kiff.setupSigner = { signer.signConfirmed(it) }
       kiff.resume(tafId)
     } catch (e: SignerException) {
-      if (generation == accountGeneration) fail(notSigned(e, "Not resumed: it wasn't confirmed."))
+      if (generation == accountGeneration) haltFailed(notSigned(e, "Not resumed: it wasn't confirmed."))
       return false
     } catch (_: KiffError.ApprovalKeyRequired) {
-      fail(KiffClient.APPROVAL_KEY_LOST)
+      haltFailed(KiffClient.APPROVAL_KEY_LOST)
       return false
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("KIFF didn't resume ${name ?: "your tafs"}. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) haltFailed("KIFF didn't resume ${name ?: "your tafs"}. ${ErrorWords.of(e)}")
       return false
     } finally {
       kiff.setupSigner = null
@@ -4986,7 +5026,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail("KIFF resumed ${name ?: "your tafs"}, but tafs cloud didn't yet. ${ErrorWords.of(e)}")
+      if (generation == accountGeneration) haltFailed("KIFF resumed ${name ?: "your tafs"}, but tafs cloud didn't yet. ${ErrorWords.of(e)}")
       return false
     }
     if (generation != accountGeneration) return false
@@ -5364,6 +5404,8 @@ class AppModel(
     // What alerts keep on this phone: a target's secret not yet handed to tafs cloud, whether alerts were turned on, and the sound.
     const val HANDOFF = "kiff.alert-handoff"
     const val ALERTS_ON = "kiff.alerts-on"
+    /** The account whose alerts were on when this phone last signed out of it, so signing in to it again brings them back. */
+    const val ALERTS_WERE_ON = "kiff.alerts-were-on"
     const val ALERT_SOUND = "kiff.alert-sound"
     const val ALERT_KINDS = "kiff.alert-kinds"
 

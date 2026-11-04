@@ -120,7 +120,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
             Eyebrow("Who holds the halt")
             HoldRow("No run starts", h.runtime)
             HoldRow("KIFF refuses its calls", h.kiff)
-            HoldRow("planque sends nothing to your tools", h.planque)
+            HoldRow("The connection sends nothing to your tools", h.planque)
             if (HaltWords.resumesWithAccount(h, tafId)) {
               Text("Halted with all your tafs. Resume them all to let it run.", style = scaled(13, color = Theme.dim))
             }
@@ -152,6 +152,8 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
             )
           }
         }
+        // Why a Halt or Resume didn't go through, here where it was asked: a tap never ends with nothing said.
+        if (!busy) state.haltError?.let { Text(it, style = scaled(14, color = Theme.no)) }
       }
     }
   }

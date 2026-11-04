@@ -276,7 +276,14 @@ data class CardExceptions(val exceptions: List<CardException> = emptyList())
 
 /** How the call ended at the tool: done, refused_by_tool, not_sent, sending, unknown or not_recorded. */
 @Serializable
-data class ToolOutcome(val status: String, val message: String? = null)
+data class ToolOutcome(
+  val status: String,
+  val message: String? = null,
+  /** Who refused a call KIFF allowed, as KIFF types it: `connection` for the connection, before anything was sent. */
+  @SerialName("refused_by") val refusedBy: String? = null,
+  /** The connection's machine code for why; the words come from [ActivityCall.detail]. */
+  val code: String? = null,
+)
 
 /** The money a call moves, as a decimal string and its unit ("150.00", "EUR"). A gateway call's integer amount has no unit. */
 @Serializable
@@ -303,6 +310,8 @@ data class ActivityCall(
   val reasons: List<String>? = null,
   @SerialName("made_at") @Serializable(with = InstantAsString::class) val madeAt: Instant? = null,
   val reason: String? = null,
+  /** KIFF's words for what happened to the call, when it gives them (a connection's refusal). */
+  val detail: String? = null,
 )
 
 @Serializable

@@ -165,7 +165,7 @@ object CoachWords {
 
   /** The vendor's page came back, but planque doesn't hold the connection as connected. */
   fun notConnected(vendor: String, status: String) =
-    "The sign-in at $vendor didn't connect: planque has it as ${status.replace('_', ' ')}. Nothing was connected. Try signing in again."
+    "The sign-in at $vendor didn't connect: the connection is ${status.replace('_', ' ')}. Nothing was connected. Try signing in again."
 
   /** An approval with nothing to sign: the connection is connected and it brings no Card. Nothing is approved. */
   fun nothingToApprove(vendor: String) = "$vendor is already connected. There's nothing new to approve, so nothing was approved."

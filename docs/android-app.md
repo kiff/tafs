@@ -86,6 +86,14 @@ is told it's done, and Restore purchases sends again what wasn't.
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
 
+**Alerts after signing out.** Signing out turns this phone's alerts off and remembers whether
+they were on for that account (`ALERTS_WERE_ON`). Signing in to the same account again registers
+this phone again, with no new confirmation, while the account's alerts still reach tafs cloud;
+otherwise the app says once that they're off, with **Turn on**. Another account doesn't get them.
+
+**Halt and Resume say what happened on the Halt screen** (`haltError`): a halt or resume that
+didn't go through says why there, and the screen never calls a connection by its service's name.
+
 **One account per phone, and signing out asks first.** Account ends with **Sign out**: another
 account is signing out, then signing in with it. Sign out, and Sign in again on the line shown
 when the phone can't approve, each open a confirmation (`ConfirmSignOut`), so one stray tap

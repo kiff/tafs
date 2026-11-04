@@ -163,6 +163,47 @@ class PushTest {
 
   // MARK: Registering the phone
 
+  // MARK: Signing out and back in (#464 item 16)
+
+  @Test fun signingBackInToTheAccountBringsThisPhonesAlertsBackWithNoConfirmation() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    val m = model()
+    m.signOut(tellKiff = false)
+    val before = transport.requestsTo(register).size
+    m.useSession("at_2", "t_01")
+    assertEquals(before + 1, transport.requestsTo(register).size)
+    assertTrue(m.state.value.alertsReady)
+    assertFalse(m.state.value.alertsOffSinceSignOut)
+    assertEquals("1", secrets.load(AppModel.ALERTS_ON))
+    assertTrue("nothing was signed", transport.requestsTo(alertTarget).isEmpty())
+  }
+
+  @Test fun alertsThatCannotComeBackOnSaySoOnce() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":false}""")
+    val m = model()
+    m.signOut(tellKiff = false)
+    m.useSession("at_2", "t_01")
+    assertFalse(m.state.value.alertsReady)
+    assertTrue(m.state.value.alertsOffSinceSignOut)
+    assertNull("left off until the owner turns them on", secrets.load(AppModel.ALERTS_ON))
+    m.dismissAlertsOff()
+    assertFalse(m.state.value.alertsOffSinceSignOut)
+  }
+
+  @Test fun anotherAccountDoesNotGetThisAccountsAlerts() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    val m = model()
+    m.signOut(tellKiff = false)
+    val before = transport.requestsTo(register).size
+    m.useSession("at_2", "t_02")
+    assertEquals(before, transport.requestsTo(register).size)
+    assertFalse(m.state.value.alertsOffSinceSignOut)
+    assertNull(secrets.load(AppModel.ALERTS_ON))
+  }
+
   @Test fun aPhoneIsRegisteredWithItsFirebaseTokenAndWhatSoundItWants() = runTest {
     reads()
     transport.answer(register, 200, """{"answers":true,"alerts":true}""")

@@ -252,6 +252,17 @@ fun RootView(model: AppModel) {
     }
   }
   if (signingIn) SignInSheet(model, onClose = { signingIn = false })
+  // Alerts were on for this account before this phone signed out, and didn't come back on: said once, with the way back.
+  if (state.alertsOffSinceSignOut && state.lastError == null) {
+    AlertDialog(
+      onDismissRequest = model::dismissAlertsOff,
+      title = { Text("Alerts are off on this phone") },
+      text = { Text("They went off when this phone signed out. Turn them on to get an alert when a taf needs you.") },
+      confirmButton = { TextButton({ model.dismissAlertsOff(); rootScope.launch { model.turnOnAlerts() } }) { Text("Turn on", color = Theme.amber) } },
+      dismissButton = { TextButton(model::dismissAlertsOff) { Text("Not now", color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
   if (confirmingSignInAgain) {
     bot.tafs.app.views.ConfirmSignOut(bot.tafs.app.views.SignOut.SignInAgain, onDismiss = { confirmingSignInAgain = false }) {
       confirmingSignInAgain = false

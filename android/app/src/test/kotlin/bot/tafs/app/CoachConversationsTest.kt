@@ -127,6 +127,25 @@ class CoachConversationsTest {
     assertEquals("refunds-1", m.state.value.coachImproving)
   }
 
+  @Test fun aSendToTheConversationLeftDoesNotBindTheNewOne() = runTest {
+    reads()
+    transport.answer("POST /v1/tafs/taf_1/improve", 200, """{"session":"s7","new_session":true}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s7", 200, """{"messages":[]}""")
+    val m = model()
+    m.improveTaf("refunds-1")
+    transport.hold("POST /v1/tafs/taf_1/improve")
+    val send = launch { m.deliverChat("How is it going?", COACH_CHAT) }
+    testScheduler.runCurrent()
+    // Another conversation before tafs cloud answered: the late answer goes on at tafs cloud, and leaves this one alone.
+    m.newCoachChat()
+    transport.release("POST /v1/tafs/taf_1/improve")
+    send.join()
+    assertNull(m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
+    assertTrue(m.state.value.chats[COACH_CHAT].orEmpty().isEmpty())
+    assertFalse("the new conversation can be written in", COACH_CHAT in m.state.value.chatSending)
+  }
+
   @Test fun changingTheLimitInCoachModeOpensCoachOnTheTaf() = runTest {
     reads()
     val m = model()

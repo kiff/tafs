@@ -488,4 +488,19 @@ class MappingTest {
     assertEquals("Stripe refused it. Nothing was done, but it still counts against today's total.", detail)
     assertNotNull(KiffMapping.executed(null, approved = true))
   }
+
+  @Test fun aRefusalKiffTypesAsTheConnectionsSaysSoInKiffsWords() {
+    fun call(detail: String?, code: String? = "halt_unavailable", by: String? = "connection") = ActivityCall("p", "list_subscriptions", actorId = "a1",
+      outcome = "allowed", createdAt = Instant.EPOCH, toolOutcome = ToolOutcome("refused_by_tool", message = "planque: halt unavailable", refusedBy = by, code = code),
+      detail = detail)
+    val typed = KiffMapping.record(listOf(call("The connection couldn't check whether it was halted, so it sent nothing.")), setOf("a1"), mapOf("list_subscriptions" to "Stripe")).single()
+    assertEquals("The connection couldn't check whether it was halted, so it sent nothing.", typed.detail)
+    assertEquals("The connection", typed.refusedBy)
+    // Typed, with no words from KIFF: the plain fact, never the tool's own message.
+    assertEquals("The connection refused it before sending. Nothing was sent.",
+      KiffMapping.record(listOf(call(null)), setOf("a1")).single().detail)
+    // Not typed as the connection's: the vendor's refusal, as before.
+    val vendor = KiffMapping.record(listOf(call(null, code = null, by = null)), setOf("a1"), mapOf("list_subscriptions" to "Stripe")).single()
+    assertEquals("Stripe", vendor.refusedBy)
+  }
 }
