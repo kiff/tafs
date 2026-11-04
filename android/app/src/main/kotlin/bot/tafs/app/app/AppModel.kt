@@ -481,6 +481,9 @@ data class AppState(
   /** The halt of a taf, or with none of the whole account, as last read: running until read. */
   fun haltOf(tafId: String?): Halt = halts[tafId.orEmpty()] ?: Halt.Running
 
+  /** What Needs you holds, as Home's headline and the bar's badge count it: held calls, currency requests and "Did this happen?". */
+  val needsYouCount: Int get() = held.size + cardUnitExceptions.size + unsure.size
+
   /** Halting is tafs cloud's: the account's, or a taf it runs. */
   fun canHalt(tafId: String?): Boolean = mode == Mode.kiff && (tafId == null || taf(tafId)?.cloudId != null)
 
