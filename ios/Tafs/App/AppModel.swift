@@ -6140,58 +6140,126 @@ final class AppModel: ObservableObject {
         setupStream = Task { await self.followSetupStream(events, text: "", gen: gen, conversation: conversation) }
     }
 
-    /// Approve on an approval (contract 4, one Face ID): the vendor's connection, then the
-    /// taf's Cards when it names a draft. The answer says what happened, never more.
-    /// Approves what the card showed: the grant's digest and the draft's version as rendered.
+    /// Approve on a Coach card (kiff/tafs#413): tafs cloud decides. The phone sends that Approve was
+    /// tapped, with what the card showed; tafs cloud reads planque's grant (as this phone) and
+    /// KIFF's draft and says what needs signing, if anything. With nothing to sign it answers Coach
+    /// itself (already approved, or failed with why), and the card shows its note. Otherwise the
+    /// phone signs exactly the message it's given, under Face ID, makes the one call it names as
+    /// given (planque's approve and the vendor's sign-in, or KIFF's draft confirm), and reports
+    /// what came of it, signed as a setup call. tafs cloud checks the report with KIFF and the
+    /// service before Coach hears "approved". The phone never builds an approval's answer.
     func approve(_ component: SetupComponent, shown: String?, shownDraft: String?) async {
-        guard let grant = component.grant else { return }
+        guard let grantID = component.grant, let s = setupTaf else { return }
         lastError = nil
         shownTermsChanged = false
-        failureIsTheRequests = false
         cardNotes[component.id] = nil
-        // Connected, or connected first and listed (contract 5): Setup reads what's next.
-        let done = await connect(grantID: grant, shown: shown, draftID: component.draft, shownDraft: shownDraft)
-        // Nothing was signed here, so it isn't "approved". Its Card confirmed already is a
-        // real approval signed earlier (another device, or a tap before this one): said as
-        // that, never as failed, or Coach asks again. With no Card at all, Coach hears it's
-        // already connected and asks for a new grant. Both in the same words as Android.
-        if done != nil, let none = nothingSigned {
-            if none.cardsConfirmed {
-                await answer(component, "already approved: \(none.vendor) is connected and its Card is confirmed")
-            } else {
-                await answer(component, "failed: \(none.vendor) is already connected; nothing new to approve")
+        guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
+            cardNotes[component.id] = "Start from Connected tools on this \(ThisDevice.kind) first."
+            return
+        }
+        guard connecting == nil else {
+            cardNotes[component.id] = "Another approval is going through. Approve this one once it's done."
+            return
+        }
+        connecting = grantID
+        defer { connecting = nil; connectStep = nil }
+        let gen = accountGeneration
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        kiff.tenant = tenant
+        defer { planque.signer = nil; kiff.setupSigner = nil }
+        let ref = cardRef(component.id)
+        let session = setupThread.components.last { $0.ref == ref }?.session
+        do {
+            // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let words = grants.first { $0.id == grantID }.flatMap { shownWords(for: $0) }
+            let decision = try await cloud.approval(s.id, component: component.id, body: .init(
+                grant: grantID, shownDigest: shown, draft: component.draft, shownDraft: shownDraft,
+                words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session), proof: proof)
+            guard gen == accountGeneration else { return }
+            switch decision.outcome {
+            case "answered":
+                cardNotes[component.id] = decision.note
+                await setupAnswered(s.id, ref: ref, decision: decision, gen: gen)
+            case "read_again":
+                cardNotes[component.id] = decision.note ?? "What you're asked to approve changed since it was shown. Read it again, then approve."
+                await refreshConnections()
+                if let id = component.draft, let draft = try? await kiff.draft(id: id), gen == accountGeneration { setupDrafts[id] = draft }
+            case "sign":
+                guard let ask = decision.ask else { return }
+                do {
+                    _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true)
+                } catch {
+                    cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                    return
+                }
+                guard gen == accountGeneration else { return }
+                kiff.setupSigner = { try signer.signConfirmed($0) }
+                let came = await makeAskedCall(ask, tenant: tenant, gen: gen)
+                guard gen == accountGeneration else { return }
+                await refreshConnections()
+                guard gen == accountGeneration else { return }
+                let outcome = try await cloud.approvalReport(s.id, component: component.id, ask: ask.id,
+                                                             body: .init(result: came.result, status: came.status, why: came.why, session: session),
+                                                             proof: proof, tenant: tenant, signedBy: { try signer.signConfirmed($0) })
+                guard gen == accountGeneration else { return }
+                cardNotes[component.id] = outcome.note
+                await setupAnswered(s.id, ref: ref, decision: outcome, gen: gen)
+            default:
+                cardNotes[component.id] = "Setup answered something this app doesn't read. Update the app."
             }
-            // After the answer, which clears the card's note when it goes.
-            cardNotes[component.id] = none.cardsConfirmed ? Self.alreadyApproved : Self.nothingToApprove(none.vendor)
+        } catch {
+            guard gen == accountGeneration else { return }
+            cardNotes[component.id] = "Your answer didn't reach Setup. \(error.localizedDescription)"
             await loadSetupThread()
-            return
         }
-        // Changed terms aren't a failure to tell Setup: the owner reads them and approves again.
-        if shownTermsChanged {
-            cardNotes[component.id] = lastError
-            lastError = nil
-            return
-        }
-        if let done, done.connected || done.listed {
-            if let e = lastError {
-                await answer(component, "failed: \(e)")
-            } else {
-                await answer(component, vendorSignedIn ? "approved, signed in" : "approved")
+    }
+
+    /// What came of the call tafs cloud asked for, as the report says it: never an answer, only what happened.
+    private struct Came {
+        let result: String
+        var status: String? = nil
+        var why: String? = nil
+    }
+
+    /// Makes the one call tafs cloud asked for, as given, and says what came of it.
+    private func makeAskedCall(_ ask: TafsCloud.ApprovalDecision.Ask, tenant: String, gen: Int) async -> Came {
+        do {
+            if ask.step == "cards" {
+                guard let k = ask.kiff else { return Came(result: "failed", why: "tafs cloud named no draft to confirm") }
+                _ = try await kiff.confirmDraft(id: k.draft, version: k.version)
+                await keepKIFFAlerts(tenant: tenant, gen: gen)
+                await keepCoachTools(tenant: tenant, gen: gen)
+                return Came(result: "confirmed")
             }
-        } else if let e = lastError {
-            if failureIsTheRequests, let shown {
-                // The request itself was refused (kiff/tafs#138): Setup changes it before
-                // asking again, and the card doesn't offer to send it unchanged.
-                refusedRequests.insert("\(component.id)|\(shown)")
-                await answer(component, "failed: \(e)")
-            } else {
-                await answer(component, "failed: \(e)")
+            guard let p = ask.planque else { return Came(result: "failed", why: "tafs cloud named no connection to approve") }
+            let approved = try await planque.approve(grantID: p.grant, body: p.body)
+            guard let signInURL = approved.signInURL else {
+                // planque already holds the sign-in: approving connected it, with no second sign-in.
+                return approved.status == "connected" || approved.status == "listed" ? Came(result: approved.status) : Came(result: "not_connected", status: approved.status)
             }
-        } else if done == nil {
-            // Nothing happened that Setup should hear of: the card says why (kiff/tafs#236).
-            cardNotes[component.id] = quietStop ?? "Nothing was approved. Approve again."
+            let back = try await vendorSignIn.signIn(at: signInURL)
+            guard let signedIn = PlanqueClient.signedIn(from: back), signedIn.grant == p.grant, signedIn.tenant == tenant else { return Came(result: "no_code") }
+            guard gen == accountGeneration else { return Came(result: "failed", why: "the account changed") }
+            // Back from the vendor: connected only once planque says so, never because the page closed.
+            connectStep = "Checking the sign-in…"
+            let connected = try await planque.confirm(grantID: p.grant, code: signedIn.code)
+            return connected.connected || connected.listed ? Came(result: "connected") : Came(result: "failed", why: "the sign-in came back, but the connection is \(connected.status)")
+        } catch VendorSignIn.SignInError.cancelled {
+            return Came(result: "sign_in_closed")
+        } catch {
+            return Came(result: "failed", why: error.localizedDescription)
         }
-        await loadSetupThread()
+    }
+
+    /// Coach heard the card's answer from tafs cloud: the card shows it's answered until the thread's
+    /// words for it come, and the run that paused on it is followed to its end, which reads the thread again.
+    private func setupAnswered(_ setupID: String, ref: String, decision: TafsCloud.ApprovalDecision, gen: Int) async {
+        answered.insert(ref)
+        if let session = decision.session { settleSetupChat(session) }
+        if let run = decision.run { await followAnswered(setupID, run: run, gen: gen) } else { await loadSetupThread() }
     }
 
     /// Set by `connect` when the grant was already connected and nothing was left to

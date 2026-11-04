@@ -215,12 +215,11 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   stream to its end, which reads the thread again, so Coach's next words show in the open
   view. A card that doesn't wait any more (409) is read again as it is.
   Each type takes its own answer: confirm, one of its options' values; questions,
-  `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `approved`, `declined` or
-  `failed: <why>`, and `approved` only after the phone signed what the card asks: a connection
-  already connected that brings no Card signs nothing, so its answer is `failed: <vendor> is
-  already connected; nothing new to approve`, and one whose Card KIFF already confirmed (approved
-  before, with its own signature) says "Already approved" and answers `already approved: <vendor>
-  is connected and its Card is confirmed` (`AppModel.connect`, and iOS's); sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
+  `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `declined` from the phone, and
+  otherwise what tafs cloud decided ([coach.md](coach.md#approving-tafs-cloud-decides)): `approved`
+  only after a signature it checked, `already approved: <vendor> is connected and its Card is
+  confirmed` for a connection and Card approved earlier with their own signature, or `failed: <why>`;
+  sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
 - Writing a message instead while a card waits answers it with those words: the run that
   waits goes on, and no second run starts beside it.
 - In the thread, each answered card carries `answer` `{state: answered|wrote|no_answer,

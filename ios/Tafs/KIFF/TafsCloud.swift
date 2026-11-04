@@ -808,6 +808,83 @@ final class TafsCloud {
                               body: Body(answer: answer, session: session))
     }
 
+    /// tafs cloud's decision on an approval card (kiff/tafs#413). `outcome` is `answered` (Coach
+    /// heard `answer` from tafs cloud; `note` is the card's line), `read_again` (the card is out of
+    /// date: `note` says so; nothing was told) or `sign` (`ask`: the one message to sign and the
+    /// call it goes into).
+    struct ApprovalDecision: Decodable, Equatable {
+        /// One message for the device's key, and the call it goes into: planque's approve body,
+        /// or KIFF's draft to confirm.
+        struct Ask: Decodable, Equatable {
+            /// planque's approve, its body as tafs cloud built it: the phone sends it as it is.
+            struct Planque: Decodable, Equatable { let grant: String; let body: PlanqueClient.ApproveBody }
+            /// KIFF's draft to confirm, at exactly this version.
+            struct KIFF: Decodable, Equatable { let draft: String; let version: String }
+            let id: String
+            /// `connect` or `cards`.
+            let step: String
+            /// The exact bytes the device's key signs, under Face ID.
+            let message: String
+            /// What the prompt says.
+            let reason: String
+            let planque: Planque?
+            let kiff: KIFF?
+        }
+        let outcome: String
+        let answer: String?
+        let note: String?
+        let ask: Ask?
+        let session: String?
+        let run: String?
+    }
+
+    /// Approve tapped on an approval card: what the card showed, so tafs cloud compares it with
+    /// what planque and KIFF hold now, and KIFF's words for the connection as this phone read them.
+    struct ApprovalAskBody: Encodable, Equatable {
+        struct Words: Encodable, Equatable {
+            let profileSHA256: String
+            let wordsSHA256: String
+            enum CodingKeys: String, CodingKey { case profileSHA256 = "profile_sha256", wordsSHA256 = "words_sha256" }
+        }
+        let grant: String
+        var shownDigest: String? = nil
+        var draft: String? = nil
+        var shownDraft: String? = nil
+        var words: Words? = nil
+        var session: String? = nil
+        enum CodingKeys: String, CodingKey { case grant, shownDigest = "shown_digest", draft, shownDraft = "shown_draft", words, session }
+    }
+
+    /// What came of the call made with the signature tafs cloud asked for: never an answer, only
+    /// what happened, in tafs cloud's own terms.
+    struct ApprovalReportBody: Encodable, Equatable {
+        let result: String
+        var status: String? = nil
+        var why: String? = nil
+        var session: String? = nil
+    }
+
+    /// Approve tapped (kiff/tafs#413): tafs cloud reads planque's grant as this phone (the signed
+    /// read `proof`, forwarded) and KIFF's draft, and decides. See `ApprovalDecision`.
+    func approval(_ id: String, component: String, body: ApprovalAskBody, proof: String?) async throws -> ApprovalDecision {
+        try await send("POST", "/v1/tafs/\(escaped(id))/components/\(escaped(component))/approval", body: body,
+                       headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
+    }
+
+    /// What came of the call, signed as a setup call to KIFF (`kiff.request.v1` over this request,
+    /// in `KIFF-Device-Signature`): KIFF tells tafs cloud this phone signed it, and planque or KIFF
+    /// what holds. tafs cloud answers Coach, and says what it answered.
+    func approvalReport(_ id: String, component: String, ask: String, body: ApprovalReportBody, proof: String?, tenant: String,
+                        signedBy sign: (Data) throws -> String) async throws -> ApprovalDecision {
+        let path = "/v1/tafs/\(escaped(id))/components/\(escaped(component))/approval/\(escaped(ask))"
+        let payload = try JSONEncoder().encode(body)
+        let signedAt = SigningTime.next()
+        let signature = try sign(KIFFClient.requestMessage(tenant: tenant, method: "POST", uri: path, body: payload, signedAt: signedAt))
+        var headers = ["KIFF-Device-Signature": "t=\(signedAt),v1=\(signature)"]
+        if let proof { headers["Planque-Device-Signature"] = proof }
+        return try KIFFClient.decoder.decode(ApprovalDecision.self, from: try await sendData("POST", path, body: KIFFClient.RawJSON(data: payload), headers: headers))
+    }
+
     /// Sends the owner's message: into the taf's current run, or a new one.
     func sendMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> Sent {
         try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target, files: files))
@@ -1473,7 +1550,8 @@ final class TafsCloud {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(body)
+            // Bytes already encoded are sent as they are: a signed request's signature covers exactly them.
+            request.httpBody = try (body as? KIFFClient.RawJSON)?.data ?? JSONEncoder().encode(body)
         }
         for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         guard let token else { throw CloudError(status: 401, message: "Sign in with KIFF first.") }

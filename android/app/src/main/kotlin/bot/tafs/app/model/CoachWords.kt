@@ -173,6 +173,12 @@ object CoachWords {
   /** An approval signed earlier (on another phone, or a tap before this one): connected, its Card confirmed in KIFF. */
   const val ALREADY_APPROVED = "Already approved"
 
+  /** An approval tapped while another goes through: one at a time. */
+  const val ANOTHER_APPROVAL = "Another approval is going through. Approve this one once it's done."
+
+  /** Approving needs this phone's key and the connection service, set up at sign-in. */
+  const val NOT_SET_UP_HERE = "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone."
+
   const val INTRO = "Name a tool a taf should work with, like your payment provider. You sign in on the tool's own page, and your sign-in is kept sealed: no taf ever sees it."
   const val SIGN_IN_NOTE = "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed."
   const val COACH_KNOWS = "Coach knows, and hands it over again."

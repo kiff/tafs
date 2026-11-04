@@ -133,7 +133,8 @@ then shows its plan. Then, each step behind the owner's yes:
    for each action exactly what asks the owner first and what is refused. Each card
    Coach shows has an id no earlier card in the conversation had. KIFF takes a Card only for a tool that is connected.
 3. **Approve the Card.** The owner reads the Card on its approval card and confirms it
-   with one Face ID, which signs exactly the draft version shown. Each draft Card's lines
+   with one Face ID, which signs exactly the draft version shown (tafs cloud names it: see
+   [Approving: tafs cloud decides](#approving-tafs-cloud-decides)). Each draft Card's lines
    are KIFF's `lines` for it, as they come. For a KIFF that doesn't send them, the app words
    them from the Card's terms and its `on_exceed`, with the same words as a taf's Card tab
    ([tafs.md](tafs.md)): an `owner` Card says what asks the owner past each limit. An editor's draft
@@ -152,6 +153,43 @@ then shows its plan. Then, each step behind the owner's yes:
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works
 from its chat.
+
+## Approving: tafs cloud decides
+
+An approval card's outcome is tafs cloud's to decide (kiff/tafs#413); the apps only sign. On
+**Approve**, the phone sends that it was tapped and what the card showed (`POST
+/v1/tafs/{id}/components/{component}/approval`: the grant, the digest and draft version
+rendered, KIFF's words for the connection as the phone read them), with its signed read of
+the connections, which tafs cloud forwards to planque unchanged. tafs cloud reads planque's
+grant as that phone and KIFF's draft with the person's session, and answers one of three
+things (`runtime/src/cloud/approval.ts`):
+
+- **answered**: nothing to sign, and Coach heard it from tafs cloud, as the person's answer to
+  the card: `already approved: <vendor> is connected and its Card is confirmed` when the
+  connection and its Card were approved earlier, with their own signature; `failed: <why>`
+  otherwise (no such connection, a connection planque failed, a request whose digest isn't its
+  hash, a connection already connected with no Card to confirm, a draft KIFF dropped). The
+  card shows tafs cloud's `note` ("Already approved", or why).
+- **read_again**: the card is out of date (its terms or its draft changed since it was shown)
+  or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
+  card shows the note, and the app reads the connections and the draft again.
+- **sign**: one message for the device's key, under Face ID or the fingerprint, with the
+  prompt's words, and the call it goes into exactly as the phone must make it: planque's
+  approve with the body tafs cloud built (the digest, and `kiff_profile` for a connection with
+  a profile), then the vendor's sign-in and the confirm code as before; or KIFF's draft to
+  confirm, at exactly that version. The phone signs that message and nothing else, makes that
+  call as given, and reports what came of it (`POST …/approval/{ask}`: connected, listed,
+  confirmed, the sign-in closed, no code, not connected, or failed with the service's reason),
+  signed as a setup call to KIFF. tafs cloud asks KIFF whether this phone signed the report,
+  then reads what holds at planque or KIFF, and only then answers Coach: `approved` when the
+  service holds the connection or the Card, else `failed: <why>` in tafs cloud's words,
+  whatever the phone reported. The phone never builds an approval's answer, and tafs cloud
+  never vouches for one: planque and KIFF still take only the device's signature.
+
+A card counts as finished only by its answer in the thread, on both apps. Every word the
+apps show for an outcome comes from tafs cloud. An ask waits 20 minutes for its report. On
+Android: `AppModel.approveCoach`; on iOS, `AppModel.approve`. A sign-in card's **Sign in
+again**, and Connect apps' sheet, still approve on the phone as before.
 
 ## Connections
 
