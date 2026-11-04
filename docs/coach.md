@@ -178,8 +178,8 @@ things (`runtime/src/cloud/approval.ts`):
   approve with the body tafs cloud built (the digest, and `kiff_profile` for a connection with
   a profile), then the vendor's sign-in and the confirm code as before; or KIFF's draft to
   confirm, at exactly that version. Before signing, the phone rebuilds the message from what it
-  holds (its own account, the card's grant or draft, the ask's digest or version) and refuses
-  any other: the phone is the last check, never a signing service (Android
+  holds (its own account, the card's grant or draft, and the digest or draft version the person
+  was shown, never the ask's) and refuses any other, and signs nothing when nothing was shown: the phone is the last check, never a signing service (Android
   `AppModel.expectedApprovalMessage`, iOS the same). It signs that message and nothing else, makes that
   call as given, and reports what came of it (`POST …/approval/{ask}`: connected, listed,
   confirmed, the sign-in closed, no code, not connected, or failed with the service's reason),

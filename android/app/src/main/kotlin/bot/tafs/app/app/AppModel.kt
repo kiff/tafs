@@ -3262,7 +3262,7 @@ class AppModel(
           val asked = decision.ask ?: return
           // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
           // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
-          if (asked.message != expectedApprovalMessage(asked, c, tenant)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return }
+          if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return }
           try {
             // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
             if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
@@ -5600,21 +5600,23 @@ class AppModel(
 
   companion object {
     /**
-     * The message this card's approval may sign, rebuilt from what the phone holds: its own account, the card's grant and
-     * planque's digest for the connect step; the card's draft and the version named for the Cards step. Null for an ask that
-     * names another grant or draft, or a step this app doesn't know: the phone signs nothing it can't rebuild itself.
+     * The message this card's approval may sign, rebuilt from what the phone holds: its own account, the card's grant and the
+     * digest the person was shown for the connect step; the card's draft and the version the person was shown for the Cards
+     * step. Null for an ask that names another grant, draft, digest or version, or a step this app doesn't know, and when
+     * nothing was shown: the phone signs nothing it can't rebuild itself from what the person read.
      */
-    fun expectedApprovalMessage(asked: bot.tafs.app.kiff.ApprovalAsk, c: SetupComponent, tenant: String): String? {
+    fun expectedApprovalMessage(asked: bot.tafs.app.kiff.ApprovalAsk, c: SetupComponent, tenant: String, shownDigest: String?, shownDraft: String?): String? {
       return when (asked.step) {
         "connect" -> {
           val p = asked.planque ?: return null
           val digest = runCatching { p.body.jsonObject["digest"]?.jsonPrimitive?.content }.getOrNull() ?: return null
-          if (p.grant != c.grant) null else "tafs.connect.v1|$tenant|${c.grant}|$digest"
+          // The digest is what the person saw, never the ask's: terms they never read are never signed.
+          if (p.grant != c.grant || shownDigest == null || digest != shownDigest) null else "tafs.connect.v1|$tenant|${c.grant}|$digest"
         }
         "cards" -> {
           val k = asked.kiff ?: return null
           val draft = c.draft ?: return null
-          if (k.draft != draft) null else "tafs.cards.v1|$tenant|$draft|${k.version}"
+          if (k.draft != draft || shownDraft == null || k.version != shownDraft) null else "tafs.cards.v1|$tenant|$draft|${k.version}"
         }
         else -> null
       }

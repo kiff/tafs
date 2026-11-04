@@ -815,10 +815,22 @@ class PlanqueTest {
       """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g2|$digest","reason":"Connect Stripe to Refunds","planque":{"grant":"g2","body":{"digest":"$digest"}}}}""",
       """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_02|g1|$digest","reason":"Connect Stripe to Refunds","planque":{"grant":"g1","body":{"digest":"$digest"}}}}""",
       """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.resume.v1|t_01|g1|$digest","reason":"Connect Stripe to Refunds","planque":{"grant":"g1","body":{"digest":"$digest"}}}}""",
-      """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g1|$digest","reason":"Connect Stripe to Refunds","planque":{"grant":"g1","body":{"digest":"${"0".repeat(64)}"}}}}""",
+      // The body and the message agree on a digest, but not the one the person was shown.
+      """{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g1|${"0".repeat(64)}","reason":"Connect Stripe to Refunds","planque":{"grant":"g1","body":{"digest":"${"0".repeat(64)}"}}}}""",
       """{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|dr_9|v3","reason":"Give refunds-1 its Card","kiff":{"draft":"dr_9","version":"v3"}}}""",
       """{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|dr_1|v3","reason":"Give refunds-1 its Card","kiff":{"draft":"dr_1","version":"v3"}}}""",
     )
+    // A Cards ask at a version other than the one shown (v3), on a card that names the draft.
+    val otherVersion = """{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|dr_1|v4","reason":"Give refunds-1 its Card","kiff":{"draft":"dr_1","version":"v4"}}}"""
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
+    transport.answer(askRoute, 200, otherVersion)
+    model().also { coachWithCard(it); it.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3") }.let { m ->
+      assertTrue(auth.asked.isEmpty())
+      assertTrue(transport.requestsTo("POST /v1/me/agent-drafts/dr_1/confirm").isEmpty())
+      assertTrue(transport.requestsTo(reportRoute).isEmpty())
+      assertEquals(bot.tafs.app.model.CoachWords.ASK_NOT_THIS_CARDS, m.state.value.coachNotes["a1"])
+    }
     for (ask in asks) {
       reads()
       transport.answer(grants, 200, """{"grants":[${grant()}]}""")
@@ -838,11 +850,16 @@ class PlanqueTest {
 
   @Test fun theExpectedMessageIsRebuiltFromTheCardAndTheAccount() {
     val connect = bot.tafs.app.kiff.ApprovalAsk("ask_1", "connect", "x", "r", planque = bot.tafs.app.kiff.PlanqueAsk("g1", KiffClient.json.parseToJsonElement("""{"digest":"d1"}""")))
-    assertEquals("tafs.connect.v1|t_01|g1|d1", AppModel.expectedApprovalMessage(connect, approvalComponent(), "t_01"))
+    assertEquals("tafs.connect.v1|t_01|g1|d1", AppModel.expectedApprovalMessage(connect, approvalComponent(), "t_01", "d1", null))
+    // The digest is the one shown, never the ask's; nothing shown, nothing signed.
+    assertNull(AppModel.expectedApprovalMessage(connect, approvalComponent(), "t_01", "d2", null))
+    assertNull(AppModel.expectedApprovalMessage(connect, approvalComponent(), "t_01", null, null))
     val cards = bot.tafs.app.kiff.ApprovalAsk("ask_1", "cards", "x", "r", kiff = bot.tafs.app.kiff.KiffAsk("dr_1", "v3"))
-    assertEquals("tafs.cards.v1|t_01|dr_1|v3", AppModel.expectedApprovalMessage(cards, approvalComponent().copy(draft = "dr_1"), "t_01"))
-    assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent(), "t_01"))
-    assertNull(AppModel.expectedApprovalMessage(connect.copy(step = "resume"), approvalComponent(), "t_01"))
+    assertEquals("tafs.cards.v1|t_01|dr_1|v3", AppModel.expectedApprovalMessage(cards, approvalComponent().copy(draft = "dr_1"), "t_01", null, "v3"))
+    assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent().copy(draft = "dr_1"), "t_01", null, "v2"))
+    assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent().copy(draft = "dr_1"), "t_01", null, null))
+    assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent(), "t_01", null, "v3"))
+    assertNull(AppModel.expectedApprovalMessage(connect.copy(step = "resume"), approvalComponent(), "t_01", "d1", null))
   }
 
   @Test fun tafsCloudUnreachableLeavesTheCardWithAWordAndNothingSigned() = runTest {

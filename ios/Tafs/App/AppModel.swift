@@ -6192,7 +6192,7 @@ final class AppModel: ObservableObject {
                 // The phone is the last check, not a signing service: it signs only the message this card
                 // implies, rebuilt from what it holds (its own account, the card's grant or draft, the ask's
                 // digest or version), and refuses any other.
-                guard ask.message == Self.expectedApprovalMessage(ask, component: component, tenant: tenant) else {
+                guard ask.message == Self.expectedApprovalMessage(ask, component: component, tenant: tenant, shownDigest: shown, shownDraft: shownDraft) else {
                     cardNotes[component.id] = Self.askNotThisCards
                     return
                 }
@@ -6228,17 +6228,21 @@ final class AppModel: ObservableObject {
     static let askNotThisCards = "Setup asked this phone to sign something that isn't this card's. Nothing was signed."
 
     /// The message this card's approval may sign, rebuilt from what the phone holds: its own account, the
-    /// card's grant and planque's digest for the connect step; the card's draft and the version named for
-    /// the Cards step. Nil for an ask that names another grant or draft, or a step this app doesn't know:
-    /// the phone signs nothing it can't rebuild itself.
-    nonisolated static func expectedApprovalMessage(_ ask: TafsCloud.ApprovalDecision.Ask, component: SetupComponent, tenant: String) -> String? {
+    /// card's grant and the digest the person was shown for the connect step; the card's draft and the
+    /// version the person was shown for the Cards step. Nil for an ask that names another grant, draft,
+    /// digest or version, or a step this app doesn't know, and when nothing was shown: the phone signs
+    /// nothing it can't rebuild itself from what the person read.
+    nonisolated static func expectedApprovalMessage(_ ask: TafsCloud.ApprovalDecision.Ask, component: SetupComponent, tenant: String,
+                                                    shownDigest: String?, shownDraft: String?) -> String? {
         switch ask.step {
         case "connect":
-            guard let p = ask.planque, p.grant == component.grant, let grant = component.grant else { return nil }
-            return "tafs.connect.v1|\(tenant)|\(grant)|\(p.body.digest)"
+            // The digest is what the person saw, never the ask's: terms they never read are never signed.
+            guard let p = ask.planque, p.grant == component.grant, let grant = component.grant,
+                  let shownDigest, p.body.digest == shownDigest else { return nil }
+            return "tafs.connect.v1|\(tenant)|\(grant)|\(shownDigest)"
         case "cards":
-            guard let k = ask.kiff, let draft = component.draft, k.draft == draft else { return nil }
-            return "tafs.cards.v1|\(tenant)|\(draft)|\(k.version)"
+            guard let k = ask.kiff, let draft = component.draft, k.draft == draft, let shownDraft, k.version == shownDraft else { return nil }
+            return "tafs.cards.v1|\(tenant)|\(draft)|\(shownDraft)"
         default:
             return nil
         }
