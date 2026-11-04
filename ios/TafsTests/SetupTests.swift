@@ -552,7 +552,7 @@ final class SetupTests: XCTestCase {
         model.planqueSetUp(for: "t_01")
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
         for (id, n) in [("connect-stripe", 1), ("stripe-tools", 2)] {
-            StubProtocol.responses["POST /v1/tafs/taf-setup/components/\(id)/approval"] = (200, #"{"outcome":"sign","ask":{"id":"ask_\(n)","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(PlanqueTests.digest)","reason":"Connect Stripe to Refunds","planque":{"grant":"g_01","body":{"digest":"\#(PlanqueTests.digest)"}}}}"#)
+            StubProtocol.responses["POST /v1/tafs/taf-setup/components/\(id)/approval"] = (200, #"{"outcome":"sign","ask":{"id":"ask_\#(n)","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(PlanqueTests.digest)","reason":"Connect Stripe to Refunds","planque":{"grant":"g_01","body":{"digest":"\#(PlanqueTests.digest)"}}}}"#)
             StubProtocol.responses["POST /v1/tafs/taf-setup/components/\(id)/approval/ask_\(n)"] = (200, #"{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}"#)
         }
         await model.loadSetup()
