@@ -120,7 +120,7 @@ cloud-provided names and action counts, and the dashed + opens Connect apps.
 An active-step arc uses cloud state. Each app's draggable sheet shows actions,
 Card limits, workflow steps and seven-day statistics; its statistics link to
 filtered Activity. Managers can add actions through Coach or disconnect an app.
-Workflow is folded by default, with the cloud's step count and app order.
+Workflow is folded by default, with the cloud's step count and app order. A step's words show under its title only when the cloud sends some.
 
 What it remembers previews the cloud's note count and newest note, limited to
 two lines. See all opens full notes and Forget. Changes to how it runs is on

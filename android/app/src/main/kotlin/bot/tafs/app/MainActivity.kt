@@ -276,6 +276,9 @@ fun RootView(model: AppModel) {
 }
 }
 
+/** Whose tafs are on screen: the sample's, or a KIFF account's, by its tenant. */
+internal fun accountShown(state: bot.tafs.app.app.AppState): String = "${state.mode}/${state.kiffAccount?.tenantId.orEmpty()}"
+
 @Composable
 private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   val state by model.state.collectAsState()
@@ -376,6 +379,14 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var coachOpen by rememberSaveable { mutableStateOf(false) }
   // Overview, on a tablet: beside the list, until a taf is picked.
   var overviewOpen by rememberSaveable { mutableStateOf(false) }
+  // Another account (signed in from the sample, or switched): the Tafs tab opens on its list, nothing of the last one left open.
+  val whose = accountShown(state)
+  var shownAccount by rememberSaveable { mutableStateOf(whose) }
+  LaunchedEffect(whose) {
+    if (whose == shownAccount) return@LaunchedEffect
+    shownAccount = whose
+    openTaf = null; trialTaf = null; versionsTaf = null; haltTaf = null; usageTaf = null; overviewOpen = false; coachOpen = false
+  }
   val detailState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
   val coachVisibility = remember { androidx.compose.animation.core.MutableTransitionState(false) }
   LaunchedEffect(coachOpen) { coachVisibility.targetState = coachOpen }

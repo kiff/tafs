@@ -28,6 +28,14 @@ describe("a taf's server-composed setup", () => {
     expect(view.memory).toMatchObject({ count: 1, latest: "Newest note" });
     expect(view.versions.summary).toBe("v2 live · 1 earlier");
   });
+  it("sends a step's words empty when they only repeat its label", () => {
+    const same = knobOf({ name: "Example", does: { label: "Read", line: "Read cases" }, unscheduled: true, doors: [], places: ["door_reply"],
+      setting: { wakes: [], busy: "skip", results: ["door_reply"], what: [{ label: "Read a case", words: "Read a case.", tool: "read_case" }, { label: "Read", words: "Read a case", tool: "read_case" }] },
+      zone: "UTC", now, today: { done: 0, working: 0, retrying: 0, needs_you: 0 } });
+    const view = setupView({ agent: "agent-example", grants: [grant], knob: same, rules: [], versions: { versions: [] } as VersionState, notes: [], now, calls: [], statsComplete: true });
+    expect(view.workflow.steps.map((s) => s.words)).toEqual(["", "Read a case"]);
+    expect(view.connections[0]!.workflow_steps[0]!.words).toBe("");
+  });
   it("keeps vendor-supplied display names and removes a server-id suffix only at the source", () => {
     expect(appDisplayName({ ...grant, vendor: "Example Suite" })).toBe("Example Suite");
     expect(appDisplayName(grant)).toBe("Example");

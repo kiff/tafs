@@ -91,7 +91,12 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
         workflow.steps.forEach { step ->
           Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(step.number.toString(), style = scaled(14, FontWeight.SemiBold, if (step.running) Theme.ok else Theme.soft))
-            Column { Text(step.label, style = scaled(15, FontWeight.SemiBold, Theme.ink)); Text(step.words, style = scaled(13, color = Theme.soft)); step.app?.let { Text(it, style = scaled(12, color = Theme.amberText)) } }
+            Column {
+              Text(step.label, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+              // Empty when it would only repeat the label, as tafs cloud sends it.
+              if (step.words.isNotEmpty()) Text(step.words, style = scaled(13, color = Theme.soft))
+              step.app?.let { Text(it, style = scaled(12, color = Theme.amberText)) }
+            }
           }
         }
         improve?.let { TextButton({ it(taf.id) }) { Text("Change the workflow with Coach", color = Theme.amberText) } }
@@ -99,7 +104,8 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
     }
   }
   source?.connections?.firstOrNull { it.id == chosen }?.let { app ->
-    ModalBottomSheet(onDismissRequest = { chosen = null }, sheetState = rememberModalBottomSheetState(), containerColor = Theme.background) {
+    // Full height, as every sheet here: the back key closes it, rather than lowering it to half.
+    ModalBottomSheet(onDismissRequest = { chosen = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
       Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(app.name, style = scaled(26, FontWeight.Bold, Theme.ink, display = true))
         Text(app.statusWords, style = scaled(14, color = if (app.reconnect) Theme.amberText else Theme.soft))
@@ -111,7 +117,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
           action.limits.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
           Text(action.stepWords, style = scaled(13, color = Theme.dim))
         }
-        app.workflowSteps.forEach { step -> Text(step.label + " · " + step.words, style = scaled(14, color = Theme.soft)) }
+        app.workflowSteps.forEach { step -> Text(workflowLine(step), style = scaled(14, color = Theme.soft)) }
         TextButton({ chosen = null; onActivity(app.stats.activityQuery) }, enabled = app.actions.isNotEmpty()) { Text(app.stats.words + " ›", color = if (app.stats.complete) Theme.amberText else Theme.no) }
         if (state.manages(taf.id)) {
           improve?.let { TextButton({ chosen = null; it(taf.id) }) { Text("Add actions with Coach", color = Theme.amberText) } }
@@ -191,7 +197,7 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
     source?.error?.let { Text(it, color = Theme.no) }
     TextButton({ all = true }) { Text(source?.pages?.firstOrNull()?.moreTitle ?: "Show all runs", color = Theme.amberText) }
   }
-  if (all) ModalBottomSheet(onDismissRequest = { all = false }, containerColor = Theme.background) {
+  if (all) ModalBottomSheet(onDismissRequest = { all = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     val cache = state.runPages["${taf.id}:true"]; val list = rememberLazyListState()
     LaunchedEffect(taf.id) { actions.loadRuns(taf.id, false, true) }
     val next = cache?.pages?.lastOrNull()?.nextCursor
@@ -217,10 +223,16 @@ internal fun MemorySummaryPanel(taf: Taf, state: AppState, actions: TafActions) 
     summary?.let { Text(it.title, style = scaled(15, FontWeight.SemiBold, Theme.ink)); it.latest?.let { note -> Text(note, style = scaled(14, color = Theme.soft), maxLines = 2, overflow = TextOverflow.Ellipsis) } }
     TextButton({ all = true }) { Text("See all", color = Theme.amberText) }
   }
-  if (all) ModalBottomSheet(onDismissRequest = { all = false; scope.launch { actions.loadSetup(taf.id) } }, containerColor = Theme.background) {
+  if (all) ModalBottomSheet(
+    onDismissRequest = { all = false; scope.launch { actions.loadSetup(taf.id) } },
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background,
+  ) {
     LaunchedEffect(taf.id) { actions.loadAllMemory(taf.id) }
     Column(Modifier.fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(16.dp)) {
       MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions, load = false)
     }
   }
 }
+
+/** A workflow step in an app's sheet: "2 · List your disputes", with its words below only when tafs cloud sends any. */
+internal fun workflowLine(step: WorkflowStep): String = "${step.number} · ${step.label}" + if (step.words.isEmpty()) "" else "\n${step.words}"
