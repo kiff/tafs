@@ -1105,6 +1105,11 @@ describe("the Telegram door, through planque", () => {
     const made = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "telegram", grant: "grt_tg1", bot: "@acme_refunds_bot", trigger: "trg_tg" } });
     expect(made.status).toBe(200);
     expect(made.body.door).toMatchObject({ id: "telegram", kind: "telegram", address: "@acme_refunds_bot", open: true, proof: "proven", grant: "grt_tg1", trigger: "trg_tg" });
+    // Every word of the door's step and its pairing is tafs cloud's; the apps keep no Telegram words or provider.
+    expect(made.body.door.words).toMatchObject({ pair_hint: "Their Telegram user id, a number", pair_from_knock: expect.stringContaining("write to the bot") });
+    const offeredApps = (await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps as Array<{ id: string; bot?: { provider: string; words: { none: string; pick: string } } }>;
+    expect(offeredApps.find((a) => a.id === "telegram")?.bot).toMatchObject({ provider: "telegram", words: { none: expect.stringContaining("BotFather"), pick: expect.any(String) } });
+    expect(offeredApps.find((a) => a.id === "email")?.bot).toBeUndefined();
     // The same bot can't be a second taf's door.
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "telegram", grant: "grt_tg1" } })).status).toBe(409);
     // Keys are Telegram user ids, never a @username.

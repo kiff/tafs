@@ -32,13 +32,6 @@ object DoorWords {
   const val SLACK_WHICH_CHANNEL = "Which channel does it answer in? New messages there will start work."
   const val SLACK_NO_CHANNELS = "The Slack bot can't see any channel yet. Add it to a channel in Slack, then try again."
 
-  /** No Telegram bot connected for this taf yet: it's connected like any app, with the bot's token. */
-  const val TELEGRAM_CONNECT_FIRST = "Connect the taf's Telegram bot first, in Settings › Connect apps, with the token BotFather gave you. Then add its door here."
-  const val TELEGRAM_WHICH_BOT = "Which Telegram bot is it? Anyone who writes to it will knock."
-
-  /** Telegram's way to pair: from the person's own message, which carries their user id. */
-  const val TELEGRAM_PAIR_FROM_KNOCK = "Ask them to write to the bot. Their message knocks here, and Pair makes them a key."
-
   /** A Slack bot connection planque gives no account for. */
   const val SLACK_NO_ACCOUNT = "This Slack connection isn't ready yet. Try again in a moment."
 
@@ -83,10 +76,10 @@ object DoorWords {
 
   fun noKeys(d: Door, taf: String): String = "${d.how}, so no one here can give $taf work. Everything that comes through knocks."
 
-  fun pairHint(d: Door): String = when (d.kind) {
+  /** tafs cloud's hint for pairing by hand; these only stand in for an older tafs cloud that sends none. */
+  fun pairHint(d: Door): String = d.words?.pairHint ?: when (d.kind) {
     "email" -> "Email address"
     "whatsapp" -> "Phone number, with its country code"
-    "telegram" -> "Their Telegram user id, a number"
     else -> "Who, as ${d.label} names them"
   }
 

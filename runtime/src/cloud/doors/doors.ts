@@ -639,7 +639,7 @@ export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, o
  * What the door's page says, in words the apps show as they are: where it stands, what a tap on
  * it does, and that its settings (keys and limits) are below. So neither app writes its own.
  */
-export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }): { state: string; tap: string; settings: string } {
+export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }): { state: string; tap: string; settings: string; pair_hint?: string; pair_from_knock?: string } {
   const label = app?.label ?? d.app;
   const state = !d.open
     ? `Closed: messages to ${d.address} start nothing.`
@@ -650,6 +650,8 @@ export function doorWords(d: Door, app: DoorApp | undefined, today = { keys: 0, 
     state,
     tap: d.open ? `Tap to close the ${label.toLowerCase()} door.` : `Tap to open the ${label.toLowerCase()} door.`,
     settings: "Paired senders and today's limits are below.",
+    ...(app?.proof === "proven" ? { pair_hint: app.pairHint } : {}),
+    ...(app?.proof === "proven" && app.pairFromKnock ? { pair_from_knock: app.pairFromKnock } : {}),
   };
 }
 
@@ -660,9 +662,9 @@ async function todayOf(store: DoorStore, tenant: string, taf: string, door: stri
 }
 
 /** The apps a door can open on here: what the deployment set up. */
-export function offered(cfg: DoorsConfig): Array<{ id: string; label: string; kind: string; proof: string; how: string }> {
+export function offered(cfg: DoorsConfig): Array<{ id: string; label: string; kind: string; proof: string; how: string; bot?: { provider: string; words: { none: string; pick: string } } }> {
   return APPS.filter((a) => (a.kind === "email" ? Boolean(cfg.email && cfg.emailDomain) : a.kind === "slack" || a.kind === "telegram" ? Boolean(cfg.planqueHandoffSecret) : Boolean(cfg.whatsapp)))
-    .map(({ id, label, kind, proof, how }) => ({ id, label, kind, proof, how }));
+    .map(({ id, label, kind, proof, how, bot }) => ({ id, label, kind, proof, how, ...(bot ? { bot } : {}) }));
 }
 
 export interface Owner {

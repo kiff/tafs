@@ -156,8 +156,9 @@ Setup › Starts when, **Add a door…**, then Telegram, and pick the bot: the S
 channel, since every chat with the bot comes through its one door. The app adds the door with
 `{app: "telegram", grant, bot?, trigger?}` (`bot` its @name, `trigger` planque's subscription, if
 there is one); it signs nothing, as there's nothing for it to subscribe. A Telegram bot is one door:
-a second door on the same bot is refused. The app knows a Telegram bot connection by planque's `provider: "telegram"`
-(or its `entry`, `api:telegram`), and names it by planque's `telegram.username`, which it sends as `bot`.
+a second door on the same bot is refused. tafs cloud offers the Telegram app with `bot: {provider, words: {none, pick}}`: the app lists the
+connections planque shows with that `provider`, names each by planque's `telegram.username` (sent as
+`bot`), and draws the step's words as they come. It keeps no Telegram words or provider of its own.
 
 **Pairing.** From a knock first: the person writes to the bot, their message knocks in Activity
 with **Pair**, and pairing keeps their Telegram user id. Pair someone by hand takes the id as a
@@ -257,7 +258,9 @@ registration country by country.
 
 Each door carries `words` (`doorWords` in `doors.ts`): `state` (open, closed, or resting until
 tomorrow, with its address), `tap` (what a tap on it does), and `settings` (that paired senders and
-today's limits are below). The apps show them as they are.
+today's limits are below). A door that holds keys also has `pair_hint` (the hint for pairing by
+hand) and, where pairing starts from the sender's own message, `pair_from_knock` (Telegram's). The
+apps show them as they are.
 
 ## Answering someone outside
 

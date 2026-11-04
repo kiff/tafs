@@ -51,7 +51,15 @@ data class Door(
 
 /** A door's words from tafs cloud (docs/doors.md, "The door's words"). */
 @Serializable
-data class DoorText(val state: String? = null, val tap: String? = null, val settings: String? = null)
+data class DoorText(
+  val state: String? = null,
+  val tap: String? = null,
+  val settings: String? = null,
+  /** Pairing by hand: the field's hint. */
+  @SerialName("pair_hint") val pairHint: String? = null,
+  /** Pairing from a sender's own message, when that's the door's way: said on its panel. */
+  @SerialName("pair_from_knock") val pairFromKnock: String? = null,
+)
 
 /** An app a door can open on here. */
 @Serializable
@@ -61,7 +69,17 @@ data class DoorApp(
   val kind: String,
   val proof: String = "none",
   val how: String = "",
+  /** A door that listens through one of the owner's bot connections: planque's provider for it, and the step's words. */
+  val bot: DoorBot? = null,
 )
+
+/** Which connections a bot door listens through (planque's `provider`), and tafs cloud's words for picking one. */
+@Serializable
+data class DoorBot(val provider: String, val words: DoorBotWords = DoorBotWords())
+
+/** `none`: no such connection for the taf yet, and how to make one. `pick`: the question over the list. */
+@Serializable
+data class DoorBotWords(val none: String = "", val pick: String = "")
 
 /** Someone without a key wrote: the owner decides. */
 @Serializable
