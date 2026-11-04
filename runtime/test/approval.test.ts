@@ -53,7 +53,7 @@ function net(s: Services) {
     if (url.endsWith("/v1/me")) return new Response(JSON.stringify(ME), { status: 200 });
     if (url.endsWith("/v1/me/device-signature")) {
       s.checks.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
-      return s.signed === true ? new Response(JSON.stringify({ signed: true }), { status: 200 }) : new Response(JSON.stringify({ error: "no" }), { status: s.signed });
+      return s.signed === true ? new Response(JSON.stringify({ signed: true, grant: "dg_1", grant_until: "2026-10-16T12:01:30Z" }), { status: 200 }) : new Response(JSON.stringify({ error: "no" }), { status: s.signed });
     }
     const draft = /\/v1\/me\/agent-drafts\/([^/?]+)$/.exec(url);
     if (draft) {
@@ -78,9 +78,9 @@ async function world(s: Services, card: Record<string, unknown> = {}) {
   agents.ask(stored, { type: "approval", id: "a1", grant: "g_1", ...card });
   agents.calls.length = 0;
   const coach = memoryCoach(() => clock);
-  const call = async (method: string, path: string, body: unknown, headers: Record<string, string> = {}) => {
+  const call = async (method: string, path: string, body: unknown, headers: Record<string, string> = {}, query?: string) => {
     const event: HTTPEvent = {
-      rawPath: path, requestContext: { http: { method } },
+      rawPath: path, ...(query ? { rawQueryString: query } : {}), requestContext: { http: { method } },
       headers: { authorization: "Bearer ana", "planque-device-signature": PROOF, ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),
     };
@@ -244,6 +244,22 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     expect(s.checks).toEqual([{ method: "POST", uri: `${ASK}/${w.id}`, body_sha256: createHash("sha256").update(JSON.stringify({ result: "connected" })).digest("hex"), signature: "t=2026-10-16T12:00:30Z,v1=sig" }]);
     // The ask is spent: a second report finds nothing waiting.
     expect((await w.report({ result: "connected" })).status).toBe(404);
+  });
+
+  it("KIFF is asked about the public path exactly as the phone signed it: no prefix, the query kept, the device grant dropped", async () => {
+    // tafs cloud is a function URL: `rawPath` is the public URL's path, with no stage or base
+    // prefix, so the phone signs what tafs cloud sees. A query goes into the signed uri too.
+    const s = services();
+    const w = await asked(s);
+    s.grants = [grant({ status: "connected" })];
+    const r = await w.call("POST", `${ASK}/${w.id}`, { result: "connected" }, { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" }, "from=phone");
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ answer: "approved" });
+    expect(s.checks.at(-1)).toMatchObject({ method: "POST", uri: `${ASK}/${w.id}?from=phone` });
+    // KIFF's answer also carried a one-minute device grant (the fake sends one): nothing of it
+    // reaches the answer, and nothing is kept of it.
+    expect(JSON.stringify(r.body)).not.toContain("dg_1");
+    expect([...w.coach.held.values()].some((v) => JSON.stringify(v).includes("dg_1"))).toBe(false);
   });
 
   it("listed counts as connected: planque holds the sign-in and the vendor's tools", async () => {

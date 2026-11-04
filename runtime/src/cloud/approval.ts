@@ -254,6 +254,9 @@ export async function checkSigned(ctx: ReportContext): Promise<void> {
   if (res.status === 409) throw new ApprovalError(409, "this signed answer was already taken");
   if (res.status === 401) throw new KIFFError(401, "KIFF did not accept this sign-in");
   if (!res.ok) throw new ApprovalError(502, `KIFF answered ${res.status} for the signature`);
+  // KIFF's answer also carries a one-minute device grant (`grant`, `grant_until`): the writes a
+  // service like the gateway then makes for the phone. tafs cloud makes none and must not use
+  // it, so only `signed` is read; the grant is dropped here and never kept or passed on.
   const out = (await res.json().catch(() => ({}))) as { signed?: unknown };
   if (out.signed !== true) throw new ApprovalError(403, "this phone didn't sign that answer");
 }
