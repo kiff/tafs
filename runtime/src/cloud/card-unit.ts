@@ -22,7 +22,10 @@ export function cardUnitExceptions(taf: { id: string; name: string; kiffAgent: s
       || (cardUnit !== undefined && !/^[A-Z]{3}$/.test(cardUnit))) throw new KIFFError(502, "The taf's currency exceptions could not be read");
     if (seen.has(exception.id)) return [];
     seen.add(exception.id);
-    const title = exception.title || rules.find((r) => r.action === exception.action)?.label || "this action";
+    // The action's name without a currency it ends with ("…, in EUR", "… (EUR)"): the ask is about
+    // another currency, so the suffix would contradict it (kiff/tafs#469 item 3).
+    const title = (exception.title || rules.find((r) => r.action === exception.action)?.label || "this action")
+      .replace(/,?\s+in\s+[A-Z]{3}$|\s*\([A-Z]{3}\)$/, "");
     const card = cardUnit ? `Its Card only allows ${cardUnit}.` : `Its Card has no ${unit} limit.`;
     const since = new Intl.DateTimeFormat("en-GB", { timeZone: zone, day: "numeric", month: "short" }).format(new Date(exception.created_at!));
     return [{ id: exception.id, kind: "card_unit" as const, taf: taf.id, name: taf.name,

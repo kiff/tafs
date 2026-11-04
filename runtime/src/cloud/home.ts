@@ -201,6 +201,13 @@ export async function readExceptions(token: string, doFetch: Fetch = fetch, base
   return result.exceptions;
 }
 
+/** How many money calls wait for the person's "Did this happen?" (`GET /v1/me/did-this-happen`). */
+export async function readUnsure(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<number> {
+  const result = await read<{ calls?: unknown[] }>("/v1/me/did-this-happen", token, doFetch, base, "the calls to confirm");
+  if (!Array.isArray(result.calls)) throw new KIFFError(502, "KIFF's calls to confirm could not be read");
+  return result.calls.length;
+}
+
 /** What the person may do with an agent, as KIFF answers it. */
 export interface Access {
   use: boolean;

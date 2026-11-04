@@ -76,6 +76,8 @@ export function runningTool(events: SessionEvent[], run: Run | undefined): strin
 export interface SetupView {
   connections: Array<{ id: string; name: string; status: string; status_words: string; reconnect: boolean; action_count: number; action_words: string;
     actions: Array<{ name: string; title: string; limits: string[]; steps: number[]; step_words: string }>;
+    /** With no saved workflow, the line the app's sheet shows under its own Workflow heading, once. */
+    workflow_words?: string;
     workflow_steps: Array<{ number: number; label: string; words: string; running: boolean }>;
     steps: number[]; running: boolean; stats: { calls: number; done: number; held: number; words: string; complete: boolean; activity_query: string } }>;
   workflow: { title: string; summary: string; steps: Array<{ number: number; label: string; words: string; app?: string; grant?: string; running: boolean }>; running_step?: number };
@@ -103,14 +105,14 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
   const cutoff = input.now.getTime() - 7 * 86400_000;
   const calls = input.calls.filter((c) => c.actor_id === input.agent && Date.parse(c.created_at) >= cutoff);
   const connections = grants.map((g) => {
-    const actions = (["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []).filter((t) => !t.setup_reads).map((t, i) => {
+    const actions = (["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []).filter((t) => !t.setup_reads).map((t) => {
       const name = t.name || t.tool;
       const used = input.knob.what.filter((s) => s.tool === name);
       const limits = limitsOf(input.rules.filter((r) => r.action === name));
       return { name, title: t.title || input.rules.find((r) => r.action === name)?.label || "App action",
         limits: limits.length ? limits : ["See its Card"], steps: used.map((s) => s.step),
-        // With no workflow, the first action says so once; the others say nothing (kiff/tafs#467 item 3).
-        step_words: !steps.length ? (i === 0 ? "Ask Coach to set its workflow" : "") : used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
+        // With no workflow, no action says anything: the app's own Workflow line does (kiff/tafs#469 item 2).
+        step_words: !steps.length ? "" : used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
     });
     const tools = new Set(actions.map((a) => a.name));
     const ownCalls = calls.filter((c) => tools.has(c.action_name));
@@ -118,7 +120,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     const held = ownCalls.filter((c) => activityMatches(c, "held")).length;
     return { id: g.id, name: names.get(g.id)!, status: g.status,
       status_words: g.status_words || ({ connected: "Connected", listed: "Signed in · choose its actions", signed_in: "Signed in", needs_reconnect: "Sign in again", pending: "Signed in · actions waiting for approval" } as Record<string, string>)[g.status] || "Read its connection",
-      reconnect: g.status === "needs_reconnect", action_count: actions.length,
+      reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: "Ask Coach to set its workflow" } : {}),
       action_words: actions.length ? `${actions.length} action${actions.length === 1 ? "" : "s"}` : "Choose actions",
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),
       running: Boolean(input.running && tools.has(input.running)),
