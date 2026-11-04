@@ -58,8 +58,11 @@ On an Android tablet:
   <img src="docs/screenshots/android/v24-account-theme-dark-tablet.png" width="340" alt="Account's alerts and theme on an Android tablet, in dark">
 </p>
 
-Screenshots come from CI, with sample data. On iOS, a run that changes a screen
-uploads them as the `screenshots` artifact; other changes skip them. On Android,
+Screenshots come from CI, with sample data, as the `screenshots` artifact. On
+iOS, a release build (a version tag, or a manual run of the iOS workflow) takes
+the full set; a pull request that changes a screen takes a key set (Tafs, a
+taf, Setup and Account, light and dark); a manual run can pick `full`, `key`
+or `none`. On Android,
 the UI tests draw them from synthetic data ([docs/android-app.md](docs/android-app.md)).
 
 ## The first five jobs

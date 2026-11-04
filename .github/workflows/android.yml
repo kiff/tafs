@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths: ["android/**", ".github/workflows/android.yml"]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths: ["android/**", ".github/workflows/android.yml"]
   # The signed release bundle for Play, on demand (the release job).
   workflow_dispatch:
@@ -62,6 +63,9 @@ jobs:
 
   # The screens' UI tests (the held call's card) on an emulator: KVM makes it fast enough.
   ui:
+    # The emulator's tests wait for a pull request to be ready for review;
+    # a draft gets the build and the unit tests only.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:

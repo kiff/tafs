@@ -1,9 +1,14 @@
 name: iOS
 
-# Every push and pull request: build and run the tests on a simulator, and,
-# when the change touches the app's screens, take screenshots.
-# A version tag (v0.1.0) or a manual run: also archive, sign and upload to
-# TestFlight. Internal testers ("Team") get it at once; it also goes to the
+# A pull request, once it's ready for review (a draft runs nothing here): the
+# tests on a simulator; the iPad's list tests when the change touches the
+# iPad's layout; and, when it touches the screens, a key set of screenshots
+# (a few screens, light and dark), beside the tests. main: the tests and the
+# iPad's.
+# A version tag (v0.1.0) or a manual run, which is how a release is built:
+# the tests, the iPad's, the full set of screenshots, and then archive, sign
+# and upload to TestFlight. A manual run can pick the screenshots (none, key,
+# full) and leave the upload off. Internal testers ("Team") get it at once; it also goes to the
 # external group "Beta testers", after Apple's Beta App Review, unless a manual
 # run sets external to false. Its testers
 # are the BETA_TESTERS secret (this repository's logs are public).
@@ -13,8 +18,21 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    # Only a change to the Apple app or this workflow: a change to tafs cloud
+    # or to Android doesn't wait for a macOS runner.
+    paths: ["ios/**", ".github/workflows/ios.yml"]
   workflow_dispatch:
     inputs:
+      upload:
+        description: Archive and upload to TestFlight. Off runs the tests and takes the screenshots only.
+        type: boolean
+        default: true
+      screenshots:
+        description: "Which screenshots: full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) or none."
+        type: choice
+        options: [full, key, none]
+        default: full
       external:
         description: Also give the build to the external Beta testers (after Apple's review). Off keeps it to Team.
         type: boolean
@@ -29,12 +47,16 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Whether the screens could look different: screenshots cost a macOS runner,
-  # so they run only for a change to the app's screens, or when asked by hand.
+  # What a run needs, from what it changes: the iPad's list tests and the
+  # screenshots each cost a macOS runner. A pull request runs the iPad's
+  # only for its layout, and a key set of screenshots only for the screens.
+  # main runs the iPad's and no screenshots; a tag the full set; a manual
+  # run what it asks for.
   changes:
     runs-on: ubuntu-latest
     outputs:
-      ui: ${{ steps.diff.outputs.ui }}
+      ipad: ${{ steps.diff.outputs.ipad }}
+      shots: ${{ steps.diff.outputs.shots }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -42,22 +64,35 @@ jobs:
       - id: diff
         env:
           EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          SHOTS: ${{ inputs.screenshots || 'full' }}
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD: ${{ github.sha }}
         run: |
+          # What the iPad's list and sidebar are drawn from: the split view,
+          # the bar (a rail on the iPad), the list, the root, the tests
+          # themselves. And this workflow.
+          ipad='^(ios/Tafs/Views/(HomeSplitView|HomeView|TafsBar)\.swift$|ios/Tafs/App/TafsApp\.swift$|ios/TafsUITests/ListTapUITests\.swift$|\.github/workflows/ios\.yml$)'
           # What draws the screens: the views, the design system, the assets,
-          # the root (TafsApp.swift: tab bar, navigation, onboarding, color
-          # scheme), the mascot. And this workflow itself.
+          # the root (TafsApp.swift), the mascot. And this workflow.
           ui='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|\.github/workflows/ios\.yml$)'
-          if [ "$EVENT" = workflow_dispatch ] || [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            echo "ui=true" >> "$GITHUB_OUTPUT"   # asked by hand, or nothing to compare with
-          elif git diff --name-only "$BASE" "$HEAD" | grep -Eq "$ui"; then
-            echo "ui=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ui=false" >> "$GITHUB_OUTPUT"
+          case "$EVENT" in
+            workflow_dispatch) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "shots=$SHOTS" >> "$GITHUB_OUTPUT"; exit 0 ;;
+            push) echo "ipad=true" >> "$GITHUB_OUTPUT"
+                  case "$REF" in refs/tags/v*) echo "shots=full" >> "$GITHUB_OUTPUT" ;; *) echo "shots=none" >> "$GITHUB_OUTPUT" ;; esac
+                  exit 0 ;;
+          esac
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "shots=key" >> "$GITHUB_OUTPUT"   # nothing to compare with
+            exit 0
           fi
+          changed=$(git diff --name-only "$BASE" "$HEAD")
+          if echo "$changed" | grep -Eq "$ipad"; then echo "ipad=true" >> "$GITHUB_OUTPUT"; else echo "ipad=false" >> "$GITHUB_OUTPUT"; fi
+          if echo "$changed" | grep -Eq "$ui"; then echo "shots=key" >> "$GITHUB_OUTPUT"; else echo "shots=none" >> "$GITHUB_OUTPUT"; fi
 
   test:
+    # A draft runs nothing on macOS: the tests run once it's ready for review.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -95,6 +130,8 @@ jobs:
   # its time. The tests run once; they run again only when the simulator failed to launch the
   # app, and any other failure fails the job at once.
   ipad:
+    needs: changes
+    if: github.event_name != 'pull_request' || (!github.event.pull_request.draft && needs.changes.outputs.ipad == 'true')
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -146,9 +183,12 @@ jobs:
           name: ipad-list-xcresult
           path: ${{ runner.temp }}/ipad-list-*.xcresult
 
+  # They show the screens, they don't test them: they run beside the tests,
+  # not after them. The full set for a release, a key set for a pull request
+  # that changes the screens (changes.shots).
   screenshots:
-    needs: [changes, test]
-    if: needs.changes.outputs.ui == 'true'
+    needs: changes
+    if: needs.changes.outputs.shots != 'none' && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
     runs-on: macos-26
     timeout-minutes: 45
     steps:
@@ -160,6 +200,8 @@ jobs:
           cd ios && xcodegen generate
 
       - name: Run the app and take screenshots
+        env:
+          SET: ${{ needs.changes.outputs.shots }}
         run: |
           cd ios
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
@@ -203,6 +245,21 @@ jobs:
             mv "$frame" "$out"
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
+          # The key set: the screens most changes touch, light and dark.
+          if [ "$SET" = key ]; then
+            shoot 2-tafs -screenshots YES -tab tafs
+            shoot 5-taf -screenshots YES -tab tafs -screen taf
+            shoot 8-setup -screenshots YES -tab tafs -screen setup
+            shoot 9-account -screenshots YES -tab account
+            xcrun simctl ui "$DEVICE_ID" appearance dark
+            shoot dark-tab-tafs -screenshots YES -tab tafs
+            shoot dark-taf -screenshots YES -tab tafs -screen taf
+            shoot dark-setup -screenshots YES -tab tafs -screen setup
+            shoot dark-tab-account -screenshots YES -tab account
+            xcrun simctl ui "$DEVICE_ID" appearance light
+            ls -la "$RUNNER_TEMP/shots"
+            exit 0
+          fi
           shoot 1-welcome
           shoot 2-tafs -screenshots YES -tab tafs
           shoot 3-needs-you -screenshots YES -tab needs-you
@@ -283,7 +340,7 @@ jobs:
 
   testflight:
     needs: [test, ipad]
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.upload)
     runs-on: macos-26
     timeout-minutes: 45
     env:
