@@ -41,7 +41,7 @@ data class Door(
   @SerialName("others_limit") val othersLimit: Int? = null,
   /** tafs cloud's words for the door, shown as they are: where it stands, what a tap on it does, and where its settings are. */
   val words: DoorText? = null,
-  /** A Slack door's Slack bot connection, channel, and planque's subscription: removing the door removes that subscription first. */
+  /** A Slack or Telegram door's bot connection, a Slack door's channel, and planque's subscription: removing the door removes that subscription first. */
   val grant: String? = null,
   val channel: String? = null,
   val trigger: String? = null,

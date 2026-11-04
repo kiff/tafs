@@ -81,6 +81,8 @@ class DoorActions(
   /** A Slack door: the channels a Slack bot connection sees (grant id), and adding the door on one (taf, app, grant, channel). */
   val loadSlackChannels: suspend (String) -> Unit = {},
   val addSlack: suspend (String, DoorApp, bot.tafs.app.kiff.Grant, bot.tafs.app.kiff.SlackChannel) -> Door? = { _, _, _, _ -> null },
+  /** A Telegram door on one of the taf's Telegram bot connections (taf, app, grant). */
+  val addTelegram: suspend (String, DoorApp, bot.tafs.app.kiff.Grant) -> Door? = { _, _, _ -> null },
   /** The taf's dial, read again; and Run now, from its face. */
   val loadKnob: suspend (String) -> Unit = {},
   val runNow: suspend (String) -> Unit = {},
@@ -160,6 +162,9 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
     doors,
     slack = SlackPicking(state.slackBots(taf.id), state.slackChannels, actions.loadSlackChannels) { app, grant, channel ->
       scope.launch { if (actions.addSlack(taf.id, app, grant, channel) != null) adding = false }
+    },
+    telegram = TelegramPicking(state.telegramBots(taf.id)) { app, grant ->
+      scope.launch { if (actions.addTelegram(taf.id, app, grant) != null) adding = false }
     },
     onClose = { adding = false },
   ) { app ->
@@ -272,6 +277,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
         }
       }
       Text(DoorWords.keysFoot(door), style = scaled(12, color = Theme.dim))
+      if (door.kind == "telegram") Text(DoorWords.TELEGRAM_PAIR_FROM_KNOCK, style = scaled(13, color = Theme.soft))
       OutlineButton("Pair someone", onPair, Modifier.fillMaxWidth())
     } else {
       Text(DoorWords.noKeys(door, taf.name), style = scaled(15, color = Theme.ink))
@@ -309,9 +315,10 @@ private fun doorColor(app: String): Color = when (app) {
 /** Picks the app a new door opens on: those that can tell who's writing first. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddDoorSheet(doors: TafDoors, slack: SlackPicking, onClose: () -> Unit, onPick: (DoorApp) -> Unit) {
-  // Slack has a step of its own: the taf's Slack bot connection, then a channel it sees.
+private fun AddDoorSheet(doors: TafDoors, slack: SlackPicking, telegram: TelegramPicking, onClose: () -> Unit, onPick: (DoorApp) -> Unit) {
+  // Slack has a step of its own: the taf's Slack bot connection, then a channel it sees. Telegram's is the bot alone.
   var slackApp by remember { mutableStateOf<DoorApp?>(null) }
+  var telegramApp by remember { mutableStateOf<DoorApp?>(null) }
   ModalBottomSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -325,8 +332,15 @@ private fun AddDoorSheet(doors: TafDoors, slack: SlackPicking, onClose: () -> Un
       Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // WhatsApp's signup runs in a browser this app doesn't open yet.
         val offered = doors.addable.filter { it.kind != "whatsapp" }
-        val pick: (DoorApp) -> Unit = { app -> if (app.kind == "slack") slackApp = app else onPick(app) }
+        val pick: (DoorApp) -> Unit = { app ->
+          when (app.kind) {
+            "slack" -> { slackApp = app; telegramApp = null }
+            "telegram" -> { telegramApp = app; slackApp = null }
+            else -> onPick(app)
+          }
+        }
         slackApp?.let { app -> SlackDoorStep(app, slack, doors.busy) }
+        telegramApp?.let { app -> TelegramDoorStep(app, telegram, doors.busy) }
         AppSection("Knows who's writing · can hold keys", offered.filter { it.proof == "proven" }, doors.busy, pick)
         AppSection("Can't prove who's writing · knocks only", offered.filter { it.proof != "proven" }, doors.busy, pick)
         if (offered.isEmpty()) Text("No more doors can be added here.", style = scaled(13, color = Theme.dim))
@@ -543,6 +557,32 @@ private fun SlackDoorStep(app: DoorApp, slack: SlackPicking, busy: Boolean) {
           modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !busy) { slack.add(app, grant, channel) }.padding(top = 10.dp),
         )
       }
+    }
+  }
+}
+
+/** What the Telegram step needs: the taf's Telegram bot connections, and adding the door on one. */
+class TelegramPicking(
+  val bots: List<bot.tafs.app.kiff.Grant>,
+  val add: (DoorApp, bot.tafs.app.kiff.Grant) -> Unit,
+)
+
+/** The Telegram door's step: the Slack step without a channel. Each bot is one door; a tap adds it, and pairing comes from knocks. */
+@Composable
+private fun TelegramDoorStep(app: DoorApp, telegram: TelegramPicking, busy: Boolean) {
+  Panel {
+    Eyebrow("Telegram door")
+    if (telegram.bots.isEmpty()) {
+      Text(DoorWords.TELEGRAM_CONNECT_FIRST, style = scaled(14, color = Theme.ink))
+      return@Panel
+    }
+    Text(DoorWords.TELEGRAM_WHICH_BOT, style = scaled(14, color = Theme.ink))
+    telegram.bots.forEach { grant ->
+      Text(
+        grant.account ?: grant.vendor,
+        style = scaled(15, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !busy) { telegram.add(app, grant) }.padding(top = 10.dp),
+      )
     }
   }
 }

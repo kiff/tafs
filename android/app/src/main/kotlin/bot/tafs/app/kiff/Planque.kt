@@ -125,6 +125,9 @@ data class Grant(
   /** A Slack bot connection, which a Slack door listens through: by planque's entry, else its connector's toolkit, never a vendor name. */
   val isSlackBot: Boolean get() = entry == SLACK_BOT_ENTRY || request.connector?.toolkit == "slackbot"
 
+  /** A Telegram bot connection, the owner's own bot by its token, which a Telegram door listens through: by planque's provider or entry, never a vendor name. */
+  val isTelegramBot: Boolean get() = request.connector?.provider == "telegram" || entry?.substringAfterLast(':') == "telegram"
+
   val connected: Boolean get() = status == "connected" || connectedNow
 
   /** Its vendor signed it out: the owner signs in again, and it's connected only once planque says so. */
