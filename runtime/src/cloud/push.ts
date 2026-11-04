@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { apsFor, levelOf } from "./levels.js";
+import { parseKinds, type AlertKind, type AlertKinds } from "./alert-preferences.js";
 
 /**
  * Alerts that reach a closed app: KIFF tells tafs cloud when a call is held
@@ -41,6 +42,7 @@ export interface Device {
   manages?: boolean;
   /** The person turned off Sound for alerts on this phone: each alert arrives quietly (see `silencing`). */
   silent?: boolean;
+  kinds?: AlertKinds;
   at: string;
 }
 
@@ -60,6 +62,8 @@ export interface PushStore {
 
 /** What tafs cloud asks APNs to deliver. */
 export interface Notification {
+  /** A visible alert's preference; background synchronization is never suppressed. */
+  preference?: AlertKind;
   /** "alert" shows; "background" wakes the app without showing anything. */
   kind: "alert" | "background";
   payload: Record<string, unknown>;
@@ -80,7 +84,13 @@ export interface Sender {
  * Time Sensitive. Every push goes through it, so no kind of alert is missed.
  */
 export function silencing(sender: Sender): Sender {
-  return { send: (device, n) => sender.send(device, quietFor(device, n)) };
+  return { send: (device, n) => sendNotification(sender, device, n) };
+}
+
+/** An opted-out kind is handled successfully, so delivery retries cannot send it later. */
+export function sendNotification(sender: Sender, device: Device, n: Notification): Promise<"sent" | "gone" | "failed"> {
+  if (n.kind === "alert" && n.preference && device.kinds?.[n.preference] === false) return Promise.resolve("sent");
+  return sender.send(device, quietFor(device, n));
 }
 
 /** `n` as it reaches `device`: as sent, or quiet where the phone asked for no sound. */
@@ -258,7 +268,7 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
     if (await deps.held(delivered)) { already++; continue; }
     if (!(await deps.claim(key, inFlight))) { sending++; continue; }
     let r: Awaited<ReturnType<Sender["send"]>>;
-    try { r = await deps.apns.send(device, n); } catch (err) {
+    try { r = await sendNotification(deps.apns, device, n); } catch (err) {
       console.error(`push: ${(err as Error).message}`);
       r = "failed";
     }
@@ -281,6 +291,7 @@ function heldNotification(body: AlertBody, holdID: string, now: Date): Notificat
   const action = typeof body.action === "string" && body.action ? body.action.replace(/[_.]+/g, " ") : "A call";
   const expires = typeof body.hold?.expires_at === "string" ? new Date(body.hold.expires_at) : undefined;
   return {
+    preference: "needs_you",
     kind: "alert",
     payload: {
       aps: {
@@ -400,6 +411,7 @@ export function registration(body: Record<string, unknown>): {
   platform: Platform;
   environment: Device["environment"];
   silent: boolean;
+  kinds?: AlertKinds;
   target?: { id: string; secret: string };
 } {
   const platform = body.platform === undefined ? "ios" : body.platform;
@@ -419,9 +431,11 @@ export function registration(body: Record<string, unknown>): {
   }
   if (body.sound !== undefined && typeof body.sound !== "boolean") throw new PushError(400, "sound is true or false");
   const silent = body.sound === false;
+  let kinds: AlertKinds | undefined;
+  try { kinds = parseKinds(body.kinds); } catch (err) { throw new PushError(400, (err as Error).message); }
   const t = body.alert_target;
-  if (t === undefined) return { token, platform, environment, silent };
-  return { token, platform, environment, silent, target: alertTarget(t) };
+  if (t === undefined) return { token, platform, environment, silent, ...(kinds ? { kinds } : {}) };
+  return { token, platform, environment, silent, ...(kinds ? { kinds } : {}), target: alertTarget(t) };
 }
 
 /** Validates KIFF's alert target as the phone hands it over: `{id, signing_secret}`. */

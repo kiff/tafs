@@ -136,6 +136,7 @@ enum KIFFMapping {
                     counted: c.counted?.map { CardCounted(tool: $0.tool, title: $0.title, lines: $0.lines) })
         }
         taf.doors = h.doors
+        taf.avatarRim = h.avatarRim
         taf.used = h.card.used.compactMapValues { amount($0) }
         taf.usageUnknown = Set(h.card.usageUnknown)
         return taf

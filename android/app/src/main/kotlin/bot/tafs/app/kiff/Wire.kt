@@ -115,6 +115,7 @@ data class HomeTaf(
   /** Its calls held for the owner. */
   val waiting: Int = 0,
   val card: HomeCardSummary = HomeCardSummary(),
+  @SerialName("avatar_rim") val avatarRim: bot.tafs.app.model.AvatarRim? = null,
 )
 
 /** A taf whose removal began and didn't finish: archived, so no longer listed as a taf. */

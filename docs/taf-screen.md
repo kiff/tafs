@@ -32,15 +32,17 @@ Each tab has one job.
   either way.
 - **Activity**: what it's waiting for from you (its Needs you items) at the top, then what
   it did, day by day, filtered **All / Done / Held / Refused**. An entry opens the request
-  step by step.
-- **Card**: only what's on the Card: the Card itself, its limits, how they're counted, what
-  it has used, **Halt** and **Revoke**.
+  step by step. The call's receipt opens from its Activity entry. Pages and filters
+  come from cloud; recent runs open their request steps.
+- **Card**: the Card itself, its limits, how they're counted, what it has used,
+  **Changes to how it runs**, **Halt** and **Revoke**.
 - **Setup**: how it runs, in sections:
   - **The job**, with **Improve in Coach**;
   - **Starts when** and **Results go to** (below), each opened with **Open**;
-  - **Connected apps**, each with its actions, **Choose actions** when none are chosen yet,
-    and **Connect an app…** (see [connect-apps.md](connect-apps.md));
-  - **What it remembers**, **Versions**, and **Remove for good**.
+  - **Connected tools**, a ring of apps around the taf's plain letter tile, with a
+    dashed + for another app (see [connect-apps.md](connect-apps.md));
+  - **Workflow**, folded by default;
+  - **What it remembers**, a summary with **See all**, and **Remove for good**.
 
 ## Setup › Starts when
 
@@ -82,14 +84,52 @@ Two examples at the top show what alerts look like on the lock screen: one with 
 ("Chargebacks needs you · Dispute #4825 · €640 is over its limit") and one silent
 ("Refunds answered maria@… · By email"). Then:
 
-- **Alerts on this phone**, and **Sound**, for a hold or a halt only;
-- **What alerts you**, as tafs cloud sends it:
-  - **A taf needs you** and **Every taf halted**: with sound, always;
+- **Alerts on this phone** is a switch; Off unregisters only this phone. **Sound**
+  controls a hold or a halt's sound.
+- **What alerts you** is four switches while alerts are on, as tafs cloud sends it:
+  - **A taf needs you** and **Every taf halted**: with sound when Sound is on;
   - **A taf answered someone**: silent, from the tafs whose Results go to includes
     Alert our phones;
   - **A reply wasn't sent**: silent.
 
 ## Dark
 
-Every screen follows the device's appearance. In dark, the ground is a warm near-black, and
+Every screen follows the saved Light, Dark or System choice; System is the default. In dark, the ground is a warm near-black, and
 green, amber and red are brighter. Secondary text keeps at least 4.5:1 contrast in both.
+
+## Account and taf details
+
+Account groups account details, people and apps, Plan, Alerts, Theme, Time zone,
+export and Legal; switching accounts and signing out are last. A bottom fade
+shows when more content remains. Light, Dark and System apply immediately and
+are saved on this device. Time zone offers a searchable cloud list, plus this
+device's zone; changing it uses KIFF's signed setup call.
+
+Alerts can be disabled for this phone without removing the account's alert
+secret. The four alert-kind switches are phone-specific and checked by cloud
+before delivery. The answered-kind link opens the taf's Results go to.
+
+Activity loads server-filtered pages of 20, keeps pages per taf and view, and
+refreshes the first page conditionally with its ETag. A changed snapshot restarts
+paging. Its work previews three runs and pages recent runs on its secondary
+screen. The upstream runs API currently exposes the latest 100 runs; older
+history is not available through this view.
+
+Connected tools shows a ring: a plain letter tile opens the job, app nodes show
+cloud-provided names and action counts, and the dashed + opens Connect apps.
+An active-step arc uses cloud state. Each app's draggable sheet shows actions,
+Card limits, workflow steps and seven-day statistics; its statistics link to
+filtered Activity. Managers can add actions through Coach or disconnect an app.
+Workflow is folded by default, with the cloud's step count and app order.
+
+What it remembers previews the cloud's note count and newest note, limited to
+two lines. See all opens full notes and Forget. Changes to how it runs is on
+Card, with the cloud's live-version and earlier-version summary. Cards behind
+the front Card are full faces with their own corners and shadow.
+
+Coach opens from the right and Back restores the same taf and tab. Its
+new-conversation button uses the square-and-pencil icon; previous conversations
+remain in the adjacent menu. Both chats use one rounded composer, text above
+the attach, mic and send row, growing to six lines. Avatars remain plain letter
+tiles; Android now draws the same animated door rim as iOS, using cloud state.
+

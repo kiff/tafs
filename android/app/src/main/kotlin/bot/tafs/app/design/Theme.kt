@@ -24,6 +24,12 @@ import androidx.compose.material3.Typography
  * for "needs you", green for done, coral for refused. The same values as iOS's Theme.
  */
 object Theme {
+  var preference by androidx.compose.runtime.mutableStateOf(bot.tafs.app.model.ThemePreference.System)
+
+  fun choose(context: android.content.Context, choice: bot.tafs.app.model.ThemePreference) {
+    context.getSharedPreferences("tafs.display", android.content.Context.MODE_PRIVATE).edit().putString("theme", choice.stored).apply()
+    preference = choice
+  }
   /**
    * Whether the phone is set to dark: [TafsTheme] follows it. Every colour below reads it, so the screens draw either way with no
    * change of their own. Dark is the owner-reviewed warm near-black, with brighter green, amber and red.
@@ -135,7 +141,12 @@ private val iosTypography = Typography().run {
 @Composable
 fun TafsTheme(content: @Composable () -> Unit) {
   // Light or dark, as the phone is set: every colour in Theme follows.
-  val dark = isSystemInDarkTheme()
+  val context = androidx.compose.ui.platform.LocalContext.current
+  androidx.compose.runtime.remember(context) {
+    Theme.preference = bot.tafs.app.model.ThemePreference.from(context.getSharedPreferences("tafs.display", android.content.Context.MODE_PRIVATE).getString("theme", "system"))
+    true
+  }
+  val dark = Theme.preference.dark(isSystemInDarkTheme())
   if (Theme.dark != dark) Theme.dark = dark
   val colors = if (dark) {
     androidx.compose.material3.darkColorScheme(

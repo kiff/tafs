@@ -362,6 +362,17 @@ final class PlanqueClient {
         return SignedIn(tenant: tenant, grant: grant, code: code)
     }
 
+    /// The device signs its own read; the cloud only forwards this proof.
+    func grantsReadProof(signedBy sign: @MainActor (Data) throws -> String) async throws -> String {
+        guard let tenant else { throw PlanqueError.notSigning }
+        if deviceID == nil, let load = deviceLoader { deviceID = await load() }
+        guard let device = deviceID else { throw PlanqueError.noDevice }
+        let path = "/v1/accounts/\(escaped(tenant))/grants"
+        let at = SigningTime.next()
+        let bytes = Self.message(base: baseURL, tenant: tenant, method: "GET", uri: path, body: Data(), signedAt: at)
+        return "t=\(at),v1=\(try sign(bytes)),d=\(device)"
+    }
+
     // MARK: Transport
 
     private func escaped(_ s: String) -> String {

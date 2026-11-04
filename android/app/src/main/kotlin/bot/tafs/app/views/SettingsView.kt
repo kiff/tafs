@@ -4,6 +4,19 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
+import bot.tafs.app.R
+import bot.tafs.app.model.ThemePreference
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -32,6 +45,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
@@ -64,164 +79,136 @@ fun SettingsSheet(
   /** The person's own chats, for their own copy: offered as two files through the share sheet. */
   onExport: suspend () -> bot.tafs.app.model.ExportResult = { bot.tafs.app.model.ExportResult.NotExported("") },
   onClose: () -> Unit,
+  onToggleAlerts: (Boolean) -> Unit = { if (it) onTurnOnAlerts() },
+  onAlertKind: (String, Boolean) -> Unit = { _, _ -> },
+  onLoadAlerts: () -> Unit = {},
+  onLoadTimeZones: (String) -> Unit = {},
+  onPickTimeZone: (String) -> Unit = {},
+  onOpenAlertTaf: (String) -> Unit = {},
 ) {
   val scope = rememberCoroutineScope()
   val uri = LocalUriHandler.current
-  // Each way out of KIFF asks first: one stray tap never ends the session.
-  var confirming by remember { mutableStateOf<SignOut?>(null) }
   val context = LocalContext.current
+  val scroll = rememberScrollState()
+  var confirming by remember { mutableStateOf<SignOut?>(null) }
+  var zonePicker by remember { mutableStateOf(false) }
+  var zoneQuery by remember { mutableStateOf("") }
+  var answeringTafs by remember { mutableStateOf(false) }
   val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "–" }
+  LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) onLoadAlerts() }
+  if (zonePicker) LaunchedEffect(zoneQuery) { kotlinx.coroutines.delay(250); onLoadTimeZones(zoneQuery) }
 
-  ModalBottomSheet(
-    onDismissRequest = onClose,
-    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    containerColor = Theme.background,
-  ) {
-    Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
+  ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+    Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text("Settings", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text("Done", style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text("Account", style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+        TextButton(onClose) { Text("Done", color = Theme.amberText) }
       }
-      Column(
-        Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-      ) {
-        // The plan first, on a KIFF account: what it's on and what's left, one tap from Plan & usage.
-        if (state.mode == Mode.kiff) Section("Plan") { PlanRow(state, onUsage) }
-        // The sample has no plan of its own: Plan & usage shows its made-up month.
-        if (state.mode == Mode.sample) Section("Usage") { Action(UsageWords.TITLE, Theme.ink, onUsage) }
-        Section("Account") {
-          Value("Mode", when (state.mode) {
-            Mode.kiff -> "Signed in with KIFF"
-            Mode.sample -> "Sample data"
-            Mode.signedOut -> "Signed out"
-          })
-          if (state.mode == Mode.kiff) state.kiffAccount?.let { account ->
-            Value("KIFF account", account.name)
-            if (account.name != account.slug) Value("Account id", account.slug)
-            // The person's own address, from KIFF's /v1/me: never the account owner's.
-            account.email?.takeIf { it.isNotEmpty() }?.let { Value("Signed in as", it) }
+      Box(Modifier.weight(1f)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(scroll).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+          Section("Your account") {
+            Value("Mode", when (state.mode) { Mode.kiff -> "Signed in with KIFF"; Mode.sample -> "Sample data"; Mode.signedOut -> "Signed out" })
+            if (state.mode == Mode.kiff) state.kiffAccount?.let { account ->
+              Value("KIFF account", account.name)
+              Value("Account id", account.slug)
+              account.email?.takeIf(String::isNotEmpty)?.let { Value("Signed in as", it) }
+            }
+            if (state.mode == Mode.sample) Action("Sign in with KIFF", Theme.ink, onSignIn)
+            if (state.approvalKeyLost) {
+              Text("Sign in again to register this phone's approval key.", style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(12.dp))
+              Action("Sign in again", Theme.amberText) { confirming = SignOut.SignInAgain }
+            }
           }
-          if (state.mode == Mode.sample) Action("Sign in with KIFF", Theme.ink, onSignIn)
-          // This phone can't approve until a new sign-in, which KIFF approves in the browser and which registers its new key.
-          if (state.mode == Mode.kiff && state.approvalKeyLost) {
-            Text(
-              bot.tafs.app.signing.ApprovalKeyRenewed.WORDS + " Refusing still works.",
-              style = scaled(13, color = Theme.amberText),
-              modifier = Modifier.padding(12.dp),
-            )
-            Action("Sign in again", Theme.amberText) { confirming = SignOut.SignInAgain }
+          if (state.mode == Mode.kiff) Section("People & apps") {
+            Action("People & groups", Theme.ink, onPeople)
+            Action("Devices", Theme.ink, onDevices)
+            Action(ConnectAppsWords.TITLE, Theme.ink, onConnectApps)
           }
-          // The account's groups and who is in each.
-          if (state.mode == Mode.kiff) Action("People & groups", Theme.ink, onPeople)
-          if (state.mode == Mode.kiff) Action("Devices", Theme.ink, onDevices)
-          // The apps the account's tafs work with: the catalog, and what's connected.
-          if (state.mode == Mode.kiff) Action(ConnectAppsWords.TITLE, Theme.ink, onConnectApps)
-          // Their own chats and notes, for their rights of access and portability (docs/data.md).
-          if (state.mode == Mode.kiff) ExportChatsRow(onExport)
-          // Another account this person is on: KIFF's sign-in page lists each one. This session ends at KIFF first, as Sign out's
-          // does, so it never stays live behind the new one.
-          if (state.mode == Mode.kiff) Action("Switch account…", Theme.ink) { confirming = SignOut.SwitchAccount }
-          Action(if (state.mode == Mode.kiff) "Sign out of KIFF" else "Clear the sample", Theme.no) {
-            // The sample has nothing at KIFF to end: it clears at once.
-            if (state.mode == Mode.kiff) confirming = SignOut.SignOut else scope.launch { if (onSignOut()) onClose() }
-          }
-          // KIFF didn't end the session, so nothing changed here: said under it, to try again.
-          state.signOutError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
-        }
-        // A held call reaches this phone with tafs closed: only where the build has Firebase's settings.
-        if (state.mode == Mode.kiff) {
-          Section("Alerts") {
-            // How each kind looks on the lock screen: a hold comes with sound, an answer comes silently.
-            LockScreenExample(AlertWords.WITH_SOUND, AlertWords.LOUD_EXAMPLE)
-            LockScreenExample(AlertWords.SILENT, AlertWords.SILENT_EXAMPLE)
-            Value(AlertWords.ON_THIS_PHONE, AlertWords.status(state.alertsAvailable, state.alertsReady))
-            if (state.alertsAvailable && !state.alertsReady) Action(if (state.turningOnAlerts) "Turning on…" else "Turn on alerts", Theme.amberText) { if (!state.turningOnAlerts) onTurnOnAlerts() }
-            if (state.alertsAvailable && state.alertsReady) {
-              Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                  Text(AlertWords.SOUND, style = scaled(16, color = Theme.ink))
-                  Text(AlertWords.SOUND_WORDS, style = scaled(13, color = Theme.dim))
-                }
-                Switch(checked = state.alertSound, onCheckedChange = onAlertSound, colors = SwitchDefaults.colors(checkedTrackColor = Theme.ok))
+          if (state.mode == Mode.kiff) Section("Plan") { PlanRow(state, onUsage) }
+          if (state.mode == Mode.sample) Section("Usage") { Action(UsageWords.TITLE, Theme.ink, onUsage) }
+          if (state.mode == Mode.kiff) {
+            Section("Alerts") {
+              LockScreenExample(AlertWords.WITH_SOUND, AlertWords.LOUD_EXAMPLE)
+              LockScreenExample(AlertWords.SILENT, AlertWords.SILENT_EXAMPLE)
+              val on = state.phoneAlerts?.enabled ?: state.alertsReady
+              AccountSwitch(AlertWords.ON_THIS_PHONE, "", on, state.alertsAvailable && !state.phoneAlertsBusy && !state.turningOnAlerts, onToggleAlerts)
+              AccountSwitch(AlertWords.SOUND, AlertWords.SOUND_WORDS, state.alertSound, on && !state.phoneAlertsBusy, onAlertSound)
+              AlertWords.foot(state.alertsAvailable, state.canAnswerHolds)?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
+              state.phoneAlertsError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
+            }
+            Section(AlertWords.WHAT_ALERTS) {
+              val preferences = state.phoneAlerts
+              if (preferences == null) Action("Read alert choices", Theme.amberText, onLoadAlerts)
+              preferences?.kinds?.forEach { choice ->
+                AccountSwitch(choice.title, choice.words, choice.enabled, preferences.enabled && !state.phoneAlertsBusy) { onAlertKind(choice.id, it) }
+                if (choice.id == "answered" && preferences.answering.tafs.isNotEmpty()) Action(preferences.answering.title + " ›", Theme.amberText) { answeringTafs = true }
               }
             }
-            AlertWords.foot(state.alertsAvailable, state.canAnswerHolds)?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
           }
-          // What alerts the owner, at the levels alerts come at (push/Alerts.kt). Read only: a taf's answers alert only where its
-          // results include our phones (Setup › Results go to).
-          Section(AlertWords.WHAT_ALERTS) {
-            Value(AlertWords.NEEDS_YOU, AlertWords.ALWAYS)
-            Value(AlertWords.ALL_HALTED, AlertWords.ALWAYS)
-            val answering = state.tafs.filter { it.alertsPhones }
-            var showing by remember { mutableStateOf(false) }
-            Row(
-              Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(enabled = answering.isNotEmpty()) { showing = true }.padding(horizontal = 12.dp),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically,
-            ) {
-              Text(AlertWords.ANSWERED, style = scaled(16, color = Theme.ink), modifier = Modifier.weight(1f))
-              Text("${AlertWords.SILENT} · ${AlertWords.tafs(answering.size)}", style = scaled(16, color = Theme.dim), modifier = Modifier.padding(start = 8.dp))
-            }
-            Value(AlertWords.NOT_SENT, AlertWords.SILENT)
-            if (showing) {
-              androidx.compose.material3.AlertDialog(
-                onDismissRequest = { showing = false },
-                title = { Text(AlertWords.ANSWERED) },
-                text = { Text(answering.joinToString("\n") { it.name }) },
-                confirmButton = { androidx.compose.material3.TextButton({ showing = false }) { Text("OK", color = Theme.amberText) } },
-                containerColor = Theme.panel,
-              )
+          Section("Theme") {
+            Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+              ThemePreference.entries.forEach { choice ->
+                Row(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (Theme.preference == choice) Theme.ink else Theme.raised)
+                  .clickable { Theme.choose(context, choice) }.padding(horizontal = 8.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                  val color = if (Theme.preference == choice) Theme.background else Theme.ink
+                  if (choice != ThemePreference.System) Icon(painterResource(if (choice == ThemePreference.Light) R.drawable.ic_sun else R.drawable.ic_moon), null, tint = color, modifier = Modifier.size(16.dp))
+                  Text(choice.title, style = scaled(14, FontWeight.Medium, color))
+                }
+              }
             }
           }
-        }
-        // A Card's day ends at midnight here, and every time the owner reads is in it; set from the phone as a signed call.
-        if (state.mode == Mode.kiff) state.kiffAccount?.let { account ->
-          val accountZone = account.timeZone ?: "UTC"
-          val device = remember { java.time.ZoneId.systemDefault().id }
-          Section("Time zone") {
-            Value("Time zone", accountZone)
-            if (accountZone != device) Action("Use this phone's: $device", Theme.amberText, onUseDeviceZone)
+          if (state.mode == Mode.kiff) Section("Time zone") {
+            Value("Time zone", state.kiffAccount?.timeZone ?: "UTC")
+            Action("Choose time zone…", Theme.amberText) { zonePicker = true }
+            Action("Use this phone's: ${java.time.ZoneId.systemDefault().id}", Theme.amberText, onUseDeviceZone)
             state.timeZoneError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
-            Text("Holds' deadlines, Activity, the Record and what your tafs write use this time zone.", style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp))
+          }
+          if (state.mode == Mode.kiff) Section("Your chats") { ExportChatsRow(onExport) }
+          Section("Legal") {
+            Action("Terms", Theme.amberText) { uri.openUri("https://kiff.dev/terms#tafs") }
+            Action("Privacy policy", Theme.amberText) { uri.openUri("https://kiff.dev/privacy#tafs") }
+          }
+          Section("About") { Value("Version", version); Text("They taf. You kiff.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
+          if (state.canDeleteAccount) Section("Delete account") { Action("Delete account…", Theme.no, onDeleteAccount) }
+          Section("Account actions") {
+            if (state.mode == Mode.kiff) Action("Switch account…", Theme.ink) { confirming = SignOut.SwitchAccount }
+            Action(if (state.mode == Mode.kiff) "Sign out of KIFF" else "Clear the sample", Theme.no) {
+              if (state.mode == Mode.kiff) confirming = SignOut.SignOut else scope.launch { if (onSignOut()) onClose() }
+            }
+            state.signOutError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
           }
         }
-        Section("How it works") {
-          Text(
-            "Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this phone.",
-            style = scaled(14, color = Theme.soft),
-            modifier = Modifier.padding(12.dp),
-          )
-        }
-        Section("Legal") {
-          Action("Terms", Theme.amberText) { uri.openUri("https://kiff.dev/terms#tafs") }
-          Action("Privacy policy", Theme.amberText) { uri.openUri("https://kiff.dev/privacy#tafs") }
-        }
-        Section("About") {
-          Value("Version", version)
-          Text("They taf. You kiff.", style = scaled(15, color = Theme.dim), modifier = Modifier.padding(12.dp))
-        }
-        // Set apart from everyday actions, and only for someone whose role may.
-        if (state.canDeleteAccount) {
-          Section("Delete account") {
-            Action("Delete account…", Theme.no, onDeleteAccount)
-          }
-        }
+        if (scroll.canScrollForward) Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(24.dp).background(Brush.verticalGradient(listOf(Color.Transparent, Theme.background))))
       }
     }
   }
+  if (zonePicker) androidx.compose.material3.AlertDialog(
+    onDismissRequest = { zonePicker = false }, title = { Text("Time zone") }, containerColor = Theme.panel,
+    text = { Column {
+      androidx.compose.material3.OutlinedTextField(zoneQuery, { zoneQuery = it }, label = { Text("Search time zones") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+      LazyColumn(Modifier.heightIn(max = 320.dp)) { items(state.timeZones, key = { it.id }) { zone ->
+        TextButton({ zonePicker = false; onPickTimeZone(zone.id) }, Modifier.fillMaxWidth()) { Text(zone.title, color = Theme.ink, modifier = Modifier.fillMaxWidth()) }
+      } }
+    } }, confirmButton = { TextButton({ zonePicker = false }) { Text("Done", color = Theme.amberText) } },
+  )
+  if (answeringTafs) androidx.compose.material3.AlertDialog(onDismissRequest = { answeringTafs = false }, title = { Text(AlertWords.ANSWERED) }, containerColor = Theme.panel,
+    text = { Column { state.phoneAlerts?.answering?.tafs?.forEach { taf -> TextButton({ answeringTafs = false; onClose(); onOpenAlertTaf(taf.id) }) { Text(taf.name, color = Theme.amberText) } } } },
+    confirmButton = { TextButton({ answeringTafs = false }) { Text("Done", color = Theme.amberText) } })
+  confirming?.let { way -> ConfirmSignOut(way, { confirming = null }) {
+    confirming = null
+    scope.launch { when (way) {
+      SignOut.SignOut -> if (onSignOut()) onClose()
+      SignOut.SignInAgain -> if (onSignInAgain()) onClose()
+      SignOut.SwitchAccount -> if (onSignOut()) onSignIn()
+    } }
+  } }
+}
 
-  confirming?.let { way ->
-    ConfirmSignOut(way, onDismiss = { confirming = null }) {
-      confirming = null
-      scope.launch {
-        when (way) {
-          SignOut.SignOut -> if (onSignOut()) onClose()
-          SignOut.SignInAgain -> if (onSignInAgain()) onClose()
-          SignOut.SwitchAccount -> if (onSignOut()) onSignIn()
-        }
-      }
-    }
+@Composable
+private fun AccountSwitch(title: String, words: String, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
+  Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Column(Modifier.weight(1f)) { Text(title, style = scaled(16, color = Theme.ink)); if (words.isNotBlank()) Text(words, style = scaled(13, color = Theme.dim)) }
+    Switch(checked, onChange, enabled = enabled, colors = SwitchDefaults.colors(checkedTrackColor = Theme.ok), modifier = Modifier.semantics { contentDescription = title })
   }
 }
 

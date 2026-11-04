@@ -781,20 +781,19 @@ struct DoorStamp: View {
 /// The taf's avatar's rim: one lit arc while a door is open, turning slowly; amber while a
 /// knock waits; grey when every open door rests for the day.
 struct DoorRim: View {
-    let lights: [DoorLight]
+    let rim: AvatarRim?
     let size: CGFloat
     let color: Color
     @State private var spin = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let open = lights.filter { $0.open }
-        if !open.isEmpty {
-            let tint = lights.contains { $0.knocks > 0 } ? Theme.amber : open.allSatisfy { $0.resting } ? Theme.dim : color
+        if let rim, rim.visible {
+            let tint = rim.tint == "knock" ? Theme.amber : rim.tint == "resting" ? Theme.dim : color
             // The arc travels along the rounded edge itself, not a rotated copy of it: turning
             // a rounded square swept its corners out past the avatar's, which read as broken
             // (the 755 retest).
-            PerimeterArc(cornerRadius: size * 0.3 + 4, phase: spin ? 1 : 0, length: min(0.12 * Double(open.count) + 0.1, 0.6))
+            PerimeterArc(cornerRadius: size * 0.3 + 4, phase: spin ? 1 : 0, length: rim.length)
                 .stroke(tint, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 .frame(width: size + 8, height: size + 8)
                 .onAppear {

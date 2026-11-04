@@ -109,6 +109,7 @@ struct SettingsView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var signingIn = false
+    @State private var atEnd = false
     @State private var confirming: SignOutWay?
     /// `-screen alerts`: the screenshots open Alerts by themselves.
     @State private var openAlerts = Screenshots.enabled && Screenshots.screen == "alerts"
@@ -116,58 +117,33 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                // The plan first, on a KIFF account: what it's on and what's left, one tap from
-                // Plan & usage.
-                if model.mode == .kiff {
-                    Section("Plan") {
-                        NavigationLink(destination: UsageView().environmentObject(model)) { PlanRow(usage: model.usage) }
-                            .accessibilityIdentifier("plan-card")
-                    }
-                }
-                // The sample has no plan of its own: Plan & usage shows its made-up month.
-                if model.mode == .sample {
-                    Section("Usage") {
-                        NavigationLink(UsageView.title, destination: UsageView().environmentObject(model))
-                    }
-                }
-                Section("Account") {
+                Section("Your account") {
                     LabeledContent("Mode", value: modeText)
-                    // The account's details, and deleting it at their bottom, on a screen of their
-                    // own (kiff/tafs#206 6.9): never one tap below Sign out.
                     if model.mode == .kiff, let account = model.kiffAccount {
-                        NavigationLink(destination: AccountView(account: account, done: { dismiss() }).environmentObject(model)) {
-                            LabeledContent("KIFF account", value: account.name)
-                        }
+                        NavigationLink { AccountView(account: account, done: { dismiss() }).environmentObject(model) } label: { LabeledContent("KIFF account", value: account.name) }
+                        LabeledContent("Account id", value: account.slug)
+                        if let email = account.email { LabeledContent("Signed in as", value: email) }
                     }
-                    // Alerts first: what reaches this device, and what alerts it.
-                    NavigationLink(NotificationSettingsView.title, destination: NotificationSettingsView().environmentObject(model))
-                    // The account's groups and who is in each.
-                    if model.mode == .kiff {
-                        NavigationLink(PeopleGroupsView.title, destination: PeopleGroupsView().environmentObject(model))
+                }
+                if model.mode == .kiff {
+                    Section("People & apps") {
+                        NavigationLink(PeopleGroupsView.title) { PeopleGroupsView() }
+                        NavigationLink(DevicesView.title) { DevicesView() }
+                        NavigationLink(ConnectAppsView.title) { ConnectAppsView() }
                     }
-                    if model.mode == .kiff {
-                        NavigationLink(DevicesView.title, destination: DevicesView().environmentObject(model))
-                        // The apps a taf can work with, the catalog first.
-                        NavigationLink(ConnectAppsView.title, destination: ConnectAppsView().environmentObject(model))
+                    Section("Plan") {
+                        NavigationLink { UsageView() } label: { PlanRow(usage: model.usage) }.accessibilityIdentifier("plan-card")
                     }
-                    if model.mode == .sample {
-                        Button("Sign in with KIFF") { signingIn = true }
+                }
+                Section {
+                    NavigationLink(NotificationSettingsView.title) { NotificationSettingsView() }
+                }
+                Section("Theme") { ThemePicker() }
+                if model.mode == .kiff {
+                    Section {
+                        NavigationLink { TimeZonePicker() } label: { LabeledContent("Time zone", value: model.kiffAccount?.timeZone ?? "UTC") }
                     }
-                    // Another account this person is on: KIFF's sign-in page lists each one (the 870 test).
-                    if model.mode == .kiff {
-                        Button("Switch account…") { confirming = .switchAccount }
-                    }
-                    Button(model.mode == .kiff ? "Sign out of KIFF" : "Clear the sample", role: .destructive) {
-                        // The sample has nothing at KIFF to end: it clears at once.
-                        if model.mode == .kiff {
-                            confirming = .signOut
-                        } else {
-                            Task { if await model.signOut() { dismiss() } }
-                        }
-                    }
-                    if let why = model.signOutError {
-                        Text(why).scaledFont(14).foregroundColor(Theme.no)
-                    }
+                    ExportChatsSection()
                 }
                 Section("How it works") {
                     Text("Every action a taf takes goes through KIFF, which checks its Card before anything reaches a tool. Your answers are signed on this \(ThisDevice.kind).")
@@ -181,9 +157,22 @@ struct SettingsView: View {
                     LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")
                     Text("They taf. You kiff.").foregroundColor(Theme.dim)
                 }
+                Section("Account actions") {
+                    if model.mode == .sample { Button("Sign in with KIFF") { signingIn = true } }
+                    if model.mode == .kiff { Button("Switch account…") { confirming = .switchAccount } }
+                    Button(model.mode == .kiff ? "Sign out of KIFF" : "Clear the sample", role: .destructive) {
+                        if model.mode == .kiff { confirming = .signOut }
+                        else { Task { if await model.signOut() { dismiss() } } }
+                    }
+                    if let why = model.signOutError { Text(why).foregroundColor(Theme.no) }
+                }
+                Color.clear.frame(height: 1).listRowBackground(Color.clear).onAppear { atEnd = true }.onDisappear { atEnd = false }
             }
             .scrollContentBackground(.hidden)
             .screenBackground()
+            .overlay(alignment: .bottom) {
+                if !atEnd { Image(systemName: "chevron.down").foregroundColor(Theme.dim).padding(8).frame(maxWidth: .infinity).background(LinearGradient(colors: [.clear, Theme.background], startPoint: .top, endPoint: .bottom)).allowsHitTesting(false) }
+            }
             .navigationTitle("Account")
             .navigationDestination(isPresented: $openAlerts) { NotificationSettingsView().environmentObject(model) }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
@@ -256,7 +245,7 @@ struct AccountView: View {
             Section {
                 // A Card's day ends at midnight here, and every time the owner reads is in it
                 // (kiff/tafs#96, #206 6.11); set from the device as a signed setup call.
-                LabeledContent("Time zone", value: zone)
+                NavigationLink { TimeZonePicker() } label: { LabeledContent("Time zone", value: zone) }
                 if zone != TimeZone.current.identifier {
                     Button("Use this \(ThisDevice.kind)'s: \(TimeZone.current.identifier)") {
                         Task { await model.useThisDevicesTimeZone() }

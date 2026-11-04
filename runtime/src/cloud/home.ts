@@ -129,6 +129,13 @@ export interface CardView {
  */
 export type HomeState = "working" | "paused" | "waiting" | "idle" | "stopped" | "halted";
 
+/** The avatar's door rim, ready to draw on both apps. */
+export function avatarRim(lights: Array<{ open: boolean; resting?: boolean; knocks?: number }>) {
+  const open = lights.filter((d) => d.open);
+  return { visible: open.length > 0, tint: lights.some((d) => (d.knocks ?? 0) > 0) ? "knock" : open.every((d) => d.resting) ? "resting" : "active",
+    length: Math.min(0.12 * open.length + 0.1, 0.6) };
+}
+
 /** KIFF's Card as `GET /v1/me/mandates?include=use` sends it, as much as the list reads. */
 export interface Mandate {
   id: string;

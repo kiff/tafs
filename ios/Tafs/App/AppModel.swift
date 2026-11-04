@@ -10,6 +10,130 @@ import SwiftUI
 ///   from `/v1/me/card-exceptions`, and KIFF decides every action.
 @MainActor
 final class AppModel: ObservableObject {
+    @Published private(set) var phoneAlerts: TafsCloud.PhoneAlerts?
+    @Published private(set) var phoneAlertsBusy = false
+    @Published private(set) var phoneAlertsError: String?
+    @Published private(set) var timeZones: [TafsCloud.TimeZoneChoice] = []
+    private var timeZoneQuery = ""
+    @Published private(set) var tafSetups: [UUID: TafsCloud.SetupView] = [:]
+    @Published private(set) var tafSetupErrors: [UUID: String] = [:]
+    @Published private(set) var activityPages: [String: SourcePages<TafsCloud.ActivityPage>] = [:]
+    @Published private(set) var runPages: [String: SourcePages<TafsCloud.RunsPage>] = [:]
+
+    private var alertsEnabledKey: String { "alerts.enabled|\(kiffTenant ?? "")" }
+    private var alertKindsKey: String { "alerts.kinds|\(kiffTenant ?? "")" }
+    private var savedAlertKinds: [String: Bool]? { UserDefaults.standard.dictionary(forKey: alertKindsKey) as? [String: Bool] }
+
+    func loadPhoneAlerts() async {
+        guard mode == .kiff, let token = pushToken else { return }
+        let gen = accountGeneration
+        do {
+            let choices = try await cloud.phoneAlerts(token)
+            guard gen == accountGeneration else { return }
+            phoneAlerts = choices; alertsReady = choices.enabled; phoneAlertsError = nil
+        } catch { if gen == accountGeneration { phoneAlertsError = error.localizedDescription } }
+    }
+    func turnOffAlerts() async {
+        guard !phoneAlertsBusy, let token = pushToken else { return }
+        let gen = accountGeneration
+        phoneAlertsBusy = true
+        defer { if gen == accountGeneration { phoneAlertsBusy = false } }
+        do {
+            try await cloud.unregisterPhone(token, environment: Self.pushEnvironment)
+            guard gen == accountGeneration else { return }
+            UserDefaults.standard.set(false, forKey: alertsEnabledKey)
+            alertsReady = false
+            phoneAlerts = nil
+            await loadPhoneAlerts()
+        } catch { if gen == accountGeneration { phoneAlertsError = error.localizedDescription } }
+    }
+    func setAlertKind(_ id: String, enabled: Bool) async {
+        guard !phoneAlertsBusy, phoneAlerts?.enabled == true, let token = pushToken, let choices = phoneAlerts?.kinds, choices.contains(where: { $0.id == id }) else { return }
+        let gen = accountGeneration
+        phoneAlertsBusy = true
+        defer { if gen == accountGeneration { phoneAlertsBusy = false } }
+        var kinds = Dictionary(uniqueKeysWithValues: choices.map { ($0.id, $0.enabled) })
+        kinds[id] = enabled
+        do {
+            _ = try await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, kinds: kinds)
+            guard gen == accountGeneration else { return }
+            UserDefaults.standard.set(kinds, forKey: alertKindsKey)
+            await loadPhoneAlerts()
+        } catch { if gen == accountGeneration { phoneAlertsError = error.localizedDescription } }
+    }
+    func loadTimeZones(_ query: String) async {
+        timeZoneQuery = query
+        let gen = accountGeneration
+        do {
+            let choices = try await cloud.timeZones(query)
+            if gen == accountGeneration && timeZoneQuery == query { timeZones = choices }
+        } catch { if gen == accountGeneration { timeZoneError = error.localizedDescription } }
+    }
+    func loadTafSetup(_ id: UUID) async {
+        guard let taf = cloudTaf(for: id) else { return }
+        let gen = accountGeneration
+        do {
+            let signer = self.signer
+            planque.tenant = kiffTenant
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let view = try await cloud.setupView(taf.id, proof: proof)
+            guard gen == accountGeneration else { return }
+            tafSetups[id] = view; tafSetupErrors[id] = nil
+        } catch { if gen == accountGeneration { tafSetupErrors[id] = error.localizedDescription } }
+    }
+    func activityKey(_ id: UUID, _ filter: String, _ selection: String = "") -> String { "\(id):\(filter):\(selection)" }
+    func loadActivityPage(_ id: UUID, filter: String, more: Bool = false, selection: String = "") async {
+        guard let taf = cloudTaf(for: id) else { return }
+        let key = activityKey(id, filter, selection)
+        var cache = activityPages[key] ?? SourcePages()
+        guard !cache.loading else { return }
+        let cursor = more ? cache.pages.last?.next_cursor : nil
+        if more && cursor == nil { return }
+        let gen = accountGeneration
+        cache.loading = true; cache.error = nil; activityPages[key] = cache
+        do {
+            let (page, tag) = try await cloud.activityPage(taf.id, filter: filter, cursor: cursor, etag: more ? nil : cache.etag, selection: selection)
+            guard gen == accountGeneration else { return }
+            if let page { cache.pages = more ? cache.pages + [page] : [page] }
+            if !more { cache.etag = tag }
+            cache.loading = false; activityPages[key] = cache
+        } catch {
+            guard gen == accountGeneration else { return }
+            cache.loading = false
+            if more, let e = error as? TafsCloud.CloudError, e.status == 409 {
+                activityPages[key] = SourcePages()
+                await loadActivityPage(id, filter: filter, selection: selection)
+            } else { cache.error = error.localizedDescription; activityPages[key] = cache }
+        }
+    }
+    func runKey(_ id: UUID, _ all: Bool) -> String { "\(id):\(all)" }
+    func loadRunPage(_ id: UUID, all: Bool = false, more: Bool = false) async {
+        guard let taf = cloudTaf(for: id) else { return }
+        let key = runKey(id, all)
+        var cache = runPages[key] ?? SourcePages()
+        guard !cache.loading else { return }
+        let cursor = more ? cache.pages.last?.next_cursor : nil
+        if more && cursor == nil { return }
+        let gen = accountGeneration
+        cache.loading = true; cache.error = nil; runPages[key] = cache
+        do {
+            let (page, tag) = try await cloud.runsPage(taf.id, cursor: cursor, etag: more ? nil : cache.etag, limit: all ? 20 : 3)
+            guard gen == accountGeneration else { return }
+            if let page { cache.pages = more ? cache.pages + [page] : [page] }
+            if !more { cache.etag = tag }
+        } catch { cache.error = error.localizedDescription }
+        guard gen == accountGeneration else { return }
+        cache.loading = false; runPages[key] = cache
+    }
+    func loadAllMemory(_ id: UUID) async {
+        guard let taf = cloudTaf(for: id) else { return }
+        let gen = accountGeneration
+        do {
+            let notes = try await cloud.memory(taf.id, all: true)
+            if gen == accountGeneration { memories[id] = notes; memoryErrors[id] = nil }
+        } catch { if gen == accountGeneration { memoryErrors[id] = error.localizedDescription } }
+    }
+
     enum Mode: String, Codable { case signedOut, sample, kiff }
 
     @Published private(set) var mode: Mode = .signedOut
@@ -97,11 +221,12 @@ final class AppModel: ObservableObject {
 
     private var declinedZoneKey: String { "tafs.timeZone.declined|\(kiffTenant ?? "")" }
 
-    func useThisDevicesTimeZone() async {
+    func useThisDevicesTimeZone() async { await setAccountTimeZone(TimeZone.current.identifier) }
+
+    func setAccountTimeZone(_ zone: String) async {
         guard mode == .kiff, let tenant = kiffTenant else { return }
         let gen = accountGeneration
         timeZoneError = nil
-        let zone = TimeZone.current.identifier
         // The owner's act, behind the device's unlock, as KIFF asks of a phone.
         do { _ = try await signer.sign(Data("tafs.time-zone.v1|\(tenant)|\(zone)".utf8), reason: "Set your account's time zone to \(zone)") } catch { return }
         guard gen == accountGeneration else { return }
@@ -399,7 +524,12 @@ final class AppModel: ObservableObject {
 
     /// Moves on with every sign-in and sign-out, so work for one session (and its key)
     /// never outlives it, even work still running when it changes.
-    private(set) var accountGeneration = 0
+    private(set) var accountGeneration = 0 {
+        didSet {
+            phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
+            tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
+        }
+    }
 
     static let tokenAccount = "kiff.session"
     static let tenantAccount = "kiff.tenant"
@@ -1041,7 +1171,11 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let token = pushToken else { return }
         let gen = accountGeneration
         let handoff = pendingHandoff
-        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target),
+        if UserDefaults.standard.object(forKey: alertsEnabledKey) as? Bool == false {
+            if let handoff, (try? await cloud.keepAlerts(handoff.target)) != nil, gen == accountGeneration { pendingHandoff = nil }
+            return
+        }
+        guard let status = try? await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target, kinds: savedAlertKinds),
               gen == accountGeneration else { return }
         if handoff != nil { pendingHandoff = nil }
         applyPush(status)
@@ -1122,10 +1256,12 @@ final class AppModel: ObservableObject {
             }
         }
         do {
-            let status = try await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target)
+            let status = try await cloud.registerPush(deviceToken: token, environment: Self.pushEnvironment, sound: alertSound, target: handoff?.target, kinds: savedAlertKinds)
             guard gen == accountGeneration else { return false }
             pendingHandoff = nil
+            UserDefaults.standard.set(true, forKey: alertsEnabledKey)
             applyPush(status)
+            await loadPhoneAlerts()
             return status.alerts
         } catch {
             lastError = "Alerts are almost on: tafs cloud didn't answer (\(error.localizedDescription)). Tap Turn on alerts again."
@@ -4681,6 +4817,14 @@ final class AppModel: ObservableObject {
     /// Signs in again to a connection its vendor signed out, from the taf's page: the same
     /// approval as Coach's card, behind one Face ID, then the vendor's own page. Signed in
     /// only once planque answers connected; otherwise the connection says why.
+    /// Resolve the source id to a freshly read signed grant for the device's approval.
+    func reconnectApp(_ id: String) async {
+        let gen = accountGeneration
+        await refreshConnections()
+        guard gen == accountGeneration, let grant = grants.first(where: { $0.id == id }) else { return }
+        await reconnect(grant)
+    }
+
     func reconnect(_ grant: PlanqueClient.Grant) async {
         lastError = nil
         reconnectErrors[grant.id] = nil

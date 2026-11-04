@@ -376,6 +376,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var coachOpen by rememberSaveable { mutableStateOf(false) }
   // Overview, on a tablet: beside the list, until a taf is picked.
   var overviewOpen by rememberSaveable { mutableStateOf(false) }
+  val detailState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+  val coachVisibility = remember { androidx.compose.animation.core.MutableTransitionState(false) }
+  LaunchedEffect(coachOpen) { coachVisibility.targetState = coachOpen }
   val actions = remember(model) {
     TafActions(
       answer = { call, answer -> model.answer(call, answer) },
@@ -387,7 +390,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       sendChat = { text, tafId, withFiles, onNotSent -> model.sendChat(text, tafId, withFiles, onNotSent) },
       issuer = model.issuer,
       doors = doorActions,
-      connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect),
+      connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId),
       stopChat = model::stopChat,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
@@ -400,6 +403,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       remove = model::removeTaf,
       report = model::reportAnswer,
       setResults = model::setResults,
+      loadSetup = model::loadTafSetup,
+      loadActivity = model::loadActivityPage,
+      loadRuns = model::loadRunPage,
+      loadAllMemory = model::loadAllMemory,
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::startApproval,
@@ -438,7 +445,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (resumedOnce) scope.launch { model.refresh() } else resumedOnce = true
   }
   // Back closes the open taf before it leaves the app.
-  BackHandler(enabled = tab == Tab.Tafs && openTaf != null) { openTaf = null }
+  BackHandler(enabled = tab == Tab.Tafs && openTaf != null && !coachOpen) { openTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && trialTaf != null) { trialTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && coachOpen) { coachOpen = false }
   // Coach asked for from another screen (a hold's "Change the limit in Coach mode"): it opens here, on the Tafs tab.
@@ -482,7 +489,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             )
           }
           val detail: @Composable (String) -> Unit = { id ->
-            TafDetailView(
+            detailState.SaveableStateProvider(id) { TafDetailView(
               id, state, actions, onBack = { openTaf = null },
               onHalt = { haltTaf = it; haltOpen = true },
               onUsage = { usageTaf = it; usageOpen = true },
@@ -490,24 +497,30 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               people = people,
               onConnectApps = { showingConnectApps = true },
               showBack = !wide,
-            )
+            ) }
           }
-          // What's open: a trial, Coach, or a taf; null for the list alone.
           val open: (@Composable () -> Unit)? = when {
             trying != null -> ({ TrialScreen(trying, state, versionActions, actions, onBack = { trialTaf = null }) })
-            coachOpen -> ({
-              CoachScreen(
-                state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false },
-                chats = remember(model) {
-                  CoachChatActions(
-                    newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
-                    loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
-                    giveTools = model::giveCoachTools,
-                  )
-                },
-              )
+            openTaf != null || coachOpen || coachVisibility.currentState || !coachVisibility.isIdle -> ({
+              Box(Modifier.fillMaxSize()) {
+                openTaf?.let { detail(it) }
+                androidx.compose.animation.AnimatedVisibility(
+                  visibleState = coachVisibility,
+                  enter = androidx.compose.animation.slideInHorizontally { it },
+                  exit = androidx.compose.animation.slideOutHorizontally { it },
+                ) {
+                  Box(Modifier.fillMaxSize().background(Theme.background)) {
+                    CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false },
+                      chats = remember(model) { CoachChatActions(
+                        newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
+                        loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
+                        giveTools = model::giveCoachTools,
+                      ) })
+                  }
+                }
+              }
             })
-            else -> openTaf?.let { id -> ({ detail(id) }) }
+            else -> null
           }
           if (wide) {
             // A tablet (as iOS's HomeSplitView): the list beside what's open. It opens on the list's first taf until another is
@@ -565,6 +578,16 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onUsage = { usageTaf = null; usageOpen = true },
         onTurnOnAlerts = { scope.launch { model.turnOnAlerts() } },
         onAlertSound = model::setAlertSound,
+        onToggleAlerts = { on -> scope.launch { if (on) { model.turnOnAlerts(); model.loadPhoneAlerts() } else model.turnOffAlerts() } },
+        onAlertKind = { kind, on -> scope.launch { model.setAlertKind(kind, on) } },
+        onLoadAlerts = { scope.launch { model.loadPhoneAlerts() } },
+        onLoadTimeZones = { query -> scope.launch { model.loadTimeZones(query) } },
+        onPickTimeZone = { zone -> scope.launch { model.setAccountTimeZone(zone) } },
+        onOpenAlertTaf = { cloudId ->
+          state.tafs.firstOrNull { it.cloudId == cloudId }?.let {
+            showingSettings = false; tab = Tab.Tafs; coachOpen = false; openTaf = it.id
+          }
+        },
         onDevices = { showingSettings = false; showingDevices = true },
         onConnectApps = { showingSettings = false; showingConnectApps = true },
         onPeople = { showingSettings = false; showingPeople = true },

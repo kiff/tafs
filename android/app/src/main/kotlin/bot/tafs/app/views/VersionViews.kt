@@ -463,10 +463,10 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
 
 /** The row on a taf's page that opens its versions. */
 @Composable
-fun VersionsRow(onClick: () -> Unit) {
+fun VersionsRow(onClick: () -> Unit, title: String = "Changes to how it runs", summary: String? = null) {
   Panel(Modifier.clickable(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text("Versions", style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.weight(1f))
+      Column(Modifier.weight(1f)) { Text(title, style = scaled(15, FontWeight.SemiBold, Theme.amberText)); summary?.let { Text(it, style = scaled(13, color = Theme.soft)) } }
       Text("›", style = scaled(20, color = Theme.dim))
     }
   }

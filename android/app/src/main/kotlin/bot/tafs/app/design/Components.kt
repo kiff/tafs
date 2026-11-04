@@ -46,13 +46,13 @@ fun Mascot(size: Dp = 40.dp, modifier: Modifier = Modifier) {
 @Composable
 fun TafAvatar(taf: Taf, size: Dp = 40.dp) {
   Box(
-    Modifier
-      .size(size)
-      .clip(RoundedCornerShape(size * 0.3f))
-      .background(Theme.tafColor(taf.colorIndex)),
+    Modifier.size(size),
     contentAlignment = Alignment.Center,
   ) {
-    Text(taf.initial, style = scaled((size.value * 0.5f).toInt(), FontWeight.Bold, Color.White, display = true))
+    Box(Modifier.size(size).clip(RoundedCornerShape(size * 0.3f)).background(Theme.tafColor(taf.colorIndex)), contentAlignment = Alignment.Center) {
+      Text(taf.initial, style = scaled((size.value * 0.5f).toInt(), FontWeight.Bold, Color.White, display = true))
+    }
+    AvatarDoorRim(taf.avatarRim, Theme.tafColor(taf.colorIndex), Modifier.size(size))
   }
 }
 

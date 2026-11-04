@@ -60,6 +60,33 @@ class PushTest {
 
   private fun body(key: String, index: Int = 0) = KiffClient.json.parseToJsonElement(String(transport.requestsTo(key)[index].body!!)).jsonObject
 
+  @Test fun turningOffUnregistersOnlyThisPhoneAndRefreshCannotTurnItOnAgain() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    transport.answer("DELETE /v1/push", 200, """{"removed":true}""")
+    val m = model()
+    val before = transport.requestsTo(register).size
+    m.turnOffAlerts(); m.syncPush()
+    assertFalse(m.state.value.alertsReady)
+    assertEquals("0", secrets.load(AppModel.ALERTS_ON))
+    assertEquals("fcm_token_1", body("DELETE /v1/push").getValue("device_token").jsonPrimitive.content)
+    assertEquals(before, transport.requestsTo(register).size)
+  }
+
+  @Test fun aKindChoiceIsSentAndKeptForThisPhoneWithoutChangingTheOthers() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    val before = """{"enabled":true,"sound":true,"kinds":[{"id":"answered","title":"A taf answered someone","enabled":true},{"id":"needs_you","title":"A taf needs you","enabled":true}],"answering":{"title":"0 tafs","tafs":[]}}"""
+    transport.answer("GET /v1/push", 200, before)
+    transport.answer("GET /v1/push", 200, before.replace("someone\",\"enabled\":true", "someone\",\"enabled\":false"))
+    val m = model(); m.loadPhoneAlerts(); m.setAlertKind("answered", false)
+    val kinds = body(register, transport.requestsTo(register).lastIndex).getValue("kinds").jsonObject
+    assertEquals("false", kinds.getValue("answered").jsonPrimitive.content)
+    assertEquals("true", kinds.getValue("needs_you").jsonPrimitive.content)
+    assertFalse(m.state.value.phoneAlerts!!.kinds.first().enabled)
+    assertEquals("fcm_token_1", transport.requestsTo("GET /v1/push").first().headers["Tafs-Device-Token"])
+  }
+
   // MARK: What arrives
 
   private val now = Instant.parse("2026-10-28T09:00:00Z")
@@ -271,6 +298,19 @@ class PushTest {
     assertTrue(m.turnOnAlerts())
     assertEquals("one target only: no second registration", 1, transport.requestsTo(alertTarget).size)
     assertEquals("tgt_1", body(register, 1).getValue("alert_target").jsonObject.getValue("id").jsonPrimitive.content)
+    assertNull(secrets.load(AppModel.HANDOFF))
+  }
+
+  @Test fun explicitOffKeepsAPendingSecretWithoutRegisteringThisPhone() = runTest {
+    reads(); transport.answer(alertTarget, 200, target)
+    transport.answer(register, 502, """{"error":"later"}""")
+    transport.answer("DELETE /v1/push", 200, """{"removed":true}""")
+    transport.answer("POST /v1/alerts", 200, """{"alerts":true}""")
+    val m = model(); assertFalse(m.turnOnAlerts()); m.turnOffAlerts()
+    val before = transport.requestsTo(register).size
+    m.syncPush()
+    assertEquals(before, transport.requestsTo(register).size)
+    assertEquals("tgt_1", body("POST /v1/alerts").getValue("alert_target").jsonObject.getValue("id").jsonPrimitive.content)
     assertNull(secrets.load(AppModel.HANDOFF))
   }
 

@@ -12,7 +12,7 @@ struct TafAvatar: View {
             .background(Theme.tafColor(taf.colorIndex))
             .clipShape(RoundedRectangle(cornerRadius: size * 0.3, style: .continuous))
             // Its doors (docs/doors.md): a lit rim while one is open.
-            .overlay(DoorRim(lights: taf.doors ?? [], size: size, color: Theme.tafColor(taf.colorIndex)))
+            .overlay(DoorRim(rim: taf.avatarRim, size: size, color: Theme.tafColor(taf.colorIndex)))
             .accessibilityHidden(true)
     }
 }

@@ -3,6 +3,7 @@ package bot.tafs.app
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
@@ -40,7 +41,7 @@ class PlanCardTest {
 
   @Test fun thePlanCardSaysThePlanAndOpensPlanAndUsage() {
     show(AppState(mode = Mode.kiff, ready = true, usage = ended))
-    rule.onNodeWithText("Trial ended · Start Solo").assertIsDisplayed().performClick()
+    rule.onNodeWithText("Trial ended · Start Solo").performScrollTo().assertIsDisplayed().performClick()
     rule.waitForIdle()
     assertEquals(1, opened)
   }
@@ -49,14 +50,14 @@ class PlanCardTest {
     show(AppState(mode = Mode.sample, ready = true, usage = ended))
     assertEquals("no Plan card in the sample", 0, rule.onAllNodes(androidx.compose.ui.test.hasText("Trial ended", substring = true)).fetchSemanticsNodes().size)
     assertEquals(0, rule.onAllNodes(androidx.compose.ui.test.hasText("PLAN")).fetchSemanticsNodes().size)
-    rule.onNodeWithText(UsageWords.TITLE).assertIsDisplayed().performClick()
+    rule.onNodeWithText(UsageWords.TITLE).performScrollTo().assertIsDisplayed().performClick()
     rule.waitForIdle()
     assertEquals(1, opened)
   }
 
   @Test fun beforeKiffsUsageIsReadTheCardStillOpensPlanAndUsage() {
     show(AppState(mode = Mode.kiff, ready = true))
-    rule.onNodeWithText(UsageWords.TITLE).assertIsDisplayed().performClick()
+    rule.onNodeWithText(UsageWords.TITLE).performScrollTo().assertIsDisplayed().performClick()
     rule.waitForIdle()
     assertEquals(1, opened)
   }

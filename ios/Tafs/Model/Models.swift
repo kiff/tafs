@@ -373,6 +373,7 @@ struct Taf: Identifiable, Hashable, Codable {
     var kiffCards: [TafCard]?
     /// Its doors, as its avatar's rim shows them; nil when it has none, or before doors.
     var doors: [DoorLight]? = nil
+    var avatarRim: AvatarRim? = nil
     /// A short word beside its name, as tafs cloud sends it: "Trial" for an open trial's
     /// entry (kiff/tafs#247); nil for a taf.
     var badge: String? = nil
@@ -522,3 +523,5 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     /// Who refused it at the tool: the vendor as connected, when known.
     var refusedBy: String?
 }
+
+struct AvatarRim: Codable, Hashable { let visible: Bool; let tint: String; let length: Double }

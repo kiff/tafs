@@ -288,3 +288,18 @@ keyguard, then waits until it is awake and unlocked, since a just-booted emulato
 and an activity launched then never gets a window ("No compose hierarchies found"). It
 also closes a system dialog left over from boot, and each test sets its screen with `setShown`,
 which waits until there's a Compose hierarchy to read before reading it.
+
+## Account and paged taf presentation
+
+`ThemePreference` and `TafsTheme` apply the saved Light/Dark/System choice.
+`SettingsSheet` exposes source-defined phone alerts and time zones. Alert
+choices are saved for this device and account and sent on registration; Off
+unregisters this phone. Time zone changes keep the existing signed KIFF flow.
+
+`TafPresentation.kt` decodes cloud presentation DTOs. `SourcePages` and
+`AppModel` cache pages and first-page ETags per taf, filter and app selection.
+The cloud defines outcomes, display names, limits, step mappings and counts.
+`TafPresentationViews` draws the ring, app sheets, Workflow, memory summary,
+Activity and recent runs. `AvatarDoorRim` animates source metadata and respects
+disabled system animations. Coach overlays the mounted taf so its tab survives.
+The API contracts and recent-run history bound are in [api.md](api.md).

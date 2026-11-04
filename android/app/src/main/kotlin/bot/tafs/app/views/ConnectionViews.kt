@@ -36,6 +36,7 @@ class ConnectionActions(
   val disconnect: suspend (String) -> Boolean,
   /** Signs in again to a connection its vendor signed out: one approval, then the vendor's page. */
   val reconnect: (Grant) -> Unit = {},
+  val reconnectId: (String) -> Unit = {},
 )
 
 /**

@@ -326,20 +326,18 @@ private fun Composer(
       .background(Theme.background),
     contentAlignment = Alignment.TopCenter,
   ) {
-    Row(
-      Modifier.widthIn(max = Readable).fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
-      verticalAlignment = Alignment.Bottom,
+    Column(
+      Modifier.widthIn(max = Readable).fillMaxWidth().padding(8.dp)
+        .clip(RoundedCornerShape(20.dp)).background(Theme.panel)
+        .border(BorderStroke(1.dp, Theme.line), RoundedCornerShape(20.dp)).padding(8.dp),
     ) {
-      attach?.invoke()
-      val shape = RoundedCornerShape(20.dp)
       BasicTextField(
         value = draft,
         onValueChange = onDraft,
         textStyle = scaled(16, color = Theme.ink),
         cursorBrush = SolidColor(Theme.amber),
         maxLines = 6,
-        modifier = Modifier.weight(1f).clip(shape).background(Theme.panel).border(BorderStroke(1.dp, Theme.line), shape),
+        modifier = Modifier.fillMaxWidth(),
         decorationBox = { field ->
           Box(Modifier.padding(horizontal = 10.dp, vertical = 8.dp).heightIn(min = 20.dp)) {
             if (draft.isEmpty()) Text(if (thinking) "Write the next message" else "Message $name", style = scaled(16, color = Theme.dim))
@@ -347,6 +345,9 @@ private fun Composer(
           }
         },
       )
+      Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      attach?.invoke()
+      androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
       dictation?.let { MicButton(it, draft, onDraft) }
       if (onStop != null && empty) {
         // While the taf works and the box is empty, Send is Stop: its run is cancelled.
@@ -372,6 +373,7 @@ private fun Composer(
         contentAlignment = Alignment.Center,
       ) {
         Icon(painterResource(R.drawable.ic_arrow_up), contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+      }
       }
     }
   }

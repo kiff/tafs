@@ -289,13 +289,14 @@ class TafsCloud(
    * This phone gets the account's alerts at [deviceToken] (its Firebase token). With [target], also hands over the KIFF target's
    * signing secret, which checks KIFF's deliveries. `sound` false: this phone's alerts arrive quietly.
    */
-  suspend fun registerPush(deviceToken: String, sound: Boolean = true, target: AlertTarget? = null): PushStatus {
+  suspend fun registerPush(deviceToken: String, sound: Boolean = true, target: AlertTarget? = null, kinds: Map<String, Boolean>? = null): PushStatus {
     val body = kotlinx.serialization.json.buildJsonObject {
       put("device_token", deviceToken)
       put("platform", "android")
       // Firebase has one environment; tafs cloud's field is Apple's.
       put("environment", "production")
       put("sound", sound)
+      kinds?.let { choices -> put("kinds", kotlinx.serialization.json.buildJsonObject { choices.forEach { (id, on) -> put(id, on) } }) }
       target?.let {
         put("alert_target", kotlinx.serialization.json.buildJsonObject {
           put("id", it.id)
@@ -321,6 +322,12 @@ class TafsCloud(
   }
 
   /** This phone stops getting the account's alerts. */
+  suspend fun unregisterPhone(deviceToken: String) {
+    sendJson("DELETE", "/v1/push", kotlinx.serialization.json.buildJsonObject {
+      put("device_token", deviceToken); put("platform", "android"); put("environment", "production")
+    })
+  }
+
   suspend fun unregisterPush(deviceToken: String) {
     send("DELETE", "/v1/push/${escaped(deviceToken)}")
   }
@@ -469,8 +476,8 @@ class TafsCloud(
   suspend fun calls(id: String): List<CallRef> = get<CallRefs>("/v1/tafs/${escaped(id)}/calls").calls
 
   /** What the taf remembers, newest first. */
-  suspend fun memory(id: String): List<MemoryNote> =
-    get<Notes>("/v1/tafs/${escaped(id)}/memory").notes.map { MemoryNote(it.id, it.path, it.content, it.updatedAt) }
+  suspend fun memory(id: String, all: Boolean = false): List<MemoryNote> =
+    get<Notes>("/v1/tafs/${escaped(id)}/memory" + if (all) "?all=true" else "").notes.map { MemoryNote(it.id, it.path, it.content, it.updatedAt) }
 
   /** Forgets one note: the taf won't see it on its next run or chat. */
   suspend fun forget(id: String, note: String) {
@@ -598,6 +605,17 @@ class TafsCloud(
   private suspend inline fun <reified T> get(path: String): T {
     val bytes = send("GET", path)
     return KiffClient.json.decodeFromString(String(bytes))
+  }
+
+  /** Conditional reads keep already-read pages on this phone. A 304 carries no replacement data. */
+  internal suspend fun representation(path: String, etag: String? = null, extra: Map<String, String> = emptyMap()): HttpResponse {
+    val bearer = token ?: throw CloudError(401, "Sign in with KIFF first.")
+    require(path.startsWith("/v1/"))
+    val headers = linkedMapOf("Accept" to "application/json", "Authorization" to "Bearer $bearer")
+    etag?.let { headers["If-None-Match"] = it }; headers.putAll(extra)
+    val response = transport.send(HttpRequest("GET", baseUrl + path, headers))
+    if (response.status != 304 && response.status !in 200..299) throw CloudError(response.status, refusal(response.body) ?: "tafs cloud answered ${response.status}")
+    return response
   }
 
   internal suspend fun send(method: String, path: String, body: ByteArray? = null): ByteArray {

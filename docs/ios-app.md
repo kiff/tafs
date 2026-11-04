@@ -205,3 +205,20 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs \
   its connection's title, never its name in KIFF; a reason in words, never a code.
 - A comment says why, often with the issue or device test it comes from
   ("the 845 test", `kiff/tafs#206`).
+
+## Account and paged taf presentation
+
+`ThemePreference` and the root's `preferredColorScheme` apply the saved
+Light/Dark/System choice. Account contains the searchable cloud time-zone
+picker and phone alert controls. Each alert-kind choice is sent to cloud;
+Off removes this phone's registration. Time zone changes retain KIFF's signed
+setup flow.
+
+`TafsCloud+Presentation` decodes the same DTOs used on Android. `SourcePages`
+and `AppModel` cache pages and validators per taf and view, clearing on account
+changes. `TafPresentationViews` draws server-defined Activity, runs, connected
+apps and Workflow. The service supplies names, limits, mappings, counts and
+summaries. Coach overlays the mounted screen with a right-edge transition;
+Back restores the existing taf and tab. `WalletLayout` measures full Card
+faces before stacking them. The API contracts and recent-run history bound
+are in [api.md](api.md).

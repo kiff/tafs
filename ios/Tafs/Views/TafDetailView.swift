@@ -9,6 +9,7 @@ struct TafDetailView: View {
         : ["setup", "starts", "results"].contains(Screenshots.screen ?? "") ? 3 : 0
     /// Activity's filter of its record.
     @State private var activityFilter: ActivityFilter = .all
+    @State private var activitySelection = ""
     /// The screenshots open Setup's screens by themselves.
     @State private var openStarts = Screenshots.enabled && Screenshots.screen == "starts"
     @State private var openResults = Screenshots.enabled && Screenshots.screen == "results"
@@ -77,6 +78,8 @@ struct TafDetailView: View {
                 HStack(alignment: .top, spacing: 0) {
                     if section == 0 && model.canChat(taf.id) {
                         TafChatView(tafID: taf.id, onScroll: fold)
+                    } else if section == 1 && model.mode == .kiff {
+                        TafActivityList(tafID: taf.id, selection: $activitySelection)
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
@@ -108,6 +111,7 @@ struct TafDetailView: View {
             .inlineTitle()
             // Coach mode opened from here works on this taf (kiff/tafs#138).
             .onAppear { model.tafOnScreen = tafID }
+            .task(id: tafID) { await model.loadTafSetup(tafID) }
             .onDisappear { if model.tafOnScreen == tafID { model.tafOnScreen = nil } }
             .navigationDestination(isPresented: $openStarts) { StartsWhenView(tafID: tafID) }
             .navigationDestination(isPresented: $openResults) { ResultsGoToView(tafID: tafID) }
@@ -285,7 +289,8 @@ struct TafDetailView: View {
             }
             .accessibilityIdentifier("setup.startsWhen")
         }
-        ConnectionsPanel(tafID: taf.id)
+        if model.mode == .kiff { ConnectedToolsRing(taf: taf) { activitySelection = $0; section = 1 } }
+        else { ConnectionsPanel(tafID: taf.id) }
         if (model.mode == .kiff && cloud != nil) || screenshot {
             PanelLink { ResultsGoToView(tafID: taf.id) } label: {
                 Label(ResultsGoToView.title, systemImage: "paperplane").scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
@@ -295,16 +300,8 @@ struct TafDetailView: View {
             .accessibilityIdentifier("setup.resultsGoTo")
         }
         // How it does the job: not part of its Card (kiff/tafs#96).
-        if model.mode == .sample || cloud != nil {
-            MemoryPanel(tafID: taf.id)
-        }
-        // Its versions are a job of their own: their own screen.
-        if model.mode == .kiff, cloud != nil, manages {
-            PanelLink { VersionsScreen(tafID: taf.id) } label: {
-                Label("Versions", systemImage: "square.stack.3d.up")
-                    .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
-            }
-        }
+        if model.mode == .kiff, cloud != nil { MemorySummaryPanel(tafID: taf.id) }
+        else if model.mode == .sample { MemoryPanel(tafID: taf.id) }
         if model.mode == .sample, taf.state != .revoked {
             Button(taf.state == .paused ? "Resume" : "Pause") { model.togglePause(taf.id) }
                 .buttonStyle(OutlineButtonStyle())
@@ -379,6 +376,15 @@ struct TafDetailView: View {
         // Halting is a job of its own too: its row opens its screen.
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, taf.state != .revoked, model.manages(taf.id) {
             HaltRow(tafID: taf.id, framed: true)
+        }
+        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
+            PanelLink { VersionsScreen(tafID: taf.id) } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(model.tafSetups[taf.id]?.versions.title ?? "Changes to how it runs", systemImage: "square.stack.3d.up")
+                        .scaledFont(15, weight: .semibold).foregroundColor(Theme.amberText)
+                    if let summary = model.tafSetups[taf.id]?.versions.summary { Text(summary).scaledFont(13).foregroundColor(Theme.soft) }
+                }
+            }
         }
         // Its usage is the account's Usage, opened from a row with this taf's count (kiff/tafs#184).
         if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil {
@@ -856,6 +862,7 @@ struct DraftCardsView: View {
 struct MemoryPanel: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
+    var loadAll = false
     /// The note waiting for the owner's yes: forgetting can't be undone (the 755 retest).
     @State private var forgetting: TafsCloud.Note?
 
@@ -891,7 +898,7 @@ struct MemoryPanel: View {
                 Text(error).scaledFont(13).foregroundColor(Theme.no)
             }
         }
-        .task(id: tafID) { await model.loadMemory(tafID) }
+        .task(id: tafID) { if loadAll { await model.loadAllMemory(tafID) } else { await model.loadMemory(tafID) } }
         .confirmationDialog("Forget this note?", isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }),
                             titleVisibility: .visible, presenting: forgetting) { note in
             Button("Forget", role: .destructive) { Task { _ = await model.forget(note, from: tafID) } }
@@ -1140,33 +1147,15 @@ struct CardStack: View {
         let shown = cards.first(where: { $0.id == front }) ?? cards.first
         // The furthest back on top, as in a wallet: the reverse of the order they're listed in.
         let behind = cards.filter { $0.id != shown?.id }.reversed()
-        VStack(spacing: -12) {
-            ForEach(Array(behind)) { card in
+        let ordered = Array(behind) + (shown.map { [$0] } ?? [])
+        WalletLayout {
+            ForEach(ordered) { card in
                 Button {
                     withMotion(.spring(response: 0.35, dampingFraction: 0.85)) { front = card.id }
                 } label: {
-                    HStack(spacing: 8) {
-                        Text(card.title).scaledFont(11, weight: .semibold, design: .monospaced).oneLineUnlessLarge()
-                        Spacer(minLength: 4)
-                        // What's left on it shows on its edge too, so no Card hides another's (kiff/tafs#236, item 9).
-                        if let left = card.leftLine {
-                            Text(left).scaledFont(12, weight: .bold).monospacedDigit().oneLineUnlessLarge()
-                        }
-                        if let environment = card.environmentLabel { EnvironmentPill(text: environment) }
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16).padding(.top, 9)
-                    .frame(maxWidth: .infinity, minHeight: Self.edge + 12, alignment: .topLeading)
-                    .background(TafCardFace.fill(card, color: color).opacity(revoked || !card.active ? 0.4 : 1))
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .shadow(color: .black.opacity(0.12), radius: 3, y: -1)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\([card.title, card.environmentLabel].compactMap { $0 }.joined(separator: ", "))\(card.leftLine.map { ", \($0)" } ?? ""). Show this Card")
-            }
-            if let shown {
-                TafCardFace(card: shown, issuedBy: issuedBy, color: color, revoked: revoked)
-                    .shadow(color: .black.opacity(0.12), radius: 3, y: -1)
+                    TafCardFace(card: card, issuedBy: issuedBy, color: color, revoked: revoked)
+                        .shadow(color: .black.opacity(0.16), radius: 4, y: -2)
+                }.buttonStyle(.plain).accessibilityLabel("\(card.title). Show this Card")
             }
         }
         .frame(maxWidth: TafCardFace.width)
@@ -1216,6 +1205,20 @@ enum ActivityFilter: CaseIterable {
         case .done: return e.kind == .done || e.kind == .approved
         case .held: return e.kind == .held
         case .refused: return e.kind == .refused || e.kind == .notDone || e.kind == .revoked
+        }
+    }
+}
+
+/// Measures full card faces, including larger text, then exposes a band of each back card.
+private struct WalletLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let widths = subviews.map { $0.sizeThatFits(proposal).width }
+        let heights = subviews.enumerated().map { CGFloat($0.offset) * 26 + $0.element.sizeThatFits(proposal).height }
+        return CGSize(width: widths.max() ?? 0, height: heights.max() ?? 0)
+    }
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (index, view) in subviews.enumerated() {
+            view.place(at: CGPoint(x: bounds.minX, y: bounds.minY + CGFloat(index) * 26), anchor: .topLeading, proposal: ProposedViewSize(width: bounds.width, height: nil))
         }
     }
 }

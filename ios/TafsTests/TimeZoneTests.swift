@@ -41,7 +41,7 @@ final class TimeZoneTests: XCTestCase {
         StubProtocol.responses["PUT /v1/me/time-zone"] = (200, #"{"time_zone":"\#(here)"}"#)
         StubProtocol.thenRespond["PUT /v1/me/time-zone"] = ["GET /v1/me": (200, #"{"tenant_id":"t1","tenant_slug":"acme","time_zone":"\#(here)"}"#)]
         let unlocksBefore = signer.signed.count // signing in signs too
-        await model.useThisDevicesTimeZone()
+        await model.setAccountTimeZone(here)
 
         let put = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PUT" })
         XCTAssertEqual(try JSONDecoder().decode([String: String].self, from: try XCTUnwrap(put.httpBody)), ["time_zone": here])

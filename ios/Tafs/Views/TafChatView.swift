@@ -432,16 +432,15 @@ struct TafChatView: View {
         let name = model.taf(tafID)?.name ?? "your taf"
         return VStack(spacing: 0) {
         FileTray(key: key)
-        HStack(alignment: .bottom, spacing: 10) {
-            if model.filesTarget(key) != nil { AttachButton(key: key) }
+        VStack(alignment: .leading, spacing: 4) {
             ChatField(title: thinking ? "Write the next message" : "Message \(name)", text: $draft, cursor: { model.dictation.cursor = $0 })
                 .accessibilityIdentifier("chat-field")
                 .focused($typing)
                 .scaledFont(16)
                 .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(Theme.panel)
-                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            HStack(alignment: .center, spacing: 10) {
+                if model.filesTarget(key) != nil { AttachButton(key: key) }
+                Spacer()
             // Speak instead of typing (kiff/tafs#208): the words wait in the box, unsent.
             MicButton(dictation: model.dictation, text: $draft)
             if thinking && empty {
@@ -475,6 +474,10 @@ struct TafChatView: View {
                                     : thinking ? "Send to \(name) while it works" : "Send")
             }
         }
+            }.padding(.horizontal, 8).padding(.bottom, 8)
+        .background(Theme.panel)
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Theme.line))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(.horizontal, 12).padding(.vertical, 10)
         }
         .frame(maxWidth: Self.readable)

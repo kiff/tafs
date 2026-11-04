@@ -135,7 +135,7 @@ fun RecordView(state: AppState, modifier: Modifier = Modifier) {
           val n = day.reads.size
           Text(
             "· ${if (n == 1) "1 read" else "$n reads"} of data, within its Card · ${if (open) "Hide" else "Show"}",
-            style = scaled(13, color = Theme.dim),
+            style = scaled(13, color = Theme.ok),
             modifier = Modifier.clickable { openReads = if (open) openReads - key else openReads + key }.padding(horizontal = 4.dp),
           )
         }
