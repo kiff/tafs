@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -155,27 +157,15 @@ fun CardStack(
   val shown = cards.firstOrNull { it.id == front } ?: cards.firstOrNull()
   // The furthest back on top, as in a wallet: the reverse of the order they're listed in.
   val behind = cards.filter { it.id != shown?.id }.reversed()
-  Column(modifier.widthIn(max = CardWidth).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy((-12).dp)) {
-    behind.forEach { card ->
-      Row(
-        Modifier
-          .fillMaxWidth()
-          .heightIn(min = 52.dp)
-          .shadow(3.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.12f))
-          .clip(RoundedCornerShape(18.dp))
-          .background(cardFill(card, color).copy(alpha = if (faded(card, revoked)) 0.4f else 1f))
-          .clickable { onFront(card.id) }
-          .padding(start = 12.dp, end = 12.dp, top = 9.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.Top,
-      ) {
-        Text(card.title, style = scaled(11, FontWeight.SemiBold, Color.White, mono = true), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        // What's left on it shows on its edge too, so no Card hides another's (kiff/tafs#236, item 9).
-        card.leftLine?.let { Text(it, style = scaled(12, FontWeight.Bold, Color.White).copy(fontFeatureSettings = "tnum"), maxLines = 1) }
-        card.environmentLabel?.let { EnvironmentPill(it) }
+  androidx.compose.foundation.layout.BoxWithConstraints(modifier.widthIn(max = CardWidth).fillMaxWidth()) {
+    val ordered = behind + listOfNotNull(shown)
+    Box(Modifier.fillMaxWidth().then(Modifier.height(maxWidth / CardRatio + 26.dp * (ordered.size - 1).coerceAtLeast(0)))) {
+      ordered.forEachIndexed { index, card ->
+        Box(Modifier.then(Modifier.offset(y = 26.dp * index)).clickable { onFront(card.id) }) {
+          TafCardFace(card, issuedBy, color, revoked)
+        }
       }
     }
-    if (shown != null) TafCardFace(shown, issuedBy, color, revoked)
   }
 }
 

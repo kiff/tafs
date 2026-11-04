@@ -335,6 +335,9 @@ enum class TafState(val label: String) {
 }
 
 @Serializable
+data class AvatarRim(val visible: Boolean = false, val tint: String = "active", val length: Float = 0.22f)
+
+@Serializable
 data class Taf(
   val id: String = newId(),
   val name: String,
@@ -365,6 +368,7 @@ data class Taf(
   val worksFromChat: Boolean = false,
   /** Where its results go, of tafs' own places, as tafs cloud lists them; none listed, only its door's reply. */
   val results: List<String> = emptyList(),
+  val avatarRim: AvatarRim? = null,
 ) {
   /** Whether a result alerts the phones of the people who manage it (`app`), silently. */
   val alertsPhones: Boolean get() = "app" in results

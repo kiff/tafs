@@ -204,6 +204,15 @@ class PlanqueClient(
     }
   }
 
+  /** One read of the account's grants, forwarded by tafs cloud; it grants and signs nothing there. */
+  suspend fun grantsReadProof(sign: (ByteArray) -> String): String {
+    val account = tenant ?: throw PlanqueError.NotSigning
+    val uri = "/v1/accounts/${escaped(account)}/grants"
+    val at = signingTime.next()
+    val device = deviceId ?: deviceLoader?.invoke()?.also { if (tenant == account) deviceId = it } ?: throw PlanqueError.NoDevice
+    return "t=$at,v1=${sign(message(baseUrl, account, "GET", uri, ByteArray(0), at))},d=$device"
+  }
+
   /**
    * Approves [grant] as shown: its digest is signed. Refused here when the digest isn't the hash of the request the owner was
    * shown. With [words], KIFF's words for its profile that the owner read, the body carries `kiff_profile` (KIFF's profile contract), so the

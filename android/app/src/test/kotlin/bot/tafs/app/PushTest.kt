@@ -60,6 +60,33 @@ class PushTest {
 
   private fun body(key: String, index: Int = 0) = KiffClient.json.parseToJsonElement(String(transport.requestsTo(key)[index].body!!)).jsonObject
 
+  @Test fun turningOffUnregistersOnlyThisPhoneAndRefreshCannotTurnItOnAgain() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    transport.answer("DELETE /v1/push", 200, """{"removed":true}""")
+    val m = model()
+    val before = transport.requestsTo(register).size
+    m.turnOffAlerts(); m.syncPush()
+    assertFalse(m.state.value.alertsReady)
+    assertEquals("0", secrets.load(AppModel.ALERTS_ON))
+    assertEquals("fcm_token_1", body("DELETE /v1/push").getValue("device_token").jsonPrimitive.content)
+    assertEquals(before, transport.requestsTo(register).size)
+  }
+
+  @Test fun aKindChoiceIsSentAndKeptForThisPhoneWithoutChangingTheOthers() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    val before = """{"enabled":true,"sound":true,"kinds":[{"id":"answered","title":"A taf answered someone","enabled":true},{"id":"needs_you","title":"A taf needs you","enabled":true}],"answering":{"title":"0 tafs","tafs":[]}}"""
+    transport.answer("GET /v1/push", 200, before)
+    transport.answer("GET /v1/push", 200, before.replace("someone\",\"enabled\":true", "someone\",\"enabled\":false"))
+    val m = model(); m.loadPhoneAlerts(); m.setAlertKind("answered", false)
+    val kinds = body(register, transport.requestsTo(register).lastIndex).getValue("kinds").jsonObject
+    assertEquals("false", kinds.getValue("answered").jsonPrimitive.content)
+    assertEquals("true", kinds.getValue("needs_you").jsonPrimitive.content)
+    assertFalse(m.state.value.phoneAlerts!!.kinds.first().enabled)
+    assertEquals("fcm_token_1", transport.requestsTo("GET /v1/push").first().headers["Tafs-Device-Token"])
+  }
+
   // MARK: What arrives
 
   private val now = Instant.parse("2026-10-28T09:00:00Z")

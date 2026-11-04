@@ -133,11 +133,10 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
     }
   }
   if (doors.loaded && doors.addable.isNotEmpty()) {
-    Text(
-      SetupWords.ADD_DOOR,
-      style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-      modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { adding = true }.padding(vertical = 12.dp),
-    )
+    androidx.compose.material3.TextButton(onClick = { adding = true }, modifier = Modifier.fillMaxWidth()) {
+      Text("+", style = scaled(22, FontWeight.SemiBold, Theme.amberText))
+      Text(SetupWords.ADD_DOOR, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.padding(start = 8.dp))
+    }
   }
   doors.error?.let { Text(it, style = scaled(13, color = Theme.no)) }
 

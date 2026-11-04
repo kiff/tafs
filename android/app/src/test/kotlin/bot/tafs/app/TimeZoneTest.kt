@@ -74,6 +74,17 @@ class TimeZoneTest {
     assertNull(again.state.value.timeZoneOffer)
   }
 
+  @Test fun choosingAnArbitraryZoneUsesTheSameSignedKiffSetupCall() = runTest {
+    val m = model(device)
+    transport.answer("PUT /v1/me/time-zone", 200, """{"time_zone":"$other"}""")
+    transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","time_zone":"$other"}""")
+    m.setAccountTimeZone(other)
+    val put = transport.requestsTo("PUT /v1/me/time-zone").single()
+    assertNotNull(put.headers["KIFF-Device-Signature"])
+    assertEquals("""{"time_zone":"$other"}""", String(put.body!!))
+    assertEquals(other, m.state.value.kiffAccount?.timeZone)
+  }
+
   @Test fun useSetsItSignedBehindOneConfirmationAndReadsTheAccountAgain() = runTest {
     transport.answer("PUT /v1/me/time-zone", 200, """{"time_zone":"$device"}""")
     val m = model(other)

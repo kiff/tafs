@@ -68,6 +68,7 @@ fun SetupTab(
   onVersions: () -> Unit,
   onConnectApps: () -> Unit,
   onRemove: (() -> Unit)?,
+  onActivity: (String) -> Unit = {},
 ) {
   val signedIn = state.mode == Mode.kiff && taf.cloudId != null
   val manages = state.manages(taf.id)
@@ -94,10 +95,9 @@ fun SetupTab(
     }
   }
   // The apps it's connected to, read from planque, for the people who manage it.
-  if (signedIn && state.canHalt(taf.id) && manages) ConnectedApps(taf, state, actions, onConnectApps)
+  if (signedIn) ConnectedToolsRing(taf, state, actions, if (manages) onConnectApps else null, onActivity)
   if (signedIn) SectionRow(SetupWords.RESULTS_GO_TO, resultsSummary(knob, state)) { resultsOpen = true }
-  if (state.mode == Mode.sample || taf.cloudId != null) MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions)
-  if (state.canHalt(taf.id) && manages) VersionsRow(onVersions)
+  if (signedIn) MemorySummaryPanel(taf, state, actions) else if (state.mode == Mode.sample) MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions)
   // In the sample, Pause is its own; signed in, it's every start, in Starts when.
   if (state.mode == Mode.sample && taf.state != bot.tafs.app.model.TafState.revoked) {
     OutlineButton(if (taf.state == bot.tafs.app.model.TafState.paused) "Resume" else "Pause", { actions.togglePause(taf.id) }, Modifier.fillMaxWidth())
@@ -166,6 +166,7 @@ private fun ConnectedApps(taf: Taf, state: AppState, actions: TafActions, onConn
 @Composable
 private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: TafActions, onClose: () -> Unit) {
   val scope = rememberCoroutineScope()
+  val improve = LocalImproveInCoach.current
   val manages = state.manages(taf.id)
   var busy by rememberSaveable { mutableStateOf(false) }
   var approving by rememberSaveable { mutableStateOf<String?>(null) }
@@ -263,6 +264,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
         }
       }
 
+      if (manages) improve?.let { change -> androidx.compose.material3.TextButton({ onClose(); change(taf.id) }) { Text("Change when it starts with Coach", color = Theme.amberText) } }
       state.knobErrors[taf.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
       // Every start at once: off for a taf that works from its chat (tafs cloud's `can_pause`).
       if (manages) {

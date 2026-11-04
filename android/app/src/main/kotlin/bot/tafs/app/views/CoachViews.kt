@@ -109,6 +109,10 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
       modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = "Back", onClick = onBack).padding(start = 10.dp, top = 4.dp),
     )
     Text("Coach", style = scaled(18, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
+    androidx.compose.material3.IconButton(onClick = onNewChat) {
+      androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_new_conversation),
+        contentDescription = "New conversation", tint = Theme.amberText)
+    }
     Box {
       Text(
         "⋯",
@@ -116,11 +120,6 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
         modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = "Coach's conversations") { menu = true }.padding(top = 6.dp, start = 12.dp),
       )
       androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
-        // Never greyed out, as in other chat apps: an empty conversation is kept, any other gives way to a new one.
-        androidx.compose.material3.DropdownMenuItem(
-          text = { Text("New conversation", style = scaled(15, color = Theme.ink)) },
-          onClick = { menu = false; onNewChat() },
-        )
         androidx.compose.material3.DropdownMenuItem(
           text = { Text("Previous conversations", style = scaled(15, color = Theme.ink)) },
           onClick = { menu = false; listing = true },

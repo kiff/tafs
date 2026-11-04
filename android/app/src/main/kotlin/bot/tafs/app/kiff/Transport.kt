@@ -19,7 +19,7 @@ class HttpRequest(
   val body: ByteArray? = null,
 )
 
-class HttpResponse(val status: Int, val body: ByteArray)
+class HttpResponse(val status: Int, val body: ByteArray, val headers: Map<String, String> = emptyMap())
 
 /** An answer that streams: its status, and its body line by line as it comes; on a refusal, the body whole. */
 class StreamedResponse(val status: Int, val lines: Flow<String>, val refusal: ByteArray = ByteArray(0))
@@ -59,7 +59,8 @@ class UrlConnectionTransport(
       }
       val status = connection.responseCode
       val stream = if (status in 200..399) connection.inputStream else connection.errorStream
-      HttpResponse(status, stream?.use { it.readBytes() } ?: ByteArray(0))
+      HttpResponse(status, stream?.use { it.readBytes() } ?: ByteArray(0),
+        connection.headerFields.mapNotNull { (name, values) -> name?.lowercase(java.util.Locale.ROOT)?.let { it to values.joinToString(", ") } }.toMap())
     } finally {
       connection.disconnect()
     }

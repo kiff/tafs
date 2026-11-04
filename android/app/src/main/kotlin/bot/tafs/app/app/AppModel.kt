@@ -1,5 +1,11 @@
 package bot.tafs.app.app
 
+import bot.tafs.app.kiff.activityPage
+import bot.tafs.app.kiff.runsPage
+import bot.tafs.app.kiff.setupView
+import bot.tafs.app.kiff.phoneAlerts
+import bot.tafs.app.kiff.timeZones
+
 import bot.tafs.app.model.ErrorWords
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -371,6 +377,15 @@ data class AppState(
   val turningOnAlerts: Boolean = false,
   /** Sound for alerts on this phone: off, tafs cloud sends this phone's alerts quietly. */
   val alertSound: Boolean = true,
+  val phoneAlerts: bot.tafs.app.kiff.PhoneAlerts? = null,
+  val phoneAlertsBusy: Boolean = false,
+  val phoneAlertsError: String? = null,
+  val timeZones: List<bot.tafs.app.kiff.TimeZoneChoice> = emptyList(),
+  val timeZoneQuery: String = "",
+  val tafSetups: Map<String, bot.tafs.app.kiff.TafSetup> = emptyMap(),
+  val tafSetupErrors: Map<String, String> = emptyMap(),
+  val activityPages: Map<String, SourcePages<bot.tafs.app.kiff.TafActivityPage>> = emptyMap(),
+  val runPages: Map<String, SourcePages<bot.tafs.app.kiff.TafRunsPage>> = emptyMap(),
   /** Where a tapped alert asked to go ("needs-you", "usage"), until the screen has gone there. */
   val requestedOpen: String? = null,
   /** The doors tafs cloud offers this account: none, and no taf shows Doors. */
@@ -1876,6 +1891,109 @@ class AppModel(
 
   fun openRequestTaken() = _state.update { it.copy(requestedOpen = null) }
 
+  private fun savedAlertKinds(): Map<String, Boolean>? = secrets.load("$ALERT_KINDS|$kiffTenant")?.let { text ->
+    runCatching { KiffClient.json.decodeFromString<Map<String, Boolean>>(text) }.getOrNull()
+  }
+
+  suspend fun loadPhoneAlerts() {
+    if (_state.value.mode != Mode.kiff) return
+    val gen = accountGeneration
+    try {
+      val token = pushToken ?: (if (push.available) push.token() else null).orEmpty()
+      val preferences = cloud.phoneAlerts(token)
+      if (gen == accountGeneration) _state.update { it.copy(phoneAlerts = preferences, alertsReady = preferences.enabled, phoneAlertsError = null) }
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsError = ErrorWords.of(e)) } }
+  }
+
+  suspend fun turnOffAlerts() {
+    if (_state.value.mode != Mode.kiff || _state.value.phoneAlertsBusy) return
+    val gen = accountGeneration
+    _state.update { it.copy(phoneAlertsBusy = true, phoneAlertsError = null) }
+    try {
+      val token = pushToken ?: push.token()
+      if (token != null) cloud.unregisterPhone(token)
+      if (gen != accountGeneration) return
+      secrets.save("0", ALERTS_ON)
+      _state.update { it.copy(alertsReady = false, phoneAlerts = it.phoneAlerts?.copy(enabled = false)) }
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsError = ErrorWords.of(e)) }
+    } finally { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsBusy = false) } }
+  }
+
+  suspend fun setAlertKind(id: String, on: Boolean) {
+    val choices = _state.value.phoneAlerts?.takeIf { it.enabled }?.kinds ?: return
+    if (choices.none { it.id == id } || _state.value.phoneAlertsBusy) return
+    val gen = accountGeneration
+    _state.update { it.copy(phoneAlertsBusy = true, phoneAlertsError = null) }
+    try {
+      val token = pushToken ?: push.token() ?: return
+      val kinds = choices.associate { it.id to (if (it.id == id) on else it.enabled) }
+      cloud.registerPush(token, _state.value.alertSound, kinds = kinds)
+      if (gen != accountGeneration) return
+      secrets.save(KiffClient.json.encodeToString(kotlinx.serialization.serializer<Map<String, Boolean>>(), kinds), "$ALERT_KINDS|$kiffTenant")
+      loadPhoneAlerts()
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsError = ErrorWords.of(e)) }
+    } finally { if (gen == accountGeneration) _state.update { it.copy(phoneAlertsBusy = false) } }
+  }
+
+  suspend fun loadTimeZones(query: String) {
+    val gen = accountGeneration
+    _state.update { it.copy(timeZoneQuery = query) }
+    try { val zones = cloud.timeZones(query); if (gen == accountGeneration && _state.value.timeZoneQuery == query) _state.update { it.copy(timeZones = zones) }
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(timeZoneError = ErrorWords.of(e)) } }
+  }
+
+  suspend fun loadTafSetup(tafId: String) {
+    val id = _state.value.taf(tafId)?.cloudId ?: return
+    val gen = accountGeneration
+    try {
+      planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
+      val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
+      val setup = cloud.setupView(id, proof)
+      if (gen == accountGeneration) _state.update { it.copy(tafSetups = it.tafSetups + (tafId to setup), tafSetupErrors = it.tafSetupErrors - tafId) }
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(tafSetupErrors = it.tafSetupErrors + (tafId to ErrorWords.of(e))) } }
+  }
+
+  suspend fun loadActivityPage(tafId: String, filter: String, more: Boolean = false, selection: String = "") {
+    val id = _state.value.taf(tafId)?.cloudId ?: return
+    val key = "$tafId:$filter:$selection"
+    val old = _state.value.activityPages[key] ?: SourcePages()
+    if (old.loading || (more && old.pages.lastOrNull()?.nextCursor == null)) return
+    val gen = accountGeneration
+    _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = true, error = null))) }
+    try {
+      val result = cloud.activityPage(id, filter, if (more) old.pages.lastOrNull()?.nextCursor else null, if (more) null else old.firstEtag, selection)
+      if (gen != accountGeneration) return
+      val next = if (result.value == null) old else SourcePages(if (more) old.pages + result.value else listOf(result.value), if (more) old.firstEtag else result.etag)
+      _state.update { it.copy(activityPages = it.activityPages + (key to next.copy(loading = false))) }
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) {
+      if (gen != accountGeneration) return
+      if (e is CloudError && e.status == 409 && more) {
+        _state.update { it.copy(activityPages = it.activityPages - key) }; loadActivityPage(tafId, filter, false, selection)
+      } else _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(error = ErrorWords.of(e)))) }
+    }
+  }
+
+  suspend fun loadRunPage(tafId: String, more: Boolean = false, all: Boolean = false) {
+    val id = _state.value.taf(tafId)?.cloudId ?: return
+    val key = "$tafId:$all"; val old = _state.value.runPages[key] ?: SourcePages()
+    if (old.loading || (more && old.pages.lastOrNull()?.nextCursor == null)) return
+    val gen = accountGeneration
+    _state.update { it.copy(runPages = it.runPages + (key to old.copy(loading = true, error = null))) }
+    try {
+      val result = cloud.runsPage(id, if (more) old.pages.lastOrNull()?.nextCursor else null, if (more) null else old.firstEtag, if (all) 20 else 3)
+      if (gen != accountGeneration) return
+      val next = if (result.value == null) old else SourcePages(if (more) old.pages + result.value else listOf(result.value), if (more) old.firstEtag else result.etag)
+      _state.update { it.copy(runPages = it.runPages + (key to next.copy(loading = false))) }
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(runPages = it.runPages + (key to old.copy(error = ErrorWords.of(e)))) } }
+  }
+
   /** Sound for alerts on this phone. */
   fun setAlertSound(on: Boolean) {
     secrets.save(if (on) "1" else "0", ALERT_SOUND)
@@ -1893,7 +2011,12 @@ class AppModel(
     val token = pushToken ?: push.token()?.also { pushToken = it } ?: return
     val generation = accountGeneration
     val handoff = pendingHandoff()
-    val status = attempt { cloud.registerPush(token, _state.value.alertSound, handoff?.target) } ?: return
+    if (!alertsWanted() && handoff != null) {
+      attempt { cloud.keepAlerts(handoff.target) } ?: return
+      if (generation == accountGeneration) keepHandoff(null)
+      return
+    }
+    val status = attempt { cloud.registerPush(token, _state.value.alertSound, handoff?.target, kinds = savedAlertKinds()) } ?: return
     if (generation != accountGeneration) return
     if (handoff != null) {
       keepHandoff(null)
@@ -1968,7 +2091,7 @@ class AppModel(
         }
       }
       return try {
-        val status = cloud.registerPush(token, _state.value.alertSound, handoff.target)
+        val status = cloud.registerPush(token, _state.value.alertSound, handoff.target, kinds = savedAlertKinds())
         if (generation != accountGeneration) return false
         keepHandoff(null)
         secrets.save("1", ALERTS_ON)
@@ -3540,6 +3663,16 @@ class AppModel(
   // MARK: What a taf remembers
 
   /** The taf's notes: signed in, read from tafs cloud; in the sample, the kind of thing a real one writes down as it learns. */
+  fun loadAllMemory(tafId: String) {
+    val id = _state.value.taf(tafId)?.cloudId ?: return
+    val gen = accountGeneration
+    viewModelScope.launch {
+      try { val notes = cloud.memory(id, all = true); if (gen == accountGeneration) _state.update { it.copy(memories = it.memories + (tafId to notes), memoryErrors = it.memoryErrors - tafId) }
+      } catch (e: CancellationException) { throw e
+      } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(memoryErrors = it.memoryErrors + (tafId to ErrorWords.of(e))) } }
+    }
+  }
+
   fun loadMemory(tafId: String) {
     if (_state.value.mode == Mode.kiff) {
       viewModelScope.launch { readMemory(tafId) }
@@ -4501,12 +4634,13 @@ class AppModel(
   }
 
   /** Sets the account's time zone to this device's, so a Card's day ends at the owner's midnight: a signed call, which KIFF takes from the owner or an admin. */
-  suspend fun useThisDevicesTimeZone() {
+  suspend fun useThisDevicesTimeZone() = setAccountTimeZone(java.time.ZoneId.systemDefault().id)
+
+  suspend fun setAccountTimeZone(zone: String) {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || tenant == null) return
     val generation = accountGeneration
     _state.update { it.copy(timeZoneError = null) }
-    val zone = java.time.ZoneId.systemDefault().id
     try {
       signer.sign("tafs.time-zone.v1|$tenant|$zone".toByteArray(), "Set your account's time zone to $zone")
     } catch (_: SignerException) {
@@ -5163,6 +5297,7 @@ class AppModel(
     const val HANDOFF = "kiff.alert-handoff"
     const val ALERTS_ON = "kiff.alerts-on"
     const val ALERT_SOUND = "kiff.alert-sound"
+    const val ALERT_KINDS = "kiff.alert-kinds"
 
     /** The waits between a failed refresh's tries, then none until the person comes back or pulls (kiff/tafs#318). */
     val REFRESH_RETRY_SECONDS = listOf(2L, 10L, 30L, 60L, 120L)

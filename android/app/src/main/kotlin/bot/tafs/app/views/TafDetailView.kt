@@ -105,6 +105,10 @@ class TafActions(
   val report: suspend (String, ChatMessage, String, String?) -> ReportResult = { _, _, _, _ -> ReportResult.NotSent("") },
   /** Where its results go, of tafs' own places (taf, places). */
   val setResults: suspend (String, List<String>) -> Unit = { _, _ -> },
+  val loadSetup: suspend (String) -> Unit = {},
+  val loadActivity: suspend (String, String, Boolean, String) -> Unit = { _, _, _, _ -> },
+  val loadRuns: suspend (String, Boolean, Boolean) -> Unit = { _, _, _ -> },
+  val loadAllMemory: (String) -> Unit = {},
 )
 
 @Composable
@@ -143,6 +147,8 @@ fun TafDetailView(
     val canChat = state.canChat(taf.id)
     val sections = Section.entries.filter { it != Section.Chat || canChat }
     var section by rememberSaveable { mutableStateOf(sections.first()) }
+    var activitySelection by rememberSaveable(taf.id) { mutableStateOf("") }
+    if (state.mode == Mode.kiff && taf.cloudId != null) LaunchedEffect(taf.id) { actions.loadSetup(taf.id) }
     var frontCard by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmRevoke by rememberSaveable { mutableStateOf(false) }
     var confirmRemove by rememberSaveable { mutableStateOf(false) }
@@ -179,6 +185,8 @@ fun TafDetailView(
     if (section == Section.Chat) {
       // The thread scrolls on its own, with the field under it.
       TafChatView(taf.id, state, actions, Modifier.weight(1f))
+    } else if (section == Section.Activity && state.mode == Mode.kiff && taf.cloudId != null) {
+      TafActivityList(taf, state, actions, activitySelection, { activitySelection = "" }, Modifier.weight(1f))
     } else {
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -192,6 +200,10 @@ fun TafDetailView(
             CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere, onRevoke = { confirmRevoke = true })
             // Halting is a job of its own: its row opens its screen. Its usage is the account's Usage, with this taf's count.
             // Only what this person manages, as KIFF says: a Viewer sees no Halt, refused only once tapped.
+            if (state.canHalt(taf.id) && state.manages(taf.id)) {
+              val version = state.tafSetups[taf.id]?.versions
+              VersionsRow({ onVersions(taf.id) }, title = version?.title ?: "Changes to how it runs", summary = version?.summary)
+            }
             if (state.canHalt(taf.id) && state.manages(taf.id) && taf.state != TafState.revoked) HaltRow(taf.id, state.haltOf(taf.id), { onHalt(taf.id) })
             if (state.mode == Mode.sample || state.canHalt(taf.id)) UsageRow(state.tafUsage(taf.id)?.counted) { onUsage(taf.id) }
           }
@@ -199,7 +211,7 @@ fun TafDetailView(
             // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
             // name freed) is its last row.
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ confirmRemove = true }) else null)
+            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ confirmRemove = true }) else null, onActivity = { activitySelection = it; section = Section.Activity })
           }
           Section.Chat -> Unit
         }
@@ -445,8 +457,8 @@ private fun RunReportPanel(tafId: String, report: RunReport?, actions: TafAction
 
 /** What the taf has written down about how the owner likes the job done. */
 @Composable
-internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?, actions: TafActions) {
-  LaunchedEffect(tafId) { actions.loadMemory(tafId) }
+internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?, actions: TafActions, load: Boolean = true) {
+  if (load) LaunchedEffect(tafId) { actions.loadMemory(tafId) }
   // The note waiting for the owner's yes: forgetting can't be undone (the 755 retest).
   var forgetting by remember { mutableStateOf<MemoryNote?>(null) }
   Panel {
