@@ -579,7 +579,7 @@ private fun TelegramDoorStep(app: DoorApp, telegram: TelegramPicking, busy: Bool
     Text(DoorWords.TELEGRAM_WHICH_BOT, style = scaled(14, color = Theme.ink))
     telegram.bots.forEach { grant ->
       Text(
-        grant.account ?: grant.vendor,
+        grant.telegramBot ?: grant.account ?: grant.vendor,
         style = scaled(15, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
         modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !busy) { telegram.add(app, grant) }.padding(top = 10.dp),
       )

@@ -156,7 +156,8 @@ Setup › Starts when, **Add a door…**, then Telegram, and pick the bot: the S
 channel, since every chat with the bot comes through its one door. The app adds the door with
 `{app: "telegram", grant, bot?, trigger?}` (`bot` its @name, `trigger` planque's subscription, if
 there is one); it signs nothing, as there's nothing for it to subscribe. A Telegram bot is one door:
-a second door on the same bot is refused.
+a second door on the same bot is refused. The app knows a Telegram bot connection by planque's `provider: "telegram"`
+(or its `entry`, `api:telegram`), and names it by planque's `telegram.username`, which it sends as `bot`.
 
 **Pairing.** From a knock first: the person writes to the bot, their message knocks in Activity
 with **Pair**, and pairing keeps their Telegram user id. Pair someone by hand takes the id as a

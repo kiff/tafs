@@ -2710,12 +2710,12 @@ class AppModel(
   }
 
   /**
-   * A Telegram door: the owner's bot connection, as tafs cloud's door (`{app: "telegram", grant}`). planque listens to the bot from
+   * A Telegram door: the owner's bot connection, as tafs cloud's door (`{app: "telegram", grant, bot?}`). planque listens to the bot from
    * its connection on, so there's nothing to subscribe and nothing to sign; who may give work is paired after, from their knock.
    */
   suspend fun addTelegramDoor(tafId: String, app: DoorApp, grant: bot.tafs.app.kiff.Grant): Door? {
     if (_state.value.mode != Mode.kiff) return null
-    return doorWork(tafId) { cloud.addDoor(it, app.id, mapOf("grant" to grant.id)) }
+    return doorWork(tafId) { cloud.addDoor(it, app.id, mapOf("grant" to grant.id) + (grant.telegramBot?.let { bot -> mapOf("bot" to bot) } ?: emptyMap())) }
   }
 
   /** A subscription planque made for an approved event that tafs cloud hasn't recorded yet: kept only to record it again. */

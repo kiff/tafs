@@ -1063,7 +1063,7 @@ class PlanqueTest {
   // MARK: A Telegram door: the bot's connection, as tafs cloud's door; nothing to subscribe, pairing from knocks
 
   private val telegramBot =
-    """{"id":"gt","status":"connected","account":"ca_t","text":"Telegram bot","digest":"","request":{"server":"","agent":"refunds-1","tools":[],"connector":{"provider":"telegram"}}}"""
+    """{"id":"gt","status":"connected","provider":"telegram","entry":"api:telegram","telegram":{"id":7001,"username":"refunds_desk_bot"},"text":"Telegram bot","digest":"","request":{"server":"","agent":"refunds-1","tools":[],"api":{"url":"https://core.telegram.org/bots/api"}}}"""
   private val telegramApp = bot.tafs.app.kiff.DoorApp(id = "telegram", label = "Telegram", kind = "telegram", proof = "proven")
 
   private suspend fun telegramModel(): AppModel {
@@ -1074,8 +1074,10 @@ class PlanqueTest {
     val m = telegramModel()
     assertEquals(listOf("gt"), m.state.value.telegramBots("refunds-1").map { it.id })
     assertTrue("a Slack bot isn't a Telegram bot", m.state.value.slackBots("refunds-1").none { it.isTelegramBot })
-    val byEntry = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g2","status":"connected","entry":"token:telegram","request":{"agent":"refunds-1"}}""")
+    val byEntry = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g2","status":"connected","entry":"api:telegram","request":{"agent":"refunds-1"}}""")
     assertTrue(byEntry.isTelegramBot)
+    assertNull("no token given yet: no bot to name", byEntry.telegramBot)
+    assertEquals("@refunds_desk_bot", m.state.value.telegramBots("refunds-1").single().telegramBot)
     val named = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>("""{"id":"g3","status":"connected","vendor":"Telegram","request":{"agent":"refunds-1"}}""")
     assertFalse("a vendor name doesn't make a Telegram bot", named.isTelegramBot)
   }
@@ -1086,7 +1088,7 @@ class PlanqueTest {
     val door = m.addTelegramDoor("refunds-1", telegramApp, m.state.value.telegramBots("refunds-1").single())
     assertEquals("telegram", door?.id)
     val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/tafs/taf_1/doors").single().body!!)).jsonObject
-    assertEquals(KiffClient.json.parseToJsonElement("""{"grant":"gt","app":"telegram"}"""), body)
+    assertEquals(KiffClient.json.parseToJsonElement("""{"grant":"gt","bot":"@refunds_desk_bot","app":"telegram"}"""), body)
     assertTrue("nothing asked", auth.asked.isEmpty())
     assertTrue("nothing subscribed at planque", transport.requests.none { it.url.contains("/triggers") })
     assertTrue(m.state.value.doors.getValue("refunds-1").doors.any { it.id == "telegram" })

@@ -69,6 +69,10 @@ data class GrantConnector(val provider: String? = null, val toolkit: String? = n
 @Serializable
 data class SlackChannel(val id: String, val name: String = "", val private: Boolean = false)
 
+/** The bot a Telegram connection's token is, as planque shows it. */
+@Serializable
+data class TelegramBotView(val id: Long = 0, val username: String = "")
+
 @Serializable
 private data class SlackChannels(val channels: List<SlackChannel> = emptyList())
 
@@ -114,6 +118,10 @@ data class Grant(
   @SerialName("vendor") val vendorName: String? = null,
   /** The catalog entry it was connected from, such as `connector:composio:slackbot`. */
   val entry: String? = null,
+  /** The connection's provider, as planque names it, such as `telegram`. */
+  val provider: String? = null,
+  /** A Telegram bot connection's bot, once its token is given: its @username, for the door to name it. */
+  val telegram: TelegramBotView? = null,
   /** Whether [digest] is the hash of the request as received: the app shows Approve only then. Set by the client, never read from planque. */
   @Transient val digestMatches: Boolean = false,
   /** planque answered connected to this phone's approval, before its list says so. Never read, only set. */
@@ -126,7 +134,10 @@ data class Grant(
   val isSlackBot: Boolean get() = entry == SLACK_BOT_ENTRY || request.connector?.toolkit == "slackbot"
 
   /** A Telegram bot connection, the owner's own bot by its token, which a Telegram door listens through: by planque's provider or entry, never a vendor name. */
-  val isTelegramBot: Boolean get() = request.connector?.provider == "telegram" || entry?.substringAfterLast(':') == "telegram"
+  val isTelegramBot: Boolean get() = provider == "telegram" || request.connector?.provider == "telegram" || entry?.substringAfterLast(':') == "telegram"
+
+  /** A Telegram bot's @username, when planque gives it. */
+  val telegramBot: String? get() = telegram?.username?.takeIf { it.isNotBlank() }?.let { "@" + it.removePrefix("@") }
 
   val connected: Boolean get() = status == "connected" || connectedNow
 
