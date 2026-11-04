@@ -368,6 +368,8 @@ data class Taf(
   val worksFromChat: Boolean = false,
   /** Where its results go, of tafs' own places, as tafs cloud lists them; none listed, only its door's reply. */
   val results: List<String> = emptyList(),
+  /** The clock its times are in, as tafs cloud says it: "Times in Europe/Paris". */
+  val timeZoneWords: String? = null,
   val avatarRim: AvatarRim? = null,
 ) {
   /** Whether a result alerts the phones of the people who manage it (`app`), silently. */

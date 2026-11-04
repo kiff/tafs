@@ -4671,9 +4671,31 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation == accountGeneration) _state.update { it.copy(timeZoneError = "The time zone didn't change. ${ErrorWords.of(e)}") }
+      return
     } finally {
       kiff.setupSigner = null
     }
+    applyAccountTimeZone()
+  }
+
+  /**
+   * KIFF has the new zone: tafs cloud moves the schedules to it, then every time on screen is read again in it. Pages and
+   * Setups already read are dropped, since their times were written in the old zone.
+   */
+  suspend fun applyAccountTimeZone() {
+    val generation = accountGeneration
+    try {
+      cloud.applyAccountTimeZone()
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(timeZoneError = ErrorWords.of(e)) }
+    }
+    if (generation != accountGeneration) return
+    val knobs = _state.value.knobs.keys
+    _state.update { it.copy(activityPages = emptyMap(), runPages = emptyMap(), tafSetups = emptyMap()) }
+    refresh()
+    knobs.forEach { attempt { loadKnob(it) } }
   }
 
   // MARK: People, groups and sharing

@@ -356,4 +356,36 @@ class TafPageTest {
     assertNull(m.state.value.memories["refunds-1"])
     assertEquals("Its notes couldn't be loaded. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.memoryErrors["refunds-1"])
   }
+
+  // MARK: The account's time zone (#464 item 2)
+
+  @Test fun theCardNamesTheClockTafsCloudSays() = runTest {
+    reads("""{"tafs":[${taf().dropLast(1)},"time_zone":"Europe/Paris","time_zone_words":"Times in Europe/Paris","schedule_time_zone":"Europe/Paris"}],"others":[],"removing":[]}""")
+    val model = model()
+    model.refresh()
+    assertEquals("Times in Europe/Paris", model.state.value.taf("refunds-1")?.timeZoneWords)
+  }
+
+  @Test fun anotherZoneMovesTheSchedulesThenReadsEveryTimeAgain() = runTest {
+    reads()
+    transport.answer("POST /v1/account/time-zone", 200, """{"time_zone":"Europe/London","updated":1}""")
+    val model = model()
+    model.refresh()
+    val homes = transport.requestsTo("GET /v1/home").size
+    model.applyAccountTimeZone()
+    assertEquals(1, transport.requestsTo("POST /v1/account/time-zone").size)
+    assertEquals("home is read again, in the new zone", homes + 1, transport.requestsTo("GET /v1/home").size)
+    assertTrue(model.state.value.activityPages.isEmpty() && model.state.value.runPages.isEmpty() && model.state.value.tafSetups.isEmpty())
+    assertNull(model.state.value.timeZoneError)
+  }
+
+  @Test fun aPartlyMovedScheduleSaysSoInTafsCloudsWords() = runTest {
+    reads()
+    transport.answer("POST /v1/account/time-zone", 503,
+      """{"error":"Your account's time zone changed, but some schedules still need to move. Try again.","words":"Your account's time zone changed, but some schedules still need to move. Try again."}""")
+    val model = model()
+    model.refresh()
+    model.applyAccountTimeZone()
+    assertEquals("Your account's time zone changed, but some schedules still need to move. Try again.", model.state.value.timeZoneError)
+  }
 }

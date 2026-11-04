@@ -300,7 +300,11 @@ which waits until there's a Compose hierarchy to read before reading it.
 `ThemePreference` and `TafsTheme` apply the saved Light/Dark/System choice.
 `SettingsSheet` exposes source-defined phone alerts and time zones. Alert
 choices are saved for this device and account and sent on registration; Off
-unregisters this phone. Time zone changes keep the existing signed KIFF flow.
+unregisters this phone. Time zone changes keep the existing signed KIFF flow; once KIFF
+has the new zone, `AppModel.applyAccountTimeZone` asks tafs cloud to move the schedules
+(`POST /v1/account/time-zone`), then drops the pages and Setups read in the old zone and reads
+home and each dial again. A 503 shows tafs cloud's words, and choosing again retries it. The
+Card tab names the clock its times are in, in tafs cloud's words (`time_zone_words`).
 Its sheets open at full height, so the back key closes them. Signing in from the
 sample, or switching account, closes what the last account had open (`accountShown`).
 

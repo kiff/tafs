@@ -163,6 +163,7 @@ object KiffMapping {
       nextRun = h.nextRun,
       worksFromChat = h.unscheduled == true,
       results = h.results,
+      timeZoneWords = h.timeZoneWords,
       avatarRim = h.avatarRim,
       kiffCardIds = h.card.ids,
       // Each Card on its own (kiff/tafs#211), as tafs cloud read it from KIFF.

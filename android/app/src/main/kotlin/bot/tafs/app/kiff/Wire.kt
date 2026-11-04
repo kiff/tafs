@@ -106,6 +106,10 @@ data class HomeTaf(
   @SerialName("kiff_agent") val kiffAgent: String,
   /** Where its results go: `door_reply`, `app`, `owner_email` (an action place isn't listed here). */
   val results: List<String> = emptyList(),
+  /** The account's clock its times are in, in tafs cloud's words ("Times in Europe/Paris"), and the zone its schedule runs in. */
+  @SerialName("time_zone") val timeZone: String? = null,
+  @SerialName("time_zone_words") val timeZoneWords: String? = null,
+  @SerialName("schedule_time_zone") val scheduleTimeZone: String? = null,
   val status: String? = null,
   @SerialName("next_run") @Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
   @SerialName("last_run") @Serializable(with = InstantAsString::class) val lastRun: Instant? = null,
