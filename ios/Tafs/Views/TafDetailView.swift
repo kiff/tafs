@@ -331,6 +331,7 @@ struct TafDetailView: View {
 
     @ViewBuilder
     private func card(_ taf: Taf) -> some View {
+        if model.mode == .kiff, let words = model.cloudTaf(for: taf.id)?.timeZoneWords { Text(words).scaledFont(13).foregroundColor(Theme.soft) }
         let cards = taf.shownCards
         let shown = cards.first(where: { $0.id == frontCard }) ?? cards.first
         CardStack(cards: cards, issuedBy: model.issuer(of: taf), color: Theme.tafColor(taf.colorIndex),

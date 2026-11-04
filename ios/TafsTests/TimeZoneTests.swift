@@ -39,6 +39,7 @@ final class TimeZoneTests: XCTestCase {
 
         let here = TimeZone.current.identifier
         StubProtocol.responses["PUT /v1/me/time-zone"] = (200, #"{"time_zone":"\#(here)"}"#)
+        StubProtocol.responses["POST /v1/account/time-zone"] = (200, #"{"time_zone":"\#(here)","updated":1}"#)
         StubProtocol.thenRespond["PUT /v1/me/time-zone"] = ["GET /v1/me": (200, #"{"tenant_id":"t1","tenant_slug":"acme","time_zone":"\#(here)"}"#)]
         let unlocksBefore = signer.signed.count // signing in signs too
         await model.setAccountTimeZone(here)
@@ -55,6 +56,7 @@ final class TimeZoneTests: XCTestCase {
         XCTAssertTrue(during.last?.hasPrefix("kiff.request.v1") ?? false, "KIFF's request message: \(during)")
         XCTAssertEqual(model.kiffAccount?.timeZone, here, "read again from KIFF")
         XCTAssertNil(model.timeZoneError)
+        XCTAssertEqual(StubProtocol.sent.filter { $0.url?.path == "/v1/account/time-zone" && $0.httpMethod == "POST" }.count, 1)
 
         StubProtocol.responses["PUT /v1/me/time-zone"] = (403, #"{"error":"only the account's owner or an admin can change its time zone"}"#)
         await model.useThisDevicesTimeZone()

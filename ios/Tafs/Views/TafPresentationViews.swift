@@ -30,7 +30,7 @@ struct ConnectedToolsRing: View {
                                 if !step.words.isEmpty { Text(step.words).scaledFont(13).foregroundColor(Theme.soft) }
                                 if let app = step.app { Text(app).scaledFont(12).foregroundColor(Theme.amberText) }
                             }
-                        }.padding(.vertical, 4)
+                        }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
                     }
                     if model.manages(taf.id) { Button("Change the workflow with Coach") { coach() } }
                 } label: {
@@ -173,6 +173,7 @@ struct TafActivityList: View {
                     ProgressView().frame(maxWidth: .infinity)
                         .task(id: cursor) { await model.loadActivityPage(tafID, filter: filter, more: true, selection: selection) }
                 } else if cache.loading { ProgressView() }
+                else if let words = cache.pages.last?.end_words { Text(words).foregroundColor(Theme.dim) }
                 else if cache.pages.allSatisfy({ $0.entries.isEmpty }) { Text("Nothing here.").foregroundColor(Theme.dim) }
             }.padding(16)
         }
@@ -244,6 +245,7 @@ struct RetainedRuns: View {
             ProgressView().task(id: cursor) { await model.loadRunPage(tafID, all: true, more: true) }
         } else if !all, let title = cache.pages.first?.more_title { Button(title) { showAll = true } }
         if cache.loading { ProgressView() }
+        else if all, cache.error == nil, let words = cache.pages.last?.end_words { Text(words).foregroundColor(Theme.dim) }
     }
 }
 

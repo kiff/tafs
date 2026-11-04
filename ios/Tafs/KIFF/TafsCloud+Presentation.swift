@@ -16,10 +16,10 @@ extension TafsCloud {
     struct ActivityGroup: Decodable, Identifiable { let id: String; let title: String; let entries: [ActivityEntry] }
     struct ActivityPage: Decodable {
         let entries: [ActivityEntry]; let groups: [ActivityGroup]; let filters: [ActivityChoice]
-        let filter: String; let revision: String; let next_cursor: String?
+        let filter: String; let revision: String; let next_cursor: String?; var end_words: String? = nil
     }
     struct RunsPage: Decodable {
-        let requests: [TafWork.Request]; let next_cursor: String?; let title: String; let more_title: String
+        let requests: [TafWork.Request]; let next_cursor: String?; let title: String; let more_title: String; var end_words: String? = nil
     }
     struct ConnectedAction: Decodable, Identifiable {
         var id: String { name }
@@ -69,6 +69,10 @@ extension TafsCloud {
         let response: Response = try await send("GET", "/v1/time-zones?q=\(query(search))")
         return response.zones
     }
+    func syncTimeZone() async throws {
+        struct Result: Decodable { let time_zone: String; let updated: Int }
+        let _: Result = try await send("POST", "/v1/account/time-zone")
+    }
 }
 
 /// Cached representations are scoped to the account and taf; the server owns pagination.
@@ -76,5 +80,6 @@ struct SourcePages<Page> {
     var pages: [Page] = []
     var etag: String?
     var loading = false
+    var moreWhenReady = false
     var error: String?
 }

@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Cloud and iOS, from the phone check:** recurring schedules can follow KIFF's confirmed account zone, and Card names that zone. Custom tafs use their own saved job and workflow, with no workflow invented from tool order. iOS keeps paging after a refresh, shows the build in Account and a schedule's current How often value, and opens Coach for the taf selected; iPad workflow rows align to the left.
 - Setup's app actions use short step references and distinguish forbidden actions from calls that need approval every time. Workflow summaries collapse consecutive uses of the same app. A taf without a numbered live version says it runs its original definition. Activity and retained runs supply an end-of-history line.
 - **Android, from the v24 phone check (v25):** a taf's Activity and its runs keep loading older pages to the end; reaching the end while the first page refreshed stopped them. Account has one way out, **Sign out** (one account per phone), and Version names the build ("25 (1.0)"). The status bar's icons follow the app's own Light/Dark choice from launch.
 - From the v24 walkthrough: a workflow step says its title once (tafs cloud sends its words empty when they'd repeat it); on Android the back key closes an app's sheet and the full notes, and signing in from the sample opens the Tafs tab on the account's list.

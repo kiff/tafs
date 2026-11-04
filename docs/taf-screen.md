@@ -100,7 +100,7 @@ green, amber and red are brighter. Secondary text keeps at least 4.5:1 contrast 
 ## Account and taf details
 
 Account groups account details, people and apps, Plan, Alerts, Theme, Time zone,
-export and Legal; switching accounts and signing out are last. A bottom fade
+export and Legal; Sign out is last, with one account per phone. Version includes the build. A bottom fade
 shows when more content remains. Light, Dark and System apply immediately and
 are saved on this device. Time zone offers a searchable cloud list, plus this
 device's zone; changing it uses KIFF's signed setup call.
@@ -141,6 +141,9 @@ Card, with the cloud's live-version and earlier-version summary. Cards behind
 the front Card are full faces with their own corners and shadow.
 
 Coach opens from the right and Back restores the same taf and tab. Its
+bar button on a taf keeps a conversation already about that taf, and starts one about
+the new taf when opened from a different taf. Old thread reads and streams cannot replace
+the newly selected conversation. Outside a taf it reopens the current conversation. Its
 new-conversation button uses the square-and-pencil icon; previous conversations
 remain in the adjacent menu. Both chats use one rounded composer, text above
 the attach, mic and send row, growing to six lines. Avatars remain plain letter

@@ -139,6 +139,19 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(model.setupThread.messages.isEmpty)
     }
 
+    func testOpeningCoachFromAnotherTafDoesNotReuseTheEarlierTafsConversation() async throws {
+        let (model, first) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae, HomeJSON.entry(agent: "example-second", name: "Second", id: "depl_2")]))
+        await model.refresh()
+        let second = try XCTUnwrap(model.tafs.first { $0.name == "Second" }?.id)
+        model.tafOnScreen = first; model.openCoach()
+        XCTAssertEqual(model.setupImproving?.id, "depl_1")
+        model.coachOpen = false
+        model.tafOnScreen = second; model.openCoach()
+        XCTAssertEqual(model.setupImproving?.id, "depl_2")
+        XCTAssertTrue(model.setupThread.messages.isEmpty)
+    }
+
     func testLoadsATafsVersions() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
         StubProtocol.responses["GET /v1/tafs/depl_1/versions"] = (200, Self.twoVersions)
