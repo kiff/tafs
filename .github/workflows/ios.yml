@@ -19,6 +19,9 @@ on:
     tags: ["v*"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    # Only a change to the Apple app or this workflow: a change to tafs cloud
+    # or to Android doesn't wait for a macOS runner.
+    paths: ["ios/**", ".github/workflows/ios.yml"]
   workflow_dispatch:
     inputs:
       upload:
