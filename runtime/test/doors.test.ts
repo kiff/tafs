@@ -887,7 +887,7 @@ describe("knocks and keys", () => {
   it("a taf has no door until its owner turns one on, and the home list says which doors are offered", async () => {
     const w = world();
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.doors).toEqual([]);
-    expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toEqual(["email", "whatsapp", "slack"]);
+    expect((await send(w, "GET", "/v1/home", { token: "ana" })).body.doors_offered).toEqual(["email", "whatsapp", "slack", "telegram"]);
     // A deployment with no doors set up offers none, and the app shows no Doors.
     w.config.email = undefined;
     w.config.whatsapp = undefined;
@@ -1029,7 +1029,7 @@ describe("what a door keeps of a message", () => {
 
   it("offers the Slack door only where planque hands Slack messages over", async () => {
     const w = world();
-    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp", "slack"]);
+    expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp", "slack", "telegram"]);
     delete w.config.planqueHandoffSecret;
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.apps.map((a: { id: string }) => a.id)).toEqual(["email", "whatsapp"]);
     expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "slack", grant: "g", channel: "C0X" } })).status).toBe(400);
@@ -1085,6 +1085,53 @@ describe("the Slack door, through planque", () => {
     expect(texts.find((t) => t.includes("from u0cy"))).toContain("in the thread 1730000001.000200");
     // Someone not paired knocks.
     expect((await slackHook(w, { id: "ev_eve", sender: "U0EVE" })).body.outcome).toBe("knock");
+  });
+});
+
+/** planque's signed handover of a Telegram message, as planque.door.v1 with app "telegram". */
+function telegramHook(w: World, body: Record<string, unknown>, opts: { secret?: string } = {}) {
+  const id = String(body.id ?? `ev_${++n}`);
+  const raw = JSON.stringify({ v: "planque.door.v1", app: "telegram", id, tenant: "t_acme", agent: "refunds", grant: "grt_tg1", provider: "planque",
+    chat: "5551234", sender: "5551234", message_id: "42", name: "Ben", text: "Refund order 9, charged twice", timestamp: Math.floor(w.now().getTime() / 1000), ...body });
+  const ts = String(Math.floor(w.now().getTime() / 1000));
+  const sig = createHmac("sha256", Buffer.from(opts.secret ?? PLANQUE_SECRET, "utf8")).update(`${id}.${ts}.${raw}`).digest("base64");
+  return send(w, "POST", "/v1/doors/planque", { raw, headers: { "planque-event-id": id, "planque-event-timestamp": ts, "planque-event-signature": `v1,${sig}` } });
+}
+
+describe("the Telegram door, through planque", () => {
+  it("opens on the owner's bot connection; paired users give work, strangers knock, the taf answers in Telegram itself", async () => {
+    const w = world();
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "telegram" } })).status).toBe(400);
+    const made = await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "telegram", grant: "grt_tg1", bot: "@acme_refunds_bot", trigger: "trg_tg" } });
+    expect(made.status).toBe(200);
+    expect(made.body.door).toMatchObject({ id: "telegram", kind: "telegram", address: "@acme_refunds_bot", open: true, proof: "proven", grant: "grt_tg1", trigger: "trg_tg" });
+    // The same bot can't be a second taf's door.
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors`, { token: "ana", body: { app: "telegram", grant: "grt_tg1" } })).status).toBe(409);
+    // Keys are Telegram user ids, never a @username.
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/telegram/keys`, { token: "ana", body: { id: "@ben" } })).status).toBe(400);
+    expect((await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/telegram/keys`, { token: "ana", body: { id: "5551234", name: "Ben" } })).status).toBe(200);
+
+    // A bad signature, another agent, another bot, or a malformed sender is no door of ours.
+    expect((await telegramHook(w, {}, { secret: "wrong" })).status).toBe(401);
+    expect((await telegramHook(w, { agent: "someone-else" })).status).toBe(404);
+    expect((await telegramHook(w, { grant: "grt_other" })).status).toBe(404);
+    expect((await telegramHook(w, { sender: "@ben" })).status).toBe(400);
+
+    const r = await telegramHook(w, { id: "ev_tg_ben" });
+    expect(r.status).toBe(202);
+    expect(r.body.outcome).toBe("run");
+    const run = w.agents.runs.find((x) => x.agent === REFUNDS)!;
+    const input = (w.agents.events.get(run.session)![0]!.body as { text: string }).text;
+    expect(input).toContain("post your answer yourself with your Telegram bot's send-message tool, in the chat 5551234, replying to message 42");
+    // The same update again starts nothing twice.
+    expect((await telegramHook(w, { id: "ev_tg_ben" })).body.outcome).toBe("seen");
+    // A forum topic in a group is kept for the answer.
+    await send(w, "POST", `/v1/tafs/${REFUNDS}/doors/telegram/keys`, { token: "ana", body: { id: "777" } });
+    expect((await telegramHook(w, { id: "ev_tg_grp", chat: "-100123", sender: "777", thread: "9", message_id: "50" })).body.outcome).toBe("run");
+    const texts = [...w.agents.events.values()].flat().map((e) => (e.body as { text?: string }).text ?? "");
+    expect(texts.find((t) => t.includes("in the chat -100123"))).toContain("in the topic 9");
+    // Someone not paired knocks.
+    expect((await telegramHook(w, { id: "ev_tg_eve", chat: "888", sender: "888" })).body.outcome).toBe("knock");
   });
 });
 
