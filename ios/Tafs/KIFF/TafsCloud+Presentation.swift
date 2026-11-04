@@ -36,6 +36,8 @@ extension TafsCloud {
         struct Stats: Decodable { let calls: Int; let done: Int; let held: Int; let words: String; let complete: Bool; let activity_query: String }
         let id: String; let name: String; let status: String; let status_words: String; let reconnect: Bool; let action_count: Int; let action_words: String
         let actions: [ConnectedAction]; let steps: [Int]; let workflow_steps: [WorkflowStep]; let running: Bool; let stats: Stats
+        /// With no saved workflow, the one line under Workflow (kiff/tafs#469 item 2).
+        var workflow_words: String? = nil
     }
     struct WorkflowStep: Decodable, Identifiable {
         var id: Int { number }
