@@ -145,8 +145,11 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
   val next = cache?.pages?.lastOrNull()?.nextCursor
   val atEnd by remember { derivedStateOf { (list.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) >= list.layoutInfo.totalItemsCount - 3 } }
   // Asked again once a load ends: reaching the end while the first page refreshes would otherwise never ask for the next one.
-  val loading = cache?.loading == true
-  LaunchedEffect(atEnd, next, loading, filter, selection) { if (atEnd && next != null && !loading) actions.loadActivity(taf.id, filter, true, selection) }
+  // The request runs in the screen's scope, so the loading it sets doesn't cancel it; a failed page waits for Try again.
+  val loading = cache?.loading == true; val failed = cache?.error != null
+  LaunchedEffect(atEnd, next, loading, failed, filter, selection) {
+    if (atEnd && next != null && !loading && !failed) scope.launch { actions.loadActivity(taf.id, filter, true, selection) }
+  }
   LazyColumn(modifier, state = list, contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     item { state.heldCalls(taf.id).forEach { HeldCallCard(it, state, actions.answer) } }
     item { RetainedRuns(taf, state, actions) }
@@ -205,8 +208,8 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
     LaunchedEffect(taf.id) { actions.loadRuns(taf.id, false, true) }
     val next = cache?.pages?.lastOrNull()?.nextCursor
     val end by remember { derivedStateOf { (list.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) >= list.layoutInfo.totalItemsCount - 3 } }
-    val loading = cache?.loading == true
-    LaunchedEffect(end, next, loading) { if (end && next != null && !loading) actions.loadRuns(taf.id, true, true) }
+    val loading = cache?.loading == true; val failed = cache?.error != null
+    LaunchedEffect(end, next, loading, failed) { if (end && next != null && !loading && !failed) scope.launch { actions.loadRuns(taf.id, true, true) } }
     LazyColumn(Modifier.fillMaxWidth().heightIn(min = 160.dp, max = 600.dp), state = list, contentPadding = PaddingValues(16.dp)) {
       item { Text("Its work", style = scaled(24, FontWeight.Bold, Theme.ink)) }
       cache?.pages?.forEach { page -> items(page.requests, key = { it.id }) { run -> TextButton({ scope.launch { actions.openRequest(taf.id, run.id) } }) { Text(run.line, color = Theme.ink) } } }
