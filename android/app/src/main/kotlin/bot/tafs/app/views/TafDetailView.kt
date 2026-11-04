@@ -200,6 +200,7 @@ fun TafDetailView(
             CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere, onRevoke = { confirmRevoke = true })
             // The clock its limits' days and its times are in, in tafs cloud's words.
             taf.timeZoneWords?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 4.dp)) }
+            taf.scheduleTimeZoneWords?.let { Text(it, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(horizontal = 4.dp)) }
             // Halting is a job of its own: its row opens its screen. Its usage is the account's Usage, with this taf's count.
             // Only what this person manages, as KIFF says: a Viewer sees no Halt, refused only once tapped.
             if (state.canHalt(taf.id) && state.manages(taf.id)) {

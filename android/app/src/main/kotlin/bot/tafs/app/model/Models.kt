@@ -370,6 +370,8 @@ data class Taf(
   val results: List<String> = emptyList(),
   /** The clock its times are in, as tafs cloud says it: "Times in Europe/Paris". */
   val timeZoneWords: String? = null,
+  /** While its schedule still runs in another zone, what tafs cloud says about it. */
+  val scheduleTimeZoneWords: String? = null,
   val avatarRim: AvatarRim? = null,
 ) {
   /** Whether a result alerts the phones of the people who manage it (`app`), silently. */

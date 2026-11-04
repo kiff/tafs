@@ -364,6 +364,15 @@ class TafPageTest {
     val model = model()
     model.refresh()
     assertEquals("Times in Europe/Paris", model.state.value.taf("refunds-1")?.timeZoneWords)
+    assertNull("no words while its schedule runs in the account's zone", model.state.value.taf("refunds-1")?.scheduleTimeZoneWords)
+  }
+
+  @Test fun aScheduleStillInAnotherZoneSaysSoInTafsCloudsWords() = runTest {
+    val words = "Its schedule still uses Europe/Paris. Apply the account's time zone again to update it."
+    reads("""{"tafs":[${taf().dropLast(1)},"time_zone":"Europe/London","time_zone_words":"Times in Europe/London","schedule_time_zone":"Europe/Paris","schedule_time_zone_words":"$words"}],"others":[],"removing":[]}""")
+    val model = model()
+    model.refresh()
+    assertEquals(words, model.state.value.taf("refunds-1")?.scheduleTimeZoneWords)
   }
 
   @Test fun anotherZoneMovesTheSchedulesThenReadsEveryTimeAgain() = runTest {
@@ -377,6 +386,21 @@ class TafPageTest {
     assertEquals("home is read again, in the new zone", homes + 1, transport.requestsTo("GET /v1/home").size)
     assertTrue(model.state.value.activityPages.isEmpty() && model.state.value.runPages.isEmpty() && model.state.value.tafSetups.isEmpty())
     assertNull(model.state.value.timeZoneError)
+  }
+
+  @Test fun aPageReadInTheOldZoneIsDroppedWhenItLandsAfterTheZoneChanged() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/taf_1/activity", 200, """{"entries":[],"groups":[],"filters":[],"filter":"all","revision":"old-zone"}""")
+    transport.answer("POST /v1/account/time-zone", 200, """{"time_zone":"Europe/London","updated":1}""")
+    val model = model()
+    model.refresh()
+    transport.hold("GET /v1/tafs/taf_1/activity")
+    val read = launch { model.loadActivityPage("refunds-1", "all") }
+    testScheduler.runCurrent()
+    model.applyAccountTimeZone()
+    transport.release("GET /v1/tafs/taf_1/activity")
+    read.join()
+    assertTrue("the page read in the old zone isn't shown", model.state.value.activityPages.isEmpty())
   }
 
   @Test fun aPartlyMovedScheduleSaysSoInTafsCloudsWords() = runTest {

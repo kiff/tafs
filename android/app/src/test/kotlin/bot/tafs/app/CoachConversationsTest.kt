@@ -5,6 +5,7 @@ import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
 import java.time.Instant
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -105,6 +106,23 @@ class CoachConversationsTest {
     m.openCoachChat("s4")
     m.openCoachOn("refunds-1")
     assertNull(m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
+    assertEquals("refunds-1", m.state.value.coachImproving)
+  }
+
+  @Test fun aReadOfTheConversationLeftDoesNotReplaceTheNewTafsOne() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200,
+      """{"messages":[{"at":"2026-10-27T09:00:00Z","from":"owner","text":"About something else","session":"s4"}]}""")
+    val m = model()
+    transport.hold("GET /v1/tafs/setup_1/conversation/s4")
+    val read = launch { m.openCoachChat("s4") }
+    testScheduler.runCurrent()
+    // Coach from Refunds' page before that read came back: a new conversation about Refunds, which the late read leaves alone.
+    m.openCoachOn("refunds-1")
+    transport.release("GET /v1/tafs/setup_1/conversation/s4")
+    read.join()
+    assertTrue(m.state.value.chats[COACH_CHAT].orEmpty().isEmpty())
     assertTrue(m.state.value.coachFresh)
     assertEquals("refunds-1", m.state.value.coachImproving)
   }

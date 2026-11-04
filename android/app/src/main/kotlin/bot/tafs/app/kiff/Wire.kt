@@ -110,6 +110,8 @@ data class HomeTaf(
   @SerialName("time_zone") val timeZone: String? = null,
   @SerialName("time_zone_words") val timeZoneWords: String? = null,
   @SerialName("schedule_time_zone") val scheduleTimeZone: String? = null,
+  /** Only while its recurring schedule still runs in another zone: what to do about it, in tafs cloud's words. */
+  @SerialName("schedule_time_zone_words") val scheduleTimeZoneWords: String? = null,
   val status: String? = null,
   @SerialName("next_run") @Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
   @SerialName("last_run") @Serializable(with = InstantAsString::class) val lastRun: Instant? = null,

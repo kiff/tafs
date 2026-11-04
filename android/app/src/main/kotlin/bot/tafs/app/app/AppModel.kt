@@ -707,6 +707,14 @@ class AppModel(
 
   /** Bumped when an account is left, so an answer for the account that was is dropped. */
   private var accountGeneration = 0
+  /**
+   * Moves on when what tafs cloud writes in the account's clock changes (a new time zone): a page, Setup, dial or work read
+   * begun before then is in the old zone, and is dropped when it lands rather than shown.
+   */
+  private var presentationGeneration = 0
+  /** Moves on when Coach leaves its conversation for another: reads and streams of the earlier one stop showing. */
+  private var coachGeneration = 0
+  private fun shownGeneration() = accountGeneration * 1_000_000 + presentationGeneration
 
   /** The session ([accountGeneration]) Coach's setup was last read in for a hold no taf is. */
   private var setupReadIn = -1
@@ -1412,6 +1420,7 @@ class AppModel(
 
   /** A new Coach conversation: an empty chat, and the next message starts it. */
   fun newCoachChat() {
+    leaveCoachChat()
     _state.update { s ->
       s.copy(
         coachChat = null, coachFresh = true, coachImproving = null, coachContext = null, coachComponents = emptyList(), coachLines = emptyList(),
@@ -1420,6 +1429,12 @@ class AppModel(
         chatErrors = s.chatErrors - COACH_CHAT,
       )
     }
+  }
+
+  /** The conversation on screen is left: this phone stops following it, and work it accepted goes on at tafs cloud. */
+  private fun leaveCoachChat() {
+    coachGeneration++
+    followers.remove(COACH_CHAT)?.cancel()
   }
 
   /** A new Coach conversation on one taf, to improve it: its first message goes to the improve route. */
@@ -1448,6 +1463,7 @@ class AppModel(
 
   /** Reopens one of Coach's conversations: it's shown alone, and messages go on in it. */
   suspend fun openCoachChat(session: String) {
+    leaveCoachChat()
     _state.update { s ->
       s.copy(
         coachChat = session, coachFresh = false, coachImproving = null, coachContext = null,
@@ -1550,16 +1566,16 @@ class AppModel(
   suspend fun loadWork(tafId: String) {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     if (_state.value.mode != Mode.kiff) return
-    val generation = accountGeneration
+    val generation = shownGeneration()
     val work = try {
       cloud.work(cloudId)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(workErrors = it.workErrors + (tafId to "Its work couldn't be read. ${ErrorWords.of(e)}")) }
+      if (generation == shownGeneration()) _state.update { it.copy(workErrors = it.workErrors + (tafId to "Its work couldn't be read. ${ErrorWords.of(e)}")) }
       return
     }
-    if (generation == accountGeneration) _state.update { it.copy(works = it.works + (tafId to work), workErrors = it.workErrors - tafId) }
+    if (generation == shownGeneration()) _state.update { it.copy(works = it.works + (tafId to work), workErrors = it.workErrors - tafId) }
   }
 
   /**
@@ -1776,11 +1792,14 @@ class AppModel(
     // A new Coach conversation has nothing to read until its first message is sent.
     if (tafId == COACH_CHAT && _state.value.coachFresh) return
     val generation = accountGeneration
+    // A Coach conversation left for another (another taf, a new one) since: what it read is no longer the one on screen.
+    val coach = coachGeneration
+    fun current() = generation == accountGeneration && (tafId != COACH_CHAT || coach == coachGeneration)
     // No conversation chosen yet (at launch): Coach opens on its newest alone, the earlier ones under Previous conversations,
     // never several together. Without the list, or with none yet, the thread reads as before.
     if (tafId == COACH_CHAT && _state.value.coachChat == null) {
       val chats = attempt { cloud.chats(cloudId) }
-      if (generation != accountGeneration) return
+      if (!current()) return
       chats?.let { list -> _state.update { it.copy(coachChats = list) } }
       chats?.maxByOrNull { it.updated }?.let { newest -> _state.update { if (it.coachChat == null && !it.coachFresh) it.copy(coachChat = newest.session) else it } }
     }
@@ -1790,10 +1809,10 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "The thread couldn't be loaded. ${ErrorWords.of(e)}")) }
+      if (current()) _state.update { it.copy(chatErrors = it.chatErrors + (tafId to "The thread couldn't be loaded. ${ErrorWords.of(e)}")) }
       return
     }
-    if (generation != accountGeneration || _state.value.mode != Mode.kiff) return
+    if (!current() || _state.value.mode != Mode.kiff) return
     val now = clock()
     _state.update { s ->
       // What the owner sent stays on screen until the thread has it (kiff/tafs#138, 48).
@@ -1959,14 +1978,14 @@ class AppModel(
 
   suspend fun loadTafSetup(tafId: String) {
     val id = _state.value.taf(tafId)?.cloudId ?: return
-    val gen = accountGeneration
+    val gen = shownGeneration()
     try {
       planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
       val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
       val setup = cloud.setupView(id, proof)
-      if (gen == accountGeneration) _state.update { it.copy(tafSetups = it.tafSetups + (tafId to setup), tafSetupErrors = it.tafSetupErrors - tafId) }
+      if (gen == shownGeneration()) _state.update { it.copy(tafSetups = it.tafSetups + (tafId to setup), tafSetupErrors = it.tafSetupErrors - tafId) }
     } catch (e: CancellationException) { throw e
-    } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(tafSetupErrors = it.tafSetupErrors + (tafId to ErrorWords.of(e))) } }
+    } catch (e: Exception) { if (gen == shownGeneration()) _state.update { it.copy(tafSetupErrors = it.tafSetupErrors + (tafId to ErrorWords.of(e))) } }
   }
 
   suspend fun loadActivityPage(tafId: String, filter: String, more: Boolean = false, selection: String = "") {
@@ -1974,18 +1993,18 @@ class AppModel(
     val key = "$tafId:$filter:$selection"
     val old = _state.value.activityPages[key] ?: SourcePages()
     if (old.loading || (more && old.pages.lastOrNull()?.nextCursor == null)) return
-    val gen = accountGeneration
+    val gen = shownGeneration()
     _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = true, error = null))) }
     try {
       val result = cloud.activityPage(id, filter, if (more) old.pages.lastOrNull()?.nextCursor else null, if (more) null else old.firstEtag, selection)
-      if (gen != accountGeneration) return
+      if (gen != shownGeneration()) return
       val next = if (result.value == null) old else SourcePages(if (more) old.pages + result.value else listOf(result.value), if (more) old.firstEtag else result.etag)
       _state.update { it.copy(activityPages = it.activityPages + (key to next.copy(loading = false))) }
     } catch (e: CancellationException) {
-      if (gen == accountGeneration) _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = false))) }
+      if (gen == shownGeneration()) _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = false))) }
       throw e
     } catch (e: Exception) {
-      if (gen != accountGeneration) return
+      if (gen != shownGeneration()) return
       if (e is CloudError && e.status == 409 && more) {
         _state.update { it.copy(activityPages = it.activityPages - key) }; loadActivityPage(tafId, filter, false, selection)
       } else _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(error = ErrorWords.of(e)))) }
@@ -1996,17 +2015,17 @@ class AppModel(
     val id = _state.value.taf(tafId)?.cloudId ?: return
     val key = "$tafId:$all"; val old = _state.value.runPages[key] ?: SourcePages()
     if (old.loading || (more && old.pages.lastOrNull()?.nextCursor == null)) return
-    val gen = accountGeneration
+    val gen = shownGeneration()
     _state.update { it.copy(runPages = it.runPages + (key to old.copy(loading = true, error = null))) }
     try {
       val result = cloud.runsPage(id, if (more) old.pages.lastOrNull()?.nextCursor else null, if (more) null else old.firstEtag, if (all) 20 else 3)
-      if (gen != accountGeneration) return
+      if (gen != shownGeneration()) return
       val next = if (result.value == null) old else SourcePages(if (more) old.pages + result.value else listOf(result.value), if (more) old.firstEtag else result.etag)
       _state.update { it.copy(runPages = it.runPages + (key to next.copy(loading = false))) }
     } catch (e: CancellationException) {
-      if (gen == accountGeneration) _state.update { it.copy(runPages = it.runPages + (key to old.copy(loading = false))) }
+      if (gen == shownGeneration()) _state.update { it.copy(runPages = it.runPages + (key to old.copy(loading = false))) }
       throw e
-    } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(runPages = it.runPages + (key to old.copy(error = ErrorWords.of(e)))) } }
+    } catch (e: Exception) { if (gen == shownGeneration()) _state.update { it.copy(runPages = it.runPages + (key to old.copy(error = ErrorWords.of(e)))) } }
   }
 
   /** Sound for alerts on this phone. */
@@ -2712,10 +2731,10 @@ class AppModel(
   suspend fun loadKnob(tafId: String, version: Int? = null) {
     if (_state.value.mode != Mode.kiff) return
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
-    val generation = accountGeneration
+    val generation = shownGeneration()
     val first = attempt { cloud.knob(cloudId, version) } ?: run {
       // A version tafs cloud made that couldn't be read: the dial stays behind it.
-      if (version != null && generation == accountGeneration) _state.update { it.copy(knobBehind = it.knobBehind + (tafId to version)) }
+      if (version != null && generation == shownGeneration()) _state.update { it.copy(knobBehind = it.knobBehind + (tafId to version)) }
       return
     }
     val waiting = first.pending?.version
@@ -2730,7 +2749,7 @@ class AppModel(
       }
     } else first
     val behind = want != null && knob.shown != want
-    if (generation == accountGeneration) _state.update {
+    if (generation == shownGeneration()) _state.update {
       it.copy(knobs = it.knobs + (tafId to knob), knobBehind = if (behind) it.knobBehind + (tafId to want!!) else it.knobBehind - tafId)
     }
   }
@@ -3522,6 +3541,7 @@ class AppModel(
 
   private fun followStream(tafId: String, events: kotlinx.coroutines.flow.Flow<StreamEvent>, retry: String?, sent: ChatMessage? = null) {
     val generation = accountGeneration
+    val coach = coachGeneration
     followers[tafId]?.cancel()
     followers[tafId] = scope.launch {
       var ended: StreamEvent.End? = null
@@ -3531,6 +3551,7 @@ class AppModel(
       try {
         events.collect { e ->
           if (generation != accountGeneration) throw CancellationException("another account")
+          if (tafId == COACH_CHAT && coach != coachGeneration) throw CancellationException("another conversation")
           when (e) {
             is StreamEvent.Session -> {
               live { it.copy(session = e.session, run = e.run ?: it.run) }
@@ -4704,7 +4725,8 @@ class AppModel(
     }
     if (generation != accountGeneration) return
     val knobs = _state.value.knobs.keys
-    _state.update { it.copy(activityPages = emptyMap(), runPages = emptyMap(), tafSetups = emptyMap()) }
+    presentationGeneration++
+    _state.update { it.copy(activityPages = emptyMap(), runPages = emptyMap(), tafSetups = emptyMap(), works = emptyMap()) }
     refresh()
     knobs.forEach { attempt { loadKnob(it) } }
   }
