@@ -47,7 +47,9 @@ cd android
 ./gradlew :app:connectedDebugAndroidTest   # the UI tests, on a running emulator or phone
 ```
 
-Gradle needs a JDK 17 or later; Android Studio's own (`jbr`) does. On Windows,
+Gradle needs a JDK 17 or later; Android Studio's own (`jbr`) does. The build uses the
+Android Gradle plugin 9.1 on Gradle 9.3.1, which the wrapper fetches and checks against its
+checksum; Android Studio needs to support that plugin version to open the project. On Windows,
 `gradlew.bat`. CI (`.github/workflows/android.yml`) runs the unit tests and the debug
 builds on every pull request that touches `android/`, and the UI tests on an emulator. The UI
 tests run in a debug-only `TestHostActivity` (`createStableComposeRule`), which takes configuration
