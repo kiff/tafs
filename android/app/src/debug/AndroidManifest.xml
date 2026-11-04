@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <!--
+      The UI tests' host (debug builds only). A configuration change, as a just-booted emulator's settles, would recreate an
+      ordinary activity and take the test's content with it ("No compose hierarchies found"); this one takes every change in
+      place, and Compose redraws with the new configuration.
+    -->
+    <activity
+      android:name="bot.tafs.app.TestHostActivity"
+      android:exported="false"
+      android:theme="@android:style/Theme.Material.Light.NoActionBar"
+      android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|uiMode|density|fontScale|fontWeightAdjustment|locale|layoutDirection|keyboard|keyboardHidden|navigation|touchscreen|colorMode|mcc|mnc|grammaticalGender" />
+  </application>
+</manifest>

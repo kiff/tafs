@@ -10,7 +10,7 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, listable, readAccess, readExceptions, readKIFF, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, listable, readAccess, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
@@ -3988,8 +3988,18 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // The limits the apps check before sending: tafs cloud's, never a copy on the phone.
   const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
   const unitExceptions = tafs.flatMap((taf) => cardUnitExceptions(taf, kiff.held, summary(cards.get(taf.kiffAgent) ?? []).rules, me.timeZone ?? "UTC", now));
+  // What Needs you lists, counted once here so Home, the tab badge and the lock screen agree with it
+  // (kiff/tafs#469 item 1): held calls, "Did this happen?" calls, currency asks, and the tafs with a
+  // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
+  // count what they have, rather than show a number that's short.
+  const unsure = await readUnsure(bearer(event), deps.fetch, deps.kiffBase).catch(() => undefined);
+  const needsYou = unsure === undefined ? undefined : (() => {
+    const count = kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length + unsure + unitExceptions.length
+      + lights.filter((l) => l.some((d) => d.knocks > 0)).length;
+    return { count, words: count === 0 ? "Nothing needs you." : `${count} ${count === 1 ? "needs" : "need"} you.` };
+  })();
   return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
-    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}) };
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
 /** The period a chat counts toward and its bound, from KIFF's usage read; none when KIFF gives no plan. */

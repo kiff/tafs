@@ -296,11 +296,20 @@ final class TafsCloud {
         /// The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors.
         var doorsOffered: [String]? = nil
         var cardUnitExceptions: [CardUnitException]? = nil
+        /// Everything that waits for the person, counted by tafs cloud with its words; absent
+        /// when KIFF's "Did this happen?" can't be read, and the app counts what it has.
+        var needsYou: NeedsYou? = nil
 
         enum CodingKeys: String, CodingKey {
             case tafs, others, removing, doorsOffered = "doors_offered"
             case cardUnitExceptions = "card_unit_exceptions"
+            case needsYou = "needs_you"
         }
+    }
+
+    struct NeedsYou: Decodable, Equatable {
+        let count: Int
+        let words: String
     }
 
     func home() async throws -> Home {

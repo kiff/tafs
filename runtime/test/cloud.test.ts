@@ -23,6 +23,8 @@ type Drafts = Record<string, { secret: string; key: string; agent: string; statu
 /** What KIFF holds for the signed-in owner's account: its Cards and held calls, or a status it answers instead. */
 interface Account {
   mandates: Mandate[]; held: Held[]; calls?: ActivityCall[];
+  /** "Did this happen?" calls KIFF lists, or "down" when that read fails. */
+  unsure?: number | "down";
   drafts?: Record<string, string | { status: string; expires_at?: string; agent_id?: string }>; status?: number;
   /** Each Card's latest revision, as its statement says (kiff/tafs#107). */
   revisions?: Record<string, number>;
@@ -128,6 +130,11 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       if (!byToken[token]) return new Response("{}", { status: 401 });
       const d = account.drafts?.[decodeURIComponent(draft[1]!)];
       return d ? new Response(JSON.stringify({ id: draft[1], ...(typeof d === "string" ? { status: d } : d) }), { status: 200 }) : new Response("{}", { status: 404 });
+    }
+    if (url.endsWith("/v1/me/did-this-happen")) {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if (account.unsure === "down") return new Response(JSON.stringify({ error: "down" }), { status: 503 });
+      return new Response(JSON.stringify({ calls: Array.from({ length: account.unsure ?? 0 }, (_, i) => ({ proposal: `p-${i}` })) }), { status: 200 });
     }
     if (url.includes("/v1/me/mandates") || url.includes("/v1/me/card-exceptions")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -337,6 +344,20 @@ describe("tafs cloud", () => {
     expect(r.body.tafs[0]).toMatchObject({ time_zone: "Europe/Paris", schedule_time_zone: "Europe/Paris" });
     expect(r.body.tafs[0].schedule_time_zone_words).toBeUndefined();
     expect(w.agents.schedules.get(`t_acme|${RAE}`)).toMatchObject({ cron: before.cron, time_zone: "Europe/Paris" });
+  });
+
+  it("counts what Needs you lists for Home, and leaves the count out when KIFF's \"Did this happen?\" can't be read", async () => {
+    const w = world();
+    w.account.held = [{ subject: "rae", kind: "hold" }, { subject: "rae" }];
+    w.account.unsure = 2;
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.needs_you).toEqual({ count: 4, words: "4 need you." });
+    w.account.held = []; w.account.unsure = 1;
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.needs_you).toEqual({ count: 1, words: "1 needs you." });
+    w.account.unsure = 0;
+    expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.needs_you).toEqual({ count: 0, words: "Nothing needs you." });
+    w.account.unsure = "down";
+    const r = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(r.status).toBe(200); expect(r.body.needs_you).toBeUndefined();
   });
 
   it("composes KIFF currency exceptions only for visible tafs, with the same row in Needs you and Setup", async () => {

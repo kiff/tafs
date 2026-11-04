@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -23,7 +22,7 @@ import org.junit.Test
 /** The Halt screen's button says what's under way: Halting… while a halt goes, even once the screen shows it halted. */
 class HaltSheetTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   @Test fun aHaltUnderWaySaysHaltingEvenOnceTheResumeButtonShows() {
     var halt by mutableStateOf(Halt(state = Halt.RUNNING))

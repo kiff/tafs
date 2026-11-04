@@ -49,7 +49,10 @@ cd android
 
 Gradle needs a JDK 17 or later; Android Studio's own (`jbr`) does. On Windows,
 `gradlew.bat`. CI (`.github/workflows/android.yml`) runs the unit tests and the debug
-builds on every pull request that touches `android/`, and the UI tests on an emulator.
+builds on every pull request that touches `android/`, and the UI tests on an emulator. The UI
+tests run in a debug-only `TestHostActivity` (`createStableComposeRule`), which takes configuration
+changes in place: on a just-booted emulator the system settles after the first test starts, and an
+ordinary activity recreated then would drop the test's screen ("No compose hierarchies found").
 
 The application id is `dev.kiff.tafs`; the Kotlin packages are `bot.tafs.app`.
 
@@ -85,6 +88,12 @@ is told it's done, and Restore purchases sends again what wasn't.
 - **How a purchase or restore went** shows under what was tapped (Start Solo, the pack, Restore
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
+
+**Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
+words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
+tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
+Android shows each alert on the lock screen as it comes, with no count of its own there. An app's
+sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
 
 **A Card asked to take another currency** (KIFF's `card_unit` exception, as tafs cloud draws it in
 `card_unit_exceptions`): one panel (`CardUnitExceptionPanel`) with tafs cloud's title, words and

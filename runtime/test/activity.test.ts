@@ -39,6 +39,15 @@ describe("Activity pages from the source", () => {
     expect(calls).toHaveLength(8); expect(calls[0]!.outcome).toBe("blocked");
     expect((await activityPage(input(), s.net)).entries).toHaveLength(8, "closed exceptions restore all decisions");
   });
+  it("names the action without a currency it ends with, so the ask doesn't contradict itself", async () => {
+    for (const title of ["Answer a dispute with evidence, in EUR", "Answer a dispute with evidence (EUR)"]) {
+      const exception: Held = { id: "exc-example", kind: "card_unit", status: "held", subject: "agent-example", action: "read_case", title,
+        count: 1, created_at: call(2).created_at, last_at: call(2).created_at, breaches: [{ outcome: "amount_unit_mismatch", unit: "USD", card_unit: "EUR" }] };
+      const page = await activityPage({ ...input(), tafName: "Example", unitExceptions: [exception] }, source([call(2)]).net);
+      expect(page.card_unit_exceptions[0]).toMatchObject({ words: "Answer a dispute with evidence gets work in USD. Its Card only allows EUR. Add a USD limit?",
+        action_title: "Add a USD limit to Answer a dispute with evidence" });
+    }
+  });
   it("advances through hidden calls and keeps the history cursor when the currency panel changes or closes", async () => {
     const exception: Held = { id: "exc-example", kind: "card_unit", status: "held", subject: "agent-example", action: "read_case",
       count: 110, created_at: call(109).created_at, last_at: call(0).created_at, breaches: [{ outcome: "amount_unit_mismatch", unit: "USD" }] };

@@ -134,6 +134,7 @@ private struct ConnectedAppSheet: View {
                     }
                 }
                 Section("Workflow") {
+                    if let words = app.workflow_words { Text(words).foregroundColor(Theme.dim) }
                     ForEach(app.workflow_steps) { step in Text(step.words.isEmpty ? "\(step.number) · \(step.label)" : "\(step.number) · \(step.label)\n\(step.words)") }
                 }
                 Section {

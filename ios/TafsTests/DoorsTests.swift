@@ -44,6 +44,12 @@ final class DoorsTests: XCTestCase {
         XCTAssertEqual(r.knocks[1].dropped, 3)
     }
 
+    func testHomeCarriesTafsCloudsNeedsYouCount() throws {
+        let sent = #"{"tafs":[],"others":[],"removing":[],"needs_you":{"count":3,"words":"3 need you."}}"#
+        XCTAssertEqual(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(sent.utf8)).needsYou, TafsCloud.NeedsYou(count: 3, words: "3 need you."))
+        XCTAssertNil(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(HomeJSON.empty.utf8)).needsYou)
+    }
+
     func testDoorsShowOnlyWhereTafsCloudOffersThem() throws {
         let offered = #"{"tafs":[],"others":[],"removing":[],"doors_offered":["email"]}"#
         XCTAssertEqual(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(offered.utf8)).doorsOffered, ["email"])

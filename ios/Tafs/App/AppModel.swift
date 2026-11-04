@@ -20,6 +20,19 @@ final class AppModel: ObservableObject {
     @Published private(set) var activityPages: [String: SourcePages<TafsCloud.ActivityPage>] = [:]
     @Published private(set) var runPages: [String: SourcePages<TafsCloud.RunsPage>] = [:]
     @Published private(set) var cardUnitExceptions: [TafsCloud.CardUnitException] = []
+    /// Home's count of what waits for the person, from tafs cloud (kiff/tafs#469 item 1).
+    @Published private(set) var homeNeedsYou: TafsCloud.NeedsYou?
+
+    /// What waits for the person: tafs cloud's count, or, when it sent none, the app's own
+    /// count of held calls, currency requests and "Did this happen?" calls.
+    var needsYouCount: Int { homeNeedsYou?.count ?? held.count + cardUnitExceptions.count + unproven.count }
+
+    /// Home's line under the working count, in tafs cloud's words when it sent them.
+    var needsYouWords: String {
+        if let words = homeNeedsYou?.words { return words }
+        let n = needsYouCount
+        return n == 0 ? "Nothing needs you." : "\(n) \(n == 1 ? "needs" : "need") you."
+    }
     @Published private(set) var dismissingCardUnits: Set<String> = []
     private var presentationGeneration = 0
 
@@ -553,7 +566,7 @@ final class AppModel: ObservableObject {
         didSet {
             phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
             tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
-            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil
+            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
             haltErrors = [:]
             alertsOffered = false
             remembered?.removeObject(forKey: Self.alertsOfferedKey)
@@ -1505,6 +1518,7 @@ final class AppModel: ObservableObject {
     /// are not recreated.
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
+        homeNeedsYou = home.needsYou
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running

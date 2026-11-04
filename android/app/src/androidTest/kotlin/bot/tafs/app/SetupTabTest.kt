@@ -11,7 +11,6 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -42,7 +41,7 @@ import org.junit.Test
 class SetupTabTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "Refund double charges", tools = emptyList(), colorIndex = 1, card = Card(rules = emptyList(), issuedBy = "You"), now = "", cloudId = "taf_1")
   private val log = mutableListOf<String>()
@@ -157,10 +156,10 @@ class SetupTabTest {
   }
 
   @Test fun anAppsSheetSaysAskCoachOnceWhenThereIsNoSavedWorkflow() {
-    // As tafs cloud sends it: the line once, on the first action, and empty after.
+    // As tafs cloud sends it: no action's line, and the app's own Workflow line, once.
     val noWorkflow = KiffClient.json.decodeFromString<TafSetup>(
-      """{"connections":[{"id":"g1","name":"Stripe","status":"connected","action_words":"2 actions",
-          "actions":[{"name":"list_disputes","title":"List your disputes","step_words":"Ask Coach to set its workflow"},
+      """{"connections":[{"id":"g1","name":"Stripe","status":"connected","action_words":"2 actions","workflow_words":"Ask Coach to set its workflow",
+          "actions":[{"name":"list_disputes","title":"List your disputes","step_words":""},
                      {"name":"read_dispute","title":"Read a dispute","step_words":""}]}]}""",
     )
     show(knob(twoOn), setup = noWorkflow)
@@ -168,6 +167,7 @@ class SetupTabTest {
     rule.waitForIdle()
     rule.onNodeWithText("Read a dispute").performScrollTo().assertIsDisplayed()
     rule.onAllNodesWithText("Ask Coach to set its workflow").assertCountEquals(1)
+    rule.onNodeWithText("WORKFLOW", ignoreCase = true).performScrollTo().assertIsDisplayed()
   }
 
   @Test fun tafsOwnPlacesShowTheLiveTafsNeverAWaitingDrafts() {

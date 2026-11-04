@@ -210,6 +210,8 @@ data class AppState(
   val roomGiven: Set<String> = emptySet(),
   val tafs: List<Taf> = emptyList(),
   val held: List<HeldCall> = emptyList(),
+  /** Needs you, counted by tafs cloud on its home read; null when it couldn't count all of it. */
+  val needsYou: bot.tafs.app.kiff.NeedsYouCount? = null,
   /** Cards asked to take another currency, as tafs cloud draws them from KIFF; counted with the held calls in Needs you. */
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
   /** The ones whose Dismiss is on its way to KIFF. */
@@ -481,8 +483,14 @@ data class AppState(
   /** The halt of a taf, or with none of the whole account, as last read: running until read. */
   fun haltOf(tafId: String?): Halt = halts[tafId.orEmpty()] ?: Halt.Running
 
-  /** What Needs you holds, as Home's headline and the bar's badge count it: held calls, currency requests and "Did this happen?". */
-  val needsYouCount: Int get() = held.size + cardUnitExceptions.size + unsure.size
+  /**
+   * What Needs you holds, as Home's headline and the bar's badge count it: tafs cloud's count, else (when it couldn't count all
+   * of it) the app's own of what it has, held calls, currency requests and "Did this happen?".
+   */
+  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size)
+
+  /** Home's line for it: tafs cloud's words, else the app's for its own count. */
+  val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) "Nothing needs you." else "$it ${if (it == 1) "needs" else "need"} you." }
 
   /** Halting is tafs cloud's: the account's, or a taf it runs. */
   fun canHalt(tafId: String?): Boolean = mode == Mode.kiff && (tafId == null || taf(tafId)?.cloudId != null)
@@ -1046,6 +1054,7 @@ class AppModel(
         otherAgents = others,
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
+        needsYou = read.home.needsYou,
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
         // What this person may do with each agent, as KIFF says: a read that failed leaves what was known.

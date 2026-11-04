@@ -177,7 +177,6 @@ struct HomeView: View {
 
     private var headline: some View {
         let working = model.workingCount
-        let waiting = model.held.count + model.cardUnitExceptions.count
         return VStack(alignment: .leading, spacing: 0) {
             if model.loadingList {
                 // Never "0 tafs working" before the tafs are read (#91).
@@ -189,7 +188,7 @@ struct HomeView: View {
             } else {
                 Text("\(working) \(working == 1 ? "taf" : "tafs") working.")
                     .foregroundColor(Theme.ink)
-                Text(waiting == 0 ? "Nothing needs you." : "\(waiting) \(waiting == 1 ? "needs" : "need") you.")
+                Text(model.needsYouWords)
                     .foregroundColor(Theme.dim)
             }
         }

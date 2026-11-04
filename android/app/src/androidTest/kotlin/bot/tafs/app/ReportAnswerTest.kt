@@ -4,7 +4,6 @@ import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -24,7 +23,7 @@ import org.junit.Test
 class ReportAnswerTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val sent = mutableListOf<Pair<String, String?>>()
 

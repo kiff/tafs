@@ -1,7 +1,6 @@
 package bot.tafs.app
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.design.TafsTheme
@@ -18,7 +17,7 @@ import org.junit.Test
 class ExportChatsTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
-  @get:Rule(order = 1) val rule = createComposeRule()
+  @get:Rule(order = 1) val rule = createStableComposeRule()
 
   private val offered = mutableListOf<ChatExport>()
   private val export = ChatExport("""{"chats":[]}""", "tafs: your chats\n")
