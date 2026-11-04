@@ -5,6 +5,7 @@ version headings refer to releases, not merely to merged pull requests.
 
 ## Unreleased
 
+- **Android (v27):** Home's line and the Needs you badge show tafs cloud's count, which also counts a knock at a door. An app's sheet with no saved workflow says "Ask Coach to set its workflow" once, under its own Workflow line. The UI tests no longer fail when the emulator's configuration settles after the first test starts.
 - **v27, tafs cloud:** Home gets `needs_you: {count, words}`, the count of what Needs you lists (held calls, "Did this happen?", currency asks, tafs with a knock), so Home, the badge and the lock screen agree with it; left out when KIFF's "Did this happen?" list can't be read. With no saved workflow, an app in Setup sends `workflow_words` for its own Workflow line instead of a line on an action. A currency ask names the action without a currency it ends with ("…, in EUR").
 - **v26, tafs cloud:** a schedule saved before the account's time zone changed now follows it by itself, hours as written, the first time someone who manages Cards opens the tafs (a viewer's read changes nothing and still says how to apply it). An app's sheet with no saved workflow says "Ask Coach to set its workflow" once, not on every action.
 - **iOS, from the v25 phone check (v26):** a Resume not answered in time says "Face ID timed out. Try again." (or Touch ID). Account › Version reads the version first, then the build ("1.0 (26)"). An app's sheet skips an empty step line.

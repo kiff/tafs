@@ -89,6 +89,12 @@ is told it's done, and Restore purchases sends again what wasn't.
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
 
+**Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
+words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
+tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
+Android shows each alert on the lock screen as it comes, with no count of its own there. An app's
+sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
+
 **A Card asked to take another currency** (KIFF's `card_unit` exception, as tafs cloud draws it in
 `card_unit_exceptions`): one panel (`CardUnitExceptionPanel`) with tafs cloud's title, words and
 history, in Needs you (and its count), at the top of the taf's Setup, and above its Activity, where

@@ -233,7 +233,6 @@ private fun Header(accountLabel: String?, showNew: Boolean, onNewTaf: () -> Unit
 @Composable
 private fun Headline(state: AppState) {
   val working = state.workingCount
-  val waiting = state.needsYouCount
   Column {
     // Never "0 tafs working" before the tafs are read (#91).
     if (state.mode == Mode.kiff && !state.listLoaded) {
@@ -245,10 +244,8 @@ private fun Headline(state: AppState) {
       return@Column
     }
     Text("$working ${if (working == 1) "taf" else "tafs"} working.", style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
-    Text(
-      if (waiting == 0) "Nothing needs you." else "$waiting ${if (waiting == 1) "needs" else "need"} you.",
-      style = scaled(36, FontWeight.Bold, Theme.dim, display = true),
-    )
+    // tafs cloud's words for what Needs you holds, else the app's for its own count.
+    Text(state.needsYouWords, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
   }
 }
 

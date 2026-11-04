@@ -119,6 +119,11 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
           if (action.stepWords.isNotEmpty()) Text(action.stepWords, style = scaled(13, color = Theme.dim))
         }
         app.workflowSteps.forEach { step -> Text(workflowLine(step), style = scaled(14, color = Theme.soft)) }
+        // No saved workflow: said once, under a Workflow line of its own, not under any one action.
+        app.workflowWords?.let { words ->
+          Eyebrow("Workflow")
+          Text(words, style = scaled(14, color = Theme.soft))
+        }
         TextButton({ chosen = null; onActivity(app.stats.activityQuery) }, enabled = app.actions.isNotEmpty()) { Text(app.stats.words + " ›", color = if (app.stats.complete) Theme.amberText else Theme.no) }
         if (state.manages(taf.id)) {
           improve?.let { TextButton({ chosen = null; it(taf.id) }) { Text("Add actions with Coach", color = Theme.amberText) } }

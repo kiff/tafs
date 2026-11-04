@@ -412,4 +412,12 @@ class TafPageTest {
     model.applyAccountTimeZone()
     assertEquals("Your account's time zone changed, but some schedules still need to move. Try again.", model.state.value.timeZoneError)
   }
+
+  @Test fun homeTakesTafsCloudsNeedsYouCount() = runTest {
+    reads("""{"tafs":[${taf()}],"others":[],"removing":[],"needs_you":{"count":2,"words":"2 need you."}}""")
+    val model = model()
+    model.refresh()
+    assertEquals(2, model.state.value.needsYouCount)
+    assertEquals("2 need you.", model.state.value.needsYouWords)
+  }
 }
