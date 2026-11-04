@@ -443,6 +443,8 @@ export function byHolder(mandates: Mandate[], held: Held[]) {
     cards.set(m.subject, [...(cards.get(m.subject) ?? []), m]);
   }
   const waiting = new Map<string, number>();
-  for (const h of held) waiting.set(h.subject, (waiting.get(h.subject) ?? 0) + 1);
+  // Only a held call waits on someone: a currency ask (card_unit) doesn't stop the taf, it asks for a
+  // limit, so it never makes the taf read "Waiting on you" (Needs you still lists it).
+  for (const h of held) if ((h.kind ?? "hold") !== "card_unit") waiting.set(h.subject, (waiting.get(h.subject) ?? 0) + 1);
   return { cards, waiting };
 }

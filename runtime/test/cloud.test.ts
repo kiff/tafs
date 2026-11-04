@@ -346,6 +346,15 @@ describe("tafs cloud", () => {
     expect(w.agents.schedules.get(`t_acme|${RAE}`)).toMatchObject({ cron: before.cron, time_zone: "Europe/Paris" });
   });
 
+  it("doesn't make a taf wait on a currency ask: it keeps working, while Needs you still counts the ask", async () => {
+    const w = world();
+    w.account.held = [{ id: "exc-1", kind: "card_unit", subject: "rae", action: "answer_case", status: "held", count: 1,
+      created_at: "2026-10-28T12:00:00Z", last_at: "2026-10-28T12:00:00Z", breaches: [{ outcome: "amount_unit_mismatch", unit: "USD", card_unit: "EUR" }] }];
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.body.tafs[0]).toMatchObject({ waiting: 0 });
+    expect(home.body.tafs[0].state).not.toBe("waiting");
+  });
+
   it("counts what Needs you lists for Home, and leaves the count out when KIFF's \"Did this happen?\" can't be read", async () => {
     const w = world();
     w.account.held = [{ subject: "rae", kind: "hold" }, { subject: "rae" }];
