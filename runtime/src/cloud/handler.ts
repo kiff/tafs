@@ -4,12 +4,13 @@ import { aiFor, type AIView, base, periodName, planOf, refusedForAI, refusedWord
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import type { ReadyRun } from "./forward.js";
-import { alertTarget, type Change, CONNECTION_SIGNED_OUT, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, type Change, CONNECTION_SIGNED_OUT, type Device, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
+import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn } from "./tafdef.js";
-import { byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, listable, readAccess, readKIFF, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
@@ -26,6 +27,8 @@ import { addDoor, answerKnock, DoorError, doorLights, doorRunEnded, placesOf, se
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
+import { activityPage, ActivityError, representationTag } from "./activity.js";
+import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -91,6 +94,8 @@ import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
  *   GET  /v1/tafs/{id}/calls            what its calls through KIFF acted on (kiff/tafs#167)
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
  *   DELETE /v1/tafs/{id}                remove it: its schedule, runs, chats, notes and key; free its name
+ *   GET  /v1/push?device_token=          this phone's registration and server-defined alert choices
+ *   DELETE /v1/push                     unregister this phone, by its token in the JSON body
  *   POST /v1/push                       {device_token, platform?, environment, sound?, alert_target?}: this phone gets the account's alerts (platform ios, the default, or android)
  *   DELETE /v1/push/{token}             it stops
  *   POST /v1/alerts                     {alert_target}: KIFF's alert target for the account, with no phone's alerts (kiff/tafs#206)
@@ -437,6 +442,19 @@ class HTTPError extends Error {
   }
 }
 
+/** A conditional representation; 304 has no JSON body. */
+class PageResponse {
+  constructor(readonly response: HTTPResult) {}
+}
+
+function conditionalPage(event: HTTPEvent, value: unknown): PageResponse {
+  const etag = representationTag(value);
+  const headers = { "content-type": "application/json", etag, "cache-control": "private, no-cache", vary: "Authorization" };
+  return new PageResponse(event.headers?.["if-none-match"] === etag
+    ? { statusCode: 304, headers, body: "" }
+    : { statusCode: 200, headers, body: JSON.stringify(value) });
+}
+
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   const began = Date.now();
   const r = await answer(event, deps);
@@ -448,10 +466,11 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   try {
     if (event.rawPath === "/v1/mcp") return await mcpRoute(event, deps);
     if (isDoorPath(event.rawPath)) return await doorWebhook(event, deps);
-    return json(200, await route(event, deps));
+    const value = await route(event, deps);
+    return value instanceof PageResponse ? value.response : json(200, value);
   } catch (err) {
     if (err instanceof HTTPError) return json(err.status, { error: err.message, ...(await withRefusalWords(event, err, deps)) });
-    if (err instanceof DoorError) return json(err.status, { error: err.message });
+    if (err instanceof DoorError || err instanceof ActivityError) return json(err.status, { error: err.message });
     if (err instanceof KIFFError || err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
     return json(500, { error: "something went wrong on tafs cloud" });
@@ -460,8 +479,8 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats components connect continue conversation " +
-  "delete deletions deliveries doors door email whatsapp ended events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
-  "memory messages pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
+  "activity delete deletions deliveries doors door email whatsapp ended events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
+  "memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks").split(" "));
 
 /**
@@ -482,6 +501,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   if (method === "GET" && parts.length === 2 && parts[1] === "jobs") {
     return { jobs: JOBS.map((j) => ({ id: j.id, name: j.name, summary: j.summary, cron: j.cron })) };
+  }
+  if (method === "GET" && parts.length === 2 && parts[1] === "time-zones") {
+    const q = (new URLSearchParams(event.rawQueryString ?? "").get("q") ?? "").trim().toLowerCase().slice(0, 100);
+    return { zones: ["UTC", ...Intl.supportedValuesOf("timeZone")].filter((zone) => zone.toLowerCase().replaceAll("_", " ").includes(q))
+      .map((id) => ({ id, title: id.replaceAll("_", " ") })) };
   }
   if (method === "POST" && parts.length === 3 && parts[1] === "kiff" && parts[2] === "alerts") {
     return alert(event, deps);
@@ -565,6 +589,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
 
   const taf = await owned(me, parts[2] ?? "", deps);
   const action = parts[3];
+  if (method === "GET" && ((parts.length === 4 && (action === "activity" || action === "setup")) || (parts.length === 5 && action === "work" && parts[4] === "runs"))) {
+    const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase);
+    if (!listable(access, taf.kiffAgent)) throw new HTTPError(404, "no such taf");
+    if (action === "activity") return conditionalPage(event, await activityPage({ token: bearer(event), tenant: me.tenantID, subject: me.subject,
+      taf: taf.id, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? "") }, deps.fetch, deps.kiffBase));
+    if (action === "work") return runsPage(event, me, taf, deps, access.get(taf.kiffAgent)?.manage === true);
+    return setupPage(event, me, taf, deps);
+  }
   if (action === "doors") return doorRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && action === "halt") return haltRoute(event, method, me, taf, deps);
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume" || action === "run") && taf.unscheduled) {
@@ -755,7 +787,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return improve(event, me, taf, deps);
   }
   if (parts.length === 4 && method === "GET" && action === "memory") {
-    return { notes: await notes(me, taf, deps) };
+    const all = await notes(me, taf, deps, true);
+    if (new URLSearchParams(event.rawQueryString ?? "").get("all") !== "true") return { notes: all.slice(0, MEMORY.shown) };
+    return { notes: all, summary: { count: all.length, title: `${all.length} note${all.length === 1 ? "" : "s"}`, ...(all[0] ? { latest: all[0].content } : {}) } };
   }
   if (parts.length === 4 && method === "GET" && action === "calls") {
     return { calls: await callRefs(me, taf, deps) };
@@ -891,6 +925,22 @@ async function person(event: HTTPEvent, deps: Deps, deleting = false): Promise<K
  */
 async function push(event: HTTPEvent, method: string, parts: string[], deps: Deps): Promise<unknown> {
   const me = await person(event, deps);
+  if (method === "GET" && parts.length === 2) {
+    const token = event.headers?.["tafs-device-token"] ?? new URLSearchParams(event.rawQueryString ?? "").get("device_token") ?? "";
+    const { devices } = await deps.push.get(me.tenantID);
+    const device = devices.find((d) => d.token === token && d.subject === me.subject);
+    const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase);
+    const answering = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent) && placesOf(t).includes("app"));
+    return { enabled: Boolean(device), sound: !device?.silent, kinds: alertChoices(device?.kinds),
+      answering: { title: `${answering.length} taf${answering.length === 1 ? "" : "s"}`, tafs: answering.map((t) => ({ id: t.id, name: t.name })) } };
+  }
+  if (method === "DELETE" && parts.length === 2) {
+    const r = registration(parseBody(event));
+    const { devices } = await deps.push.get(me.tenantID);
+    const device = devices.find((d) => d.token === r.token && d.subject === me.subject);
+    if (device) await deps.push.removeDevice(me.tenantID, device.token);
+    return { removed: Boolean(device) };
+  }
   if (method === "POST" && parts.length === 2) {
     const r = registration(parseBody(event));
     if (r.platform === "android" && deps.androidPush === false) throw new HTTPError(503, "alerts on Android phones aren't set up on this tafs cloud");
@@ -908,8 +958,8 @@ async function push(event: HTTPEvent, method: string, parts: string[], deps: Dep
     // handed over now or, for a phone that registered before, the one kept.
     const newest = r.target?.secret ?? secrets[0];
     if (newest && answers) await deps.accounts.put(me.tenantID, me.tenantID, newest);
-    await deps.push.addDevice(me.tenantID, { token: r.token, platform: r.platform, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, at });
-    return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0 };
+    await deps.push.addDevice(me.tenantID, { token: r.token, platform: r.platform, environment: r.environment, subject: me.subject, answers, addsTasks, manages, silent: r.silent, kinds: r.kinds ?? devices.find((d) => d.token === r.token && d.subject === me.subject)?.kinds, at });
+    return { device: true, answers, alerts: Boolean(r.target) || secrets.length > 0, ...(r.kinds ? { kinds: alertChoices(r.kinds) } : {}) };
   }
   if (method === "DELETE" && parts.length === 3) {
     // The token as the phone wrote it in the path: Firebase's has colons, which come percent-encoded.
@@ -1000,6 +1050,7 @@ function haltNotification(taf: Taf | undefined, halted: boolean): Notification {
   const name = taf?.name;
   const who = name ?? "All your tafs";
   return {
+    preference: "halted",
     kind: "alert",
     payload: {
       aps: {
@@ -2580,6 +2631,59 @@ async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, d
 
 
 /** The taf's dial (docs/api.md, "The knob"): every label and line written here. */
+/** The service's retained runs, paged for the screen without exposing another person's chat. */
+async function runsPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps, manages: boolean): Promise<PageResponse> {
+  const q = new URLSearchParams(event.rawQueryString ?? "");
+  const limit = Number(q.get("limit") ?? 20);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50) throw new HTTPError(400, "limit is 1 to 50");
+  const scope = representationTag([me.tenantID, me.subject, taf.id, "runs"]);
+  let before: { at: string; id: string } | undefined;
+  const raw = q.get("cursor");
+  if (raw) {
+    try {
+      if (raw.length > 2048) throw new Error();
+      const c = JSON.parse(Buffer.from(raw, "base64url").toString());
+      if (c.scope !== scope || typeof c.at !== "string" || typeof c.id !== "string") throw new Error();
+      before = c;
+    } catch { throw new HTTPError(400, "invalid runs cursor"); }
+  }
+  const all = (await agentsCall(() => deps.agents.runs(me.tenantID, taf.id, false, 100)))
+    .filter((r) => manages || !r.requester || (r.requester.kind === "member" && r.requester.id === me.subject))
+    .sort((a, b) => b.created.localeCompare(a.created) || b.id.localeCompare(a.id));
+  const remaining = before ? all.filter((r) => r.created < before.at || (r.created === before.at && r.id < before.id)) : all;
+  const selected = remaining.slice(0, limit);
+  const sent = deps.doors ? await sentOf(deps.doors.store, me.tenantID, taf.id).catch(() => []) : [];
+  const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, sent.filter((s) => s.status === "not_sent").map((s) => s.run)).catch(() => new Set<string>()) : new Set<string>();
+  const now = deps.now?.() ?? new Date();
+  const last = selected.at(-1);
+  return conditionalPage(event, { ...workOf(selected, me.timeZone ?? "UTC", now, sent, again),
+    ...(remaining.length > limit && last ? { next_cursor: Buffer.from(JSON.stringify({ scope, at: last.created, id: last.id })).toString("base64url") } : {}),
+    title: "Its work", more_title: "Show all runs" });
+}
+
+/** Names, counts, limits and summaries are made here, never joined by a phone. */
+async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  const now = deps.now?.() ?? new Date();
+  const token = bearer(event);
+  const proof = event.headers?.["planque-device-signature"] ?? "";
+  const [knob, memory, versions, cards, stats, runs, grants] = await Promise.all([
+    knobRoute(event, me, taf, deps), notes(me, taf, deps, true),
+    agentsCall(() => deps.agents.versions(me.tenantID, taf.id)),
+    readKIFF(token, deps.fetch, deps.kiffBase),
+    appCalls(token, taf.kiffAgent, now, deps.fetch ?? fetch, deps.kiffBase ?? KIFF_API),
+    agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true, 20)),
+    deps.planqueBase && proof ? setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch).then((grants) => ({ grants, error: undefined as string | undefined }),
+      () => ({ grants: [], error: "Connected apps could not be read; try again" }))
+      : Promise.resolve({ grants: [], error: "Connect this phone to read its connected apps" }),
+  ]);
+  const active = runs.find((r) => r.status === "RUNNING");
+  const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
+  const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent)).rules;
+  return { ...setupView({ agent: taf.kiffAgent, grants: grants.grants, knob: knob as import("./knob.js").Knob, rules, notes: memory,
+    versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete }),
+    ...(grants.error ? { connections_error: grants.error } : {}) };
+}
+
 async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
     // The taf's dial (docs/api.md, "The knob"): every label and line written here.
   const now = deps.now?.() ?? new Date();
@@ -3706,14 +3810,14 @@ export interface Note {
 }
 
 /** The taf's newest notes the person reads, newest first: the shared ones and their own, never another person's. */
-async function notes(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<Note[]> {
+async function notes(me: KIFFIdentity, taf: Taf, deps: Deps, every = false): Promise<Note[]> {
   const all = await agentsCall(() => deps.agents.memories(me.tenantID, taf.id, ownerKey(me)));
   return all
     .map((n): Note => n.scope
       ? { id: `@${n.name}`, path: n.name, content: n.text, updated_at: iso(n.updated), scope: "mine" }
       : { id: n.name, path: n.name, content: n.text, updated_at: iso(n.updated), scope: "shared" })
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-    .slice(0, MEMORY.shown);
+    .slice(0, every ? undefined : MEMORY.shown);
 }
 
 /** Forgets one note, by its name, as the app sends it (escaped). Gone means gone: kiff/agents keeps no versions. */
@@ -3815,7 +3919,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run }, me.timeZone ?? "UTC", now) : undefined;
-    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i] } : {}), ...(work ? { work } : {}) };
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}) };
   });
   // Setup's agent and a taf being removed are tafs cloud's too: never another agent.
   // Another agent's colour isn't kept: it can change when a taf is added.
@@ -4546,7 +4650,7 @@ async function tellPhones(deps: Deps, tenant: string, n: Notification): Promise<
   try {
     const { devices } = await deps.push.get(tenant);
     await Promise.all(devices.filter((d) => d.answers).map(async (d) => {
-      const r = await deps.apns.send(d, n).catch(() => "failed" as const);
+      const r = await sendNotification(deps.apns, d, n).catch(() => "failed" as const);
       if (r === "gone") await deps.push.removeDevice(tenant, d.token);
     }));
   } catch (err) {

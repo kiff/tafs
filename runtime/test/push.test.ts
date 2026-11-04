@@ -100,8 +100,8 @@ function fakeContinue(order: string[] = [], status = 202) {
   return c;
 }
 
-function call(method: string, path: string, opts: { body?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<ReadyRun | void>; accounts?: Map<string, { tenant: string; secret: string }>; agents?: object; androidPush?: boolean; tafs?: Array<{ id: string; name: string; kiffAgent: string; removing?: boolean }> }) {
-  const event: HTTPEvent = { rawPath: path, requestContext: { http: { method } }, headers: opts.headers ?? {}, body: opts.body };
+function call(method: string, path: string, opts: { body?: string; query?: string; headers?: Record<string, string>; push: ReturnType<typeof memoryPush>; apns?: ReturnType<typeof fakeAPNs>; slots?: ReturnType<typeof memorySlots>; now?: Date; forward?: (s: string, r: string) => Promise<ReadyRun | void>; accounts?: Map<string, { tenant: string; secret: string }>; agents?: object; androidPush?: boolean; tafs?: Array<{ id: string; name: string; kiffAgent: string; removing?: boolean }> }) {
+  const event: HTTPEvent = { rawPath: path, rawQueryString: opts.query, requestContext: { http: { method } }, headers: opts.headers ?? {}, body: opts.body };
   const accounts = opts.accounts ?? new Map();
   return handle(event, {
     agents: opts.agents ?? new Proxy({}, { get: () => { throw new Error("alerts and phones never need kiff/agents"); } }),
@@ -686,5 +686,29 @@ describe("an Android phone's alerts", () => {
   it("validates a registration the way the handler does", () => {
     expect(registration({ device_token: FCM_TOKEN, platform: "android" })).toEqual({ token: FCM_TOKEN, platform: "android", environment: "production", silent: false });
     expect(registration({ device_token: TOKEN_A.toUpperCase(), environment: "sandbox" })).toEqual({ token: TOKEN_A, platform: "ios", environment: "sandbox", silent: false });
+  });
+});
+
+
+describe("phone alert choices and unregistering", () => {
+  it("keeps kinds on a token refresh and never borrows another person's choices", async () => {
+    const push = memoryPush();
+    await call("POST", "/v1/push", { push, headers: { authorization: "Bearer ana" }, body: JSON.stringify({ device_token: TOKEN_A, environment: "sandbox", kinds: { answered: false } }) });
+    await call("POST", "/v1/push", { push, headers: { authorization: "Bearer ana" }, body: JSON.stringify({ device_token: TOKEN_A, environment: "sandbox" }) });
+    expect(push.devices.get("t_acme")?.[0]?.kinds?.answered).toBe(false);
+    const read = await call("GET", "/v1/push", { push, headers: { authorization: "Bearer ana" }, query: `device_token=${TOKEN_A}` });
+    expect(read.body.enabled).toBe(true);
+    expect((read.body.kinds as Array<{ id: string; enabled: boolean }>).find((k) => k.id === "answered")?.enabled).toBe(false);
+    const other = await call("GET", "/v1/push", { push, headers: { authorization: "Bearer viewer" }, query: `device_token=${TOKEN_A}` });
+    expect(other.body.enabled).toBe(false);
+  });
+  it("removes only this person's phone and keeps the account's alert secret", async () => {
+    const push = memoryPush(); push.secrets.set("t_acme", [SECRET]);
+    await call("POST", "/v1/push", { push, headers: { authorization: "Bearer ana" }, body: JSON.stringify({ device_token: TOKEN_A, environment: "sandbox" }) });
+    const body = JSON.stringify({ device_token: TOKEN_A, environment: "sandbox" });
+    expect((await call("DELETE", "/v1/push", { push, headers: { authorization: "Bearer viewer" }, body })).body.removed).toBe(false);
+    expect((await call("DELETE", "/v1/push", { push, headers: { authorization: "Bearer ana" }, body })).body.removed).toBe(true);
+    expect(push.devices.get("t_acme")).toHaveLength(0); expect(push.secrets.get("t_acme")).toEqual([SECRET]);
+    expect((await call("DELETE", "/v1/push", { push, headers: { authorization: "Bearer ana" }, body })).body.removed).toBe(false);
   });
 });

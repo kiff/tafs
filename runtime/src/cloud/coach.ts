@@ -83,7 +83,7 @@ export const TOOLS: ToolDef[] = [
       "Say \"Waiting for your approval\" once. tafs_state shows each taf's results.",
   },
   {
-    name: "taf_dial", line: "Draft a change to a taf's dial",
+    name: "taf_dial", line: "Draft a change to a taf",
     properties: {
       taf: TAF,
       wakes: {

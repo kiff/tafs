@@ -1,13 +1,14 @@
 import { createHash, randomBytes } from "node:crypto";
 import { AgentsError, type AIBound, type Run } from "../agents.js";
 import { refTenant, type Note } from "../coach.js";
-import { type Device, type PushStore, type Sender, tellChange } from "../push.js";
+import { type Device, type PushStore, type Sender, sendNotification, tellChange } from "../push.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
 import { type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
+import { apsFor, levelOf } from "../levels.js";
 import { eventLog, logEvent } from "../events.js";
 
 /** What doors are set up with in a deployment; a door whose part is missing isn't offered. */
@@ -321,13 +322,14 @@ async function countDropped(ctx: DoorsContext, tenant: string, taf: Taf, door: D
 /** One alert to the phones of the people who manage Cards; a failure is logged, never in the way. */
 // The phones of people who manage the account's tafs. A phone registered before tafs cloud kept `manages`
 // counts by whether its person may answer held calls, so it isn't left out until it registers again.
-async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, body: string, knock: string, about: "knock" | "reply" = "knock"): Promise<void> {
+async function tellOwner(ctx: DoorsContext, tenant: string, taf: Taf, body: string, knock: string, about: "knock" | "reply" | "not_sent" = "knock"): Promise<void> {
   try {
     const { devices } = await ctx.push.get(tenant);
-    await Promise.all(devices.filter((d: Device) => (d.manages ?? d.answers) === true).map((d: Device) => ctx.apns.send(d, {
+    await Promise.all(devices.filter((d: Device) => (d.manages ?? d.answers) === true).map((d: Device) => sendNotification(ctx.apns, d, {
+      preference: about === "knock" ? "needs_you" : about === "not_sent" ? "not_sent" : "answered",
       kind: "alert",
       // Every door alert opens the taf (`open`, `taf_id`, read by both apps); a knock's also names the knock.
-      payload: { aps: { alert: { title: taf.name, body }, sound: "default" }, open: "taf", taf_id: taf.id, ...(about === "knock" ? { door_knock: { taf: taf.id, knock } } : {}) },
+      payload: { aps: { alert: { title: taf.name, body }, ...apsFor(levelOf(about === "knock" ? "hold" : "run_ended", false)) }, open: "taf", taf_id: taf.id, ...(about === "knock" ? { door_knock: { taf: taf.id, knock } } : {}) },
       collapseID: knock.slice(0, 64),
     }).catch(() => "failed")));
   } catch (err) {
@@ -451,7 +453,7 @@ async function settle(ctx: DoorsContext, tenant: string, ref: string, noted?: st
   if (sent && !done.has("door_reply")) {
     await stamp(sent);
     if (taf && placesOf(taf).includes("app") && !done.has("app")) {
-      await tellOwner(ctx, tenant, taf, `Your reply to ${reply.name || reply.to} wasn't sent. You can send it again from ${taf.name}.`, `reply-${ref}`, "reply");
+      await tellOwner(ctx, tenant, taf, `Your reply to ${reply.name || reply.to} wasn't sent. You can send it again from ${taf.name}.`, `reply-${ref}`, "not_sent");
     }
     if (taf && door && app) {
       await store.put(doorKeys.unsent(tenant, reply.taf, runID), { ref, reply: { ...reply, run: runID } }, addDays(ctx.now, DOOR.replyDays));
