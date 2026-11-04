@@ -16,7 +16,8 @@ import { skippedOf, summaryOf, workOf } from "./work.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { requestDetail } from "./request.js";
 import { type ActionPlace, actionPlace } from "./places.js";
-import { ConnectError, listApps, startApp } from "./connect.js";
+import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
+import { recipesFor, type RecipesView } from "./recipes.js";
 import { instantIn, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
@@ -72,6 +73,7 @@ import { ApprovalError, askOf, decide as decideApproval, reportOf, settle as set
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
+ *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476)
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
  *   DELETE /v1/tafs/{id}/follow-ups/{fid}  a follow-up the taf set itself, removed
@@ -561,6 +563,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "ai" && method === "GET") return aiUsage(event, await person(event, deps), deps);
   if (parts[1] === "connect" && parts[2] === "apps") return connectApps(event, method, parts, await person(event, deps), deps);
+  if (method === "GET" && parts.length === 2 && parts[1] === "recipes") return recipes(event, await person(event, deps), deps);
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
   }
@@ -4953,6 +4956,33 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
     throw err;
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * Recipes (docs/coach.md, "Recipes"): the tried recipes whose connections the account's catalog can
+ * make, read with the person's own session. When the catalog can't be read, every tried recipe is
+ * listed and `filtered` says so: a new person still opens Coach to recipes, and Coach says what it
+ * can't connect.
+ */
+async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<RecipesView> {
+  let apps: CatalogApp[] | undefined;
+  if (deps.planqueBase) {
+    try {
+      apps = [];
+      let page: { cursor?: string; provider?: string } = {};
+      // The whole catalog: the reviewed entries, then the managed provider's apps, a page at a time, at most a few.
+      for (let i = 0; i < 4; i++) {
+        const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
+        apps.push(...got.apps);
+        if (!got.next_cursor) break;
+        page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
+      }
+    } catch (err) {
+      if (!(err instanceof ConnectError)) throw err;
+      apps = undefined;
+    }
+  }
+  return recipesFor(apps);
 }
 
 /** The taf's open knocks, for its thread: someone without a key wrote, and waits for the owner. */

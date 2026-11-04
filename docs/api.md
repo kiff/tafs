@@ -59,6 +59,12 @@ The catalog of apps a taf can use, and a connection started for one taf. tafs cl
 | `GET /v1/connect/apps?q=&provider=&cursor=` | a person | One page of the catalog, searched by `q`: `{apps: [{entry, vendor, title, icon?, how: oauth \| key, state: available \| connected \| needs_reconnect, grant?}], by_key, provider?, next_cursor?, skipped?}`. Reviewed entries come first, then a page of the managed provider's apps (`entry` like `connector:composio:gmail`). Within a page, the account's own connections come first (one to sign in again before one connected), then, for a search, apps whose name starts with `q`, then whose name has it. Ask for the next page with the same `q`, `provider` and `next_cursor` as `cursor`; there's no `next_cursor` on the last page. `skipped` counts entries planque left out as malformed or unsupported. `by_key` says Coach can connect a vendor that isn't listed |
 | `POST /v1/connect/apps/{entry}` | `cards.manage`, managing the taf | `{taf}`: starts a connection for that taf's KIFF agent, named by the taf's name in the words the owner signs ("Connect Gmail for Refunds"). Answers `{grant, needs_key?}`, the grant to approve. Nothing is signed here, and there's no sign-in URL until the phone approves |
 
+### Recipes
+
+| Route | Who | What |
+|---|---|---|
+| `GET /v1/recipes` | a person | The recipes a new Coach conversation opens to ([coach.md](coach.md#recipes)): `{categories: [{id, title}], recipes: [{id, title, category, line, say, connections: [[vendor…]…], card: {allows[], holds[], never[]}}], filtered}`. Only recipes Coach built and ran on a test account (`tried` in `recipes/`), filtered to those whose every connection has a vendor the account's catalog lists, read from planque with the person's session. `categories` are the ones with a recipe, in order, with the title the apps show. `say` is what a tap puts in Coach's message box; the person edits it before sending. When the catalog can't be read, every tried recipe is listed and `filtered` is false: the page is never blank for that |
+
 ### Alerts
 
 | Route | Who | What |

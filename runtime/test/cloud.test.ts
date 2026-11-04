@@ -256,6 +256,34 @@ describe("tafs cloud", () => {
     expect(r.body.jobs.map((j: { id: string }) => j.id)).toContain("refunds");
   });
 
+  it("serves the recipes to a person, filtered to what the account's catalog can connect (kiff/tafs#476)", async () => {
+    const w = world();
+    expect((await call(w, "GET", "/v1/recipes")).status).toBe(401);
+    expect((await call(w, "GET", "/v1/recipes", { token: "key_rae" })).status).toBe(403);
+    // With no planque, every tried recipe, unfiltered; the apps still open Coach to recipes.
+    const plain = await call(w, "GET", "/v1/recipes", { token: "ana" });
+    expect(plain.status).toBe(200);
+    expect(plain.body.filtered).toBe(false);
+    expect(Array.isArray(plain.body.recipes) && Array.isArray(plain.body.categories)).toBe(true);
+    // With planque, the catalog is read with the person's session, every page of it.
+    const asked: string[] = [];
+    const deps = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (!url.startsWith("https://planque.test/")) return depsOf(w).fetch!(url, init);
+      asked.push(`${url} as ${(init?.headers as Record<string, string>).authorization}`);
+      if (url.includes("cursor=")) return new Response(JSON.stringify({ entries: [{ entry: "stripe@3", title: "Stripe", vendor: "Stripe", how: "key" }] }), { status: 200 });
+      return new Response(JSON.stringify({ entries: [{ entry: "connector:composio:gmail", title: "Gmail", how: "oauth" }], provider: "composio", next_cursor: "p2" }), { status: 200 });
+    }) as Deps["fetch"] };
+    const r = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body).filtered).toBe(true);
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/catalog as Bearer ana", "https://planque.test/v1/accounts/t_acme/catalog?provider=composio&cursor=p2 as Bearer ana"]);
+    // planque down: unfiltered, never an error, so the page is never blank for that.
+    const down = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
+      { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/") ? new Response("boom", { status: 500 }) : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
+    expect(down.statusCode).toBe(200);
+    expect(JSON.parse(down.body).filtered).toBe(false);
+  });
+
   it("needs a KIFF sign-in, and a person rather than a key", async () => {
     const w = world();
     expect((await call(w, "GET", "/v1/tafs")).status).toBe(401);

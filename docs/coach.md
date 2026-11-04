@@ -367,3 +367,26 @@ A plan (`steps` component) comes with `line`, its one-line form (`withLine` in `
 "Step 3 of 6 · Your rules", for the step at work or the first still to do, or "Done · 6 of 6". It's
 in the thread and on the stream alike. An app shows the plan folded to that line in Coach's header,
 and opens it to the steps. Android shows the plan's title where a plan has no `line`.
+
+## Recipes
+
+A new Coach conversation opens to **recipes** instead of a blank page (kiff/tafs#476): jobs worth
+giving a taf, each with the words to say to Coach. Tapping one fills Coach's message box with
+those words; the person edits them (the limits are examples) and sends. Coach then works as for
+any request: it connects the tools from the catalog, drafts the Card and hands the taf over. There
+is no recipe-specific code: when Coach can't build one, the gap is fixed generically (a connection,
+how Coach picks tools, a Card rule), and the recipe is listed only once it has.
+
+The source is one file per recipe in [`recipes/`](../recipes/README.md): its title, category
+(money, customers, operations, errands), one line on what the taf does, the vendors each
+connection needs (any of several where one stands in for another), what its Card allows, holds and
+never does, in words, and `tried`: the date and the kind of account Coach built and ran it on. A
+recipe without `tried` is a candidate and isn't served. `runtime/scripts/recipes.mjs` reads the
+files into `runtime/src/recipes.ts`, and a test fails when they differ.
+
+tafs cloud serves them at `GET /v1/recipes` ([api.md](api.md#recipes), `runtime/src/cloud/recipes.ts`):
+the tried recipes whose every connection has a vendor the account's catalog lists, read from
+planque with the person's own session, grouped by category with the titles the apps show. When
+the catalog can't be read, every tried recipe is listed and `filtered` says so, so the page is
+never blank for that; Coach says what it can't connect. The apps only draw the list and fill the
+message box: the words come from tafs cloud, so both apps show the same.
