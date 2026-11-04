@@ -278,6 +278,10 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   const pending = (await ctx.store.get(key)) as Pending | undefined;
   if (!pending || !pending.step) throw new ApprovalError(404, "no approval waits for that answer");
   await checkSigned(ctx);
+  // Taken once, atomically, before Coach hears anything: two signed reports of one ask that
+  // arrive together settle it once; the other finds nothing waiting. A report KIFF refused
+  // above spends nothing, so the phone can report again.
+  if (!(await ctx.store.once(`${key}#taken`, new Date(ctx.now.getTime() + ASK_KEPT_MS)))) throw new ApprovalError(404, "no approval waits for that answer");
   await ctx.store.remove(key);
   if (pending.step === "cards") {
     const draft = pending.draft ? await draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now) : undefined;

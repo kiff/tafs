@@ -702,6 +702,55 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// The phone signs only the message this card implies, rebuilt from what it holds: an ask for
+    /// another grant, another account, another draft, another digest or another kind of message
+    /// is refused before any Face ID, and nothing is reported.
+    func testAMessageThatIsntThisCardsIsRefusedBeforeAnyPrompt() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        await model.loadSetup()
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        await model.refreshConnections()
+        let d = PlanqueTests.digest
+        let asks = [
+            #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_02|\#(d)","reason":"Connect","planque":{"grant":"g_02","body":{"digest":"\#(d)"}}}}"#,
+            #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_02|g_01|\#(d)","reason":"Connect","planque":{"grant":"g_01","body":{"digest":"\#(d)"}}}}"#,
+            #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.resume.v1|t_01|g_01|\#(d)","reason":"Connect","planque":{"grant":"g_01","body":{"digest":"\#(d)"}}}}"#,
+            #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(d)","reason":"Connect","planque":{"grant":"g_01","body":{"digest":"0000"}}}}"#,
+            #"{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|d_09|v3","reason":"Give","kiff":{"draft":"d_09","version":"v3"}}}"#,
+            #"{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|d_01|v3","reason":"Give","kiff":{"draft":"d_01","version":"v3"}}}"#,
+        ]
+        let card = try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01"}"#)
+        for ask in asks {
+            StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-stripe/approval"] = (200, ask)
+            StubProtocol.sent = []
+            await model.approve(card, shown: model.grants.first?.digest, shownDraft: nil)
+            XCTAssertTrue(signer.prompts.isEmpty, ask)
+            XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").isEmpty, ask)
+            XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts/d_09/confirm").isEmpty, ask)
+            XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-stripe/approval/ask_1").isEmpty, ask)
+            XCTAssertEqual(model.cardNotes["connect-stripe"], AppModel.askNotThisCards, ask)
+            XCTAssertNil(model.connecting)
+        }
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// The expected message is rebuilt from the card and the account, never taken from the ask.
+    func testTheExpectedMessageIsRebuiltFromTheCardAndTheAccount() throws {
+        let card = try SetupTests.component(#"{"type":"approval","id":"a1","grant":"g_01"}"#)
+        let withDraft = try SetupTests.component(#"{"type":"approval","id":"a1","grant":"g_01","draft":"d_01"}"#)
+        let connect = try KIFFClient.decoder.decode(TafsCloud.ApprovalDecision.Ask.self, from: Data(#"{"id":"ask_1","step":"connect","message":"x","reason":"r","planque":{"grant":"g_01","body":{"digest":"d1"}}}"#.utf8))
+        XCTAssertEqual(AppModel.expectedApprovalMessage(connect, component: card, tenant: "t_01"), "tafs.connect.v1|t_01|g_01|d1")
+        let cards = try KIFFClient.decoder.decode(TafsCloud.ApprovalDecision.Ask.self, from: Data(#"{"id":"ask_1","step":"cards","message":"x","reason":"r","kiff":{"draft":"d_01","version":"v3"}}"#.utf8))
+        XCTAssertEqual(AppModel.expectedApprovalMessage(cards, component: withDraft, tenant: "t_01"), "tafs.cards.v1|t_01|d_01|v3")
+        XCTAssertNil(AppModel.expectedApprovalMessage(cards, component: card, tenant: "t_01"))
+        let other = try KIFFClient.decoder.decode(TafsCloud.ApprovalDecision.Ask.self, from: Data(#"{"id":"ask_1","step":"resume","message":"x","reason":"r"}"#.utf8))
+        XCTAssertNil(AppModel.expectedApprovalMessage(other, component: card, tenant: "t_01"))
+    }
+
     /// An answer the app can't read leaves its card unanswered, never the card out.
     func testAnUnreadableAnswerKeepsTheCard() throws {
         let json = #"{"at":"2026-10-17T10:00:06.000Z","session":"s1","run":"r1","component":{"type":"result","id":"done","text":"Done."},"answer":{"outcome":"set up"}}"#

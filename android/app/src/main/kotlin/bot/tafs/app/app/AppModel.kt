@@ -58,6 +58,8 @@ import bot.tafs.app.push.NoPush
 import bot.tafs.app.push.PushPlatform
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import bot.tafs.app.kiff.ShownComponent
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.kiff.Door
@@ -3258,6 +3260,9 @@ class AppModel(
         "read_again" -> { note(c.id, decision.note ?: VersionWords.OUT_OF_DATE_CARD); readApprovals() }
         "sign" -> {
           val asked = decision.ask ?: return
+          // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
+          // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
+          if (asked.message != expectedApprovalMessage(asked, c, tenant)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return }
           try {
             // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
             if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
@@ -5594,6 +5599,27 @@ class AppModel(
   }
 
   companion object {
+    /**
+     * The message this card's approval may sign, rebuilt from what the phone holds: its own account, the card's grant and
+     * planque's digest for the connect step; the card's draft and the version named for the Cards step. Null for an ask that
+     * names another grant or draft, or a step this app doesn't know: the phone signs nothing it can't rebuild itself.
+     */
+    fun expectedApprovalMessage(asked: bot.tafs.app.kiff.ApprovalAsk, c: SetupComponent, tenant: String): String? {
+      return when (asked.step) {
+        "connect" -> {
+          val p = asked.planque ?: return null
+          val digest = runCatching { p.body.jsonObject["digest"]?.jsonPrimitive?.content }.getOrNull() ?: return null
+          if (p.grant != c.grant) null else "tafs.connect.v1|$tenant|${c.grant}|$digest"
+        }
+        "cards" -> {
+          val k = asked.kiff ?: return null
+          val draft = c.draft ?: return null
+          if (k.draft != draft) null else "tafs.cards.v1|$tenant|$draft|${k.version}"
+        }
+        else -> null
+      }
+    }
+
     /** How often a thread is read again while a run is at work in it, and how many times at most. */
     const val CHAT_POLL_MS = 2_500L
     const val CHAT_POLL_BUDGET = 150

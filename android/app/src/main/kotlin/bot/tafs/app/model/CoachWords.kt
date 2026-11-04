@@ -173,6 +173,9 @@ object CoachWords {
   /** An approval signed earlier (on another phone, or a tap before this one): connected, its Card confirmed in KIFF. */
   const val ALREADY_APPROVED = "Already approved"
 
+  /** tafs cloud asked this phone to sign a message that isn't this card's: refused, nothing signed. */
+  const val ASK_NOT_THIS_CARDS = "Setup asked this phone to sign something that isn't this card's. Nothing was signed."
+
   /** An approval tapped while another goes through: one at a time. */
   const val ANOTHER_APPROVAL = "Another approval is going through. Approve this one once it's done."
 

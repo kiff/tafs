@@ -177,7 +177,10 @@ things (`runtime/src/cloud/approval.ts`):
   prompt's words, and the call it goes into exactly as the phone must make it: planque's
   approve with the body tafs cloud built (the digest, and `kiff_profile` for a connection with
   a profile), then the vendor's sign-in and the confirm code as before; or KIFF's draft to
-  confirm, at exactly that version. The phone signs that message and nothing else, makes that
+  confirm, at exactly that version. Before signing, the phone rebuilds the message from what it
+  holds (its own account, the card's grant or draft, the ask's digest or version) and refuses
+  any other: the phone is the last check, never a signing service (Android
+  `AppModel.expectedApprovalMessage`, iOS the same). It signs that message and nothing else, makes that
   call as given, and reports what came of it (`POST …/approval/{ask}`: connected, listed,
   confirmed, the sign-in closed, no code, not connected, or failed with the service's reason),
   signed as a setup call to KIFF. tafs cloud asks KIFF whether this phone signed the report,
@@ -187,7 +190,8 @@ things (`runtime/src/cloud/approval.ts`):
   never vouches for one: planque and KIFF still take only the device's signature.
 
 A card counts as finished only by its answer in the thread, on both apps. Every word the
-apps show for an outcome comes from tafs cloud. An ask waits 20 minutes for its report. On
+apps show for an outcome comes from tafs cloud. An ask waits 20 minutes for its report and is
+taken once: a second signed report of the same ask finds nothing waiting. On
 Android: `AppModel.approveCoach`; on iOS, `AppModel.approve`. A sign-in card's **Sign in
 again**, and Connect apps' sheet, still approve on the phone as before.
 

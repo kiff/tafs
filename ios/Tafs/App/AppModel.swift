@@ -6189,6 +6189,13 @@ final class AppModel: ObservableObject {
                 if let id = component.draft, let draft = try? await kiff.draft(id: id), gen == accountGeneration { setupDrafts[id] = draft }
             case "sign":
                 guard let ask = decision.ask else { return }
+                // The phone is the last check, not a signing service: it signs only the message this card
+                // implies, rebuilt from what it holds (its own account, the card's grant or draft, the ask's
+                // digest or version), and refuses any other.
+                guard ask.message == Self.expectedApprovalMessage(ask, component: component, tenant: tenant) else {
+                    cardNotes[component.id] = Self.askNotThisCards
+                    return
+                }
                 do {
                     _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true)
                 } catch {
@@ -6214,6 +6221,26 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = "Your answer didn't reach Setup. \(error.localizedDescription)"
             await loadSetupThread()
+        }
+    }
+
+    /// tafs cloud asked this phone to sign a message that isn't this card's: refused, nothing signed.
+    static let askNotThisCards = "Setup asked this phone to sign something that isn't this card's. Nothing was signed."
+
+    /// The message this card's approval may sign, rebuilt from what the phone holds: its own account, the
+    /// card's grant and planque's digest for the connect step; the card's draft and the version named for
+    /// the Cards step. Nil for an ask that names another grant or draft, or a step this app doesn't know:
+    /// the phone signs nothing it can't rebuild itself.
+    nonisolated static func expectedApprovalMessage(_ ask: TafsCloud.ApprovalDecision.Ask, component: SetupComponent, tenant: String) -> String? {
+        switch ask.step {
+        case "connect":
+            guard let p = ask.planque, p.grant == component.grant, let grant = component.grant else { return nil }
+            return "tafs.connect.v1|\(tenant)|\(grant)|\(p.body.digest)"
+        case "cards":
+            guard let k = ask.kiff, let draft = component.draft, k.draft == draft else { return nil }
+            return "tafs.cards.v1|\(tenant)|\(draft)|\(k.version)"
+        default:
+            return nil
         }
     }
 

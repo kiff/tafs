@@ -13,6 +13,7 @@ import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, 
  */
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
+const BO = { tenant_id: "t_other", subject: "u_bo", api_key: false, capabilities: ["read", "cards.manage"] };
 const NOW = new Date("2026-10-16T12:00:00Z");
 const COACH = "taf-cccc0000000000000000";
 const ANA = { requester: { kind: "member" as const, id: "u_ana" } };
@@ -48,9 +49,10 @@ function net(s: Services) {
       return new Response(JSON.stringify({ grants: s.grants }), { status: 200 });
     }
     const token = String(headers.authorization ?? "").replace("Bearer ", "");
-    if (token !== "ana") return new Response("{}", { status: 401 });
+    const me = token === "ana" ? ME : token === "bo" ? BO : undefined;
+    if (!me) return new Response("{}", { status: 401 });
     if (url.endsWith("/v1/me/access")) return new Response(JSON.stringify({ agents: { "setup-acme": { use: true, oversee: false, manage: true } } }), { status: 200 });
-    if (url.endsWith("/v1/me")) return new Response(JSON.stringify(ME), { status: 200 });
+    if (url.endsWith("/v1/me")) return new Response(JSON.stringify(me), { status: 200 });
     if (url.endsWith("/v1/me/device-signature")) {
       s.checks.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return s.signed === true ? new Response(JSON.stringify({ signed: true, grant: "dg_1", grant_until: "2026-10-16T12:01:30Z" }), { status: 200 }) : new Response(JSON.stringify({ error: "no" }), { status: s.signed });
@@ -76,12 +78,19 @@ async function world(s: Services, card: Record<string, unknown> = {}) {
   const run = await agents.api.startRun("t_acme", COACH, "Set up refunds", ANA);
   const stored = agents.runs.find((r) => r.id === run.id)!;
   agents.ask(stored, { type: "approval", id: "a1", grant: "g_1", ...card });
+  // Bo, on another account, has a Coach by the same id paused on a card by the same id.
+  tafs.held.set(`t_other#${COACH}`, { ...taf });
+  await agents.api.putAgent("t_other", COACH, {} as never);
+  agents.access.set("u_bo", { cards_manage: true });
+  const bosRun = await agents.api.startRun("t_other", COACH, "Set up refunds", { requester: { kind: "member", id: "u_bo" } });
+  const bosStored = agents.runs.find((r) => r.id === bosRun.id)!;
+  agents.ask(bosStored, { type: "approval", id: "a1", grant: "g_1", ...card });
   agents.calls.length = 0;
   const coach = memoryCoach(() => clock);
-  const call = async (method: string, path: string, body: unknown, headers: Record<string, string> = {}, query?: string) => {
+  const call = async (method: string, path: string, body: unknown, headers: Record<string, string> = {}, query?: string, token = "ana") => {
     const event: HTTPEvent = {
       rawPath: path, ...(query ? { rawQueryString: query } : {}), requestContext: { http: { method } },
-      headers: { authorization: "Bearer ana", "planque-device-signature": PROOF, ...headers },
+      headers: { authorization: `Bearer ${token}`, "planque-device-signature": PROOF, ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),
     };
     const r = await handle(event, {
@@ -95,7 +104,8 @@ async function world(s: Services, card: Record<string, unknown> = {}) {
   };
   /** What Coach heard for the card, if anything. */
   const told = () => (stored.requirements ?? []).find((q) => (q.input as { id?: string }).id === "a1")?.result as { answer?: unknown } | undefined;
-  return { agents, stored, call, told, coach, at: (d: Date) => { clock = d; } };
+  const boTold = () => (bosStored.requirements ?? []).find((q) => (q.input as { id?: string }).id === "a1")?.result as { answer?: unknown } | undefined;
+  return { agents, stored, call, told, boTold, coach, at: (d: Date) => { clock = d; } };
 }
 
 const ASK = `/v1/tafs/${COACH}/components/a1/approval`;
@@ -330,6 +340,29 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     s.drafts.drf_1 = { status: "confirmed", version: "v3" };
     expect((await again.report({ result: "confirmed" })).body).toMatchObject({ answer: "approved" });
     expect(again.told()).toMatchObject({ answer: "approved" });
+  });
+
+  it("an ask is taken once: two signed reports that arrive together settle it once, and Coach hears once", async () => {
+    const s = services();
+    const w = await asked(s);
+    s.grants = [grant({ status: "connected" })];
+    const [a, b] = await Promise.all([w.report({ result: "connected" }), w.report({ result: "connected" })]);
+    expect([a.status, b.status].sort()).toEqual([200, 404]);
+    expect(w.told()).toMatchObject({ answer: "approved" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerCard")).length).toBe(1);
+  });
+
+  it("another account's session can't report on this account's ask, even with a card and ask id of the same name", async () => {
+    const s = services();
+    const w = await asked(s);
+    s.grants = [grant({ status: "connected" })];
+    const r = await w.call("POST", `${ASK}/${w.id}`, { result: "connected" }, { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" }, undefined, "bo");
+    expect(r.status).toBe(404);
+    expect(w.told()).toBeUndefined();
+    expect(w.boTold()).toBeUndefined();
+    expect(s.checks).toEqual([]);
+    // Ana's ask still waits for Ana.
+    expect((await w.report({ result: "connected" })).body).toMatchObject({ answer: "approved" });
   });
 
   it("an ask lapses: a report after its time finds nothing waiting", async () => {
