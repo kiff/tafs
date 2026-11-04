@@ -5,6 +5,7 @@ import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
 import java.time.Instant
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -71,6 +72,27 @@ class CardUnitTest {
     assertNotNull(sent["signature"])
     assertEquals(1, transport.requestsTo(exception).size)
     assertTrue(m.state.value.dismissingCardUnits.isEmpty())
+  }
+
+  @Test fun aDismissedRequestLeavesActivityAndAPageOnItsWayDoesNotBringItBack() = runTest {
+    reads()
+    transport.answer(exception, 200, kiffException())
+    transport.answer(reject, 200, "{}")
+    val page = """{"entries":[],"groups":[],"filters":[],"filter":"all","revision":"r1","card_unit_exceptions":[$row]}"""
+    transport.answer("GET /v1/tafs/taf_1/activity", 200, page)
+    val m = model()
+    m.refresh()
+    // One page read already, showing it; another on its way when it's dismissed.
+    m.loadActivityPage("chargebacks-1", "all")
+    assertEquals(1, m.state.value.activityPages.values.single().pages.single().cardUnitExceptions.size)
+    transport.hold("GET /v1/tafs/taf_1/activity")
+    val late = launch { m.loadActivityPage("chargebacks-1", "held") }
+    testScheduler.runCurrent()
+    m.dismissCardUnit(m.state.value.cardUnitExceptions.single())
+    transport.release("GET /v1/tafs/taf_1/activity")
+    late.join()
+    assertTrue(m.state.value.activityPages.values.all { c -> c.pages.all { it.cardUnitExceptions.isEmpty() } })
+    assertTrue(m.state.value.cardUnitExceptions.isEmpty())
   }
 
   @Test fun aRequestThatChangedMeanwhileIsNotDismissed() = runTest {

@@ -92,7 +92,9 @@ history, in Needs you (and its count), at the top of the taf's Setup, and above 
 the Activity page's rows win over Home's. It is never a held call and never offers Approve once.
 Its Coach button opens a new conversation on the taf with tafs cloud's proposal written in, not
 sent (`discussCardUnit`); Dismiss reads KIFF's exception again and, only while it's still that
-taf's open request, signs KIFF's ordinary refusal against its current version (`dismissCardUnit`).
+taf's open request, signs KIFF's ordinary refusal against its current version (`dismissCardUnit`). A
+dismissed one leaves at once, from Home, Setup and Activity's cached pages, and a page or Setup read
+already on its way doesn't bring it back (`dismissedCardUnits`).
 
 **Alerts after signing out.** Signing out turns this phone's alerts off and remembers whether
 they were on for that account (`ALERTS_WERE_ON`). Signing in to the same account again registers

@@ -214,6 +214,8 @@ data class AppState(
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
   /** The ones whose Dismiss is on its way to KIFF. */
   val dismissingCardUnits: Set<String> = emptySet(),
+  /** The ones KIFF took a Dismiss for: kept out of every page and Setup read since, even one that was on its way already. */
+  val dismissedCardUnits: Set<String> = emptySet(),
   val record: List<RecordEntry> = emptyList(),
   val scriptPosition: Map<String, Int> = emptyMap(),
   val templateOf: Map<String, String> = emptyMap(),
@@ -1040,7 +1042,7 @@ class AppModel(
         tafs = tafs,
         otherAgents = others,
         held = held,
-        cardUnitExceptions = read.home.cardUnitExceptions.orEmpty(),
+        cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
         // What this person may do with each agent, as KIFF says: a read that failed leaves what was known.
@@ -1627,6 +1629,15 @@ class AppModel(
       if (generation != accountGeneration) return
       kiff.reject(current.id, null, KiffClient.AnswerSignature(signedAt, signature))
       if (generation != accountGeneration) return
+      // Gone at once wherever it shows, Activity's cached pages included, and kept out of any read already on its way.
+      _state.update { st ->
+        st.copy(
+          dismissedCardUnits = st.dismissedCardUnits + current.id,
+          cardUnitExceptions = st.cardUnitExceptions.filterNot { it.id == current.id },
+          activityPages = st.activityPages.mapValues { (_, c) -> c.copy(pages = c.pages.map { p -> p.copy(cardUnitExceptions = p.cardUnitExceptions.filterNot { it.id == current.id }) }) },
+          tafSetups = st.tafSetups.mapValues { (_, v) -> v.copy(cardUnitExceptions = v.cardUnitExceptions.filterNot { it.id == current.id }) },
+        )
+      }
       refresh()
       loadTafSetup(taf.id)
     } catch (e: SignerException) {
@@ -2066,7 +2077,7 @@ class AppModel(
     try {
       planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
       val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
-      val setup = cloud.setupView(id, proof)
+      val setup = cloud.setupView(id, proof).let { v -> v.copy(cardUnitExceptions = v.cardUnitExceptions.filterNot { it.id in _state.value.dismissedCardUnits }) }
       if (gen == shownGeneration()) _state.update { it.copy(tafSetups = it.tafSetups + (tafId to setup), tafSetupErrors = it.tafSetupErrors - tafId) }
     } catch (e: CancellationException) { throw e
     } catch (e: Exception) { if (gen == shownGeneration()) _state.update { it.copy(tafSetupErrors = it.tafSetupErrors + (tafId to ErrorWords.of(e))) } }
@@ -2082,7 +2093,8 @@ class AppModel(
     try {
       val result = cloud.activityPage(id, filter, if (more) old.pages.lastOrNull()?.nextCursor else null, if (more) null else old.firstEtag, selection)
       if (gen != shownGeneration()) return
-      val next = if (result.value == null) old else SourcePages(if (more) old.pages + result.value else listOf(result.value), if (more) old.firstEtag else result.etag)
+      val page = result.value?.let { p -> p.copy(cardUnitExceptions = p.cardUnitExceptions.filterNot { it.id in _state.value.dismissedCardUnits }) }
+      val next = if (page == null) old else SourcePages(if (more) old.pages + page else listOf(page), if (more) old.firstEtag else result.etag)
       _state.update { it.copy(activityPages = it.activityPages + (key to next.copy(loading = false))) }
     } catch (e: CancellationException) {
       if (gen == shownGeneration()) _state.update { it.copy(activityPages = it.activityPages + (key to old.copy(loading = false))) }
