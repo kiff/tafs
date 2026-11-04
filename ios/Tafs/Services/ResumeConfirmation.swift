@@ -8,10 +8,13 @@ final class ResumeConfirmation {
     private var continuation: CheckedContinuation<Void, Error>?
     private var signing: Task<Void, Never>?
     private var deadline: Task<Void, Never>?
+    private let signer: ApprovalSigning
+
+    private init(signer: ApprovalSigning) { self.signer = signer }
 
     static func confirm(signer: ApprovalSigning, message: Data, reason: String,
                         wait: @escaping @MainActor () async throws -> Void) async throws {
-        let pending = ResumeConfirmation()
+        let pending = ResumeConfirmation(signer: signer)
         try await withTaskCancellationHandler {
             try Task.checkCancellation()
             try await withCheckedThrowingContinuation { continuation in
@@ -37,12 +40,14 @@ final class ResumeConfirmation {
                 }
             }
         } onCancel: {
-            Task { @MainActor in
-                guard pending.continuation != nil else { return }
-                signer.cancelConfirmation()
-                pending.finish(.failure(CancellationError()))
-            }
+            Task { @MainActor in pending.cancel() }
         }
+    }
+
+    private func cancel() {
+        guard continuation != nil else { return }
+        signer.cancelConfirmation()
+        finish(.failure(CancellationError()))
     }
 
     private func finish(_ result: Result<Void, Error>) {
