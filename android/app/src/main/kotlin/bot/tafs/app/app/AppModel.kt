@@ -1126,7 +1126,7 @@ class AppModel(
       lostApprovalKey()
       e.message!!
     }
-    e is bot.tafs.app.signing.PromptNotOpened -> e.message!!
+    e is bot.tafs.app.signing.ConfirmationTimedOut -> e.message!!
     e.message == DeviceSigner.NO_FINGERPRINT -> e.message!!
     e.message == DeviceSigner.NOT_RECOGNIZED -> e.message!!
     else -> otherwise
@@ -5088,7 +5088,7 @@ class AppModel(
       // unanswered after 10 seconds is cancelled, the prompt with it, so a late answer sends nothing (#464 item 18).
       kotlinx.coroutines.withTimeoutOrNull(RESUME_CONFIRM_MS) {
         confirmGrant("tafs.resume.v1|$tenant|${tafId ?: "*"}", name?.let { "Resume $it" } ?: "Resume all your tafs")
-      } ?: throw bot.tafs.app.signing.PromptNotOpened()
+      } ?: throw bot.tafs.app.signing.ConfirmationTimedOut()
       if (generation != accountGeneration) return false
       kiff.tenant = tenant
       val signer = signer
@@ -5096,7 +5096,7 @@ class AppModel(
       // With the approval key, its fingerprint is asked as KIFF's request is signed: the same 10 seconds bound it.
       val confirm = kiff.approvalSigner
       val bounded: (suspend (() -> ByteArray) -> String)? = confirm?.let { c ->
-        { built -> kotlinx.coroutines.withTimeoutOrNull(RESUME_CONFIRM_MS) { c(built) } ?: throw bot.tafs.app.signing.PromptNotOpened() }
+        { built -> kotlinx.coroutines.withTimeoutOrNull(RESUME_CONFIRM_MS) { c(built) } ?: throw bot.tafs.app.signing.ConfirmationTimedOut() }
       }
       kiff.approvalSigner = bounded
       try {

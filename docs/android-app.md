@@ -105,15 +105,17 @@ otherwise the app says once that they're off, with **Turn on**. Another account 
 
 **Halt and Resume say what happened on the Halt screen** (`haltError`): a halt or resume that
 didn't go through says why there, and the screen never calls a connection by its service's name.
+Its button says what's under way, "Halting…" or "Resuming…", even once the screen has turned to
+the other button.
 Resume's confirmation is bounded: unanswered after 10 seconds, the fingerprint check is
 cancelled, the prompt with it, so a late answer sends nothing, and the screen says "The fingerprint
-check didn't open. Try again." (`RESUME_CONFIRM_MS`). Android can't tell whether its prompt is on
+check timed out. Try again." (`RESUME_CONFIRM_MS`). Android can't tell whether its prompt is on
 screen, so the wait itself is what's bounded, and only for Resume.
 
 **One account per phone, and signing out asks first.** Account ends with **Sign out**: another
 account is signing out, then signing in with it. Sign out, and Sign in again on the line shown
 when the phone can't approve, each open a confirmation (`ConfirmSignOut`), so one stray tap
-never ends the session. Account › About › Version names the build, e.g. "25 (1.0)"
+never ends the session. Account › About › Version names the build, e.g. "1.0 (26)"
 (`versionWords`).
 
 The status and navigation bars follow the app's own Light/Dark/System choice from the first

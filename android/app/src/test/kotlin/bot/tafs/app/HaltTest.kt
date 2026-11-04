@@ -179,7 +179,7 @@ class HaltTest {
     val m = model()
     assertFalse(m.resumeHalt("refunds-1"))
     assertEquals("It gave up at 10 seconds", 10_000, testScheduler.currentTime)
-    assertEquals("The fingerprint check didn't open. Try again.", m.state.value.haltError)
+    assertEquals("The fingerprint check timed out. Try again.", m.state.value.haltError)
     testScheduler.advanceTimeBy(60_000)
     testScheduler.runCurrent()
     assertTrue(transport.requests.none { it.url.endsWith("/resume") || it.method == "DELETE" })

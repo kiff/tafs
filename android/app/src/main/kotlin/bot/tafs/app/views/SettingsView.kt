@@ -291,5 +291,5 @@ private fun Action(label: String, color: Color, onClick: () -> Unit) {
   HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 12.dp))
 }
 
-/** The build, as Account shows it: "25 (1.0)", the build number and then the version. */
-internal fun versionWords(build: Long, version: String?): String = "$build (${version ?: "–"})"
+/** The build, as Account shows it: "1.0 (26)", the version and then the build number. */
+internal fun versionWords(build: Long, version: String?): String = "${version ?: "–"} ($build)"
