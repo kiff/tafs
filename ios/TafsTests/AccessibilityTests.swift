@@ -33,6 +33,27 @@ final class AccessibilityTests: XCTestCase {
         }
     }
 
+    /// The same colour as the device draws it in dark.
+    private func dark(_ color: Color) -> Color {
+        Color(uiColor: UIColor(color).resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark)))
+    }
+
+    func testDarkTextOnTheBackgroundPanelsAndRaised() {
+        for text in [Theme.ink, Theme.soft, Theme.dim, Theme.amberText, Theme.ok, Theme.no, Theme.blue] {
+            for ground in [Theme.background, Theme.panel, Theme.raised] {
+                XCTAssertGreaterThanOrEqual(ratio(dark(text), dark(ground)), 4.5, "\(text) on \(ground)")
+            }
+        }
+    }
+
+    func testTextOnInkCoachAndStatusFillsInBoth() {
+        // Theme.no is the bar's Needs you badge too.
+        for fill in [Theme.ink, Theme.coach, Theme.ok, Theme.no] {
+            XCTAssertGreaterThanOrEqual(ratio(Theme.onFill, fill), 4.5, "light: \(fill)")
+            XCTAssertGreaterThanOrEqual(ratio(dark(Theme.onFill), dark(fill)), 4.5, "dark: \(fill)")
+        }
+    }
+
     func testTheGreyedSendAnswersButtonIsReadable() {
         // Disabled: soft text on dim at 22% over a panel.
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0

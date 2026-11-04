@@ -193,7 +193,7 @@ the home list's `removing`.
 
 What the person can do on the page follows KIFF's access answer for that taf
 (`AppModel.manages`): someone who doesn't manage it sees no Halt, Versions, Revoke,
-Doors tab, or line saying who it's shared with. For whoever manages it, that line has a
+Doors tab (on Android, none of Setup's changes), or line saying who it's shared with. For whoever manages it, that line has a
 **Share** button with the system's share mark, beside who uses the taf. On its Cards, "Issued by" names who
 issued them to someone who manages the taf, and the account's name to someone who only
 uses it (`AppModel.issuer` on iOS, `AppState.issuer` on Android).

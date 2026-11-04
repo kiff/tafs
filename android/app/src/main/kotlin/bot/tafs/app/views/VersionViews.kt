@@ -319,7 +319,7 @@ fun TrialScreen(tafId: String, state: AppState, actions: VersionActions, tafActi
 private fun Chip(text: String, color: Color) {
   Text(
     text,
-    style = scaled(11, FontWeight.Bold, Color.White),
+    style = scaled(11, FontWeight.Bold, Theme.panel),
     modifier = Modifier.clip(CircleShape).background(color).padding(horizontal = 7.dp, vertical = 2.dp),
   )
 }

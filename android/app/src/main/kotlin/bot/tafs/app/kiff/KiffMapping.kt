@@ -162,6 +162,7 @@ object KiffMapping {
       paused = h.status == "paused",
       nextRun = h.nextRun,
       worksFromChat = h.unscheduled == true,
+      results = h.results,
       kiffCardIds = h.card.ids,
       // Each Card on its own (kiff/tafs#211), as tafs cloud read it from KIFF.
       kiffCards = h.card.cards?.map { c ->

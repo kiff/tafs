@@ -92,7 +92,7 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
     contentAlignment = Alignment.Center,
   ) {
     if (listening) {
-      Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(Color.White))
+      Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(Theme.panel))
     } else {
       Icon(painterResource(R.drawable.ic_mic), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(18.dp))
     }

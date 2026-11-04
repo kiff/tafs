@@ -150,7 +150,7 @@ jobs:
     needs: [changes, test]
     if: needs.changes.outputs.ui == 'true'
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
 
@@ -211,7 +211,12 @@ jobs:
           shoot 5b-cards -screenshots YES -tab tafs -screen card
           shoot 6-new-taf -screenshots YES -tab tafs -screen new
           shoot 7-chat -screenshots YES -tab tafs -screen chat
-          shoot 8-doors -screenshots YES -tab tafs -screen doors
+          # The taf layout: the bar's Account, and the taf's Setup with its two screens.
+          shoot 8-setup -screenshots YES -tab tafs -screen setup
+          shoot 8b-starts-when -screenshots YES -tab tafs -screen starts
+          shoot 8c-results-go-to -screenshots YES -tab tafs -screen results
+          shoot 9-account -screenshots YES -tab account
+          shoot 9b-alerts -screenshots YES -tab account -screen alerts
           # Each product's purchase screen, for its review screenshot in App Store Connect:
           # Solo, and the add-tasks screen with one pack at a time.
           shoot iap-solo -screenshots YES -screen solo
@@ -225,6 +230,16 @@ jobs:
           shoot ax-card -screenshots YES -tab tafs -screen card
           shoot ax-chat -screenshots YES -tab tafs -screen chat
           xcrun simctl ui "$DEVICE_ID" content_size large
+          # Dark (the taf layout): the same screens in the phone's dark appearance.
+          xcrun simctl ui "$DEVICE_ID" appearance dark
+          shoot dark-alerts -screenshots YES -tab account -screen alerts
+          for screen in "tafs" "needs-you" "record" "account"; do
+            shoot "dark-tab-$screen" -screenshots YES -tab "$screen"
+          done
+          for screen in taf card chat setup starts results; do
+            shoot "dark-$screen" -screenshots YES -tab tafs -screen "$screen"
+          done
+          xcrun simctl ui "$DEVICE_ID" appearance light
           # The iPad (kiff/tafs#85): the sidebar beside the open taf. The largest iPad,
           # whose portrait width still fits the taf's second column.
           xcrun simctl shutdown "$DEVICE_ID" || true
@@ -246,8 +261,19 @@ jobs:
           shoot ipad-narrow-needs-you -screenshots YES -tab needs-you -narrow YES
           shoot ipad-narrow-chat -screenshots YES -tab tafs -screen chat -narrow YES
           shoot ipad-2-taf -screenshots YES -tab tafs -screen taf
-          shoot ipad-8-doors -screenshots YES -tab tafs -screen doors
+          shoot ipad-8-setup -screenshots YES -tab tafs -screen setup
+          shoot ipad-8b-starts-when -screenshots YES -tab tafs -screen starts
           shoot ipad-4-cards -screenshots YES -tab tafs -screen card
+          shoot ipad-9-account -screenshots YES -tab account
+          # Landscape, the iPad's alone (the iPhone is portrait): the app turns its window
+          # itself (-landscape), as simctl can't.
+          shoot ipad-land-tafs -screenshots YES -tab tafs -landscape YES
+          shoot ipad-land-setup -screenshots YES -tab tafs -screen setup -landscape YES
+          xcrun simctl ui "$DEVICE_ID" appearance dark
+          shoot ipad-dark-tafs -screenshots YES -tab tafs
+          shoot ipad-dark-setup -screenshots YES -tab tafs -screen setup
+          shoot ipad-dark-land-taf -screenshots YES -tab tafs -screen taf -landscape YES
+          xcrun simctl ui "$DEVICE_ID" appearance light
           ls -la "$RUNNER_TEMP/shots"
 
       - uses: actions/upload-artifact@v7

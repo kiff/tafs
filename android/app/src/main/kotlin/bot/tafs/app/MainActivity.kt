@@ -98,6 +98,13 @@ import bot.tafs.app.views.TafActions
 import bot.tafs.app.views.TafDetailView
 import java.io.File
 import kotlinx.coroutines.launch
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.draw.clip
 
 /** A FragmentActivity: the system's biometric prompt shows on one. */
 class MainActivity : FragmentActivity() {
@@ -392,6 +399,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       setPaused = model::setPaused,
       remove = model::removeTaf,
       report = model::reportAnswer,
+      setResults = model::setResults,
       coach = CoachActions(
         answer = model::answerCoach,
         approve = model::startApproval,
@@ -447,7 +455,16 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   // A tablet, either way up, or a large phone on its side: the list and what's open side by side.
   val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= WIDE_DP
 
-  Column(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
+  // The bar's two places that open rather than switch: Account (today's Settings) and Coach, for whoever may use it.
+  val openAccount = { showingSettings = true }
+  val openCoach: (() -> Unit)? = if (state.mayUseCoach) ({ tab = Tab.Tafs; trialTaf = null; coachOpen = true }) else null
+  Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
+    // Landscape and tablets: the same places as a rail on the left, Coach at its foot.
+    if (wide) {
+      TabRail(tab, state, onTab = { tab = it }, onAccount = openAccount, onCoach = openCoach)
+      Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
+    }
+  Column(Modifier.weight(1f).fillMaxHeight()) {
     Box(Modifier.weight(1f)) {
       when (tab) {
         Tab.Tafs -> {
@@ -460,9 +477,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onPlayNext = { if (state.mode == Mode.sample) model.playNextDemoActions() else model.refresh() },
               onOpenTaf = { coachOpen = false; trialTaf = null; overviewOpen = false; openTaf = it },
               onNewTaf = { showingNew = true },
-              onSettings = { showingSettings = true },
               onHaltAll = { haltTaf = null; haltOpen = true },
-              onCoach = { coachOpen = true },
               onUsage = { usageTaf = null; usageOpen = true },
             )
           }
@@ -473,6 +488,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onUsage = { usageTaf = it; usageOpen = true },
               onVersions = { versionsTaf = it },
               people = people,
+              onConnectApps = { showingConnectApps = true },
               showBack = !wide,
             )
           }
@@ -612,39 +628,115 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       if (taf == null) UsageSheet(state, account, onClose = { usageOpen = false })
       else TafUsageSheet(taf, state, account, onClose = { usageOpen = false })
     }
-    if (!keyboardUp) HorizontalDivider(color = Theme.line)
-    // 56 dp rather than Material's 80, above the system's gesture bar: it takes less of the screen, as iOS's tab bar.
-    if (!keyboardUp) NavigationBar(
-      Modifier.navigationBarsPadding().height(56.dp),
-      containerColor = Theme.background,
-      tonalElevation = 0.dp,
-      windowInsets = WindowInsets(0),
-    ) {
-      Tab.entries.forEach { t ->
-        NavigationBarItem(
-          selected = tab == t,
-          onClick = { tab = t },
-          icon = {
-            val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
-            if (t == Tab.NeedsYou && state.held.isNotEmpty()) {
-              BadgedBox(badge = { Badge(containerColor = Theme.no) { Text("${state.held.size}") } }) { icon() }
-            } else {
-              icon()
-            }
-          },
-          label = { Text(t.title, style = scaled(11)) },
-          colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = Theme.amber,
-            selectedTextColor = Theme.amber,
-            unselectedIconColor = Theme.dim,
-            unselectedTextColor = Theme.dim,
-            indicatorColor = Theme.amber.copy(alpha = 0.14f),
-          ),
-        )
-      }
+    if (!keyboardUp && !wide) {
+      HorizontalDivider(color = Theme.line)
+      TabBar(tab, state, onTab = { tab = it }, onAccount = openAccount, onCoach = openCoach)
     }
   }
+  }
 }
+
+/** The bar under every screen: Account, the three tabs, and Coach. 56 dp, above the system's gesture bar, as iOS's tab bar. */
+@Composable
+internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> Unit, onAccount: () -> Unit, onCoach: (() -> Unit)?) {
+  NavigationBar(
+    Modifier.navigationBarsPadding().height(56.dp),
+    containerColor = Theme.background,
+    tonalElevation = 0.dp,
+    windowInsets = WindowInsets(0),
+  ) {
+    NavigationBarItem(
+      selected = false,
+      onClick = onAccount,
+      icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
+      label = { Text(ACCOUNT, style = scaled(11)) },
+      colors = barColors(),
+    )
+    Tab.entries.forEach { t ->
+      NavigationBarItem(
+        selected = tab == t,
+        onClick = { onTab(t) },
+        icon = { TabIcon(t, state) },
+        label = { Text(t.title, style = scaled(11)) },
+        colors = barColors(),
+      )
+    }
+    onCoach?.let { open -> Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) { CoachButton(open) } }
+  }
+}
+
+/** The same places as a rail, for landscape and tablets: Account, the three tabs, then Coach at the foot. */
+@Composable
+private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> Unit, onAccount: () -> Unit, onCoach: (() -> Unit)?) {
+  androidx.compose.material3.NavigationRail(
+    Modifier.fillMaxHeight().navigationBarsPadding().statusBarsPadding(),
+    containerColor = Theme.background,
+  ) {
+    androidx.compose.material3.NavigationRailItem(
+      selected = false,
+      onClick = onAccount,
+      icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
+      label = { Text(ACCOUNT, style = scaled(11)) },
+      colors = railColors(),
+    )
+    Tab.entries.forEach { t ->
+      androidx.compose.material3.NavigationRailItem(
+        selected = tab == t,
+        onClick = { onTab(t) },
+        icon = { TabIcon(t, state) },
+        label = { Text(t.title, style = scaled(11)) },
+        colors = railColors(),
+      )
+    }
+    Spacer(Modifier.weight(1f))
+    onCoach?.let { CoachButton(it, Modifier.padding(bottom = 12.dp)) }
+  }
+}
+
+/** A tab's icon; Needs you with its count. */
+@Composable
+private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
+  val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
+  if (t == Tab.NeedsYou && state.held.isNotEmpty()) {
+    BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("${state.held.size}") } }) { icon() }
+  } else {
+    icon()
+  }
+}
+
+/** Coach, at the bar's end: filled, ink with a white label, so it reads as the one place to make or change a taf. */
+@Composable
+private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+  Text(
+    COACH,
+    style = scaled(13, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.background),
+    modifier = modifier.heightIn(min = 40.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.ink)
+      .clickable(onClick = onClick).semantics { role = androidx.compose.ui.semantics.Role.Button }
+      .padding(horizontal = 14.dp, vertical = 10.dp),
+  )
+}
+
+@Composable
+private fun barColors() = NavigationBarItemDefaults.colors(
+  selectedIconColor = Theme.amber,
+  selectedTextColor = Theme.amber,
+  unselectedIconColor = Theme.dim,
+  unselectedTextColor = Theme.dim,
+  indicatorColor = Theme.amber.copy(alpha = 0.14f),
+)
+
+@Composable
+private fun railColors() = androidx.compose.material3.NavigationRailItemDefaults.colors(
+  selectedIconColor = Theme.amber,
+  selectedTextColor = Theme.amber,
+  unselectedIconColor = Theme.dim,
+  unselectedTextColor = Theme.dim,
+  indicatorColor = Theme.amber.copy(alpha = 0.14f),
+)
+
+/** The bar's two places that open: the account (Settings) and Coach. */
+const val ACCOUNT = "Account"
+const val COACH = "Coach"
 
 /** From this width the Tafs tab shows the list beside what's open, as iOS on an iPad: a tablet either way up, or a large phone on its side. */
 private const val WIDE_DP = 720

@@ -36,8 +36,7 @@ enum HomeSelection: Hashable {
     case overview
 }
 
-/// The sidebar (Theme.raised): Coach mode, where tafs are made and changed, the calls
-/// waiting for the owner, and the tafs with a line on each. The selected one opens beside it.
+/// The sidebar (Theme.raised): the overview, the calls waiting for the owner, and the tafs with a line on each. The selected one opens beside it.
 struct HomeSplitView: View {
     @EnvironmentObject private var model: AppModel
     @State private var selection: HomeSelection?
@@ -46,7 +45,6 @@ struct HomeSplitView: View {
     @State private var opened: HomeSelection?
     @State private var chosen = false
     @State private var showingNew = false
-    @State private var showingSettings = false
 
     var body: some View {
         NavigationSplitView {
@@ -89,7 +87,6 @@ struct HomeSplitView: View {
             model.requestedTaf = nil
         }
         .sheet(isPresented: $showingNew) { NewTafFlow().environmentObject(model) }
-        .sheet(isPresented: $showingSettings) { SettingsView().environmentObject(model) }
         // Something open from the start: the first taf in the list, which is the one used
         // last, a call waiting on it first (CI's screenshots open Refunds, as on the phone).
         // While the list settles at launch it follows its first taf, until the owner chooses
@@ -136,13 +133,6 @@ struct HomeSplitView: View {
         List(selection: Binding(get: { selection }, set: { chosen = true; selection = $0 })) {
             if model.mode == .kiff {
                 Section {
-                    // Coach mode (kiff/tafs#138): where tafs are made, connected and changed,
-                    // first in the sidebar.
-                    if model.mayUseCoach {
-                        Button { model.openCoach() } label: {
-                            Label("Coach mode", systemImage: "sparkle").scaledFont(15, weight: .semibold).foregroundColor(Theme.coach)
-                        }
-                    }
                     // Today across the tafs, one line each.
                     if !model.tafs.isEmpty {
                         NavigationLink(value: HomeSelection.overview) {
@@ -259,18 +249,12 @@ struct HomeSplitView: View {
                 Button { startNewTaf() } label: { Label("Start a new taf", systemImage: "plus") }
                     .buttonStyle(PrimaryButtonStyle())
             }
-            Button { showingSettings = true } label: {
-                VStack(spacing: 2) {
-                    Label("Settings", systemImage: "gearshape").scaledFont(14).foregroundColor(Theme.soft)
-                    // The account this is, always in sight (the 870 test).
-                    if let account = model.accountLabel {
-                        Text(account).scaledFont(12).foregroundColor(Theme.dim).lineLimit(1)
-                    }
-                }
-                .frame(maxWidth: .infinity, minHeight: 36)
+            // The account this is, always in sight (the 870 test); its settings are the
+            // rail's Account.
+            if let account = model.accountLabel {
+                Text(account).scaledFont(12).foregroundColor(Theme.dim).lineLimit(1)
+                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(model.accountLabel.map { "Settings, in \($0)" } ?? "Settings")
             // KIFF can't be reached just now (the 930 test): under the account's name, with
             // the status page; nothing when all is well.
             if let words = model.unreachable { UnreachableLine(words: words, retrying: model.retryingRefresh) }

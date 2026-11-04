@@ -363,7 +363,11 @@ data class Taf(
   @Serializable(with = InstantAsString::class) val nextRun: Instant? = null,
   /** It works from its chat: no schedule runs it, so there's nothing to run now or pause (kiff/tafs#138). */
   val worksFromChat: Boolean = false,
+  /** Where its results go, of tafs' own places, as tafs cloud lists them; none listed, only its door's reply. */
+  val results: List<String> = emptyList(),
 ) {
+  /** Whether a result alerts the phones of the people who manage it (`app`), silently. */
+  val alertsPhones: Boolean get() = "app" in results
   val initial: String get() = name.take(1).uppercase()
 
   /**

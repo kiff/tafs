@@ -379,6 +379,23 @@ class TafsCloud(
   suspend fun setPaused(id: String, paused: Boolean): Schedule =
     post<ScheduleBody>("/v1/tafs/${escaped(id)}/${if (paused) "pause" else "resume"}", emptyMap()).taf
 
+  /**
+   * Where its results go, of tafs' own places (`door_reply`, `app`, `owner_email`; `manages`), at once. Answers the places tafs
+   * cloud now keeps, from its view of the taf; null when it sends none.
+   */
+  suspend fun setResults(id: String, places: List<String>): List<String>? {
+    val answer = sendJson(
+      "PUT", "/v1/tafs/${escaped(id)}/results",
+      kotlinx.serialization.json.JsonObject(mapOf("places" to kotlinx.serialization.json.JsonArray(places.map { kotlinx.serialization.json.JsonPrimitive(it) }))),
+    )
+    return runCatching {
+      val taf = KiffClient.json.parseToJsonElement(String(answer)).jsonObjectOrNull()?.get("taf")?.jsonObjectOrNull()
+      (taf?.get("results") as? kotlinx.serialization.json.JsonArray)?.map { (it as kotlinx.serialization.json.JsonPrimitive).content }
+    }.getOrNull()
+  }
+
+  private fun kotlinx.serialization.json.JsonElement.jsonObjectOrNull() = this as? kotlinx.serialization.json.JsonObject
+
   suspend fun runs(id: String): List<Run> = get<Runs>("/v1/tafs/${escaped(id)}/runs").runs
 
   /** Where the taf's work stands (docs/reliability.md, "The taf's view"): every line and time in tafs cloud's words. */

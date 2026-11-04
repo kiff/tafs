@@ -115,7 +115,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
   ) {
     Text(
       text,
-      style = scaled(16, FontWeight.SemiBold, if (enabled) Theme.amberInk else Theme.soft),
+      style = scaled(16, FontWeight.SemiBold, if (enabled) Theme.onBrand else Theme.soft),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
       textAlign = TextAlign.Center,

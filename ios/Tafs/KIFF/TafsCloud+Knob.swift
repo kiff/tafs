@@ -346,6 +346,15 @@ extension TafsCloud {
         try await send("PUT", "/v1/tafs/\(escaped(id))/knob", body: setting)
     }
 
+    /// Where its results go that tafs cloud delivers itself (`PUT …/results`): one or more of
+    /// `door_reply`, `app` and `owner_email`. Live at once, no new version.
+    func putResults(_ id: String, places: [String]) async throws -> CloudTaf {
+        struct Body: Encodable { let places: [String] }
+        struct Response: Decodable { let taf: CloudTaf }
+        let r: Response = try await send("PUT", "/v1/tafs/\(escaped(id))/results", body: Body(places: places))
+        return r.taf
+    }
+
     func removeFollowUp(_ id: String, followUp: String) async throws {
         struct Removed: Decodable { var removed: String }
         let _: Removed = try await send("DELETE", "/v1/tafs/\(escaped(id))/follow-ups/\(escaped(followUp))")

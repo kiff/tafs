@@ -8,8 +8,8 @@ enum KeyCommand: CaseIterable {
     case close
     /// ⌘N starts a new taf, in Coach mode.
     case newTaf
-    /// ⌘1, ⌘2, ⌘3: Tafs, Needs you and Record.
-    case tafs, needsYou, record
+    /// ⌘1, ⌘2, ⌘3: Tafs, Needs you and Record; ⌘, Account.
+    case tafs, needsYou, record, account
     /// ⌘. stops the run in progress.
     case stop
     /// ⌘K opens Coach mode.
@@ -23,6 +23,7 @@ enum KeyCommand: CaseIterable {
         case .tafs: "Tafs"
         case .needsYou: "Needs you"
         case .record: "Record"
+        case .account: "Account"
         case .stop: "Stop the run"
         case .coach: "Coach mode"
         }
@@ -36,6 +37,7 @@ enum KeyCommand: CaseIterable {
         case .tafs: "1"
         case .needsYou: "2"
         case .record: "3"
+        case .account: ","
         case .stop: "."
         case .coach: "k"
         }
@@ -51,7 +53,7 @@ extension View {
     }
 }
 
-/// The shortcuts that work on every screen: a new taf, the tabs and Coach mode. Buttons
+/// The shortcuts that work on every screen: a new taf, the bar's tabs and Coach mode. Buttons
 /// that take no space and that VoiceOver skips, there for the keyboard and its ⌘ list.
 struct GlobalKeyCommands: View {
     @EnvironmentObject private var model: AppModel
@@ -64,6 +66,7 @@ struct GlobalKeyCommands: View {
             Button(KeyCommand.tafs.title) { tab = .tafs }.shortcut(.tafs)
             Button(KeyCommand.needsYou.title) { tab = .needsYou }.shortcut(.needsYou)
             Button(KeyCommand.record.title) { tab = .record }.shortcut(.record)
+            Button(KeyCommand.account.title) { tab = .account }.shortcut(.account)
             Button(KeyCommand.coach.title) { model.coachOpen = true }.shortcut(.coach).disabled(!coachAvailable || model.coachOpen)
         }
         .opacity(0)
