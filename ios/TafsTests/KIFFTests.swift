@@ -1,8 +1,9 @@
 import XCTest
 @testable import Tafs
 
-/// Answers requests from canned responses, and records what was sent.
-final class StubProtocol: URLProtocol {
+/// Answers requests from canned responses, and records what was sent. Each instance completes
+/// one immutable request; shared mutable fixtures are locked, including delayed worker replies.
+final class StubProtocol: URLProtocol, @unchecked Sendable {
     // Each is read and written behind one lock: a test sets them while URL loading reads
     // them on its own thread, and an unguarded dictionary crashed mid-change
     // (testADroppedConnectionKeepsPolling: "unrecognized selector … objectForKey:").
