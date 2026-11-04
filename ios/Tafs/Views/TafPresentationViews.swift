@@ -169,7 +169,8 @@ struct TafActivityList: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 14) {
                 ForEach(model.heldCalls(for: tafID)) { HeldCallCard(call: $0) }
-                ForEach(cache.pages.first?.card_unit_exceptions ?? model.cardUnitExceptions.filter { $0.taf == model.cloudTaf(for: tafID)?.id }) { exception in CardUnitExceptionPanel(ask: exception) }
+                ForEach(cache.pages.last?.card_unit_exceptions ?? model.cardUnitExceptions.filter { $0.taf == model.cloudTaf(for: tafID)?.id }) { exception in CardUnitExceptionPanel(ask: exception) }
+                if let notice = cache.pages.last?.card_unit_exceptions_notice { Text(notice).scaledFont(13).foregroundColor(Theme.dim) }
                 RetainedRuns(tafID: tafID)
                 if !selection.isEmpty { Button("All apps") { selection = "" } }
                 ScrollView(.horizontal, showsIndicators: false) {

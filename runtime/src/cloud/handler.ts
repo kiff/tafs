@@ -31,7 +31,7 @@ import { activityPage, ActivityError, representationTag } from "./activity.js";
 import { appCalls, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
-import { cardUnitExceptions } from "./card-unit.js";
+import { CARD_UNIT_NOTICE, cardUnitExceptions } from "./card-unit.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -619,9 +619,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (method === "GET" && ((parts.length === 4 && (action === "activity" || action === "setup")) || (parts.length === 5 && action === "work" && parts[4] === "runs"))) {
     const access = await readAccess(bearer(event), deps.fetch, deps.kiffBase);
     if (!listable(access, taf.kiffAgent)) throw new HTTPError(404, "no such taf");
-    if (action === "activity") return conditionalPage(event, await activityPage({ token: bearer(event), tenant: me.tenantID, subject: me.subject,
-      taf: taf.id, tafName: taf.name, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? ""),
-      unitExceptions: await readExceptions(bearer(event), deps.fetch, deps.kiffBase) }, deps.fetch, deps.kiffBase));
+    if (action === "activity") {
+      let unitExceptions: Awaited<ReturnType<typeof readExceptions>> = [], unitExceptionsNotice: string | undefined;
+      try { unitExceptions = await readExceptions(bearer(event), deps.fetch, deps.kiffBase); }
+      catch { unitExceptionsNotice = CARD_UNIT_NOTICE; }
+      return conditionalPage(event, await activityPage({ token: bearer(event), tenant: me.tenantID, subject: me.subject,
+        taf: taf.id, tafName: taf.name, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? ""),
+        unitExceptions, unitExceptionsNotice }, deps.fetch, deps.kiffBase));
+    }
     if (action === "work") return runsPage(event, me, taf, deps, access.get(taf.kiffAgent)?.manage === true);
     return setupPage(event, me, taf, deps);
   }

@@ -63,7 +63,7 @@ final class PresentationTests: XCTestCase {
 
     func testACurrencyExceptionNamesItsTafAndOpensOnlyAnOrdinaryCoachRequest() async throws {
         let (model, id) = await model()
-        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]},"setup":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
         await model.refreshPeople()
         let data = Data(#"{"id":"exc-example","kind":"card_unit","taf":"depl_1","name":"Rae","title":"Rae needs a USD limit","words":"Its Card only allows EUR. Add a USD limit?","history":"Tried 4 times since 2 Nov","action_title":"Add a USD limit to this action","dismiss_title":"Dismiss","can_approve_once":false,"coach_text":"Add a USD limit to this action for Rae. Read its Card first and ask me to approve."}"#.utf8)
         let ask = try JSONDecoder().decode(TafsCloud.CardUnitException.self, from: data)
@@ -78,7 +78,7 @@ final class PresentationTests: XCTestCase {
 
     func testCurrencyExceptionsNeverBecomeApprovableHoldsAndDismissUsesKiffsCurrentVersion() async throws {
         let signer = RecordingSigner()
-        let (model, _) = await model(signer: signer)
+        let (model, tafID) = await model(signer: signer)
         let raw = #"{"id":"exc-example","kind":"card_unit","subject":"rae-k3f9","action":"answer_case","entity_id":"tc-example","status":"held","breaches":[{"outcome":"amount_unit_mismatch","unit":"USD","card_unit":"EUR"}],"count":4,"created_at":"2026-11-02T12:00:00Z","last_at":"2026-11-04T11:00:00Z","accounting_version":3,"can_approve_once":false}"#
         let row = #"{"id":"exc-example","kind":"card_unit","taf":"depl_1","name":"Rae","title":"Rae needs a USD limit","words":"Its Card only allows EUR","history":"Tried 4 times since 2 Nov","action_title":"Add a USD limit to this action","coach_text":"Add a USD limit to this action for Rae","dismiss_title":"Dismiss","can_approve_once":false}"#
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[\#(raw)]}"#)
@@ -89,9 +89,24 @@ final class PresentationTests: XCTestCase {
         XCTAssertEqual(model.cardUnitExceptions.count, 1)
         let exception = try XCTUnwrap(model.cardUnitExceptions.first)
         XCTAssertFalse(exception.can_approve_once)
+        StubProtocol.responses["GET /v1/tafs/depl_1/activity?filter=all"] = (200, #"{"entries":[],"groups":[],"filters":[],"filter":"all","revision":"r","card_unit_exceptions":[\#(row)]}"#)
+        await model.loadActivityPage(tafID, filter: "all")
+        XCTAssertEqual(model.activityPages[model.activityKey(tafID, "all")]?.pages.first?.card_unit_exceptions?.count, 1)
+        StubProtocol.holdOnce = "GET /v1/tafs/depl_1/activity?filter=all"
+        let earlierPage = Task { await model.loadActivityPage(tafID, filter: "all") }
+        await untilHeld()
         StubProtocol.responses["GET /v1/me/card-exceptions/exc-example"] = (200, raw)
         StubProtocol.responses["POST /v1/me/card-exceptions/exc-example/reject"] = (200, "{}")
+        StubProtocol.thenRespond["POST /v1/me/card-exceptions/exc-example/reject"] = [
+            "GET /v1/home": (200, list), "GET /v1/me/card-exceptions?status=held": (200, #"{"exceptions":[]}"#)
+        ]
         await model.dismissCardUnit(exception)
+        XCTAssertTrue(model.cardUnitExceptions.isEmpty)
+        XCTAssertEqual(model.activityPages[model.activityKey(tafID, "all")]?.pages.first?.card_unit_exceptions, [], "the cached Activity row also clears after KIFF confirms")
+        StubProtocol.release.signal()
+        await earlierPage.value
+        XCTAssertEqual(model.activityPages[model.activityKey(tafID, "all")]?.pages.first?.card_unit_exceptions, [], "an older in-flight page cannot bring back the dismissed question")
+        XCTAssertFalse(model.activityPages[model.activityKey(tafID, "all")]?.loading == true)
         let request = try XCTUnwrap(StubProtocol.sent.last { $0.url?.path == "/v1/me/card-exceptions/exc-example/reject" })
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(request.httpBody)) as? [String: Any])
         let signature = try XCTUnwrap(body["signature"] as? [String: Any])
@@ -108,9 +123,10 @@ final class PresentationTests: XCTestCase {
         XCTAssertEqual(StubProtocol.sent.filter { $0.url?.path.hasSuffix("/reject") == true }.count, count, "a changed kind is read again rather than signed from a stale row")
     }
     func testTerminalPagesKeepCloudWordsAndVersionIncludesTheBuild() throws {
-        let activity = try KIFFClient.decoder.decode(TafsCloud.ActivityPage.self, from: Data(#"{"entries":[],"groups":[],"filters":[],"filter":"all","revision":"r","card_unit_exceptions":[],"end_words":"Nothing older in this view"}"#.utf8))
+        let activity = try KIFFClient.decoder.decode(TafsCloud.ActivityPage.self, from: Data(#"{"entries":[],"groups":[],"filters":[],"filter":"all","revision":"r","card_unit_exceptions":[],"card_unit_exceptions_notice":"Currency requests couldn't be read.","end_words":"Nothing older in this view"}"#.utf8))
         XCTAssertNil(activity.next_cursor)
         XCTAssertEqual(activity.card_unit_exceptions, [])
+        XCTAssertEqual(activity.card_unit_exceptions_notice, "Currency requests couldn't be read.")
         XCTAssertEqual(activity.end_words, "Nothing older in this view")
         let runs = try KIFFClient.decoder.decode(TafsCloud.RunsPage.self, from: Data(#"{"requests":[],"title":"Its work","more_title":"Show all runs","end_words":"Nothing older in the retained runs"}"#.utf8))
         XCTAssertEqual(runs.end_words, "Nothing older in the retained runs")

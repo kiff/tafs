@@ -248,9 +248,13 @@ response fails the read instead of claiming no exception waits.
 Activity collapses the refused calls in a still-open currency episode beneath that
 exception, matching only KIFF's typed `amount_unit_mismatch` reason, subject, action,
 observed currency and episode times (or first proposal id). Other decisions and past
-episodes remain visible. The original Record is unchanged. The exception snapshot is
-part of the Activity cursor revision: a changed count or closed exception forces a
-refresh. An empty `card_unit_exceptions` array clears an older row on that view.
+episodes remain visible. The original Record is unchanged. The panel is read afresh
+with each page, independently of the history cursor revision: changes to its count or
+closure do not discard older pages. Apps draw the latest page's panel metadata.
+An empty `card_unit_exceptions` array clears an older row. If exceptions cannot be read
+or their data is unreadable, Activity still returns its decisions with an empty panel
+and `card_unit_exceptions_notice`; it does not claim that no requests wait. Normal
+Activity failures still fail the page. Home and Setup retain their existing read errors.
 
 The phone forwards one signed read of planque's account grants using the
 `Planque-Device-Signature` header, signed for planque's `GET

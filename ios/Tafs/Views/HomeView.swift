@@ -177,7 +177,7 @@ struct HomeView: View {
 
     private var headline: some View {
         let working = model.workingCount
-        let waiting = model.held.count
+        let waiting = model.held.count + model.cardUnitExceptions.count
         return VStack(alignment: .leading, spacing: 0) {
             if model.loadingList {
                 // Never "0 tafs working" before the tafs are read (#91).

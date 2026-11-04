@@ -3,6 +3,8 @@ import { timeIn } from "./work.js";
 import { KIFFError } from "./kiff.js";
 import type { ActivityCall } from "./activity.js";
 
+export const CARD_UNIT_NOTICE = "Currency requests couldn't be read. Your activity is still shown; try refreshing.";
+
 export interface CardUnitException {
   id: string; kind: "card_unit"; taf: string; name: string; title: string; words: string;
   history: string; action_title: string; coach_text: string; dismiss_title: string; can_approve_once: false;

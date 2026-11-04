@@ -156,10 +156,17 @@ not approve a Card or change its limits. Dismiss sends the exception's signed re
 Record and closes the exception when the Card gains the unit or a call is allowed.
 Activity reads that same exception with each page and collapses only the matching
 typed refusals from its open episode. Other decisions stay visible; Record retains
-all of them. When the exception changes or closes, Activity refreshes its pages.
+all of them. Each Activity page refreshes the panel independently of its history cursor;
+exception changes do not discard older pages. If the panel cannot be read, Activity
+still shows its decisions and the cloud's small notice instead of hiding the history.
+Once KIFF confirms a dismissal, its question also clears from cached views immediately.
 
 Halt names the connection in its status rows. A failed Halt or Resume, including a resume
 that was not confirmed on the device, leaves its reason on that screen beside the control.
 The app checks the session again after each awaited resume step, so an old session cannot
 resume a different account after sign-out.
+Resume stops an unresolved biometric confirmation after ten seconds, invalidates the
+pending authentication, shows a retry message and frees the button. A late confirmation
+cannot send Resume. iOS cannot observe when the system prompt became visible, so its
+deadline covers the unresolved confirmation attempt, including a prompt that never opens.
 

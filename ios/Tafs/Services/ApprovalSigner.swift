@@ -22,6 +22,8 @@ protocol ApprovalSigning {
     func allowUnlockReuse()
     /// That answer is over, signed or not: the next one asks again.
     func endUnlockReuse()
+    /// Invalidate an unfinished system authentication, so a late answer cannot confirm a step.
+    func cancelConfirmation()
     /// The public half of the approval key (P-256, SPKI DER), which signs only what grants
     /// authority (kiff/tafs#233); empty when this device holds none.
     var approvalPublicKeyDER: Data { get }
@@ -43,6 +45,7 @@ extension ApprovalSigning {
     /// (kiff/tafs#236, item 25). Signers that always ask ignore it.
     func allowUnlockReuse() {}
     func endUnlockReuse() {}
+    func cancelConfirmation() {}
 }
 
 @MainActor
@@ -109,6 +112,7 @@ final class ApprovalSigner: ApprovalSigning {
     /// The Face ID that confirmed the current step, and when: the approval key signs under
     /// it, without asking again, until the step is over.
     private var step: (context: LAContext, at: Date)?
+    private var pendingAuthentication: LAContext?
     /// How long one confirmed Face ID covers a step's signatures.
     static let stepWindow: TimeInterval = 120
     /// Set for one answer chosen on its notification: its unlock, seconds ago, counts. It
@@ -261,6 +265,12 @@ final class ApprovalSigner: ApprovalSigning {
         step = nil
     }
 
+    func cancelConfirmation() {
+        pendingAuthentication?.invalidate()
+        pendingAuthentication = nil
+        endStep()
+    }
+
     func signConfirmed(_ message: Data) throws -> String {
         let signature: Data
         if let enclaveKey {
@@ -292,7 +302,11 @@ final class ApprovalSigner: ApprovalSigning {
             throw SignerError.notAuthenticated
             #endif
         }
+        pendingAuthentication = context
+        defer { if pendingAuthentication === context { pendingAuthentication = nil } }
         let ok = try await context.evaluatePolicy(policy, localizedReason: reason)
+        try Task.checkCancellation()
+        guard pendingAuthentication === context else { throw SignerError.notAuthenticated }
         if !ok { throw SignerError.notAuthenticated }
         // This Face ID confirms a new step: the last one's is over.
         endStep()

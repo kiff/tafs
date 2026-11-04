@@ -23,6 +23,7 @@ extension TafsCloud {
         let entries: [ActivityEntry]; let groups: [ActivityGroup]; let filters: [ActivityChoice]
         let filter: String; let revision: String; let next_cursor: String?; var end_words: String? = nil
         var card_unit_exceptions: [CardUnitException]? = nil
+        var card_unit_exceptions_notice: String? = nil
     }
     struct RunsPage: Decodable {
         let requests: [TafWork.Request]; let next_cursor: String?; let title: String; let more_title: String; var end_words: String? = nil

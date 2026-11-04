@@ -230,6 +230,7 @@ final class AlertsTests: XCTestCase {
         StubProtocol.responses["POST /v1/push"] = (200, #"{"answers":true,"alerts":true}"#)
         await model.pushTokenArrived(token)
         StubProtocol.responses["DELETE /v1/push"] = (200, #"{"removed":true}"#)
+        StubProtocol.responses["GET /v1/push"] = (200, #"{"enabled":false,"sound":true,"kinds":[],"answering":{"title":"Answered tafs","tafs":[]}}"#)
         let before = sent("POST", "cloud.test", "/v1/push").count
         await model.turnOffAlerts()
         await model.syncPush()

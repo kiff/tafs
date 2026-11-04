@@ -3,7 +3,7 @@ import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 import { dayIn } from "./knob.js";
 import { timeIn } from "./work.js";
 import { connectionRefusalWords } from "./refusal.js";
-import { cardUnitExceptions, collapsedCurrencyDecision, type CardUnitException } from "./card-unit.js";
+import { CARD_UNIT_NOTICE, cardUnitExceptions, collapsedCurrencyDecision, type CardUnitException } from "./card-unit.js";
 import type { Held } from "./home.js";
 
 export const ACTIVITY_FILTERS = [
@@ -37,6 +37,7 @@ export interface ActivityPage {
   entries: ActivityEntry[]; groups: Array<{ id: string; title: string; entries: ActivityEntry[] }>;
   filters: typeof ACTIVITY_FILTERS; filter: ActivityFilter; next_cursor?: string; revision: string; end_words?: string;
   card_unit_exceptions: CardUnitException[];
+  card_unit_exceptions_notice?: string;
 }
 
 interface Cursor { scope: string; offset: number; revision: string; day?: string }
@@ -97,7 +98,7 @@ export function activityEntry(c: ActivityCall, zone: string, now: Date): Activit
 }
 
 /** Bounded source scanning: a cursor advances even through a page with no matching outcomes. */
-export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[] }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
+export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[]; unitExceptionsNotice?: string }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
   const filter = input.query.get("filter") ?? "all";
   if (!ACTIVITY_FILTERS.some((f) => f.id === filter)) throw new ActivityError(400, "filter is all, done, held or refused");
   const take = Number(input.query.get("limit") ?? 20);
@@ -108,8 +109,10 @@ export async function activityPage(input: { token: string; tenant: string; subje
   if (from && !Number.isFinite(Date.parse(from))) throw new ActivityError(400, "from is an ISO date");
   const scope = hash([input.tenant, input.subject, input.taf, filter, tools, from]);
   const cursor = cursorOf(input.query.get("cursor"), scope);
-  const unitExceptions = (input.unitExceptions ?? []).filter((e) => e.subject === input.agent && e.kind === "card_unit" && e.status === "held");
-  const exceptionRows = cardUnitExceptions({ id: input.taf, name: input.tafName ?? "This taf", kiffAgent: input.agent }, unitExceptions, [], input.zone, input.now);
+  let unitExceptions = (input.unitExceptions ?? []).filter((e) => e.subject === input.agent && e.kind === "card_unit" && e.status === "held");
+  let exceptionRows: CardUnitException[] = [], notice = input.unitExceptionsNotice;
+  try { exceptionRows = cardUnitExceptions({ id: input.taf, name: input.tafName ?? "This taf", kiffAgent: input.agent }, unitExceptions, [], input.zone, input.now); }
+  catch { unitExceptions = []; notice = CARD_UNIT_NOTICE; }
   const read = async (offset: number, limit: number) => {
     const q = new URLSearchParams({ actor: input.agent, limit: String(limit), offset: String(offset) });
     const res = await net(`${base}/v1/me/activity?${q}`, { headers: { authorization: `Bearer ${input.token}`, accept: "application/json" } });
@@ -118,7 +121,7 @@ export async function activityPage(input: { token: string; tenant: string; subje
   };
   let source = await read(0, cursor ? 1 : 100);
   if (!Array.isArray(source.calls) || !Number.isSafeInteger(source.shown) || source.shown < 0) throw new ActivityError(502, "Activity returned an unreadable page");
-  const revision = hash([source.shown, source.counts, source.calls[0] ?? null, [...unitExceptions].sort((a, b) => (a.id ?? "").localeCompare(b.id ?? ""))]);
+  const revision = hash([source.shown, source.counts, source.calls[0] ?? null]);
   if (cursor && cursor.revision !== revision) throw new ActivityError(409, "Activity changed; refresh to see the newest entries");
   let offset = cursor?.offset ?? 0;
   const entries: ActivityEntry[] = [];
@@ -142,5 +145,6 @@ export async function activityPage(input: { token: string; tenant: string; subje
     group.entries.push(entry);
   }
   return { entries, groups, filters: ACTIVITY_FILTERS, filter: filter as ActivityFilter, revision, card_unit_exceptions: exceptionRows,
+    ...(notice ? { card_unit_exceptions_notice: notice } : {}),
     ...(more ? { next_cursor: Buffer.from(JSON.stringify({ scope, offset, revision, day: entries.at(-1)?.day ?? cursor?.day })).toString("base64url") } : { end_words: "Nothing older in this view" }) };
 }

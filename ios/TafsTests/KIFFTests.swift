@@ -81,8 +81,18 @@ final class StubProtocol: URLProtocol {
         if Self.holdOnce == key {
             Self.holdOnce = nil
             Self.arrived.signal()
-            Self.release.wait()
+            // Keep URL loading free to serve another request while this response is delayed.
+            // Tests can then confirm a write before releasing an earlier, stale read.
+            DispatchQueue.global().async { [self, request] in
+                Self.release.wait()
+                finishLoading(key, request: request)
+            }
+            return
         }
+        finishLoading(key, request: request)
+    }
+
+    private func finishLoading(_ key: String, request: URLRequest) {
         let (dropped, status, body) = Self.answer(key)
         if let dropped {
             client?.urlProtocol(self, didFailWithError: URLError(dropped))

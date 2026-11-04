@@ -1410,6 +1410,7 @@ final class AppModel: ObservableObject {
         if signer.renewApprovalKeyIfBiometricsChanged() { lostApprovalKey() }
         refreshing = true
         let gen = accountGeneration
+        let presentation = presentationGeneration
         // Dropped before its answer: the list wasn't read, so it isn't shown as loaded (and
         // empty). The next refresh reads it.
         var cancelled = false
@@ -1435,6 +1436,7 @@ final class AppModel: ObservableObject {
             let done = await activity
             let happened = await events
             let account = await me
+            guard gen == accountGeneration, presentation == presentationGeneration else { return }
             // KIFF and tafs cloud answered: nothing to say, and no retry waiting.
             if gen == accountGeneration {
                 unreachable = nil
@@ -2548,6 +2550,7 @@ final class AppModel: ObservableObject {
     /// whole account.
     @Published private(set) var halts: [String: TafsCloud.Halt] = [:]
     @Published private(set) var haltErrors: [String: String] = [:]
+    var resumeConfirmationWait: @MainActor () async throws -> Void = { try await Task.sleep(nanoseconds: 10_000_000_000) }
 
     func haltError(_ tafID: UUID?) -> String? { haltKey(tafID).flatMap { haltErrors[$0] } }
 
@@ -2840,8 +2843,11 @@ final class AppModel: ObservableObject {
         let name = tafID.flatMap { taf($0)?.name }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
-                                      reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", grants: true)
+            try await ResumeConfirmation.confirm(signer: signer, message: Data("tafs.resume.v1|\(tenant)|\(agent ?? "*")".utf8),
+                reason: name.map { "Resume \($0)" } ?? "Resume all your tafs", wait: resumeConfirmationWait)
+        } catch ResumeConfirmation.Failure.timedOut {
+            if gen == accountGeneration { recordHaltError(key, "\(Biometry.name) didn't open. Try again.") }
+            return false
         } catch {
             if gen == accountGeneration { recordHaltError(key, ApprovalReadiness.cancelled(error) ?? "Resume wasn't confirmed on this device. Try again.") }
             return false
@@ -5331,6 +5337,27 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             try await kiff.reject(current.id, signature: .init(signedAt: at, value: signature))
             guard gen == accountGeneration else { return }
+            // KIFF confirmed the dismissal: cached views stop offering the same answer at once.
+            presentationGeneration += 1
+            cardUnitExceptions.removeAll { $0.id == exception.id }
+            for (key, var view) in tafSetups {
+                view.card_unit_exceptions?.removeAll { $0.id == exception.id }
+                tafSetups[key] = view
+            }
+            for (key, var cache) in activityPages {
+                cache.pages = cache.pages.map { old in
+                    var page = old
+                    page.card_unit_exceptions?.removeAll { $0.id == exception.id }
+                    return page
+                }
+                cache.etag = nil
+                cache.loading = false; cache.moreWhenReady = false
+                activityPages[key] = cache
+            }
+            for (key, var cache) in runPages {
+                cache.loading = false; cache.moreWhenReady = false
+                runPages[key] = cache
+            }
             await refresh()
             await loadTafSetup(taf.id)
         } catch {

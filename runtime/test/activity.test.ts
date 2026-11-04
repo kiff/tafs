@@ -18,6 +18,12 @@ function source(calls: ActivityCall[]) {
 }
 
 describe("Activity pages from the source", () => {
+  it("keeps history visible with a notice when a currency exception is unreadable", async () => {
+    const s = source([call(0)]);
+    const page = await activityPage({ ...input(), unitExceptions: [{ kind: "card_unit", subject: "agent-example", status: "held" }] }, s.net);
+    expect(page.entries).toHaveLength(1); expect(page.card_unit_exceptions).toEqual([]);
+    expect(page.card_unit_exceptions_notice).toContain("couldn't be read");
+  });
   it("collapses only the typed refusals in an open currency episode and leaves Record calls intact", async () => {
     const exception: Held = { id: "exc-example", kind: "card_unit", status: "held", subject: "agent-example", action: "read_case", title: "Read a case",
       count: 3, proposal_id: "proposal-10", created_at: call(9).created_at, last_at: call(2).created_at,
@@ -33,7 +39,7 @@ describe("Activity pages from the source", () => {
     expect(calls).toHaveLength(8); expect(calls[0]!.outcome).toBe("blocked");
     expect((await activityPage(input(), s.net)).entries).toHaveLength(8, "closed exceptions restore all decisions");
   });
-  it("advances through hidden calls and invalidates a cursor if the currency exception changes or closes", async () => {
+  it("advances through hidden calls and keeps the history cursor when the currency panel changes or closes", async () => {
     const exception: Held = { id: "exc-example", kind: "card_unit", status: "held", subject: "agent-example", action: "read_case",
       count: 110, created_at: call(109).created_at, last_at: call(0).created_at, breaches: [{ outcome: "amount_unit_mismatch", unit: "USD" }] };
     const calls = [...Array.from({ length: 110 }, (_, i) => ({ ...call(i), outcome: "blocked", reasons: ["amount_unit_mismatch"], amount: { value: "12", unit: "USD" } })),
@@ -43,8 +49,11 @@ describe("Activity pages from the source", () => {
     expect(page.entries).toHaveLength(20); expect(page.entries[0]!.call.proposal_id).toBe("proposal-110");
     const nextInput = { ...input(`cursor=${page.next_cursor}`), unitExceptions: [exception] };
     expect((await activityPage(nextInput, s.net)).entries).toHaveLength(10);
-    await expect(activityPage({ ...nextInput, unitExceptions: [{ ...exception, count: 111 }] }, s.net)).rejects.toMatchObject({ status: 409 });
-    await expect(activityPage({ ...nextInput, unitExceptions: [] }, s.net)).rejects.toMatchObject({ status: 409 });
+    const changed = await activityPage({ ...nextInput, unitExceptions: [{ ...exception, count: 111 }] }, s.net);
+    expect(changed.entries).toHaveLength(10); expect(changed.revision).toBe(page.revision);
+    expect(changed.card_unit_exceptions[0]!.history).toContain("111 times");
+    const closed = await activityPage({ ...nextInput, unitExceptions: [] }, s.net);
+    expect(closed.entries).toHaveLength(10); expect(closed.revision).toBe(page.revision); expect(closed.card_unit_exceptions).toEqual([]);
   });
   it("attributes a typed connection refusal without parsing vendor text or changing status, evidence or what counts", () => {
     const original = { ...call(0, "refused_by_tool"), held: true, amount: { value: "12.30", unit: "EUR" },
@@ -117,7 +126,7 @@ describe("Activity pages from the source", () => {
 describe("Activity's HTTP contract", () => {
   it("returns 304 without a body and checks account and agent access before reading calls", async () => {
     const id = "taf-01234567890123456789";
-    let tenant = "account-example", allowed = true, reads = 0, exceptionReads = 0;
+    let tenant = "account-example", allowed = true, reads = 0, exceptionReads = 0, exceptionUnavailable = false;
     const deps = {
       now: () => now,
       tafs: { get: async (account: string) => account === "account-example" ? { id, name: "Example", job: "refunds", kiffAgent: "agent-example" } : undefined },
@@ -125,7 +134,7 @@ describe("Activity's HTTP contract", () => {
         const u = new URL(String(url));
         if (u.pathname === "/v1/me") return new Response(JSON.stringify({ tenant_id: tenant, subject: "person-example", api_key: false, capabilities: ["read"], time_zone: "UTC" }));
         if (u.pathname === "/v1/me/access") return new Response(JSON.stringify({ agents: allowed ? { "agent-example": { use: true } } : {} }));
-        if (u.pathname === "/v1/me/card-exceptions") { exceptionReads++; return new Response(JSON.stringify({ exceptions: [] })); }
+        if (u.pathname === "/v1/me/card-exceptions") { exceptionReads++; return new Response(JSON.stringify({ exceptions: [] }), { status: exceptionUnavailable ? 503 : 200 }); }
         if (u.pathname === "/v1/me/activity") { reads++; return new Response(JSON.stringify({ calls: [call(0)], shown: 1 })); }
         throw new Error("unexpected request");
       }) as typeof fetch,
@@ -134,6 +143,12 @@ describe("Activity's HTTP contract", () => {
     const first = await handle(event, deps); expect(first.statusCode).toBe(200); expect(first.headers.etag).toBeTruthy();
     const unchanged = await handle({ ...event, headers: { ...event.headers, "if-none-match": first.headers.etag } }, deps);
     expect(unchanged.statusCode).toBe(304); expect(unchanged.body).toBe("");
+    exceptionUnavailable = true;
+    const available = await handle(event, deps); expect(available.statusCode).toBe(200);
+    const page = JSON.parse(available.body);
+    expect(page.entries).toHaveLength(1); expect(page.card_unit_exceptions).toEqual([]);
+    expect(page.card_unit_exceptions_notice).toContain("couldn't be read");
+    expect(page.revision).toBe(JSON.parse(first.body).revision);
     const before = reads, beforeExceptions = exceptionReads; allowed = false;
     expect((await handle(event, deps)).statusCode).toBe(404); expect(reads).toBe(before);
     expect(exceptionReads).toBe(beforeExceptions);
