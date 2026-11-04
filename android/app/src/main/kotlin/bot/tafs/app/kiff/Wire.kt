@@ -136,6 +136,8 @@ data class Home(
   val removing: List<PendingRemoval> = emptyList(),
   /** The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors. */
   @SerialName("doors_offered") val doorsOffered: List<String>? = null,
+  /** Cards asked to take a currency they have no limit for, for the tafs this person sees: Needs you draws them. */
+  @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException>? = null,
 )
 
 // MARK: tafs cloud's chat
@@ -267,6 +269,8 @@ data class CardException(
   @SerialName("proposal_id") val proposalId: String? = null,
   /** KIFF's answer to whether approving once can pass this call (kiff/tafs#138); absent from an older response. */
   @SerialName("can_approve_once") val canApproveOnce: Boolean? = null,
+  /** What kind of exception: a held call, or `card_unit`, a currency its Card has no limit for, which tafs cloud draws itself. */
+  val kind: String? = null,
 )
 
 @Serializable

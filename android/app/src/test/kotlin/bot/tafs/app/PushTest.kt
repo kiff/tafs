@@ -8,6 +8,7 @@ import bot.tafs.app.push.Alert
 import bot.tafs.app.push.AlertPayload
 import bot.tafs.app.push.PushPlatform
 import java.time.Instant
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -202,6 +203,24 @@ class PushTest {
     assertEquals(before, transport.requestsTo(register).size)
     assertFalse(m.state.value.alertsOffSinceSignOut)
     assertNull(secrets.load(AppModel.ALERTS_ON))
+  }
+
+  @Test fun aSignInOvertakenByAnotherGivesItNothingOfItsAlerts() = runTest {
+    reads(); secrets.save("1", AppModel.ALERTS_ON)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
+    val m = model()
+    m.signOut(tellKiff = false)
+    val before = transport.requestsTo(register).size
+    // Signing in to the account whose alerts were on, still reading, when another account's sign-in overtakes it.
+    val slow = transport.holdNext("GET /v1/home")
+    val first = launch { m.useSession("at_a", "t_01") }
+    testScheduler.runCurrent()
+    m.useSession("at_b", "t_02")
+    slow.complete(Unit)
+    first.join()
+    assertEquals("the other account's phone isn't registered", before, transport.requestsTo(register).size)
+    assertNull(secrets.load(AppModel.ALERTS_ON))
+    assertFalse(m.state.value.alertsOffSinceSignOut)
   }
 
   @Test fun aPhoneIsRegisteredWithItsFirebaseTokenAndWhatSoundItWants() = runTest {

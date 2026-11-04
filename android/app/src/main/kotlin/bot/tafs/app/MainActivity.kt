@@ -238,6 +238,9 @@ fun RootView(model: AppModel) {
         ),
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
+        bot.tafs.app.views.LocalCardUnitActions provides remember(model) {
+          bot.tafs.app.views.CardUnitActions(discuss = model::discussCardUnit, dismiss = model::dismissCardUnit)
+        },
         LocalCoachInstalls provides remember(model) {
           CoachInstalls(
             begin = model::beginCoachInstall,
@@ -753,8 +756,9 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
 @Composable
 private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
   val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
-  if (t == Tab.NeedsYou && state.held.isNotEmpty()) {
-    BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("${state.held.size}") } }) { icon() }
+  val waiting = state.held.size + state.cardUnitExceptions.size
+  if (t == Tab.NeedsYou && waiting > 0) {
+    BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("$waiting") } }) { icon() }
   } else {
     icon()
   }

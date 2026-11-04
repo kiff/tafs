@@ -210,6 +210,10 @@ data class AppState(
   val roomGiven: Set<String> = emptySet(),
   val tafs: List<Taf> = emptyList(),
   val held: List<HeldCall> = emptyList(),
+  /** Cards asked to take another currency, as tafs cloud draws them from KIFF; counted with the held calls in Needs you. */
+  val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
+  /** The ones whose Dismiss is on its way to KIFF. */
+  val dismissingCardUnits: Set<String> = emptySet(),
   val record: List<RecordEntry> = emptyList(),
   val scriptPosition: Map<String, Int> = emptyMap(),
   val templateOf: Map<String, String> = emptyMap(),
@@ -882,13 +886,17 @@ class AppModel(
     followers.clear()
     // Nothing of an earlier session or of the sample shows in this one.
     _state.value = AppState(mode = Mode.kiff, ready = true, sessionHasKey = tenant != null, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0")
+    // This sign-in, so a later one that overtook it while it read gets nothing of it: no alert registration, no notice.
+    val generation = accountGeneration
     refresh()
     registerApprovalKey()
+    if (generation != accountGeneration) return
     // Alerts were on for this account when this phone signed out of it: they come back on with no new confirmation while the
     // account's alerts still reach tafs cloud. Otherwise the phone says they're off, and offers to turn them on.
     val restoring = tenant != null && push.available && !alertsWanted() && secrets.load(ALERTS_WERE_ON) == tenant
     if (restoring) secrets.save("1", ALERTS_ON)
     syncPush()
+    if (generation != accountGeneration) return
     if (restoring && !_state.value.alertsReady) {
       secrets.delete(ALERTS_ON)
       _state.update { it.copy(alertsOffSinceSignOut = true) }
@@ -1025,12 +1033,14 @@ class AppModel(
     val holders = (tafs + others).map { it.id }.toSet()
     // A held install is Coach's only from Coach's own agent, which KIFF holds only under Coach's install Card.
     val coach = _state.value.coachAgent?.takeIf { it.isNotEmpty() }
-    val held = read.exceptions.map { KiffMapping.held(it, coach) }
+    // A Card asked to take another currency isn't a held call: tafs cloud draws it once, with its own actions (card_unit_exceptions).
+    val held = read.exceptions.filter { it.kind != "card_unit" }.map { KiffMapping.held(it, coach) }
     _state.update { s ->
       s.copy(
         tafs = tafs,
         otherAgents = others,
         held = held,
+        cardUnitExceptions = read.home.cardUnitExceptions.orEmpty(),
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
         // What this person may do with each agent, as KIFF says: a read that failed leaves what was known.
@@ -1574,6 +1584,59 @@ class AppModel(
       return null
     } finally {
       _state.update { it.copy(runsInFlight = it.runsInFlight - tafId) }
+    }
+  }
+
+  // MARK: A Card asked to take another currency (KIFF's card_unit exception)
+
+  /**
+   * Talks it over in Coach: a new conversation on the taf, with tafs cloud's proposal written in, not sent. It grants nothing;
+   * only a changed Card, made and signed as any other, lets those calls through.
+   */
+  fun discussCardUnit(ask: bot.tafs.app.kiff.CardUnitException) {
+    val taf = _state.value.tafs.firstOrNull { it.cloudId == ask.taf } ?: return
+    if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach || !_state.value.manages(taf.id)) return
+    improveTaf(taf.id)
+    setDraft(COACH_CHAT, ask.coachText)
+    _state.update { it.copy(coachRequested = true) }
+  }
+
+  /**
+   * Dismisses it: KIFF's exception is read again, and only while it's still this taf's open currency request is its ordinary
+   * refusal signed, against the version it has now.
+   */
+  suspend fun dismissCardUnit(ask: bot.tafs.app.kiff.CardUnitException) {
+    val tenant = kiffTenant
+    val taf = _state.value.tafs.firstOrNull { it.cloudId == ask.taf }
+    if (_state.value.mode != Mode.kiff || tenant == null || taf == null || ask.id in _state.value.dismissingCardUnits) return
+    val generation = accountGeneration
+    _state.update { it.copy(dismissingCardUnits = it.dismissingCardUnits + ask.id) }
+    try {
+      val current = kiff.cardException(ask.id)
+      if (generation != accountGeneration) return
+      val version = current.accountingVersion
+      if (current.kind != "card_unit" || current.status != "held" || _state.value.holder(current.subject)?.id != taf.id || version == null) {
+        fail("This request changed. Read it again before dismissing it.")
+        return
+      }
+      var signedAt = ""
+      val signature = signer.sign("Dismiss ${ask.title}") {
+        signedAt = DateTimeFormatter.ISO_INSTANT.format(clock().truncatedTo(ChronoUnit.SECONDS))
+        KiffClient.answerMessage(tenant, current.id, Answer.Refuse.kiffName, null, null, version, signedAt)
+      }
+      if (generation != accountGeneration) return
+      kiff.reject(current.id, null, KiffClient.AnswerSignature(signedAt, signature))
+      if (generation != accountGeneration) return
+      refresh()
+      loadTafSetup(taf.id)
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) fail(notSigned(e, "Not dismissed: it wasn't confirmed."))
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail("The request wasn't dismissed. ${AnswerRefusals.answerRefusedWords(e)}")
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(dismissingCardUnits = it.dismissingCardUnits - ask.id) }
     }
   }
 
@@ -3433,7 +3496,7 @@ class AppModel(
       _state.update { it.copy(chatLive = it.chatLive + (tafId to LiveAnswer(started = clock()))) }
       readThread(tafId)
       if (!current()) return false
-      followStream(tafId, events, retry = words, sent = pending, coach = coachToken)
+      followStream(tafId, events, retry = words, sent = pending, coach = coachToken, account = generation)
       return true
     }
     readThread(tafId)
@@ -3570,10 +3633,12 @@ class AppModel(
 
   private fun followStream(
     tafId: String, events: kotlinx.coroutines.flow.Flow<StreamEvent>, retry: String?, sent: ChatMessage? = null,
-    // The Coach conversation this stream is of, taken before it was opened: once Coach has left it, nothing of it shows.
+    // The account and Coach conversation this stream is of, taken before it was opened: once either has changed, nothing of it
+    // shows.
     coach: Int = coachGeneration,
+    account: Int = accountGeneration,
   ) {
-    val generation = accountGeneration
+    val generation = account
     fun current() = generation == accountGeneration && (tafId != COACH_CHAT || coach == coachGeneration)
     followers[tafId]?.cancel()
     followers[tafId] = scope.launch {
@@ -3684,20 +3749,23 @@ class AppModel(
     if (isTrialChat(tafId)) return
     if (!again && (followers[tafId]?.isActive == true || run in resumedRuns)) return
     resumedRuns += run
+    // The account and Coach conversation it resumes for: a resume that lands after either changed writes nothing and follows nothing.
+    val generation = accountGeneration
     val coach = coachGeneration
+    fun current() = generation == accountGeneration && (tafId != COACH_CHAT || coach == coachGeneration)
     val events = try {
       cloud.resumeRun(cloudId, run)
     } catch (e: CancellationException) {
       throw e
     } catch (_: Exception) {
       // Its stream can't open: the thread is read on a timer while the run works, as before the stream.
-      followChat(tafId)
+      if (current()) followChat(tafId)
       return
     }
-    if (tafId == COACH_CHAT && coach != coachGeneration) return
+    if (!current()) return
     val working = _state.value.chatWorking[tafId]
     _state.update { it.copy(chatLive = it.chatLive + (tafId to LiveAnswer(started = clock(), session = working?.session, run = run))) }
-    followStream(tafId, events, retry = null, coach = coach)
+    followStream(tafId, events, retry = null, coach = coach, account = generation)
   }
 
   /**

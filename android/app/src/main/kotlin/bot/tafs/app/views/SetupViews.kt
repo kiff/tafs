@@ -77,6 +77,9 @@ fun SetupTab(
   var startsOpen by rememberSaveable(taf.id) { mutableStateOf(false) }
   var resultsOpen by rememberSaveable(taf.id) { mutableStateOf(false) }
 
+  // Its Card asked to take another currency: first, since every call in it is refused until the Card changes.
+  state.tafSetups[taf.id]?.cardUnitExceptions?.forEach { ask -> CardUnitExceptionPanel(ask, state) }
+
   // The job, and changing it with Coach.
   Panel {
     Eyebrow(SetupWords.JOB)

@@ -86,6 +86,14 @@ is told it's done, and Restore purchases sends again what wasn't.
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
 
+**A Card asked to take another currency** (KIFF's `card_unit` exception, as tafs cloud draws it in
+`card_unit_exceptions`): one panel (`CardUnitExceptionPanel`) with tafs cloud's title, words and
+history, in Needs you (and its count), at the top of the taf's Setup, and above its Activity, where
+the Activity page's rows win over Home's. It is never a held call and never offers Approve once.
+Its Coach button opens a new conversation on the taf with tafs cloud's proposal written in, not
+sent (`discussCardUnit`); Dismiss reads KIFF's exception again and, only while it's still that
+taf's open request, signs KIFF's ordinary refusal against its current version (`dismissCardUnit`).
+
 **Alerts after signing out.** Signing out turns this phone's alerts off and remembers whether
 they were on for that account (`ALERTS_WERE_ON`). Signing in to the same account again registers
 this phone again, with no new confirmation, while the account's alerts still reach tafs cloud;

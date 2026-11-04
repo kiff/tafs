@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -215,6 +216,23 @@ class ChatStreamTest {
     m.loadChat("refunds-1")
     assertEquals(1, transport.requestsTo("GET /v1/tafs/taf_1/runs/run_1/stream").size)
     assertTrue(transport.requestsTo("GET /v1/tafs/taf_1/runs/run_1/stream").single().url.endsWith("?after=0"))
+  }
+
+  @Test fun aResumeThatLandsAfterAnotherSignInStartsNothing() = runTest {
+    reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
+    transport.answer("GET /v1/tafs/taf_1/runs/run_1/stream", 200, sse("activity" to """{"tool":"list_charges","step":"Reading payments…","call_id":"c1"}"""))
+    val m = model()
+    transport.hold("GET /v1/tafs/taf_1/runs/run_1/stream")
+    val read = launch { m.loadChat("refunds-1") }
+    settle()
+    // Another sign-in while the resume was on its way: what it brings back belongs to the session that asked.
+    m.useSession("at_2", "t_01")
+    val reads = transport.requestsTo(conversation).size
+    transport.release("GET /v1/tafs/taf_1/runs/run_1/stream")
+    read.join()
+    settle()
+    assertTrue(m.state.value.chatLive.isEmpty())
+    assertEquals("the old resume follows nothing in the new session", reads, transport.requestsTo(conversation).size)
   }
 
   // MARK: The live line
